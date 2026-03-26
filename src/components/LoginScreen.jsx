@@ -44,7 +44,7 @@ export function LoginScreen({ onSendMagicLink, loading }) {
               overflow: "hidden",
               margin: "0 auto 16px",
             }}>
-              <img src={LOGO_B64} alt="RB Performance" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              <img src={LOGO_B64} alt="RB Performance" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: "#f5f5f5", margin: "0 0 6px", letterSpacing: "-0.5px" }}>
               RB <span style={{ color: "#02d1ba" }}>Performance</span>
