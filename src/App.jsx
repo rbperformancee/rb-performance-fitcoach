@@ -9,6 +9,7 @@ import { SessionReport } from "./components/SessionReport";
 import { MessageBanner } from "./components/MessageBanner";
 import { RPEModal } from "./components/RPEModal";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
+import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPages";
 import { LoginScreen } from "./components/LoginScreen";
 import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
@@ -70,6 +71,8 @@ export default function App() {
   const [showReport,      setShowReport]      = useState(false);
   const [exporting,       setExporting]       = useState(false);
   const [showPrivacy,     setShowPrivacy]     = useState(false);
+  const [showMentions,    setShowMentions]    = useState(false);
+  const [showCGU,         setShowCGU]         = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRPE,         setShowRPE]         = useState(false);
 
@@ -145,12 +148,25 @@ export default function App() {
 
   const handleDeleteAccount = async () => {
     if (!client) return;
+    const clientEmail = client.email;
+    const clientName = client.full_name;
+    // Supprimer toutes les données
     await supabase.from("weight_logs").delete().eq("client_id", client.id);
     await supabase.from("exercise_logs").delete().eq("client_id", client.id);
     await supabase.from("session_rpe").delete().eq("client_id", client.id);
     await supabase.from("messages").delete().eq("client_id", client.id);
     await supabase.from("programmes").delete().eq("client_id", client.id);
     await supabase.from("clients").delete().eq("id", client.id);
+    // Envoyer email de confirmation de suppression
+    try {
+      await supabase.functions.invoke("send-welcome", {
+        body: {
+          email: clientEmail,
+          full_name: clientName,
+          type: "deletion_confirmation",
+        },
+      });
+    } catch (e) { console.warn("Email suppression non envoyé", e); }
     await supabase.auth.signOut();
   };
 
@@ -168,26 +184,15 @@ export default function App() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      {showMentions && <MentionsLegales onClose={() => setShowMentions(false)} />}
+      {showCGU && <CGU onClose={() => setShowCGU(false)} />}
 
       {/* Modal suppression données */}
       {showDeleteConfirm && (
-        <div style={{ position:"fixed", inset:0, zIndex:998, background:"rgba(0,0,0,0.85)", backdropFilter:"blur(20px)", display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
-          <div style={{ background:"#141414", border:"1px solid rgba(239,68,68,0.3)", borderRadius:20, padding:28, maxWidth:380, width:"100%", textAlign:"center" }}>
-            <div style={{ fontSize:40, marginBottom:16 }}>⚠️</div>
-            <h2 style={{ fontSize:18, fontWeight:800, color:"#f5f5f5", marginBottom:8 }}>Supprimer mes données</h2>
-            <p style={{ fontSize:13, color:"#9ca3af", lineHeight:1.7, marginBottom:24 }}>
-              Cette action supprimera définitivement toutes tes données : programme, historique, poids, messages. Cette action est irréversible.
-            </p>
-            <div style={{ display:"flex", gap:10 }}>
-              <button onClick={() => setShowDeleteConfirm(false)} style={{ flex:1, padding:"12px", background:"none", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, color:"#9ca3af", fontSize:13, fontWeight:700, cursor:"pointer" }}>
-                Annuler
-              </button>
-              <button onClick={handleDeleteAccount} style={{ flex:1, padding:"12px", background:"#ef4444", border:"none", borderRadius:10, color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>
-                Supprimer tout
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onConfirm={() => { setShowDeleteConfirm(false); handleDeleteAccount(); }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
 
       {showReport && session && (
@@ -394,14 +399,12 @@ export default function App() {
           </nav>
 
       {/* Liens RGPD */}
-      <div style={{ textAlign:"center", padding:"8px 0 16px", display:"flex", justifyContent:"center", gap:20 }}>
-        <button onClick={() => setShowPrivacy(true)} style={{ background:"none", border:"none", fontSize:10, color:"#444", cursor:"pointer", textDecoration:"underline" }}>
-          Politique de confidentialité
-        </button>
+      <div style={{ textAlign:"center", padding:"8px 0 16px", display:"flex", justifyContent:"center", gap:16, flexWrap:"wrap" }}>
+        <button onClick={() => setShowPrivacy(true)} style={{ background:"none", border:"none", fontSize:10, color:"#444", cursor:"pointer", textDecoration:"underline" }}>Confidentialité</button>
+        <button onClick={() => setShowMentions(true)} style={{ background:"none", border:"none", fontSize:10, color:"#444", cursor:"pointer", textDecoration:"underline" }}>Mentions légales</button>
+        <button onClick={() => setShowCGU(true)} style={{ background:"none", border:"none", fontSize:10, color:"#444", cursor:"pointer", textDecoration:"underline" }}>CGU</button>
         {client && (
-          <button onClick={() => setShowDeleteConfirm(true)} style={{ background:"none", border:"none", fontSize:10, color:"#444", cursor:"pointer", textDecoration:"underline" }}>
-            Supprimer mes données
-          </button>
+          <button onClick={() => setShowDeleteConfirm(true)} style={{ background:"none", border:"none", fontSize:10, color:"#ef4444", cursor:"pointer", textDecoration:"underline" }}>Supprimer mes données</button>
         )}
       </div>
         </>
