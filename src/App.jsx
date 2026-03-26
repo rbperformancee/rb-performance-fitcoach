@@ -14,7 +14,7 @@ import { exportProgressPDF } from "./utils/exportPDF";
 import { LOGO_B64 } from "./utils/logo";
 import "./App.css";
 
-const GREEN = "#22c55e";
+const GREEN = "#02d1ba";
 // ⚠️  Email du coach — seul cet email peut accéder au dashboard admin
 const COACH_EMAIL = "rb.performancee@gmail.com"; // ← remplace par ton email
 
@@ -174,8 +174,8 @@ export default function App() {
           {/* Bouton coach */}
           {isCoach && (
             <button onClick={() => setShowCoachDash(true)} style={{
-              padding: "5px 10px", background: "rgba(34,197,94,0.08)",
-              border: "1px solid rgba(34,197,94,0.2)", borderRadius: 7,
+              padding: "5px 10px", background: "rgba(2,209,186,0.08)",
+              border: "1px solid rgba(2,209,186,0.2)", borderRadius: 7,
               color: GREEN, fontSize: 10.5, fontWeight: 700, cursor: "pointer",
             }}>
               🎛 Coach
@@ -228,10 +228,10 @@ export default function App() {
           <div className={`import-drop-zone ${isDragging ? "dragging" : ""}`} onClick={() => { const i = document.createElement("input"); i.type = "file"; i.accept = ".html"; i.onchange = handleLocalImport; i.click(); }}>
             <div className="import-icon">
               <svg viewBox="0 0 48 48" fill="none">
-                <rect x="6" y="4" width="26" height="34" rx="3" stroke="#22c55e" strokeWidth="1.8"/>
-                <path d="M32 4l8 8" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round"/>
-                <rect x="32" y="4" width="8" height="8" rx="1" stroke="#22c55e" strokeWidth="1.8"/>
-                <line x1="14" y1="16" x2="28" y2="16" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                <rect x="6" y="4" width="26" height="34" rx="3" stroke="#02d1ba" strokeWidth="1.8"/>
+                <path d="M32 4l8 8" stroke="#02d1ba" strokeWidth="1.8" strokeLinecap="round"/>
+                <rect x="32" y="4" width="8" height="8" rx="1" stroke="#02d1ba" strokeWidth="1.8"/>
+                <line x1="14" y1="16" x2="28" y2="16" stroke="#02d1ba" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
               </svg>
             </div>
             <div className="import-title">Importer un programme</div>
@@ -326,12 +326,12 @@ export default function App() {
                   <button onClick={() => setShowReport(true)} style={{
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     width: "100%", marginTop: 20, padding: "14px",
-                    background: sessionComplete ? GREEN : "rgba(34,197,94,0.08)",
-                    border: `1.5px solid ${sessionComplete ? GREEN : "rgba(34,197,94,0.2)"}`,
+                    background: sessionComplete ? GREEN : "rgba(2,209,186,0.08)",
+                    border: `1.5px solid ${sessionComplete ? GREEN : "rgba(2,209,186,0.2)"}`,
                     borderRadius: 12,
                     color: sessionComplete ? "#0d0d0d" : GREEN,
                     fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
-                    boxShadow: sessionComplete ? "0 4px 20px rgba(34,197,94,0.3)" : "none",
+                    boxShadow: sessionComplete ? "0 4px 20px rgba(2,209,186,0.3)" : "none",
                     animation: sessionComplete ? "slideUp 0.4s ease" : "none",
                   }}>
                     {sessionComplete ? <>🏆 Séance terminée — Voir le bilan</> : <>📊 Bilan ({sessionDone}/{sessionTotal})</>}

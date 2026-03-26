@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
-const GREEN = "#22c55e";
-const GREEN_DIM = "rgba(34,197,94,0.12)";
-const GREEN_GLOW = "rgba(34,197,94,0.4)";
+const GREEN = "#02d1ba";
+const GREEN_DIM = "rgba(2,209,186,0.12)";
+const GREEN_GLOW = "rgba(2,209,186,0.4)";
 
 /* Parse "2 min", "1 min 30", "90s", "3 min", etc. → secondes */
 function parseRestSeconds(rest) {
@@ -246,7 +246,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
               cursor: "pointer", transition: "all 0.15s",
               fontFamily: "'JetBrains Mono',monospace",
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(34,197,94,0.3)"; e.currentTarget.style.color = GREEN; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(2,209,186,0.3)"; e.currentTarget.style.color = GREEN; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
           >
             +{s}s
@@ -296,14 +296,14 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
           style={{
             flex: phase === "done" ? 1 : 1.2,
             padding: "13px",
-            background: phase === "done" ? GREEN : "rgba(34,197,94,0.12)",
-            border: `1.5px solid ${phase === "done" ? GREEN : "rgba(34,197,94,0.3)"}`,
+            background: phase === "done" ? GREEN : "rgba(2,209,186,0.12)",
+            border: `1.5px solid ${phase === "done" ? GREEN : "rgba(2,209,186,0.3)"}`,
             borderRadius: 12,
             color: phase === "done" ? "#0d0d0d" : GREEN,
             fontSize: 12, fontWeight: 700,
             cursor: "pointer", transition: "all 0.15s",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            boxShadow: phase === "done" ? "0 4px 20px rgba(34,197,94,0.4)" : "none",
+            boxShadow: phase === "done" ? "0 4px 20px rgba(2,209,186,0.4)" : "none",
           }}
         >
           {phase === "done" ? (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-const GREEN = "#22c55e";
+const GREEN = "#02d1ba";
 
 export function MessageBanner({ clientId }) {
   const [messages, setMessages] = useState([]);
@@ -50,8 +50,8 @@ export function MessageBanner({ clientId }) {
 
   return (
     <div style={{
-      background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.05))",
-      border: "1px solid rgba(34,197,94,0.25)",
+      background: "linear-gradient(135deg, rgba(2,209,186,0.1), rgba(2,209,186,0.05))",
+      border: "1px solid rgba(2,209,186,0.25)",
       borderRadius: 14, padding: "14px 16px", margin: "0 0 16px",
       display: "flex", alignItems: "flex-start", gap: 12,
       animation: "slideDown 0.3s ease",
@@ -64,7 +64,7 @@ export function MessageBanner({ clientId }) {
       {/* Icône */}
       <div style={{
         width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-        background: "rgba(34,197,94,0.15)",
+        background: "rgba(2,209,186,0.15)",
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 16,
       }}>💬</div>

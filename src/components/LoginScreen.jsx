@@ -26,8 +26,8 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
         @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .login-input:focus { border-color: #22c55e !important; background: rgba(34,197,94,0.04) !important; }
-        .login-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(34,197,94,0.4) !important; }
+        .login-input:focus { border-color: #02d1ba !important; background: rgba(2,209,186,0.04) !important; }
+        .login-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(2,209,186,0.4) !important; }
       `}</style>
 
       <div style={{
@@ -53,7 +53,7 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
           fontSize: 22, fontWeight: 800, color: "#f5f5f5",
           letterSpacing: "-0.5px", marginBottom: 4, textAlign: "center",
         }}>
-          RB <span style={{ color: "#22c55e" }}>Performance</span>
+          RB <span style={{ color: "#02d1ba" }}>Performance</span>
         </h1>
         <p style={{
           fontSize: 13, color: "#6b7280", marginBottom: 36, textAlign: "center", lineHeight: 1.6,
@@ -115,7 +115,7 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
               disabled={!valid || loading}
               style={{
                 padding: "14px",
-                background: valid && !loading ? "#22c55e" : "#1a1a1a",
+                background: valid && !loading ? "#02d1ba" : "#1a1a1a",
                 border: "none",
                 borderRadius: 10,
                 color: valid && !loading ? "#0d0d0d" : "#444",
@@ -123,7 +123,7 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
                 cursor: valid && !loading ? "pointer" : "not-allowed",
                 transition: "all 0.2s",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: valid && !loading ? "0 4px 20px rgba(34,197,94,0.25)" : "none",
+                boxShadow: valid && !loading ? "0 4px 20px rgba(2,209,186,0.25)" : "none",
               }}
             >
               {loading ? (
@@ -152,8 +152,8 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
           /* ── Magic link envoyé ── */
           <div style={{
             width: "100%",
-            background: "rgba(34,197,94,0.06)",
-            border: "1px solid rgba(34,197,94,0.2)",
+            background: "rgba(2,209,186,0.06)",
+            border: "1px solid rgba(2,209,186,0.2)",
             borderRadius: 14,
             padding: "28px 24px",
             textAlign: "center",
@@ -161,14 +161,14 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
           }}>
             <div style={{
               width: 52, height: 52,
-              background: "rgba(34,197,94,0.12)",
+              background: "rgba(2,209,186,0.12)",
               borderRadius: "50%",
               display: "flex", alignItems: "center", justifyContent: "center",
               animation: "pulse 2s infinite",
             }}>
               <svg viewBox="0 0 24 24" fill="none" style={{ width: 26, height: 26 }}>
                 <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round"/>
+                  stroke="#02d1ba" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -177,7 +177,7 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
               </div>
               <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.6 }}>
                 Un lien de connexion a été envoyé à<br/>
-                <strong style={{ color: "#22c55e" }}>{email}</strong>
+                <strong style={{ color: "#02d1ba" }}>{email}</strong>
               </div>
             </div>
             <div style={{ fontSize: 11, color: "#555", marginTop: 4 }}>

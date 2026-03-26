@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 
-const GREEN = "#22c55e";
+const GREEN = "#02d1ba";
 
 const LABELS = ["Facile", "Correct", "Difficile", "Très dur", "Épuisant"];
-const COLORS = ["#4ade80", "#22c55e", "#f97316", "#ef4444", "#dc2626"];
+const COLORS = ["#4ade80", "#02d1ba", "#f97316", "#ef4444", "#dc2626"];
 const EMOJIS = ["😊", "💪", "😤", "😰", "🥵"];
 
 export function RPEModal({ clientId, sessionName, onClose }) {
@@ -100,7 +100,7 @@ export function RPEModal({ clientId, sessionName, onClose }) {
                 background: rpe ? GREEN : "#1a1a1a", border: "none", borderRadius: 10,
                 color: rpe ? "#0d0d0d" : "#444",
                 fontSize: 13, fontWeight: 800, cursor: rpe ? "pointer" : "not-allowed",
-                boxShadow: rpe ? "0 4px 16px rgba(34,197,94,0.3)" : "none",
+                boxShadow: rpe ? "0 4px 16px rgba(2,209,186,0.3)" : "none",
               }}>Enregistrer 💪</button>
             </div>
           </>

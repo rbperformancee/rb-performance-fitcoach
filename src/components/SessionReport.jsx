@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 
-const GREEN = "#22c55e";
+const GREEN = "#02d1ba";
 
 export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClose, onExportPDF }) {
   const stats = useMemo(() => {
@@ -67,7 +67,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
         ].map((s, i) => (
           <div key={i} style={{
             background: "#141414",
-            border: `1px solid ${i === 3 && stats.prs.length > 0 ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.06)"}`,
+            border: `1px solid ${i === 3 && stats.prs.length > 0 ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.06)"}`,
             borderRadius: 12, padding: "14px 12px",
           }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#555", marginBottom: 4 }}>{s.label}</div>
@@ -79,7 +79,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
 
       {/* PRs */}
       {stats.prs.length > 0 && (
-        <div style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
+        <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 8 }}>🏆 Records battus</div>
           {stats.prs.map((name, i) => (
             <div key={i} style={{ fontSize: 12, color: "#f5f5f5", display: "flex", alignItems: "center", gap: 8, padding: "3px 0" }}>
@@ -108,7 +108,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
                   <span style={{
                     fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, fontWeight: 600,
                     padding: "2px 7px", borderRadius: 5,
-                    background: ex.delta > 0 ? "rgba(34,197,94,0.12)" : ex.delta < 0 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
+                    background: ex.delta > 0 ? "rgba(2,209,186,0.12)" : ex.delta < 0 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
                     color: ex.delta > 0 ? GREEN : ex.delta < 0 ? "#ef4444" : "#555",
                   }}>
                     {ex.delta > 0 ? "+" : ""}{ex.delta !== 0 ? ex.delta.toFixed(1) + " kg" : "="}
@@ -146,7 +146,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
           flex: 1.2, padding: "13px",
           background: GREEN, border: "none",
           borderRadius: 12, color: "#0d0d0d", fontSize: 12, fontWeight: 800,
-          cursor: "pointer", boxShadow: "0 4px 20px rgba(34,197,94,0.35)",
+          cursor: "pointer", boxShadow: "0 4px 20px rgba(2,209,186,0.35)",
         }}>
           Continuer 💪
         </button>

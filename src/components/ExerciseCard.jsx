@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Sparkline } from "./Sparkline";
 import { RestTimer, parseRestSeconds } from "./RestTimer";
 
-const GREEN = "#22c55e";
-const GREEN_DIM = "rgba(34,197,94,0.12)";
+const GREEN = "#02d1ba";
+const GREEN_DIM = "rgba(2,209,186,0.12)";
 
 function ytId(url) {
   if (!url) return null;
@@ -77,9 +77,9 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.2) 45%, transparent 100%)" }} />
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{
-          width: 54, height: 54, background: "rgba(34,197,94,0.92)", backdropFilter: "blur(4px)",
+          width: 54, height: 54, background: "rgba(2,209,186,0.92)", backdropFilter: "blur(4px)",
           borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 24px rgba(34,197,94,0.45), 0 0 0 6px rgba(34,197,94,0.15)",
+          boxShadow: "0 4px 24px rgba(2,209,186,0.45), 0 0 0 6px rgba(2,209,186,0.15)",
         }}>
           <svg viewBox="0 0 24 24" fill="#0d0d0d" style={{ width: 22, height: 22, marginLeft: 3 }}>
             <polygon points="5,3 19,12 5,21"/>
@@ -141,8 +141,8 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
       )}
 
       <div className="ex-card" style={{
-        borderColor: allDone ? "rgba(34,197,94,0.25)" : undefined,
-        borderLeft: ex.group ? `3px solid ${GREEN}` : allDone ? `3px solid rgba(34,197,94,0.5)` : undefined,
+        borderColor: allDone ? "rgba(2,209,186,0.25)" : undefined,
+        borderLeft: ex.group ? `3px solid ${GREEN}` : allDone ? `3px solid rgba(2,209,186,0.5)` : undefined,
       }}>
         {ex.group && <div className="ex-superset-badge">{ex.groupType || "Superset"} {ex.group}</div>}
 
@@ -180,14 +180,14 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               <button onClick={() => setShowVideo(v => !v)} style={{
                 display: "flex", alignItems: "center", gap: 5,
                 padding: "5px 10px",
-                background: showVideo ? "rgba(34,197,94,0.18)" : "rgba(34,197,94,0.08)",
-                border: `1.5px solid ${showVideo ? "rgba(34,197,94,0.5)" : "rgba(34,197,94,0.25)"}`,
+                background: showVideo ? "rgba(2,209,186,0.18)" : "rgba(2,209,186,0.08)",
+                border: `1.5px solid ${showVideo ? "rgba(2,209,186,0.5)" : "rgba(2,209,186,0.25)"}`,
                 borderRadius: 100, color: GREEN,
                 fontSize: 10.5, fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
               }}>
                 <svg viewBox="0 0 16 16" fill="none" style={{ width: 12, height: 12 }}>
-                  <rect x="1" y="3" width="14" height="10" rx="2" stroke="#22c55e" strokeWidth="1.5"/>
-                  <polygon points="6,6 6,10 11,8" fill="#22c55e"/>
+                  <rect x="1" y="3" width="14" height="10" rx="2" stroke="#02d1ba" strokeWidth="1.5"/>
+                  <polygon points="6,6 6,10 11,8" fill="#02d1ba"/>
                 </svg>
                 {showVideo ? "Masquer" : "Vidéo"}
               </button>
@@ -201,7 +201,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                 color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: "pointer", transition: "all 0.15s",
               }} title="Lancer le timer de repos"
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(34,197,94,0.3)"; e.currentTarget.style.color = GREEN; }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(2,209,186,0.3)"; e.currentTarget.style.color = GREEN; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#555"; }}
               >
                 <svg viewBox="0 0 20 20" fill="none" style={{ width: 12, height: 12 }}>

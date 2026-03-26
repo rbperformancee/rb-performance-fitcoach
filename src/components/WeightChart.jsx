@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback } from "react";
 
-const GREEN = "#22c55e";
-const GREEN_DIM = "rgba(34,197,94,0.15)";
-const GREEN_STROKE = "rgba(34,197,94,0.8)";
+const GREEN = "#02d1ba";
+const GREEN_DIM = "rgba(2,209,186,0.15)";
+const GREEN_STROKE = "rgba(2,209,186,0.8)";
 
 // SVG sparkline with tooltip
 function LineChart({ data, width, height, showDots = true }) {
@@ -68,8 +68,8 @@ function LineChart({ data, width, height, showDots = true }) {
       >
         <defs>
           <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+            <stop offset="0%" stopColor="#02d1ba" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#02d1ba" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -108,7 +108,7 @@ function LineChart({ data, width, height, showDots = true }) {
           {showDots && data.map((d, i) => (
             <circle key={i}
               cx={toX(i)} cy={toY(d.weight)} r={tooltip?.idx === i ? 5 : 2.5}
-              fill={tooltip?.idx === i ? GREEN : "rgba(34,197,94,0.7)"}
+              fill={tooltip?.idx === i ? GREEN : "rgba(2,209,186,0.7)"}
               style={{ transition: "r 0.1s" }}
             />
           ))}
@@ -118,7 +118,7 @@ function LineChart({ data, width, height, showDots = true }) {
             <>
               <line
                 x1={tooltip.x} y1={0} x2={tooltip.x} y2={H}
-                stroke="rgba(34,197,94,0.3)" strokeWidth="1" strokeDasharray="3,3"
+                stroke="rgba(2,209,186,0.3)" strokeWidth="1" strokeDasharray="3,3"
               />
               <circle cx={tooltip.x} cy={tooltip.y} r={5} fill={GREEN} />
             </>
@@ -133,7 +133,7 @@ function LineChart({ data, width, height, showDots = true }) {
           left: Math.min(pad.left + tooltip.x + 10, width - 110),
           top: pad.top + tooltip.y - 40,
           background: "#1a1a1a",
-          border: "1px solid rgba(34,197,94,0.3)",
+          border: "1px solid rgba(2,209,186,0.3)",
           borderRadius: 8,
           padding: "6px 10px",
           pointerEvents: "none",
@@ -177,8 +177,8 @@ function WeeklyBars({ data, width, height }) {
     <svg width={width} height={height} style={{ display: "block" }}>
       <defs>
         <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#22c55e" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#22c55e" stopOpacity="0.3" />
+          <stop offset="0%" stopColor="#02d1ba" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#02d1ba" stopOpacity="0.3" />
         </linearGradient>
       </defs>
       <g transform={`translate(${pad.left},${pad.top})`}>
@@ -191,7 +191,7 @@ function WeeklyBars({ data, width, height }) {
               <rect
                 x={x} y={H - bh} width={barW} height={bh}
                 rx={3}
-                fill={hover === i || isLast ? "url(#bg)" : "rgba(34,197,94,0.25)"}
+                fill={hover === i || isLast ? "url(#bg)" : "rgba(2,209,186,0.25)"}
                 style={{ transition: "fill 0.15s" }}
               />
               <text x={x + barW / 2} y={H + 16} textAnchor="middle"
@@ -238,7 +238,7 @@ export function WeightTracker({ entries, addEntry, removeEntry, getStats }) {
     setShowForm(false);
   };
 
-  const trendColor = stats?.trend > 0 ? "#ef4444" : stats?.trend < 0 ? "#22c55e" : "#9ca3af";
+  const trendColor = stats?.trend > 0 ? "#ef4444" : stats?.trend < 0 ? "#02d1ba" : "#9ca3af";
   const trendLabel = stats?.trend > 0
     ? `+${(stats.trend * 7).toFixed(2)} kg/sem`
     : stats?.trend < 0
@@ -263,7 +263,7 @@ export function WeightTracker({ entries, addEntry, removeEntry, getStats }) {
       {/* Section header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#22c55e", marginBottom: 3 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#02d1ba", marginBottom: 3 }}>
             Suivi poids
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#f5f5f5", letterSpacing: "-0.3px" }}>
@@ -275,10 +275,10 @@ export function WeightTracker({ entries, addEntry, removeEntry, getStats }) {
           style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "8px 14px",
-            background: showForm ? "rgba(34,197,94,0.15)" : "#1a1a1a",
-            border: `1.5px solid ${showForm ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.1)"}`,
+            background: showForm ? "rgba(2,209,186,0.15)" : "#1a1a1a",
+            border: `1.5px solid ${showForm ? "rgba(2,209,186,0.4)" : "rgba(255,255,255,0.1)"}`,
             borderRadius: 8,
-            color: showForm ? "#22c55e" : "#9ca3af",
+            color: showForm ? "#02d1ba" : "#9ca3af",
             fontSize: 12, fontWeight: 600, cursor: "pointer",
             transition: "all 0.15s",
           }}
@@ -295,7 +295,7 @@ export function WeightTracker({ entries, addEntry, removeEntry, getStats }) {
       {showForm && (
         <div style={{
           background: "#141414",
-          border: "1px solid rgba(34,197,94,0.15)",
+          border: "1px solid rgba(2,209,186,0.15)",
           borderRadius: 12,
           padding: 16,
           marginBottom: 16,
@@ -327,7 +327,7 @@ export function WeightTracker({ entries, addEntry, removeEntry, getStats }) {
             onClick={handleAdd}
             style={{
               width: "100%", padding: "11px",
-              background: weight ? "#22c55e" : "#1e1e1e",
+              background: weight ? "#02d1ba" : "#1e1e1e",
               border: "none", borderRadius: 8,
               color: weight ? "#0d0d0d" : "#555",
               fontFamily: "'Inter',sans-serif",
@@ -347,18 +347,18 @@ export function WeightTracker({ entries, addEntry, removeEntry, getStats }) {
           {[
             { label: "Actuel", value: `${stats.current} kg`, sub: null, highlight: true },
             { label: "Variation totale", value: `${stats.totalDelta > 0 ? "+" : ""}${stats.totalDelta} kg`,
-              sub: `depuis début`, color: stats.totalDelta < 0 ? "#22c55e" : stats.totalDelta > 0 ? "#ef4444" : "#9ca3af" },
+              sub: `depuis début`, color: stats.totalDelta < 0 ? "#02d1ba" : stats.totalDelta > 0 ? "#ef4444" : "#9ca3af" },
             { label: "Tendance", value: trendLabel, sub: "7 derniers jours", color: trendColor },
           ].map((card, i) => (
             <div key={i} style={{
               background: "#141414",
-              border: `1px solid ${card.highlight ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.06)"}`,
+              border: `1px solid ${card.highlight ? "rgba(2,209,186,0.2)" : "rgba(255,255,255,0.06)"}`,
               borderRadius: 10, padding: "12px 10px",
             }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#555", marginBottom: 4 }}>
                 {card.label}
               </div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 600, color: card.color || "#22c55e", lineHeight: 1.2 }}>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 600, color: card.color || "#02d1ba", lineHeight: 1.2 }}>
                 {card.value}
               </div>
               {card.sub && (
@@ -397,10 +397,10 @@ export function WeightTracker({ entries, addEntry, removeEntry, getStats }) {
             {[["curve", "Courbe"], ["bars", "Semaines"], ["history", "Historique"]].map(([t, l]) => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: "5px 13px",
-                background: tab === t ? "rgba(34,197,94,0.15)" : "transparent",
-                border: `1px solid ${tab === t ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.07)"}`,
+                background: tab === t ? "rgba(2,209,186,0.15)" : "transparent",
+                border: `1px solid ${tab === t ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.07)"}`,
                 borderRadius: 100,
-                color: tab === t ? "#22c55e" : "#555",
+                color: tab === t ? "#02d1ba" : "#555",
                 fontSize: 11, fontWeight: 600, cursor: "pointer",
                 transition: "all 0.15s",
               }}>{l}</button>

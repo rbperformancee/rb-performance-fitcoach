@@ -21,7 +21,7 @@ function hexToRgb(hex) {
   return [r, g, b];
 }
 
-const GREEN  = [34, 197, 94];
+const GREEN  = [2, 209, 186];
 const DARK   = [13, 13, 13];
 const DARK2  = [20, 20, 20];
 const DARK3  = [30, 30, 30];
@@ -73,14 +73,14 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
     doc.setFillColor(13, 13, 132);
     doc.rect(0, 0, W, 22, "F");
     // Ligne verte
-    doc.setFillColor(34, 197, 94);
+    doc.setFillColor(2, 209, 186);
     doc.rect(0, 21.5, W, 0.8, "F");
   }
 
   function pageHeader(title, sub) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    doc.setTextColor(34, 197, 94);
+    doc.setTextColor(2, 209, 186);
     doc.text("RB PERFORMANCE", ML, 9);
     doc.setTextColor(107, 114, 128);
     doc.setFontSize(6);
@@ -128,13 +128,13 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
   doc.rect(0, 80, W, H - 80, "F");
 
   // Glow vert subtil
-  doc.setFillColor(34, 197, 94);
+  doc.setFillColor(2, 209, 186);
   doc.setGState(doc.GState({ opacity: 0.04 }));
   doc.circle(W/2, 60, 80, "F");
   doc.setGState(doc.GState({ opacity: 1 }));
 
   // Logo text
-  doc.setFillColor(34, 197, 94);
+  doc.setFillColor(2, 209, 186);
   doc.roundedRect(ML, MT, 18, 10, 2, 2, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
@@ -153,7 +153,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
   doc.text(new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }), W - MR, MT + 6.5, { align: "right" });
 
   // Ligne verte déco
-  doc.setFillColor(34, 197, 94);
+  doc.setFillColor(2, 209, 186);
   doc.rect(ML, 40, 24, 1.5, "F");
 
   // Titre principal
@@ -166,7 +166,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
   // Sous-titre
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
-  doc.setTextColor(34, 197, 94);
+  doc.setTextColor(2, 209, 186);
   doc.text("Rapport de progression", ML, 67);
 
   if (programme.clientName) {
@@ -198,7 +198,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
     doc.roundedRect(cx, 88, cardW, 22, 3, 3, "S");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.setTextColor(34, 197, 94);
+    doc.setTextColor(2, 209, 186);
     doc.text(String(c.val), cx + cardW/2, 103, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
@@ -269,7 +269,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
 
       // Bande latérale verte si PR récent
       if (delta !== null && delta > 0) {
-        doc.setFillColor(34, 197, 94);
+        doc.setFillColor(2, 209, 186);
         doc.roundedRect(ML, yPos, 2, cardH, 1, 1, "F");
       }
 
@@ -305,7 +305,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
       // Poids actuel
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.setTextColor(34, 197, 94);
+      doc.setTextColor(2, 209, 186);
       doc.text(`${latest.weight} kg`, ML + 5, yPos + 32);
 
       // Delta
@@ -313,7 +313,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
         const dSign = delta > 0 ? "+" : "";
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
-        if (delta > 0) doc.setTextColor(34, 197, 94);
+        if (delta > 0) doc.setTextColor(2, 209, 186);
       else if (delta < 0) doc.setTextColor(239, 68, 68);
       else doc.setTextColor(107, 114, 128);
         doc.text(`${dSign}${delta.toFixed(1)} kg`, ML + 5 + doc.getTextWidth(`${latest.weight} kg`) + 3, yPos + 32);
@@ -369,7 +369,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
       doc.roundedRect(cx, y, scW, 20, 2, 2, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
-      if (i === 1 && totalDelta < 0) doc.setTextColor(34, 197, 94);
+      if (i === 1 && totalDelta < 0) doc.setTextColor(2, 209, 186);
       else if (i === 1 && totalDelta > 0) doc.setTextColor(239, 68, 68);
       else doc.setTextColor(245, 245, 245);
       doc.text(sc.v, cx + scW/2, y + 12, { align: "center" });
@@ -387,7 +387,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
     // Table historique
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    doc.setTextColor(34, 197, 94);
+    doc.setTextColor(2, 209, 186);
     doc.text("HISTORIQUE DES PESÉES", ML, y);
     y += 6;
 
@@ -408,7 +408,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
       doc.text(`${entry.weight} kg`, ML + 52, y + 2);
       if (d !== null) {
         if (d > 0) doc.setTextColor(239, 68, 68);
-          else if (d < 0) doc.setTextColor(34, 197, 94);
+          else if (d < 0) doc.setTextColor(2, 209, 186);
           else doc.setTextColor(107, 114, 128);
         doc.setFontSize(7);
         doc.text(`${d > 0 ? "+" : ""}${d.toFixed(1)} kg`, ML + 80, y + 2);

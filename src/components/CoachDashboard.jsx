@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { LOGO_B64 } from "../utils/logo";
 
-const G = "#22c55e";
-const G_DIM = "rgba(34,197,94,0.12)";
-const G_BORDER = "rgba(34,197,94,0.25)";
+const G = "#02d1ba";
+const G_DIM = "rgba(2,209,186,0.12)";
+const G_BORDER = "rgba(2,209,186,0.25)";
 
 function daysAgo(dateStr) {
   if (!dateStr) return null;
@@ -91,7 +91,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
   const RPE_EMOJIS = ["", "😊", "💪", "😤", "😰", "🥵"];
   const RPE_LABELS = ["", "Facile", "Correct", "Difficile", "Très dur", "Épuisant"];
-  const RPE_COLORS = ["", "#4ade80", "#22c55e", "#f97316", "#ef4444", "#dc2626"];
+  const RPE_COLORS = ["", "#4ade80", "#02d1ba", "#f97316", "#ef4444", "#dc2626"];
 
   // Exercices distincts avec progression
   const exMap = {};
@@ -455,7 +455,7 @@ export function CoachDashboard({ onExit }) {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         .client-row:hover{background:#1c1c1c!important;cursor:pointer}
         .client-row:hover .row-arrow{opacity:1!important}
-        .inp-focus:focus{border-color:#22c55e!important}
+        .inp-focus:focus{border-color:#02d1ba!important}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
       `}</style>
 
@@ -527,7 +527,7 @@ export function CoachDashboard({ onExit }) {
               </button>
             ))}
           </div>
-          <button onClick={()=>setShowAdd(v=>!v)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 18px", background:showAdd?G_DIM:G, border:`1px solid ${showAdd?G_BORDER:G}`, borderRadius:9, color:showAdd?G:"#0d0d0d", fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:showAdd?"none":"0 4px 16px rgba(34,197,94,0.25)" }}>
+          <button onClick={()=>setShowAdd(v=>!v)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 18px", background:showAdd?G_DIM:G, border:`1px solid ${showAdd?G_BORDER:G}`, borderRadius:9, color:showAdd?G:"#0d0d0d", fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:showAdd?"none":"0 4px 16px rgba(2,209,186,0.25)" }}>
             {showAdd?"✕ Annuler":"+ Nouveau client"}
           </button>
         </div>
@@ -576,7 +576,7 @@ export function CoachDashboard({ onExit }) {
               const lastW    = c._weights?.[0];
               const lastRpe  = c._rpe?.[0];
               const RPE_EMOJIS = ["","😊","💪","😤","😰","🥵"];
-              const RPE_COLORS = ["","#4ade80","#22c55e","#f97316","#ef4444","#dc2626"];
+              const RPE_COLORS = ["","#4ade80","#02d1ba","#f97316","#ef4444","#dc2626"];
               const daysAgoStr = daysAgo(c._lastActivity);
               const inactiveDays = c._lastActivity ? Math.floor((Date.now()-new Date(c._lastActivity))/86400000) : null;
 

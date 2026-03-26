@@ -12,13 +12,13 @@ export function Sparkline({ data, width = 80, height = 28 }) {
     <svg width={width} height={height} style={{ overflow: "visible" }}>
       <defs>
         <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#22c55e" stopOpacity="0.25"/>
-          <stop offset="100%" stopColor="#22c55e" stopOpacity="0"/>
+          <stop offset="0%" stopColor="#02d1ba" stopOpacity="0.25"/>
+          <stop offset="100%" stopColor="#02d1ba" stopOpacity="0"/>
         </linearGradient>
       </defs>
       <path d={areaPath} fill="url(#sg)"/>
-      <polyline fill="none" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={pts}/>
-      <circle cx={lastPt[0]} cy={lastPt[1]} r="3" fill="#22c55e"/>
+      <polyline fill="none" stroke="#02d1ba" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={pts}/>
+      <circle cx={lastPt[0]} cy={lastPt[1]} r="3" fill="#02d1ba"/>
     </svg>
   );
 }
