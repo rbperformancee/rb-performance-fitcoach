@@ -1,3 +1,4 @@
+import SplashScreen from "./components/SplashScreen";
 import React, { useState, useRef, useCallback } from "react";
 import { parseProgrammeHTML } from "./utils/parserProgramme";
 import { useLogs } from "./hooks/useLogs";
@@ -60,6 +61,7 @@ export default function App() {
   } = useAuth();
 
   const isCoach = user?.email === COACH_EMAIL;
+  const [splashDone, setSplashDone] = React.useState(false);
   const [showCoachDash, setShowCoachDash] = useState(false);
 
   // Programme (cloud si connecté, sinon local)
