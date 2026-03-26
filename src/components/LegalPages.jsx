@@ -23,7 +23,7 @@ function PageWrapper({ title, subtitle, onClose, children }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: TURQUOISE, marginBottom: 6 }}>{subtitle}</div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#f5f5f5", margin: 0 }}>RB Performance</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#f5f5f5", margin: 0 }}>RB Perform</h1>
           </div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, width: 36, height: 36, color: "#f5f5f5", fontSize: 18, cursor: "pointer", flexShrink: 0 }}>×</button>
         </div>
@@ -44,7 +44,7 @@ export function MentionsLegales({ onClose }) {
   return (
     <PageWrapper title="Mentions légales" subtitle="Mentions légales" onClose={onClose}>
       <Section title="1. Éditeur du service">
-        <p>Le service RB Performance est édité par :</p>
+        <p>Le service RB Perform est édité par :</p>
         <br />
         <p><strong style={{ color: "#f5f5f5" }}>Rayan Bonte</strong><br />
         Coach sportif personnel<br />
@@ -62,7 +62,7 @@ export function MentionsLegales({ onClose }) {
       </Section>
 
       <Section title="3. Propriété intellectuelle">
-        <p>L'ensemble des contenus présents sur ce service (programmes d'entraînement, textes, graphiques, logo RB Performance) sont la propriété exclusive de Rayan Bonte et sont protégés par les lois françaises et internationales relatives à la propriété intellectuelle.</p>
+        <p>L'ensemble des contenus présents sur ce service (programmes d'entraînement, textes, graphiques, logo RB Perform) sont la propriété exclusive de Rayan Bonte et sont protégés par les lois françaises et internationales relatives à la propriété intellectuelle.</p>
         <br />
         <p>Toute reproduction, représentation, modification ou adaptation, même partielle, est strictement interdite sans autorisation écrite préalable.</p>
       </Section>
@@ -74,7 +74,7 @@ export function MentionsLegales({ onClose }) {
       </Section>
 
       <Section title="5. Responsabilité">
-        <p>Les programmes d'entraînement fournis sont à titre indicatif et personnalisés par un coach qualifié. RB Performance ne peut être tenu responsable des blessures résultant d'une mauvaise exécution des exercices ou d'un état de santé incompatible avec la pratique sportive.</p>
+        <p>Les programmes d'entraînement fournis sont à titre indicatif et personnalisés par un coach qualifié. RB Perform ne peut être tenu responsable des blessures résultant d'une mauvaise exécution des exercices ou d'un état de santé incompatible avec la pratique sportive.</p>
         <br />
         <p>Il est conseillé de consulter un médecin avant de débuter tout programme d'entraînement intensif.</p>
       </Section>
@@ -91,11 +91,11 @@ export function CGU({ onClose }) {
   return (
     <PageWrapper title="Conditions Générales d'Utilisation" subtitle="CGU" onClose={onClose}>
       <Section title="1. Objet">
-        <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application RB Performance, service de coaching sportif personnalisé proposé par Rayan Bonte.</p>
+        <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application RB Perform, service de coaching sportif personnalisé proposé par Rayan Bonte.</p>
       </Section>
 
       <Section title="2. Accès au service">
-        <p>L'accès au service est réservé aux personnes ayant reçu une invitation de la part du coach RB Performance et ayant créé un compte via leur adresse email.</p>
+        <p>L'accès au service est réservé aux personnes ayant reçu une invitation de la part du coach RB Perform et ayant créé un compte via leur adresse email.</p>
         <br />
         <p>L'utilisateur s'engage à :</p>
         <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
@@ -107,7 +107,7 @@ export function CGU({ onClose }) {
       </Section>
 
       <Section title="3. Description du service">
-        <p>RB Performance fournit :</p>
+        <p>RB Perform fournit :</p>
         <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
           <li>Un programme d'entraînement personnalisé créé par votre coach</li>
           <li>Un outil de suivi des charges et de la progression</li>
@@ -123,7 +123,7 @@ export function CGU({ onClose }) {
         <br />
         <p>L'utilisateur s'engage à signaler immédiatement à son coach toute douleur, blessure ou contre-indication médicale.</p>
         <br />
-        <p>RB Performance décline toute responsabilité en cas de blessure résultant :</p>
+        <p>RB Perform décline toute responsabilité en cas de blessure résultant :</p>
         <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
           <li>D'une mauvaise exécution des exercices</li>
           <li>D'un état de santé non déclaré</li>
@@ -133,13 +133,13 @@ export function CGU({ onClose }) {
       </Section>
 
       <Section title="5. Propriété du contenu">
-        <p>Les programmes d'entraînement, conseils et contenus fournis dans l'application sont la propriété intellectuelle de Rayan Bonte — RB Performance.</p>
+        <p>Les programmes d'entraînement, conseils et contenus fournis dans l'application sont la propriété intellectuelle de Rayan Bonte — RB Perform.</p>
         <br />
         <p>L'utilisateur ne peut ni reproduire, ni diffuser, ni vendre ces contenus sans autorisation écrite préalable.</p>
       </Section>
 
       <Section title="6. Suspension et résiliation">
-        <p>RB Performance se réserve le droit de suspendre ou supprimer un compte en cas de :</p>
+        <p>RB Perform se réserve le droit de suspendre ou supprimer un compte en cas de :</p>
         <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
           <li>Non-respect des présentes CGU</li>
           <li>Comportement abusif ou irrespectueux</li>
@@ -150,7 +150,7 @@ export function CGU({ onClose }) {
       </Section>
 
       <Section title="7. Modifications des CGU">
-        <p>RB Performance se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs seront informés par email en cas de modification substantielle. La poursuite de l'utilisation du service vaut acceptation des nouvelles conditions.</p>
+        <p>RB Perform se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs seront informés par email en cas de modification substantielle. La poursuite de l'utilisation du service vaut acceptation des nouvelles conditions.</p>
       </Section>
 
       <Section title="8. Droit applicable et juridiction">

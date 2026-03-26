@@ -206,7 +206,7 @@ export default function App() {
       {/* ── Topbar ── */}
       <header className="topbar">
         <div className="topbar-brand">
-          <div className="topbar-logo-img"><img src={LOGO_B64} alt="RB Performance" /></div>
+          <div className="topbar-logo-img"><img src={LOGO_B64} alt="RB Perform" /></div>
           <span className="topbar-name">RB&nbsp;<span>Performance</span></span>
         </div>
         <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -278,7 +278,7 @@ export default function App() {
               </svg>
             </div>
             <div className="import-title">Importer un programme</div>
-            <div className="import-sub">Fichier .html exporté depuis le builder RB Performance</div>
+            <div className="import-sub">Fichier .html exporté depuis le builder RB Perform</div>
             <div className="import-cta">Choisir un fichier</div>
           </div>
         </div>

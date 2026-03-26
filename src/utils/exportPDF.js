@@ -1,5 +1,5 @@
 /**
- * Export PDF de progression — RB Performance FitCoach
+ * Export PDF de progression — RB Perform FitCoach
  * Utilise jsPDF (CDN) chargé dynamiquement
  */
 
@@ -81,7 +81,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
     doc.setTextColor(2, 209, 186);
-    doc.text("RB PERFORMANCE", ML, 9);
+    doc.text("RB PERFORM", ML, 9);
     doc.setTextColor(107, 114, 128);
     doc.setFontSize(6);
     doc.setFont("helvetica", "normal");
@@ -144,7 +144,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(245, 245, 245);
-  doc.text("RB PERFORMANCE", ML + 22, MT + 6.5);
+  doc.text("RB PERFORM", ML + 22, MT + 6.5);
 
   // Date
   doc.setFont("helvetica", "normal");

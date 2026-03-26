@@ -12,7 +12,7 @@ export function PrivacyPolicy({ onClose }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#02d1ba", marginBottom: 6 }}>Politique de confidentialité</div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#f5f5f5", margin: 0 }}>RB Performance</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#f5f5f5", margin: 0 }}>RB Perform</h1>
           </div>
           {onClose && (
             <button onClick={onClose} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, width: 36, height: 36, color: "#f5f5f5", fontSize: 18, cursor: "pointer" }}>×</button>
@@ -24,7 +24,7 @@ export function PrivacyPolicy({ onClose }) {
         {[
           {
             title: "1. Qui sommes-nous ?",
-            content: `RB Performance est un service de coaching sportif personnalisé exploité par Rayan Bonte (rb.performancee@gmail.com). Dans le cadre du Règlement Général sur la Protection des Données (RGPD), Rayan Bonte agit en qualité de responsable de traitement.`
+            content: `RB Perform est un service de coaching sportif personnalisé exploité par Rayan Bonte (rb.performancee@gmail.com). Dans le cadre du Règlement Général sur la Protection des Données (RGPD), Rayan Bonte agit en qualité de responsable de traitement.`
           },
           {
             title: "2. Données collectées",
@@ -36,7 +36,7 @@ export function PrivacyPolicy({ onClose }) {
           },
           {
             title: "4. Base légale",
-            content: `Le traitement de vos données est fondé sur :\n\n• Votre consentement explicite, donné lors de la création de votre compte\n• L'exécution du contrat de coaching sportif entre vous et RB Performance\n\nLes données de santé (poids, composition corporelle, ressenti physique) sont traitées sur la base de votre consentement explicite, que vous pouvez retirer à tout moment.`
+            content: `Le traitement de vos données est fondé sur :\n\n• Votre consentement explicite, donné lors de la création de votre compte\n• L'exécution du contrat de coaching sportif entre vous et RB Perform\n\nLes données de santé (poids, composition corporelle, ressenti physique) sont traitées sur la base de votre consentement explicite, que vous pouvez retirer à tout moment.`
           },
           {
             title: "5. Hébergement et sous-traitants",
@@ -44,7 +44,7 @@ export function PrivacyPolicy({ onClose }) {
           },
           {
             title: "6. Durée de conservation",
-            content: `Vos données sont conservées :\n\n• Pendant toute la durée de votre relation avec RB Performance\n• 3 ans après la fin de votre abonnement ou la suppression de votre compte\n\nPassé ce délai, toutes vos données personnelles sont supprimées définitivement.`
+            content: `Vos données sont conservées :\n\n• Pendant toute la durée de votre relation avec RB Perform\n• 3 ans après la fin de votre abonnement ou la suppression de votre compte\n\nPassé ce délai, toutes vos données personnelles sont supprimées définitivement.`
           },
           {
             title: "7. Vos droits",
@@ -60,7 +60,7 @@ export function PrivacyPolicy({ onClose }) {
           },
           {
             title: "10. Contact",
-            content: `Pour toute question relative à cette politique ou à vos données personnelles :\n\nRayan Bonte — RB Performance\nEmail : rb.performancee@gmail.com`
+            content: `Pour toute question relative à cette politique ou à vos données personnelles :\n\nRayan Bonte — RB Perform\nEmail : rb.performancee@gmail.com`
           },
         ].map((section, i) => (
           <div key={i} style={{ marginBottom: 28 }}>

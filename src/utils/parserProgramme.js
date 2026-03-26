@@ -1,7 +1,7 @@
 /**
- * parserProgramme.js — RB Performance FitCoach
+ * parserProgramme.js — RB Perform FitCoach
  *
- * Parse le HTML exporté depuis le builder RB Performance.
+ * Parse le HTML exporté depuis le builder RB Perform.
  * Structure retournée :
  * {
  *   name, clientName, duration, tagline, objective,
