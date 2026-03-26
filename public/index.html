@@ -30,8 +30,9 @@
     </script>
   
   
+  
   <style>
-    body { background: #0d0d0d; }
+    body { background: #0d0d0d; margin: 0; }
     #sp {
       position: fixed; inset: 0; z-index: 99999;
       background: #0d0d0d;
@@ -39,39 +40,22 @@
       align-items: center; justify-content: center;
       transition: opacity 0.5s ease;
     }
-    #sp-box {
-      width: 130px; height: 130px; border-radius: 28px;
-      background: #111;
-      box-shadow: 0 0 50px rgba(2,209,186,0.3);
+    #sp img {
+      width: 130px; height: 130px;
+      border-radius: 28px;
+      object-fit: cover;
+      object-position: center 60%;
+      box-shadow: 0 0 50px rgba(2,209,186,0.35);
       border: 1px solid rgba(2,209,186,0.2);
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column;
     }
-    #sp-bolt {
-      width: 0; height: 0;
-      border-left: 18px solid transparent;
-      border-right: 18px solid transparent;
-      border-bottom: 36px solid #02d1ba;
-      position: relative; margin-bottom: -8px;
+    #sp-label {
+      margin-top: 18px; font-size: 11px; font-weight: 700;
+      letter-spacing: 4px; color: rgba(2,209,186,0.8);
+      font-family: Arial, sans-serif;
     }
-    #sp-bolt2 {
-      width: 0; height: 0;
-      border-left: 18px solid transparent;
-      border-right: 18px solid transparent;
-      border-top: 36px solid #02d1ba;
-      position: relative; margin-top: -8px;
-    }
-    #sp-rb { color: white; font-size: 15px; font-weight: 900; font-family: Arial Black, Arial, sans-serif; margin-top: 6px; letter-spacing: 1px; }
-    #sp-perf { color: white; font-size: 8px; font-weight: 800; font-family: Arial, sans-serif; letter-spacing: 3px; margin-top: 2px; }
-    #sp-label { margin-top: 18px; font-size: 11px; font-weight: 700; letter-spacing: 4px; color: rgba(2,209,186,0.8); font-family: Arial, sans-serif; }
   </style>
   <div id="sp">
-    <div id="sp-box">
-      <div id="sp-bolt"></div>
-      <div id="sp-bolt2"></div>
-      <div id="sp-rb">RB</div>
-      <div id="sp-perf">PERFORM</div>
-    </div>
+    <img src="/logo.png" alt="RB PERFORM" />
     <div id="sp-label">RB PERFORM</div>
   </div>
   <script>
