@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PrivacyPolicy } from "./PrivacyPolicy";
+import { LOGO_B64 } from "../utils/logo";
 
 export function LoginScreen({ onSendMagicLink, loading }) {
   const [email, setEmail]         = useState("");
@@ -40,10 +41,11 @@ export function LoginScreen({ onSendMagicLink, loading }) {
               background: "#141414",
               border: "2px solid rgba(2,209,186,0.2)",
               borderRadius: 20,
-              display: "flex", alignItems: "center", justifyContent: "center",
+              overflow: "hidden",
               margin: "0 auto 16px",
-              fontSize: 32,
-            }}>💪</div>
+            }}>
+              <img src={LOGO_B64} alt="RB Performance" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            </div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: "#f5f5f5", margin: "0 0 6px", letterSpacing: "-0.5px" }}>
               RB <span style={{ color: "#02d1ba" }}>Performance</span>
             </h1>
