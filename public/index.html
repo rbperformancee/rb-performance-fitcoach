@@ -62,45 +62,6 @@
       }
     </script>
   
-  <style>
-    #ns {
-      position:fixed;inset:0;z-index:99999;
-      background:#0d0d0d;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-      transition:opacity 0.6s ease;
-    }
-    #ns-logo {
-      width:130px;height:130px;border-radius:28px;
-      background:#111;
-      box-shadow:0 0 60px rgba(2,209,186,0.35),0 0 120px rgba(2,209,186,0.15);
-      border:1px solid rgba(2,209,186,0.2);
-      display:flex;align-items:center;justify-content:center;
-      animation:splashIn 0.5s ease forwards;
-    }
-    #ns span {
-      margin-top:20px;font-size:13px;font-weight:600;
-      letter-spacing:0.2em;color:rgba(2,209,186,0.7);
-      font-family:Inter,sans-serif;
-      opacity:0;animation:fadeIn 0.6s ease 0.3s forwards;
-    }
-    @keyframes splashIn {from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
-    @keyframes fadeIn {from{opacity:0}to{opacity:1}}
-  </style>
-  <div id="ns">
-    <div id="ns-logo">
-      <svg width="80" height="80" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="60,0 20,55 50,55 40,120 80,55 50,55 60,0" fill="#02d1ba"/>
-        <text x="28" y="78" font-family="Arial Black,sans-serif" font-size="22" font-weight="900" fill="white">RB</text>
-      </svg>
-    </div>
-    <span>RB PERFORM</span>
-  </div>
-  <script>
-    setTimeout(function(){
-      var s=document.getElementById('ns');
-      if(s){s.style.opacity='0';setTimeout(function(){s.remove()},600)}
-    },1500);
-  </script>
+  
 </body>
 </html>
