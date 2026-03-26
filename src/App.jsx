@@ -8,6 +8,7 @@ import { WeightTracker } from "./components/WeightChart";
 import { SessionReport } from "./components/SessionReport";
 import { MessageBanner } from "./components/MessageBanner";
 import { RPEModal } from "./components/RPEModal";
+import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { LoginScreen } from "./components/LoginScreen";
 import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
@@ -68,6 +69,8 @@ export default function App() {
   const [page,            setPage]            = useState("training");
   const [showReport,      setShowReport]      = useState(false);
   const [exporting,       setExporting]       = useState(false);
+  const [showPrivacy,     setShowPrivacy]     = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRPE,         setShowRPE]         = useState(false);
 
   // Le programme affiché : cloud en priorité, sinon local
@@ -139,6 +142,18 @@ export default function App() {
   });
   const sessionComplete = sessionTotal > 0 && sessionDone === sessionTotal;
 
+
+  const handleDeleteAccount = async () => {
+    if (!client) return;
+    await supabase.from("weight_logs").delete().eq("client_id", client.id);
+    await supabase.from("exercise_logs").delete().eq("client_id", client.id);
+    await supabase.from("session_rpe").delete().eq("client_id", client.id);
+    await supabase.from("messages").delete().eq("client_id", client.id);
+    await supabase.from("programmes").delete().eq("client_id", client.id);
+    await supabase.from("clients").delete().eq("id", client.id);
+    await supabase.auth.signOut();
+  };
+
   const handleExportPDF = async () => {
     setExporting(true);
     try { await exportProgressPDF({ programme, getHistory, entries }); }
@@ -151,6 +166,29 @@ export default function App() {
   return (
     <div className="app-root" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+
+      {/* Modal suppression données */}
+      {showDeleteConfirm && (
+        <div style={{ position:"fixed", inset:0, zIndex:998, background:"rgba(0,0,0,0.85)", backdropFilter:"blur(20px)", display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
+          <div style={{ background:"#141414", border:"1px solid rgba(239,68,68,0.3)", borderRadius:20, padding:28, maxWidth:380, width:"100%", textAlign:"center" }}>
+            <div style={{ fontSize:40, marginBottom:16 }}>⚠️</div>
+            <h2 style={{ fontSize:18, fontWeight:800, color:"#f5f5f5", marginBottom:8 }}>Supprimer mes données</h2>
+            <p style={{ fontSize:13, color:"#9ca3af", lineHeight:1.7, marginBottom:24 }}>
+              Cette action supprimera définitivement toutes tes données : programme, historique, poids, messages. Cette action est irréversible.
+            </p>
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={() => setShowDeleteConfirm(false)} style={{ flex:1, padding:"12px", background:"none", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, color:"#9ca3af", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                Annuler
+              </button>
+              <button onClick={handleDeleteAccount} style={{ flex:1, padding:"12px", background:"#ef4444", border:"none", borderRadius:10, color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                Supprimer tout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showReport && session && (
         <SessionReport
@@ -354,6 +392,18 @@ export default function App() {
               {entries.length > 0 && <span style={{ position: "absolute", top: 6, right: "calc(50% - 20px)", width: 6, height: 6, borderRadius: "50%", background: GREEN }} />}
             </button>
           </nav>
+
+      {/* Liens RGPD */}
+      <div style={{ textAlign:"center", padding:"8px 0 16px", display:"flex", justifyContent:"center", gap:20 }}>
+        <button onClick={() => setShowPrivacy(true)} style={{ background:"none", border:"none", fontSize:10, color:"#444", cursor:"pointer", textDecoration:"underline" }}>
+          Politique de confidentialité
+        </button>
+        {client && (
+          <button onClick={() => setShowDeleteConfirm(true)} style={{ background:"none", border:"none", fontSize:10, color:"#444", cursor:"pointer", textDecoration:"underline" }}>
+            Supprimer mes données
+          </button>
+        )}
+      </div>
         </>
       )}
     </div>

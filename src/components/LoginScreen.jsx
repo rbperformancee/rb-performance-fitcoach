@@ -1,17 +1,23 @@
 import React, { useState } from "react";
 import { LOGO_B64 } from "../utils/logo";
 
+import { PrivacyPolicy } from "./PrivacyPolicy";
+
 export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
   const [email, setEmail] = useState("");
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && accepted;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (valid && !loading) onSendMagicLink(email);
+    if (valid && !loading && accepted) onSendMagicLink(email);
   };
 
   return (
-    <div style={{
+    <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{
       minHeight: "100vh",
       background: "#0d0d0d",
       display: "flex",
@@ -30,13 +36,17 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
         .login-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(2,209,186,0.4) !important; }
       `}</style>
 
+      <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
       <div style={{
         width: "100%", maxWidth: 380,
         animation: "fadeUp 0.4s ease",
         display: "flex", flexDirection: "column", alignItems: "center", gap: 0,
       }}>
         {/* Logo */}
-        <div style={{
+        <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{
           width: 52, height: 52,
           background: "#141414",
           border: "1px solid rgba(255,255,255,0.1)",
@@ -64,7 +74,9 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
         {!magicSent ? (
           /* ── Formulaire ── */
           <form onSubmit={handleSubmit} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={{
                 fontSize: 9.5, fontWeight: 700, letterSpacing: "1.5px",
                 textTransform: "uppercase", color: "#555",
@@ -97,7 +109,9 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
 
             {/* Erreur */}
             {error && (
-              <div style={{
+              <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{
                 background: "rgba(239,68,68,0.08)",
                 border: "1px solid rgba(239,68,68,0.2)",
                 borderRadius: 8,
@@ -109,10 +123,40 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
               </div>
             )}
 
+            {/* Case consentement RGPD */}
+            <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <div
+                onClick={() => setAccepted(v => !v)}
+                style={{
+                  width: 18, height: 18, flexShrink: 0, marginTop: 1,
+                  borderRadius: 5, cursor: "pointer",
+                  background: accepted ? "#02d1ba" : "transparent",
+                  border: `2px solid ${accepted ? "#02d1ba" : "rgba(255,255,255,0.2)"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s",
+                }}
+              >
+                {accepted && <span style={{ color: "#0d0d0d", fontSize: 11, fontWeight: 800 }}>✓</span>}
+              </div>
+              <p style={{ fontSize: 11, color: "#6b7280", margin: 0, lineHeight: 1.6 }}>
+                J'accepte la{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowPrivacy(true)}
+                  style={{ background: "none", border: "none", color: "#02d1ba", fontSize: 11, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                >
+                  politique de confidentialité
+                </button>
+                {" "}et le traitement de mes données personnelles conformément au RGPD.
+              </p>
+            </div>
+
             <button
               type="submit"
               className="login-btn"
-              disabled={!valid || loading}
+              disabled={!accepted || !email || loading}
               style={{
                 padding: "14px",
                 background: valid && !loading ? "#02d1ba" : "#1a1a1a",
@@ -150,7 +194,9 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
           </form>
         ) : (
           /* ── Magic link envoyé ── */
-          <div style={{
+          <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{
             width: "100%",
             background: "rgba(2,209,186,0.06)",
             border: "1px solid rgba(2,209,186,0.2)",
@@ -159,7 +205,9 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
             textAlign: "center",
             display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
           }}>
-            <div style={{
+            <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{
               width: 52, height: 52,
               background: "rgba(2,209,186,0.12)",
               borderRadius: "50%",
@@ -172,15 +220,21 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f5", marginBottom: 6 }}>
+              <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f5", marginBottom: 6 }}>
                 Vérifie ta boîte mail !
               </div>
-              <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.6 }}>
+              <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.6 }}>
                 Un lien de connexion a été envoyé à<br/>
                 <strong style={{ color: "#02d1ba" }}>{email}</strong>
               </div>
             </div>
-            <div style={{ fontSize: 11, color: "#555", marginTop: 4 }}>
+            <>
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      <div style={{ fontSize: 11, color: "#555", marginTop: 4 }}>
               Le lien expire dans 1 heure.<br/>
               Vérifie tes spams si tu ne vois rien.
             </div>
@@ -197,5 +251,6 @@ export function LoginScreen({ onSendMagicLink, loading, error, magicSent }) {
         )}
       </div>
     </div>
+    </>
   );
 }
