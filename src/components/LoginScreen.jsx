@@ -37,14 +37,14 @@ export function LoginScreen({ onSendMagicLink, loading }) {
           {/* Logo */}
           <div style={{ textAlign: "center", marginBottom: 36 }}>
             <div style={{
-              width: 72, height: 72,
+              width: 120, height: 120,
               background: "#141414",
               border: "2px solid rgba(2,209,186,0.2)",
               borderRadius: 20,
               overflow: "hidden",
               margin: "0 auto 16px",
             }}>
-              <img src={LOGO_B64} alt="RB Performance" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={LOGO_B64} alt="RB Performance" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%" }} />
             </div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: "#f5f5f5", margin: "0 0 6px", letterSpacing: "-0.5px" }}>
               RB <span style={{ color: "#02d1ba" }}>Performance</span>
