@@ -1,0 +1,111 @@
+import React, { useState } from "react";
+import { supabase } from "../lib/supabase";
+
+const GREEN = "#22c55e";
+
+const LABELS = ["Facile", "Correct", "Difficile", "Très dur", "Épuisant"];
+const COLORS = ["#4ade80", "#22c55e", "#f97316", "#ef4444", "#dc2626"];
+const EMOJIS = ["😊", "💪", "😤", "😰", "🥵"];
+
+export function RPEModal({ clientId, sessionName, onClose }) {
+  const [rpe,  setRpe]  = useState(null);
+  const [note, setNote] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    if (!rpe || !clientId) return;
+    await supabase.from("session_rpe").upsert({
+      client_id: clientId,
+      date: new Date().toISOString().slice(0, 10),
+      rpe,
+      note: note.trim() || null,
+    }, { onConflict: "client_id,date" });
+    setSaved(true);
+    setTimeout(onClose, 1200);
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 997,
+      background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "24px", fontFamily: "'Inter',sans-serif",
+    }}>
+      <div style={{
+        background: "#141414", border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 20, padding: 28, width: "100%", maxWidth: 400,
+        animation: "fadeUp 0.3s ease",
+      }}>
+        <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+        {saved ? (
+          <div style={{ textAlign: "center", padding: "24px 0" }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f5" }}>Ressenti enregistré !</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 8 }}>Bilan de séance</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#f5f5f5" }}>Comment tu t'es senti ?</div>
+              {sessionName && <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>{sessionName}</div>}
+            </div>
+
+            {/* Boutons RPE */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+              {[1,2,3,4,5].map(v => (
+                <button key={v} onClick={() => setRpe(v)} style={{
+                  flex: 1, padding: "12px 0",
+                  background: rpe === v ? `${COLORS[v-1]}20` : "#1a1a1a",
+                  border: `2px solid ${rpe === v ? COLORS[v-1] : "rgba(255,255,255,0.06)"}`,
+                  borderRadius: 12,
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                  cursor: "pointer", transition: "all 0.15s",
+                }}>
+                  <span style={{ fontSize: 22 }}>{EMOJIS[v-1]}</span>
+                  <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.5px", color: rpe === v ? COLORS[v-1] : "#555" }}>{v}</span>
+                </button>
+              ))}
+            </div>
+            {rpe && (
+              <div style={{ textAlign: "center", marginBottom: 16, fontSize: 13, fontWeight: 600, color: COLORS[rpe-1] }}>
+                {EMOJIS[rpe-1]} {LABELS[rpe-1]}
+              </div>
+            )}
+
+            {/* Note optionnelle */}
+            <textarea
+              placeholder="Note optionnelle (douleur, fatigue, observations...)"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              rows={2}
+              style={{
+                width: "100%", boxSizing: "border-box",
+                background: "#1a1a1a", border: "1.5px solid rgba(255,255,255,0.07)",
+                borderRadius: 10, padding: "10px 12px", color: "#f5f5f5",
+                fontFamily: "'Inter',sans-serif", fontSize: 13,
+                resize: "none", outline: "none", marginBottom: 16,
+              }}
+            />
+
+            {/* Boutons */}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={onClose} style={{
+                flex: 1, padding: "12px", background: "none",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10,
+                color: "#555", fontSize: 12, fontWeight: 600, cursor: "pointer",
+              }}>Passer</button>
+              <button onClick={handleSave} disabled={!rpe} style={{
+                flex: 2, padding: "12px",
+                background: rpe ? GREEN : "#1a1a1a", border: "none", borderRadius: 10,
+                color: rpe ? "#0d0d0d" : "#444",
+                fontSize: 13, fontWeight: 800, cursor: rpe ? "pointer" : "not-allowed",
+                boxShadow: rpe ? "0 4px 16px rgba(34,197,94,0.3)" : "none",
+              }}>Enregistrer 💪</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

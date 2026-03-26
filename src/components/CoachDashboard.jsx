@@ -1,0 +1,660 @@
+import React, { useState, useEffect, useRef } from "react";
+import { supabase } from "../lib/supabase";
+import { LOGO_B64 } from "../utils/logo";
+
+const G = "#22c55e";
+const G_DIM = "rgba(34,197,94,0.12)";
+const G_BORDER = "rgba(34,197,94,0.25)";
+
+function daysAgo(dateStr) {
+  if (!dateStr) return null;
+  const d = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+  if (d === 0) return "Aujourd'hui";
+  if (d === 1) return "Hier";
+  return `Il y a ${d}j`;
+}
+function activityColor(lastSeen) {
+  if (!lastSeen) return "#444";
+  const d = Math.floor((Date.now() - new Date(lastSeen)) / 86400000);
+  if (d <= 1) return G;
+  if (d <= 3) return "#4ade80";
+  if (d <= 7) return "#f97316";
+  return "#ef4444";
+}
+function Avatar({ name, size = 40, active }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%", flexShrink: 0,
+      background: active ? G_DIM : "rgba(255,255,255,0.04)",
+      border: `2px solid ${active ? G_BORDER : "rgba(255,255,255,0.08)"}`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontWeight: 700, fontSize: size * 0.38, color: active ? G : "#666",
+    }}>
+      {(name || "?")[0].toUpperCase()}
+    </div>
+  );
+}
+function MiniSparkline({ data, color = G, w = 80, h = 28 }) {
+  if (!data || data.length < 2) return <span style={{ fontSize: 11, color: "#444" }}>—</span>;
+  const vals = data.map(d => d.weight || d.value || 0);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const range = max - min || 1;
+  const pts = vals.map((v, i) => `${(i / (vals.length - 1)) * w},${h - ((v - min) / range) * (h - 4) - 2}`).join(" ");
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible" }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={pts.split(" ").pop().split(",")[0]} cy={pts.split(" ").pop().split(",")[1]} r="2.5" fill={color} />
+    </svg>
+  );
+}
+
+/* ── Panel détail client avec messages ── */
+function ClientPanel({ client, onClose, onUpload, onDelete }) {
+  const [msgText,   setMsgText]   = useState("");
+  const [sending,   setSending]   = useState(false);
+  const [messages,  setMessages]  = useState([]);
+  const [rpeData,   setRpeData]   = useState([]);
+  const [tab,       setTab]       = useState("overview"); // overview | messages | progress
+  const fileRef = useRef();
+
+  const prog = client.programmes?.find(p => p.is_active);
+  const logs = client._logs || [];
+  const weights = client._weights || [];
+  const lastWeight = weights[0];
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekLogs = logs.filter(l => new Date(l.logged_at) >= weekAgo);
+
+  useEffect(() => {
+    if (!client.id) return;
+    // Charger messages
+    supabase.from("messages").select("*").eq("client_id", client.id)
+      .order("created_at", { ascending: false }).limit(20)
+      .then(({ data }) => setMessages(data || []));
+    // Charger RPE
+    supabase.from("session_rpe").select("*").eq("client_id", client.id)
+      .order("date", { ascending: false }).limit(10)
+      .then(({ data }) => setRpeData(data || []));
+  }, [client.id]);
+
+  const sendMessage = async () => {
+    if (!msgText.trim() || !client.id) return;
+    setSending(true);
+    const { error } = await supabase.from("messages").insert({
+      client_id: client.id, from_coach: true, content: msgText.trim(),
+    });
+    if (!error) {
+      setMessages(prev => [{ content: msgText.trim(), from_coach: true, created_at: new Date().toISOString(), read: false }, ...prev]);
+      setMsgText("");
+    }
+    setSending(false);
+  };
+
+  const RPE_EMOJIS = ["", "😊", "💪", "😤", "😰", "🥵"];
+  const RPE_LABELS = ["", "Facile", "Correct", "Difficile", "Très dur", "Épuisant"];
+  const RPE_COLORS = ["", "#4ade80", "#22c55e", "#f97316", "#ef4444", "#dc2626"];
+
+  // Exercices distincts avec progression
+  const exMap = {};
+  [...logs].reverse().forEach(l => {
+    if (!exMap[l.ex_key]) exMap[l.ex_key] = [];
+    exMap[l.ex_key].push({ weight: l.weight, date: l.logged_at });
+  });
+  const topEx = Object.entries(exMap)
+    .filter(([, v]) => v.length >= 2)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 4);
+
+  const tabStyle = (t) => ({
+    padding: "7px 14px", fontSize: 11, fontWeight: 600,
+    background: tab === t ? G_DIM : "transparent",
+    border: `1px solid ${tab === t ? G_BORDER : "rgba(255,255,255,0.07)"}`,
+    borderRadius: 100, color: tab === t ? G : "#666",
+    cursor: "pointer", transition: "all 0.15s",
+  });
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+      <div style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, width: "100%", maxWidth: 520, maxHeight: "90vh", display: "flex", flexDirection: "column", animation: "slideUp 0.25s ease" }} onClick={e => e.stopPropagation()}>
+        <style>{`@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+        {/* Header panel */}
+        <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+            <Avatar name={client.full_name || client.email} size={48} active={!!prog} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#f5f5f5" }}>{client.full_name || "—"}</div>
+              <div style={{ fontSize: 11, color: "#555" }}>{client.email}</div>
+            </div>
+            {/* Alerte inactivité */}
+            {client._inactive && (
+              <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#ef4444" }}>
+                ⚠ Inactif {client._inactiveDays}j
+              </div>
+            )}
+            <button onClick={onClose} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, width: 30, height: 30, color: "#666", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+          </div>
+
+          {/* Stats rapides */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 14 }}>
+            {[
+              { l: "Séances", v: Math.ceil(logs.length / 3) || 0, icon: "💪" },
+              { l: "Cette sem.", v: weekLogs.length, icon: "🔥" },
+              { l: "Pesées", v: weights.length, icon: "⚖️" },
+              { l: "RPE moy.", v: rpeData.length ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "—", icon: "🧠" },
+            ].map((s, i) => (
+              <div key={i} style={{ background: "#1a1a1a", borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
+                <div style={{ fontSize: 16 }}>{s.icon}</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: G, lineHeight: 1.2 }}>{s.v}</div>
+                <div style={{ fontSize: 9, color: "#555", textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Onglets */}
+          <div style={{ display: "flex", gap: 6 }}>
+            {[["overview","📋 Vue"], ["messages","💬 Message"], ["progress","📈 Progression"]].map(([t, l]) => (
+              <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>{l}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Contenu onglet */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+
+          {/* ── OVERVIEW ── */}
+          {tab === "overview" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* Programme */}
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 8 }}>Programme</div>
+                {prog ? (
+                  <div style={{ background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#f5f5f5" }}>{prog.programme_name}</div>
+                      <div style={{ fontSize: 10, color: G, marginTop: 2 }}>✓ Actif · {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
+                    </div>
+                    <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Mettre à jour</button>
+                  </div>
+                ) : (
+                  <div style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 10, padding: 14 }}>
+                    <div style={{ fontSize: 12, color: "#f97316", marginBottom: 8 }}>⚠ Aucun programme assigné</div>
+                    <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: "8px", background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 8, color: G, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>↑ Uploader le programme</button>
+                  </div>
+                )}
+              </div>
+
+              {/* Dernier poids */}
+              {lastWeight && (
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 8 }}>Dernier poids</div>
+                  <div style={{ background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 700, color: G }}>{lastWeight.weight} kg</div>
+                      <div style={{ fontSize: 11, color: "#555" }}>{new Date(lastWeight.date).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" })}</div>
+                    </div>
+                    {weights.length >= 2 && <MiniSparkline data={[...weights].reverse()} color={G} />}
+                  </div>
+                </div>
+              )}
+
+              {/* RPE récent */}
+              {rpeData.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 8 }}>Ressenti récent</div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {rpeData.slice(0, 5).map((r, i) => (
+                      <div key={i} style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, padding: "8px 4px", textAlign: "center" }}>
+                        <div style={{ fontSize: 18 }}>{RPE_EMOJIS[r.rpe]}</div>
+                        <div style={{ fontSize: 9, color: RPE_COLORS[r.rpe], fontWeight: 700, marginTop: 2 }}>{r.rpe}/5</div>
+                        <div style={{ fontSize: 8, color: "#444" }}>{new Date(r.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f); e.target.value = ""; } }} />
+                <button onClick={() => onDelete(client.id, client.email)} style={{ flex: 1, padding: "10px", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, color: "#ef4444", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Supprimer</button>
+                <button onClick={onClose} style={{ flex: 2, padding: "10px", background: G, border: "none", borderRadius: 10, color: "#0d0d0d", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>Fermer</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── MESSAGES ── */}
+          {tab === "messages" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ fontSize: 10, color: "#555", textAlign: "center", marginBottom: 4 }}>
+                Envoie un message directement à ton client — il le verra dès sa prochaine connexion
+              </div>
+
+              {/* Saisie message */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <textarea
+                  value={msgText}
+                  onChange={e => setMsgText(e.target.value)}
+                  placeholder="Ex: Super séance ! Augmente de 2.5kg sur le squat la prochaine fois 💪"
+                  rows={3}
+                  style={{
+                    flex: 1, background: "#1a1a1a", border: "1.5px solid rgba(255,255,255,0.08)",
+                    borderRadius: 10, padding: "10px 12px", color: "#f5f5f5",
+                    fontFamily: "'Inter',sans-serif", fontSize: 13, resize: "none", outline: "none",
+                  }}
+                  onKeyDown={e => { if (e.key === "Enter" && e.metaKey) sendMessage(); }}
+                />
+                <button onClick={sendMessage} disabled={!msgText.trim() || sending} style={{
+                  alignSelf: "flex-end", width: 44, height: 44, borderRadius: 10,
+                  background: msgText.trim() ? G : "#1a1a1a",
+                  border: "none", cursor: msgText.trim() ? "pointer" : "not-allowed",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  fontSize: 18, color: msgText.trim() ? "#0d0d0d" : "#444",
+                }}>
+                  {sending ? "..." : "→"}
+                </button>
+              </div>
+              <div style={{ fontSize: 10, color: "#444", textAlign: "right" }}>⌘+Entrée pour envoyer</div>
+
+              {/* Historique messages */}
+              {messages.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 8 }}>Historique</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {messages.map((m, i) => (
+                      <div key={i} style={{
+                        background: "#1a1a1a", borderRadius: 10, padding: "10px 12px",
+                        borderLeft: `3px solid ${m.from_coach ? G : "#6b7280"}`,
+                        opacity: m.read ? 0.6 : 1,
+                      }}>
+                        <div style={{ fontSize: 12, color: "#f5f5f5", lineHeight: 1.5 }}>{m.content}</div>
+                        <div style={{ fontSize: 10, color: "#555", marginTop: 4, display: "flex", justifyContent: "space-between" }}>
+                          <span>{m.from_coach ? "Toi (coach)" : client.full_name || "Client"}</span>
+                          <span>{m.read ? "Lu ✓" : "Non lu"} · {new Date(m.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── PROGRESSION ── */}
+          {tab === "progress" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {topEx.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 32, color: "#444", fontSize: 13 }}>Aucune donnée de progression encore</div>
+              ) : (
+                topEx.map(([key, data], i) => {
+                  const name = key.split("_").slice(-1)[0] || key;
+                  const latest = data[data.length - 1];
+                  const first = data[0];
+                  const delta = latest.weight - first.weight;
+                  const max = Math.max(...data.map(d => d.weight));
+                  return (
+                    <div key={i} style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#f5f5f5", marginBottom: 2 }}>{name}</div>
+                          <div style={{ fontSize: 10, color: "#555" }}>{data.length} séances · max {max} kg</div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 700, color: G }}>{latest.weight} kg</div>
+                          <div style={{ fontSize: 10, fontWeight: 600, color: delta > 0 ? G : delta < 0 ? "#ef4444" : "#555" }}>
+                            {delta > 0 ? "+" : ""}{delta.toFixed(1)} kg
+                          </div>
+                        </div>
+                      </div>
+                      <MiniSparkline data={data} color={G} w={440} h={32} />
+                    </div>
+                  );
+                })
+              )}
+
+              {/* Courbe poids */}
+              {weights.length >= 2 && (
+                <div style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#f5f5f5" }}>Évolution du poids</div>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "#555" }}>
+                      {weights[weights.length-1]?.weight} → {weights[0]?.weight} kg
+                    </div>
+                  </div>
+                  <MiniSparkline data={[...weights].reverse()} color={G} w={440} h={40} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   COACH DASHBOARD PRINCIPAL
+══════════════════════════════════════════════ */
+export function CoachDashboard({ onExit }) {
+  const [clients,   setClients]   = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [search,    setSearch]    = useState("");
+  const [showAdd,   setShowAdd]   = useState(false);
+  const [newEmail,  setNewEmail]  = useState("");
+  const [newName,   setNewName]   = useState("");
+  const [toast,     setToast]     = useState(null);
+  const [selected,  setSelected]  = useState(null);
+  const [filter,    setFilter]    = useState("all");
+
+  const showToast = (msg, type = "ok") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+
+  const loadClients = async () => {
+    setLoading(true);
+    try {
+      const { data: clientsData } = await supabase
+        .from("clients")
+        .select("*, programmes(id, programme_name, uploaded_at, is_active)")
+        .order("created_at", { ascending: false });
+      if (!clientsData) return;
+
+      const enriched = await Promise.all(clientsData.map(async (c) => {
+        const [{ data: logs }, { data: weights }, { data: rpe }] = await Promise.all([
+          supabase.from("exercise_logs").select("*").eq("client_id", c.id).order("logged_at", { ascending: false }).limit(30),
+          supabase.from("weight_logs").select("*").eq("client_id", c.id).order("date", { ascending: false }).limit(10),
+          supabase.from("session_rpe").select("*").eq("client_id", c.id).order("date", { ascending: false }).limit(5),
+        ]);
+        const lastActivity = logs?.[0]?.logged_at || weights?.[0]?.date || null;
+        const inactiveDays = lastActivity ? Math.floor((Date.now() - new Date(lastActivity)) / 86400000) : 999;
+        return {
+          ...c,
+          _logs: logs || [], _weights: weights || [], _rpe: rpe || [],
+          _lastActivity: lastActivity,
+          _inactive: inactiveDays >= 7,
+          _inactiveDays: inactiveDays < 999 ? inactiveDays : null,
+        };
+      }));
+      setClients(enriched);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadClients(); }, []);
+
+  const addClient = async () => {
+    if (!newEmail) return;
+    const { error } = await supabase.from("clients").insert({ email: newEmail.trim().toLowerCase(), full_name: newName.trim() || null });
+    if (error) { showToast(error.code === "23505" ? "Email déjà utilisé" : error.message, "err"); return; }
+    showToast(`✓ ${newEmail} ajouté !`);
+    setNewEmail(""); setNewName(""); setShowAdd(false);
+    loadClients();
+  };
+
+  const deleteClient = async (id, email) => {
+    if (!window.confirm(`Supprimer ${email} ?`)) return;
+    await supabase.from("clients").delete().eq("id", id);
+    setSelected(null); showToast("Client supprimé"); loadClients();
+  };
+
+  const uploadProg = async (client, file) => {
+    setUploading(true);
+    try {
+      const html = await file.text();
+      const m = html.match(/id="prog-name"[^>]*value="([^"]*)"/);
+      const progName = m?.[1] || file.name.replace(".html", "");
+      await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
+      const { error } = await supabase.from("programmes").insert({
+        client_id: client.id, html_content: html, programme_name: progName || "Programme",
+        is_active: true, uploaded_by: (await supabase.auth.getUser()).data.user?.email,
+      });
+      if (error) throw error;
+      showToast(`✓ Programme uploadé pour ${client.full_name || client.email}`);
+      loadClients();
+    } catch (e) { showToast(e.message, "err"); }
+    finally { setUploading(false); setSelected(null); }
+  };
+
+  // Stats
+  const total        = clients.length;
+  const withProg     = clients.filter(c => c.programmes?.some(p => p.is_active)).length;
+  const activeToday  = clients.filter(c => c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 1).length;
+  const activeWeek   = clients.filter(c => c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7).length;
+  const inactiveAlerts = clients.filter(c => c._inactive && c.programmes?.some(p => p.is_active)).length;
+
+  const filtered = clients
+    .filter(c => {
+      const s = search.toLowerCase();
+      if (s && !c.email.includes(s) && !(c.full_name || "").toLowerCase().includes(s)) return false;
+      if (filter === "active") return c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7;
+      if (filter === "noprog") return !c.programmes?.some(p => p.is_active);
+      if (filter === "inactive") return c._inactive && c.programmes?.some(p => p.is_active);
+      return true;
+    })
+    .sort((a, b) => {
+      if (!a._lastActivity && !b._lastActivity) return 0;
+      if (!a._lastActivity) return 1;
+      if (!b._lastActivity) return -1;
+      return new Date(b._lastActivity) - new Date(a._lastActivity);
+    });
+
+  const inp = {
+    padding: "10px 13px", background: "#141414",
+    border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 9,
+    color: "#f5f5f5", fontFamily: "'Inter',sans-serif", fontSize: 13,
+    outline: "none", width: "100%", boxSizing: "border-box",
+    transition: "border-color 0.15s",
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0d0d0d", fontFamily: "'Inter',sans-serif", color: "#f5f5f5" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        .client-row:hover{background:#1c1c1c!important;cursor:pointer}
+        .client-row:hover .row-arrow{opacity:1!important}
+        .inp-focus:focus{border-color:#22c55e!important}
+        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+      `}</style>
+
+      {/* Toast */}
+      {toast && (
+        <div style={{ position:"fixed", top:16, left:"50%", transform:"translateX(-50%)", background: toast.type==="err"?"#1a0a0a":"#0a1a0f", border:`1px solid ${toast.type==="err"?"rgba(239,68,68,0.3)":G_BORDER}`, borderRadius:10, padding:"10px 20px", fontSize:12, fontWeight:600, color:toast.type==="err"?"#ef4444":G, zIndex:500, boxShadow:"0 8px 32px rgba(0,0,0,0.5)", whiteSpace:"nowrap", animation:"fadeUp 0.2s ease" }}>{toast.msg}</div>
+      )}
+      {uploading && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", backdropFilter:"blur(8px)", zIndex:300, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:14 }}>
+          <div style={{ width:44, height:44, border:`3px solid #1a1a1a`, borderTopColor:G, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
+          <div style={{ color:G, fontSize:13, fontWeight:600 }}>Upload en cours...</div>
+        </div>
+      )}
+      {selected && <ClientPanel client={selected} onClose={() => setSelected(null)} onUpload={uploadProg} onDelete={deleteClient} />}
+
+      {/* TOPBAR */}
+      <div style={{ background:"rgba(13,13,13,0.97)", borderBottom:"1px solid rgba(255,255,255,0.07)", padding:"0 32px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100, backdropFilter:"blur(20px)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", border:"1px solid rgba(255,255,255,0.1)" }}><img src={LOGO_B64} alt="" style={{ width:"100%", height:"100%", objectFit:"contain" }} /></div>
+          <span style={{ fontSize:14, fontWeight:800, color:"#f5f5f5" }}>RB <span style={{ color:G }}>Performance</span></span>
+          <span style={{ fontSize:10, fontWeight:700, color:"#333", letterSpacing:"2px" }}>COACH</span>
+          {/* Alerte inactifs */}
+          {inactiveAlerts > 0 && (
+            <div style={{ background:"rgba(239,68,68,0.12)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:20, padding:"3px 10px", fontSize:10, fontWeight:700, color:"#ef4444", display:"flex", alignItems:"center", gap:5, animation:"pulse 2s infinite" }}>
+              ⚠ {inactiveAlerts} inactif{inactiveAlerts>1?"s":""} 7j+
+            </div>
+          )}
+        </div>
+        <div style={{ display:"flex", gap:8 }}>
+          <button onClick={loadClients} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:7, padding:"5px 12px", color:"#555", fontSize:11, fontWeight:600, cursor:"pointer" }}>↻ Actualiser</button>
+          <button onClick={onExit} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:7, padding:"5px 12px", color:"#555", fontSize:11, fontWeight:600, cursor:"pointer" }}>← Mon app</button>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"32px 24px 60px" }}>
+        {/* Titre */}
+        <div style={{ marginBottom:28 }}>
+          <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:"-0.5px", color:"#f5f5f5", marginBottom:4 }}>Dashboard Coach</h1>
+          <p style={{ fontSize:13, color:"#555" }}>Vue d'ensemble de tes {total} client{total>1?"s":""}</p>
+        </div>
+
+        {/* Stats cards */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:12, marginBottom:28 }}>
+          {[
+            { label:"Clients total", value:total, icon:"👥", accent:false },
+            { label:"Avec programme", value:withProg, sub:`${total-withProg} sans`, icon:"📋", accent:false },
+            { label:"Actifs aujourd'hui", value:activeToday, icon:"🔥", accent:activeToday>0 },
+            { label:"Actifs cette semaine", value:activeWeek, icon:"📈", accent:activeWeek>0 },
+            { label:"Inactifs 7j+", value:inactiveAlerts, icon:"⚠️", accent:false, warn:inactiveAlerts>0 },
+          ].map((s,i) => (
+            <div key={i} style={{ background:"#141414", border:`1px solid ${s.warn?"rgba(239,68,68,0.2)":s.accent?G_BORDER:"rgba(255,255,255,0.06)"}`, borderRadius:14, padding:"16px 14px" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div style={{ fontSize:9, fontWeight:700, letterSpacing:"1.5px", textTransform:"uppercase", color:"#555" }}>{s.label}</div>
+                <span style={{ fontSize:16 }}>{s.icon}</span>
+              </div>
+              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:26, fontWeight:700, color:s.warn&&s.value>0?"#ef4444":s.accent?G:"#f5f5f5", lineHeight:1.2, marginTop:4 }}>{s.value}</div>
+              {s.sub && <div style={{ fontSize:10, color:"#555", marginTop:2 }}>{s.sub}</div>}
+            </div>
+          ))}
+        </div>
+
+        {/* Barre filtres + actions */}
+        <div style={{ display:"flex", gap:10, marginBottom:16, alignItems:"center", flexWrap:"wrap" }}>
+          <input className="inp-focus" placeholder="🔍  Rechercher..." value={search} onChange={e=>setSearch(e.target.value)} style={{ ...inp, flex:1, minWidth:200 }} />
+          <div style={{ display:"flex", gap:4 }}>
+            {[["all","Tous",total],["active","Actifs 7j",activeWeek],["noprog","Sans prog.",total-withProg],["inactive","⚠ Inactifs",inactiveAlerts]].map(([k,l,n])=>(
+              <button key={k} onClick={()=>setFilter(k)} style={{ padding:"7px 12px", fontSize:10.5, fontWeight:600, background:filter===k?G_DIM:"transparent", border:`1px solid ${filter===k?G_BORDER:"rgba(255,255,255,0.08)"}`, borderRadius:100, color:filter===k?G:"#666", cursor:"pointer", whiteSpace:"nowrap" }}>
+                {l} <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9 }}>({n})</span>
+              </button>
+            ))}
+          </div>
+          <button onClick={()=>setShowAdd(v=>!v)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 18px", background:showAdd?G_DIM:G, border:`1px solid ${showAdd?G_BORDER:G}`, borderRadius:9, color:showAdd?G:"#0d0d0d", fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:showAdd?"none":"0 4px 16px rgba(34,197,94,0.25)" }}>
+            {showAdd?"✕ Annuler":"+ Nouveau client"}
+          </button>
+        </div>
+
+        {/* Formulaire nouveau client */}
+        {showAdd && (
+          <div style={{ background:"#141414", border:`1px solid ${G_BORDER}`, borderRadius:14, padding:20, marginBottom:16, animation:"fadeUp 0.2s ease" }}>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:G, marginBottom:14 }}>Nouveau client</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:10 }}>
+              <div>
+                <label style={{ fontSize:9, color:"#555", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>Email *</label>
+                <input className="inp-focus" type="email" placeholder="client@email.com" value={newEmail} onChange={e=>setNewEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addClient()} style={inp} />
+              </div>
+              <div>
+                <label style={{ fontSize:9, color:"#555", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>Prénom Nom</label>
+                <input className="inp-focus" type="text" placeholder="Thomas Dupont" value={newName} onChange={e=>setNewName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addClient()} style={inp} />
+              </div>
+              <div style={{ display:"flex", alignItems:"flex-end" }}>
+                <button onClick={addClient} disabled={!newEmail} style={{ padding:"10px 20px", background:newEmail?G:"#1e1e1e", border:"none", borderRadius:9, color:newEmail?"#0d0d0d":"#444", fontSize:12, fontWeight:700, cursor:newEmail?"pointer":"not-allowed", height:40 }}>Créer</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Table clients */}
+        {loading ? (
+          <div style={{ textAlign:"center", padding:60, color:"#555" }}>
+            <div style={{ width:32, height:32, border:`2.5px solid #222`, borderTopColor:G, borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 12px" }} />
+            Chargement...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign:"center", padding:60, color:"#444", fontSize:13 }}>
+            {search||filter!=="all" ? "Aucun client correspond" : "Aucun client — ajoute ton premier 👆"}
+          </div>
+        ) : (
+          <div style={{ background:"#0f0f0f", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, overflow:"hidden" }}>
+            {/* Header colonnes */}
+            <div style={{ display:"grid", gridTemplateColumns:"2fr 1.4fr 0.8fr 0.8fr 0.9fr 1fr 1fr auto", padding:"10px 20px", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:9, fontWeight:700, letterSpacing:"1.5px", textTransform:"uppercase", color:"#444" }}>
+              <div>Client</div><div>Programme</div><div>Statut</div><div>Séances</div><div>Poids</div><div>RPE</div><div>Dernier contact</div><div></div>
+            </div>
+
+            {filtered.map((c, i) => {
+              const prog     = c.programmes?.find(p => p.is_active);
+              const actColor = activityColor(c._lastActivity);
+              const logsCount = Math.ceil(c._logs.length / 3);
+              const lastW    = c._weights?.[0];
+              const lastRpe  = c._rpe?.[0];
+              const RPE_EMOJIS = ["","😊","💪","😤","😰","🥵"];
+              const RPE_COLORS = ["","#4ade80","#22c55e","#f97316","#ef4444","#dc2626"];
+              const daysAgoStr = daysAgo(c._lastActivity);
+              const inactiveDays = c._lastActivity ? Math.floor((Date.now()-new Date(c._lastActivity))/86400000) : null;
+
+              return (
+                <div key={c.id} className="client-row" onClick={() => setSelected(c)} style={{
+                  display:"grid", gridTemplateColumns:"2fr 1.4fr 0.8fr 0.8fr 0.9fr 1fr 1fr auto",
+                  padding:"13px 20px", borderBottom: i<filtered.length-1?"1px solid rgba(255,255,255,0.04)":"none",
+                  alignItems:"center", gap:8, transition:"background 0.15s",
+                  animation:`fadeUp ${0.05+i*0.025}s ease both`,
+                }}>
+                  {/* Nom */}
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <div style={{ position:"relative" }}>
+                      <Avatar name={c.full_name||c.email} size={34} active={!!prog} />
+                      {c._inactive && c.programmes?.some(p=>p.is_active) && (
+                        <div style={{ position:"absolute", top:-2, right:-2, width:10, height:10, borderRadius:"50%", background:"#ef4444", border:"2px solid #0f0f0f", animation:"pulse 2s infinite" }} />
+                      )}
+                    </div>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:600, color:"#f5f5f5" }}>{c.full_name||<span style={{color:"#555"}}>Sans nom</span>}</div>
+                      <div style={{ fontSize:10, color:"#555" }}>{c.email}</div>
+                    </div>
+                  </div>
+
+                  {/* Programme */}
+                  <div>
+                    {prog ? (
+                      <>
+                        <div style={{ fontSize:11, fontWeight:600, color:G, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>✓ {prog.programme_name||"Actif"}</div>
+                        <div style={{ fontSize:9, color:"#444" }}>{new Date(prog.uploaded_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})}</div>
+                      </>
+                    ) : <span style={{ fontSize:11, color:"#f97316", fontWeight:600 }}>⚠ Aucun</span>}
+                  </div>
+
+                  {/* Statut / activité */}
+                  <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                    <div style={{ width:7, height:7, borderRadius:"50%", background:actColor, boxShadow: inactiveDays!==null&&inactiveDays<=1?`0 0 6px ${actColor}`:"none" }} />
+                    <span style={{ fontSize:9.5, color:actColor, fontWeight:600 }}>
+                      {!c._lastActivity ? "Jamais" : inactiveDays<=1 ? "Actif" : inactiveDays<=7 ? "Semaine" : `${inactiveDays}j`}
+                    </span>
+                  </div>
+
+                  {/* Séances */}
+                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:15, fontWeight:600, color:logsCount>0?"#f5f5f5":"#444" }}>{logsCount}</div>
+
+                  {/* Poids */}
+                  <div>
+                    {lastW ? (
+                      <>
+                        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:13, fontWeight:600, color:"#f5f5f5" }}>{lastW.weight} kg</div>
+                        <div style={{ fontSize:9, color:"#444" }}>{new Date(lastW.date).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})}</div>
+                      </>
+                    ) : <span style={{ fontSize:11, color:"#444" }}>—</span>}
+                  </div>
+
+                  {/* RPE */}
+                  <div>
+                    {lastRpe ? (
+                      <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                        <span style={{ fontSize:16 }}>{RPE_EMOJIS[lastRpe.rpe]}</span>
+                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:12, fontWeight:600, color:RPE_COLORS[lastRpe.rpe] }}>{lastRpe.rpe}/5</span>
+                      </div>
+                    ) : <span style={{ fontSize:11, color:"#444" }}>—</span>}
+                  </div>
+
+                  {/* Dernier contact */}
+                  <div style={{ fontSize:11, color: daysAgoStr===null?"#444":daysAgoStr==="Aujourd'hui"||daysAgoStr==="Hier"?G:"#9ca3af" }}>
+                    {daysAgoStr||"Jamais"}
+                  </div>
+
+                  {/* Flèche */}
+                  <div className="row-arrow" style={{ opacity:0, transition:"opacity 0.15s", color:"#555", fontSize:14 }}>→</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
