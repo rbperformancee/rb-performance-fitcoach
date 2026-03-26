@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       * { -webkit-tap-highlight-color: transparent; }
-      body { background: #080808; overscroll-behavior: none; }
+      body { background: #0d0d0d; overscroll-behavior: none; }
       ::-webkit-scrollbar { width: 0; background: transparent; }
     </style>
   
@@ -31,38 +31,6 @@
   
   
   
-  <style>
-    body { background: #0d0d0d; margin: 0; }
-    #sp {
-      position: fixed; inset: 0; z-index: 99999;
-      background: #0d0d0d;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      transition: opacity 0.5s ease;
-    }
-    #sp img {
-      width: 130px; height: 130px;
-      border-radius: 28px;
-      object-fit: cover;
-      object-position: center 60%;
-      box-shadow: 0 0 50px rgba(2,209,186,0.35);
-      border: 1px solid rgba(2,209,186,0.2);
-    }
-    #sp-label {
-      margin-top: 18px; font-size: 11px; font-weight: 700;
-      letter-spacing: 4px; color: rgba(2,209,186,0.8);
-      font-family: Arial, sans-serif;
-    }
-  </style>
-  <div id="sp">
-    <img src="/logo.png" alt="RB PERFORM" />
-    <div id="sp-label">RB PERFORM</div>
-  </div>
-  <script>
-    setTimeout(function(){
-      var s=document.getElementById('sp');
-      if(s){s.style.opacity='0';setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s)},500)}
-    },1500);
-  </script>
+  
 </body>
 </html>
