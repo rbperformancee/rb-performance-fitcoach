@@ -45,7 +45,7 @@ export function LoginScreen({ onSendMagicLink, loading }) {
                     borderRadius: 28,
                     boxShadow: "0 0 40px rgba(2,209,186,0.25), 0 0 80px rgba(2,209,186,0.1)",
                     border: "1px solid rgba(2,209,186,0.15)",
-      />
+            }} />
             <h1 style={{ fontSize: 26, fontWeight: 800, color: "#f5f5f5", margin: "0 0 6px", letterSpacing: "-0.5px" }}>
               RB <span style={{ color: "#02d1ba" }}>Performance</span>
             </h1>
