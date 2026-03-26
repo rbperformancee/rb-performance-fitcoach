@@ -384,9 +384,19 @@ export function CoachDashboard({ onExit }) {
 
   const addClient = async () => {
     if (!newEmail) return;
-    const { error } = await supabase.from("clients").insert({ email: newEmail.trim().toLowerCase(), full_name: newName.trim() || null });
+    const email = newEmail.trim().toLowerCase();
+    const fullName = newName.trim() || null;
+    const { error } = await supabase.from("clients").insert({ email, full_name: fullName });
     if (error) { showToast(error.code === "23505" ? "Email déjà utilisé" : error.message, "err"); return; }
-    showToast(`✓ ${newEmail} ajouté !`);
+    // Envoyer l'email de bienvenue
+    try {
+      await supabase.functions.invoke("send-welcome", {
+        body: { email, full_name: fullName },
+      });
+    } catch (e) {
+      console.warn("Email de bienvenue non envoyé:", e);
+    }
+    showToast(`✓ ${email} ajouté — email de bienvenue envoyé !`);
     setNewEmail(""); setNewName(""); setShowAdd(false);
     loadClients();
   };
