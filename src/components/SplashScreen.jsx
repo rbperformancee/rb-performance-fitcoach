@@ -19,25 +19,29 @@ export default function SplashScreen({ onDone }) {
       transition: "opacity 0.5s ease",
     }}>
       <div style={{
-        width: 130, height: 130,
-        borderRadius: 28,
+        width: 130, height: 130, borderRadius: 28,
         background: "#111",
         boxShadow: "0 0 60px rgba(2,209,186,0.35), 0 0 120px rgba(2,209,186,0.15)",
         border: "1px solid rgba(2,209,186,0.2)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        flexDirection: "column",
+        flexDirection: "column", gap: 4,
       }}>
-        <svg width="56" height="68" viewBox="0 0 56 68" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="36,0 12,34 28,34 20,68 44,34 28,34 36,0" fill="#02d1ba"/>
-        </svg>
         <div style={{
-          color: "white", fontSize: 11, fontWeight: 800,
-          letterSpacing: 2, fontFamily: "Arial, sans-serif",
-          marginTop: 2,
+          width: 44, height: 64,
+          background: "#02d1ba",
+          clipPath: "polygon(65% 0%, 20% 52%, 50% 52%, 35% 100%, 80% 48%, 50% 48%, 65% 0%)",
+        }} />
+        <div style={{
+          color: "white", fontSize: 14, fontWeight: 900,
+          letterSpacing: 1, fontFamily: "Arial Black, Arial, sans-serif",
         }}>RB</div>
+        <div style={{
+          color: "white", fontSize: 9, fontWeight: 800,
+          letterSpacing: 3, fontFamily: "Arial, sans-serif",
+        }}>PERFORM</div>
       </div>
       <div style={{
-        marginTop: 18, fontSize: 12, fontWeight: 600,
+        marginTop: 20, fontSize: 12, fontWeight: 600,
         letterSpacing: 4, color: "rgba(2,209,186,0.7)",
         fontFamily: "Arial, sans-serif",
       }}>RB PERFORM</div>
