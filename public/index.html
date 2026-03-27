@@ -1,6 +1,6 @@
 <!DsetTimeout(hide,2000);OCTYPE html>
 <html lang="fr">
-  <setTimeout(hide,2500);head>
+  <setTimeout(hide,2000);head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#080808" />
@@ -64,7 +64,7 @@
       var el=document.getElementById('sp'),done=false;
       function hide(){ if(done)return; done=true; el.style.opacity='0'; setTimeout(function(){ if(el.parentNode)el.parentNode.removeChild(el); },650); }
       setTimeout(hide,2000);
-      window.addEventListener('load',function(){ setTimeout(hide,300); });
+      window.addEventListener('load',function(){ setTimeout(hide,2000); });
     })();
   </script>
 </body>
