@@ -10,6 +10,7 @@ export function LoginScreen({ onSendMagicLink, loading }) {
 
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && accepted;
 
+  const handleHaptic = () => { try { navigator.vibrate && navigator.vibrate(10); } catch(e) {} };
   const handleSubmit = (e) => {
     e.preventDefault();
     if (valid && !loading) {

@@ -1,3 +1,7 @@
+import WelcomeScreen from "./components/WelcomeScreen";
+import StreakBadge from "./components/StreakBadge";
+import { useHaptic } from "./hooks/useHaptic";
+import { useStreak } from "./hooks/useStreak";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import SplashScreen from "./components/SplashScreen";
 import React, { useState, useRef, useCallback } from "react";

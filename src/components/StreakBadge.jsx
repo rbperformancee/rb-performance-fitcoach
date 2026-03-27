@@ -1,0 +1,42 @@
+import React from 'react';
+
+export default function StreakBadge({ streak, bestStreak }) {
+  if (!streak && !bestStreak) return null;
+  
+  return (
+    <div style={{
+      display: 'flex', gap: 10, alignItems: 'center',
+      marginBottom: 16,
+    }}>
+      <div style={{
+        background: streak > 0 ? 'rgba(255,140,0,0.12)' : 'rgba(255,255,255,0.05)',
+        border: `1px solid ${streak > 0 ? 'rgba(255,140,0,0.3)' : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 12, padding: '8px 14px',
+        display: 'flex', alignItems: 'center', gap: 7,
+        animation: streak > 2 ? 'fadeInUp 0.4s ease forwards' : 'none',
+      }}>
+        <span style={{ fontSize: 18 }}>{streak > 5 ? '🔥' : streak > 2 ? '⚡' : '💪'}</span>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: streak > 0 ? '#ff8c00' : '#6b7280', lineHeight: 1 }}>
+            {streak}
+          </div>
+          <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 600, letterSpacing: 1 }}>STREAK</div>
+        </div>
+      </div>
+      {bestStreak > 0 && (
+        <div style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 12, padding: '8px 14px',
+          display: 'flex', alignItems: 'center', gap: 7,
+        }}>
+          <span style={{ fontSize: 16 }}>🏆</span>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#f5f5f5', lineHeight: 1 }}>{bestStreak}</div>
+            <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 600, letterSpacing: 1 }}>RECORD</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
