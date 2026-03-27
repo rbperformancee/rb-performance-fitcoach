@@ -46,7 +46,7 @@ import "./App.css";
 
 const GREEN = "#02d1ba";
 // ⚠️  Email du coach — seul cet email peut accéder au dashboard admin
-const COACH_EMAIL = "rb.performancee@gmail.com"; // ← remplace par ton email
+const COACH_EMAIL = 'rb.performancee@gmail.com';
 
 const IconDumbbell = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
