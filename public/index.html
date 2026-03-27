@@ -52,7 +52,7 @@
         var el=document.getElementById('sp'),done=false;
         function hide(){ if(done)return; done=true; el.style.opacity='0'; setTimeout(function(){ if(el.parentNode)el.parentNode.removeChild(el); },650); }
         setTimeout(hide,2000);
-        window.addEventListener('load',function(){ setTimeout(hide,300); });
+        
       })();
     </script>
   </body>
