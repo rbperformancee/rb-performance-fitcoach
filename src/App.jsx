@@ -10,7 +10,7 @@ import { useLogs } from "./hooks/useLogs";
 import { useAuth } from "./hooks/useAuth";
 import { useWeight } from "./hooks/useWeight";
 import { ExerciseCard } from "./components/ExerciseCard";
-import { WeightChart } from "./components/WeightChart";
+import WeightChart from "./components/WeightChart";
 import { SessionReport } from "./components/SessionReport";
 import { MessageBanner } from "./components/MessageBanner";
 import { RPEModal } from "./components/RPEModal";
