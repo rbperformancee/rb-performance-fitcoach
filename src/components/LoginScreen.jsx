@@ -74,8 +74,16 @@ export function LoginScreen({ onSendMagicLink, loading }) {
               <img src={LOGO_B64} alt="RB PERFORM" style={{ width: 84, height: 84, objectFit: "cover", objectPosition: "center 60%", display: "block", borderRadius: 20, boxShadow: "0 0 0 1px rgba(2,209,186,0.2), 0 20px 60px rgba(2,209,186,0.12)", position: "relative" }} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-2px", lineHeight: 1.0, color: "#f5f5f5", animation: "fadeInUp 0.5s ease 0s both" }}>{phrase[0]}</div>
-              <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-2px", lineHeight: 1.0, color: "#02d1ba", animation: "fadeInUp 0.5s ease 0.1s both" }}>{phrase[1]}</div>
+              {[phrase[0], phrase[1]].map((line, li) => (
+                <div key={li} style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-2px", lineHeight: 1.0, color: li === 0 ? "#f5f5f5" : "#02d1ba", overflow: "hidden" }}>
+                  {line.split("").map((char, ci) => (
+                    <span key={ci} style={{
+                      display: "inline-block",
+                      animation: `letterReveal 0.4s ease ${li * 0.15 + ci * 0.03}s both`,
+                    }}>{char === " " ? " " : char}</span>
+                  ))}
+                </div>
+              ))}
             </div>
             <p style={{ fontSize: 11, color: "#4b5563", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", animation: "fadeInUp 0.5s ease 0.2s both", margin: 0 }}>Programmes d'entraînement personnalisés</p>
           </div>
@@ -128,6 +136,7 @@ export function LoginScreen({ onSendMagicLink, loading }) {
         <div style={{ position: "fixed", bottom: 20, fontSize: 10, color: "#1f2937", letterSpacing: "1.5px", fontWeight: 600, textTransform: "uppercase" }}>RB PERFORM · SIRET 99063780300018</div>
         <style>{`
           @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+          @keyframes letterReveal { from { opacity:0; transform:translateY(20px) skewY(3deg); } to { opacity:1; transform:translateY(0) skewY(0deg); } }
           @keyframes bounceIn { 0%{transform:translateY(-50%) scale(0);} 70%{transform:translateY(-50%) scale(1.2);} 100%{transform:translateY(-50%) scale(1);} }
           @keyframes pulse { 0%,100%{opacity:0.5;transform:scale(1);} 50%{opacity:1;transform:scale(1.05);} }
           @keyframes spin { to{transform:rotate(360deg);} }
