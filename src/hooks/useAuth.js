@@ -25,7 +25,7 @@ export function useAuth() {
         .single();
 
       if (cErr || !clientData) {
-        setError("Aucun compte client trouvé pour cet email. Contacte ton coach.");
+        setError("Aucun compte client trouvé pour cet email. Contacte Rayan.");
         setLoading(false);
         return;
       }
@@ -42,7 +42,7 @@ export function useAuth() {
         .single();
 
       if (pErr || !progData) {
-        setError("Aucun programme actif. Ton coach n'a pas encore uploadé ton programme.");
+        setError("Aucun programme actif. Rayan n'a pas encore uploadé ton programme.");
         setLoading(false);
         return;
       }

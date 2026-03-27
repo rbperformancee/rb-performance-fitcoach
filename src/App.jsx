@@ -235,7 +235,7 @@ export default function App() {
           {client?.full_name && (
             <span style={{ fontSize: 11, color: "#555", fontWeight: 500 }}>{client.full_name.split(" ")[0]}</span>
           )}
-          {/* Bouton coach */}
+          {/* BouRayan */}
           {isCoach && (
             <button onClick={() => setShowCoachDash(true)} style={{
               padding: "5px 10px", background: "rgba(2,209,186,0.08)",

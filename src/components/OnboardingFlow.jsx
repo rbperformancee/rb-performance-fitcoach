@@ -13,7 +13,7 @@ const STEPS = [
   {
     id: 'goal',
     title: () => "Quel est ton objectif ?",
-    subtitle: "Ton coach adaptera ton programme en fonction.",
+    subtitle: "Rayan adaptera ton programme en fonction.",
     cta: "Continuer →",
     icon: '🎯',
     options: ['Prise de masse 💪', 'Perte de poids 🔥', 'Performance ⚡', 'Remise en forme 🏃', 'Autre 📋'],
@@ -29,7 +29,7 @@ const STEPS = [
   {
     id: 'sessions',
     title: () => "Combien de séances par semaine ?",
-    subtitle: "Ton coach optimisera la charge de travail.",
+    subtitle: "Rayan optimisera la charge de travail.",
     cta: "Continuer →",
     icon: '📅',
     options: ['2 séances', '3 séances', '4 séances', '5+ séances'],
@@ -37,7 +37,7 @@ const STEPS = [
   {
     id: 'ready',
     title: (name) => `${name}, c'est parti ! 🚀`,
-    subtitle: "Ton profil est configuré. Ton coach va préparer ton programme.",
+    subtitle: "Ton profil est configuré. Rayan va préparer ton programme.",
     cta: "Accéder à mon programme",
     icon: '🏆',
   },

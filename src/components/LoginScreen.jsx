@@ -51,7 +51,7 @@ export function LoginScreen({ onSendMagicLink, loading }) {
               RB <span style={{ color: "#02d1ba" }}>PERFORM</span>
             </h1>
             <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
-              Connecte-toi pour accéder à ton programme personnalisé
+              Accède à tes programmes d'entraînement personnalisés
             </p>
           </div>
 

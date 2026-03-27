@@ -46,9 +46,11 @@ export function MentionsLegales({ onClose }) {
       <Section title="1. Éditeur du service">
         <p>Le service RB Perform est édité par :</p>
         <br />
-        <p><strong style={{ color: "#f5f5f5" }}>Rayan Bonte</strong><br />
+        <p><strong style={{ color: "#f5f5f5" }}>Rayan Bonte
+        <br />Micro-entrepreneur — SIRET : [TON SIRET]</strong><br />
         Coach sportif personnel<br />
-        Email : rb.performancee@gmail.com<br />
+        Email : rb.performancee@gmail.com
+        <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA<br />
         Site web : rb-perfor.vercel.app</p>
       </Section>
 
@@ -62,7 +64,8 @@ export function MentionsLegales({ onClose }) {
       </Section>
 
       <Section title="3. Propriété intellectuelle">
-        <p>L'ensemble des contenus présents sur ce service (programmes d'entraînement, textes, graphiques, logo RB Perform) sont la propriété exclusive de Rayan Bonte et sont protégés par les lois françaises et internationales relatives à la propriété intellectuelle.</p>
+        <p>L'ensemble des contenus présents sur ce service (programmes d'entraînement, textes, graphiques, logo RB Perform) sont la propriété exclusive de Rayan Bonte
+        <br />Micro-entrepreneur — SIRET : [TON SIRET] et sont protégés par les lois françaises et internationales relatives à la propriété intellectuelle.</p>
         <br />
         <p>Toute reproduction, représentation, modification ou adaptation, même partielle, est strictement interdite sans autorisation écrite préalable.</p>
       </Section>
@@ -70,11 +73,12 @@ export function MentionsLegales({ onClose }) {
       <Section title="4. Données personnelles">
         <p>Le traitement des données personnelles est régi par notre Politique de Confidentialité, consultable dans l'application.</p>
         <br />
-        <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits : rb.performancee@gmail.com</p>
+        <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits : rb.performancee@gmail.com
+        <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA</p>
       </Section>
 
       <Section title="5. Responsabilité">
-        <p>Les programmes d'entraînement fournis sont à titre indicatif et personnalisés par un coach qualifié. RB Perform ne peut être tenu responsable des blessures résultant d'une mauvaise exécution des exercices ou d'un état de santé incompatible avec la pratique sportive.</p>
+        <p>Les programmes d'entraînement fournis sont à titre indicatif et personnalisés par un préparateur sportif. RB Perform ne peut être tenu responsable des blessures résultant d'une mauvaise exécution des exercices ou d'un état de santé incompatible avec la pratique sportive.</p>
         <br />
         <p>Il est conseillé de consulter un médecin avant de débuter tout programme d'entraînement intensif.</p>
       </Section>
@@ -91,7 +95,8 @@ export function CGU({ onClose }) {
   return (
     <PageWrapper title="Conditions Générales d'Utilisation" subtitle="CGU" onClose={onClose}>
       <Section title="1. Objet">
-        <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application RB Perform, service de coaching sportif personnalisé proposé par Rayan Bonte.</p>
+        <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application RB Perform, service de suivi sportif personnalisé proposé par Rayan Bonte
+        <br />Micro-entrepreneur — SIRET : [TON SIRET].</p>
       </Section>
 
       <Section title="2. Accès au service">
@@ -109,11 +114,11 @@ export function CGU({ onClose }) {
       <Section title="3. Description du service">
         <p>RB Perform fournit :</p>
         <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
-          <li>Un programme d'entraînement personnalisé créé par votre coach</li>
+          <li>Un programme d'entraînement personnalisé créé par Rayan</li>
           <li>Un outil de suivi des charges et de la progression</li>
           <li>Un timer de repos automatique</li>
           <li>Un suivi du poids corporel</li>
-          <li>Une messagerie avec votre coach</li>
+          <li>Une messagerie avec Rayan</li>
           <li>L'export de rapports de progression en PDF</li>
         </ul>
       </Section>
@@ -133,7 +138,8 @@ export function CGU({ onClose }) {
       </Section>
 
       <Section title="5. Propriété du contenu">
-        <p>Les programmes d'entraînement, conseils et contenus fournis dans l'application sont la propriété intellectuelle de Rayan Bonte — RB Perform.</p>
+        <p>Les programmes d'entraînement, conseils et contenus fournis dans l'application sont la propriété intellectuelle de Rayan Bonte
+        <br />Micro-entrepreneur — SIRET : [TON SIRET] — RB Perform.</p>
         <br />
         <p>L'utilisateur ne peut ni reproduire, ni diffuser, ni vendre ces contenus sans autorisation écrite préalable.</p>
       </Section>
@@ -154,7 +160,8 @@ export function CGU({ onClose }) {
       </Section>
 
       <Section title="8. Droit applicable et juridiction">
-        <p>Les présentes CGU sont soumises au droit français. Tout litige sera soumis aux tribunaux compétents du ressort du domicile de Rayan Bonte.</p>
+        <p>Les présentes CGU sont soumises au droit français. Tout litige sera soumis aux tribunaux compétents du ressort du domicile de Rayan Bonte
+        <br />Micro-entrepreneur — SIRET : [TON SIRET].</p>
       </Section>
     </PageWrapper>
   );

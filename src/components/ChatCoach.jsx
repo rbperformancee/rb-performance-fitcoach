@@ -96,7 +96,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach }) {
           value={newMsg}
           onChange={e => setNewMsg(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-          placeholder={isCoach ? "Message à ton client..." : "Message à ton coach..."}
+          placeholder={isCoach ? "Message à ton client..." : "Message à Rayan..."}
           style={{
             flex: 1, background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.08)',

@@ -24,19 +24,19 @@ export function PrivacyPolicy({ onClose }) {
         {[
           {
             title: "1. Qui sommes-nous ?",
-            content: `RB Perform est un service de coaching sportif personnalisé exploité par Rayan Bonte (rb.performancee@gmail.com). Dans le cadre du Règlement Général sur la Protection des Données (RGPD), Rayan Bonte agit en qualité de responsable de traitement.`
+            content: `RB Perform est un service de suivi sportif personnalisé exploité par Rayan Bonte (rb.performancee@gmail.com). Dans le cadre du Règlement Général sur la Protection des Données (RGPD), Rayan Bonte agit en qualité de responsable de traitement.`
           },
           {
             title: "2. Données collectées",
-            content: `Nous collectons les données suivantes :\n\n• Adresse email (identification et authentification)\n• Prénom et nom (optionnel, fourni par le coach)\n• Données d'entraînement : exercices réalisés, charges, répétitions, séries\n• Données de composition corporelle : poids, pourcentage de masse grasse (saisie volontaire)\n• Ressenti d'entraînement (RPE) : niveau de fatigue perçu après chaque séance\n• Notes personnelles liées aux séances (optionnel)`
+            content: `Nous collectons les données suivantes :\n\n• Adresse email (identification et authentification)\n• Prénom et nom (optionnel, fourni par Rayan)\n• Données d'entraînement : exercices réalisés, charges, répétitions, séries\n• Données de composition corporelle : poids, pourcentage de masse grasse (saisie volontaire)\n• Ressenti d'entraînement (RPE) : niveau de fatigue perçu après chaque séance\n• Notes personnelles liées aux séances (optionnel)`
           },
           {
             title: "3. Finalités du traitement",
-            content: `Vos données sont utilisées exclusivement pour :\n\n• Vous permettre d'accéder à votre programme d'entraînement personnalisé\n• Suivre votre progression et vos performances sportives\n• Permettre à votre coach de personnaliser votre accompagnement\n• Générer des rapports de progression (export PDF)\n• Vous envoyer des communications liées à votre programme`
+            content: `Vos données sont utilisées exclusivement pour :\n\n• Vous permettre d'accéder à votre programme d'entraînement personnalisé\n• Suivre votre progression et vos performances sportives\n• Permettre à Rayan de personnaliser votre accompagnement\n• Générer des rapports de progression (export PDF)\n• Vous envoyer des communications liées à votre programme`
           },
           {
             title: "4. Base légale",
-            content: `Le traitement de vos données est fondé sur :\n\n• Votre consentement explicite, donné lors de la création de votre compte\n• L'exécution du contrat de coaching sportif entre vous et RB Perform\n\nLes données de santé (poids, composition corporelle, ressenti physique) sont traitées sur la base de votre consentement explicite, que vous pouvez retirer à tout moment.`
+            content: `Le traitement de vos données est fondé sur :\n\n• Votre consentement explicite, donné lors de la création de votre compte\n• L'exécution du contrat de suivi sportif entre vous et RB Perform\n\nLes données de santé (poids, composition corporelle, ressenti physique) sont traitées sur la base de votre consentement explicite, que vous pouvez retirer à tout moment.`
           },
           {
             title: "5. Hébergement et sous-traitants",
