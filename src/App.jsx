@@ -1,3 +1,6 @@
+import AvatarPicker from "./components/AvatarPicker";
+import GoalWidget from "./components/GoalWidget";
+import { useTheme } from "./hooks/useTheme";
 import ActivityWidget from "./components/ActivityWidget";
 import WelcomeScreen from "./components/WelcomeScreen";
 import StreakBadge from "./components/StreakBadge";
@@ -222,7 +225,7 @@ export default function App() {
       {/* ── Topbar ── */}
       <header className="topbar">
         <div className="topbar-brand">
-          <div className="topbar-logo-img"><img src={LOGO_B64} alt="RB Perform" /></div>
+          <div className="topbar-logo-img" onClick={toggle} style={{ cursor: "pointer" }} title={isDark ? "Mode clair" : "Mode sombre"}><img src={LOGO_B64} alt="RB Perform" /></div>
           <span className="topbar-name">RB&nbsp;<span>Performance</span></span>
         </div>
         <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
