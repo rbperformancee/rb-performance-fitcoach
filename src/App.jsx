@@ -79,7 +79,7 @@ function SessionTab({ session, active, onClick, weekIdx, sessionIdx, getHistory,
   );
 }
 
-export default function PasswordResetScreen() {
+export default function PasswordResetScreen({ onDone }) {
   const [pwd, setPwd] = React.useState('');
   const [done, setDone] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -95,7 +95,7 @@ export default function PasswordResetScreen() {
     } else {
       setDone(true);
       await supabase.auth.signOut();
-      setTimeout(() => { window.location.href = '/'; }, 2000);
+      setTimeout(() => { onDone && onDone(); window.location.href = '/'; }, 2000);
     }
   };
 
