@@ -79,7 +79,52 @@ function SessionTab({ session, active, onClick, weekIdx, sessionIdx, getHistory,
   );
 }
 
-export default function App() {
+export default function PasswordResetScreen() {
+  const [pwd, setPwd] = React.useState('');
+  const [done, setDone] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  const handleReset = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: pwd });
+    if (error) setError(error.message);
+    else setDone(true);
+    setLoading(false);
+  };
+
+  if (done) return (
+    <div style={{ minHeight: '100vh', background: '#0d0d0d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ fontSize: 48 }}>✅</div>
+      <div style={{ fontSize: 20, fontWeight: 900, color: '#f5f5f5' }}>Mot de passe défini !</div>
+      <div style={{ fontSize: 13, color: '#6b7280' }}>Tu peux maintenant te connecter avec Espace Coach</div>
+      <button onClick={() => window.location.href = '/'} style={{ marginTop: 8, background: '#02d1ba', border: 'none', borderRadius: 12, padding: '12px 24px', color: '#0d0d0d', fontWeight: 800, cursor: 'pointer', fontSize: 14 }}>Aller à la connexion</button>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0d0d0d', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 2, marginBottom: 8 }}>RB PERFORM</div>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#f5f5f5', letterSpacing: '-1px', margin: 0 }}>Nouveau mot de passe</h1>
+        </div>
+        <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input type="password" placeholder="Nouveau mot de passe (min. 8 caractères)" value={pwd} onChange={e => setPwd(e.target.value)} minLength={8} required autoFocus
+            style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none' }} />
+          {error && <div style={{ color: '#ef4444', fontSize: 12, textAlign: 'center' }}>{error}</div>}
+          <button type="submit" disabled={loading || pwd.length < 8}
+            style={{ padding: '15px', borderRadius: 14, border: 'none', background: pwd.length >= 8 ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: pwd.length >= 8 ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, cursor: pwd.length >= 8 ? 'pointer' : 'not-allowed' }}>
+            {loading ? 'Enregistrement...' : 'Définir le mot de passe →'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function App() {
   // Auth
   const {
     user, client, programme: cloudProgramme, loading: authLoading,
