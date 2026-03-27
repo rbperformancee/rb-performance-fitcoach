@@ -50,6 +50,7 @@ export function MentionsLegales({ onClose }) {
         <br />Micro-entrepreneur — SIRET : 99063780300018</strong><br />
         Coach sportif personnel<br />
         Email : rb.performancee@gmail.com
+        <br />06 95 12 93 47
         <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA<br />
         Site web : rb-perfor.vercel.app</p>
       </Section>
@@ -74,6 +75,7 @@ export function MentionsLegales({ onClose }) {
         <p>Le traitement des données personnelles est régi par notre Politique de Confidentialité, consultable dans l'application.</p>
         <br />
         <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits : rb.performancee@gmail.com
+        <br />06 95 12 93 47
         <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA</p>
       </Section>
 
