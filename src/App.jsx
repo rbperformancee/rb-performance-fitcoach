@@ -1,3 +1,6 @@
+import ProgramPDFButton from "./components/ProgramPDF";
+import ClientAnalytics from "./components/ClientAnalytics";
+import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
 import { BadgeSystem } from "./components/BadgeSystem";
 import { ToastProvider, toast } from "./components/Toast";
 import ProfilePage from "./components/ProfilePage";
