@@ -1,3 +1,13 @@
+
+function SkeletonLoader() {
+  return (
+    <div style={{ padding: '16px', animation: 'fadeInUp 0.3s ease' }}>
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="skeleton skeleton-card" style={{ animationDelay: `${i * 0.05}s` }} />
+      ))}
+    </div>
+  );
+}
 import SessionTimer from "./components/SessionTimer";
 import OnboardingFlow from "./components/OnboardingFlow";
 import AvatarPicker from "./components/AvatarPicker";
