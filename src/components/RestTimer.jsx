@@ -32,6 +32,25 @@ function Arc({ radius, progress, size, strokeWidth, color, glowColor }) {
   const offset = circ * (1 - progress);
   const cx = size / 2;
   const cy = size / 2;
+
+  // Son + vibration fin de timer
+  const playFinishSound = React.useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.15, 0.3].forEach((delay, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = i === 2 ? 880 : 660;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.2);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.2);
+      });
+    } catch(e) {}
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+  }, []);
   return (
     <>
       {/* Track */}
@@ -77,7 +96,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
       const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
       const remaining = totalRef.current - elapsed;
       if (remaining <= 0) {
-        setTimeLeft(0);
+        setTimeLeft(0); };
         setPhase("done");
         setRunning(false);
         vibrate();

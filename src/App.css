@@ -281,3 +281,60 @@ input[type=number] { -moz-appearance: textfield; }
   .prog-header { padding: 18px 14px 14px; }
   .week-nav, .session-tabs { padding: 0 14px 10px; }
 }
+
+
+/* ===== ANIMATIONS PREMIUM ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bounceIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes slideInBottom {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.anim-fade-in { animation: fadeIn 0.35s ease forwards; }
+.anim-fade-up { animation: fadeInUp 0.4s ease forwards; }
+.anim-bounce { animation: bounceIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.anim-slide-bottom { animation: slideInBottom 0.35s ease forwards; }
+
+/* Cascade delay pour ExerciseCard */
+.card-cascade-0 { animation: fadeInUp 0.35s ease 0.05s both; }
+.card-cascade-1 { animation: fadeInUp 0.35s ease 0.12s both; }
+.card-cascade-2 { animation: fadeInUp 0.35s ease 0.19s both; }
+.card-cascade-3 { animation: fadeInUp 0.35s ease 0.26s both; }
+.card-cascade-4 { animation: fadeInUp 0.35s ease 0.33s both; }
+.card-cascade-5 { animation: fadeInUp 0.35s ease 0.40s both; }
+.card-cascade-6 { animation: fadeInUp 0.35s ease 0.47s both; }
+.card-cascade-7 { animation: fadeInUp 0.35s ease 0.54s both; }
+
+/* Transitions de page */
+.page-transition {
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+/* BottomNav active bounce */
+.nav-active {
+  animation: bounceIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+
+/* Pulse bouton */
+.btn-pulse:active {
+  animation: pulse 0.2s ease;
+}
