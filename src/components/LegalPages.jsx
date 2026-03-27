@@ -47,7 +47,7 @@ export function MentionsLegales({ onClose }) {
         <p>Le service RB Perform est édité par :</p>
         <br />
         <p><strong style={{ color: "#f5f5f5" }}>Rayan Bonte
-        <br />Micro-entrepreneur — SIRET : [TON SIRET]</strong><br />
+        <br />Micro-entrepreneur — SIRET : 99063780300018</strong><br />
         Coach sportif personnel<br />
         Email : rb.performancee@gmail.com
         <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA<br />
@@ -65,7 +65,7 @@ export function MentionsLegales({ onClose }) {
 
       <Section title="3. Propriété intellectuelle">
         <p>L'ensemble des contenus présents sur ce service (programmes d'entraînement, textes, graphiques, logo RB Perform) sont la propriété exclusive de Rayan Bonte
-        <br />Micro-entrepreneur — SIRET : [TON SIRET] et sont protégés par les lois françaises et internationales relatives à la propriété intellectuelle.</p>
+        <br />Micro-entrepreneur — SIRET : 99063780300018 et sont protégés par les lois françaises et internationales relatives à la propriété intellectuelle.</p>
         <br />
         <p>Toute reproduction, représentation, modification ou adaptation, même partielle, est strictement interdite sans autorisation écrite préalable.</p>
       </Section>
@@ -96,7 +96,7 @@ export function CGU({ onClose }) {
     <PageWrapper title="Conditions Générales d'Utilisation" subtitle="CGU" onClose={onClose}>
       <Section title="1. Objet">
         <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application RB Perform, service de suivi sportif personnalisé proposé par Rayan Bonte
-        <br />Micro-entrepreneur — SIRET : [TON SIRET].</p>
+        <br />Micro-entrepreneur — SIRET : 99063780300018.</p>
       </Section>
 
       <Section title="2. Accès au service">
@@ -139,7 +139,7 @@ export function CGU({ onClose }) {
 
       <Section title="5. Propriété du contenu">
         <p>Les programmes d'entraînement, conseils et contenus fournis dans l'application sont la propriété intellectuelle de Rayan Bonte
-        <br />Micro-entrepreneur — SIRET : [TON SIRET] — RB Perform.</p>
+        <br />Micro-entrepreneur — SIRET : 99063780300018 — RB Perform.</p>
         <br />
         <p>L'utilisateur ne peut ni reproduire, ni diffuser, ni vendre ces contenus sans autorisation écrite préalable.</p>
       </Section>
@@ -161,7 +161,7 @@ export function CGU({ onClose }) {
 
       <Section title="8. Droit applicable et juridiction">
         <p>Les présentes CGU sont soumises au droit français. Tout litige sera soumis aux tribunaux compétents du ressort du domicile de Rayan Bonte
-        <br />Micro-entrepreneur — SIRET : [TON SIRET].</p>
+        <br />Micro-entrepreneur — SIRET : 99063780300018.</p>
       </Section>
     </PageWrapper>
   );
