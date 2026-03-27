@@ -292,8 +292,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
           {/* ── PROGRESSION ── */}
           {tab === "progress" && (
-              <ClientAnalytics clientId={client.id} period={30} />
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <ClientAnalytics clientId={client.id} period={30} />
               {topEx.length === 0 ? (
                 <div style={{ textAlign: "center", padding: 32, color: "#444", fontSize: 13 }}>Aucune donnée de progression encore</div>
               ) : (
