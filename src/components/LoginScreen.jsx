@@ -71,7 +71,7 @@ export function LoginScreen({ onSendMagicLink, loading }) {
           <div style={{ textAlign: "center", marginBottom: 44 }}>
             <div style={{ display: "inline-block", position: "relative", marginBottom: 24 }}>
               <div style={{ position: "absolute", inset: -10, borderRadius: 36, background: "radial-gradient(circle, rgba(2,209,186,0.18) 0%, transparent 70%)", animation: "pulse 3s ease-in-out infinite" }} />
-              <img src={LOGO_B64} alt="RB PERFORM" style={{ width: 84, height: 84, objectFit: "cover", objectPosition: "center 60%", display: "block", borderRadius: 20, boxShadow: "0 0 0 1px rgba(2,209,186,0.2), 0 20px 60px rgba(2,209,186,0.12)", position: "relative" }} />
+              <img src={LOGO_B64} alt="RB PERFORM" style={{ width: 110, height: 110, objectFit: "cover", objectPosition: "center 60%", display: "block", borderRadius: 24, boxShadow: "0 0 0 1px rgba(2,209,186,0.2), 0 20px 60px rgba(2,209,186,0.12)", position: "relative" }} />
             </div>
             <div style={{ marginBottom: 14 }}>
               {[phrase[0], phrase[1]].map((line, li) => (
