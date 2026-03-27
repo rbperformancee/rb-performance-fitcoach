@@ -1,3 +1,6 @@
+import { BadgeSystem } from "./components/BadgeSystem";
+import { ToastProvider, toast } from "./components/Toast";
+import ProfilePage from "./components/ProfilePage";
 
 function SkeletonLoader() {
   return (
@@ -98,7 +101,7 @@ export default function App() {
   const [activeWeek,      setActiveWeek]      = useState(0);
   const [activeSession,   setActiveSession]   = useState(0);
   const [isDragging,      setIsDragging]      = useState(false);
-  const [page,            setPage]            = useState("training");
+  const [page, setPage] = useState("training");
   const [showReport,      setShowReport]      = useState(false);
   const [exporting,       setExporting]       = useState(false);
   const [showPrivacy,     setShowPrivacy]     = useState(false);
@@ -318,7 +321,9 @@ export default function App() {
       {/* ── App principale ── */}
       {programme && !authError && (
         <>
-          {page === "training" ? (
+          {page === "profile" ? (
+              <ProfilePage client={client} />
+            ) : page === "training" ? (
             <main className="main">
               {client && <MessageBanner clientId={client.id} />}
               <div className="prog-header">
@@ -426,6 +431,10 @@ export default function App() {
             <button className={`nav-tab ${page === "weight" ? "active" : ""}`} onClick={() => setPage("weight")}>
               <IconScale />Poids
               {entries.length > 0 && <span style={{ position: "absolute", top: 6, right: "calc(50% - 20px)", width: 6, height: 6, borderRadius: "50%", background: GREEN }} />}
+            </button>
+          <button className={`nav-tab ${page === "profile" ? "active" : ""}`} onClick={() => setPage("profile")}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              <span style={{fontSize:9,fontWeight:700,letterSpacing:0.5}}>PROFIL</span>
             </button>
           </nav>
 
