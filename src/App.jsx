@@ -89,9 +89,14 @@ export default function PasswordResetScreen() {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: pwd });
-    if (error) setError(error.message);
-    else setDone(true);
-    setLoading(false);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      setDone(true);
+      await supabase.auth.signOut();
+      setTimeout(() => { window.location.href = '/'; }, 2000);
+    }
   };
 
   if (done) return (
