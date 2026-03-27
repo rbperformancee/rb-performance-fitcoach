@@ -1,0 +1,39 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+
+export function useWeightTracking(clientId) {
+  const [weights, setWeights] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchWeights = useCallback(async () => {
+    if (!clientId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('weight_logs')
+      .select('weight, logged_at, note')
+      .eq('client_id', clientId)
+      .order('logged_at', { ascending: true })
+      .limit(30);
+    setWeights(data || []);
+    setLoading(false);
+  }, [clientId]);
+
+  const addWeight = useCallback(async (weight, note = '') => {
+    if (!clientId) return;
+    await supabase.from('weight_logs').insert({
+      client_id: clientId,
+      weight: parseFloat(weight),
+      note,
+      logged_at: new Date().toISOString(),
+    });
+    fetchWeights();
+  }, [clientId, fetchWeights]);
+
+  useEffect(() => { fetchWeights(); }, [fetchWeights]);
+
+  const latest = weights[weights.length - 1];
+  const first = weights[0];
+  const diff = latest && first ? (latest.weight - first.weight).toFixed(1) : null;
+
+  return { weights, loading, addWeight, latest, diff };
+}

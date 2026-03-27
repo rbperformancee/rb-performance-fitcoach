@@ -1,3 +1,4 @@
+import ChatCoach from "./ChatCoach";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { LOGO_B64 } from "../utils/logo";
