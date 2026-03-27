@@ -1,3 +1,4 @@
+import { usePushNotifications } from "./hooks/usePushNotifications";
 import SplashScreen from "./components/SplashScreen";
 import React, { useState, useRef, useCallback } from "react";
 import { parseProgrammeHTML } from "./utils/parserProgramme";
@@ -61,6 +62,14 @@ export default function App() {
   } = useAuth();
 
   const isCoach = user?.email === COACH_EMAIL;
+  const { requestPermission, permission } = usePushNotifications(client?.id);
+  
+  // Demander permission push au client après connexion
+  React.useEffect(() => {
+    if (client?.id && !isCoach && permission === 'default') {
+      setTimeout(() => requestPermission(), 2000);
+    }
+  }, [client?.id, isCoach, permission, requestPermission]);
   const [splashDone, setSplashDone] = React.useState(false);
   const [showCoachDash, setShowCoachDash] = useState(false);
 
