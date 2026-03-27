@@ -1,3 +1,4 @@
+import ActivityWidget from "./components/ActivityWidget";
 import WelcomeScreen from "./components/WelcomeScreen";
 import StreakBadge from "./components/StreakBadge";
 import { useHaptic } from "./hooks/useHaptic";
