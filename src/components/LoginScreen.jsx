@@ -1,3 +1,4 @@
+import { supabase } from '../lib/supabase';
 import React, { useState, useEffect, useRef } from "react";
 import { PrivacyPolicy } from "./PrivacyPolicy";
 import { LOGO_B64 } from "../utils/logo";
@@ -48,9 +49,26 @@ export function LoginScreen({ onSendMagicLink, loading }) {
   const [focused, setFocused] = useState(false);
   const [btnHover, setBtnHover] = useState(false);
   const [btnPress, setBtnPress] = useState(false);
+  const [coachMode, setCoachMode] = useState(false);
+  const [password, setPassword] = useState('');
+  const [pwdFocused, setPwdFocused] = useState(false);
+  const [coachError, setCoachError] = useState('');
+  const [coachLoading, setCoachLoading] = useState(false);
   const [phraseIdx] = useState(() => Math.floor(Math.random() * PHRASES.length));
   const phrase = PHRASES[phraseIdx];
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && accepted;
+
+  const handleCoachLogin = async (e) => {
+    e.preventDefault();
+    setCoachLoading(true);
+    setCoachError('');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setCoachError('Email ou mot de passe incorrect');
+      if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+    }
+    setCoachLoading(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
