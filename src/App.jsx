@@ -1,3 +1,4 @@
+import SessionTimer from "./components/SessionTimer";
 import OnboardingFlow from "./components/OnboardingFlow";
 import AvatarPicker from "./components/AvatarPicker";
 import GoalWidget from "./components/GoalWidget";
@@ -226,7 +227,7 @@ export default function App() {
       {/* ── Topbar ── */}
       <header className="topbar">
         <div className="topbar-brand">
-          <div className="topbar-logo-img" onClick={toggle} style={{ cursor: "pointer" }} title={isDark ? "Mode clair" : "Mode sombre"}><img src={LOGO_B64} alt="RB Perform" /></div>
+          <button onClick={() => !isCoach && setShowTimer(true)} style={{ background: "none", border: "none", cursor: !isCoach ? "pointer" : "default", padding: 0 }}><div className="topbar-logo-img" onClick={toggle} style={{ cursor: "pointer" }} title={isDark ? "Mode clair" : "Mode sombre"}><img src={LOGO_B64} alt="RB Perform" /></div>
           <span className="topbar-name">RB&nbsp;<span>Performance</span></span>
         </div>
         <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
