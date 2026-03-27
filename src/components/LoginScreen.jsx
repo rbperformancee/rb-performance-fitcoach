@@ -100,7 +100,11 @@ export function LoginScreen({ onSendMagicLink, loading }) {
                   {accepted && <span style={{ color: "#0d0d0d", fontSize: 11, fontWeight: 800 }}>✓</span>}
                 </div>
                 <p style={{ fontSize: 11, color: "#6b7280", margin: 0, lineHeight: 1.6 }}>
-                  J'accepte la{" "}
+                  J'ai consulté un médecin avant de commencer ce programme. Je reconnais que RB PERFORM ne fournit pas de conseils médicaux.</label>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <input type="checkbox" id="cgv" style={{ marginTop: 3, accentColor: '#02d1ba' }} />
+                <label htmlFor="cgv" style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5, cursor: 'pointer' }}>J'accepte la{" "}
                   <button
                     type="button"
                     onClick={() => setShowPrivacy(true)}
