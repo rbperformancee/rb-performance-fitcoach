@@ -346,6 +346,36 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 /* ══════════════════════════════════════════════
    COACH DASHBOARD PRINCIPAL
 ══════════════════════════════════════════════ */
+
+function CoachSkeleton() {
+  return (
+    <div style={{ padding: "16px", animation: "fadeInUp 0.3s ease" }}>
+      {/* Header skeleton */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div className="skeleton" style={{ width: 120, height: 20, borderRadius: 6 }} />
+        <div className="skeleton" style={{ width: 80, height: 32, borderRadius: 10 }} />
+      </div>
+      {/* Stats skeleton */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        {[...Array(4)].map((_,i) => (
+          <div key={i} className="skeleton" style={{ flex: 1, height: 72, borderRadius: 14 }} />
+        ))}
+      </div>
+      {/* Client rows skeleton */}
+      {[...Array(5)].map((_,i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+          <div className="skeleton" style={{ width: 40, height: 40, borderRadius: "50%" }} />
+          <div style={{ flex: 1 }}>
+            <div className="skeleton" style={{ width: "60%", height: 13, borderRadius: 4, marginBottom: 6 }} />
+            <div className="skeleton" style={{ width: "40%", height: 10, borderRadius: 4 }} />
+          </div>
+          <div className="skeleton" style={{ width: 50, height: 22, borderRadius: 20 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function CoachDashboard({ onExit }) {
   const [clients,   setClients]   = useState([]);
   const [loading,   setLoading]   = useState(true);

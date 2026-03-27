@@ -25,11 +25,11 @@ export function useInactivityAlerts(clients, isCoach) {
 
         if (subs?.length > 0) {
           const firstName = client.full_name?.split(' ')[0] || '';
-          await fetch('https://pwkajyrpldhlybavmopd.supabase.co/functions/v1/send-push', {
+          await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-push`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3a2FqeXJwbGRobHliYXZtb3BkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA1ODY3ODAsImV4cCI6MjA1NjE2Mjc4MH0.LpNQcBpMJz7iFXGi6sVy6kYpHJhJMVgFJkGZjUoE8Q8',
+              'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY,
             },
             body: JSON.stringify({
               client_id: client.id,
