@@ -10,7 +10,7 @@ import { useLogs } from "./hooks/useLogs";
 import { useAuth } from "./hooks/useAuth";
 import { useWeight } from "./hooks/useWeight";
 import { ExerciseCard } from "./components/ExerciseCard";
-import { WeightTracker } from "./components/WeightChart";
+import { WeightChart } from "./components/WeightChart";
 import { SessionReport } from "./components/SessionReport";
 import { MessageBanner } from "./components/MessageBanner";
 import { RPEModal } from "./components/RPEModal";
@@ -399,7 +399,7 @@ export default function App() {
             </main>
           ) : (
             <main className="main" style={{ paddingTop: 8 }}>
-              <WeightTracker entries={entries} addEntry={addEntry} removeEntry={removeEntry} getStats={getStats} />
+              <WeightChart entries={entries} addEntry={addEntry} removeEntry={removeEntry} getStats={getStats} />
             </main>
           )}
 
