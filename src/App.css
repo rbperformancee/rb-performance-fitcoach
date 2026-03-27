@@ -553,3 +553,134 @@ input[type=number] { -moz-appearance: textfield; }
 .btn-pulse:active {
   animation: pulse 0.2s ease;
 }
+
+
+/* ============================================================
+   COACH DASHBOARD PREMIUM
+   ============================================================ */
+
+/* Header coach */
+.coach-header {
+  background: linear-gradient(135deg, rgba(2,209,186,0.08) 0%, transparent 60%);
+  border-bottom: 1px solid rgba(2,209,186,0.1);
+  padding: 20px 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.coach-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #02d1ba, transparent);
+}
+
+/* Client cards premium */
+.client-row {
+  transition: all 0.15s cubic-bezier(0.22,1,0.36,1) !important;
+  cursor: pointer;
+}
+
+.client-row:active {
+  background: rgba(2,209,186,0.04) !important;
+  transform: scale(0.99);
+}
+
+/* Stats cards */
+.stat-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.stat-card:hover {
+  border-color: rgba(2,209,186,0.2);
+  transform: translateY(-1px);
+}
+
+/* Badge inactif */
+.badge-inactive {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: #ef4444;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+/* Input coach premium */
+.coach-input {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1.5px solid rgba(255,255,255,0.08) !important;
+  border-radius: 12px !important;
+  color: #f5f5f5 !important;
+  transition: all 0.2s !important;
+}
+
+.coach-input:focus {
+  border-color: rgba(2,209,186,0.4) !important;
+  box-shadow: 0 0 0 3px rgba(2,209,186,0.08) !important;
+}
+
+/* Bouton ajouter client premium */
+.btn-add-client {
+  background: #02d1ba !important;
+  color: #0d0d0d !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.15s !important;
+  box-shadow: 0 4px 16px rgba(2,209,186,0.25) !important;
+}
+
+.btn-add-client:active {
+  transform: scale(0.96) !important;
+  box-shadow: 0 2px 8px rgba(2,209,186,0.2) !important;
+}
+
+/* Panel client premium */
+.client-panel {
+  animation: slideUp 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Tabs panel */
+.panel-tab {
+  transition: all 0.2s ease !important;
+  position: relative !important;
+}
+
+.panel-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 2px;
+  background: #02d1ba;
+  border-radius: 1px;
+}
+
+/* Toast coach */
+.coach-toast {
+  animation: toastSlide 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes toastSlide {
+  from { opacity:0; transform:translateY(-10px) scale(0.95); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+
+/* Sparkline glow */
+.sparkline-glow {
+  filter: drop-shadow(0 0 4px rgba(2,209,186,0.4));
+}

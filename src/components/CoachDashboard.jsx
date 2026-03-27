@@ -1,10 +1,16 @@
 import CoachStats from "./CoachStats";
 import ChatCoach from "./ChatCoach";
+import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { LOGO_B64 } from "../utils/logo";
 
 const G = "#02d1ba";
+const PREMIUM_STYLES = {
+  card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)" },
+  badge: (color) => ({ display: "inline-flex", alignItems: "center", gap: 4, background: color + "15", border: "1px solid " + color + "30", color, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, letterSpacing: 0.5 }),
+};
+// PREMIUM;
 const G_DIM = "rgba(2,209,186,0.12)";
 const G_BORDER = "rgba(2,209,186,0.25)";
 
@@ -406,7 +412,7 @@ export function CoachDashboard({ onExit }) {
   const deleteClient = async (id, email) => {
     if (!window.confirm(`Supprimer ${email} ?`)) return;
     await supabase.from("clients").delete().eq("id", id);
-    setSelected(null); showToast("Client supprimé"); loadClients();
+    setSelected(null); showToast("Client supprimé"); toast.info("Client supprimé"); loadClients();
   };
 
   const uploadProg = async (client, file) => {
