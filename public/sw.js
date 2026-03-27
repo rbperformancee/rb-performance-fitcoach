@@ -24,3 +24,6 @@ self.addEventListener("fetch", e => {
       .catch(() => caches.match(e.request))
   );
 });
+
+self.addEventListener('push',function(e){const d=e.data?e.data.json():{};e.waitUntil(self.registration.showNotification(d.title||'RB PERFORM',{body:d.body||'Message de ton coach',icon:'/icon-192.png',badge:'/icon-192.png',vibrate:[100,50,100],data:{url:d.url||'/'}}));});
+self.addEventListener('notificationclick',function(e){e.notification.close();e.waitUntil(clients.openWindow(e.notification.data.url||'/'));});
