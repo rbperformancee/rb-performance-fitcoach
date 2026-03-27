@@ -1,3 +1,4 @@
+import OnboardingFlow from "./components/OnboardingFlow";
 import AvatarPicker from "./components/AvatarPicker";
 import GoalWidget from "./components/GoalWidget";
 import { useTheme } from "./hooks/useTheme";
