@@ -1,5 +1,4 @@
-import ProgramPDFButton from "./components/ProgramPDF";
-import ClientAnalytics from "./components/ClientAnalytics";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
 import { BadgeSystem } from "./components/BadgeSystem";
 import { ToastProvider, toast } from "./components/Toast";
@@ -26,7 +25,7 @@ import { useHaptic } from "./hooks/useHaptic";
 import { useStreak } from "./hooks/useStreak";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import SplashScreen from "./components/SplashScreen";
-import React, { useState, useRef, useCallback } from "react";
+
 import { parseProgrammeHTML } from "./utils/parserProgramme";
 import { useLogs } from "./hooks/useLogs";
 import { useAuth } from "./hooks/useAuth";
@@ -43,6 +42,7 @@ import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
 import { LOGO_B64 } from "./utils/logo";
 import "./App.css";
+import { supabase } from "./lib/supabase";
 
 const GREEN = "#02d1ba";
 // ⚠️  Email du coach — seul cet email peut accéder au dashboard admin
@@ -79,9 +79,7 @@ function SessionTab({ session, active, onClick, weekIdx, sessionIdx, getHistory,
   );
 }
 
-export default 
-
-function App() {
+export default function App() {
   // Auth
   const {
     user, client, programme: cloudProgramme, loading: authLoading,
@@ -117,7 +115,7 @@ function App() {
 
   // Le programme affiché : cloud en priorité, sinon local
   const rawHtml = cloudProgramme || localProgramme;
-  const programme = rawHtml ? parseProgrammeHTML(rawHtml) : null;
+  const programme = useMemo(() => rawHtml ? parseProgrammeHTML(rawHtml) : null, [rawHtml]);
 
   const { getHistory, getLatest, saveLog, getDelta } = useLogs(
     client ? `client_${client.id}` : programme?.name
@@ -245,7 +243,7 @@ function App() {
       {/* ── Topbar ── */}
       <header className="topbar">
         <div className="topbar-brand">
-          <div className="topbar-logo-img" onClick={() => !isCoach && setShowTimer(true)} style={{ cursor: !isCoach ? "pointer" : "default" }}><img src={LOGO_B64} alt="RB Perform" /></div>
+          <div className="topbar-logo-img" onClick={() => {}} style={{ cursor: !isCoach ? "pointer" : "default" }}><img src={LOGO_B64} alt="RB Perform" /></div>
           <span className="topbar-name">RB&nbsp;<span>Performance</span></span>
         </div>
         <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -392,7 +390,7 @@ function App() {
 
                   <div className="exercises-list">
                     {session.exercises.map((ex, k) => (
-                      <ExerciseCard key={k} ex={ex}
+                      <ExerciseCard key={`${ex.name}-${k}`} ex={ex}
                         weekIdx={activeWeek} sessionIdx={safeIdx} exIdx={k} globalIndex={k}
                         getHistory={getHistory} getLatest={getLatest} saveLog={saveLog} getDelta={getDelta}
                         nextExName={session.exercises[k + 1]?.name || null}
