@@ -4,6 +4,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
+const COACH_EMAIL = 'rb.performancee@gmail.com';
+
 export function useAuth() {
   const [user,        setUser]        = useState(null);
   const [client,      setClient]      = useState(null);  // profil clients table
@@ -16,6 +18,8 @@ export function useAuth() {
   /* ── Charger le profil + programme depuis Supabase ── */
   const loadClientData = useCallback(async (authUser) => {
     if (!authUser) { setLoading(false); return; }
+    // Le coach n'a pas de profil client — skip
+    if (authUser.email === COACH_EMAIL) { setLoading(false); return; }
     try {
       // 1. Récupérer le profil client
       const { data: clientData, error: cErr } = await supabase

@@ -113,6 +113,14 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const [inputWeight, setInputWeight] = useState(latest ? String(latest.weight) : "");
   const [inputReps,   setInputReps]   = useState(latest ? String(latest.reps || ex.reps || "") : "");
 
+  // Synchroniser avec les données chargées
+  React.useEffect(() => {
+    if (latest) {
+      setInputWeight(String(latest.weight || ""));
+      setInputReps(String(latest.reps || ex.reps || ""));
+    }
+  }, [latest?.weight, latest?.reps]);
+
   const allDone  = history.length > 0;
   const deltaPos = delta !== null && delta > 0;
   const deltaNeg = delta !== null && delta < 0;
