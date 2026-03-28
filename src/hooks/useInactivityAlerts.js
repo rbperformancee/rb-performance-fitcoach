@@ -29,7 +29,7 @@ export function useInactivityAlerts(clients, isCoach) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY,
+              'apikey': 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud',
             },
             body: JSON.stringify({
               client_id: client.id,
