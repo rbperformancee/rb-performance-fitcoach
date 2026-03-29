@@ -20,13 +20,15 @@ export function useWeightTracking(clientId) {
 
   const addWeight = useCallback(async (weight, note = '') => {
     if (!clientId) return;
-    await supabase.from('weight_logs').insert({
+    const { error } = await supabase.from('weight_logs').insert({
       client_id: clientId,
       weight: parseFloat(weight),
       note,
       logged_at: new Date().toISOString(),
     });
+    if (error) { console.error('Weight error:', error.message); return { error }; }
     fetchWeights();
+    return { success: true };
   }, [clientId, fetchWeights]);
 
   useEffect(() => { fetchWeights(); }, [fetchWeights]);
