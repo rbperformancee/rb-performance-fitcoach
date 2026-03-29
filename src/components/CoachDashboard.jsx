@@ -145,7 +145,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           </div>
 
           {/* Stats rapides */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 14 }}>
             {[
               { l: "Séances", v: Math.ceil(logs.length / 3) || 0, icon: "💪" },
               { l: "Cette sem.", v: weekLogs.length, icon: "🔥" },
@@ -223,10 +223,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                 </div>
               )}
 
+              {/* Input file toujours présent */}
+              <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }}
+                onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f); e.target.value = ""; } }} />
               {/* Actions */}
               <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }}
-                  onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f); e.target.value = ""; } }} />
                 <button onClick={() => onDelete(client.id, client.email)} style={{ flex: 1, padding: "10px", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, color: "#ef4444", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Supprimer</button>
                 <button onClick={onClose} style={{ flex: 2, padding: "10px", background: G, border: "none", borderRadius: 10, color: "#0d0d0d", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>Fermer</button>
               </div>
@@ -548,7 +549,7 @@ export function CoachDashboard({ onExit }) {
         </div>
       </div>
 
-      <div style={{ maxWidth:"100%", margin:"0 auto", padding:"16px 16px 80px" }}>
+      <div style={{ maxWidth:"100%", margin:"0 auto", padding:"12px 12px 80px" }}>
         {/* Titre */}
         <div style={{ marginBottom:28 }}>
           <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:"-0.5px", color:"#f5f5f5", marginBottom:4 }}>Dashboard Coach</h1>
@@ -556,7 +557,7 @@ export function CoachDashboard({ onExit }) {
         </div>
 
         {/* Stats cards */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:12, marginBottom:28 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28 }}>
           {[
             { label:"Clients total", value:total, icon:"👥", accent:false },
             { label:"Avec programme", value:withProg, sub:`${total-withProg} sans`, icon:"📋", accent:false },
