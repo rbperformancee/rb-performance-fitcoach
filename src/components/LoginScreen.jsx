@@ -44,7 +44,7 @@ const PHRASES = [
 export function LoginScreen({ onSendMagicLink, loading }) {
   const [email, setEmail] = useState('');
   const [step, setStep] = useState('email'); // email | otp
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -215,7 +215,7 @@ export function LoginScreen({ onSendMagicLink, loading }) {
 
               {verifying && <div style={{ fontSize: 13, color: '#02d1ba' }}>Vérification...</div>}
 
-              <button onClick={() => { setStep('email'); setOtp(['','','','','','']); setError(''); }}
+              <button onClick={() => { setStep('email'); setOtp(['','','','','','','','']); setError(''); }}
                 style={{ background: 'none', border: 'none', color: '#374151', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
                 ← Changer d email
               </button>
