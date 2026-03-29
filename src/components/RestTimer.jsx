@@ -94,8 +94,32 @@ function Arc({ radius, progress, size, strokeWidth, color, glowColor }) {
   );
 }
 
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[0, 660], [0.15, 660], [0.3, 880]].forEach(([delay, freq]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.35, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.25);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.3);
+    });
+  } catch(e) {}
+}
+
 export function RestTimer({ restSeconds, onDismiss, exName }) {
   const [timeLeft, setTimeLeft] = useState(restSeconds);
+  
+  // Demander permission notification au montage
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
   const [running, setRunning] = useState(true);
   const [extra, setExtra] = useState(0);          // secondes ajoutées manuellement
   const [phase, setPhase] = useState("rest");     // "rest" | "done"
@@ -107,6 +131,28 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
   const vibrate = useCallback(() => {
     if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
   }, []);
+
+  // Gérer visibilité page (arrière-plan)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && running) {
+        // Recalculer le temps restant quand on revient
+        const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
+        const remaining = totalRef.current - elapsed;
+        if (remaining <= 0) {
+          setTimeLeft(0);
+          setPhase("done");
+          setRunning(false);
+          vibrate();
+          playBeep();
+        } else {
+          setTimeLeft(remaining);
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [running, vibrate]);
 
   useEffect(() => {
     if (!running) return;
@@ -126,6 +172,23 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
     }, 250);
     return () => clearInterval(intervalRef.current);
   }, [running, vibrate]);
+
+  // Programmer une notification quand le timer se lance
+  useEffect(() => {
+    if (!running) return;
+    // Programmer notification locale si permission accordée
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const delay = totalRef.current * 1000;
+      const notifTimer = setTimeout(() => {
+        new Notification('RB PERFORM — Repos terminé ! 💪', {
+          body: 'C\'est reparti !',
+          icon: '/icon.svg',
+          silent: false,
+        });
+      }, delay);
+      return () => clearTimeout(notifTimer);
+    }
+  }, [running]);
 
   const addTime = (secs) => {
     totalRef.current += secs;
