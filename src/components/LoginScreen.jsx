@@ -44,7 +44,7 @@ const PHRASES = [
 export function LoginScreen({ onSendMagicLink, loading }) {
   const [email, setEmail] = useState('');
   const [step, setStep] = useState('email'); // email | otp
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -81,26 +81,15 @@ export function LoginScreen({ onSendMagicLink, loading }) {
     setSending(false);
   };
 
-  // Gérer la saisie OTP
-  const handleOtpChange = (i, val) => {
-    if (!/^[0-9]?$/.test(val)) return;
-    const newOtp = [...otp];
-    newOtp[i] = val;
-    setOtp(newOtp);
-    if (val && i < 5) otpRefs.current[i + 1]?.focus();
-    if (newOtp.every(d => d !== '') && newOtp.join('').length === 6) {
-      verifyOTP(newOtp.join(''));
-    }
-  };
-
-  const handleOtpKey = (i, e) => {
-    if (e.key === 'Backspace' && !otp[i] && i > 0) {
-      otpRefs.current[i - 1]?.focus();
-    }
+  const handleOtpChange = (val) => {
+    const cleaned = val.replace(/[^0-9]/g, '').substring(0, 8);
+    setOtp(cleaned);
+    if (cleaned.length >= 6) verifyOTP(cleaned);
   };
 
   // Vérifier le code OTP
   const verifyOTP = async (code) => {
+    if (code.length < 6) return;
     setVerifying(true);
     setError('');
     try {
@@ -200,22 +189,19 @@ export function LoginScreen({ onSendMagicLink, loading }) {
                 <div style={{ fontSize: 12, color: '#6b7280' }}>Vérifie <span style={{ color: '#02d1ba' }}>{email}</span></div>
               </div>
 
-              {/* 6 cases OTP */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                {otp.map((digit, i) => (
-                  <input key={i} ref={el => otpRefs.current[i] = el}
-                    type="text" inputMode="numeric" pattern="[0-9]*" maxLength={1}
-                    value={digit} onChange={e => handleOtpChange(i, e.target.value)} onKeyDown={e => handleOtpKey(i, e)}
-                    style={{ width: 44, height: 54, textAlign: 'center', fontSize: 22, fontWeight: 700, fontFamily: 'monospace', background: digit ? 'rgba(2,209,186,0.08)' : 'rgba(255,255,255,0.04)', border: '1.5px solid ' + (digit ? 'rgba(2,209,186,0.4)' : 'rgba(255,255,255,0.1)'), borderRadius: 12, color: '#f5f5f5', outline: 'none', transition: 'all 0.15s' }}
-                  />
-                ))}
-              </div>
+              {/* Input OTP unique */}
+              <input
+                type="text" inputMode="numeric" pattern="[0-9]*"
+                value={otp} onChange={e => handleOtpChange(e.target.value)}
+                placeholder="_ _ _ _ _ _" maxLength={8} autoFocus
+                style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center', fontSize: 32, fontWeight: 900, letterSpacing: 12, fontFamily: 'monospace', background: otp.length >= 6 ? 'rgba(2,209,186,0.08)' : 'rgba(255,255,255,0.04)', border: '2px solid ' + (otp.length >= 6 ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.1)'), borderRadius: 16, padding: '20px 16px', color: '#02d1ba', outline: 'none', transition: 'all 0.2s' }}
+              />
 
               {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#ef4444', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}>{error}</div>}
 
               {verifying && <div style={{ fontSize: 13, color: '#02d1ba' }}>Vérification...</div>}
 
-              <button onClick={() => { setStep('email'); setOtp(['','','','','','']); setError(''); }}
+              <button onClick={() => { setStep('email'); setOtp(''); setError(''); }}
                 style={{ background: 'none', border: 'none', color: '#374151', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
                 ← Changer d email
               </button>
