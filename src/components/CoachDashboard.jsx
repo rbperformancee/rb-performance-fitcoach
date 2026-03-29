@@ -452,8 +452,15 @@ export function CoachDashboard({ onExit }) {
     setUploading(true);
     try {
       const html = await file.text();
-      const m = html.match(/id="prog-name"[^>]*value="([^"]*)"/);
-      const progName = m?.[1] || file.name.replace(".html", "");
+      // Parser le HTML pour extraire le nom du programme
+      let progName = file.name.replace(".html", "");
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const nameEl = doc.getElementById("prog-name");
+        const parsed = (nameEl?.value || nameEl?.getAttribute("value") || "").trim();
+        if (parsed) progName = parsed;
+      } catch(e) { console.warn("Parse name error", e); }
       await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
       const { error } = await supabase.from("programmes").insert({
         client_id: client.id, html_content: html, programme_name: progName || "Programme",
@@ -541,7 +548,7 @@ export function CoachDashboard({ onExit }) {
         </div>
       </div>
 
-      <div style={{ maxWidth:1100, margin:"0 auto", padding:"32px 24px 60px" }}>
+      <div style={{ maxWidth:"100%", margin:"0 auto", padding:"16px 16px 80px" }}>
         {/* Titre */}
         <div style={{ marginBottom:28 }}>
           <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:"-0.5px", color:"#f5f5f5", marginBottom:4 }}>Dashboard Coach</h1>
