@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Sparkline } from "./Sparkline";
 import { RestTimer, parseRestSeconds } from "./RestTimer";
 
@@ -100,12 +100,37 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
   );
 }
 
+
+function SetInput({ index, done, defaultW, defaultR, placeholder, onDone }) {
+  const [w, setW] = useState(defaultW || "");
+  const [r, setR] = useState(defaultR || "");
+  const validate = () => {
+    if (!w || done) return;
+    onDone(w, r, index);
+  };
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"22px 1fr 1fr 34px", gap:4, marginBottom:4, alignItems:"center", opacity: done ? 0.4 : 1, transition:"opacity 0.25s" }}>
+      <div style={{ textAlign:"center", fontSize:11, fontWeight:700, color: done ? "#02d1ba" : "#555", fontFamily:"monospace" }}>{done ? "✓" : index+1}</div>
+      <input type="number" inputMode="decimal" value={w} onChange={e => setW(e.target.value)} disabled={done} placeholder="0" onKeyDown={e => e.key==="Enter" && validate()}
+        style={{ boxSizing:"border-box", background: done ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.04)", border:"1.5px solid "+(done?"rgba(2,209,186,0.2)":"rgba(255,255,255,0.08)"), borderRadius:9, padding:"9px 6px", color:"#f5f5f5", fontSize:14, fontWeight:600, fontFamily:"monospace", outline:"none", textAlign:"center", width:"100%" }} />
+      <input type="text" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder} onKeyDown={e => e.key==="Enter" && validate()}
+        style={{ boxSizing:"border-box", background: done ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.04)", border:"1.5px solid "+(done?"rgba(2,209,186,0.2)":"rgba(255,255,255,0.08)"), borderRadius:9, padding:"9px 6px", color:"#f5f5f5", fontSize:14, fontWeight:600, fontFamily:"monospace", outline:"none", textAlign:"center", width:"100%" }} />
+      <button onClick={validate} disabled={done || !w} style={{ width:34, height:34, borderRadius:9, border:"none", cursor: done||!w ? "not-allowed":"pointer", background: done?"rgba(2,209,186,0.12)":w?"#02d1ba":"rgba(255,255,255,0.06)", color: done?"#02d1ba":w?"#0d0d0d":"#555", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.15s" }}>
+        <svg viewBox="0 0 20 20" fill="none" style={{ width:13, height:13 }}><polyline points="4,10 8,14 16,6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+    </div>
+  );
+}
+
 export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName }) {
   const [expanded,   setExpanded]   = useState(false);
   const [showVideo,  setShowVideo]  = useState(false);
   const [saved,      setSaved]      = useState(false);
   const [showTimer,  setShowTimer]  = useState(false);
 
+  const [resetKey, setResetKey] = useState(0);
+  const [doneCount, setDoneCount] = useState(0);
+  const completedSetsRef = useRef([]);
   const history = getHistory(weekIdx, sessionIdx, exIdx);
   const latest  = getLatest(weekIdx, sessionIdx, exIdx);
   const delta   = getDelta(weekIdx, sessionIdx, exIdx);
@@ -127,6 +152,29 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const hasVideo = !!ex.vidUrl;
   const chipsReps = ex.rawReps || (ex.sets && ex.reps ? `${ex.sets}X${ex.reps}` : ex.reps) || null;
   const restSecs  = parseRestSeconds(ex.rest);
+
+  const setsCount = (typeof ex.sets === 'number' && ex.sets > 0) ? ex.sets : 1;
+
+  const handleSetDone = (weight, reps, idx) => {
+    completedSetsRef.current = [...completedSetsRef.current, { weight, reps, index: idx }];
+    const n = completedSetsRef.current.length;
+    setDoneCount(n);
+    if (navigator.vibrate) navigator.vibrate([20, 10, 40]);
+    if (n >= setsCount) {
+      const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
+      saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n-1].reps, completedSetsRef.current);
+      if (navigator.vibrate) navigator.vibrate([30, 20, 60]);
+      if (restSecs) setTimeout(() => setShowTimer(true), 600);
+    } else if (restSecs) {
+      setTimeout(() => setShowTimer(true), 400);
+    }
+  };
+
+  const handleReset = () => {
+    completedSetsRef.current = [];
+    setDoneCount(0);
+    setResetKey(k => k + 1);
+  };
 
   const handleSave = () => {
     if (!inputWeight) return;
@@ -249,37 +297,30 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
         {/* ── Vidéo ── */}
         {hasVideo && showVideo && <VideoCard vidUrl={ex.vidUrl} thumbUrl={ex.thumbUrl} exName={ex.name} />}
 
-        {/* ── Saisie ── */}
-        <div className="ex-log-row">
-          <div className="ex-input-group">
-            <label className="ex-input-label">Charge</label>
-            <div className="ex-input-wrap">
-              <input type="number" inputMode="decimal" className="ex-input"
-                placeholder={latest ? String(latest.weight) : "0"}
-                value={inputWeight} onChange={e => setInputWeight(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleSave()} />
-              <span className="ex-unit">kg</span>
-            </div>
+        {/* ── Grille séries ── */}
+        <div style={{ marginTop: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "22px 1fr 1fr 34px", gap: 4, marginBottom: 5 }}>
+            {["#","kg","Reps",""].map((h,i) => (
+              <div key={i} style={{ fontSize: 9, color: "#444", fontWeight: 700, textAlign: "center", textTransform: "uppercase" }}>{h}</div>
+            ))}
           </div>
-          <div className="ex-input-group">
-            <label className="ex-input-label">Reps réalisées</label>
-            <div className="ex-input-wrap">
-              <input type="text" className="ex-input"
-                placeholder={ex.reps || chipsReps || "—"}
-                value={inputReps} onChange={e => setInputReps(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleSave()} />
-            </div>
-          </div>
-          <button className={`ex-save-btn ${saved ? "saved" : ""}`} onClick={handleSave}>
-            {saved ? (
-              <svg viewBox="0 0 20 20" fill="none"><polyline points="4,10 8,14 16,6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            ) : (
-              <svg viewBox="0 0 20 20" fill="none">
-                <line x1="10" y1="4" x2="10" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="4" y1="10" x2="16" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            )}
-          </button>
+          {Array.from({ length: setsCount }, (_, i) => (
+            <SetInput
+              key={resetKey + "-" + i}
+              index={i}
+              done={i < doneCount}
+              defaultW={latest?.sets?.[i]?.weight ?? (latest?.weight ? String(latest.weight) : "")}
+              defaultR={latest?.sets?.[i]?.reps ?? (ex.reps || "")}
+              placeholder={ex.reps || "—"}
+              onDone={handleSetDone}
+            />
+          ))}
+          {doneCount > 0 && doneCount < setsCount && (
+            <button onClick={handleReset} style={{ width:"100%", marginTop:4, padding:"5px", borderRadius:7, border:"1px solid rgba(255,255,255,0.07)", background:"transparent", color:"#555", fontSize:10, cursor:"pointer" }}>↺ Reset</button>
+          )}
+          {doneCount >= setsCount && setsCount > 0 && (
+            <div style={{ textAlign:"center", marginTop:6, padding:"6px", background:"rgba(2,209,186,0.08)", borderRadius:8, fontSize:11, color:GREEN, fontWeight:700 }}>✓ Toutes les séries !</div>
+          )}
         </div>
 
         {/* ── Progression ── */}
