@@ -132,9 +132,18 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     if (!inputWeight) return;
     saveLog(weekIdx, sessionIdx, exIdx, inputWeight, inputReps);
     setSaved(true);
+    // Vibration
+    if (navigator.vibrate) navigator.vibrate([30, 20, 60]);
     // Lancer le timer auto si repos configuré
-    if (restSecs) setTimeout(() => { setSaved(false); setShowTimer(true); }, 600);
-    else setTimeout(() => setSaved(false), 1800);
+    if (restSecs) {
+      setTimeout(() => {
+        setSaved(false);
+        setShowTimer(true);
+        if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
+      }, 600);
+    } else {
+      setTimeout(() => setSaved(false), 1800);
+    }
   };
 
   return (

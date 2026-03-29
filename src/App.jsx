@@ -29,7 +29,6 @@ import SplashScreen from "./components/SplashScreen";
 import { parseProgrammeHTML } from "./utils/parserProgramme";
 import { useLogs } from "./hooks/useLogs";
 import { useAuth } from "./hooks/useAuth";
-import { useWeight } from "./hooks/useWeight";
 import { ExerciseCard } from "./components/ExerciseCard";
 import WeightChart from "./components/WeightChart";
 import { SessionReport } from "./components/SessionReport";
@@ -120,7 +119,6 @@ export default function App() {
   const { getHistory, getLatest, saveLog, getDelta } = useLogs(
     client ? `client_${client.id}` : programme?.name
   );
-  const { entries, addEntry, removeEntry, getStats } = useWeight();
 
   const handleLocalImport = useCallback(async (e) => {
     const file = e.target?.files?.[0] || e.dataTransfer?.files?.[0];
@@ -209,7 +207,7 @@ export default function App() {
 
   const handleExportPDF = async () => {
     setExporting(true);
-    try { await exportProgressPDF({ programme, getHistory, entries }); }
+    try { await exportProgressPDF({ programme, getHistory, entries: [] }); }
     finally { setExporting(false); }
   };
 
@@ -423,7 +421,7 @@ export default function App() {
             </main>
           ) : (
             <main className="main" style={{ paddingTop: 8 }}>
-              <WeightChart entries={entries} addEntry={addEntry} removeEntry={removeEntry} getStats={getStats} />
+              <WeightChart clientId={client?.id} />
             </main>
           )}
 
