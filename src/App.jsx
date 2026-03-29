@@ -431,7 +431,7 @@ export default function App() {
             </button>
             <button className={`nav-tab ${page === "weight" ? "active" : ""}`} onClick={() => setPage("weight")}>
               <IconScale />Poids
-              {entries.length > 0 && <span style={{ position: "absolute", top: 6, right: "calc(50% - 20px)", width: 6, height: 6, borderRadius: "50%", background: GREEN }} />}
+              {[].length > 0 && <span style={{ position: "absolute", top: 6, right: "calc(50% - 20px)", width: 6, height: 6, borderRadius: "50%", background: GREEN }} />}
             </button>
           <button className={`nav-tab ${page === "profile" ? "active" : ""}`} onClick={() => setPage("profile")}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
