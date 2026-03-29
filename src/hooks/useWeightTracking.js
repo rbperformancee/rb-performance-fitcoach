@@ -10,9 +10,9 @@ export function useWeightTracking(clientId) {
     setLoading(true);
     const { data } = await supabase
       .from('weight_logs')
-      .select('weight, logged_at, note')
+      .select('weight, date, note, fat_pct')
       .eq('client_id', clientId)
-      .order('logged_at', { ascending: true })
+      .order('date', { ascending: true })
       .limit(30);
     setWeights(data || []);
     setLoading(false);
@@ -24,7 +24,7 @@ export function useWeightTracking(clientId) {
       client_id: clientId,
       weight: parseFloat(weight),
       note,
-      logged_at: new Date().toISOString(),
+      date: new Date().toISOString().slice(0, 10),
     });
     if (error) { console.error('Weight error:', error.message); return { error }; }
     fetchWeights();
