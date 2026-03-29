@@ -114,11 +114,19 @@ function playBeep() {
 export function RestTimer({ restSeconds, onDismiss, exName }) {
   const [timeLeft, setTimeLeft] = useState(restSeconds);
   
-  // Demander permission notification au montage
+  // Enregistrer SW et demander permission
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    const setup = async () => {
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+      if ('serviceWorker' in navigator) {
+        try {
+          await navigator.serviceWorker.register('/sw-timer.js');
+        } catch(e) {}
+      }
+    };
+    setup();
   }, []);
   const [running, setRunning] = useState(true);
   const [extra, setExtra] = useState(0);          // secondes ajoutées manuellement
@@ -173,22 +181,27 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
     return () => clearInterval(intervalRef.current);
   }, [running, vibrate]);
 
-  // Programmer une notification quand le timer se lance
+  // Programmer notification via Service Worker (fonctionne en arrière-plan)
   useEffect(() => {
     if (!running) return;
-    // Programmer notification locale si permission accordée
-    if ('Notification' in window && Notification.permission === 'granted') {
-      const delay = totalRef.current * 1000;
-      const notifTimer = setTimeout(() => {
-        new Notification('RB PERFORM — Repos terminé ! 💪', {
-          body: 'C\'est reparti !',
-          icon: '/icon.svg',
-          silent: false,
+    if ('Notification' in window && Notification.permission === 'granted' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg.active) {
+          reg.active.postMessage({
+            type: 'SCHEDULE_TIMER',
+            delay: totalRef.current,
+            title: 'RB PERFORM — Repos terminé ! 💪',
+            body: exName ? 'Prochain : ' + exName : "C'est reparti !",
+          });
+        }
+      });
+      return () => {
+        navigator.serviceWorker.ready.then(reg => {
+          if (reg.active) reg.active.postMessage({ type: 'CANCEL_TIMER' });
         });
-      }, delay);
-      return () => clearTimeout(notifTimer);
+      };
     }
-  }, [running]);
+  }, [running, exName]);
 
   const addTime = (secs) => {
     totalRef.current += secs;
