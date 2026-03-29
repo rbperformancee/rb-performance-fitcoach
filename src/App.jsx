@@ -97,7 +97,7 @@ export default function App() {
     }
   }, [client?.id, isCoach, permission, requestPermission]);
   const [splashDone, setSplashDone] = React.useState(false);
-  const [showCoachDash, setShowCoachDash] = useState(false);
+  const [showCoachDash, setShowCoachDash] = useState(true);
 
   // Programme (cloud si connecté, sinon local)
   const [localProgramme,  setLocalProgramme]  = useState(null);
