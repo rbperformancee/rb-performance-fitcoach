@@ -43,29 +43,86 @@ const PHRASES = [
 
 export function LoginScreen({ onSendMagicLink, loading }) {
   const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
+  const [step, setStep] = useState('email'); // email | otp
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState('');
   const [phraseIdx] = useState(() => Math.floor(Math.random() * PHRASES.length));
   const [coachMode, setCoachMode] = useState(false);
   const [password, setPassword] = useState('');
   const [pwdFocused, setPwdFocused] = useState(false);
   const [coachError, setCoachError] = useState('');
   const [coachLoading, setCoachLoading] = useState(false);
-  const [btnPress, setBtnPress] = useState(false);
-  const [btnHover, setBtnHover] = useState(false);
-
+  const otpRefs = React.useRef([]);
   const phrase = PHRASES[phraseIdx];
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && accepted;
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (valid && !loading) {
-      if (navigator.vibrate) navigator.vibrate([20, 10, 40]);
-      onSendMagicLink(email);
-      setSent(true);
+  // Envoyer le code OTP
+  const handleSendOTP = async () => {
+    if (!validEmail || !accepted) return;
+    setSending(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim().toLowerCase(),
+        options: { shouldCreateUser: false }
+      });
+      if (error) throw error;
+      setStep('otp');
+      setTimeout(() => otpRefs.current[0]?.focus(), 100);
+    } catch(e) {
+      setError(e.message || 'Erreur envoi du code');
     }
+    setSending(false);
+  };
+
+  // Gérer la saisie OTP
+  const handleOtpChange = (i, val) => {
+    if (!/^[0-9]?$/.test(val)) return;
+    const newOtp = [...otp];
+    newOtp[i] = val;
+    setOtp(newOtp);
+    if (val && i < 5) otpRefs.current[i + 1]?.focus();
+    if (newOtp.every(d => d !== '') && newOtp.join('').length === 6) {
+      verifyOTP(newOtp.join(''));
+    }
+  };
+
+  const handleOtpKey = (i, e) => {
+    if (e.key === 'Backspace' && !otp[i] && i > 0) {
+      otpRefs.current[i - 1]?.focus();
+    }
+  };
+
+  // Vérifier le code OTP
+  const verifyOTP = async (code) => {
+    setVerifying(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: code,
+        type: 'email',
+        options: {
+          // Session longue si "Se souvenir de moi"
+          ...(rememberMe ? {} : {})
+        }
+      });
+      if (error) {
+        setError('Code incorrect ou expiré. Réessaie.');
+        setOtp(['', '', '', '', '', '']);
+        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+      }
+      // Si succès → Supabase met à jour la session automatiquement
+    } catch(e) {
+      setError('Erreur de vérification');
+    }
+    setVerifying(false);
   };
 
   const handleCoachLogin = async (e) => {
@@ -74,10 +131,7 @@ export function LoginScreen({ onSendMagicLink, loading }) {
     setCoachError('');
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        setCoachError('Email ou mot de passe incorrect');
-        if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-      }
+      if (error) setCoachError('Email ou mot de passe incorrect');
     } catch(err) {
       setCoachError('Erreur de connexion');
     }
@@ -90,91 +144,114 @@ export function LoginScreen({ onSendMagicLink, loading }) {
       {React.createElement(Particles)}
       <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(2,209,186,0.07) 0%, #0d0d0d 60%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', fontFamily: 'Inter, -apple-system, sans-serif', position: 'relative', zIndex: 1 }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent 0%, #02d1ba 50%, transparent 100%)', opacity: 0.7 }} />
+        
         <div style={{ width: '100%', maxWidth: 360 }}>
-          <div style={{ textAlign: 'center', marginBottom: 44 }}>
-            <div style={{ display: 'inline-block', position: 'relative', marginBottom: 24 }}>
-              <div style={{ position: 'absolute', inset: -10, borderRadius: 36, background: 'radial-gradient(circle, rgba(2,209,186,0.18) 0%, transparent 70%)', animation: 'pulse 3s ease-in-out infinite' }} />
-              <img src={LOGO_B64} alt="RB PERFORM" style={{ width: 110, height: 110, objectFit: 'cover', objectPosition: 'center 60%', display: 'block', borderRadius: 24, boxShadow: '0 0 0 1px rgba(2,209,186,0.2), 0 20px 60px rgba(2,209,186,0.12)', position: 'relative' }} />
-            </div>
-            <div style={{ marginBottom: 14 }}>
-              {[phrase[0], phrase[1]].map((line, li) => (
-                <div key={li} style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1.0, color: li === 0 ? '#f5f5f5' : '#02d1ba', overflow: 'hidden' }}>
-                  {line.split('').map((char, ci) => (
-                    <span key={ci} style={{ display: 'inline-block', animation: 'letterReveal 0.4s ease ' + (li * 0.15 + ci * 0.03) + 's both' }}>{char === ' ' ? '\u00a0' : char}</span>
-                  ))}
-                </div>
-              ))}
-            </div>
-            <p style={{ fontSize: 11, color: '#4b5563', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>Programmes d entraînement personnalisés</p>
+          {/* Logo + Phrase */}
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <img src={LOGO_B64} alt="RB PERFORM" style={{ width: 88, height: 88, objectFit: 'cover', objectPosition: 'center 60%', display: 'block', margin: '0 auto 20px', borderRadius: 22, boxShadow: '0 0 0 1px rgba(2,209,186,0.2), 0 20px 60px rgba(2,209,186,0.12)' }} />
+            {[phrase[0], phrase[1]].map((line, li) => (
+              <div key={li} style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1.05, color: li === 0 ? '#f5f5f5' : '#02d1ba' }}>{line}</div>
+            ))}
+            <p style={{ fontSize: 10, color: '#4b5563', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', margin: '8px 0 0' }}>Programmes d entraînement personnalisés</p>
           </div>
 
-          {!sent ? (
+          {/* Step Email */}
+          {step === 'email' && !coachMode && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ position: 'relative' }}>
-                <input type="email" placeholder="ton@email.com" value={email} onChange={e => setEmail(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} autoFocus
-                  style={{ width: '100%', boxSizing: 'border-box', background: focused ? 'rgba(2,209,186,0.04)' : 'rgba(255,255,255,0.03)', border: '1.5px solid ' + (focused ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.08)'), borderRadius: 14, padding: '16px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s', boxShadow: focused ? '0 0 0 4px rgba(2,209,186,0.08)' : 'none' }} />
-                {email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
-                  <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#02d1ba', fontSize: 16 }}>✓</div>
-                )}
-              </div>
+              <input type="email" placeholder="ton@email.com" value={email}
+                onChange={e => setEmail(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+                onKeyDown={e => e.key === 'Enter' && handleSendOTP()}
+                autoFocus
+                style={{ width: '100%', boxSizing: 'border-box', background: focused ? 'rgba(2,209,186,0.04)' : 'rgba(255,255,255,0.03)', border: '1.5px solid ' + (focused ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.08)'), borderRadius: 14, padding: '16px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s' }} />
 
-              {!coachMode && (
-                <>
-                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-                    <div onClick={() => { setAccepted(a => !a); if (navigator.vibrate) navigator.vibrate(10); }}
-                      style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2, background: accepted ? '#02d1ba' : 'transparent', border: '1.5px solid ' + (accepted ? '#02d1ba' : 'rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', cursor: 'pointer' }}>
-                      {accepted && <span style={{ fontSize: 10, color: '#0d0d0d', fontWeight: 900 }}>✓</span>}
-                    </div>
-                    <span style={{ fontSize: 11, color: '#4b5563', lineHeight: 1.6 }}>
-                      J accepte la{' '}
-                      <button type="button" onClick={() => setShowPrivacy(true)} style={{ background: 'none', border: 'none', color: '#02d1ba', cursor: 'pointer', fontSize: 11, padding: 0, textDecoration: 'underline' }}>politique de confidentialité</button>
-                      {' '}et le traitement de mes données RGPD.
-                    </span>
-                  </label>
-                  <button type="button" disabled={!valid || loading}
-                    onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => { setBtnHover(false); setBtnPress(false); }}
-                    onMouseDown={() => setBtnPress(true)} onMouseUp={() => setBtnPress(false)}
-                    onTouchStart={() => setBtnPress(true)} onTouchEnd={() => setBtnPress(false)}
-                    onClick={handleSubmit}
-                    style={{ marginTop: 4, width: '100%', padding: '17px', borderRadius: 14, border: 'none', background: valid ? (btnPress ? '#00b5a0' : btnHover ? '#00c4b0' : '#02d1ba') : 'rgba(255,255,255,0.06)', color: valid ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', cursor: valid ? 'pointer' : 'not-allowed', transition: 'all 0.15s', transform: btnPress && valid ? 'scale(0.98)' : 'scale(1)', boxShadow: valid ? (btnHover ? '0 8px 30px rgba(2,209,186,0.4)' : '0 4px 20px rgba(2,209,186,0.25)') : 'none' }}>
-                    {loading ? 'Envoi...' : 'Accéder à mon programme →'}
-                  </button>
-                  <p style={{ textAlign: 'center', fontSize: 11, color: '#374151', margin: '4px 0 0' }}>Lien magique par email — aucun mot de passe</p>
-                </>
-              )}
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                <div onClick={() => setAccepted(a => !a)} style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2, background: accepted ? '#02d1ba' : 'transparent', border: '1.5px solid ' + (accepted ? '#02d1ba' : 'rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+                  {accepted && <span style={{ fontSize: 10, color: '#0d0d0d', fontWeight: 900 }}>✓</span>}
+                </div>
+                <span style={{ fontSize: 11, color: '#4b5563', lineHeight: 1.6 }}>
+                  J accepte la <button type="button" onClick={() => setShowPrivacy(true)} style={{ background: 'none', border: 'none', color: '#02d1ba', cursor: 'pointer', fontSize: 11, padding: 0, textDecoration: 'underline' }}>politique de confidentialité</button> et le traitement de mes données RGPD.
+                </span>
+              </label>
 
-              {coachMode && (
-                <form onSubmit={handleCoachLogin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input type="password" placeholder="Mot de passe coach" value={password} onChange={e => setPassword(e.target.value)} onFocus={() => setPwdFocused(true)} onBlur={() => setPwdFocused(false)}
-                    style={{ width: '100%', boxSizing: 'border-box', background: pwdFocused ? 'rgba(2,209,186,0.04)' : 'rgba(255,255,255,0.03)', border: '1.5px solid ' + (pwdFocused ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.08)'), borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s' }} />
-                  {coachError && <div style={{ fontSize: 12, color: '#ef4444', textAlign: 'center', background: 'rgba(239,68,68,0.1)', padding: '8px', borderRadius: 8 }}>{coachError}</div>}
-                  <button type="submit" disabled={!password || !email || coachLoading}
-                    style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: password && email ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: password && email ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, cursor: password && email ? 'pointer' : 'not-allowed', letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.15s' }}>
-                    {coachLoading ? 'Connexion...' : 'Accéder au dashboard →'}
-                  </button>
-                </form>
-              )}
+              {/* Se souvenir de moi */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                <div onClick={() => setRememberMe(r => !r)} style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, background: rememberMe ? '#02d1ba' : 'transparent', border: '1.5px solid ' + (rememberMe ? '#02d1ba' : 'rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+                  {rememberMe && <span style={{ fontSize: 10, color: '#0d0d0d', fontWeight: 900 }}>✓</span>}
+                </div>
+                <span style={{ fontSize: 11, color: '#4b5563' }}>Se souvenir de moi sur cet appareil</span>
+              </label>
 
-              <button onClick={() => { setCoachMode(m => !m); setCoachError(''); }}
-                style={{ background: 'none', border: 'none', color: coachMode ? '#02d1ba' : '#374151', fontSize: 11, cursor: 'pointer', margin: '8px auto 0', display: 'block', letterSpacing: 0.5, textDecoration: 'underline' }}>
-                {coachMode ? '← Retour client' : 'Espace Coach'}
+              {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#ef4444', textAlign: 'center' }}>{error}</div>}
+
+              <button onClick={handleSendOTP} disabled={!validEmail || !accepted || sending}
+                style={{ marginTop: 4, width: '100%', padding: '17px', borderRadius: 14, border: 'none', background: validEmail && accepted ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: validEmail && accepted ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', cursor: validEmail && accepted ? 'pointer' : 'not-allowed', transition: 'all 0.15s' }}>
+                {sending ? 'Envoi...' : 'Recevoir mon code →'}
               </button>
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '32px 0' }}>
-              <div style={{ fontSize: 56, marginBottom: 16 }}>⚡</div>
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#f5f5f5', margin: '0 0 10px', letterSpacing: '-0.5px' }}>Check tes emails</h2>
-              <p style={{ color: '#6b7280', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
-                Lien envoyé à<br /><span style={{ color: '#02d1ba', fontWeight: 700 }}>{email}</span><br />Clique dessus pour accéder à ton programme.
-              </p>
-              <div style={{ marginTop: 24, padding: '12px 16px', background: 'rgba(2,209,186,0.06)', border: '1px solid rgba(2,209,186,0.12)', borderRadius: 12 }}>
-                <p style={{ color: '#4b5563', fontSize: 11, margin: 0 }}>Vérifie tes spams si tu ne vois pas l email.</p>
-              </div>
+              <p style={{ textAlign: 'center', fontSize: 11, color: '#374151', margin: '4px 0 0' }}>Code à 6 chiffres par email — sans mot de passe</p>
             </div>
           )}
+
+          {/* Step OTP */}
+          {step === 'otp' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📬</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#f5f5f5', marginBottom: 4 }}>Code envoyé !</div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>Vérifie <span style={{ color: '#02d1ba' }}>{email}</span></div>
+              </div>
+
+              {/* 6 cases OTP */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {otp.map((digit, i) => (
+                  <input key={i} ref={el => otpRefs.current[i] = el}
+                    type="text" inputMode="numeric" pattern="[0-9]*" maxLength={1}
+                    value={digit} onChange={e => handleOtpChange(i, e.target.value)} onKeyDown={e => handleOtpKey(i, e)}
+                    style={{ width: 44, height: 54, textAlign: 'center', fontSize: 22, fontWeight: 700, fontFamily: 'monospace', background: digit ? 'rgba(2,209,186,0.08)' : 'rgba(255,255,255,0.04)', border: '1.5px solid ' + (digit ? 'rgba(2,209,186,0.4)' : 'rgba(255,255,255,0.1)'), borderRadius: 12, color: '#f5f5f5', outline: 'none', transition: 'all 0.15s' }}
+                  />
+                ))}
+              </div>
+
+              {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#ef4444', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}>{error}</div>}
+
+              {verifying && <div style={{ fontSize: 13, color: '#02d1ba' }}>Vérification...</div>}
+
+              <button onClick={() => { setStep('email'); setOtp(['','','','','','']); setError(''); }}
+                style={{ background: 'none', border: 'none', color: '#374151', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
+                ← Changer d email
+              </button>
+
+              <button onClick={handleSendOTP} disabled={sending}
+                style={{ background: 'none', border: 'none', color: '#02d1ba', fontSize: 12, cursor: 'pointer' }}>
+                {sending ? 'Envoi...' : 'Renvoyer le code'}
+              </button>
+            </div>
+          )}
+
+          {/* Espace Coach */}
+          {coachMode && (
+            <form onSubmit={handleCoachLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input type="email" placeholder="coach@email.com" value={email} onChange={e => setEmail(e.target.value)} autoFocus
+                style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none' }} />
+              <input type="password" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} onFocus={() => setPwdFocused(true)} onBlur={() => setPwdFocused(false)}
+                style={{ width: '100%', boxSizing: 'border-box', background: pwdFocused ? 'rgba(2,209,186,0.04)' : 'rgba(255,255,255,0.03)', border: '1.5px solid ' + (pwdFocused ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.08)'), borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s' }} />
+              {coachError && <div style={{ fontSize: 12, color: '#ef4444', textAlign: 'center', background: 'rgba(239,68,68,0.1)', padding: '8px', borderRadius: 8 }}>{coachError}</div>}
+              <button type="submit" disabled={!password || !email || coachLoading}
+                style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: password && email ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: password && email ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, cursor: password && email ? 'pointer' : 'not-allowed', letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.15s' }}>
+                {coachLoading ? 'Connexion...' : 'Accéder au dashboard →'}
+              </button>
+            </form>
+          )}
+
+          {step === 'email' && (
+            <button onClick={() => { setCoachMode(m => !m); setCoachError(''); setError(''); }}
+              style={{ background: 'none', border: 'none', color: coachMode ? '#02d1ba' : '#374151', fontSize: 11, cursor: 'pointer', margin: '16px auto 0', display: 'block', textDecoration: 'underline' }}>
+              {coachMode ? '← Retour client' : 'Espace Coach'}
+            </button>
+          )}
         </div>
+
         <div style={{ position: 'fixed', bottom: 20, fontSize: 10, color: '#1f2937', letterSpacing: '1.5px', fontWeight: 600, textTransform: 'uppercase' }}>RB PERFORM · SIRET 99063780300018</div>
-        <style>{'@keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } } @keyframes letterReveal { from { opacity:0; transform:translateY(20px) skewY(3deg); } to { opacity:1; transform:translateY(0) skewY(0deg); } } @keyframes bounceIn { 0%{transform:translateY(-50%) scale(0);} 70%{transform:translateY(-50%) scale(1.2);} 100%{transform:translateY(-50%) scale(1);} } @keyframes pulse { 0%,100%{opacity:0.5;transform:scale(1);} 50%{opacity:1;transform:scale(1.05);} } @keyframes spin { to{transform:rotate(360deg);} } input::placeholder{color:#374151;}'}</style>
+        <style>{'input::placeholder { color: #374151; }'}</style>
       </div>
     </>
   );

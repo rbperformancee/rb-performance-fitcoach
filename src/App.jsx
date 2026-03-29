@@ -149,12 +149,7 @@ export default function App() {
   // ── Pas connecté → Login ──
   if (!user) {
     return (
-      <LoginScreen
-        onSendMagicLink={sendMagicLink}
-        loading={sendingLink}
-        error={authError}
-        magicSent={magicSent}
-      />
+      <LoginScreen />
     );
   }
 
