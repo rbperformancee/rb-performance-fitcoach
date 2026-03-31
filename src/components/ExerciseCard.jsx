@@ -128,8 +128,13 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const [saved,      setSaved]      = useState(false);
   const [showTimer,  setShowTimer]  = useState(false);
 
+
+  const today = new Date().toISOString().slice(0, 10);
+  const storageKey = 'sets_done_' + weekIdx + '_' + sessionIdx + '_' + exIdx + '_' + today;
   const [resetKey, setResetKey] = useState(0);
-  const [doneCount, setDoneCount] = useState(0);
+  const [doneCount, setDoneCount] = useState(() => {
+    try { return parseInt(localStorage.getItem('sets_done_' + weekIdx + '_' + sessionIdx + '_' + exIdx + '_' + new Date().toISOString().slice(0,10)) || '0'); } catch { return 0; }
+  });
   const completedSetsRef = useRef([]);
   const history = getHistory(weekIdx, sessionIdx, exIdx);
   const latest  = getLatest(weekIdx, sessionIdx, exIdx);
@@ -159,6 +164,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     completedSetsRef.current = [...completedSetsRef.current, { weight, reps, index: idx }];
     const n = completedSetsRef.current.length;
     setDoneCount(n);
+    try { localStorage.setItem(storageKey, String(n)); } catch {}
     if (navigator.vibrate) navigator.vibrate([20, 10, 40]);
     if (n >= setsCount) {
       const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
@@ -174,6 +180,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     completedSetsRef.current = [];
     setDoneCount(0);
     setResetKey(k => k + 1);
+    try { localStorage.removeItem(storageKey); } catch {}
   };
 
   const handleSave = () => {
