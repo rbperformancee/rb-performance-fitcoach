@@ -420,6 +420,17 @@ export default function App() {
             </main>
           )}
 
+          {showRPE && client && <RPEModal clientId={client.id} sessionName={session?.name} onClose={() => setShowRPE(false)} />}
+          {page === "training" && (
+            <button onClick={() => setShowRPE(true)} style={{
+              position:"fixed", bottom:82, right:16, zIndex:100,
+              background:"#02d1ba", border:"none", borderRadius:100,
+              padding:"12px 18px", color:"#0d0d0d", fontSize:12,
+              fontWeight:800, cursor:"pointer",
+              boxShadow:"0 4px 20px rgba(2,209,186,0.5)",
+              display:"flex", alignItems:"center", gap:6
+            }}>✓ Fin de séance</button>
+          )}
           <nav className="bottom-nav">
             <button className={`nav-tab ${page === "training" ? "active" : ""}`} onClick={() => setPage("training")}>
               <IconDumbbell />Entraînement
