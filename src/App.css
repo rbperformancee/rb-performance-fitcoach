@@ -346,55 +346,55 @@ input[type=number] { -moz-appearance: textfield; }
 .main { flex: 1; padding: 0 0 90px; }
 
 /* ── PROGRAMME HEADER ── */
-.prog-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px 18px 18px; gap: 14px; }
-.prog-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--accent); margin-bottom: 5px; }
-.prog-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); line-height: 1.2; }
-.prog-client { font-size: 12px; color: var(--text-3); margin-top: 4px; }
-.prog-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; color: var(--text-3); }
-.dot { color: #2a2a2a; }
+.prog-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 28px 24px 20px; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.prog-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: rgba(2,209,186,0.6); margin-bottom: 10px; }
+.prog-name { font-size: 30px; font-weight: 800; letter-spacing: -1.5px; color: #ffffff; line-height: 1.1; }
+.prog-client { font-size: 11px; color: rgba(255,255,255,0.2); margin-top: 8px; letter-spacing: 0.5px; }
+.prog-meta { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 10px; color: rgba(255,255,255,0.2); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+.dot { color: rgba(255,255,255,0.08); }
 
-.prog-ring-wrap { position: relative; width: 48px; height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.prog-ring { width: 48px; height: 48px; }
-.prog-ring-pct { position: absolute; font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--accent); }
+.prog-ring-wrap { position: relative; width: 56px; height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.prog-ring { width: 56px; height: 56px; filter: drop-shadow(0 0 6px rgba(2,209,186,0.5)); }
+.prog-ring-pct { position: absolute; font-family: var(--mono); font-size: 11px; font-weight: 700; color: #02d1ba; }
 
 /* ── WEEK NAV ── */
 .week-nav { display: flex; gap: 6px; padding: 0 18px 12px; overflow-x: auto; scrollbar-width: none; }
 .week-nav::-webkit-scrollbar { display: none; }
 .week-btn {
-  flex-shrink: 0; padding: 5px 15px;
-  background: var(--bg-3); border: 1px solid var(--border);
-  border-radius: 100px; color: var(--text-3);
-  font-family: var(--font); font-size: 11.5px; font-weight: 600;
-  cursor: pointer; transition: all 0.15s;
+  flex-shrink: 0; padding: 6px 18px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 100px; color: rgba(255,255,255,0.3);
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
 }
 .week-btn:hover { border-color: var(--border-2); color: var(--text-2); }
-.week-btn.active { background: var(--accent); border-color: var(--accent); color: #0d0d0d; box-shadow: 0 2px 10px var(--accent-glow); }
+.week-btn.active { background: #02d1ba; border-color: #02d1ba; color: #000; box-shadow: 0 0 16px rgba(2,209,186,0.4); font-weight: 700; }
 
 /* ── SESSION TABS ── */
 .session-tabs { display: flex; gap: 6px; padding: 0 18px 12px; overflow-x: auto; scrollbar-width: none; }
 .session-tabs::-webkit-scrollbar { display: none; }
 .session-tab {
   flex-shrink: 0; display: flex; align-items: center; gap: 6px;
-  padding: 5px 15px; background: var(--bg-3); border: 1px solid var(--border);
-  border-radius: 100px; color: var(--text-3);
-  font-family: var(--font); font-size: 11.5px; font-weight: 500;
-  cursor: pointer; transition: all 0.15s;
+  padding: 6px 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 100px; color: rgba(255,255,255,0.3);
+  font-family: var(--font); font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
 }
 .session-tab:hover { border-color: var(--border-2); color: var(--text-2); }
-.session-tab.active { background: var(--bg-4); border-color: rgba(2,209,186,0.4); color: var(--text); }
+.session-tab.active { background: rgba(2,209,186,0.08); border-color: rgba(2,209,186,0.35); color: #fff; font-weight: 600; }
 .session-tab-pct { font-family: var(--mono); font-size: 9.5px; color: var(--text-3); }
 
 /* ── SESSION CONTENT ── */
 .session-content { padding: 0 14px; }
 .session-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 2px 2px 18px; gap: 10px; }
-.session-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
-.session-name { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.session-eyebrow { font-size: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.2); margin-bottom: 8px; }
+.session-name { font-size: 22px; font-weight: 800; letter-spacing: -0.8px; color: #ffffff; }
 .session-desc { margin-top: 4px; font-size: 12px; color: var(--text-3); line-height: 1.5; }
 .session-count {
   flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 40px; height: 40px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); background: var(--bg-3);
-  font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text);
+  width: 44px; height: 44px; border-radius: 12px;
+  border: 1px solid rgba(2,209,186,0.2); background: rgba(2,209,186,0.06);
+  font-family: var(--mono); font-size: 16px; font-weight: 300; color: #02d1ba;
 }
 .session-count span { font-size: 8.5px; color: var(--text-3); letter-spacing: 0.5px; margin-top: 1px; }
 
