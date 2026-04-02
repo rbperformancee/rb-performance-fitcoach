@@ -356,7 +356,7 @@ export default function App() {
       {/* ── Topbar ── */}
       <header className="topbar">
         <div className="topbar-brand">
-          <div className="topbar-logo-img" onClick={() => {}} style={{ cursor: !isCoach ? "pointer" : "default" }}><img src={require("./utils/logo").LOGO_B64} alt="RB Perform" /></div>
+          <div className="topbar-logo-img" onClick={() => { if (!isCoach) setShowHome(true); }} style={{ cursor: !isCoach ? "pointer" : "default" }}><img src={require("./utils/logo").LOGO_B64} alt="RB Perform" /></div>
           <span className="topbar-name">RB&nbsp;<span>Performance</span></span>
         </div>
         <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
