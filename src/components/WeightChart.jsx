@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 
 export default function WeightChart({ clientId, programme }) {
-  const { weights, addWeight, latest, diff } = useWeightTracking(clientId);
+  const { weights, addWeight, latest, diff, weightGoal, saveGoal } = useWeightTracking(clientId);
+  const [editGoal, setEditGoal] = useState(false);
+  const [newGoal, setNewGoal] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [newWeight, setNewWeight] = useState("");
   const [saving, setSaving] = useState(false);
@@ -24,7 +26,7 @@ export default function WeightChart({ clientId, programme }) {
   const maxV = vals.length ? Math.max(...vals) : 100;
   const range = maxV - minV || 1;
   const GREEN = "#02d1ba";
-  const goal = 78;
+  const goal = weightGoal;
 
   const getPhrase = () => {
     if (!weekDiff) return "Commence ton suivi. Chaque gramme compte.";
@@ -67,7 +69,7 @@ export default function WeightChart({ clientId, programme }) {
 
   const proj = getProjection();
   const heatmap = getHeatmap();
-  const goalPct = latestW ? Math.min(Math.max(Math.round((1 - (latestW - goal) / 10) * 100), 0), 100) : 0;
+  const goalPct = latestW && goal ? Math.min(Math.max(Math.round((1 - (latestW - goal) / 10) * 100), 0), 100) : 0;
   const isDown = weekDiff !== null && weekDiff < 0;
 
   const W = 420, H = 120, padY = 10;
@@ -127,8 +129,8 @@ export default function WeightChart({ clientId, programme }) {
                 <stop offset="100%" stopColor={GREEN} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <line x1={0} y1={goalY} x2={W} y2={goalY} stroke="rgba(2,209,186,0.2)" strokeWidth={1} strokeDasharray="8,5" />
-            <text x={8} y={goalY - 4} fill="rgba(2,209,186,0.4)" fontSize={9} fontFamily="-apple-system,sans-serif">Objectif {goal}kg</text>
+            {goal && <line x1={0} y1={goalY} x2={W} y2={goalY} stroke="rgba(2,209,186,0.2)" strokeWidth={1} strokeDasharray="8,5" />}
+            {goal && <text x={8} y={goalY - 4} fill="rgba(2,209,186,0.4)" fontSize={9} fontFamily="-apple-system,sans-serif">Objectif {goal}kg</text>}
             <path d={areaD} fill="url(#wg2)" />
             <path d={pathD} fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             <circle cx={toX(vals.length - 1)} cy={toY(vals[vals.length - 1])} r={5} fill={GREEN} />
@@ -153,13 +155,49 @@ export default function WeightChart({ clientId, programme }) {
       </div>
 
       <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>Objectif · {goal} kg</span>
-          <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{goalPct}% atteint</span>
-        </div>
-        <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
-          <div style={{ height: "100%", width: goalPct + "%", background: GREEN, borderRadius: 1, boxShadow: "0 0 8px rgba(2,209,186,0.4)" }} />
-        </div>
+        {goal ? (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>Objectif · {goal} kg</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{goalPct}% atteint</span>
+                <button onClick={() => setEditGoal(true)} style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "2px 8px", cursor: "pointer" }}>Modifier</button>
+              </div>
+            </div>
+            <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+              <div style={{ height: "100%", width: goalPct + "%", background: GREEN, borderRadius: 1, boxShadow: "0 0 8px rgba(2,209,186,0.4)" }} />
+            </div>
+          </>
+        ) : (
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>Definis ton objectif de poids</div>
+            {editGoal ? (
+              <div style={{ display: "flex", gap: 10 }}>
+                <input type="number" step="0.1" placeholder="Ex: 75" value={newGoal}
+                  onChange={e => setNewGoal(e.target.value)}
+                  style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
+                <button onClick={async () => { await saveGoal(newGoal); setEditGoal(false); setNewGoal(""); }}
+                  style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer" }}>OK</button>
+              </div>
+            ) : (
+              <button onClick={() => setEditGoal(true)}
+                style={{ background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, padding: "12px 20px", color: GREEN, fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%" }}>
+                + Definir mon objectif
+              </button>
+            )}
+          </div>
+        )}
+        {editGoal && goal && (
+          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+            <input type="number" step="0.1" placeholder={"Actuel: " + goal + " kg"} value={newGoal}
+              onChange={e => setNewGoal(e.target.value)}
+              style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
+            <button onClick={async () => { await saveGoal(newGoal); setEditGoal(false); setNewGoal(""); }}
+              style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer" }}>OK</button>
+            <button onClick={() => setEditGoal(false)}
+              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 14px", color: "rgba(255,255,255,0.3)", cursor: "pointer" }}>✕</button>
+          </div>
+        )}
       </div>
 
       <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
