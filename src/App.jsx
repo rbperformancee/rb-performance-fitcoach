@@ -156,94 +156,120 @@ export default function App() {
   // ── Coach → Dashboard admin ──
   if (showHome && !isCoach) {
     const _h = new Date().getHours();
-    const _g = _h < 5 ? 'Bonne nuit,' : _h < 12 ? 'Bonjour,' : _h < 18 ? 'Bon apres-midi,' : 'Bonsoir,';
+    const _g = _h < 12 ? 'Bonjour' : _h < 18 ? 'Bon apres-midi' : 'Bonsoir';
     const _fn = client?.full_name?.split(' ')[0] || 'Athlete';
     const _quotes = [
-      "La douleur d aujourd hui est la force de demain.",
-      "Les champions ne naissent pas. Ils se construisent.",
-      "Le corps accomplit ce que l esprit croit possible.",
-      "Zero excuse. Maximum resultat.",
-      "Un jour tu seras content d avoir continue.",
-      "La discipline c est la liberte.",
-      "Chaque rep te rapproche de qui tu veux etre.",
+      "LA DOULEUR D AUJOURD HUI EST LA FORCE DE DEMAIN.",
+      "LES CHAMPIONS NE NAISSENT PAS. ILS SE CONSTRUISENT.",
+      "ZERO EXCUSE. MAXIMUM RESULTAT.",
+      "UN JOUR TU SERAS CONTENT D AVOIR CONTINUE.",
+      "LA DISCIPLINE C EST LA LIBERTE.",
+      "CHAQUE REP TE RAPPROCHE DE QUI TU VEUX ETRE.",
+      "LE CORPS ACCOMPLIT CE QUE L ESPRIT CROIT POSSIBLE.",
     ];
     const _q = _quotes[new Date().getDay() % _quotes.length];
     const _tw = programme?.weeks?.length || 0;
     const _ts = programme?.weeks?.reduce((a,w) => a+(w.sessions?.length||0), 0) || 0;
     const _now = new Date();
     const _time = String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
-    const _days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-    const _months = ['janvier','fevrier','mars','avril','mai','juin','juillet','aout','septembre','octobre','novembre','decembre'];
+    const _days = ['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
+    const _months = ['JAN','FEV','MAR','AVR','MAI','JUN','JUL','AOU','SEP','OCT','NOV','DEC'];
+    const _dash = 2 * Math.PI * 40;
+    const _pct = _ts > 0 ? Math.min(Math.round((0 / _ts) * 100), 100) : 0;
     return (
-      <div style={{minHeight:'100vh',background:'#000',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden'}}>
+      <div style={{minHeight:'100vh',background:'#050505',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden'}}>
 
-        {/* Fond dégradé subtil */}
-        <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 30% 0%, rgba(2,209,186,0.12) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(129,140,248,0.08) 0%, transparent 50%)',pointerEvents:'none'}}/>
+        {/* Particules d'ambiance */}
+        <div style={{position:'absolute',top:0,left:0,right:0,height:'60%',background:'radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.15) 0%, transparent 60%)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',bottom:0,left:0,right:0,height:'40%',background:'radial-gradient(ellipse at 50% 120%, rgba(2,209,186,0.06) 0%, transparent 60%)',pointerEvents:'none'}}/>
 
-        {/* Heure en grand — style Apple */}
-        <div style={{padding:'60px 32px 0',position:'relative',zIndex:1}}>
-          <div style={{fontSize:80,fontWeight:100,color:'rgba(255,255,255,0.9)',letterSpacing:'-3px',lineHeight:1,fontVariantNumeric:'tabular-nums'}}>{_time}</div>
-          <div style={{fontSize:16,color:'rgba(255,255,255,0.3)',fontWeight:400,marginTop:8,letterSpacing:'0.5px'}}>
-            {_days[_now.getDay()]}, {_now.getDate()} {_months[_now.getMonth()]}
+        {/* TOP BAR — date + heure Tesla style */}
+        <div style={{padding:'52px 28px 0',display:'flex',justifyContent:'space-between',alignItems:'flex-start',position:'relative',zIndex:2}}>
+          <div>
+            <div style={{fontSize:10,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'3px',textTransform:'uppercase',marginBottom:12}}>{_days[_now.getDay()]} · {_now.getDate()} {_months[_now.getMonth()]}</div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontWeight:400,letterSpacing:'1px',marginBottom:6}}>{_g}</div>
+            <div style={{fontSize:44,fontWeight:800,color:'#ffffff',letterSpacing:'-2px',lineHeight:1}}>{_fn}<span style={{color:'#02d1ba'}}>.</span></div>
+          </div>
+
+          {/* Anneau Tesla + heure Apple */}
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:38,fontWeight:100,color:'rgba(255,255,255,0.8)',letterSpacing:'-2px',fontVariantNumeric:'tabular-nums',lineHeight:1}}>{_time}</div>
+            <div style={{display:'flex',justifyContent:'flex-end',marginTop:12}}>
+              <div style={{position:'relative',width:52,height:52}}>
+                <svg width="52" height="52" viewBox="0 0 100 100" style={{transform:'rotate(-90deg)'}}>
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8"/>
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="#02d1ba" strokeWidth="8" strokeLinecap="round"
+                    strokeDasharray={_dash} strokeDashoffset={_dash * (1 - _pct / 100)}
+                    style={{filter:'drop-shadow(0 0 6px rgba(2,209,186,0.8))'}}/>
+                </svg>
+                <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#02d1ba'}}>{_pct}%</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Salutation */}
-        <div style={{padding:'32px 32px 0',position:'relative',zIndex:1}}>
-          <div style={{fontSize:14,color:'rgba(255,255,255,0.35)',fontWeight:400,letterSpacing:'0.3px',marginBottom:4}}>{_g}</div>
-          <div style={{fontSize:42,fontWeight:700,color:'#fff',letterSpacing:'-1.5px',lineHeight:1.1}}>{_fn}.</div>
+        {/* CITATION NIKE — le wow factor */}
+        <div style={{padding:'36px 28px 0',position:'relative',zIndex:2}}>
+          <div style={{fontSize:11,color:'rgba(2,209,186,0.5)',fontWeight:700,letterSpacing:'4px',textTransform:'uppercase',marginBottom:16}}>Citation du jour</div>
+          <div style={{fontSize:22,fontWeight:900,color:'rgba(255,255,255,0.92)',lineHeight:1.35,letterSpacing:'-0.3px'}}>
+            {_q.split(' ').map((word, i) => (
+              <span key={i} style={{
+                color: i === 0 ? '#02d1ba' : 'rgba(255,255,255,0.9)',
+                marginRight: '6px',
+                display: 'inline-block'
+              }}>{word}</span>
+            ))}
+          </div>
         </div>
 
-        {/* Ligne séparatrice */}
-        <div style={{margin:'28px 32px 0',height:'1px',background:'rgba(255,255,255,0.07)',position:'relative',zIndex:1}}/>
+        {/* DIVIDER */}
+        <div style={{margin:'28px 28px 0',height:'1px',background:'linear-gradient(90deg, rgba(2,209,186,0.3) 0%, rgba(255,255,255,0.05) 100%)',position:'relative',zIndex:2}}/>
 
-        {/* Programme — minimaliste */}
+        {/* PROGRAMME — Tesla dashboard */}
         {programme && (
-          <div style={{padding:'24px 32px 0',position:'relative',zIndex:1}}>
-            <div style={{fontSize:11,color:'rgba(2,209,186,0.7)',fontWeight:600,letterSpacing:'2px',textTransform:'uppercase',marginBottom:12}}>Programme actif</div>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
-              <div style={{fontSize:28,fontWeight:700,color:'#fff',letterSpacing:'-0.5px'}}>{programme.name}</div>
-              <div style={{textAlign:'right'}}>
-                <div style={{fontSize:13,color:'rgba(255,255,255,0.3)'}}>{_tw} sem. · {_ts} séances</div>
+          <div style={{padding:'24px 28px 0',position:'relative',zIndex:2}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+              <div style={{fontSize:10,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'3px',textTransform:'uppercase'}}>Programme actif</div>
+              <div style={{display:'flex',gap:6}}>
+                <span style={{fontSize:10,color:'rgba(2,209,186,0.7)',background:'rgba(2,209,186,0.1)',border:'1px solid rgba(2,209,186,0.2)',borderRadius:20,padding:'3px 10px',fontWeight:600}}>{_tw} SEM.</span>
+                <span style={{fontSize:10,color:'rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.05)',borderRadius:20,padding:'3px 10px',fontWeight:600}}>{_ts} SÉANCES</span>
               </div>
             </div>
-            {/* Barre de progression */}
-            <div style={{marginTop:16,height:3,background:'rgba(255,255,255,0.08)',borderRadius:2,overflow:'hidden'}}>
-              <div style={{height:'100%',width:'30%',background:'linear-gradient(90deg, #02d1ba, #01b8a3)',borderRadius:2,boxShadow:'0 0 10px rgba(2,209,186,0.5)'}}/>
+            <div style={{fontSize:30,fontWeight:800,color:'#fff',letterSpacing:'-1px'}}>{programme.name}</div>
+            {/* Barre progression */}
+            <div style={{marginTop:14,height:2,background:'rgba(255,255,255,0.06)',borderRadius:1}}>
+              <div style={{height:'100%',width:_pct+'%',minWidth:'2%',background:'#02d1ba',borderRadius:1,boxShadow:'0 0 12px rgba(2,209,186,0.6)',transition:'width 1s ease'}}/>
             </div>
           </div>
         )}
 
-        {/* Stats — épurées */}
-        <div style={{padding:'28px 32px 0',display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1,position:'relative',zIndex:1}}>
+        {/* STATS — Tesla data */}
+        <div style={{padding:'24px 28px 0',display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,position:'relative',zIndex:2}}>
           {[
-            {label:'Séances',value:_ts,sub:'total'},
-            {label:'Semaines',value:_tw,sub:'programme'},
-            {label:'Exercices',value:0,sub:'validés'},
+            {label:'Séances',value:_ts,unit:'total',color:'#02d1ba'},
+            {label:'Semaines',value:_tw,unit:'programme',color:'rgba(255,255,255,0.5)'},
+            {label:'Exercices',value:0,unit:'validés',color:'rgba(255,255,255,0.5)'},
           ].map((s,i)=>(
-            <div key={i} style={{padding:'16px 0',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
-              <div style={{fontSize:28,fontWeight:300,color:'#fff',letterSpacing:'-1px'}}>{s.value}</div>
-              <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontWeight:500,marginTop:4,textTransform:'uppercase',letterSpacing:'1px'}}>{s.label}</div>
+            <div key={i} style={{borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:14}}>
+              <div style={{fontSize:32,fontWeight:200,color:s.color,letterSpacing:'-1.5px',lineHeight:1}}>{s.value}</div>
+              <div style={{fontSize:9,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'2px',textTransform:'uppercase',marginTop:6}}>{s.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Quote — style editorial */}
-        <div style={{padding:'28px 32px 0',position:'relative',zIndex:1}}>
-          <div style={{fontSize:15,color:'rgba(255,255,255,0.35)',lineHeight:1.8,fontStyle:'italic',fontWeight:300}}>
-            " {_q} "
-          </div>
-        </div>
+        <div style={{flex:1,minHeight:20}}/>
 
-        <div style={{flex:1}}/>
-
-        {/* CTA — Apple style */}
-        <div style={{padding:'0 32px 50px',position:'relative',zIndex:1}}>
-          <button onClick={()=>setShowHome(false)} style={{width:'100%',padding:'19px',borderRadius:16,border:'none',background:'#02d1ba',color:'#000',fontSize:16,fontWeight:600,cursor:'pointer',letterSpacing:'-0.2px',transition:'opacity 0.2s'}}
-            onTouchStart={e=>e.currentTarget.style.opacity='0.85'}
-            onTouchEnd={e=>e.currentTarget.style.opacity='1'}>
-            Commencer la séance
+        {/* CTA — Apple meets Nike */}
+        <div style={{padding:'0 28px 48px',position:'relative',zIndex:2}}>
+          <button onClick={()=>setShowHome(false)}
+            style={{width:'100%',padding:'20px 24px',borderRadius:18,border:'none',background:'#02d1ba',color:'#000',fontSize:15,fontWeight:700,cursor:'pointer',letterSpacing:'0.5px',position:'relative',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'space-between'}}
+            onTouchStart={e=>{e.currentTarget.style.transform='scale(0.98)';e.currentTarget.style.opacity='0.9'}}
+            onTouchEnd={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.opacity='1'}}>
+            <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 50%)',pointerEvents:'none'}}/>
+            <span style={{position:'relative',fontWeight:800,letterSpacing:'-0.2px'}}>Commencer la séance</span>
+            <svg viewBox="0 0 24 24" fill="currentColor" style={{width:20,height:20,position:'relative'}}><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
           </button>
+          <div style={{textAlign:'center',marginTop:16,fontSize:9,color:'rgba(255,255,255,0.1)',letterSpacing:'3px',fontWeight:600,textTransform:'uppercase'}}>RB Perform · Coaching personnalisé</div>
         </div>
       </div>
     );
