@@ -20,12 +20,14 @@ export function useWeightTracking(clientId) {
 
   const addWeight = useCallback(async (weight, note = '') => {
     if (!clientId) return;
-    const { error } = await supabase.from('weight_logs').insert({
+    const today = new Date();
+    const date = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+    const { error } = await supabase.from('weight_logs').upsert({
       client_id: clientId,
       weight: parseFloat(weight),
       note,
-      date: new Date().toISOString().slice(0, 10),
-    });
+      date,
+    }, { onConflict: 'client_id,date' });
     if (error) { console.error('Weight error:', error.message); return { error }; }
     fetchWeights();
     return { success: true };
