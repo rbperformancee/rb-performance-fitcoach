@@ -239,25 +239,50 @@ export default function WeightChart({ clientId, client, programme }) {
       <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
 
       <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Seances · Impact poids</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {(() => {
-            const isPrise = goal && latestW && goal > latestW;
-            return [
-              { label: "3+ seances / sem.", pct: 85, change: isPrise ? "+0.5 kg" : "-0.5 kg", color: GREEN },
-              { label: "2 seances / sem.", pct: 40, change: isPrise ? "+0.2 kg" : "-0.1 kg", color: "rgba(255,255,255,0.3)" },
-              { label: "0-1 seance / sem.", pct: 25, change: isPrise ? "+0.0 kg" : "+0.2 kg", color: isPrise ? "rgba(255,255,255,0.3)" : "rgba(239,68,68,0.7)" },
-            ];
-          })().map((r, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", width: 130, flexShrink: 0 }}>{r.label}</div>
-              <div style={{ flex: 1, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
-                <div style={{ height: "100%", width: r.pct + "%", background: r.color, borderRadius: 1 }} />
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Signal · Bruit</div>
+        {(() => {
+          if (vals.length < 3) return (
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.15)" }}>Ajoute plus de pesees pour analyser tes variations.</div>
+          );
+          const diffs = vals.slice(1).map((v, i) => Math.abs(v - vals[i]));
+          const noise = (diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(2);
+          const lastDiff = Math.abs(vals[vals.length - 1] - vals[vals.length - 2]);
+          const isNoise = lastDiff <= parseFloat(noise);
+          const fakeAlerts = diffs.filter(d => d <= parseFloat(noise)).length;
+          const realSignals = diffs.filter(d => d > parseFloat(noise)).length;
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 14 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>Variation naturelle quotidienne</div>
+                  <div style={{ fontSize: 24, fontWeight: 200, color: GREEN, letterSpacing: "-1px" }}>± {noise} kg</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 4 }}>Ignorer si</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{"<"} {noise} kg</div>
+                </div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 500, color: r.color, width: 48, textAlign: "right" }}>{r.change}</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ flex: 1, padding: "12px 14px", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)", borderRadius: 12 }}>
+                  <div style={{ fontSize: 9, color: "rgba(239,68,68,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Fausses alertes</div>
+                  <div style={{ fontSize: 22, fontWeight: 200, color: "rgba(239,68,68,0.8)" }}>{fakeAlerts}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>variations normales</div>
+                </div>
+                <div style={{ flex: 1, padding: "12px 14px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.12)", borderRadius: 12 }}>
+                  <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Vrais signaux</div>
+                  <div style={{ fontSize: 22, fontWeight: 200, color: GREEN }}>{realSignals}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>vraies tendances</div>
+                </div>
+              </div>
+              <div style={{ padding: "12px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 12, fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic", lineHeight: 1.6 }}>
+                {isNoise
+                  ? `" Ta derniere variation de ${lastDiff.toFixed(2)} kg est du bruit normal. Ne t inquiete pas. "`
+                  : `" Ta derniere variation de ${lastDiff.toFixed(2)} kg est un vrai signal. Prends-le en compte. "`
+                }
+              </div>
             </div>
-          ))}
-        </div>
+          );
+        })()}
       </div>
 
       <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
