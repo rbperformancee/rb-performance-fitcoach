@@ -156,99 +156,94 @@ export default function App() {
   // ── Coach → Dashboard admin ──
   if (showHome && !isCoach) {
     const _h = new Date().getHours();
-    const _g = _h < 12 ? 'Bonjour' : _h < 18 ? 'Bon apres-midi' : 'Bonsoir';
-    const _fn = client?.full_name?.split(' ')[0] || '';
+    const _g = _h < 5 ? 'Bonne nuit,' : _h < 12 ? 'Bonjour,' : _h < 18 ? 'Bon apres-midi,' : 'Bonsoir,';
+    const _fn = client?.full_name?.split(' ')[0] || 'Athlete';
     const _quotes = [
-      { text: "La douleur d aujourd hui est la force de demain.", author: "Arnold" },
-      { text: "Les champions ne naissent pas. Ils se construisent.", author: "RB PERFORM" },
-      { text: "Le corps accomplit ce que l esprit croit possible.", author: "Napoleon Hill" },
-      { text: "Zero excuse. Maximum resultat.", author: "RB PERFORM" },
-      { text: "Un jour tu seras content d avoir continue.", author: "Anonyme" },
-      { text: "La discipline c est faire ce que tu dois faire.", author: "RB PERFORM" },
-      { text: "Chaque rep te rapproche de qui tu veux etre.", author: "RB PERFORM" },
+      "La douleur d aujourd hui est la force de demain.",
+      "Les champions ne naissent pas. Ils se construisent.",
+      "Le corps accomplit ce que l esprit croit possible.",
+      "Zero excuse. Maximum resultat.",
+      "Un jour tu seras content d avoir continue.",
+      "La discipline c est la liberte.",
+      "Chaque rep te rapproche de qui tu veux etre.",
     ];
     const _q = _quotes[new Date().getDay() % _quotes.length];
     const _tw = programme?.weeks?.length || 0;
     const _ts = programme?.weeks?.reduce((a,w) => a+(w.sessions?.length||0), 0) || 0;
     const _now = new Date();
-    const _days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-    const _months = ['Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Dec'];
-    const _pct = _ts > 0 ? Math.min(Math.round((_tw / _ts) * 100), 100) : 0;
-    const _dash = 226.19;
+    const _time = String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
+    const _days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    const _months = ['janvier','fevrier','mars','avril','mai','juin','juillet','aout','septembre','octobre','novembre','decembre'];
     return (
-      <div style={{minHeight:'100vh',background:'#0a0a0a',display:'flex',flexDirection:'column',fontFamily:'Inter,-apple-system,sans-serif',position:'relative',overflow:'hidden'}}>
-        {/* Ambient glows */}
-        <div style={{position:'absolute',top:-120,left:'50%',transform:'translateX(-50%)',width:500,height:500,background:'radial-gradient(circle, rgba(2,209,186,0.07) 0%, transparent 65%)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',bottom:-100,right:-100,width:300,height:300,background:'radial-gradient(circle, rgba(129,140,248,0.05) 0%, transparent 70%)',pointerEvents:'none'}}/>
+      <div style={{minHeight:'100vh',background:'#000',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden'}}>
 
-        {/* Header */}
-        <div style={{padding:'56px 24px 0',display:'flex',justifyContent:'space-between',alignItems:'flex-start',position:'relative',zIndex:1}}>
-          <div>
-            <div style={{fontSize:11,color:'rgba(255,255,255,0.2)',fontWeight:700,letterSpacing:3,textTransform:'uppercase',marginBottom:10}}>{_days[_now.getDay()]} {_now.getDate()} {_months[_now.getMonth()]}</div>
-            <div style={{fontSize:14,color:'rgba(255,255,255,0.45)',fontWeight:400,marginBottom:4}}>{_g}{_fn ? ',' : ''}</div>
-            <div style={{fontSize:36,fontWeight:900,color:'#ffffff',letterSpacing:'-1.5px',lineHeight:1}}>{_fn ? _fn+'.' : 'Athlete.'}</div>
-          </div>
-          {/* Anneau progression Apple Watch */}
-          <div style={{position:'relative',width:88,height:88,flexShrink:0}}>
-            <svg width="88" height="88" viewBox="0 0 88 88" style={{transform:'rotate(-90deg)'}}>
-              <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6"/>
-              <circle cx="44" cy="44" r="36" fill="none" stroke="#02d1ba" strokeWidth="6" strokeLinecap="round"
-                strokeDasharray={_dash} strokeDashoffset={_dash * (1 - _pct / 100)}
-                style={{filter:'drop-shadow(0 0 8px rgba(2,209,186,0.7))'}}/>
-            </svg>
-            <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-              <div style={{fontSize:19,fontWeight:900,color:'#02d1ba',lineHeight:1}}>{_pct}%</div>
-              <div style={{fontSize:8,color:'rgba(255,255,255,0.25)',fontWeight:700,letterSpacing:1,textTransform:'uppercase',marginTop:2}}>prog</div>
-            </div>
+        {/* Fond dégradé subtil */}
+        <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 30% 0%, rgba(2,209,186,0.12) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(129,140,248,0.08) 0%, transparent 50%)',pointerEvents:'none'}}/>
+
+        {/* Heure en grand — style Apple */}
+        <div style={{padding:'60px 32px 0',position:'relative',zIndex:1}}>
+          <div style={{fontSize:80,fontWeight:100,color:'rgba(255,255,255,0.9)',letterSpacing:'-3px',lineHeight:1,fontVariantNumeric:'tabular-nums'}}>{_time}</div>
+          <div style={{fontSize:16,color:'rgba(255,255,255,0.3)',fontWeight:400,marginTop:8,letterSpacing:'0.5px'}}>
+            {_days[_now.getDay()]}, {_now.getDate()} {_months[_now.getMonth()]}
           </div>
         </div>
 
-        {/* Stats */}
-        <div style={{padding:'20px 24px 0',display:'flex',gap:10,position:'relative',zIndex:1}}>
-          {[
-            {label:'Exercices',value:0,icon:'💪',color:'#02d1ba'},
-            {label:'Semaines',value:_tw,icon:'📅',color:'#818cf8'},
-            {label:'Seances',value:_ts,icon:'🎯',color:'#f97316'}
-          ].map((s,i)=>(
-            <div key={i} style={{flex:1,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:20,padding:'16px 8px',textAlign:'center',backdropFilter:'blur(10px)'}}>
-              <div style={{fontSize:22,marginBottom:8}}>{s.icon}</div>
-              <div style={{fontFamily:'monospace',fontSize:24,fontWeight:900,color:s.color,lineHeight:1}}>{s.value}</div>
-              <div style={{fontSize:9,color:'rgba(255,255,255,0.2)',fontWeight:700,letterSpacing:1.5,textTransform:'uppercase',marginTop:6}}>{s.label}</div>
-            </div>
-          ))}
+        {/* Salutation */}
+        <div style={{padding:'32px 32px 0',position:'relative',zIndex:1}}>
+          <div style={{fontSize:14,color:'rgba(255,255,255,0.35)',fontWeight:400,letterSpacing:'0.3px',marginBottom:4}}>{_g}</div>
+          <div style={{fontSize:42,fontWeight:700,color:'#fff',letterSpacing:'-1.5px',lineHeight:1.1}}>{_fn}.</div>
         </div>
 
-        {/* Programme card glassmorphism */}
+        {/* Ligne séparatrice */}
+        <div style={{margin:'28px 32px 0',height:'1px',background:'rgba(255,255,255,0.07)',position:'relative',zIndex:1}}/>
+
+        {/* Programme — minimaliste */}
         {programme && (
-          <div style={{margin:'16px 24px 0',background:'linear-gradient(135deg, rgba(2,209,186,0.09) 0%, rgba(2,209,186,0.03) 100%)',border:'1px solid rgba(2,209,186,0.18)',borderRadius:24,padding:'20px 22px',position:'relative',zIndex:1,overflow:'hidden'}}>
-            <div style={{position:'absolute',top:-30,right:-30,width:100,height:100,background:'radial-gradient(circle, rgba(2,209,186,0.12) 0%, transparent 70%)',pointerEvents:'none'}}/>
-            <div style={{fontSize:9,color:'#02d1ba',fontWeight:800,letterSpacing:3,textTransform:'uppercase',marginBottom:10,opacity:0.9}}>Programme actif</div>
-            <div style={{fontSize:22,fontWeight:900,color:'#ffffff',marginBottom:10,letterSpacing:'-0.5px'}}>{programme.name}</div>
-            <div style={{display:'flex',gap:8}}>
-              <span style={{fontSize:11,color:'rgba(255,255,255,0.45)',background:'rgba(255,255,255,0.07)',borderRadius:20,padding:'4px 12px',fontWeight:600}}>{_tw} sem.</span>
-              <span style={{fontSize:11,color:'rgba(255,255,255,0.45)',background:'rgba(255,255,255,0.07)',borderRadius:20,padding:'4px 12px',fontWeight:600}}>{_ts} seances</span>
+          <div style={{padding:'24px 32px 0',position:'relative',zIndex:1}}>
+            <div style={{fontSize:11,color:'rgba(2,209,186,0.7)',fontWeight:600,letterSpacing:'2px',textTransform:'uppercase',marginBottom:12}}>Programme actif</div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
+              <div style={{fontSize:28,fontWeight:700,color:'#fff',letterSpacing:'-0.5px'}}>{programme.name}</div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:13,color:'rgba(255,255,255,0.3)'}}>{_tw} sem. · {_ts} séances</div>
+              </div>
+            </div>
+            {/* Barre de progression */}
+            <div style={{marginTop:16,height:3,background:'rgba(255,255,255,0.08)',borderRadius:2,overflow:'hidden'}}>
+              <div style={{height:'100%',width:'30%',background:'linear-gradient(90deg, #02d1ba, #01b8a3)',borderRadius:2,boxShadow:'0 0 10px rgba(2,209,186,0.5)'}}/>
             </div>
           </div>
         )}
 
-        {/* Quote */}
-        <div style={{margin:'14px 24px 0',position:'relative',zIndex:1}}>
-          <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:20,padding:'18px 20px',borderLeft:'3px solid #02d1ba'}}>
-            <div style={{fontSize:13,color:'rgba(255,255,255,0.5)',fontStyle:'italic',lineHeight:1.75,marginBottom:10}}>" {_q.text} "</div>
-            <div style={{fontSize:9,color:'rgba(2,209,186,0.7)',fontWeight:800,letterSpacing:2,textTransform:'uppercase'}}>— {_q.author}</div>
+        {/* Stats — épurées */}
+        <div style={{padding:'28px 32px 0',display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1,position:'relative',zIndex:1}}>
+          {[
+            {label:'Séances',value:_ts,sub:'total'},
+            {label:'Semaines',value:_tw,sub:'programme'},
+            {label:'Exercices',value:0,sub:'validés'},
+          ].map((s,i)=>(
+            <div key={i} style={{padding:'16px 0',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+              <div style={{fontSize:28,fontWeight:300,color:'#fff',letterSpacing:'-1px'}}>{s.value}</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontWeight:500,marginTop:4,textTransform:'uppercase',letterSpacing:'1px'}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Quote — style editorial */}
+        <div style={{padding:'28px 32px 0',position:'relative',zIndex:1}}>
+          <div style={{fontSize:15,color:'rgba(255,255,255,0.35)',lineHeight:1.8,fontStyle:'italic',fontWeight:300}}>
+            " {_q} "
           </div>
         </div>
 
         <div style={{flex:1}}/>
 
-        {/* CTA */}
-        <div style={{padding:'0 24px 44px',position:'relative',zIndex:1}}>
-          <button onClick={()=>setShowHome(false)} style={{width:'100%',padding:'20px',borderRadius:22,border:'none',background:'linear-gradient(135deg, #02d1ba 0%, #01b8a3 100%)',color:'#050505',fontSize:15,fontWeight:900,cursor:'pointer',letterSpacing:'1.5px',textTransform:'uppercase',boxShadow:'0 8px 32px rgba(2,209,186,0.45), 0 2px 8px rgba(2,209,186,0.2)',display:'flex',alignItems:'center',justifyContent:'center',gap:14,position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(255,255,255,0.12) 0%,transparent 60%)',pointerEvents:'none'}}/>
-            <svg viewBox="0 0 24 24" fill="currentColor" style={{width:18,height:18,position:'relative'}}><polygon points="5,3 19,12 5,21"/></svg>
-            <span style={{position:'relative'}}>Commencer la seance</span>
+        {/* CTA — Apple style */}
+        <div style={{padding:'0 32px 50px',position:'relative',zIndex:1}}>
+          <button onClick={()=>setShowHome(false)} style={{width:'100%',padding:'19px',borderRadius:16,border:'none',background:'#02d1ba',color:'#000',fontSize:16,fontWeight:600,cursor:'pointer',letterSpacing:'-0.2px',transition:'opacity 0.2s'}}
+            onTouchStart={e=>e.currentTarget.style.opacity='0.85'}
+            onTouchEnd={e=>e.currentTarget.style.opacity='1'}>
+            Commencer la séance
           </button>
-          <div style={{textAlign:'center',marginTop:14,fontSize:10,color:'rgba(255,255,255,0.12)',letterSpacing:2,fontWeight:600}}>RB PERFORM · COACHING PERSONNALISE</div>
         </div>
       </div>
     );
