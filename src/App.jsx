@@ -490,7 +490,7 @@ export default function App() {
             </main>
           ) : (
             <main className="main" style={{ paddingTop: 8 }}>
-              <WeightChart clientId={client?.id} />
+              <WeightChart clientId={client?.id} client={client} />
             </main>
           )}
 
