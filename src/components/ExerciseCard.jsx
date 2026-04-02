@@ -52,7 +52,7 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
         />
         <button onClick={() => setPlaying(false)} style={{
           position: "absolute", top: 8, right: 8,
-          background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.2)",
+          background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: "50%", width: 30, height: 30, color: "#fff",
           fontSize: 16, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -66,7 +66,7 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
       onClick={() => id ? setPlaying(true) : window.open(vidUrl, "_blank")}
       style={{
         display: "block", width: "100%", position: "relative",
-        borderRadius: 12, overflow: "hidden", background: "#111",
+        borderRadius: 12, overflow: "hidden", background: "#050505",
         cursor: "pointer", border: "none", padding: 0, aspectRatio: "16/9",
       }}
     >
@@ -81,7 +81,7 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
           borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
           boxShadow: "0 4px 24px rgba(2,209,186,0.45), 0 0 0 6px rgba(2,209,186,0.15)",
         }}>
-          <svg viewBox="0 0 24 24" fill="#0d0d0d" style={{ width: 22, height: 22, marginLeft: 3 }}>
+          <svg viewBox="0 0 24 24" fill="#050505" style={{ width: 22, height: 22, marginLeft: 3 }}>
             <polygon points="5,3 19,12 5,21"/>
           </svg>
         </div>
@@ -91,7 +91,7 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: GREEN, marginBottom: 2 }}>Démonstration</div>
           <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{exName}</div>
         </div>
-        <div style={{ flexShrink: 0, background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "4px 10px", fontSize: 10, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 5, backdropFilter: "blur(4px)" }}>
+        <div style={{ flexShrink: 0, background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "4px 10px", fontSize: 10, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 5, backdropFilter: "blur(4px)" }}>
           <svg viewBox="0 0 16 16" fill="none" style={{ width: 10, height: 10 }}><polygon points="4,2 12,8 4,14" fill="#fff"/></svg>
           Lancer
         </div>
@@ -115,7 +115,7 @@ function SetInput({ index, done, defaultW, defaultR, placeholder, onDone }) {
         style={{ boxSizing:"border-box", background: done ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.04)", border:"1.5px solid "+(done?"rgba(2,209,186,0.2)":"rgba(255,255,255,0.08)"), borderRadius:9, padding:"9px 6px", color:"#f5f5f5", fontSize:14, fontWeight:600, fontFamily:"monospace", outline:"none", textAlign:"center", width:"100%" }} />
       <input type="text" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder} onKeyDown={e => e.key==="Enter" && validate()}
         style={{ boxSizing:"border-box", background: done ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.04)", border:"1.5px solid "+(done?"rgba(2,209,186,0.2)":"rgba(255,255,255,0.08)"), borderRadius:9, padding:"9px 6px", color:"#f5f5f5", fontSize:14, fontWeight:600, fontFamily:"monospace", outline:"none", textAlign:"center", width:"100%" }} />
-      <button onClick={validate} disabled={done || !w} style={{ width:34, height:34, borderRadius:9, border:"none", cursor: done||!w ? "not-allowed":"pointer", background: done?"rgba(2,209,186,0.12)":w?"#02d1ba":"rgba(255,255,255,0.06)", color: done?"#02d1ba":w?"#0d0d0d":"#555", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.15s" }}>
+      <button onClick={validate} disabled={done || !w} style={{ width:34, height:34, borderRadius:9, border:"none", cursor: done||!w ? "not-allowed":"pointer", background: done?"rgba(2,209,186,0.12)":w?"#02d1ba":"rgba(255,255,255,0.06)", color: done?"#02d1ba":w?"#050505":"#555", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.15s" }}>
         <svg viewBox="0 0 20 20" fill="none" style={{ width:13, height:13 }}><polyline points="4,10 8,14 16,6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </button>
     </div>
@@ -323,7 +323,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             />
           ))}
           {doneCount > 0 && doneCount < setsCount && (
-            <button onClick={handleReset} style={{ width:"100%", marginTop:4, padding:"5px", borderRadius:7, border:"1px solid rgba(255,255,255,0.07)", background:"transparent", color:"#555", fontSize:10, cursor:"pointer" }}>↺ Reset</button>
+            <button onClick={handleReset} style={{ width:"100%", marginTop:4, padding:"5px", borderRadius:7, border:"1px solid rgba(255,255,255,0.06)", background:"transparent", color:"#555", fontSize:10, cursor:"pointer" }}>↺ Reset</button>
           )}
           {doneCount >= setsCount && setsCount > 0 && (
             <div style={{ textAlign:"center", marginTop:6, padding:"6px", background:"rgba(2,209,186,0.08)", borderRadius:8, fontSize:11, color:GREEN, fontWeight:700 }}>✓ Toutes les séries !</div>
