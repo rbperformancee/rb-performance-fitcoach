@@ -31,11 +31,17 @@ export default function WeightChart({ clientId, client, programme }) {
   const goal = _wg != null ? _wg : null;
 
   const getPhrase = () => {
-    if (!weekDiff) return "Commence ton suivi. Chaque gramme compte.";
-    if (weekDiff < -0.5) return "Tu es en mouvement. Continue comme ca.";
-    if (weekDiff < 0) return "Legere baisse. Tu vas dans le bon sens.";
-    if (weekDiff === 0) return "Stable cette semaine. Reste focus.";
-    return "Petite hausse. Ajuste et rebondis.";
+    const isPrise = goal && latestW && goal > latestW;
+    if (!weekDiff || parseFloat(weekDiff) === 0) return "Commence ton suivi. Chaque gramme compte.";
+    if (isPrise) {
+      if (parseFloat(weekDiff) > 0.5) return "Tu prends bien. Continue sur cette lancee.";
+      if (parseFloat(weekDiff) > 0) return "Legere progression. Tu vas dans le bon sens.";
+      return "Petite baisse cette semaine. Mange plus et reste focus.";
+    } else {
+      if (parseFloat(weekDiff) < -0.5) return "Tu es en mouvement. Continue comme ca.";
+      if (parseFloat(weekDiff) < 0) return "Legere baisse. Tu vas dans le bon sens.";
+      return "Petite hausse. Ajuste ton alimentation et rebondis.";
+    }
   };
 
   const getProjection = () => {
