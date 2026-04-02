@@ -72,12 +72,12 @@ export default function WeightChart({ clientId, client, programme }) {
   const proj = getProjection();
   const heatmap = getHeatmap();
   const goalPct = (() => {
-    if (!latestW || !goal) return 0;
-    const startW = vals.length > 0 ? Math.max(...vals) : latestW;
-    const totalToLose = startW - goal;
-    if (totalToLose <= 0) return 100;
-    const lost = startW - latestW;
-    return Math.min(Math.max(Math.round((lost / totalToLose) * 100), 0), 100);
+    if (!latestW || !goal || vals.length === 0) return 0;
+    const startW = vals[0] ? parseFloat(vals[0]) : latestW;
+    const totalChange = goal - startW;
+    if (Math.abs(totalChange) < 0.1) return 100;
+    const currentChange = latestW - startW;
+    return Math.min(Math.max(Math.round((currentChange / totalChange) * 100), 0), 100);
   })();
   const isDown = weekDiff !== null && weekDiff < 0;
 
