@@ -39,20 +39,22 @@ export default function WeightChart({ clientId, client, programme }) {
   };
 
   const getProjection = () => {
-    if (!latestW || vals.length < 2 || !weekDiff || weekDiff >= 0) return null;
-    const kgLeft = latestW - goal;
-    if (kgLeft <= 0) return null;
+    if (!latestW || !goal || vals.length < 2) return null;
     const firstDate = new Date(weights[0].date);
     const lastDate = new Date(weights[weights.length - 1].date);
     const daysElapsed = Math.max((lastDate - firstDate) / (24 * 3600 * 1000), 1);
-    const lossPerWeek = Math.abs(parseFloat(diff)) / (daysElapsed / 7);
-    if (lossPerWeek <= 0) return null;
-    const weeksNeeded = Math.ceil(kgLeft / lossPerWeek);
+    const totalChange = parseFloat(diff);
+    if (Math.abs(totalChange) < 0.1) return null;
+    const changePerWeek = totalChange / (daysElapsed / 7);
+    const remaining = goal - latestW;
+    if ((changePerWeek > 0 && remaining < 0) || (changePerWeek < 0 && remaining > 0)) return null;
+    const weeksNeeded = Math.ceil(Math.abs(remaining) / Math.abs(changePerWeek));
+    if (weeksNeeded > 200) return null;
     const target = new Date();
     target.setDate(target.getDate() + weeksNeeded * 7);
     return {
       date: target.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
-      kgLeft: kgLeft.toFixed(1),
+      kgLeft: Math.abs(remaining).toFixed(1),
       weeks: weeksNeeded
     };
   };
