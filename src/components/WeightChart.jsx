@@ -267,9 +267,16 @@ export default function WeightChart({ clientId, client, programme }) {
           ))}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-          {heatmap.map((day, i) => (
-            <div key={i} style={{ height: 20, borderRadius: 4, background: day.logged ? GREEN : "rgba(255,255,255,0.05)", opacity: day.logged ? 0.85 : 1 }} />
-          ))}
+          {(() => {
+            const firstDay = heatmap.length > 0 ? new Date(heatmap[0].date).getDay() : 1;
+            const offset = firstDay === 0 ? 6 : firstDay - 1;
+            const cells = [];
+            for (let i = 0; i < offset; i++) cells.push(<div key={"e"+i} style={{ height: 20 }} />);
+            heatmap.forEach((day, i) => cells.push(
+              <div key={i} title={day.date} style={{ height: 20, borderRadius: 4, background: day.logged ? GREEN : "rgba(255,255,255,0.05)", opacity: day.logged ? 0.9 : 1 }} />
+            ));
+            return cells;
+          })()}
         </div>
         <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4 }}>
