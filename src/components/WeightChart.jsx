@@ -28,7 +28,7 @@ export default function WeightChart({ clientId, client, programme }) {
   const maxV = vals.length ? Math.max(...vals) : 100;
   const range = maxV - minV || 1;
   const GREEN = "#02d1ba";
-  const goal = weightGoal;
+  const goal = weightGoal || null;
 
   const getPhrase = () => {
     if (!weekDiff) return "Commence ton suivi. Chaque gramme compte.";
@@ -71,7 +71,7 @@ export default function WeightChart({ clientId, client, programme }) {
 
   const proj = getProjection();
   const heatmap = getHeatmap();
-  const goalPct = latestW && goal ? Math.min(Math.max(Math.round((1 - (latestW - goal) / 10) * 100), 0), 100) : 0;
+  const goalPct = latestW && goal && goal > 0 ? Math.min(Math.max(Math.round((1 - (latestW - goal) / 10) * 100), 0), 100) : 0;
   const isDown = weekDiff !== null && weekDiff < 0;
 
   const W = 420, H = 120, padY = 10;
@@ -79,7 +79,7 @@ export default function WeightChart({ clientId, client, programme }) {
   const toY = (v) => H - padY - ((v - minV) / range) * (H - padY * 2);
   const pathD = vals.length > 1 ? vals.map((v, i) => (i === 0 ? "M" : "L") + toX(i).toFixed(1) + "," + toY(v).toFixed(1)).join(" ") : "";
   const areaD = vals.length > 1 ? "M" + toX(0).toFixed(1) + "," + H + " " + vals.map((v, i) => "L" + toX(i).toFixed(1) + "," + toY(v).toFixed(1)).join(" ") + " L" + toX(vals.length - 1).toFixed(1) + "," + H + " Z" : "";
-  const goalY = toY(goal);
+  const goalY = goal ? toY(goal) : -9999;
 
   return (
     <div style={{ background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 40, position: "relative" }}>
