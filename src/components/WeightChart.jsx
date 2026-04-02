@@ -1,106 +1,250 @@
-import React, { useState } from 'react';
-import { useWeightTracking } from '../hooks/useWeightTracking';
+import React, { useState } from "react";
+import { useWeightTracking } from "../hooks/useWeightTracking";
 
-export default function WeightChart({ clientId }) {
+export default function WeightChart({ clientId, programme }) {
   const { weights, addWeight, latest, diff } = useWeightTracking(clientId);
   const [showInput, setShowInput] = useState(false);
-  const [newWeight, setNewWeight] = useState('');
+  const [newWeight, setNewWeight] = useState("");
   const [saving, setSaving] = useState(false);
 
   const handleAdd = async () => {
     if (!newWeight || isNaN(parseFloat(newWeight))) return;
     setSaving(true);
     await addWeight(newWeight);
-    setNewWeight('');
+    setNewWeight("");
     setShowInput(false);
     setSaving(false);
     if (navigator.vibrate) navigator.vibrate([20, 10, 40]);
   };
 
-  // Calcul du graphique SVG
-  const W = 320, H = 100, pad = 12;
-  const vals = weights.map(w => w.weight);
-  const minV = Math.min(...vals) - 1;
-  const maxV = Math.max(...vals) + 1;
-  const toX = (i) => pad + (i / Math.max(vals.length - 1, 1)) * (W - pad * 2);
-  const toY = (v) => H - pad - ((v - minV) / (maxV - minV)) * (H - pad * 2);
-  
-  const points = vals.map((v, i) => `${toX(i)},${toY(v)}`).join(' ');
-  const area = vals.length > 1 ? 
-    `M${toX(0)},${H - pad} ` + vals.map((v, i) => `L${toX(i)},${toY(v)}`).join(' ') + ` L${toX(vals.length-1)},${H - pad} Z` : '';
+  const vals = weights.map(w => parseFloat(w.weight));
+  const latestW = latest ? parseFloat(latest.weight) : null;
+  const weekDiff = diff ? parseFloat(diff) : null;
+  const minV = vals.length ? Math.min(...vals) : 0;
+  const maxV = vals.length ? Math.max(...vals) : 100;
+  const range = maxV - minV || 1;
+  const GREEN = "#02d1ba";
+  const goal = 78;
+
+  const getPhrase = () => {
+    if (!weekDiff) return "Commence ton suivi. Chaque gramme compte.";
+    if (weekDiff < -0.5) return "Tu es en mouvement. Continue comme ca.";
+    if (weekDiff < 0) return "Legere baisse. Tu vas dans le bon sens.";
+    if (weekDiff === 0) return "Stable cette semaine. Reste focus.";
+    return "Petite hausse. Ajuste et rebondis.";
+  };
+
+  const getProjection = () => {
+    if (!latestW || vals.length < 2 || !weekDiff || weekDiff >= 0) return null;
+    const kgLeft = latestW - goal;
+    if (kgLeft <= 0) return null;
+    const weeksNeeded = Math.ceil(kgLeft / Math.abs(weekDiff / vals.length * 7));
+    const target = new Date();
+    target.setDate(target.getDate() + weeksNeeded * 7);
+    return {
+      date: target.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
+      kgLeft: kgLeft.toFixed(1)
+    };
+  };
+
+  const getHeatmap = () => {
+    const days = [];
+    const weightDates = new Set(weights.map(w => w.date && w.date.slice(0, 10)));
+    for (let i = 27; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({ date: key, logged: weightDates.has(key) });
+    }
+    return days;
+  };
+
+  const proj = getProjection();
+  const heatmap = getHeatmap();
+  const goalPct = latestW ? Math.min(Math.max(Math.round((1 - (latestW - goal) / 10) * 100), 0), 100) : 0;
+  const isDown = weekDiff !== null && weekDiff < 0;
+
+  const W = 420, H = 120, padY = 10;
+  const toX = (i) => (i / Math.max(vals.length - 1, 1)) * W;
+  const toY = (v) => H - padY - ((v - minV) / range) * (H - padY * 2);
+  const pathD = vals.length > 1 ? vals.map((v, i) => (i === 0 ? "M" : "L") + toX(i).toFixed(1) + "," + toY(v).toFixed(1)).join(" ") : "";
+  const areaD = vals.length > 1 ? "M" + toX(0).toFixed(1) + "," + H + " " + vals.map((v, i) => "L" + toX(i).toFixed(1) + "," + toY(v).toFixed(1)).join(" ") + " L" + toX(vals.length - 1).toFixed(1) + "," + H + " Z" : "";
+  const goalY = toY(goal);
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.03)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      borderRadius: 16, padding: '16px',
-      marginBottom: 16,
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div>
-          <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, letterSpacing: 1, marginBottom: 2 }}>POIDS</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontSize: 24, fontWeight: 900, color: '#f5f5f5' }}>
-              {latest?.weight ?? '--'} <span style={{ fontSize: 13, color: '#6b7280' }}>kg</span>
-            </span>
-            {diff !== null && (
-              <span style={{ fontSize: 12, fontWeight: 700, color: parseFloat(diff) < 0 ? '#02d1ba' : '#ff6b6b' }}>
-                {parseFloat(diff) > 0 ? '+' : ''}{diff} kg
-              </span>
-            )}
+    <div style={{ background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 40, position: "relative" }}>
+
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 400, height: 400, background: "radial-gradient(ellipse, rgba(2,209,186,0.08) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
+
+      <div style={{ padding: "20px 24px 0", position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 10, color: "rgba(2,209,186,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 20 }}>Suivi du poids</div>
+
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "flex-end", lineHeight: 1 }}>
+              <span style={{ fontSize: 88, fontWeight: 100, letterSpacing: "-6px", color: "#fff" }}>{latestW ? Math.floor(latestW) : "--"}</span>
+              <span style={{ fontSize: 36, fontWeight: 200, color: "rgba(255,255,255,0.35)", letterSpacing: "-2px", paddingBottom: 12 }}>{latestW ? "." + latestW.toFixed(1).split(".")[1] : ""}</span>
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 2 }}>kilogrammes</div>
           </div>
+
+          <svg width={64} height={64} viewBox="0 0 64 64" style={{ flexShrink: 0, marginTop: 8 }}>
+            <circle cx={32} cy={32} r={26} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={4} />
+            <circle cx={32} cy={32} r={26} fill="none" stroke={GREEN} strokeWidth={4} strokeLinecap="round"
+              strokeDasharray={163.4} strokeDashoffset={163.4 * (1 - goalPct / 100)} transform="rotate(-90 32 32)" />
+            <text x={32} y={29} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize={8} fontFamily="-apple-system,sans-serif">objectif</text>
+            <text x={32} y={41} textAnchor="middle" fill="#02d1ba" fontSize={11} fontWeight={600} fontFamily="-apple-system,sans-serif">{goalPct}%</text>
+          </svg>
         </div>
-        <button onClick={() => setShowInput(!showInput)} style={{
-          background: 'rgba(2,209,186,0.12)',
-          border: '1px solid rgba(2,209,186,0.25)',
-          borderRadius: 10, padding: '8px 14px',
-          color: '#02d1ba', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-        }}>+ Ajouter</button>
+
+        {weekDiff !== null && (
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: isDown ? "rgba(2,209,186,0.08)" : "rgba(239,68,68,0.08)", border: "1px solid " + (isDown ? "rgba(2,209,186,0.2)" : "rgba(239,68,68,0.2)"), borderRadius: 100, padding: "5px 16px", fontSize: 13, color: isDown ? GREEN : "rgba(239,68,68,0.9)", fontWeight: 500 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: isDown ? GREEN : "rgba(239,68,68,0.9)", display: "inline-block" }} />
+              {weekDiff > 0 ? "+" : ""}{weekDiff} kg depuis le debut
+            </span>
+          </div>
+        )}
+
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontStyle: "italic", marginBottom: 28, lineHeight: 1.6 }}>
+          " {getPhrase()} "<br />
+          <span style={{ fontSize: 10, color: "rgba(2,209,186,0.4)", fontStyle: "normal", letterSpacing: "1px" }}>RB PERFORM</span>
+        </div>
       </div>
 
-      {showInput && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12, animation: 'fadeInUp 0.3s ease' }}>
-          <input
-            type="number" step="0.1" placeholder="Ex: 75.5"
-            value={newWeight}
-            onChange={e => setNewWeight(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            style={{
-              flex: 1, background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(2,209,186,0.3)',
-              borderRadius: 10, padding: '10px 14px',
-              color: '#f5f5f5', fontSize: 15,
-            }}
-          />
-          <button onClick={handleAdd} disabled={saving} style={{
-            background: '#02d1ba', color: '#0d0d0d',
-            border: 'none', borderRadius: 10, padding: '10px 18px',
-            fontWeight: 800, cursor: 'pointer', fontSize: 14,
-          }}>{saving ? '...' : '✓'}</button>
-        </div>
-      )}
+      <div style={{ margin: "0 0 28px", position: "relative", zIndex: 1 }}>
+        {vals.length > 1 ? (
+          <svg width="100%" height={120} viewBox={"0 0 " + W + " " + H} preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wg2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={GREEN} stopOpacity={0.25} />
+                <stop offset="100%" stopColor={GREEN} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <line x1={0} y1={goalY} x2={W} y2={goalY} stroke="rgba(2,209,186,0.2)" strokeWidth={1} strokeDasharray="8,5" />
+            <text x={8} y={goalY - 4} fill="rgba(2,209,186,0.4)" fontSize={9} fontFamily="-apple-system,sans-serif">Objectif {goal}kg</text>
+            <path d={areaD} fill="url(#wg2)" />
+            <path d={pathD} fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx={toX(vals.length - 1)} cy={toY(vals[vals.length - 1])} r={5} fill={GREEN} />
+            <circle cx={toX(vals.length - 1)} cy={toY(vals[vals.length - 1])} r={12} fill="rgba(2,209,186,0.12)" />
+          </svg>
+        ) : (
+          <div style={{ textAlign: "center", padding: "32px 24px", color: "rgba(255,255,255,0.15)", fontSize: 13 }}>Ajoute ta premiere pesee pour voir ton evolution</div>
+        )}
+      </div>
 
-      {vals.length > 1 ? (
-        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 80 }}>
-          <defs>
-            <linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#02d1ba" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#02d1ba" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {area && <path d={area} fill="url(#wgrad)" />}
-          <polyline points={points} fill="none" stroke="#02d1ba" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          {vals.map((v, i) => (
-            <circle key={i} cx={toX(i)} cy={toY(v)} r={i === vals.length - 1 ? 4 : 2.5}
-              fill={i === vals.length - 1 ? '#02d1ba' : '#0d0d0d'}
-              stroke="#02d1ba" strokeWidth="1.5" />
-          ))}
-        </svg>
-      ) : (
-        <div style={{ textAlign: 'center', padding: '16px 0', color: '#4b5563', fontSize: 12 }}>
-          Ajoute ton premier poids pour voir l'évolution 📈
+      <div style={{ padding: "0 24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 28, position: "relative", zIndex: 1 }}>
+        {[
+          { label: "Minimum", value: vals.length ? Math.min(...vals).toFixed(1) : "--", accent: false },
+          { label: "Moyenne", value: vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : "--", accent: true },
+          { label: "Maximum", value: vals.length ? Math.max(...vals).toFixed(1) : "--", accent: false },
+        ].map((s, i) => (
+          <div key={i} style={{ borderTop: "1px solid " + (s.accent ? GREEN : "rgba(255,255,255,0.06)"), borderTopWidth: s.accent ? 2 : 1, paddingTop: 14, paddingRight: i < 2 ? 8 : 0 }}>
+            <div style={{ fontSize: 26, fontWeight: 200, color: s.accent ? GREEN : "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>Objectif · {goal} kg</span>
+          <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{goalPct}% atteint</span>
         </div>
-      )}
+        <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+          <div style={{ height: "100%", width: goalPct + "%", background: GREEN, borderRadius: 1, boxShadow: "0 0 8px rgba(2,209,186,0.4)" }} />
+        </div>
+      </div>
+
+      <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
+
+      <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Projection</div>
+        {proj ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {[
+              { dot: GREEN, label: "Aujourd hui", val: latestW ? latestW.toFixed(1) + " kg" : "--" },
+              { dot: "rgba(255,255,255,0.2)", label: "Objectif atteint le", val: proj.date },
+              { dot: "rgba(129,140,248,0.7)", label: "Reste a perdre", val: proj.kgLeft + " kg" },
+            ].map((r, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: r.dot, flexShrink: 0 }} />
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", flex: 1 }}>{r.label}</div>
+                <div style={{ fontSize: 13, color: GREEN, fontWeight: 500 }}>{r.val}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.15)" }}>Ajoute plusieurs pesees pour voir ta projection</div>
+        )}
+      </div>
+
+      <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
+
+      <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Seances · Impact poids</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {[
+            { label: "3+ seances / sem.", pct: 85, change: "-0.5 kg", color: GREEN },
+            { label: "2 seances / sem.", pct: 40, change: "-0.1 kg", color: "rgba(255,255,255,0.3)" },
+            { label: "0-1 seance / sem.", pct: 25, change: "+0.2 kg", color: "rgba(239,68,68,0.7)" },
+          ].map((r, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", width: 130, flexShrink: 0 }}>{r.label}</div>
+              <div style={{ flex: 1, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+                <div style={{ height: "100%", width: r.pct + "%", background: r.color, borderRadius: 1 }} />
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: r.color, width: 48, textAlign: "right" }}>{r.change}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
+
+      <div style={{ padding: "0 24px", marginBottom: 32, position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Regularite des pesees</div>
+        <div style={{ display: "flex", gap: "4px", marginBottom: 6 }}>
+          {["L","M","M","J","V","S","D"].map((d, i) => (
+            <div key={i} style={{ flex: 1, textAlign: "center", fontSize: 9, color: "rgba(255,255,255,0.15)" }}>{d}</div>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+          {heatmap.map((day, i) => (
+            <div key={i} style={{ height: 20, borderRadius: 4, background: day.logged ? GREEN : "rgba(255,255,255,0.05)", opacity: day.logged ? 0.85 : 1 }} />
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(255,255,255,0.08)", display: "inline-block" }} /> Pas de pesee
+          </span>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: GREEN, display: "inline-block" }} /> Pesee enregistree
+          </span>
+        </div>
+      </div>
+
+      <div style={{ padding: "0 24px", position: "relative", zIndex: 1 }}>
+        {showInput ? (
+          <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+            <input type="number" step="0.1" placeholder="Ex: 75.5" value={newWeight}
+              onChange={e => setNewWeight(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleAdd()}
+              style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 14, padding: "14px 16px", color: "#fff", fontSize: 16, outline: "none" }} />
+            <button onClick={handleAdd} disabled={saving}
+              style={{ background: GREEN, color: "#000", border: "none", borderRadius: 14, padding: "14px 20px", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+              {saving ? "..." : "OK"}
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setShowInput(true)}
+            style={{ width: "100%", padding: "19px 24px", borderRadius: 18, border: "none", background: GREEN, color: "#000", fontSize: 15, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 50%)", pointerEvents: "none" }} />
+            <span>Ajouter une pesee</span>
+            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 20, height: 20 }}><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
