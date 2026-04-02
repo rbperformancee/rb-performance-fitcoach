@@ -1,51 +1,66 @@
-import React from 'react';
-import AvatarPicker from './AvatarPicker';
-import { BadgeSystem } from './BadgeSystem';
-import { useStreak } from '../hooks/useStreak';
-import { useWeightTracking } from '../hooks/useWeightTracking';
+import React from "react";
+import AvatarPicker from "./AvatarPicker";
+import { BadgeSystem } from "./BadgeSystem";
+import { useStreak } from "../hooks/useStreak";
+import { useWeightTracking } from "../hooks/useWeightTracking";
 
 export default function ProfilePage({ client }) {
   const { streak, bestStreak } = useStreak(client?.id);
-  const { latest, diff } = useWeightTracking(client?.id);
-  const name = client?.full_name || client?.email?.split('@')[0] || 'Athlète';
-  const firstName = name.split(' ')[0];
-
+  const { latest } = useWeightTracking(client?.id);
+  const name = client?.full_name || client?.email?.split("@")[0] || "Athlete";
+  const firstName = name.split(" ")[0];
+  const email = client?.email || "";
+  const pct = bestStreak ? Math.min(Math.round((streak / bestStreak) * 100), 100) : 100;
   return (
-    <div style={{ padding: '16px', animation: 'fadeInUp 0.3s ease' }}>
-      {/* Header profil */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, padding: '20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20 }}>
-        <AvatarPicker clientId={client?.id} name={name} size={72} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#f5f5f5', letterSpacing: '-0.5px' }}>{firstName}</div>
-          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{client?.email}</div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <div style={{ background: 'rgba(255,140,0,0.12)', border: '1px solid rgba(255,140,0,0.25)', borderRadius: 8, padding: '4px 10px', fontSize: 11, color: '#ff8c00', fontWeight: 700 }}>
-              🔥 {streak} jours
+    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", paddingBottom: 40, position: "relative" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 50% -20%, rgba(2,209,186,0.1) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "relative", zIndex: 1, padding: "52px 28px 0" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Mon profil</div>
+            <div style={{ fontSize: 42, fontWeight: 800, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>{firstName}<span style={{ color: "#02d1ba" }}>.</span></div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 8 }}>{email}</div>
+          </div>
+          <AvatarPicker clientId={client?.id} name={name} size={72} />
+        </div>
+        <div style={{ height: "1px", background: "linear-gradient(90deg, rgba(2,209,186,0.4) 0%, rgba(255,255,255,0.05) 100%)", marginBottom: 28 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 28 }}>
+          {[
+            { label: "Streak", value: streak || 0, unit: "j", color: "#f97316" },
+            { label: "Record", value: bestStreak || 0, unit: "j", color: "#fbbf24" },
+            { label: "Poids", value: latest?.weight || "--", unit: "kg", color: "#02d1ba" },
+          ].map((s, i) => (
+            <div key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16, paddingRight: i < 2 ? 16 : 0 }}>
+              <div style={{ fontSize: 34, fontWeight: 200, color: s.color, letterSpacing: "-1.5px", lineHeight: 1 }}>{s.value}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}>{s.unit}</span></div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", marginTop: 6 }}>{s.label}</div>
             </div>
-            {latest && <div style={{ background: 'rgba(2,209,186,0.1)', border: '1px solid rgba(2,209,186,0.2)', borderRadius: 8, padding: '4px 10px', fontSize: 11, color: '#02d1ba', fontWeight: 700 }}>
-              ⚖️ {latest.weight} kg
-            </div>}
+          ))}
+        </div>
+        {streak > 0 && (
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase" }}>Progression streak</div>
+              <div style={{ fontSize: 10, color: "#f97316", fontWeight: 600 }}>{streak} / {bestStreak || streak} j</div>
+            </div>
+            <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+              <div style={{ height: "100%", width: pct + "%", minWidth: "4px", background: "linear-gradient(90deg, #f97316, #fbbf24)", borderRadius: 1, boxShadow: "0 0 10px rgba(249,115,22,0.5)" }} />
+            </div>
+          </div>
+        )}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ fontSize: 18, fontWeight: 900, lineHeight: 1.4, textTransform: "uppercase" }}>
+            <span style={{ color: "#02d1ba" }}>LA </span>
+            <span style={{ color: "rgba(255,255,255,0.15)" }}>DISCIPLINE </span>
+            <span style={{ color: "rgba(255,255,255,0.08)" }}>C EST </span>
+            <span style={{ color: "rgba(255,255,255,0.35)" }}>LA LIBERTE.</span>
           </div>
         </div>
+        <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", marginBottom: 24 }} />
+        <div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 16 }}>Mes badges</div>
+          <BadgeSystem clientId={client?.id} />
+        </div>
       </div>
-
-      {/* Stats rapides */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-        {[
-          { label: 'STREAK', value: streak, unit: 'j', icon: '🔥', color: '#ff8c00' },
-          { label: 'RECORD', value: bestStreak, unit: 'j', icon: '🏆', color: '#fbbf24' },
-          { label: 'POIDS', value: latest?.weight || '--', unit: 'kg', icon: '⚖️', color: '#02d1ba' },
-        ].map((s, i) => (
-          <div key={i} style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 10px', textAlign: 'center', animation: `fadeInUp 0.35s ease ${i * 0.07}s both` }}>
-            <div style={{ fontSize: 20 }}>{s.icon}</div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: s.color, lineHeight: 1.2 }}>{s.value}<span style={{ fontSize: 10, color: '#6b7280' }}>{s.unit}</span></div>
-            <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 700, letterSpacing: 1 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Badges */}
-      <BadgeSystem clientId={client?.id} />
     </div>
   );
 }
