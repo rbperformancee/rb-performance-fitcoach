@@ -354,53 +354,7 @@ export default function App() {
       )}
 
       {/* ── Topbar ── */}
-      <header className="topbar">
-        <div className="topbar-brand">
-          <div className="topbar-logo-img" onClick={() => { if (!isCoach) setShowHome(true); }} style={{ cursor: !isCoach ? "pointer" : "default" }}><img src={require("./utils/logo").LOGO_B64} alt="RB Perform" /></div>
-          <span className="topbar-name">RB&nbsp;<span>Performance</span></span>
-        </div>
-        <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {/* Nom client */}
-          {client?.full_name && (
-            <span style={{ fontSize: 11, color: "#555", fontWeight: 500 }}>{client.full_name.split(" ")[0]}</span>
-          )}
-          {/* BouRayan */}
-          {isCoach && (
-            <button onClick={() => setShowCoachDash(true)} style={{
-              padding: "5px 10px", background: "rgba(2,209,186,0.08)",
-              border: "1px solid rgba(2,209,186,0.2)", borderRadius: 7,
-              color: GREEN, fontSize: 10.5, fontWeight: 700, cursor: "pointer",
-            }}>
-              🎛 Coach
-            </button>
-          )}
-          {/* Export PDF */}
-          {programme && (
-            <button onClick={handleExportPDF} disabled={exporting} style={{
-              display: "flex", alignItems: "center", gap: 5, padding: "5px 10px",
-              background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 7, color: exporting ? "#555" : "#9ca3af",
-              fontSize: 10.5, fontWeight: 600, cursor: exporting ? "not-allowed" : "pointer",
-              transition: "all 0.15s", fontFamily: "'Inter',sans-serif",
-            }}>
-              {exporting ? "..." : (
-                <><svg viewBox="0 0 20 20" fill="none" style={{ width: 11, height: 11 }}>
-                  <path d="M10 3v10M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="3" y1="16" x2="17" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                </svg>PDF</>
-              )}
-            </button>
-          )}
-          {/* Déconnexion */}
-          <button onClick={signOut} style={{
-            background: "none", border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 7, padding: "5px 10px", color: "#555",
-            fontSize: 10.5, fontWeight: 600, cursor: "pointer",
-          }}>
-            Déco
-          </button>
-        </div>
-      </header>
+      
 
       {/* ── Erreur programme ── */}
       {authError && !programme && (
@@ -438,7 +392,7 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "profile" ? (
-              <ProfilePage client={client} />
+              <ProfilePage client={client} onLogout={() => supabase.auth.signOut()} />
             ) : page === "training" ? (
             <main className="main">
               {client && <MessageBanner clientId={client.id} />}

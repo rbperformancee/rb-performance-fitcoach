@@ -4,7 +4,7 @@ import { BadgeSystem } from "./BadgeSystem";
 import { useStreak } from "../hooks/useStreak";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 
-export default function ProfilePage({ client }) {
+export default function ProfilePage({ client, onLogout }) {
   const { streak, bestStreak } = useStreak(client?.id);
   const { latest } = useWeightTracking(client?.id);
   const name = client?.full_name || client?.email?.split("@")[0] || "Athlete";
@@ -60,6 +60,12 @@ export default function ProfilePage({ client }) {
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 16 }}>Mes badges</div>
           <BadgeSystem clientId={client?.id} />
         </div>
+
+        <div style={{ marginTop: 40, height: "1px", background: "rgba(255,255,255,0.06)", marginBottom: 24 }} />
+
+        <button onClick={onLogout} style={{ width: "100%", padding: "16px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 13, fontWeight: 500, cursor: "pointer", letterSpacing: "0.3px" }}>
+          Se déconnecter
+        </button>
       </div>
     </div>
   );
