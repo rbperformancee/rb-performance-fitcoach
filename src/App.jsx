@@ -262,17 +262,7 @@ export default function App() {
         <div style={{flex:1,minHeight:20}}/>
 
         {/* CTA — Apple meets Nike */}
-        <div style={{padding:'0 28px 48px',position:'relative',zIndex:2}}>
-          <button onClick={()=>setShowHome(false)}
-            style={{width:'100%',padding:'20px 24px',borderRadius:18,border:'none',background:'#02d1ba',color:'#000',fontSize:15,fontWeight:700,cursor:'pointer',letterSpacing:'0.5px',position:'relative',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'space-between'}}
-            onTouchStart={e=>{e.currentTarget.style.transform='scale(0.98)';e.currentTarget.style.opacity='0.9'}}
-            onTouchEnd={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.opacity='1'}}>
-            <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 50%)',pointerEvents:'none'}}/>
-            <span style={{position:'relative',fontWeight:800,letterSpacing:'-0.2px'}}>Commencer la séance</span>
-            <svg viewBox="0 0 24 24" fill="currentColor" style={{width:20,height:20,position:'relative'}}><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
-          </button>
-          <div style={{textAlign:'center',marginTop:16,fontSize:9,color:'rgba(255,255,255,0.1)',letterSpacing:'3px',fontWeight:600,textTransform:'uppercase'}}>RB Perform · Coaching personnalisé</div>
-        </div>
+        
         <nav style={{position:'fixed',bottom:'calc(env(safe-area-inset-bottom, 0px) + 20px)',left:'50%',transform:'translateX(-50%)',display:'flex',gap:0,background:'rgba(18,18,18,0.88)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:100,padding:5,zIndex:100}}>
           {[
             {id:'training',icon:<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' style={{width:20,height:20}}><path d='M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12'/></svg>},
