@@ -442,18 +442,18 @@ export default function App() {
             ) : page === "training" ? (
             <main className="main">
               {client && <MessageBanner clientId={client.id} />}
-              <div className="prog-header">
+              <div style={{ padding: "28px 24px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                 <div>
-                  <div className="prog-eyebrow">Programme actif</div>
-                  <h1 className="prog-name">{programme.name}</h1>
+                  <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", fontWeight: 500, letterSpacing: "0.3px", marginBottom: 8 }}>Programme actif</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-1px", lineHeight: 1.1, marginBottom: 10 }}>{programme.name}<span style={{ color: "#02d1ba" }}>.</span></div>
                   {(client?.full_name || programme.clientName) && (
-                    <div className="prog-client">{client?.full_name || programme.clientName}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 6 }}>{client?.full_name || programme.clientName}</div>
                   )}
-                  <div className="prog-meta">
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>
                     <span>{programme.weeks.length} semaine{programme.weeks.length > 1 ? "s" : ""}</span>
-                    <span className="dot">·</span>
+                    <span style={{ color: "rgba(255,255,255,0.1)" }}>·</span>
                     <span>{programme.weeks.reduce((a, w) => a + w.sessions.length, 0)} séances</span>
-                    <span className="dot">·</span>
+                    <span style={{ color: "rgba(255,255,255,0.1)" }}>·</span>
                     <span>{totalEx} exercices</span>
                   </div>
                 </div>
@@ -472,9 +472,9 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="week-nav">
+              <div style={{ display: "flex", gap: 8, padding: "16px 24px", overflowX: "auto", scrollbarWidth: "none" }}>
                 {programme.weeks.map((w, i) => (
-                  <button key={i} className={`week-btn ${activeWeek === i ? "active" : ""}`}
+                  <button key={i} style={{ flexShrink: 0, padding: "6px 18px", borderRadius: 100, fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: activeWeek === i ? "#02d1ba" : "rgba(255,255,255,0.04)", border: activeWeek === i ? "1px solid #02d1ba" : "1px solid rgba(255,255,255,0.08)", color: activeWeek === i ? "#000" : "rgba(255,255,255,0.35)", boxShadow: activeWeek === i ? "0 4px 16px rgba(2,209,186,0.3)" : "none" }}
                     onClick={() => { setActiveWeek(i); setActiveSession(0); }}>S{i + 1}</button>
                 ))}
               </div>
@@ -492,13 +492,13 @@ export default function App() {
 
               {session && (
                 <div className="session-content">
-                  <div className="session-header">
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 24px 16px", gap: 12 }}>
                     <div>
-                      <div className="session-eyebrow">Semaine {activeWeek + 1} · Séance {safeIdx + 1}</div>
-                      <h2 className="session-name">{session.name}</h2>
-                      {session.description && <p className="session-desc">{session.description}</p>}
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 400, marginBottom: 6 }}>Semaine {activeWeek + 1} · Séance {safeIdx + 1}</div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", lineHeight: 1.2 }}>{session.name}</div>
+                      {session.description && <p style={{ marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>{session.description}</p>}
                     </div>
-                    <div className="session-count">{session.exercises.length}<span>ex</span></div>
+                    <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 12, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>{session.exercises.length}<span>ex</span></div>
                   </div>
 
                   <div className="exercises-list">
