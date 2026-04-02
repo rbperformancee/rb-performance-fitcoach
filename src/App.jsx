@@ -109,6 +109,7 @@ export default function App() {
   const [showMentions,    setShowMentions]    = useState(false);
   const [showCGU,         setShowCGU]         = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showHome, setShowHome] = useState(true);
   const [showRPE,         setShowRPE]         = useState(false);
 
   // Le programme affiché : cloud en priorité, sinon local
@@ -153,6 +154,62 @@ export default function App() {
   }
 
   // ── Coach → Dashboard admin ──
+  if (showHome && !isCoach) {
+    const _h = new Date().getHours();
+    const _g = _h < 12 ? 'Bonjour' : _h < 18 ? 'Bon apres-midi' : 'Bonsoir';
+    const _fn = client?.full_name?.split(' ')[0] || '';
+    const _q = ["La douleur paie demain.","Les champions se construisent.","Zero excuse. Max resultat.","Continue. Toujours."][new Date().getDay() % 4];
+    const _tw = programme?.weeks?.length || 0;
+    const _ts = programme?.weeks?.reduce((a,w) => a+(w.sessions?.length||0), 0) || 0;
+    const _now = new Date();
+    const _days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    const _months = ['Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Dec'];
+    return (
+      <div style={{minHeight:'100vh',background:'#0a0a0a',display:'flex',flexDirection:'column',fontFamily:'Inter,-apple-system,sans-serif',position:'relative'}}>
+        <div style={{position:'absolute',top:-100,left:'50%',transform:'translateX(-50%)',width:400,height:400,background:'radial-gradient(circle, rgba(2,209,186,0.07) 0%, transparent 70%)',pointerEvents:'none'}}/>
+        <div style={{padding:'56px 24px 0',display:'flex',justifyContent:'space-between',alignItems:'center',position:'relative',zIndex:1}}>
+          <div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontWeight:700,letterSpacing:3,textTransform:'uppercase',marginBottom:8}}>{_days[_now.getDay()]} {_now.getDate()} {_months[_now.getMonth()]}</div>
+            <div style={{fontSize:13,color:'rgba(255,255,255,0.5)',marginBottom:2}}>{_g}{_fn ? ',' : ''}</div>
+            <div style={{fontSize:32,fontWeight:900,color:'#fff',letterSpacing:'-1px'}}>{_fn ? _fn+'.' : 'Athlete.'}</div>
+          </div>
+          <div style={{fontSize:32,fontWeight:100,color:'rgba(255,255,255,0.4)'}}>{String(_h).padStart(2,'0')}:{String(_now.getMinutes()).padStart(2,'0')}</div>
+        </div>
+        <div style={{padding:'24px 24px 0',display:'flex',gap:10,position:'relative',zIndex:1}}>
+          {[{label:'Exercices',value:doneEx||0,icon:'💪',color:'#02d1ba'},{label:'Semaines',value:_tw,icon:'📅',color:'#818cf8'},{label:'Seances',value:_ts,icon:'🎯',color:'#f97316'}].map((s,i)=>(
+            <div key={i} style={{flex:1,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:18,padding:'14px 10px',textAlign:'center'}}>
+              <div style={{fontSize:18,marginBottom:6}}>{s.icon}</div>
+              <div style={{fontFamily:'monospace',fontSize:22,fontWeight:900,color:s.color}}>{s.value}</div>
+              <div style={{fontSize:9,color:'rgba(255,255,255,0.25)',fontWeight:700,letterSpacing:1.5,textTransform:'uppercase',marginTop:4}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        {programme && (
+          <div style={{margin:'16px 24px 0',background:'rgba(2,209,186,0.07)',border:'1px solid rgba(2,209,186,0.15)',borderRadius:22,padding:'18px 20px',position:'relative',zIndex:1}}>
+            <div style={{fontSize:9,color:'#02d1ba',fontWeight:800,letterSpacing:3,textTransform:'uppercase',marginBottom:8}}>Programme actif</div>
+            <div style={{fontSize:20,fontWeight:900,color:'#fff',marginBottom:6}}>{programme.name}</div>
+            <div style={{display:'flex',gap:8}}>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.4)',background:'rgba(255,255,255,0.06)',borderRadius:20,padding:'3px 10px'}}>{_tw} sem.</span>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.4)',background:'rgba(255,255,255,0.06)',borderRadius:20,padding:'3px 10px'}}>{_ts} seances</span>
+            </div>
+          </div>
+        )}
+        <div style={{margin:'16px 24px 0',position:'relative',zIndex:1}}>
+          <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.05)',borderRadius:18,padding:'16px 18px',borderLeft:'3px solid rgba(2,209,186,0.5)'}}>
+            <div style={{fontSize:13,color:'rgba(255,255,255,0.5)',fontStyle:'italic',lineHeight:1.7}}>"{_q}"</div>
+            <div style={{fontSize:9,color:'rgba(2,209,186,0.5)',fontWeight:800,letterSpacing:2,textTransform:'uppercase',marginTop:8}}>RB PERFORM</div>
+          </div>
+        </div>
+        <div style={{flex:1}}/>
+        <div style={{padding:'0 24px 48px',position:'relative',zIndex:1}}>
+          <button onClick={()=>setShowHome(false)} style={{width:'100%',padding:'18px',borderRadius:20,border:'none',background:'linear-gradient(135deg, #02d1ba, #01b8a3)',color:'#0a0a0a',fontSize:15,fontWeight:900,cursor:'pointer',letterSpacing:'1px',textTransform:'uppercase',boxShadow:'0 12px 40px rgba(2,209,186,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:12}}>
+            <svg viewBox="0 0 24 24" fill="currentColor" style={{width:18,height:18}}><polygon points="5,3 19,12 5,21"/></svg>
+            Commencer la seance
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (isCoach && showCoachDash) {
     return <CoachDashboard onExit={() => setShowCoachDash(false)} />;
   }
