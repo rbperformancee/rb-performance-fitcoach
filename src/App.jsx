@@ -176,7 +176,7 @@ export default function App() {
           <div style={{fontSize:32,fontWeight:100,color:'rgba(255,255,255,0.4)'}}>{String(_h).padStart(2,'0')}:{String(_now.getMinutes()).padStart(2,'0')}</div>
         </div>
         <div style={{padding:'24px 24px 0',display:'flex',gap:10,position:'relative',zIndex:1}}>
-          {[{label:'Exercices',value:doneEx||0,icon:'💪',color:'#02d1ba'},{label:'Semaines',value:_tw,icon:'📅',color:'#818cf8'},{label:'Seances',value:_ts,icon:'🎯',color:'#f97316'}].map((s,i)=>(
+          {[{label:'Exercices',value:0,icon:'💪',color:'#02d1ba'},{label:'Semaines',value:_tw,icon:'📅',color:'#818cf8'},{label:'Seances',value:_ts,icon:'🎯',color:'#f97316'}].map((s,i)=>(
             <div key={i} style={{flex:1,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:18,padding:'14px 10px',textAlign:'center'}}>
               <div style={{fontSize:18,marginBottom:6}}>{s.icon}</div>
               <div style={{fontFamily:'monospace',fontSize:22,fontWeight:900,color:s.color}}>{s.value}</div>
