@@ -220,7 +220,7 @@ export default function WeightChart({ clientId, client, programme }) {
             {[
               { dot: GREEN, label: "Aujourd hui", val: latestW ? latestW.toFixed(1) + " kg" : "--" },
               { dot: "rgba(255,255,255,0.2)", label: "Objectif atteint le", val: proj.date },
-              { dot: "rgba(129,140,248,0.7)", label: "Reste a perdre", val: proj.kgLeft + " kg" },
+              { dot: "rgba(129,140,248,0.7)", label: goal > latestW ? "Reste a prendre" : "Reste a perdre", val: proj.kgLeft + " kg" },
             ].map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: r.dot, flexShrink: 0 }} />
