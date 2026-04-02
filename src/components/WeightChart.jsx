@@ -246,8 +246,8 @@ export default function WeightChart({ clientId, client, programme }) {
           );
           const diffs = vals.slice(1).map((v, i) => Math.abs(v - vals[i]));
           const noise = (diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(2);
-          const lastDiff = Math.abs(vals[vals.length - 1] - vals[vals.length - 2]);
-          const isNoise = lastDiff <= parseFloat(noise);
+          const lastDiff = vals.length >= 2 ? Math.abs(vals[vals.length - 1] - vals[vals.length - 2]) : 0;
+          const isNoise = lastDiff === 0 || lastDiff <= parseFloat(noise);
           const fakeAlerts = diffs.filter(d => d <= parseFloat(noise)).length;
           const realSignals = diffs.filter(d => d > parseFloat(noise)).length;
           return (
@@ -280,6 +280,7 @@ export default function WeightChart({ clientId, client, programme }) {
                   const lastVal = vals[vals.length - 1];
                   const prevVal = vals[vals.length - 2];
                   const isProgres = isPrise ? lastVal > prevVal : lastVal < prevVal;
+                  if (lastDiff === 0) return `" Aucune variation depuis ta derniere pesee. Pese-toi regulierement pour suivre ta progression. "`;
                   if (isNoise) return `" Ta variation de ${lastDiff.toFixed(2)} kg est du bruit normal. Continue sur ta lancee. "`;
                   if (isProgres) return `" ${lastDiff.toFixed(2)} kg ${isPrise ? "de prise" : "de perte"} — un vrai signal positif. Bien joue. "`;
                   return `" ${lastDiff.toFixed(2)} kg dans le mauvais sens — un vrai signal. Analyse ta semaine. "`;
