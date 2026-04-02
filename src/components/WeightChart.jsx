@@ -9,6 +9,7 @@ export default function WeightChart({ clientId, client, programme }) {
   const [newWeight, setNewWeight] = useState("");
   const [saving, setSaving] = useState(false);
   const [localGoal, setLocalGoal] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(null);
   const _wg = localGoal != null ? localGoal : (client && client.weight_goal ? parseFloat(client.weight_goal) : null);
 
   const handleAdd = async () => {
@@ -306,15 +307,32 @@ export default function WeightChart({ clientId, client, programme }) {
             <div key={i} style={{ flex: 1, textAlign: "center", fontSize: 9, color: "rgba(255,255,255,0.15)" }}>{d}</div>
           ))}
         </div>
+        {selectedDay && (
+          <div onClick={() => setSelectedDay(null)} style={{ position: "relative", marginBottom: 12, padding: "14px 16px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 10, color: "rgba(2,209,186,0.6)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>
+                {new Date(selectedDay.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
+                {selectedDay.weight} <span style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>kg</span>
+              </div>
+            </div>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 14, color: "rgba(255,255,255,0.3)" }}>✕</div>
+          </div>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
           {(() => {
             const firstDay = heatmap.length > 0 ? new Date(heatmap[0].date).getDay() : 1;
             const offset = firstDay === 0 ? 6 : firstDay - 1;
             const cells = [];
             for (let i = 0; i < offset; i++) cells.push(<div key={"e"+i} style={{ height: 20 }} />);
-            heatmap.forEach((day, i) => cells.push(
-              <div key={i} title={day.date} style={{ height: 20, borderRadius: 4, background: day.logged ? GREEN : "rgba(255,255,255,0.05)", opacity: day.logged ? 0.9 : 1 }} />
-            ));
+            heatmap.forEach((day, i) => {
+              const weightEntry = weights.find(w => w.date && w.date.slice(0,10) === day.date);
+              cells.push(
+                <div key={i} onClick={() => day.logged && weightEntry ? setSelectedDay({ date: day.date, weight: weightEntry.weight }) : null}
+                  style={{ height: 20, borderRadius: 4, background: day.logged ? GREEN : "rgba(255,255,255,0.05)", opacity: day.logged ? 0.9 : 1, cursor: day.logged ? "pointer" : "default", transition: "all 0.15s", border: selectedDay && selectedDay.date === day.date ? "1.5px solid #fff" : "1.5px solid transparent" }} />
+              );
+            });
             return cells;
           })()}
         </div>
