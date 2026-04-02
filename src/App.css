@@ -78,8 +78,8 @@
 
 /* Cards premium */
 .ex-card {
-  background: rgba(255,255,255,0.025) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
   border-radius: 16px !important;
   transition: all 0.2s cubic-bezier(0.22,1,0.36,1) !important;
   position: relative !important;
