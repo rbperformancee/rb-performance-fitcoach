@@ -31,6 +31,13 @@ export function useWeightTracking(clientId) {
     return { success: true };
   }, [clientId, fetchWeights]);
 
+  const saveGoal = async (goal) => {
+    if (!clientId) return;
+    const { error } = await supabase.from('clients').update({ weight_goal: parseFloat(goal) }).eq('id', clientId);
+    if (error) console.error('saveGoal error:', error.message);
+    return { error };
+  };
+
   useEffect(() => { fetchWeights(); }, [fetchWeights]);
 
   const latest = weights[weights.length - 1];
