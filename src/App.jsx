@@ -39,7 +39,6 @@ import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPage
 import { LoginScreen } from "./components/LoginScreen";
 import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
-import { LOGO_B64 } from "./utils/logo";
 import "./App.css";
 import { supabase } from "./lib/supabase";
 
@@ -236,7 +235,7 @@ export default function App() {
       {/* ── Topbar ── */}
       <header className="topbar">
         <div className="topbar-brand">
-          <div className="topbar-logo-img" onClick={() => {}} style={{ cursor: !isCoach ? "pointer" : "default" }}><img src={LOGO_B64} alt="RB Perform" /></div>
+          <div className="topbar-logo-img" onClick={() => {}} style={{ cursor: !isCoach ? "pointer" : "default" }}><img src={require("./utils/logo").LOGO_B64} alt="RB Perform" /></div>
           <span className="topbar-name">RB&nbsp;<span>Performance</span></span>
         </div>
         <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
