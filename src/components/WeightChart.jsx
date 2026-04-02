@@ -241,11 +241,14 @@ export default function WeightChart({ clientId, client, programme }) {
       <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Seances · Impact poids</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {[
-            { label: "3+ seances / sem.", pct: 85, change: "-0.5 kg", color: GREEN },
-            { label: "2 seances / sem.", pct: 40, change: "-0.1 kg", color: "rgba(255,255,255,0.3)" },
-            { label: "0-1 seance / sem.", pct: 25, change: "+0.2 kg", color: "rgba(239,68,68,0.7)" },
-          ].map((r, i) => (
+          {(() => {
+            const isPrise = goal && latestW && goal > latestW;
+            return [
+              { label: "3+ seances / sem.", pct: 85, change: isPrise ? "+0.5 kg" : "-0.5 kg", color: GREEN },
+              { label: "2 seances / sem.", pct: 40, change: isPrise ? "+0.2 kg" : "-0.1 kg", color: "rgba(255,255,255,0.3)" },
+              { label: "0-1 seance / sem.", pct: 25, change: isPrise ? "+0.0 kg" : "+0.2 kg", color: isPrise ? "rgba(255,255,255,0.3)" : "rgba(239,68,68,0.7)" },
+            ];
+          })().map((r, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", width: 130, flexShrink: 0 }}>{r.label}</div>
               <div style={{ flex: 1, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
