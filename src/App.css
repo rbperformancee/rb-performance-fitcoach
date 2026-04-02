@@ -698,3 +698,8 @@ input[type=number] { -moz-appearance: textfield; }
   background: rgba(2,209,186,0.04) !important;
   outline: none !important;
 }
+
+/* Safe area global */
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+}
