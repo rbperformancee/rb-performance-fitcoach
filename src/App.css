@@ -78,7 +78,7 @@
 
 /* Cards premium */
 .ex-card {
-  background: rgba(255,255,255,0.02) !important;
+  background: rgba(255,255,255,0.025) !important;
   border: 1px solid rgba(255,255,255,0.06) !important;
   border-radius: 16px !important;
   transition: all 0.2s cubic-bezier(0.22,1,0.36,1) !important;
@@ -683,4 +683,18 @@ input[type=number] { -moz-appearance: textfield; }
 /* Sparkline glow */
 .sparkline-glow {
   filter: drop-shadow(0 0 4px rgba(2,209,186,0.4));
+}
+
+.ex-input, input[type="number"] {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  font-size: 16px !important;
+  font-weight: 300 !important;
+}
+.ex-input:focus, input[type="number"]:focus {
+  border-color: rgba(2,209,186,0.4) !important;
+  background: rgba(2,209,186,0.04) !important;
+  outline: none !important;
 }

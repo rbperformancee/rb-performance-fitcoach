@@ -52,7 +52,7 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
         />
         <button onClick={() => setPlaying(false)} style={{
           position: "absolute", top: 8, right: 8,
-          background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.2)",
+          background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.2)",
           borderRadius: "50%", width: 30, height: 30, color: "#fff",
           fontSize: 16, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -91,7 +91,7 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: GREEN, marginBottom: 2 }}>Démonstration</div>
           <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{exName}</div>
         </div>
-        <div style={{ flexShrink: 0, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "4px 10px", fontSize: 10, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 5, backdropFilter: "blur(4px)" }}>
+        <div style={{ flexShrink: 0, background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "4px 10px", fontSize: 10, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 5, backdropFilter: "blur(4px)" }}>
           <svg viewBox="0 0 16 16" fill="none" style={{ width: 10, height: 10 }}><polygon points="4,2 12,8 4,14" fill="#fff"/></svg>
           Lancer
         </div>
