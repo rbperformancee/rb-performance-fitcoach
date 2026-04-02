@@ -110,6 +110,8 @@ export default function App() {
   const [showCGU,         setShowCGU]         = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showHome, setShowHome] = useState(true);
+  const [navVisible, setNavVisible] = useState(true);
+  const lastScrollY = React.useRef(0);
   const [showRPE,         setShowRPE]         = useState(false);
 
   // Le programme affiché : cloud en priorité, sinon local
