@@ -62,10 +62,12 @@ export default function WeightChart({ clientId, client, programme }) {
   const getHeatmap = () => {
     const days = [];
     const weightDates = new Set(weights.map(w => w.date && w.date.slice(0, 10)));
+    const today = new Date();
+    const todayStr = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
     for (let i = 27; i >= 0; i--) {
-      const d = new Date();
+      const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+      const key = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
       days.push({ date: key, logged: weightDates.has(key) });
     }
     return days;
