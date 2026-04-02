@@ -275,10 +275,15 @@ export default function WeightChart({ clientId, client, programme }) {
                 </div>
               </div>
               <div style={{ padding: "12px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 12, fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic", lineHeight: 1.6 }}>
-                {isNoise
-                  ? `" Ta derniere variation de ${lastDiff.toFixed(2)} kg est du bruit normal. Ne t inquiete pas. "`
-                  : `" Ta derniere variation de ${lastDiff.toFixed(2)} kg est un vrai signal. Prends-le en compte. "`
-                }
+                {(() => {
+                  const isPrise = goal && latestW && goal > latestW;
+                  const lastVal = vals[vals.length - 1];
+                  const prevVal = vals[vals.length - 2];
+                  const isProgres = isPrise ? lastVal > prevVal : lastVal < prevVal;
+                  if (isNoise) return `" Ta variation de ${lastDiff.toFixed(2)} kg est du bruit normal. Continue sur ta lancee. "`;
+                  if (isProgres) return `" ${lastDiff.toFixed(2)} kg ${isPrise ? "de prise" : "de perte"} — un vrai signal positif. Bien joue. "`;
+                  return `" ${lastDiff.toFixed(2)} kg dans le mauvais sens — un vrai signal. Analyse ta semaine. "`;
+                })()}
               </div>
             </div>
           );
