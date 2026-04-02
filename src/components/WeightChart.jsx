@@ -9,7 +9,7 @@ export default function WeightChart({ clientId, client, programme }) {
   const [newWeight, setNewWeight] = useState("");
   const [saving, setSaving] = useState(false);
   const [localGoal, setLocalGoal] = useState(null);
-  const weightGoal = localGoal != null ? localGoal : (client && client.weight_goal ? parseFloat(client.weight_goal) : null);
+  const _wg = localGoal != null ? localGoal : (client && client.weight_goal ? parseFloat(client.weight_goal) : null);
 
   const handleAdd = async () => {
     if (!newWeight || isNaN(parseFloat(newWeight))) return;
@@ -28,7 +28,7 @@ export default function WeightChart({ clientId, client, programme }) {
   const maxV = vals.length ? Math.max(...vals) : 100;
   const range = maxV - minV || 1;
   const GREEN = "#02d1ba";
-  const goal = weightGoal || null;
+  const goal = _wg != null ? _wg : null;
 
   const getPhrase = () => {
     if (!weekDiff) return "Commence ton suivi. Chaque gramme compte.";
