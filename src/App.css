@@ -39,7 +39,7 @@
 }
 
 /* Bottom nav premium */
-.bottom-nav {
+.bottom-nav { padding-bottom: env(safe-area-inset-bottom, 8px) !important; 
   background: rgba(13,13,13,0.95) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
