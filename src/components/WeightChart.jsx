@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 
 export default function WeightChart({ clientId, client, programme }) {
-  const { weights, addWeight, latest, diff, weightGoal: _hookGoal, saveGoal } = useWeightTracking(clientId);
-  const weightGoal = _hookGoal != null ? _hookGoal : (client?.weight_goal ? parseFloat(client.weight_goal) : null);
+  const { weights, addWeight, latest, diff, saveGoal } = useWeightTracking(clientId);
   const [editGoal, setEditGoal] = useState(false);
   const [newGoal, setNewGoal] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [newWeight, setNewWeight] = useState("");
   const [saving, setSaving] = useState(false);
+  const [localGoal, setLocalGoal] = useState(null);
+  const weightGoal = localGoal != null ? localGoal : (client && client.weight_goal ? parseFloat(client.weight_goal) : null);
 
   const handleAdd = async () => {
     if (!newWeight || isNaN(parseFloat(newWeight))) return;
@@ -177,7 +178,7 @@ export default function WeightChart({ clientId, client, programme }) {
                 <input type="number" step="0.1" placeholder="Ex: 75" value={newGoal}
                   onChange={e => setNewGoal(e.target.value)}
                   style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
-                <button onClick={async () => { await saveGoal(newGoal); setEditGoal(false); setNewGoal(""); }}
+                <button onClick={async () => { const g = parseFloat(newGoal); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
                   style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer" }}>OK</button>
               </div>
             ) : (
@@ -193,7 +194,7 @@ export default function WeightChart({ clientId, client, programme }) {
             <input type="number" step="0.1" placeholder={"Actuel: " + goal + " kg"} value={newGoal}
               onChange={e => setNewGoal(e.target.value)}
               style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
-            <button onClick={async () => { await saveGoal(newGoal); setEditGoal(false); setNewGoal(""); }}
+            <button onClick={async () => { const g = parseFloat(newGoal); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
               style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer" }}>OK</button>
             <button onClick={() => setEditGoal(false)}
               style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 14px", color: "rgba(255,255,255,0.3)", cursor: "pointer" }}>✕</button>
