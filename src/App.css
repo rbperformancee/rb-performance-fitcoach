@@ -78,9 +78,9 @@
 
 /* Cards premium */
 .ex-card {
-  background: var(--bg-2) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius) !important;
+  background: rgba(255,255,255,0.02) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 16px !important;
   transition: all 0.2s cubic-bezier(0.22,1,0.36,1) !important;
   position: relative !important;
   overflow: hidden !important;
@@ -343,7 +343,7 @@ input[type=number] { -moz-appearance: textfield; }
 .import-drop-zone:hover .import-cta { opacity: 0.85; }
 
 /* ── MAIN ── */
-.main { flex: 1; padding: 0 0 90px; }
+.main { flex: 1; padding: 0 0 90px; background: #050505; }
 
 /* ── PROGRAMME HEADER ── */
 .prog-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 28px 24px 20px; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
@@ -422,7 +422,7 @@ input[type=number] { -moz-appearance: textfield; }
 .ex-num { width: 28px; height: 28px; border-radius: 6px; background: var(--bg-4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .ex-num span { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--text-3); }
 .ex-title-block { flex: 1; min-width: 0; }
-.ex-name { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.ex-name { font-size: 15px; font-weight: 600; color: #ffffff; line-height: 1.3; letter-spacing: -0.2px; }
 .ex-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .ex-chip { font-size: 10.5px; padding: 2px 7px; border-radius: 5px; font-weight: 500; }
 .ex-chip-sets  { background: rgba(255,255,255,0.06); color: var(--text-2); }
