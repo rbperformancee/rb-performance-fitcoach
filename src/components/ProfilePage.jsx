@@ -1,16 +1,48 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import AvatarPicker from "./AvatarPicker";
 import { BadgeSystem } from "./BadgeSystem";
 import { useStreak } from "../hooks/useStreak";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 import { useXP, getLevelInfo } from "../hooks/useXP";
+import { supabase } from "../lib/supabase";
 
 const GREEN = "#02d1ba";
 
 export default function ProfilePage({ client, onLogout }) {
   const { streak, bestStreak } = useStreak(client?.id);
-  const { latest } = useWeightTracking(client?.id);
+  const { latest, weights } = useWeightTracking(client?.id);
   const { xp, recentActivity, levelInfo } = useXP(client?.id);
+  const [sessionCount, setSessionCount] = useState(0);
+  const [adnData, setAdnData] = useState(null);
+
+  useEffect(() => {
+    if (!client?.id) return;
+    const fetchSessionData = async () => {
+      const { data, count } = await supabase
+        .from("session_logs")
+        .select("session_name, logged_at", { count: "exact" })
+        .eq("client_id", client.id)
+        .order("logged_at", { ascending: false })
+        .limit(50);
+      setSessionCount(count || 0);
+      if (data && data.length >= 2) {
+        // Calculer ADN - jours preferes
+        const dayCount = [0,0,0,0,0,0,0];
+        const sessionNames = {};
+        data.forEach(s => {
+          const d = new Date(s.logged_at);
+          dayCount[d.getDay()]++;
+          if (s.session_name) sessionNames[s.session_name] = (sessionNames[s.session_name] || 0) + 1;
+        });
+        const days = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+        const topDays = dayCount.map((c,i) => ({day: days[i], count: c})).filter(d => d.count > 0).sort((a,b) => b.count - a.count).slice(0,3);
+        const topSession = Object.entries(sessionNames).sort((a,b) => b[1]-a[1])[0];
+        const freq = count >= 12 ? "3x / semaine" : count >= 6 ? "2x / semaine" : "1x / semaine";
+        setAdnData({ topDays, topSession: topSession?.[0], freq, total: count });
+      }
+    };
+    fetchSessionData();
+  }, [client?.id]);
   const name = client?.full_name || client?.email?.split("@")[0] || "Athlete";
   const firstName = name.split(" ")[0];
   const email = client?.email || "";
@@ -114,9 +146,9 @@ export default function ProfilePage({ client, onLogout }) {
         <div style={{ padding: "0 24px" }}>
           <BadgeSystem
             clientId={client?.id}
-            sessions={0}
+            sessions={sessionCount}
             streak={streak}
-            weights={latest ? 1 : 0}
+            weights={weights?.length || 0}
           />
         </div>
 
@@ -142,6 +174,31 @@ export default function ProfilePage({ client, onLogout }) {
 
         {/* DIVIDER */}
         <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "20px 24px" }} />
+
+        {/* ADN ATHLETE */}
+        {adnData && (
+          <div style={{ padding: "0 24px", marginBottom: 20 }}>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 14 }}>Ton ADN Athlete</div>
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: 18, position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: -40, right: -40, width: 120, height: 120, background: `radial-gradient(circle, ${GREEN}08 0%, transparent 70%)`, pointerEvents: "none" }} />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                <div style={{ background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, padding: "6px 14px", fontSize: 12, color: GREEN }}>{adnData.freq}</div>
+                {adnData.topDays.slice(0,2).map((d,i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, padding: "6px 14px", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{d.day}</div>
+                ))}
+                {adnData.topSession && (
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, padding: "6px 14px", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{adnData.topSession}</div>
+                )}
+              </div>
+              <div style={{ paddingLeft: 12, borderLeft: `2px solid rgba(2,209,186,0.3)`, fontSize: 12, color: "rgba(255,255,255,0.35)", lineHeight: 1.6, fontStyle: "italic" }}>
+                {adnData.topDays[0] ? `Tu t entraînes le plus le ${adnData.topDays[0].day}. ${adnData.total >= 10 ? "Tu es consistant — continue." : "Construis ta regularite."}` : "Continue tes seances pour voir ton ADN se former."}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* DIVIDER */}
+        <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 24px 20px" }} />
 
         {/* CITATION */}
         <div style={{ padding: "0 24px", marginBottom: 28 }}>

@@ -407,7 +407,7 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "profile" ? (
-              <ProfilePage client={client} onLogout={() => supabase.auth.signOut()} />
+              <ProfilePage client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} />
             ) : page === "training" ? (
             <main className="main">
               {client && <MessageBanner clientId={client.id} />}
@@ -487,7 +487,20 @@ export default function App() {
                     </div>
                   )}
 
-                  <button onClick={() => setShowReport(true)} style={{
+                  <button onClick={async () => {
+                    setShowReport(true);
+                    if (client?.id && session?.name) {
+                      try {
+                        const { supabase } = await import('./lib/supabase');
+                        await supabase.from('session_logs').insert({
+                          client_id: client.id,
+                          session_name: session.name,
+                          programme_name: programme?.name || '',
+                          logged_at: new Date().toISOString(),
+                        });
+                      } catch(e) { console.error('session log error', e); }
+                    }
+                  }} style={{
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     width: "100%", marginTop: 20, padding: "14px",
                     background: sessionComplete ? GREEN : "rgba(2,209,186,0.08)",
