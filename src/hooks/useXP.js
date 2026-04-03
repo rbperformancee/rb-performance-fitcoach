@@ -78,9 +78,33 @@ export function useXP(clientId) {
       activity.push({ type: "weight", label: `Pesee · ${w.weight} kg`, meta: "+5 XP", xp: 5, date: w.date, color: "rgba(2,209,186,0.5)" });
     });
 
+    // XP courses (Move)
+    const [runsRes, stepsRes] = await Promise.all([
+      supabase.from("run_logs").select("id, date, distance_km").eq("client_id", clientId).order("date", { ascending: false }).limit(20),
+      supabase.from("daily_tracking").select("date, pas").eq("client_id", clientId).order("date", { ascending: false }).limit(30),
+    ]);
+    const runCount = runsRes.data?.length || 0;
+    const totalKm = (runsRes.data || []).reduce((a, r) => a + (r.distance_km || 0), 0);
+    totalXP += runCount * 10;
+    runsRes.data?.slice(0, 2).forEach(r => {
+      activity.push({ type: "run", label: `Course · ${r.distance_km} km`, meta: "+10 XP", xp: 10, date: r.date, color: "#ef4444" });
+    });
+
+    // XP pas (objectif atteint)
+    const goalsRes2 = await supabase.from("nutrition_goals").select("pas").eq("client_id", clientId).single();
+    const pasGoal = goalsRes2.data?.pas || 8000;
+    const stepsGoalDays = (stepsRes.data || []).filter(d => (d.pas || 0) >= pasGoal).length;
+    totalXP += stepsGoalDays * 5;
+
     // XP badges
-    const badgeXPMap = { first_session: 50, five_sessions: 80, ten_sessions: 120, twenty_sessions: 200, streak_7: 100, streak_30: 300, weight_logged: 30, goal_set: 50 };
+    const badgeXPMap = {
+      first_session: 50, five_sessions: 80, ten_sessions: 120, twenty_sessions: 200,
+      fifty_sessions: 400, streak_7: 100, streak_30: 300, weight_logged: 30, goal_set: 50,
+      first_run: 40, five_runs: 80, hundred_km: 200, steps_goal_7: 100,
+    };
     (badgesData.data || []).forEach(b => { totalXP += badgeXPMap[b.badge_id] || 0; });
+
+    // Stocker pour les badges
 
     setXP(totalXP);
     setRecentActivity(activity.slice(0, 6));
@@ -89,5 +113,5 @@ export function useXP(clientId) {
 
   useEffect(() => { fetchXP(); }, [fetchXP]);
 
-  return { xp, loading, recentActivity, levelInfo: getLevelInfo(xp) };
+  return { xp, loading, recentActivity, levelInfo: getLevelInfo(xp), runCount: runCount || 0, totalKm: totalKm || 0 };
 }

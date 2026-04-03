@@ -11,7 +11,7 @@ const GREEN = "#02d1ba";
 export default function ProfilePage({ client, onLogout }) {
   const { streak, bestStreak } = useStreak(client?.id);
   const { latest, weights } = useWeightTracking(client?.id);
-  const { xp, recentActivity, levelInfo } = useXP(client?.id);
+  const { xp, recentActivity, levelInfo, runCount, totalKm } = useXP(client?.id);
   const [sessionCount, setSessionCount] = useState(0);
   const [adnData, setAdnData] = useState(null);
 
@@ -149,6 +149,8 @@ export default function ProfilePage({ client, onLogout }) {
             sessions={sessionCount}
             streak={streak}
             weights={weights?.length || 0}
+            runs={runCount}
+            km={totalKm}
           />
         </div>
 

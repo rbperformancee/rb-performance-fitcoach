@@ -4,14 +4,17 @@ import { supabase } from "../lib/supabase";
 const GREEN = "#02d1ba";
 
 const BADGES = [
-  { id: "first_session",   xp: 50,  color: GREEN,       label: "Premier pas",    desc: "1ere seance validee",  sessions: 1,  icon: "bolt" },
-  { id: "five_sessions",   xp: 80,  color: "#f97316",   label: "En feu",         desc: "5 seances completees", sessions: 5,  icon: "fire" },
+  { id: "first_session",   xp: 50,  color: GREEN,       label: "Premier pas",    desc: "1ere seance",          sessions: 1,  icon: "bolt" },
+  { id: "five_sessions",   xp: 80,  color: "#f97316",   label: "En feu",         desc: "5 seances",            sessions: 5,  icon: "fire" },
   { id: "ten_sessions",    xp: 120, color: "#a78bfa",   label: "Warrior",        desc: "10 seances",           sessions: 10, icon: "dumbbell" },
   { id: "twenty_sessions", xp: 200, color: "#fbbf24",   label: "Champion",       desc: "20 seances",           sessions: 20, icon: "trophy" },
   { id: "fifty_sessions",  xp: 400, color: "#ef4444",   label: "Titan",          desc: "50 seances",           sessions: 50, icon: "crown" },
   { id: "streak_7",        xp: 100, color: "#34d399",   label: "7 jours",        desc: "Streak 7 jours",       streak: 7,    icon: "calendar" },
-  { id: "streak_30",       xp: 300, color: "#818cf8",   label: "Legende",        desc: "30 jours de streak",   streak: 30,   icon: "star" },
+  { id: "streak_30",       xp: 300, color: "#818cf8",   label: "Legende",        desc: "30j de streak",        streak: 30,   icon: "star" },
   { id: "weight_logged",   xp: 30,  color: "#60a5fa",   label: "Suivi poids",    desc: "1ere pesee",           weights: 1,   icon: "scale" },
+  { id: "first_run",       xp: 40,  color: "#ef4444",   label: "Premier km",     desc: "1ere course loguee",   runs: 1,      icon: "run" },
+  { id: "five_runs",       xp: 80,  color: "#f97316",   label: "Runner",         desc: "5 sorties course",     runs: 5,      icon: "fire" },
+  { id: "hundred_km",      xp: 200, color: "#fbbf24",   label: "100 km",         desc: "100 km cumules",       km: 100,      icon: "crown" },
 ];
 
 const ICON = ({ name, color, size = 20 }) => {
@@ -28,7 +31,7 @@ const ICON = ({ name, color, size = 20 }) => {
   return null;
 };
 
-export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0 }) {
+export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0, runs = 0, km = 0 }) {
   const [earned, setEarned] = useState([]);
   const [newBadge, setNewBadge] = useState(null);
 
@@ -42,6 +45,8 @@ export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0 })
       if (b.sessions && sessions >= b.sessions) return true;
       if (b.streak && streak >= b.streak) return true;
       if (b.weights && weights >= b.weights) return true;
+      if (b.runs && runs >= b.runs) return true;
+      if (b.km && km >= b.km) return true;
       return false;
     });
 
@@ -114,7 +119,7 @@ export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0 })
       {nextBadge && (
         <div style={{ marginTop: 12, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ fontSize: 22, fontWeight: 200, color: GREEN, letterSpacing: "-1px", flexShrink: 0 }}>
-            {nextBadge.sessions ? `${sessions}/${nextBadge.sessions}` : nextBadge.streak ? `${streak}/${nextBadge.streak}j` : `${weights}/1`}
+            {nextBadge.sessions ? `${sessions}/${nextBadge.sessions}` : nextBadge.streak ? `${streak}/${nextBadge.streak}j` : nextBadge.runs ? `${runs}/${nextBadge.runs}` : nextBadge.km ? `${Math.round(km)}/${nextBadge.km}km` : `${weights}/1`}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginBottom: 5 }}>Prochain · {nextBadge.label}</div>

@@ -72,6 +72,13 @@ export default function MovePage({ client }) {
     setShowAdd(false);
     setSaving(false);
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+    // Log XP dans session_logs pour que useXP le compte
+    await supabase.from("session_logs").insert({
+      client_id: client.id,
+      session_name: "Course · " + form.distance + " km",
+      programme_name: "Move",
+      logged_at: new Date().toISOString(),
+    }).then(() => {});
   };
 
   const stepsPct = Math.min(Math.round((dailySteps / stepsGoal) * 100), 100);
