@@ -91,6 +91,14 @@ export function useXP(clientId) {
       activity.push({ type: "run", label: `Course · ${r.distance_km} km`, meta: "+10 XP", xp: 10, date: r.date, color: "#ef4444" });
     });
 
+    // XP nutrition - jours avec au moins un repas logue
+    const nutritionRes = await supabase.from("nutrition_logs").select("date").eq("client_id", clientId);
+    const nutritionDays = new Set((nutritionRes.data || []).map(n => n.date)).size;
+    totalXP += nutritionDays * 5;
+    if (nutritionDays > 0) {
+      activity.push({ type: "fuel", label: `Nutrition loguee`, meta: `${nutritionDays} jours · +${nutritionDays * 5} XP`, xp: nutritionDays * 5, color: "#f97316" });
+    }
+
     // XP pas (objectif atteint)
     const goalsRes2 = await supabase.from("nutrition_goals").select("pas").eq("client_id", clientId).single();
     const pasGoal = goalsRes2.data?.pas || 8000;
