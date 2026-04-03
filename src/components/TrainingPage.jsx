@@ -224,20 +224,17 @@ export default function TrainingPage({
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
   const [chrono, setChrono] = useState(0);
-  const [sessionStarted, setSessionStarted] = useState(false);
   const chronoRef = useRef(null);
+  const startRef = useRef(Date.now());
 
-  // Demarrer le chrono automatiquement
+  // Demarrer le chrono une seule fois au montage
   useEffect(() => {
-    if (!sessionStarted) {
-      setSessionStarted(true);
-      const start = Date.now();
-      chronoRef.current = setInterval(() => {
-        setChrono(Math.floor((Date.now() - start) / 1000));
-      }, 1000);
-    }
+    startRef.current = Date.now();
+    chronoRef.current = setInterval(() => {
+      setChrono(Math.floor((Date.now() - startRef.current) / 1000));
+    }, 1000);
     return () => { if (chronoRef.current) clearInterval(chronoRef.current); };
-  }, [sessionStarted]);
+  }, []);
 
   const formatChrono = (secs) => {
     const m = Math.floor(secs / 60);
@@ -248,7 +245,7 @@ export default function TrainingPage({
   // Calcul progression globale
   // Stats live — calculees depuis les exercices completes
   const totalExSession = currentSession?.exercises?.length || 0;
-  const seriesCompletees = currentSession?.exercises?.reduce((total, _, ei) => {
+  const seriesCompletees = (currentSession?.exercises || []).reduce((total, _, ei) => {
     const h = getHistory(activeWeek, activeSession, ei);
     return total + (h.length > 0 ? (currentSession.exercises[ei].sets || 1) : 0);
   }, 0) || 0;
