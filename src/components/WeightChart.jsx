@@ -104,7 +104,7 @@ export default function WeightChart({ clientId, client, programme }) {
 
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 400, height: 400, background: "radial-gradient(ellipse, rgba(2,209,186,0.08) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
-      <div style={{ padding: "20px 24px 0", position: "relative", zIndex: 1 }}>
+      <div style={{ padding: "0px 24px 0", position: "relative", zIndex: 1 }}>
         <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Suivi</div>
         <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Body<span style={{ color: "#02d1ba" }}>.</span></div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic", marginBottom: 20 }}>
