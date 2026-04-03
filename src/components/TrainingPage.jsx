@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -223,8 +223,47 @@ export default function TrainingPage({
 }) {
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
+  const [chrono, setChrono] = useState(0);
+  const [sessionStarted, setSessionStarted] = useState(false);
+  const chronoRef = useRef(null);
+
+  // Demarrer le chrono automatiquement
+  useEffect(() => {
+    if (!sessionStarted) {
+      setSessionStarted(true);
+      const start = Date.now();
+      chronoRef.current = setInterval(() => {
+        setChrono(Math.floor((Date.now() - start) / 1000));
+      }, 1000);
+    }
+    return () => { if (chronoRef.current) clearInterval(chronoRef.current); };
+  }, [sessionStarted]);
+
+  const formatChrono = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
 
   // Calcul progression globale
+  // Stats live — calculees depuis les exercices completes
+  const totalExSession = currentSession?.exercises?.length || 0;
+  const seriesCompletees = currentSession?.exercises?.reduce((total, _, ei) => {
+    const h = getHistory(activeWeek, activeSession, ei);
+    return total + (h.length > 0 ? (currentSession.exercises[ei].sets || 1) : 0);
+  }, 0) || 0;
+  const volumeTotal = currentSession?.exercises?.reduce((total, ex, ei) => {
+    const latest = getLatest(activeWeek, activeSession, ei);
+    if (latest && getHistory(activeWeek, activeSession, ei).length > 0) {
+      return total + (parseFloat(latest.weight) || 0) * (parseInt(ex.sets || 1)) * (parseInt(ex.reps || 1));
+    }
+    return total;
+  }, 0) || 0;
+  const progressionKg = currentSession?.exercises?.reduce((total, _, ei) => {
+    const delta = getDelta(activeWeek, activeSession, ei);
+    return total + (delta > 0 ? delta : 0);
+  }, 0) || 0;
+
   const totalSessions = programme?.weeks?.reduce((a, w) => a + (w.sessions?.length || 0), 0) || 0;
   const doneSessions = activeWeek * (programme?.weeks?.[0]?.sessions?.length || 0) + activeSession;
   const globalPct = totalSessions > 0 ? Math.min(Math.round((doneSessions / totalSessions) * 100), 100) : 0;
@@ -267,24 +306,63 @@ export default function TrainingPage({
       <div style={{ position: "relative", zIndex: 1 }}>
 
         {/* HERO */}
-        <div style={{ padding: "20px 20px 16px" }}>
-          <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Programme</div>
-          <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.9, marginBottom: 10 }}>
-            Train<span style={{ color: GREEN }}>.</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{programme.name}</div>
-            <div style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-            <div style={{ fontSize: 13, color: GREEN, fontWeight: 600 }}>Semaine {activeWeek + 1}</div>
-          </div>
+        <div style={{ padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 20% 50%, rgba(2,209,186,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
+          <div style={{ position: "relative", zIndex: 1 }}>
+            {/* Header avec chrono */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
+              <div>
+                <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Programme</div>
+                <div style={{ fontSize: 42, fontWeight: 800, color: "#fff", letterSpacing: "-2.5px", lineHeight: 0.9, marginBottom: 8 }}>
+                  Train<span style={{ color: GREEN }}>.</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{programme.name}</div>
+                  <div style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
+                  <div style={{ fontSize: 13, color: GREEN, fontWeight: 600 }}>S{activeWeek + 1}</div>
+                </div>
+              </div>
+              {/* Chrono */}
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontSize: 36, fontWeight: 100, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>
+                  {formatChrono(chrono).split(":")[0]}<span style={{ fontSize: 18, color: "rgba(255,255,255,0.3)" }}>:{formatChrono(chrono).split(":")[1]}</span>
+                </div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 3 }}>Chrono</div>
+              </div>
+            </div>
 
-          {/* Progress global */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Avancement programme</div>
-            <div style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>{doneSessions}/{totalSessions} seances</div>
-          </div>
-          <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
-            <div style={{ height: "100%", width: globalPct + "%", background: GREEN, borderRadius: 1, transition: "width 0.6s ease" }} />
+            {/* Stats live */}
+            <div style={{ display: "flex", gap: 20, marginBottom: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 200, color: "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
+                  {Math.round(volumeTotal)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>kg</span>
+                </div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Volume</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 200, color: GREEN, letterSpacing: "-1px", lineHeight: 1 }}>
+                  {seriesCompletees}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>series</span>
+                </div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Completees</div>
+              </div>
+              {progressionKg > 0 && (
+                <div>
+                  <div style={{ fontSize: 20, fontWeight: 200, color: "#fbbf24", letterSpacing: "-1px", lineHeight: 1 }}>
+                    +{progressionKg.toFixed(1)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>kg</span>
+                  </div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Progression</div>
+                </div>
+              )}
+            </div>
+
+            {/* Progress global */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Momentum</div>
+              <div style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>{doneSessions}/{totalSessions} seances</div>
+            </div>
+            <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+              <div style={{ height: "100%", width: globalPct + "%", background: `linear-gradient(90deg, ${GREEN}, rgba(2,209,186,0.5))`, borderRadius: 1, transition: "width 0.6s ease" }} />
+            </div>
           </div>
         </div>
 
