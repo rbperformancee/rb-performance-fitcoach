@@ -64,7 +64,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [sending,   setSending]   = useState(false);
   const [messages,  setMessages]  = useState([]);
   const [rpeData,   setRpeData]   = useState([]);
-  const [tab,       setTab]       = useState("overview"); // overview | messages | progress
+  const [tab,       setTab]       = useState("overview"); // overview | messages | progress | nutrition
+  const [nutGoals,  setNutGoals]  = useState(null);
+  const [nutSaving, setNutSaving] = useState(false);
   const fileRef = useRef();
 
   const prog = client.programmes?.find(p => p.is_active);
@@ -84,6 +86,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
     supabase.from("session_rpe").select("*").eq("client_id", client.id)
       .order("date", { ascending: false }).limit(10)
       .then(({ data }) => setRpeData(data || []));
+    // Charger objectifs nutrition
+    supabase.from("nutrition_goals").select("*").eq("client_id", client.id).single()
+      .then(({ data }) => setNutGoals(data || { calories: 2000, proteines: 150, glucides: 250, lipides: 70, eau_ml: 2500, pas: 8000 }));
   }, [client.id]);
 
   const sendMessage = async () => {
@@ -162,7 +167,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
           {/* Onglets */}
           <div style={{ display: "flex", gap: 6 }}>
-            {[["overview","📋 Vue"], ["messages","💬 Message"], ["progress","📈 Progression"]].map(([t, l]) => (
+            {[["overview","📋 Vue"], ["messages","💬 Message"], ["progress","📈 Progression"], ["nutrition","🥗 Nutrition"]].map(([t, l]) => (
               <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>{l}</button>
             ))}
           </div>
@@ -292,6 +297,42 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           )}
 
           {/* ── PROGRESSION ── */}
+          {tab === "nutrition" && nutGoals && (
+            <div style={{ padding: "16px 0", display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>
+                Definir les objectifs nutritionnels de {client.full_name?.split(" ")[0] || "ce client"}
+              </div>
+              {[
+                { key: "calories", label: "Calories", unit: "kcal", min: 500, max: 5000, step: 50, color: "#f97316" },
+                { key: "proteines", label: "Proteines", unit: "g", min: 50, max: 400, step: 5, color: G },
+                { key: "glucides", label: "Glucides", unit: "g", min: 50, max: 600, step: 10, color: "#60a5fa" },
+                { key: "lipides", label: "Lipides", unit: "g", min: 20, max: 200, step: 5, color: "#a78bfa" },
+                { key: "eau_ml", label: "Eau", unit: "mL", min: 500, max: 5000, step: 250, color: "#38bdf8" },
+                { key: "pas", label: "Pas / jour", unit: "pas", min: 2000, max: 20000, step: 500, color: "#34d399" },
+              ].map(({ key, label, unit, min, max, step, color }) => (
+                <div key={key}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>{label}</div>
+                    <div style={{ fontSize: 13, color, fontWeight: 700 }}>{nutGoals[key]?.toLocaleString()} {unit}</div>
+                  </div>
+                  <input type="range" min={min} max={max} step={step} value={nutGoals[key] || 0}
+                    onChange={e => setNutGoals(prev => ({ ...prev, [key]: parseInt(e.target.value) }))}
+                    style={{ width: "100%", accentColor: color }} />
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>
+                    <span>{min.toLocaleString()}</span><span>{max.toLocaleString()}</span>
+                  </div>
+                </div>
+              ))}
+              <button onClick={async () => {
+                setNutSaving(true);
+                await supabase.from("nutrition_goals").upsert({ client_id: client.id, ...nutGoals }, { onConflict: "client_id" });
+                setNutSaving(false);
+                toast("Objectifs nutrition sauvegardes !");
+              }} style={{ padding: "14px", background: G, color: "#000", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", marginTop: 4 }}>
+                {nutSaving ? "Sauvegarde..." : "Sauvegarder les objectifs"}
+              </button>
+            </div>
+          )}
           {tab === "progress" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <ClientAnalytics clientId={client.id} period={30} />
