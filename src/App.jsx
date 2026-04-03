@@ -4,6 +4,7 @@ import { BadgeSystem } from "./components/BadgeSystem";
 import { ToastProvider, toast } from "./components/Toast";
 import ProfilePage from "./components/ProfilePage";
 import FuelPage from "./components/FuelPage";
+import MovePage from "./components/MovePage";
 
 function SkeletonLoader() {
   return (
@@ -438,7 +439,9 @@ export default function App() {
       {/* ── App principale ── */}
       {programme && !authError && (
         <>
-          {page === "fuel" ? (
+          {page === "move" ? (
+              <MovePage client={client} />
+          ) : page === "fuel" ? (
               <FuelPage client={client} />
           ) : page === "profile" ? (
               <ProfilePage client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} />
@@ -582,11 +585,12 @@ export default function App() {
             {[
               { id: "training", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:20,height:20}}><path d="M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12"/></svg> },
               { id: "weight", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:20,height:20}}><path d="M6 3h12l2 7H4L6 3z"/><path d="M4 10v10a1 1 0 001 1h14a1 1 0 001-1V10"/><line x1="12" y1="10" x2="12" y2="20"/></svg> },
+              { id: "move", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:20,height:20}}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> },
               { id: "fuel", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:20,height:20}}><path d="M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14z"/><path d="M12 12c0 3-2 4-2 6a2 2 0 004 0c0-2-2-3-2-6z"/></svg> },
               { id: "profile", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:20,height:20}}><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg> },
             ].map(tab => (
               <button key={tab.id} onClick={() => setPage(tab.id)} style={{
-                width: 46, height: 46, borderRadius: 100, border: "none",
+                width: 42, height: 42, borderRadius: 100, border: "none",
                 background: page === tab.id ? "#02d1ba" : "transparent",
                 color: page === tab.id ? "#000" : "rgba(255,255,255,0.4)",
                 display: "flex", alignItems: "center", justifyContent: "center",
