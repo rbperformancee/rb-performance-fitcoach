@@ -58,7 +58,7 @@ export default function ProfilePage({ client, onLogout }) {
       <div style={{ position: "relative", zIndex: 1 }}>
 
         {/* HERO */}
-        <div style={{ padding: "4px 24px 0" }}>
+        <div style={{ padding: "0px 24px 0" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
             <div>
               <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Mon profil</div>
@@ -128,7 +128,7 @@ export default function ProfilePage({ client, onLogout }) {
 
         {/* STREAK BAR */}
         {streak > 0 && (
-          <div style={{ padding: "4px 24px 0" }}>
+          <div style={{ padding: "0px 24px 0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Progression streak</div>
               <div style={{ fontSize: 10, color: "#f97316", fontWeight: 600 }}>{streak} / {bestStreak || streak} j</div>
