@@ -37,6 +37,8 @@ export function useXP(clientId) {
   const fetchXP = useCallback(async () => {
     if (!clientId) return;
     setLoading(true);
+    let runCount = 0;
+    let totalKm = 0;
 
     const [sessions, weights, streakData, badgesData] = await Promise.all([
       supabase.from("session_logs").select("id, logged_at, note").eq("client_id", clientId).order("logged_at", { ascending: false }).limit(50),
