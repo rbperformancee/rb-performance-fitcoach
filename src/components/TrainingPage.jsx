@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -224,17 +224,15 @@ export default function TrainingPage({
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
   const [chrono, setChrono] = useState(0);
-  const chronoRef = useRef(null);
-  const startRef = useRef(Date.now());
+  const [chronoRunning, setChronoRunning] = useState(false);
 
-  // Demarrer le chrono une seule fois au montage
+  // Chrono demarre uniquement quand le client appuie sur "Commencer"
   useEffect(() => {
-    startRef.current = Date.now();
-    chronoRef.current = setInterval(() => {
-      setChrono(Math.floor((Date.now() - startRef.current) / 1000));
-    }, 1000);
-    return () => { if (chronoRef.current) clearInterval(chronoRef.current); };
-  }, []);
+    if (!chronoRunning) return;
+    const start = Date.now() - chrono * 1000;
+    const id = setInterval(() => setChrono(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [chronoRunning]);
 
   const formatChrono = (secs) => {
     const m = Math.floor(secs / 60);
@@ -319,17 +317,27 @@ export default function TrainingPage({
                   <div style={{ fontSize: 13, color: GREEN, fontWeight: 600 }}>S{activeWeek + 1}</div>
                 </div>
               </div>
-              {/* Chrono */}
+              {/* Chrono ou bouton commencer */}
               <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontSize: 36, fontWeight: 100, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>
-                  {formatChrono(chrono).split(":")[0]}<span style={{ fontSize: 18, color: "rgba(255,255,255,0.3)" }}>:{formatChrono(chrono).split(":")[1]}</span>
-                </div>
-                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 3 }}>Chrono</div>
+                {chronoRunning ? (
+                  <>
+                    <div style={{ fontSize: 36, fontWeight: 100, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>
+                      {formatChrono(chrono).split(":")[0]}<span style={{ fontSize: 18, color: "rgba(255,255,255,0.3)" }}>:{formatChrono(chrono).split(":")[1]}</span>
+                    </div>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 3 }}>Chrono</div>
+                  </>
+                ) : (
+                  <button onClick={() => setChronoRunning(true)} style={{
+                    background: GREEN, color: "#000", border: "none", borderRadius: 100,
+                    padding: "10px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    letterSpacing: "0.5px",
+                  }}>▶ Commencer</button>
+                )}
               </div>
             </div>
 
-            {/* Stats live */}
-            <div style={{ display: "flex", gap: 20, marginBottom: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            {/* Stats live - uniquement quand seance commencee */}
+            {chronoRunning && <div style={{ display: "flex", gap: 20, marginBottom: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 200, color: "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
                   {Math.round(volumeTotal)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>kg</span>
@@ -350,7 +358,7 @@ export default function TrainingPage({
                   <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Progression</div>
                 </div>
               )}
-            </div>
+            </div>}
 
             {/* Progress global */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
