@@ -335,7 +335,7 @@ export default function TrainingPage({
             const bandColor = isDone ? "#02d1ba" : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
 
             return (
-              <div key={ei} style={{ marginBottom: 10, opacity: (!isDone && !isActive) ? 0.45 - (ei * 0.03) : 1, transition: "opacity 0.3s" }}>
+              <div key={ei} style={{ marginBottom: 10, opacity: (!isDone && !isActive) ? 0.4 : 1, transition: "opacity 0.3s" }}>
                 <ExerciseCard
                   ex={ex}
                   weekIdx={activeWeek}
