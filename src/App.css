@@ -740,3 +740,19 @@ body {
   100% { opacity: 1; transform: translateY(0); }
 }
 .page-loaded { animation: fadeInPage 0.4s ease forwards; }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-slide-right { animation: slideInRight 0.22s cubic-bezier(0.22,1,0.36,1) forwards; }
+.page-slide-left { animation: slideInLeft 0.22s cubic-bezier(0.22,1,0.36,1) forwards; }
+.page-fade-up { animation: fadeInUp 0.22s cubic-bezier(0.22,1,0.36,1) forwards; }

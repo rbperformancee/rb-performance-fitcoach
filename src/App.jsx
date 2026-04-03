@@ -105,7 +105,17 @@ export default function App() {
   const [activeSession,   setActiveSession]   = useState(0);
   const [isDragging,      setIsDragging]      = useState(false);
   const [page, setPage] = useState("training");
-  // page peut etre: training, weight, profile, fuel
+  const [prevPage, setPrevPage] = useState(null);
+  const [slideDir, setSlideDir] = useState("right");
+  // page peut etre: training, weight, move, fuel, profile
+  const PAGE_ORDER = ["training", "weight", "move", "fuel", "profile"];
+  const navigateTo = (newPage) => {
+    const oldIdx = PAGE_ORDER.indexOf(page);
+    const newIdx = PAGE_ORDER.indexOf(newPage);
+    setSlideDir(newIdx > oldIdx ? "right" : "left");
+    setPrevPage(page);
+    setPage(newPage);
+  };
   const [showReport,      setShowReport]      = useState(false);
   const [exporting,       setExporting]       = useState(false);
   const [showPrivacy,     setShowPrivacy]     = useState(false);
@@ -314,7 +324,7 @@ export default function App() {
             {id:'weight',icon:<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' style={{width:20,height:20}}><path d='M6 3h12l2 7H4L6 3z'/><path d='M4 10v10a1 1 0 001 1h14a1 1 0 001-1V10'/><line x1='12' y1='10' x2='12' y2='20'/></svg>},
             {id:'profile',icon:<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' style={{width:20,height:20}}><circle cx='12' cy='8' r='4'/><path d='M4 20c0-4 3.58-7 8-7s8 3 8 7'/></svg>},
           ].map(tab => (
-            <button key={tab.id} onClick={()=>{setShowHome(false);setPage(tab.id);}} style={{width:50,height:50,borderRadius:100,border:'none',background:tab.id==='training'?'#02d1ba':'transparent',color:tab.id==='training'?'#000':'rgba(255,255,255,0.35)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s cubic-bezier(0.22,1,0.36,1)'}}>
+            <button key={tab.id} onClick={()=>{setShowHome(false);navigateTo(tab.id);}} style={{width:50,height:50,borderRadius:100,border:'none',background:tab.id==='training'?'#02d1ba':'transparent',color:tab.id==='training'?'#000':'rgba(255,255,255,0.35)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s cubic-bezier(0.22,1,0.36,1)'}}>
               {tab.icon}
             </button>
           ))}
@@ -440,11 +450,11 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "move" ? (
-              <MovePage client={client} />
+              <div key={page} className={slideDir === "right" ? "page-slide-right" : "page-slide-left"}><MovePage client={client} /></div>
           ) : page === "fuel" ? (
-              <FuelPage client={client} />
+              <div key={page} className={slideDir === "right" ? "page-slide-right" : "page-slide-left"}><FuelPage client={client} /></div>
           ) : page === "profile" ? (
-              <ProfilePage client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} />
+              <div key={page} className={slideDir === "right" ? "page-slide-right" : "page-slide-left"}><ProfilePage client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} /></div>
             ) : page === "training" ? (
             <main className="main">
               {client && <MessageBanner clientId={client.id} />}
@@ -556,7 +566,7 @@ export default function App() {
             </main>
           ) : (
             <main className="main" style={{ paddingTop: 8 }}>
-              <WeightChart clientId={client?.id} client={client} />
+              <div key="weight" className={slideDir === "right" ? "page-slide-right" : "page-slide-left"}><WeightChart clientId={client?.id} client={client} /></div>
             </main>
           )}
 
@@ -589,7 +599,7 @@ export default function App() {
               { id: "fuel", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:20,height:20}}><path d="M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14z"/><path d="M12 12c0 3-2 4-2 6a2 2 0 004 0c0-2-2-3-2-6z"/></svg> },
               { id: "profile", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:20,height:20}}><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg> },
             ].map(tab => (
-              <button key={tab.id} onClick={() => setPage(tab.id)} style={{
+              <button key={tab.id} onClick={() => navigateTo(tab.id)} style={{
                 width: 42, height: 42, borderRadius: 100, border: "none",
                 background: page === tab.id ? "#02d1ba" : "transparent",
                 color: page === tab.id ? "#000" : "rgba(255,255,255,0.4)",
