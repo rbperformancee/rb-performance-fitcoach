@@ -11,7 +11,7 @@ export default function MovePage({ client }) {
   const [weekRuns, setWeekRuns] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ distance: "", duree: "", note: "" });
+  const [form, setForm] = useState({ distance: "", heures: "0", minutes: "", note: "" });
   const [saving, setSaving] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
   const [tempSteps, setTempSteps] = useState(0);
@@ -49,11 +49,10 @@ export default function MovePage({ client }) {
   };
 
   const addRun = async () => {
-    if (!form.distance || !form.duree) return;
+    if (!form.distance || !form.minutes) return;
     setSaving(true);
     const dist = parseFloat(form.distance);
-    const [min, sec] = form.duree.split(":").map(Number);
-    const totalMin = (min || 0) + (sec || 0) / 60;
+    const totalMin = (parseInt(form.heures || 0) * 60) + (parseInt(form.minutes || 0));
     const allureTotalSec = Math.round((totalMin / dist) * 60);
     const allureMin = Math.floor(allureTotalSec / 60);
     const allureSec = allureTotalSec % 60;
@@ -63,13 +62,13 @@ export default function MovePage({ client }) {
       client_id: client.id,
       date: today,
       distance_km: dist,
-      duree_min: Math.round(totalMin),
+      duree_min: totalMin,
       allure_min_km: allure,
       note: form.note || "",
     }).select().single();
 
     if (data) setRuns(prev => [data, ...prev]);
-    setForm({ distance: "", duree: "", note: "" });
+    setForm({ distance: "", heures: "0", minutes: "", note: "" });
     setShowAdd(false);
     setSaving(false);
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
@@ -225,9 +224,15 @@ export default function MovePage({ client }) {
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Distance (km)</div>
                 <input type="number" step="0.1" value={form.distance} onChange={e => setForm(p => ({ ...p, distance: e.target.value }))} placeholder="6.2" style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Duree (mm:ss)</div>
-                <input type="text" value={form.duree} onChange={e => setForm(p => ({ ...p, duree: e.target.value }))} placeholder="35:00" style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
+              <div style={{ flex: 1, display: "flex", gap: 6 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Heures</div>
+                  <input type="number" min="0" max="10" value={form.heures} onChange={e => setForm(p => ({ ...p, heures: e.target.value }))} placeholder="0" style={{ width: "100%", padding: "14px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", textAlign: "center" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Minutes</div>
+                  <input type="number" min="0" max="59" value={form.minutes} onChange={e => setForm(p => ({ ...p, minutes: e.target.value }))} placeholder="35" style={{ width: "100%", padding: "14px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", textAlign: "center" }} />
+                </div>
               </div>
             </div>
 
@@ -238,8 +243,7 @@ export default function MovePage({ client }) {
 
             {form.distance && form.duree && (() => {
               const dist = parseFloat(form.distance);
-              const [min, sec] = form.duree.split(":").map(Number);
-              const totalMin = (min || 0) + (sec || 0) / 60;
+              const totalMin = (parseInt(form.heures || 0) * 60) + (parseInt(form.minutes || 0));
               if (dist > 0 && totalMin > 0) {
                 const allureSec = Math.round((totalMin / dist) * 60);
                 const aMin = Math.floor(allureSec / 60);
@@ -254,7 +258,7 @@ export default function MovePage({ client }) {
               return null;
             })()}
 
-            <button onClick={addRun} disabled={saving || !form.distance || !form.duree} style={{ width: "100%", padding: 16, background: form.distance && form.duree ? RED : "rgba(255,255,255,0.06)", color: form.distance && form.duree ? "#fff" : "rgba(255,255,255,0.2)", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: form.distance && form.duree ? "pointer" : "not-allowed" }}>
+            <button onClick={addRun} disabled={saving || !form.distance || !form.minutes} style={{ width: "100%", padding: 16, background: form.distance && form.minutes ? RED : "rgba(255,255,255,0.06)", color: form.distance && form.duree ? "#fff" : "rgba(255,255,255,0.2)", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: form.distance && form.minutes ? "pointer" : "not-allowed" }}>
               {saving ? "Enregistrement..." : "Enregistrer la sortie"}
             </button>
           </div>
