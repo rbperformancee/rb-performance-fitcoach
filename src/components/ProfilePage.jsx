@@ -8,9 +8,12 @@ import { supabase } from "../lib/supabase";
 
 const GREEN = "#02d1ba";
 
-export default function ProfilePage({ client, onLogout }) {
-  const { streak, bestStreak } = useStreak(client?.id);
-  const { latest, weights } = useWeightTracking(client?.id);
+export default function ProfilePage({ client, onLogout, appData }) {
+  const streakData = useStreak(appData ? null : client?.id);
+  const streak = appData?.streak ?? streakData.streak;
+  const bestStreak = appData?.bestStreak ?? streakData.bestStreak;
+  const weights = appData?.weights || [];
+  const latest = weights[weights.length - 1];
   const { xp, recentActivity, levelInfo, runCount, totalKm } = useXP(client?.id);
   const [sessionCount, setSessionCount] = useState(0);
   const [adnData, setAdnData] = useState(null);

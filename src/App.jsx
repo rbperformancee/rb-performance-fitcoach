@@ -5,6 +5,7 @@ import { ToastProvider, toast } from "./components/Toast";
 import ProfilePage from "./components/ProfilePage";
 import FuelPage from "./components/FuelPage";
 import MovePage from "./components/MovePage";
+import { useAppData } from "./hooks/useAppData";
 
 function SkeletonLoader() {
   return (
@@ -126,6 +127,7 @@ export default function App() {
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
   const [_sessionsDone, setSessionsDone] = React.useState(0);
+  const appData = useAppData(client?.id);
   const [_todayDone, setTodayDone] = React.useState(false);
   const [_daysSinceLast, setDaysSinceLast] = React.useState(null);
 
@@ -450,11 +452,11 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "move" ? (
-              <MovePage key={page} client={client} />
+              <MovePage key={page} client={client} appData={appData} />
           ) : page === "fuel" ? (
-              <FuelPage key={page} client={client} />
+              <FuelPage key={page} client={client} appData={appData} />
           ) : page === "profile" ? (
-              <ProfilePage key={page} client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} />
+              <ProfilePage key={page} client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} appData={appData} />
             ) : page === "training" ? (
             <main className="main">
               {client && <MessageBanner clientId={client.id} />}
@@ -566,7 +568,7 @@ export default function App() {
             </main>
           ) : (
             <main className="main" style={{ paddingTop: 8 }}>
-              <WeightChart key={page} clientId={client?.id} client={client} />
+              <WeightChart key={page} clientId={client?.id} client={client} appData={appData} />
             </main>
           )}
 

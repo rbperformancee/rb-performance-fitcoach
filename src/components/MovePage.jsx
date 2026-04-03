@@ -4,17 +4,17 @@ import { supabase } from "../lib/supabase";
 const GREEN = "#34d399";
 const RED = "#ef4444";
 
-export default function MovePage({ client }) {
-  const [runs, setRuns] = useState([]);
-  const [dailySteps, setDailySteps] = useState(0);
-  const [stepsGoal, setStepsGoal] = useState(8000);
+export default function MovePage({ client, appData }) {
+  const [runs, setRuns] = useState(appData?.runs || []);
+  const [dailySteps, setDailySteps] = useState(appData?.dailyTracking?.pas || 0);
+  const [stepsGoal, setStepsGoal] = useState(appData?.nutritionGoals?.pas || 8000);
   const [weekRuns, setWeekRuns] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!appData || appData.loading);
   const [form, setForm] = useState({ distance: "", heures: "0", minutes: "", note: "" });
   const [saving, setSaving] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
-  const [tempSteps, setTempSteps] = useState(0);
+  const [tempSteps, setTempSteps] = useState(appData?.dailyTracking?.pas || 0);
 
   const today = new Date().toISOString().split("T")[0];
 

@@ -45,8 +45,13 @@ const ScoreRing = ({ score }) => {
   );
 };
 
-export default function FuelPage({ client }) {
-  const { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateTracking, score } = useFuel(client?.id);
+export default function FuelPage({ client, appData }) {
+  const fuelData = useFuel(appData ? null : client?.id);
+  const goals = appData?.nutritionGoals || fuelData.goals;
+  const logs = fuelData.logs;
+  const dailyTracking = appData?.dailyTracking || fuelData.dailyTracking;
+  const loading = appData ? appData.loading : fuelData.loading;
+  const { totals, addFood, removeFood, updateTracking, score } = fuelData;
   const { results, loading: searching, search } = useOpenFoodFacts();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedRepas, setSelectedRepas] = useState("Dejeuner");

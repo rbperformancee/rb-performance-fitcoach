@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 
-export default function WeightChart({ clientId, client, programme }) {
-  const { weights, addWeight, latest, diff, saveGoal, loading } = useWeightTracking(clientId);
+export default function WeightChart({ clientId, client, programme, appData }) {
+  const tracking = useWeightTracking(appData ? null : clientId);
+  const weights = appData?.weights?.length > 0 ? appData.weights : tracking.weights;
+  const loading = appData ? appData.loading : tracking.loading;
+  const { addWeight, saveGoal } = tracking;
+  const latest = weights[weights.length - 1];
+  const first = weights[0];
+  const diff = latest && first ? (latest.weight - first.weight).toFixed(1) : null;
   const [editGoal, setEditGoal] = useState(false);
   const [newGoal, setNewGoal] = useState("");
   const [showInput, setShowInput] = useState(false);
