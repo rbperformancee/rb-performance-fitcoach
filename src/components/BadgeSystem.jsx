@@ -1,106 +1,129 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import React, { useState, useEffect, useCallback } from "react";
+import { supabase } from "../lib/supabase";
+
+const GREEN = "#02d1ba";
 
 const BADGES = [
-  { id: 'first_session', icon: '⚡', label: 'Premier pas', desc: '1ère séance validée', condition: (s) => s >= 1, color: '#02d1ba' },
-  { id: 'five_sessions', icon: '🔥', label: 'En feu', desc: '5 séances complétées', condition: (s) => s >= 5, color: '#fb923c' },
-  { id: 'ten_sessions', icon: '💪', label: 'Warrior', desc: '10 séances complétées', condition: (s) => s >= 10, color: '#a78bfa' },
-  { id: 'twenty_sessions', icon: '🏆', label: 'Champion', desc: '20 séances complétées', condition: (s) => s >= 20, color: '#fbbf24' },
-  { id: 'streak_7', icon: '🗓️', label: 'Semaine parfaite', desc: '7 jours de streak', condition: (s, streak) => streak >= 7, color: '#34d399' },
-  { id: 'streak_30', icon: '👑', label: 'Légende', desc: '30 jours de streak', condition: (s, streak) => streak >= 30, color: '#f59e0b' },
-  { id: 'weight_logged', icon: '⚖️', label: 'Suivi poids', desc: 'Premier poids enregistré', condition: (s, streak, w) => w >= 1, color: '#60a5fa' },
-  { id: 'goal_set', icon: '🎯', label: 'Objectif fixé', desc: 'Premier objectif défini', condition: (s, streak, w, g) => g >= 1, color: '#f472b6' },
+  { id: "first_session",   xp: 50,  color: GREEN,       label: "Premier pas",    desc: "1ere seance validee",  sessions: 1,  icon: "bolt" },
+  { id: "five_sessions",   xp: 80,  color: "#f97316",   label: "En feu",         desc: "5 seances completees", sessions: 5,  icon: "fire" },
+  { id: "ten_sessions",    xp: 120, color: "#a78bfa",   label: "Warrior",        desc: "10 seances",           sessions: 10, icon: "dumbbell" },
+  { id: "twenty_sessions", xp: 200, color: "#fbbf24",   label: "Champion",       desc: "20 seances",           sessions: 20, icon: "trophy" },
+  { id: "fifty_sessions",  xp: 400, color: "#ef4444",   label: "Titan",          desc: "50 seances",           sessions: 50, icon: "crown" },
+  { id: "streak_7",        xp: 100, color: "#34d399",   label: "7 jours",        desc: "Streak 7 jours",       streak: 7,    icon: "calendar" },
+  { id: "streak_30",       xp: 300, color: "#818cf8",   label: "Legende",        desc: "30 jours de streak",   streak: 30,   icon: "star" },
+  { id: "weight_logged",   xp: 30,  color: "#60a5fa",   label: "Suivi poids",    desc: "1ere pesee",           weights: 1,   icon: "scale" },
 ];
 
-export function BadgeSystem({ clientId, compact = false }) {
+const ICON = ({ name, color, size = 20 }) => {
+  const s = { width: size, height: size };
+  const p = { fill: "none", stroke: color, strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" };
+  if (name === "bolt")     return <svg viewBox="0 0 24 24" style={s}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" {...p}/></svg>;
+  if (name === "fire")     return <svg viewBox="0 0 24 24" style={s}><path d="M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14z" {...p}/><path d="M12 12c0 3-2 4-2 6a2 2 0 004 0c0-2-2-3-2-6z" {...p}/></svg>;
+  if (name === "dumbbell") return <svg viewBox="0 0 24 24" style={s}><path d="M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12" {...p}/></svg>;
+  if (name === "trophy")   return <svg viewBox="0 0 24 24" style={s}><path d="M12 15l-2 5h8l-2-5" {...p}/><path d="M8 5H5L3 9c0 2.2 1.8 4 4 4" {...p}/><path d="M16 5h3l2 4c0 2.2-1.8 4-4 4" {...p}/><path d="M8 5a4 4 0 008 0H8z" {...p}/></svg>;
+  if (name === "crown")    return <svg viewBox="0 0 24 24" style={s}><path d="M2 20h20M5 20V10l7-6 7 6v10" {...p}/><path d="M9 20v-5h6v5" {...p}/></svg>;
+  if (name === "calendar") return <svg viewBox="0 0 24 24" style={s}><rect x="3" y="4" width="18" height="18" rx="2" {...p}/><line x1="16" y1="2" x2="16" y2="6" {...p}/><line x1="8" y1="2" x2="8" y2="6" {...p}/><line x1="3" y1="10" x2="21" y2="10" {...p}/><path d="M9 16l2 2 4-4" {...p}/></svg>;
+  if (name === "star")     return <svg viewBox="0 0 24 24" style={s}><circle cx="12" cy="8" r="6" {...p}/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" {...p}/></svg>;
+  if (name === "scale")    return <svg viewBox="0 0 24 24" style={s}><path d="M12 3v18M3 9l9-6 9 6" {...p}/><path d="M3 15h6a3 3 0 006 0h6" {...p}/></svg>;
+  return null;
+};
+
+export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0 }) {
   const [earned, setEarned] = useState([]);
-  const [stats, setStats] = useState({ sessions: 0, streak: 0, weights: 0, goals: 0 });
   const [newBadge, setNewBadge] = useState(null);
 
-  const fetchStats = useCallback(async () => {
+  const checkAndSave = useCallback(async () => {
     if (!clientId) return;
-    const [s, w, g] = await Promise.all([
-      supabase.from('session_logs').select('id', { count: 'exact', head: true }).eq('client_id', clientId),
-      supabase.from('weight_logs').select('id', { count: 'exact', head: true }).eq('client_id', clientId),
-      supabase.from('client_goals').select('id', { count: 'exact', head: true }).eq('client_id', clientId),
-    ]);
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-    const { count: recentCount } = await supabase.from('session_logs').select('id', { count: 'exact', head: true }).eq('client_id', clientId).gte('logged_at', weekAgo);
-    const streak = recentCount || 0;
-    const newStats = { sessions: s.count || 0, streak, weights: w.count || 0, goals: g.count || 0 };
-    setStats(newStats);
-    const earnedBadges = BADGES.filter(b => b.condition(newStats.sessions, newStats.streak, newStats.weights, newStats.goals));
-    const prevEarned = earned.map(e => e.id);
-    const justEarned = earnedBadges.filter(b => !prevEarned.includes(b.id));
-    if (justEarned.length > 0 && earned.length > 0) {
-      setNewBadge(justEarned[0]);
-      setTimeout(() => setNewBadge(null), 3000);
+    const { data: existing } = await supabase.from("client_badges").select("badge_id").eq("client_id", clientId);
+    const earnedIds = new Set((existing || []).map(b => b.badge_id));
+
+    const toEarn = BADGES.filter(b => {
+      if (earnedIds.has(b.id)) return true;
+      if (b.sessions && sessions >= b.sessions) return true;
+      if (b.streak && streak >= b.streak) return true;
+      if (b.weights && weights >= b.weights) return true;
+      return false;
+    });
+
+    const newlyEarned = toEarn.filter(b => !earnedIds.has(b.id));
+    if (newlyEarned.length > 0) {
+      await supabase.from("client_badges").upsert(
+        newlyEarned.map(b => ({ client_id: clientId, badge_id: b.id })),
+        { onConflict: "client_id,badge_id" }
+      );
+      setNewBadge(newlyEarned[0]);
       if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
+      setTimeout(() => setNewBadge(null), 3500);
     }
-    setEarned(earnedBadges);
-  }, [clientId, earned]);
+    setEarned(toEarn.map(b => b.id));
+  }, [clientId, sessions, streak, weights]);
 
-  useEffect(() => { fetchStats(); }, [clientId]);
+  useEffect(() => { checkAndSave(); }, [checkAndSave]);
 
-  if (compact) {
-    return (
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-        {BADGES.map(b => {
-          const has = earned.find(e => e.id === b.id);
-          return (
-            <div key={b.id} title={b.label} style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: has ? `${b.color}15` : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${has ? b.color + '40' : 'rgba(255,255,255,0.06)'}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, opacity: has ? 1 : 0.3,
-              transition: 'all 0.3s',
-              animation: has ? 'bounceIn 0.4s ease' : 'none',
-            }}>{b.icon}</div>
-          );
-        })}
-      </div>
-    );
-  }
+  const earnedCount = earned.length;
+  const nextBadge = BADGES.find(b => !earned.includes(b.id));
 
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div>
       {newBadge && (
-        <div style={{
-          position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
-          background: '#111', border: `1px solid ${newBadge.color}`,
-          borderRadius: 16, padding: '12px 20px', zIndex: 9999,
-          display: 'flex', alignItems: 'center', gap: 12,
-          boxShadow: `0 8px 32px ${newBadge.color}40`,
-          animation: 'badgePopup 0.5s cubic-bezier(0.34,1.56,0.64,1)',
-        }}>
-          <span style={{ fontSize: 28 }}>{newBadge.icon}</span>
+        <div style={{ marginBottom: 14, padding: "14px 16px", background: `rgba(${newBadge.color === GREEN ? "2,209,186" : "249,115,22"},0.08)`, border: `1px solid ${newBadge.color}40`, borderRadius: 14, display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${newBadge.color}15`, border: `1px solid ${newBadge.color}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <ICON name={newBadge.icon} color={newBadge.color} size={18} />
+          </div>
           <div>
-            <div style={{ fontSize: 11, color: newBadge.color, fontWeight: 700, letterSpacing: 1 }}>BADGE DÉBLOQUÉ !</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#f5f5f5' }}>{newBadge.label}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: newBadge.color }}>Badge debloque !</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{newBadge.label} · +{newBadge.xp} XP</div>
           </div>
         </div>
       )}
-      <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5, marginBottom: 12 }}>🏅 BADGES</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-        {BADGES.map((b, i) => {
-          const has = earned.find(e => e.id === b.id);
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase" }}>Trophees</div>
+        <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", fontWeight: 500 }}>{earnedCount} / {BADGES.length}</div>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4, margin: "0 -24px", padding: "0 24px 8px" }}>
+        {BADGES.map(b => {
+          const has = earned.includes(b.id);
+          const isNew = newBadge?.id === b.id;
+          const circumference = 2 * Math.PI * 22;
+          const offset = has ? 0 : circumference * 0.7;
           return (
-            <div key={b.id} style={{
-              background: has ? `${b.color}10` : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${has ? b.color + '30' : 'rgba(255,255,255,0.05)'}`,
-              borderRadius: 14, padding: '12px 8px', textAlign: 'center',
-              opacity: has ? 1 : 0.4, transition: 'all 0.3s',
-              animation: has ? `bounceIn 0.4s ease ${i * 0.05}s both` : 'none',
-            }}>
-              <div style={{ fontSize: 24, marginBottom: 4 }}>{b.icon}</div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: has ? '#f5f5f5' : '#6b7280', lineHeight: 1.3 }}>{b.label}</div>
-              <div style={{ fontSize: 8, color: '#4b5563', marginTop: 2, lineHeight: 1.3 }}>{b.desc}</div>
+            <div key={b.id} style={{ flexShrink: 0, width: 88, background: isNew ? `${b.color}08` : has ? "rgba(255,255,255,0.025)" : "rgba(255,255,255,0.01)", border: `1px solid ${isNew ? b.color + "40" : has ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)"}`, borderRadius: 20, padding: "16px 10px", textAlign: "center", position: "relative", opacity: has ? 1 : 0.35, transition: "all 0.3s" }}>
+              {isNew && <div style={{ position: "absolute", top: 9, right: 9, width: 6, height: 6, borderRadius: "50%", background: b.color }} />}
+              <div style={{ width: 52, height: 52, margin: "0 auto 10px", position: "relative" }}>
+                <svg width="52" height="52" viewBox="0 0 52 52" style={{ position: "absolute", inset: 0 }}>
+                  <circle cx="26" cy="26" r="22" fill="none" stroke={`${b.color}18`} strokeWidth="3" />
+                  <circle cx="26" cy="26" r="22" fill="none" stroke={b.color} strokeWidth="3" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} transform="rotate(-90 26 26)" style={{ transition: "stroke-dashoffset 0.8s ease" }} />
+                </svg>
+                <div style={{ position: "absolute", inset: 6, borderRadius: "50%", background: `${b.color}12`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <ICON name={b.icon} color={b.color} size={22} />
+                </div>
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#fff", lineHeight: 1.2, marginBottom: 3 }}>{b.label}</div>
+              {has
+                ? <div style={{ fontSize: 9, fontWeight: 700, color: `${b.color}99`, letterSpacing: "0.5px" }}>+{b.xp} XP</div>
+                : <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>{b.desc}</div>
+              }
             </div>
           );
         })}
+        <div style={{ flexShrink: 0, width: 24 }} />
       </div>
-      <style>{'@keyframes badgePopup { from { opacity:0; transform:translateX(-50%) translateY(-20px) scale(0.8); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }'}</style>
+
+      {nextBadge && (
+        <div style={{ marginTop: 12, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 22, fontWeight: 200, color: GREEN, letterSpacing: "-1px", flexShrink: 0 }}>
+            {nextBadge.sessions ? `${sessions}/${nextBadge.sessions}` : nextBadge.streak ? `${streak}/${nextBadge.streak}j` : `${weights}/1`}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginBottom: 5 }}>Prochain · {nextBadge.label}</div>
+            <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+              <div style={{ height: "100%", width: `${Math.min(Math.round((nextBadge.sessions ? sessions / nextBadge.sessions : nextBadge.streak ? streak / nextBadge.streak : weights) * 100), 100)}%`, background: nextBadge.color, borderRadius: 1 }} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
