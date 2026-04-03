@@ -255,7 +255,7 @@ export default function TrainingPage({
     return total;
   }, 0) || 0;
   const progressionKg = currentSession?.exercises?.reduce((total, _, ei) => {
-    const delta = getDelta(activeWeek, activeSession, ei);
+    const delta = getDelta ? getDelta(activeWeek, activeSession, ei) : null;
     return total + (delta > 0 ? delta : 0);
   }, 0) || 0;
 
@@ -296,7 +296,7 @@ export default function TrainingPage({
     <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 120 }}>
 
       {/* Ambient */}
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 30% 0%, rgba(2,209,186,0.1) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 30% 0%, rgba(2,209,186,0.1) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
 
