@@ -759,3 +759,8 @@ body {
 
 .page-enter { opacity: 0; transform: translateX(10px); }
 .page-enter-active { opacity: 1; transform: translateX(0); transition: opacity 0.2s ease, transform 0.2s ease; }
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
