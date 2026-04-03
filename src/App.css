@@ -719,3 +719,24 @@ body {
   60% { transform: scale(1.05); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+@keyframes fadeInSection {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.fade-section {
+  animation: fadeInSection 0.5s ease forwards;
+  opacity: 0;
+}
+.fade-section-1 { animation-delay: 0.05s; }
+.fade-section-2 { animation-delay: 0.15s; }
+.fade-section-3 { animation-delay: 0.25s; }
+.fade-section-4 { animation-delay: 0.35s; }
+.fade-section-5 { animation-delay: 0.45s; }
+.fade-section-6 { animation-delay: 0.55s; }
+
+@keyframes fadeInPage {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.page-loaded { animation: fadeInPage 0.4s ease forwards; }
