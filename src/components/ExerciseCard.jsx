@@ -204,98 +204,60 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
 
   return (
     <>
-      {/* ── Timer overlay ── */}
       {showTimer && restSecs && (
-        <RestTimer
-          restSeconds={restSecs}
-          exName={nextExName}
-          onDismiss={() => setShowTimer(false)}
-        />
+        <RestTimer restSeconds={restSecs} exName={nextExName} onDismiss={() => setShowTimer(false)} />
       )}
 
-      <div className="ex-card" style={{
-        borderColor: allDone ? "rgba(2,209,186,0.25)" : undefined,
-        borderLeft: ex.group ? `3px solid ${GREEN}` : allDone ? `3px solid rgba(2,209,186,0.5)` : undefined,
+      <div style={{
+        marginBottom: 10,
+        background: allDone ? "rgba(2,209,186,0.04)" : "rgba(255,255,255,0.025)",
+        border: `1px solid ${allDone ? "rgba(2,209,186,0.18)" : "rgba(255,255,255,0.07)"}`,
+        borderLeft: `3px solid ${allDone ? GREEN : ex.group ? GREEN : "rgba(255,255,255,0.15)"}`,
+        borderRadius: 16,
+        overflow: "hidden",
+        transition: "all 0.25s ease",
       }}>
-        {ex.group && <div className="ex-superset-badge">{ex.groupType || "Superset"} {ex.group}</div>}
-
-        {/* ── Header ── */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <div className="ex-num" style={{ background: allDone ? GREEN_DIM : undefined }}>
-            <span style={{ color: allDone ? GREEN : undefined }}>{String(globalIndex + 1).padStart(2, "0")}</span>
+        {ex.group && (
+          <div style={{ fontSize: 9, color: GREEN, letterSpacing: "1.5px", textTransform: "uppercase", padding: "6px 16px 0", fontWeight: 700 }}>
+            {ex.groupType || "Superset"} {ex.group}
           </div>
+        )}
 
+        {/* HEADER */}
+        <div style={{ padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="ex-name">{ex.name}</div>
-            <div className="ex-meta">
-              {chipsReps && <span className="ex-chip ex-chip-sets">{chipsReps}</span>}
-              {ex.tempo   && <span className="ex-chip ex-chip-tempo">{ex.tempo}</span>}
-              {ex.rir != null && <span className="ex-chip ex-chip-rir">RIR {ex.rir}</span>}
-              {ex.rest    && (
-                <span
-                  className="ex-chip ex-chip-rest"
-                  style={{ cursor: restSecs ? "pointer" : "default" }}
-                  onClick={() => restSecs && setShowTimer(true)}
-                  title={restSecs ? "Lancer le timer" : undefined}
-                >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: allDone ? GREEN : "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>
+                {allDone ? "✓" : String(globalIndex + 1).padStart(2, "0")}
+              </span>
+              <div style={{ fontSize: 15, fontWeight: 700, color: allDone ? "rgba(255,255,255,0.6)" : "#fff", letterSpacing: "-0.3px" }}>{ex.name}</div>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+              {chipsReps && (
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", padding: "3px 10px", borderRadius: 100 }}>{chipsReps}</span>
+              )}
+              {ex.tempo && (
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100 }}>Tempo {ex.tempo}</span>
+              )}
+              {ex.rir != null && (
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100 }}>RIR {ex.rir}</span>
+              )}
+              {ex.rest && (
+                <span onClick={() => restSecs && setShowTimer(true)} style={{ fontSize: 11, color: restSecs ? GREEN : "rgba(255,255,255,0.3)", background: restSecs ? "rgba(2,209,186,0.08)" : "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>
                   ⏱ {ex.rest}
-                  {restSecs && <span style={{ marginLeft: 3, color: GREEN, fontSize: 9 }}>▶</span>}
                 </span>
               )}
             </div>
           </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-            {allDone && <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: GREEN }}>✓</span>}
-
-            {/* Bouton vidéo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
             {hasVideo && (
-              <button onClick={() => setShowVideo(v => !v)} style={{
-                display: "flex", alignItems: "center", gap: 5,
-                padding: "5px 10px",
-                background: showVideo ? "rgba(2,209,186,0.18)" : "rgba(2,209,186,0.08)",
-                border: `1.5px solid ${showVideo ? "rgba(2,209,186,0.5)" : "rgba(2,209,186,0.25)"}`,
-                borderRadius: 100, color: GREEN,
-                fontSize: 10.5, fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
-              }}>
-                <svg viewBox="0 0 16 16" fill="none" style={{ width: 12, height: 12 }}>
-                  <rect x="1" y="3" width="14" height="10" rx="2" stroke="#02d1ba" strokeWidth="1.5"/>
-                  <polygon points="6,6 6,10 11,8" fill="#02d1ba"/>
-                </svg>
-                {showVideo ? "Masquer" : "Vidéo"}
+              <button onClick={() => setShowVideo(v => !v)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", background: showVideo ? "rgba(2,209,186,0.15)" : "rgba(2,209,186,0.07)", border: `1px solid ${showVideo ? "rgba(2,209,186,0.4)" : "rgba(2,209,186,0.2)"}`, borderRadius: 100, color: GREEN, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+                <svg viewBox="0 0 16 16" fill="none" style={{ width: 10, height: 10 }}><rect x="1" y="3" width="14" height="10" rx="2" stroke="#02d1ba" strokeWidth="1.5"/><polygon points="6,6 6,10 11,8" fill="#02d1ba"/></svg>
+                {showVideo ? "Fermer" : "Video"}
               </button>
             )}
-
-            {/* Timer manuel */}
-            {restSecs && (
-              <button onClick={() => setShowTimer(true)} style={{
-                width: 28, height: 28, background: "transparent",
-                border: "1.5px solid rgba(255,255,255,0.07)", borderRadius: 7,
-                color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", transition: "all 0.15s",
-              }} title="Lancer le timer de repos"
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(2,209,186,0.3)"; e.currentTarget.style.color = GREEN; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#555"; }}
-              >
-                <svg viewBox="0 0 20 20" fill="none" style={{ width: 12, height: 12 }}>
-                  <circle cx="10" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/>
-                  <line x1="10" y1="11" x2="10" y2="7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                  <line x1="10" y1="11" x2="13" y2="13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                  <line x1="7.5" y1="2" x2="12.5" y2="2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                </svg>
-              </button>
-            )}
-
-            {/* Chevron */}
-            <button onClick={() => setExpanded(v => !v)} style={{
-              width: 28, height: 28, background: "transparent",
-              border: "1.5px solid rgba(255,255,255,0.07)", borderRadius: 7,
-              color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", transition: "all 0.15s",
-            }}>
-              <svg viewBox="0 0 20 20" fill="none"
-                style={{ width: 12, height: 12, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
-                stroke="currentColor" strokeWidth="2.2">
+            <button onClick={() => setExpanded(v => !v)} style={{ width: 30, height: 30, background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg viewBox="0 0 20 20" fill="none" style={{ width: 12, height: 12, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} stroke="currentColor" strokeWidth="2.2">
                 <polyline points="4 7 10 13 16 7"/>
               </svg>
             </button>
@@ -305,11 +267,11 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
         {/* ── Vidéo ── */}
         {hasVideo && showVideo && <VideoCard vidUrl={ex.vidUrl} thumbUrl={ex.thumbUrl} exName={ex.name} />}
 
-        {/* ── Grille séries ── */}
-        <div style={{ marginTop: 10 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "22px 1fr 1fr 34px", gap: 4, marginBottom: 5 }}>
-            {["#","kg","Reps",""].map((h,i) => (
-              <div key={i} style={{ fontSize: 9, color: "#444", fontWeight: 700, textAlign: "center", textTransform: "uppercase" }}>{h}</div>
+        {/* GRILLE SERIES */}
+        <div style={{ padding: "0 16px 14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "22px 1fr 1fr 34px", gap: 6, marginBottom: 8 }}>
+            {["#", "kg", "Reps", ""].map((h, i) => (
+              <div key={i} style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 700, textAlign: "center", textTransform: "uppercase", letterSpacing: "1px" }}>{h}</div>
             ))}
           </div>
           {Array.from({ length: setsCount }, (_, i) => (
@@ -324,28 +286,28 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             />
           ))}
           {doneCount > 0 && doneCount < setsCount && (
-            <button onClick={handleReset} style={{ width:"100%", marginTop:4, padding:"5px", borderRadius:7, border:"1px solid rgba(255,255,255,0.06)", background:"transparent", color:"#555", fontSize:10, cursor:"pointer" }}>↺ Reset</button>
+            <button onClick={handleReset} style={{ width: "100%", marginTop: 6, padding: "8px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 11, cursor: "pointer" }}>↺ Recommencer</button>
           )}
           {doneCount >= setsCount && setsCount > 0 && (
-            <div style={{ textAlign:"center", marginTop:6, padding:"6px", background:"rgba(2,209,186,0.08)", borderRadius:8, fontSize:11, color:GREEN, fontWeight:700 }}>✓ Toutes les séries !</div>
+            <div style={{ textAlign: "center", marginTop: 8, padding: "8px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 10, fontSize: 12, color: GREEN, fontWeight: 700 }}>✓ Toutes les series completees !</div>
           )}
         </div>
 
-        {/* ── Progression ── */}
+        {/* PROGRESSION */}
         {(latest || history.length > 0) && (
-          <div className="ex-progress-row">
-            <div className="ex-last">
-              <span className="ex-last-label">Dernier</span>
-              <span className="ex-last-val">{latest?.weight} kg</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>Dernier</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>{latest?.weight} kg</span>
               {delta !== null && (
-                <span className={`ex-delta ${deltaPos ? "pos" : deltaNeg ? "neg" : "neu"}`}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: deltaPos ? GREEN : deltaNeg ? "#ef4444" : "rgba(255,255,255,0.3)" }}>
                   {deltaPos ? "+" : ""}{delta !== 0 ? delta.toFixed(1) + " kg" : "="}
                 </span>
               )}
             </div>
-            {history.length >= 2 && <div className="ex-spark"><Sparkline data={history} width={64} height={20}/></div>}
-            <button className="ex-history-toggle" onClick={() => setExpanded(v => !v)}>
-              {expanded ? "Fermer" : `${history.length} séance${history.length > 1 ? "s" : ""}`}
+            {history.length >= 2 && <Sparkline data={history} width={56} height={18}/>}
+            <button onClick={() => setExpanded(v => !v)} style={{ fontSize: 10, color: GREEN, background: "transparent", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              {expanded ? "Fermer" : `${history.length} seance${history.length > 1 ? "s" : ""}`}
             </button>
           </div>
         )}
