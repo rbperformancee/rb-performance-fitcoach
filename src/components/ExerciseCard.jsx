@@ -41,67 +41,39 @@ function ThumbWithFallback({ id, thumbUrl, alt }) {
 function VideoCard({ vidUrl, thumbUrl, exName }) {
   const [playing, setPlaying] = useState(false);
   const id = ytId(vidUrl);
-
   if (playing && id) {
     return (
-      <div style={{ borderRadius: 12, overflow: "hidden", background: "#000", position: "relative" }}>
+      <div style={{ borderRadius: 14, overflow: "hidden", background: "#000", margin: "0 0 12px" }}>
         <iframe
           src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
           style={{ width: "100%", aspectRatio: "16/9", border: "none", display: "block" }}
           allow="autoplay; encrypted-media; fullscreen" allowFullScreen
         />
         <button onClick={() => setPlaying(false)} style={{
-          position: "absolute", top: 8, right: 8,
-          background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: "50%", width: 30, height: 30, color: "#fff",
-          fontSize: 16, cursor: "pointer",
+          position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)", border: "none",
+          borderRadius: "50%", width: 30, height: 30, color: "#fff", fontSize: 16, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>×</button>
       </div>
     );
   }
-
   return (
-    <button
-      onClick={() => id ? setPlaying(true) : window.open(vidUrl, "_blank")}
-      style={{
-        display: "block", width: "100%", position: "relative",
-        borderRadius: 12, overflow: "hidden", background: "#050505",
-        cursor: "pointer", border: "none", padding: 0, aspectRatio: "16/9",
-      }}
-    >
+    <button onClick={() => id ? setPlaying(true) : window.open(vidUrl, "_blank")} style={{
+      display: "block", width: "100%", position: "relative", borderRadius: 14, overflow: "hidden",
+      background: "#050505", cursor: "pointer", border: "none", padding: 0, aspectRatio: "16/9", margin: "0 0 12px",
+    }}>
       {(id || thumbUrl) && <ThumbWithFallback id={id} thumbUrl={thumbUrl} alt={exName} />}
-      {!id && !thumbUrl && (
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,#1c2820,#111)" }} />
-      )}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.2) 45%, transparent 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)" }} />
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{
-          width: 54, height: 54, background: "rgba(2,209,186,0.92)", backdropFilter: "blur(4px)",
-          borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 24px rgba(2,209,186,0.45), 0 0 0 6px rgba(2,209,186,0.15)",
-        }}>
-          <svg viewBox="0 0 24 24" fill="#050505" style={{ width: 22, height: 22, marginLeft: 3 }}>
-            <polygon points="5,3 19,12 5,21"/>
-          </svg>
-        </div>
-      </div>
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 12px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: GREEN, marginBottom: 2 }}>Démonstration</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{exName}</div>
-        </div>
-        <div style={{ flexShrink: 0, background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "4px 10px", fontSize: 10, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 5, backdropFilter: "blur(4px)" }}>
-          <svg viewBox="0 0 16 16" fill="none" style={{ width: 10, height: 10 }}><polygon points="4,2 12,8 4,14" fill="#fff"/></svg>
-          Lancer
+        <div style={{ width: 52, height: 52, background: "rgba(2,209,186,0.9)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg viewBox="0 0 24 24" fill="#050505" style={{ width: 20, height: 20, marginLeft: 3 }}><polygon points="5,3 19,12 5,21"/></svg>
         </div>
       </div>
     </button>
   );
 }
 
-
-function SetInput({ index, done, defaultW, defaultR, placeholder, onDone }) {
+function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive }) {
   const [w, setW] = useState(defaultW || "");
   const [r, setR] = useState(defaultR || "");
   const validate = () => {
@@ -109,57 +81,82 @@ function SetInput({ index, done, defaultW, defaultR, placeholder, onDone }) {
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
     onDone(w, r, index);
   };
+
+  const opacity = done ? 1 : isActive ? 1 : 0.2;
+
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"22px 1fr 1fr 34px", gap:4, marginBottom:4, alignItems:"center", opacity: done ? 0.4 : 1, transition:"opacity 0.25s" }}>
-      <div style={{ textAlign:"center", fontSize:11, fontWeight:700, color: done ? "#02d1ba" : "#555", fontFamily:"monospace", transition:"all 0.2s", transform: done ? "scale(1.2)" : "scale(1)" }}>{done ? "✓" : index+1}</div>
-      <input type="number" inputMode="decimal" value={w} onChange={e => setW(e.target.value)} disabled={done} placeholder="0" onKeyDown={e => e.key==="Enter" && validate()}
-        style={{ boxSizing:"border-box", background: done ? "rgba(2,209,186,0.06)" : "transparent", border: "1px solid " + (done ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.1)"), borderRadius: 10, padding: "10px 6px", color: done ? "#02d1ba" : "rgba(255,255,255,0.8)", fontSize: 16, fontWeight: 300, fontFamily: "monospace", outline: "none", textAlign: "center", width: "100%" }} />
-      <input type="text" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder} onKeyDown={e => e.key==="Enter" && validate()}
-        style={{ boxSizing:"border-box", background: done ? "rgba(2,209,186,0.06)" : "transparent", border: "1px solid " + (done ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.1)"), borderRadius: 10, padding: "10px 6px", color: done ? "#02d1ba" : "rgba(255,255,255,0.8)", fontSize: 16, fontWeight: 300, fontFamily: "monospace", outline: "none", textAlign: "center", width: "100%" }} />
-      <button onClick={validate} disabled={done || !w} style={{ width:34, height:34, borderRadius:9, border:"none", cursor: done||!w ? "not-allowed":"pointer", background: done?"rgba(2,209,186,0.12)":w?"#02d1ba":"rgba(255,255,255,0.06)", color: done?"#02d1ba":w?"#050505":"#555", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.2s", transform: done ? "scale(0.95)" : "scale(1)" }}>
-        <svg viewBox="0 0 20 20" fill="none" style={{ width:13, height:13 }}><polyline points="4,10 8,14 16,6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px", gap: 8, marginBottom: 10, alignItems: "center", opacity, transition: "opacity 0.3s" }}>
+      <div style={{ textAlign: "center" }}>
+        {done ? (
+          <div style={{ width: 24, height: 24, borderRadius: "50%", background: GREEN, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="3" strokeLinecap="round" style={{ width: 11, height: 11 }}><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        ) : (
+          <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.15)" }}>{index + 1}</span>
+        )}
+      </div>
+      <input type="number" inputMode="decimal" value={w} onChange={e => setW(e.target.value)} disabled={done} placeholder="0"
+        onKeyDown={e => e.key === "Enter" && validate()}
+        style={{
+          background: done ? "rgba(2,209,186,0.06)" : isActive ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
+          border: `${done ? 1 : isActive ? 2 : 1}px solid ${done ? "rgba(2,209,186,0.15)" : isActive ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.04)"}`,
+          borderRadius: 14, padding: "16px 8px", textAlign: "center",
+          fontSize: 28, fontWeight: 100, color: done ? GREEN : isActive ? "#fff" : "rgba(255,255,255,0.1)",
+          letterSpacing: "-1.5px", outline: "none", fontFamily: "-apple-system,Inter,sans-serif",
+          width: "100%", boxSizing: "border-box",
+        }}
+      />
+      <input type="text" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder || "—"}
+        onKeyDown={e => e.key === "Enter" && validate()}
+        style={{
+          background: done ? "rgba(2,209,186,0.06)" : isActive ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
+          border: `${done ? 1 : isActive ? 2 : 1}px solid ${done ? "rgba(2,209,186,0.15)" : isActive ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.04)"}`,
+          borderRadius: 14, padding: "16px 8px", textAlign: "center",
+          fontSize: 28, fontWeight: 100, color: done ? GREEN : isActive ? "#fff" : "rgba(255,255,255,0.1)",
+          letterSpacing: "-1.5px", outline: "none", fontFamily: "-apple-system,Inter,sans-serif",
+          width: "100%", boxSizing: "border-box",
+        }}
+      />
+      <button onClick={validate} disabled={done || !w} style={{
+        width: 48, height: 48, borderRadius: 14, border: "none", cursor: done || !w ? "not-allowed" : "pointer",
+        background: done ? "rgba(2,209,186,0.08)" : w ? GREEN : "rgba(255,255,255,0.03)",
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+        transition: "all 0.2s", transform: done ? "scale(0.95)" : "scale(1)",
+      }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke={done ? GREEN : w ? "#050505" : "rgba(255,255,255,0.08)"} strokeWidth="3" strokeLinecap="round" style={{ width: 16, height: 16 }}>
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
       </button>
     </div>
   );
 }
 
-export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName }) {
-  const [expanded,   setExpanded]   = useState(false);
-  const [showVideo,  setShowVideo]  = useState(false);
-  const [saved,      setSaved]      = useState(false);
-  const [showTimer,  setShowTimer]  = useState(false);
-
+export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData }) {
+  const [expanded, setExpanded] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [showTimer, setShowTimer] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
-  const storageKey = 'sets_done_' + weekIdx + '_' + sessionIdx + '_' + exIdx + '_' + today;
+  const storageKey = "sets_done_" + weekIdx + "_" + sessionIdx + "_" + exIdx + "_" + today;
   const [resetKey, setResetKey] = useState(0);
   const [doneCount, setDoneCount] = useState(() => {
-    try { return parseInt(localStorage.getItem('sets_done_' + weekIdx + '_' + sessionIdx + '_' + exIdx + '_' + new Date().toISOString().slice(0,10)) || '0'); } catch { return 0; }
+    try { return parseInt(localStorage.getItem(storageKey) || "0"); } catch { return 0; }
   });
   const completedSetsRef = useRef([]);
   const history = getHistory(weekIdx, sessionIdx, exIdx);
-  const latest  = getLatest(weekIdx, sessionIdx, exIdx);
-  const delta   = getDelta(weekIdx, sessionIdx, exIdx);
+  const latest = getLatest(weekIdx, sessionIdx, exIdx);
+  const delta = getDelta(weekIdx, sessionIdx, exIdx);
 
-  const [inputWeight, setInputWeight] = useState(latest ? String(latest.weight) : "");
-  const [inputReps,   setInputReps]   = useState(latest ? String(latest.reps || ex.reps || "") : "");
-
-  // Synchroniser avec les données chargées
-  React.useEffect(() => {
-    if (latest) {
-      setInputWeight(String(latest.weight || ""));
-      setInputReps(String(latest.reps || ex.reps || ""));
-    }
-  }, [latest?.weight, latest?.reps]);
-
-  const allDone  = history.length > 0;
+  const allDone = doneCount >= (typeof ex.sets === "number" && ex.sets > 0 ? ex.sets : 1) && doneCount > 0;
   const deltaPos = delta !== null && delta > 0;
   const deltaNeg = delta !== null && delta < 0;
   const hasVideo = !!ex.vidUrl;
-  const chipsReps = ex.rawReps || (ex.sets && ex.reps ? `${ex.sets}X${ex.reps}` : ex.reps) || null;
-  const restSecs  = parseRestSeconds(ex.rest);
+  const chipsReps = ex.rawReps || (ex.sets && ex.reps ? `${ex.sets}×${ex.reps}` : ex.reps) || null;
+  const restSecs = parseRestSeconds(ex.rest);
+  const setsCount = (typeof ex.sets === "number" && ex.sets > 0) ? ex.sets : 1;
 
-  const setsCount = (typeof ex.sets === 'number' && ex.sets > 0) ? ex.sets : 1;
+  // Calcul du volume de l exercice
+  const volume = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0);
 
   const handleSetDone = (weight, reps, idx) => {
     completedSetsRef.current = [...completedSetsRef.current, { weight, reps, index: idx }];
@@ -169,8 +166,8 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     if (navigator.vibrate) navigator.vibrate([20, 10, 40]);
     if (n >= setsCount) {
       const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
-      saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n-1].reps, completedSetsRef.current);
-      if (navigator.vibrate) navigator.vibrate([30, 20, 60]);
+      saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n - 1].reps, completedSetsRef.current);
+      if (navigator.vibrate) navigator.vibrate([30, 20, 60, 20, 100]);
       if (restSecs) setTimeout(() => setShowTimer(true), 600);
     } else if (restSecs) {
       setTimeout(() => setShowTimer(true), 400);
@@ -184,101 +181,125 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     try { localStorage.removeItem(storageKey); } catch {}
   };
 
-  const handleSave = () => {
-    if (!inputWeight) return;
-    saveLog(weekIdx, sessionIdx, exIdx, inputWeight, inputReps);
-    setSaved(true);
-    // Vibration
-    if (navigator.vibrate) navigator.vibrate([30, 20, 60]);
-    // Lancer le timer auto si repos configuré
-    if (restSecs) {
-      setTimeout(() => {
-        setSaved(false);
-        setShowTimer(true);
-        if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
-      }, 600);
-    } else {
-      setTimeout(() => setSaved(false), 1800);
-    }
-  };
+  // DESIGN : exercice ferme (complete ou a venir)
+  if (allDone) {
+    return (
+      <>
+        {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} onDismiss={() => setShowTimer(false)} />}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "stretch", borderRadius: 18, overflow: "hidden", background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.12)", cursor: "pointer" }}
+            onClick={() => setExpanded(v => !v)}>
+            <div style={{ width: 5, background: GREEN, flexShrink: 0 }} />
+            <div style={{ flex: 1, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="3" strokeLinecap="round" style={{ width: 16, height: 16 }}><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "-0.3px" }}>{ex.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+                  {latest && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{latest.weight} kg · {chipsReps}</span>}
+                  {deltaPos && <span style={{ fontSize: 11, color: GREEN, fontWeight: 700, background: "rgba(2,209,186,0.08)", padding: "2px 8px", borderRadius: 100 }}>+{delta?.toFixed(1)} kg</span>}
+                  {deltaNeg && <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 700, background: "rgba(239,68,68,0.08)", padding: "2px 8px", borderRadius: 100 }}>{delta?.toFixed(1)} kg</span>}
+                </div>
+              </div>
+              {volume > 0 && (
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 200, color: "rgba(2,209,186,0.5)", letterSpacing: "-0.5px" }}>{Math.round(volume)}<span style={{ fontSize: 9 }}>kg</span></div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.15)", letterSpacing: "1px" }}>VOLUME</div>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Historique expandable */}
+          {expanded && history.length > 0 && (
+            <div style={{ margin: "6px 0 0", padding: "12px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14 }}>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10 }}>Historique</div>
+              {[...history].reverse().slice(0, 5).map((entry, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{new Date(entry.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>{entry.weight} kg</span>
+                  {entry.reps && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>× {entry.reps}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
 
+  // DESIGN : exercice actif ouvert
   return (
     <>
-      {showTimer && restSecs && (
-        <RestTimer restSeconds={restSecs} exName={nextExName} onDismiss={() => setShowTimer(false)} />
-      )}
+      {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} onDismiss={() => setShowTimer(false)} />}
 
-      <div style={{
-        marginBottom: 10,
-        background: allDone ? "rgba(2,209,186,0.04)" : "rgba(255,255,255,0.025)",
-        border: `1px solid ${allDone ? "rgba(2,209,186,0.18)" : "rgba(255,255,255,0.07)"}`,
-        borderLeft: `3px solid ${allDone ? GREEN : ex.group ? GREEN : "rgba(255,255,255,0.15)"}`,
-        borderRadius: 16,
-        overflow: "hidden",
-        transition: "all 0.25s ease",
-      }}>
-        {ex.group && (
-          <div style={{ fontSize: 9, color: GREEN, letterSpacing: "1.5px", textTransform: "uppercase", padding: "6px 16px 0", fontWeight: 700 }}>
-            {ex.groupType || "Superset"} {ex.group}
-          </div>
-        )}
+      <div style={{ marginBottom: 8, borderRadius: 20, overflow: "hidden", background: "rgba(255,255,255,0.03)", border: "2px solid #02d1ba" }}>
 
-        {/* HEADER */}
-        <div style={{ padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: allDone ? GREEN : "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>
-                {allDone ? "✓" : String(globalIndex + 1).padStart(2, "0")}
-              </span>
-              <div style={{ fontSize: 15, fontWeight: 700, color: allDone ? "rgba(255,255,255,0.6)" : "#fff", letterSpacing: "-0.3px" }}>{ex.name}</div>
+        {/* Header exercice actif */}
+        <div style={{ padding: "20px 20px 16px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: GREEN, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
+                ● Exercice actif · {String(globalIndex + 1).padStart(2, "0")}
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px", lineHeight: 1.1, marginBottom: 10 }}>{ex.name}</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {chipsReps && <span style={{ fontSize: 11, color: "rgba(2,209,186,0.8)", background: "rgba(2,209,186,0.08)", padding: "5px 12px", borderRadius: 100, fontWeight: 600 }}>{chipsReps}</span>}
+                {ex.rest && <span onClick={() => restSecs && setShowTimer(true)} style={{ fontSize: 11, color: "rgba(255,165,0,0.7)", background: "rgba(255,165,0,0.07)", padding: "5px 12px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>⏱ {ex.rest}</span>}
+                {ex.tempo && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>{ex.tempo}</span>}
+                {ex.rir != null && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>RIR {ex.rir}</span>}
+                {hasVideo && <button onClick={() => setShowVideo(v => !v)} style={{ fontSize: 11, color: GREEN, background: "rgba(2,209,186,0.07)", border: "1px solid rgba(2,209,186,0.2)", padding: "5px 12px", borderRadius: 100, cursor: "pointer" }}>{showVideo ? "Fermer" : "▶ Video"}</button>}
+              </div>
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-              {chipsReps && (
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", padding: "3px 10px", borderRadius: 100 }}>{chipsReps}</span>
-              )}
-              {ex.tempo && (
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100 }}>Tempo {ex.tempo}</span>
-              )}
-              {ex.rir != null && (
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100 }}>RIR {ex.rir}</span>
-              )}
-              {ex.rest && (
-                <span onClick={() => restSecs && setShowTimer(true)} style={{ fontSize: 11, color: restSecs ? GREEN : "rgba(255,255,255,0.3)", background: restSecs ? "rgba(2,209,186,0.08)" : "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>
-                  ⏱ {ex.rest}
-                </span>
-              )}
+            {/* Anneau de serie */}
+            <div style={{ flexShrink: 0, textAlign: "center" }}>
+              <div style={{ position: "relative", width: 56, height: 56 }}>
+                <svg width="56" height="56" viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4"/>
+                  <circle cx="28" cy="28" r="22" fill="none" stroke={GREEN} strokeWidth="4" strokeLinecap="round"
+                    strokeDasharray="138" strokeDashoffset={138 - (138 * doneCount / setsCount)}
+                    transform="rotate(-90 28 28)" style={{ transition: "stroke-dashoffset 0.4s ease" }}/>
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: GREEN, lineHeight: 1 }}>{doneCount}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>/{setsCount}</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>SERIE</div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            {hasVideo && (
-              <button onClick={() => setShowVideo(v => !v)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", background: showVideo ? "rgba(2,209,186,0.15)" : "rgba(2,209,186,0.07)", border: `1px solid ${showVideo ? "rgba(2,209,186,0.4)" : "rgba(2,209,186,0.2)"}`, borderRadius: 100, color: GREEN, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
-                <svg viewBox="0 0 16 16" fill="none" style={{ width: 10, height: 10 }}><rect x="1" y="3" width="14" height="10" rx="2" stroke="#02d1ba" strokeWidth="1.5"/><polygon points="6,6 6,10 11,8" fill="#02d1ba"/></svg>
-                {showVideo ? "Fermer" : "Video"}
-              </button>
-            )}
-            <button onClick={() => setExpanded(v => !v)} style={{ width: 30, height: 30, background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-              <svg viewBox="0 0 20 20" fill="none" style={{ width: 12, height: 12, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} stroke="currentColor" strokeWidth="2.2">
-                <polyline points="4 7 10 13 16 7"/>
-              </svg>
-            </button>
-          </div>
+
+          {/* Video */}
+          {hasVideo && showVideo && <VideoCard vidUrl={ex.vidUrl} thumbUrl={ex.thumbUrl} exName={ex.name} />}
+
+          {/* Fantome semaine precedente */}
+          {ghostData && (
+            <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 12, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase" }}>Toi · Semaine precedente</div>
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontStyle: "italic", fontWeight: 200 }}>
+                {ghostData.weight} kg × {ghostData.reps}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* ── Vidéo ── */}
-        {hasVideo && showVideo && <VideoCard vidUrl={ex.vidUrl} thumbUrl={ex.thumbUrl} exName={ex.name} />}
-
-        {/* GRILLE SERIES */}
-        <div style={{ padding: "0 16px 14px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "22px 1fr 1fr 34px", gap: 6, marginBottom: 8 }}>
-            {["#", "kg", "Reps", ""].map((h, i) => (
-              <div key={i} style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 700, textAlign: "center", textTransform: "uppercase", letterSpacing: "1px" }}>{h}</div>
-            ))}
+        {/* Series */}
+        <div style={{ padding: "0 16px 16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px", gap: 8, marginBottom: 10, padding: "0 2px" }}>
+            <div></div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>POIDS</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>REPS</div>
+            <div></div>
           </div>
           {Array.from({ length: setsCount }, (_, i) => (
-            <SetInput
+            <SetRow
               key={resetKey + "-" + i}
               index={i}
               done={i < doneCount}
+              isActive={i === doneCount}
               defaultW={latest?.sets?.[i]?.weight ?? (latest?.weight ? String(latest.weight) : "")}
               defaultR={latest?.sets?.[i]?.reps ?? (ex.reps || "")}
               placeholder={ex.reps || "—"}
@@ -286,45 +307,28 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             />
           ))}
           {doneCount > 0 && doneCount < setsCount && (
-            <button onClick={handleReset} style={{ width: "100%", marginTop: 6, padding: "8px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 11, cursor: "pointer" }}>↺ Recommencer</button>
-          )}
-          {doneCount >= setsCount && setsCount > 0 && (
-            <div style={{ textAlign: "center", marginTop: 8, padding: "8px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 10, fontSize: 12, color: GREEN, fontWeight: 700 }}>✓ Toutes les series completees !</div>
+            <button onClick={handleReset} style={{ width: "100%", marginTop: 4, padding: "8px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)", background: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 11, cursor: "pointer" }}>↺ Recommencer</button>
           )}
         </div>
 
-        {/* PROGRESSION */}
-        {(latest || history.length > 0) && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>Dernier</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>{latest?.weight} kg</span>
-              {delta !== null && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: deltaPos ? GREEN : deltaNeg ? "#ef4444" : "rgba(255,255,255,0.3)" }}>
-                  {deltaPos ? "+" : ""}{delta !== 0 ? delta.toFixed(1) + " kg" : "="}
-                </span>
-              )}
+        {/* Footer — Timer + Intelligence progression */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "14px 16px", display: "flex", gap: 10 }}>
+          {ex.rest && (
+            <div onClick={() => restSecs && setShowTimer(true)} style={{ flex: 1, padding: "10px 14px", background: "rgba(255,165,0,0.04)", border: "1px solid rgba(255,165,0,0.08)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: restSecs ? "pointer" : "default" }}>
+              <div style={{ fontSize: 9, color: "rgba(255,165,0,0.4)", letterSpacing: "1px", textTransform: "uppercase" }}>Repos</div>
+              <div style={{ fontSize: 18, fontWeight: 100, color: "rgba(255,165,0,0.6)", letterSpacing: "-1px" }}>{ex.rest}</div>
             </div>
-            {history.length >= 2 && <Sparkline data={history} width={56} height={18}/>}
-            <button onClick={() => setExpanded(v => !v)} style={{ fontSize: 10, color: GREEN, background: "transparent", border: "none", cursor: "pointer", fontWeight: 600 }}>
-              {expanded ? "Fermer" : `${history.length} seance${history.length > 1 ? "s" : ""}`}
-            </button>
-          </div>
-        )}
-
-        {/* ── Historique ── */}
-        {expanded && history.length > 0 && (
-          <div className="ex-history">
-            <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8.5, letterSpacing: "1.5px", textTransform: "uppercase", color: "#555", marginBottom: 3 }}>Historique</p>
-            {[...history].reverse().slice(0, 8).map((entry, i) => (
-              <div key={i} className="ex-history-row">
-                <span className="ex-history-date">{new Date(entry.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>
-                <span className="ex-history-weight">{entry.weight} kg</span>
-                {entry.reps && <span className="ex-history-reps">× {entry.reps}</span>}
+          )}
+          {history.length >= 2 && (
+            <div style={{ flex: 1, padding: "10px 14px", background: "rgba(2,209,186,0.03)", border: "1px solid rgba(2,209,186,0.08)", borderRadius: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: delta > 0 ? GREEN : delta < 0 ? "#ef4444" : "#fbbf24", flexShrink: 0 }} />
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", lineHeight: 1.3 }}>
+                {delta > 0 ? `+${delta?.toFixed(1)} kg vs S-1` : delta < 0 ? `${delta?.toFixed(1)} kg vs S-1` : "Stable depuis 2S"}
               </div>
-            ))}
-          </div>
-        )}
+              {history.length >= 2 && <div style={{ marginLeft: "auto" }}><Sparkline data={history} width={48} height={16}/></div>}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
