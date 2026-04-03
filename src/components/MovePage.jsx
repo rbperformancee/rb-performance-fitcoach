@@ -111,7 +111,7 @@ export default function MovePage({ client }) {
       <div style={{ position: "relative", zIndex: 1 }}>
 
         {/* HERO */}
-        <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 20px) 24px 20px" }}>
+        <div style={{ padding: "8px 24px 0" }}>
           <div style={{ fontSize: 10, color: "rgba(239,68,68,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Activite</div>
           <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Run<span style={{ color: RED }}>.</span></div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>

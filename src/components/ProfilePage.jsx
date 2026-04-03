@@ -58,7 +58,7 @@ export default function ProfilePage({ client, onLogout }) {
       <div style={{ position: "relative", zIndex: 1 }}>
 
         {/* HERO */}
-        <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 20px) 24px 20px" }}>
+        <div style={{ padding: "8px 24px 0" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
             <div>
               <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Mon profil</div>
