@@ -450,11 +450,11 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "move" ? (
-              <div key={page} className={slideDir === "right" ? "page-slide-right" : "page-slide-left"}><MovePage client={client} /></div>
+              <MovePage key={page} client={client} />
           ) : page === "fuel" ? (
-              <div key={page} className={slideDir === "right" ? "page-slide-right" : "page-slide-left"}><FuelPage client={client} /></div>
+              <FuelPage key={page} client={client} />
           ) : page === "profile" ? (
-              <div key={page} className={slideDir === "right" ? "page-slide-right" : "page-slide-left"}><ProfilePage client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} /></div>
+              <ProfilePage key={page} client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} />
             ) : page === "training" ? (
             <main className="main">
               {client && <MessageBanner clientId={client.id} />}
@@ -566,7 +566,7 @@ export default function App() {
             </main>
           ) : (
             <main className="main" style={{ paddingTop: 8 }}>
-              <div key="weight" className={slideDir === "right" ? "page-slide-right" : "page-slide-left"}><WeightChart clientId={client?.id} client={client} /></div>
+              <WeightChart key={page} clientId={client?.id} client={client} />
             </main>
           )}
 
