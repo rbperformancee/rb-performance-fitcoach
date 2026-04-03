@@ -438,7 +438,9 @@ export default function App() {
       {/* ── App principale ── */}
       {programme && !authError && (
         <>
-          {page === "profile" ? (
+          {page === "fuel" ? (
+              <FuelPage client={client} />
+          ) : page === "profile" ? (
               <ProfilePage client={client} onLogout={() => supabase.auth.signOut()} supabase={supabase} />
             ) : page === "training" ? (
             <main className="main">
