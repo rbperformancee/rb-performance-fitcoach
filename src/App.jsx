@@ -6,6 +6,7 @@ import ProfilePage from "./components/ProfilePage";
 import FuelPage from "./components/FuelPage";
 import MovePage from "./components/MovePage";
 import { useAppData } from "./hooks/useAppData";
+import TrainingPage from "./components/TrainingPage";
 
 function SkeletonLoader() {
   return (
@@ -451,7 +452,20 @@ export default function App() {
       {/* ── App principale ── */}
       {programme && !authError && (
         <>
-          {page === "move" ? (
+          {page === "training" ? (
+              <TrainingPage
+                client={client}
+                programme={programme}
+                activeWeek={activeWeek}
+                setActiveWeek={setActiveWeek}
+                activeSession={activeSession}
+                setActiveSession={setActiveSession}
+                getHistory={getHistory}
+                getLatest={getLatest}
+                saveLog={saveLog}
+                getDelta={getDelta}
+              />
+          ) : page === "move" ? (
               <MovePage key={page} client={client} appData={appData} />
           ) : page === "fuel" ? (
               <FuelPage key={page} client={client} appData={appData} />
