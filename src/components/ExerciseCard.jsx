@@ -106,16 +106,17 @@ function SetInput({ index, done, defaultW, defaultR, placeholder, onDone }) {
   const [r, setR] = useState(defaultR || "");
   const validate = () => {
     if (!w || done) return;
+    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
     onDone(w, r, index);
   };
   return (
     <div style={{ display:"grid", gridTemplateColumns:"22px 1fr 1fr 34px", gap:4, marginBottom:4, alignItems:"center", opacity: done ? 0.4 : 1, transition:"opacity 0.25s" }}>
-      <div style={{ textAlign:"center", fontSize:11, fontWeight:700, color: done ? "#02d1ba" : "#555", fontFamily:"monospace" }}>{done ? "✓" : index+1}</div>
+      <div style={{ textAlign:"center", fontSize:11, fontWeight:700, color: done ? "#02d1ba" : "#555", fontFamily:"monospace", transition:"all 0.2s", transform: done ? "scale(1.2)" : "scale(1)" }}>{done ? "✓" : index+1}</div>
       <input type="number" inputMode="decimal" value={w} onChange={e => setW(e.target.value)} disabled={done} placeholder="0" onKeyDown={e => e.key==="Enter" && validate()}
         style={{ boxSizing:"border-box", background: done ? "rgba(2,209,186,0.06)" : "transparent", border: "1px solid " + (done ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.1)"), borderRadius: 10, padding: "10px 6px", color: done ? "#02d1ba" : "rgba(255,255,255,0.8)", fontSize: 16, fontWeight: 300, fontFamily: "monospace", outline: "none", textAlign: "center", width: "100%" }} />
       <input type="text" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder} onKeyDown={e => e.key==="Enter" && validate()}
         style={{ boxSizing:"border-box", background: done ? "rgba(2,209,186,0.06)" : "transparent", border: "1px solid " + (done ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.1)"), borderRadius: 10, padding: "10px 6px", color: done ? "#02d1ba" : "rgba(255,255,255,0.8)", fontSize: 16, fontWeight: 300, fontFamily: "monospace", outline: "none", textAlign: "center", width: "100%" }} />
-      <button onClick={validate} disabled={done || !w} style={{ width:34, height:34, borderRadius:9, border:"none", cursor: done||!w ? "not-allowed":"pointer", background: done?"rgba(2,209,186,0.12)":w?"#02d1ba":"rgba(255,255,255,0.06)", color: done?"#02d1ba":w?"#050505":"#555", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.15s" }}>
+      <button onClick={validate} disabled={done || !w} style={{ width:34, height:34, borderRadius:9, border:"none", cursor: done||!w ? "not-allowed":"pointer", background: done?"rgba(2,209,186,0.12)":w?"#02d1ba":"rgba(255,255,255,0.06)", color: done?"#02d1ba":w?"#050505":"#555", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.2s", transform: done ? "scale(0.95)" : "scale(1)" }}>
         <svg viewBox="0 0 20 20" fill="none" style={{ width:13, height:13 }}><polyline points="4,10 8,14 16,6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </button>
     </div>

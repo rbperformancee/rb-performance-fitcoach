@@ -189,7 +189,37 @@ export default function App() {
     const _days = ['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
     const _months = ['JAN','FEV','MAR','AVR','MAI','JUN','JUL','AOU','SEP','OCT','NOV','DEC'];
     const _dash = 2 * Math.PI * 40;
-    const _pct = _ts > 0 ? Math.min(Math.round((0 / _ts) * 100), 100) : 0;
+    // Calculer les seances completees depuis session_logs
+    const [_sessionsDone, setSessionsDone] = React.useState(0);
+    const [_todayDone, setTodayDone] = React.useState(false);
+    const [_daysSinceLast, setDaysSinceLast] = React.useState(null);
+    React.useEffect(() => {
+      if (!client?.id) return;
+      supabase.from('session_logs').select('logged_at', { count: 'exact' }).eq('client_id', client.id).then(({ count, data }) => {
+        setSessionsDone(count || 0);
+        if (data?.length > 0) {
+          const last = new Date(data[0].logged_at);
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0];
+          const lastStr = last.toISOString().split('T')[0];
+          setTodayDone(lastStr === todayStr);
+          const diff = Math.floor((today - last) / 86400000);
+          setDaysSinceLast(diff);
+        }
+      });
+    }, [client?.id]);
+    const _pct = _ts > 0 ? Math.min(Math.round((_sessionsDone / _ts) * 100), 100) : 0;
+    
+    // Message contextuel selon heure + historique
+    const getContextMsg = () => {
+      if (_todayDone) return { title: "Bien joue aujourd hui.", sub: "Recupere bien. Tu repars demain plus fort.", color: "#02d1ba" };
+      if (_daysSinceLast === 1) return { title: "C est l heure.", sub: "Ta seance t attend. Lance-toi.", color: "#fff" };
+      if (_daysSinceLast >= 2) return { title: `${_daysSinceLast} jours sans seance.`, sub: "Le travail n attend pas. Maintenant.", color: "#f97316" };
+      if (_h < 12) return { title: "Bonjour.", sub: "Commence fort. La journee t appartient.", color: "#fff" };
+      if (_h < 17) return { title: "L apres-midi est la.", sub: "Pas d excuse. La seance, maintenant.", color: "#fff" };
+      return { title: "Derniere chance.", sub: "Tu la saisis ou tu la laisses passer.", color: "#f97316" };
+    };
+    const _ctx = getContextMsg();
     return (
       <div style={{minHeight:'100vh',background:'#050505',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden'}}>
 
@@ -498,6 +528,7 @@ export default function App() {
                           programme_name: programme?.name || '',
                           logged_at: new Date().toISOString(),
                         });
+                        if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100, 50, 150]);
                       } catch(e) { console.error('session log error', e); }
                     }
                   }} style={{

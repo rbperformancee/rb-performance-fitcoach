@@ -703,3 +703,19 @@ input[type=number] { -moz-appearance: textfield; }
 body {
   padding-top: env(safe-area-inset-top, 0px);
 }
+
+@keyframes checkPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.4); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1.1); }
+}
+@keyframes slideUpFade {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes celebratePop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
