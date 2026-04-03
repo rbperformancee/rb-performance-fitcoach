@@ -39,9 +39,6 @@ export function useXP(clientId) {
   const fetchXP = useCallback(async () => {
     if (!clientId) return;
     setLoading(true);
-    let runCount = 0;
-    let totalKm = 0;
-
     const [sessions, weights, streakData, badgesData] = await Promise.all([
       supabase.from("session_logs").select("id, logged_at, note").eq("client_id", clientId).order("logged_at", { ascending: false }).limit(50),
       supabase.from("weight_logs").select("id, date, weight").eq("client_id", clientId).order("date", { ascending: false }).limit(10),
@@ -87,8 +84,8 @@ export function useXP(clientId) {
       supabase.from("run_logs").select("id, date, distance_km").eq("client_id", clientId).order("date", { ascending: false }).limit(20),
       supabase.from("daily_tracking").select("date, pas").eq("client_id", clientId).order("date", { ascending: false }).limit(30),
     ]);
-    const runCount = runsRes.data?.length || 0;
-    const totalKm = (runsRes.data || []).reduce((a, r) => a + (r.distance_km || 0), 0);
+    runCount = runsRes.data?.length || 0;
+    totalKm = (runsRes.data || []).reduce((a, r) => a + (r.distance_km || 0), 0);
     totalXP += runCount * 10;
     runsRes.data?.slice(0, 2).forEach(r => {
       activity.push({ type: "run", label: `Course · ${r.distance_km} km`, meta: "+10 XP", xp: 10, date: r.date, color: "#ef4444" });
