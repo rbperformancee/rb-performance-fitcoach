@@ -112,6 +112,25 @@ export default function App() {
   const [showHome, setShowHome] = useState(true);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
+  const [_sessionsDone, setSessionsDone] = React.useState(0);
+  const [_todayDone, setTodayDone] = React.useState(false);
+  const [_daysSinceLast, setDaysSinceLast] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!client?.id) return;
+    supabase.from('session_logs').select('logged_at', { count: 'exact' }).eq('client_id', client.id).order('logged_at', { ascending: false }).limit(1).then(({ count, data }) => {
+      setSessionsDone(count || 0);
+      if (data?.length > 0) {
+        const last = new Date(data[0].logged_at);
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const lastStr = last.toISOString().split('T')[0];
+        setTodayDone(lastStr === todayStr);
+        const diff = Math.floor((today - last) / 86400000);
+        setDaysSinceLast(diff);
+      }
+    });
+  }, [client?.id]);
 
   React.useEffect(() => {
     if (showHome) { setNavVisible(true); return; }
@@ -189,25 +208,6 @@ export default function App() {
     const _days = ['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
     const _months = ['JAN','FEV','MAR','AVR','MAI','JUN','JUL','AOU','SEP','OCT','NOV','DEC'];
     const _dash = 2 * Math.PI * 40;
-    // Calculer les seances completees depuis session_logs
-    const [_sessionsDone, setSessionsDone] = React.useState(0);
-    const [_todayDone, setTodayDone] = React.useState(false);
-    const [_daysSinceLast, setDaysSinceLast] = React.useState(null);
-    React.useEffect(() => {
-      if (!client?.id) return;
-      supabase.from('session_logs').select('logged_at', { count: 'exact' }).eq('client_id', client.id).then(({ count, data }) => {
-        setSessionsDone(count || 0);
-        if (data?.length > 0) {
-          const last = new Date(data[0].logged_at);
-          const today = new Date();
-          const todayStr = today.toISOString().split('T')[0];
-          const lastStr = last.toISOString().split('T')[0];
-          setTodayDone(lastStr === todayStr);
-          const diff = Math.floor((today - last) / 86400000);
-          setDaysSinceLast(diff);
-        }
-      });
-    }, [client?.id]);
     const _pct = _ts > 0 ? Math.min(Math.round((_sessionsDone / _ts) * 100), 100) : 0;
     
     // Message contextuel selon heure + historique
