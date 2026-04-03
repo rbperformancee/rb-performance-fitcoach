@@ -131,7 +131,7 @@ function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive
   );
 }
 
-export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData }) {
+export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData, bandColor }) {
   const [expanded, setExpanded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
@@ -180,6 +180,31 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     setResetKey(k => k + 1);
     try { localStorage.removeItem(storageKey); } catch {}
   };
+
+  // DESIGN : exercice a venir (pas encore actif, pas complete)
+  const isNextActive = doneCount === 0 && !allDone;
+  // Si pas fait et pas le prochain actif -> bande coloree fermee
+  if (!allDone && !isNextActive) {
+    const bc = bandColor || "rgba(255,255,255,0.15)";
+    return (
+      <>
+        {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} onDismiss={() => setShowTimer(false)} />}
+        <div style={{ marginBottom: 8 }} onClick={() => setExpanded(v => !v)}>
+          <div style={{ display: "flex", alignItems: "stretch", borderRadius: 16, overflow: "hidden", background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" }}>
+            <div style={{ width: 5, background: bc, flexShrink: 0 }} />
+            <div style={{ flex: 1, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", fontFamily: "monospace", width: 22, flexShrink: 0 }}>{String(globalIndex + 1).padStart(2, "0")}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "-0.3px" }}>{ex.name}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginTop: 3 }}>{chipsReps}{ex.rest ? ` · ⏱ ${ex.rest}` : ""}</div>
+              </div>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: bc, flexShrink: 0 }} />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   // DESIGN : exercice ferme (complete ou a venir)
   if (allDone) {

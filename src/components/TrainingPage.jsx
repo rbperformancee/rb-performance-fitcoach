@@ -331,18 +331,11 @@ export default function TrainingPage({
             // Le Fantome — donnees semaine precedente
             const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
 
-            return (
-              <div key={ei} style={{ marginBottom: 12, opacity: (!isDone && !isActive) ? 0.5 : 1, transition: "opacity 0.3s" }}>
-                {/* Header exercice avec statut */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <StatusDot status={isDone ? "green" : status} />
-                  {ghostData && (
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
-                      Fantome : {ghostData.weight} kg × {ghostData.reps} reps
-                    </div>
-                  )}
-                </div>
+            // Couleur bande selon Intelligence de Progression
+            const bandColor = isDone ? "#02d1ba" : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
 
+            return (
+              <div key={ei} style={{ marginBottom: 10, opacity: (!isDone && !isActive) ? 0.45 - (ei * 0.03) : 1, transition: "opacity 0.3s" }}>
                 <ExerciseCard
                   ex={ex}
                   weekIdx={activeWeek}
@@ -354,6 +347,8 @@ export default function TrainingPage({
                   saveLog={saveLog}
                   getDelta={getDelta}
                   nextExName={currentSession.exercises?.[ei + 1]?.name}
+                  ghostData={ghostData}
+                  bandColor={bandColor}
                 />
               </div>
             );
