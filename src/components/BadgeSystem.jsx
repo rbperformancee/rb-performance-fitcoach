@@ -35,7 +35,7 @@ export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0, r
   const [earned, setEarned] = useState([]);
   const [newBadge, setNewBadge] = useState(null);
 
-  const checkAndSave = useCallback(async () => { // eslint-disable-line
+  const checkAndSave = useCallback(async () => {
     if (!clientId) return;
     const { data: existing } = await supabase.from("client_badges").select("badge_id").eq("client_id", clientId);
     const earnedIds = new Set((existing || []).map(b => b.badge_id));
@@ -61,7 +61,6 @@ export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0, r
       setTimeout(() => setNewBadge(null), 3500);
     }
     setEarned(toEarn.map(b => b.id));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId, sessions, streak, weights, runs, km]);
 
   useEffect(() => { checkAndSave(); }, [checkAndSave]);
