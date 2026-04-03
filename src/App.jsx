@@ -591,6 +591,14 @@ export default function App() {
             zIndex: 100,
             opacity: navVisible ? 1 : 0,
             transition: "opacity 0.3s ease, transform 0.3s ease",
+          }}
+          onTouchStart={e => { window._swipeStartX = e.touches[0].clientX; }}
+          onTouchEnd={e => {
+            const dx = e.changedTouches[0].clientX - (window._swipeStartX || 0);
+            const ORDER = ["training", "weight", "move", "fuel", "profile"];
+            const idx = ORDER.indexOf(page);
+            if (dx < -40 && idx < ORDER.length - 1) navigateTo(ORDER[idx + 1]);
+            else if (dx > 40 && idx > 0) navigateTo(ORDER[idx - 1]);
           }}>
             {[
               { id: "training", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{width:20,height:20}}><path d="M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12"/></svg> },
