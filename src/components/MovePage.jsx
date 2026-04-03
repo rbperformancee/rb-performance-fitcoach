@@ -153,6 +153,52 @@ export default function MovePage({ client }) {
         {/* DIVIDER */}
         <div style={{ height: 1, background: "linear-gradient(90deg, rgba(239,68,68,0.3) 0%, rgba(255,255,255,0.04) 100%)", margin: "20px 24px" }} />
 
+        {/* RECORD PERSONNEL */}
+        {(() => {
+          if (runs.length === 0) return null;
+          const allures = runs.filter(r => r.allure_min_km && r.allure_min_km !== "--").map(r => {
+            const [m, s] = r.allure_min_km.split(":").map(Number);
+            return { sec: m * 60 + s, run: r };
+          });
+          if (allures.length === 0) return null;
+          const best = allures.reduce((a, b) => a.sec < b.sec ? a : b);
+          const last = allures[0];
+          const lastSec = last.sec;
+          const bestSec = best.sec;
+          const pct = Math.min(Math.round((bestSec / lastSec) * 100), 100);
+          const isRecord = last.run.id === best.run.id;
+          const bestMin = Math.floor(bestSec / 60);
+          const bestS = String(bestSec % 60).padStart(2, "0");
+          return (
+            <div style={{ padding: "0 24px", marginBottom: 20 }}>
+              <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${isRecord ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.07)"}`, borderRadius: 20, padding: 20, position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, background: "radial-gradient(circle, rgba(239,68,68,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Record personnel</div>
+                    <div style={{ fontSize: 44, fontWeight: 100, color: RED, letterSpacing: "-2px", lineHeight: 1 }}>{bestMin}:{bestS}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}> min/km</span></div>
+                  </div>
+                  {isRecord && (
+                    <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 100, padding: "6px 14px", fontSize: 11, color: RED, fontWeight: 700, flexShrink: 0 }}>Nouveau !</div>
+                  )}
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>Derniere sortie vs record</div>
+                    <div style={{ fontSize: 11, color: pct >= 95 ? RED : "rgba(255,255,255,0.3)", fontWeight: 600 }}>{pct}%</div>
+                  </div>
+                  <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+                    <div style={{ height: "100%", width: pct + "%", background: pct >= 95 ? RED : "rgba(239,68,68,0.4)", borderRadius: 2, transition: "width 0.8s ease" }} />
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
+                  {isRecord ? `" Nouveau record ! Tu repousses tes limites. "` : pct >= 95 ? `" Tout pres de ton record. Encore un effort. "` : `" Continue — chaque sortie te rapproche de ton record. "`}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* GRAPHIQUE SEMAINE */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 14 }}>Cette semaine</div>
