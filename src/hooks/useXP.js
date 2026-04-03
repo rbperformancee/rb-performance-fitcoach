@@ -33,6 +33,8 @@ export function useXP(clientId) {
   const [xp, setXP] = useState(0);
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [runCount, setRunCountState] = useState(0);
+  const [totalKm, setTotalKmState] = useState(0);
 
   const fetchXP = useCallback(async () => {
     if (!clientId) return;
@@ -110,10 +112,12 @@ export function useXP(clientId) {
 
     setXP(totalXP);
     setRecentActivity(activity.slice(0, 6));
+    setRunCountState(runCount);
+    setTotalKmState(totalKm);
     setLoading(false);
   }, [clientId]);
 
   useEffect(() => { fetchXP(); }, [fetchXP]);
 
-  return { xp, loading, recentActivity, levelInfo: getLevelInfo(xp), runCount: runCount || 0, totalKm: totalKm || 0 };
+  return { xp, loading, recentActivity, levelInfo: getLevelInfo(xp), runCount, totalKm };
 }
