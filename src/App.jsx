@@ -112,6 +112,18 @@ export default function App() {
   const [showHome, setShowHome] = useState(true);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
+
+  React.useEffect(() => {
+    if (showHome) { setNavVisible(true); return; }
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > lastScrollY.current + 8) setNavVisible(false);
+      else if (y < lastScrollY.current - 8) setNavVisible(true);
+      lastScrollY.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [showHome]);
   const [showRPE,         setShowRPE]         = useState(false);
 
   // Le programme affiché : cloud en priorité, sinon local
