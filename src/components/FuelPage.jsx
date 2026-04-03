@@ -98,7 +98,7 @@ export default function FuelPage({ client }) {
   }, {});
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#050505", padding: "16px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "#050505", padding: "4px 24px" }}>
       {[80, 180, 120, 100].map((h, i) => (
         <div key={i} className="skeleton" style={{ height: h, borderRadius: 16, marginBottom: 16 }} />
       ))}
