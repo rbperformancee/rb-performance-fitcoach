@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 
 export default function WeightChart({ clientId, client, programme }) {
-  const { weights, addWeight, latest, diff, saveGoal } = useWeightTracking(clientId);
+  const { weights, addWeight, latest, diff, saveGoal, loading } = useWeightTracking(clientId);
   const [editGoal, setEditGoal] = useState(false);
   const [newGoal, setNewGoal] = useState("");
   const [showInput, setShowInput] = useState(false);
