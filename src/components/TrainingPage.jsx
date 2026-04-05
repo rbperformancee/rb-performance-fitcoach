@@ -227,22 +227,6 @@ export default function TrainingPage({
 
   // Calcul progression globale
   // Stats live — calculees depuis les exercices completes
-  const totalExSession = currentSession?.exercises?.length || 0;
-  const seriesCompletees = (currentSession?.exercises || []).reduce((total, _, ei) => {
-    const h = getHistory(activeWeek, activeSession, ei);
-    return total + (h.length > 0 ? (currentSession.exercises[ei].sets || 1) : 0);
-  }, 0) || 0;
-  const volumeTotal = currentSession?.exercises?.reduce((total, ex, ei) => {
-    const latest = getLatest(activeWeek, activeSession, ei);
-    if (latest && getHistory(activeWeek, activeSession, ei).length > 0) {
-      return total + (parseFloat(latest.weight) || 0) * (parseInt(ex.sets || 1)) * (parseInt(ex.reps || 1));
-    }
-    return total;
-  }, 0) || 0;
-  const progressionKg = currentSession?.exercises?.reduce((total, _, ei) => {
-    const delta = getDelta ? getDelta(activeWeek, activeSession, ei) : null;
-    return total + (delta > 0 ? delta : 0);
-  }, 0) || 0;
 
   const totalSessions = programme?.weeks?.reduce((a, w) => a + (w.sessions?.length || 0), 0) || 0;
   const doneSessions = activeWeek * (programme?.weeks?.[0]?.sessions?.length || 0) + activeSession;
