@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -223,22 +223,7 @@ export default function TrainingPage({
 }) {
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
-  const [chrono, setChrono] = useState(0);
-  const [chronoRunning, setChronoRunning] = useState(false);
 
-  // Chrono demarre uniquement quand le client appuie sur "Commencer"
-  useEffect(() => {
-    if (!chronoRunning) return;
-    const start = Date.now() - chrono * 1000;
-    const id = setInterval(() => setChrono(Math.floor((Date.now() - start) / 1000)), 1000);
-    return () => clearInterval(id);
-  }, [chronoRunning]);
-
-  const formatChrono = (secs) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  };
 
   // Calcul progression globale
   // Stats live — calculees depuis les exercices completes
@@ -301,73 +286,22 @@ export default function TrainingPage({
       <div style={{ position: "relative", zIndex: 1 }}>
 
         {/* HERO */}
-        <div style={{ padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 20% 50%, rgba(2,209,186,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
-          <div style={{ position: "relative", zIndex: 1 }}>
-            {/* Header avec chrono */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
-              <div>
-                <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Programme</div>
-                <div style={{ fontSize: 42, fontWeight: 800, color: "#fff", letterSpacing: "-2.5px", lineHeight: 0.9, marginBottom: 8 }}>
-                  Train<span style={{ color: GREEN }}>.</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{programme.name}</div>
-                  <div style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-                  <div style={{ fontSize: 13, color: GREEN, fontWeight: 600 }}>S{activeWeek + 1}</div>
-                </div>
-              </div>
-              {/* Chrono ou bouton commencer */}
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                {chronoRunning ? (
-                  <>
-                    <div style={{ fontSize: 36, fontWeight: 100, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>
-                      {formatChrono(chrono).split(":")[0]}<span style={{ fontSize: 18, color: "rgba(255,255,255,0.3)" }}>:{formatChrono(chrono).split(":")[1]}</span>
-                    </div>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 3 }}>Chrono</div>
-                  </>
-                ) : (
-                  <button onClick={() => setChronoRunning(true)} style={{
-                    background: GREEN, color: "#000", border: "none", borderRadius: 100,
-                    padding: "10px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                    letterSpacing: "0.5px",
-                  }}>▶ Commencer</button>
-                )}
-              </div>
-            </div>
-
-            {/* Stats live - uniquement quand seance commencee */}
-            {chronoRunning && <div style={{ display: "flex", gap: 20, marginBottom: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 200, color: "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
-                  {Math.round(volumeTotal)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>kg</span>
-                </div>
-                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Volume</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 200, color: GREEN, letterSpacing: "-1px", lineHeight: 1 }}>
-                  {seriesCompletees}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>series</span>
-                </div>
-                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Completees</div>
-              </div>
-              {progressionKg > 0 && (
-                <div>
-                  <div style={{ fontSize: 20, fontWeight: 200, color: "#fbbf24", letterSpacing: "-1px", lineHeight: 1 }}>
-                    +{progressionKg.toFixed(1)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>kg</span>
-                  </div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Progression</div>
-                </div>
-              )}
-            </div>}
-
-            {/* Progress global */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Momentum</div>
-              <div style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>{doneSessions}/{totalSessions} seances</div>
-            </div>
-            <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
-              <div style={{ height: "100%", width: globalPct + "%", background: `linear-gradient(90deg, ${GREEN}, rgba(2,209,186,0.5))`, borderRadius: 1, transition: "width 0.6s ease" }} />
-            </div>
+        <div style={{ padding: "20px 20px 16px" }}>
+          <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Programme</div>
+          <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.9, marginBottom: 10 }}>
+            Train<span style={{ color: GREEN }}>.</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{programme.name}</div>
+            <div style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
+            <div style={{ fontSize: 13, color: GREEN, fontWeight: 600 }}>Semaine {activeWeek + 1}</div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Avancement</div>
+            <div style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>{doneSessions}/{totalSessions} seances</div>
+          </div>
+          <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+            <div style={{ height: "100%", width: globalPct + "%", background: GREEN, borderRadius: 1, transition: "width 0.6s ease" }} />
           </div>
         </div>
 
