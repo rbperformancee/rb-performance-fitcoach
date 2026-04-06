@@ -136,7 +136,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     clearInterval(intervalRef.current);
     saveSession({ status: "done", totalTime, chronoStart: 0, paused: false });
   }, [saveSession]);
-  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const currentWeek = programme?.weeks?.[activeWeek];
   const currentSession = currentWeek?.sessions?.[activeSession];
