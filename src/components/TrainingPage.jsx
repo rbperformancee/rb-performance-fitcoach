@@ -28,6 +28,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
   const [showResume, setShowResume] = useState(false);
+  const [sessionTerminee, setSessionTerminee] = useState(false);
 
   // Detecter seance partielle au chargement
   useEffect(() => {
@@ -106,7 +107,10 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   }, 0);
 
   const handleBilan = async () => {
-    if (!client?.id) return;
+    if (!client?.id || sessionTerminee) return;
+    setSessionTerminee(true);
+    setChronoOn(false);
+    try { localStorage.removeItem("rb_chrono_start"); } catch {}
     await supabase.from("session_logs").insert({
       client_id: client.id,
       session_name: currentSession?.name || "Seance",
@@ -305,9 +309,9 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* BOUTON TERMINER */}
       <div style={{ padding: "20px 20px 0" }}>
-        <div onClick={() => setShowConfirm(true)} style={{ padding: "16px 20px", background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: G }}>Terminer la seance</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{doneEx}/{totalEx} · +40 XP</div>
+        <div onClick={() => !sessionTerminee && setShowConfirm(true)} style={{ padding: "16px 20px", background: sessionTerminee ? "rgba(255,255,255,0.03)" : G_DIM, border: `1px solid ${sessionTerminee ? "rgba(255,255,255,0.06)" : G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: sessionTerminee ? "not-allowed" : "pointer", opacity: sessionTerminee ? 0.5 : 1, transition: "all 0.3s ease" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: sessionTerminee ? "rgba(255,255,255,0.3)" : G }}>{sessionTerminee ? "Seance terminee ✓" : "Terminer la seance"}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{sessionTerminee ? "" : `${doneEx}/${totalEx} · +40 XP`}</div>
         </div>
       </div>
 
