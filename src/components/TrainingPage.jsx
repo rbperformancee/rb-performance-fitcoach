@@ -323,21 +323,72 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {showOptions && (
         <div onClick={() => setShowOptions(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "24px 20px calc(env(safe-area-inset-bottom,0px) + 24px)", width: "100%", maxWidth: 420 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Options de seance</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-              {[
-                { label: "Reporter", sub: "Au lendemain" },
-                { label: "Repos", sub: "Journee de repos" },
-                { label: "Remplacer", sub: "Un exercice" },
-                { label: "Reordonner", sub: "Les exercices" },
-              ].map(({ label, sub }) => (
-                <div key={label} onClick={() => setShowOptions(false)} style={{ padding: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer" }}>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 600, marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{sub}</div>
-                </div>
-              ))}
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Options</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>{currentSession?.name}</div>
+
+            {/* Reporter */}
+            <div onClick={async () => {
+              await supabase.from("session_logs").insert({
+                client_id: client?.id,
+                session_name: (currentSession?.name || "Seance") + " (Reportee)",
+                programme_name: programme?.name,
+                logged_at: new Date().toISOString(),
+                note: "REPORTEE",
+              });
+              setShowOptions(false);
+              alert("Seance reportee. Ton coach est notifie.");
+            }} style={{ padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" style={{ width: 18, height: 18 }}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#60a5fa", marginBottom: 2 }}>Reporter la seance</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Notifie ton coach automatiquement</div>
+              </div>
             </div>
-            <button onClick={() => setShowOptions(false)} style={{ width: "100%", padding: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.4)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
+
+            {/* Repos */}
+            <div onClick={async () => {
+              await supabase.from("daily_tracking").upsert({
+                client_id: client?.id,
+                date: new Date().toISOString().split("T")[0],
+                repos: true,
+              }, { onConflict: "client_id,date" });
+              setShowOptions(false);
+              alert("Journee de repos enregistree.");
+            }} style={{ padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" style={{ width: 18, height: 18 }}><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#a78bfa", marginBottom: 2 }}>Journee de repos</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Repos actif — visible par ton coach</div>
+              </div>
+            </div>
+
+            {/* Remplacer exercice */}
+            <div onClick={() => {
+              const nom = prompt("Nom de l exercice de remplacement ?");
+              if (nom) {
+                try {
+                  const key = `rb_replace_w${activeWeek}_s${activeSession}`;
+                  const existing = JSON.parse(localStorage.getItem(key) || "[]");
+                  existing.push(nom);
+                  localStorage.setItem(key, JSON.stringify(existing));
+                } catch {}
+                setShowOptions(false);
+              }
+            }} style={{ padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" style={{ width: 18, height: 18 }}><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#34d399", marginBottom: 2 }}>Remplacer un exercice</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Sauvegarde pour cette seance uniquement</div>
+              </div>
+            </div>
+
+            <button onClick={() => setShowOptions(false)} style={{ width: "100%", padding: 14, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.3)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
           </div>
         </div>
       )}
