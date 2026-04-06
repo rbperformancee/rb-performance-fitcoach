@@ -478,9 +478,7 @@ export default function App() {
           )}
 
           {showRPE && client && <RPEModal clientId={client.id} sessionName={session?.name} onClose={() => setShowRPE(false)} />}
-          {page === "training" && (
-            <button onClick={() => setShowRPE(true)} style={{
-          )}
+
           <nav style={{
             position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
             left: "50%", transform: navVisible ? "translateX(-50%)" : "translateX(-50%) translateY(20px)",
