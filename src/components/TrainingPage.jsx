@@ -26,22 +26,50 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
-  const [chrono, setChrono] = useState(0);
-  const [chronoOn, setChronoOn] = useState(false);
+  const CHRONO_KEY = "rb_chrono_start";
+  const [chrono, setChrono] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CHRONO_KEY);
+      if (saved) return Math.floor((Date.now() - parseInt(saved)) / 1000);
+    } catch {}
+    return 0;
+  });
+  const [chronoOn, setChronoOn] = useState(() => {
+    try { return !!localStorage.getItem(CHRONO_KEY); } catch { return false; }
+  });
   const intervalRef = useRef(null);
-  const startRef = useRef(null);
 
   useEffect(() => {
     if (chronoOn) {
-      startRef.current = Date.now() - chrono * 1000;
+      // Si pas encore de timestamp, en creer un
+      try {
+        if (!localStorage.getItem(CHRONO_KEY)) {
+          localStorage.setItem(CHRONO_KEY, String(Date.now() - chrono * 1000));
+        }
+      } catch {}
       intervalRef.current = setInterval(() => {
-        setChrono(Math.floor((Date.now() - startRef.current) / 1000));
+        try {
+          const start = parseInt(localStorage.getItem(CHRONO_KEY) || Date.now());
+          setChrono(Math.floor((Date.now() - start) / 1000));
+        } catch {}
       }, 1000);
     } else {
       clearInterval(intervalRef.current);
+      try { localStorage.removeItem(CHRONO_KEY); } catch {}
     }
     return () => clearInterval(intervalRef.current);
   }, [chronoOn]);
+
+  const startChrono = () => {
+    try { localStorage.setItem(CHRONO_KEY, String(Date.now())); } catch {}
+    setChrono(0);
+    setChronoOn(true);
+  };
+
+  const stopChrono = () => {
+    setChronoOn(false);
+    setChrono(0);
+  };
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
@@ -129,14 +157,14 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             </div>
           </div>
           {chronoOn ? (
-            <div onClick={() => setChronoOn(false)} style={{ textAlign: "right", cursor: "pointer" }}>
+            <div onClick={stopChrono} style={{ textAlign: "right", cursor: "pointer" }}>
               <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
                 {fmt(chrono).split(":")[0]}<span style={{ color: "rgba(255,255,255,0.3)" }}>:</span>{fmt(chrono).split(":")[1]}
               </div>
               <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Chrono</div>
             </div>
           ) : (
-            <button onClick={() => setChronoOn(true)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "10px 16px", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <button onClick={startChrono} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "10px 16px", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               ▶ Chrono
             </button>
           )}
