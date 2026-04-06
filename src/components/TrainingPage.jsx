@@ -311,7 +311,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       <div style={{ padding: "20px 20px 0" }}>
         <div onClick={() => !sessionTerminee && setShowConfirm(true)} style={{ padding: "16px 20px", background: sessionTerminee ? "rgba(255,255,255,0.03)" : G_DIM, border: `1px solid ${sessionTerminee ? "rgba(255,255,255,0.06)" : G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: sessionTerminee ? "not-allowed" : "pointer", opacity: sessionTerminee ? 0.5 : 1, transition: "all 0.3s ease" }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: sessionTerminee ? "rgba(255,255,255,0.3)" : G }}>{sessionTerminee ? "Seance terminee ✓" : "Terminer la seance"}</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{sessionTerminee ? "" : `${doneEx}/${totalEx} · +40 XP`}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{sessionTerminee ? `Duree : ${fmt(chrono)}` : `${doneEx}/${totalEx} · +40 XP`}</div>
         </div>
       </div>
 
