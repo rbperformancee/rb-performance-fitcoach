@@ -28,6 +28,10 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
   const [showResume, setShowResume] = useState(false);
+  const [exercisesOrder, setExercisesOrder] = useState(null);
+  const [dragIdx, setDragIdx] = useState(null);
+  const [dragOverIdx, setDragOverIdx] = useState(null);
+  const longPressRef = useRef({});
   const [sessionTerminee, setSessionTerminee] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
@@ -284,14 +288,36 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {/* EXERCICES */}
       <div style={{ padding: "0 20px" }}>
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>Exercices</div>
-        {(currentSession.exercises || []).map((ex, ei) => {
+        {getExercises().map((ex, ei) => {
           const history = getHistory(activeWeek, activeSession, ei) || [];
           const status = getProgressStatus(history);
           const isDone = history.length > 0;
           const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
           const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
+          const isDragging = dragIdx === ei;
+          const isDragOver = dragOverIdx === ei;
           return (
-            <div key={ei} style={{ marginBottom: 10, opacity: isDone ? 1 : (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4 }}>
+            <div key={ei}
+              onTouchStart={() => !isDone && handleLongPress(ei)}
+              onTouchEnd={() => { handleLongPressEnd(ei); if (dragIdx !== null) handleDrop(ei); }}
+              onTouchMove={() => handleLongPressEnd(ei)}
+              onMouseEnter={() => handleDragOver(ei)}
+              style={{
+                marginBottom: 10,
+                opacity: isDragging ? 0.4 : isDone ? 1 : (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4,
+                transform: isDragOver && !isDone ? "translateY(-4px)" : "none",
+                transition: "transform 0.15s ease, opacity 0.2s ease",
+                cursor: isDone ? "default" : "grab",
+              }}>
+              {!isDone && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, paddingLeft: 4 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" style={{ width: 14, height: 14 }}>
+                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                  </svg>
+                  <span style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", letterSpacing: "1px" }}>MAINTENIR POUR DEPLACER</span>
+                </div>
+              )}
               <ExerciseCard
                 ex={ex}
                 weekIdx={activeWeek}
