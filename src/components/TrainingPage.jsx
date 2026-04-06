@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -240,6 +240,21 @@ export default function TrainingPage({
   const doneEx = currentSession?.exercises?.filter((_, ei) => getHistory(activeWeek, activeSession, ei).length > 0).length || 0;
   const sessionPct = totalEx > 0 ? Math.round((doneEx / totalEx) * 100) : 0;
 
+  // Stats live
+  const volumeTotal = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
+    const h = getHistory(activeWeek, activeSession, ei);
+    if (h.length === 0) return tot;
+    const w = parseFloat(h[h.length-1]?.weight || 0);
+    const s = parseInt(ex.sets || 1);
+    const r = parseInt(ex.reps || 1);
+    return tot + w * s * r;
+  }, 0);
+
+  const seriesDone = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
+    const h = getHistory(activeWeek, activeSession, ei);
+    return tot + (h.length > 0 ? parseInt(ex.sets || 1) : 0);
+  }, 0);
+
   // Bilan seance — envoyer rapport au coach
   const handleBilan = async () => {
     if (!client?.id) return;
@@ -286,6 +301,39 @@ export default function TrainingPage({
           </div>
           <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
             <div style={{ height: "100%", width: globalPct + "%", background: GREEN, borderRadius: 1, transition: "width 0.6s ease" }} />
+          </div>
+
+          {/* Chrono + stats */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ display: "flex", gap: 20 }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 200, color: "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
+                  {Math.round(volumeTotal)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 3 }}>kg</span>
+                </div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Volume</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 200, color: GREEN, letterSpacing: "-1px", lineHeight: 1 }}>
+                  {seriesDone}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 3 }}>series</span>
+                </div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Completees</div>
+              </div>
+            </div>
+            {/* Chrono */}
+            {chronoOn ? (
+              <div onClick={() => setChronoOn(false)} style={{ textAlign: "right", cursor: "pointer" }}>
+                <div style={{ fontSize: 30, fontWeight: 100, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>
+                  {fmtChrono(chrono).split(":")[0]}<span style={{ color: "rgba(255,255,255,0.3)" }}>:</span>{fmtChrono(chrono).split(":")[1]}
+                </div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 3 }}>Chrono</div>
+              </div>
+            ) : (
+              <button onClick={() => setChronoOn(true)} style={{
+                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 100, padding: "10px 18px", color: "rgba(255,255,255,0.5)",
+                fontSize: 12, fontWeight: 600, cursor: "pointer",
+              }}>▶ Chrono</button>
+            )}
           </div>
         </div>
 
