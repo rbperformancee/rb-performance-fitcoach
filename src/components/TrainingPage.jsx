@@ -48,51 +48,94 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       if (val && parseInt(val) > 0) setShowResume(true);
     } catch {}
   }, [activeWeek, activeSession]);
-  const CHRONO_KEY = "rb_chrono_start";
+  // CHRONO — bouton Demarrer manuel, pause, resume, persistant
+  const SESSION_KEY = `rb_session_w${activeWeek}_s${activeSession}`;
+  const intervalRef = useRef(null);
+
+  const getSession = useCallback(() => {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "{}"); } catch { return {}; }
+  }, [SESSION_KEY]);
+
+  const saveSession = useCallback((patch) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ ...existing, ...patch }));
+    } catch {}
+  }, [SESSION_KEY]);
+
   const [chrono, setChrono] = useState(() => {
     try {
-      const saved = localStorage.getItem(CHRONO_KEY);
-      if (saved) return Math.floor((Date.now() - parseInt(saved)) / 1000);
+      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
+      if (s.status === "done") return s.totalTime || 0;
+      if (s.chronoStart && !s.paused) return Math.floor((Date.now() - s.chronoStart) / 1000) + (s.baseElapsed || 0);
+      if (s.baseElapsed) return s.baseElapsed;
     } catch {}
     return 0;
   });
-  const [chronoOn, setChronoOn] = useState(() => {
-    try { return !!localStorage.getItem(CHRONO_KEY); } catch { return false; }
+
+  const [chronoStarted, setChronoStarted] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
+      return !!(s.chronoStart || s.baseElapsed || s.status === "done");
+    } catch { return false; }
   });
-  const intervalRef = useRef(null);
 
+  const [chronoPaused, setChronoPaused] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
+      return !!s.paused;
+    } catch { return false; }
+  });
+
+  const fmt = (s) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+    return `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+  };
+
+  // Tick chrono
   useEffect(() => {
-    if (chronoOn) {
-      // Si pas encore de timestamp, en creer un
-      try {
-        if (!localStorage.getItem(CHRONO_KEY)) {
-          localStorage.setItem(CHRONO_KEY, String(Date.now() - chrono * 1000));
-        }
-      } catch {}
-      intervalRef.current = setInterval(() => {
-        try {
-          const start = parseInt(localStorage.getItem(CHRONO_KEY) || Date.now());
-          setChrono(Math.floor((Date.now() - start) / 1000));
-        } catch {}
-      }, 1000);
-    } else {
-      clearInterval(intervalRef.current);
-      try { localStorage.removeItem(CHRONO_KEY); } catch {}
-    }
+    const s = getSession();
+    if (!s.chronoStart || s.paused || s.status === "done") return;
+    const base = s.baseElapsed || 0;
+    intervalRef.current = setInterval(() => {
+      const sess = getSession();
+      if (sess.chronoStart && !sess.paused) {
+        setChrono(Math.floor((Date.now() - sess.chronoStart) / 1000) + (sess.baseElapsed || base));
+      }
+    }, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [chronoOn]);
+  }, [chronoPaused, chronoStarted, SESSION_KEY]);
 
-  const startChrono = () => {
-    try { localStorage.setItem(CHRONO_KEY, String(Date.now())); } catch {}
+  const startChrono = useCallback(() => {
+    const now = Date.now();
+    saveSession({ chronoStart: now, startedAt: now, status: "active", baseElapsed: 0, paused: false });
+    setChronoStarted(true);
+    setChronoPaused(false);
     setChrono(0);
-    setChronoOn(true);
-  };
+  }, [saveSession]);
 
-  const stopChrono = () => {
-    setChronoOn(false);
-    setChrono(0);
-  };
+  const pauseChrono = useCallback(() => {
+    clearInterval(intervalRef.current);
+    const sess = getSession();
+    const elapsed = Math.floor((Date.now() - (sess.chronoStart || Date.now())) / 1000) + (sess.baseElapsed || 0);
+    saveSession({ paused: true, chronoStart: 0, baseElapsed: elapsed });
+    setChronoPaused(true);
+    setChrono(elapsed);
+  }, [getSession, saveSession]);
 
+  const resumeChrono = useCallback(() => {
+    const now = Date.now();
+    saveSession({ paused: false, chronoStart: now });
+    setChronoPaused(false);
+  }, [saveSession]);
+
+  const stopChrono = useCallback((totalTime) => {
+    clearInterval(intervalRef.current);
+    saveSession({ status: "done", totalTime, chronoStart: 0, paused: false });
+  }, [saveSession]);
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const currentWeek = programme?.weeks?.[activeWeek];
@@ -169,7 +212,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
           <div style={{ height: "100%", width: globalPct + "%", background: G, borderRadius: 1, transition: "width 0.6s ease" }} />
         </div>
 
-        {/* Chrono + Stats */}
+        {/* Stats + Chrono */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           <div style={{ display: "flex", gap: 20 }}>
             <div>
@@ -181,33 +224,27 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
               <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Completees</div>
             </div>
           </div>
-          {chronoOn ? (
-            <div onClick={stopChrono} style={{ textAlign: "right", cursor: "pointer" }}>
-              <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
-                {fmt(chrono).split(":")[0]}<span style={{ color: "rgba(255,255,255,0.3)" }}>:</span>{fmt(chrono).split(":")[1]}
-              </div>
-              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Chrono</div>
+
+          {/* CHRONO */}
+          {sessionTerminee ? (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 28, fontWeight: 100, color: "rgba(255,255,255,0.4)", letterSpacing: "-2px" }}>{fmt(chrono)}</div>
+              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>Duree totale</div>
             </div>
-          ) : (
-            <button onClick={startChrono} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "10px 16px", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-              ▶ Chrono
+          ) : !chronoStarted ? (
+            <button onClick={startChrono} style={{ background: G, color: "#000", border: "none", borderRadius: 100, padding: "10px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              ▶ Démarrer
             </button>
+          ) : (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 28, fontWeight: 100, color: chronoPaused ? "rgba(255,255,255,0.3)" : "#fff", letterSpacing: "-2px", lineHeight: 1 }}>{fmt(chrono)}</div>
+              <button onClick={chronoPaused ? resumeChrono : pauseChrono} style={{ fontSize: 9, color: chronoPaused ? G : "rgba(255,255,255,0.3)", background: "transparent", border: "none", cursor: "pointer", letterSpacing: "1px", textTransform: "uppercase", padding: 0, marginTop: 3 }}>
+                {chronoPaused ? "▶ Reprendre" : "⏸ Pause"}
+              </button>
+            </div>
           )}
         </div>
       </div>
-
-      {/* BANNER SEANCE PARTIELLE */}
-      {showResume && (
-        <div style={{ margin: "0 20px 16px", padding: "14px 18px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24", marginBottom: 3 }}>Seance en cours</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Tu as commence cette seance. Continue !</div>
-          </div>
-          <button onClick={() => setShowResume(false)} style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 100, padding: "6px 14px", fontSize: 11, color: "#fbbf24", fontWeight: 700, cursor: "pointer" }}>
-            Reprendre
-          </button>
-        </div>
-      )}
 
       {/* SEMAINES */}
       <div style={{ marginBottom: 16 }}>
