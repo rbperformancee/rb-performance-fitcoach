@@ -167,7 +167,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
           {/* Onglets */}
           <div style={{ display: "flex", gap: 6 }}>
-            {[["overview","📋 Vue"], ["messages","💬 Message"], ["progress","📈 Progression"], ["nutrition","🥗 Nutrition"]].map(([t, l]) => (
+            {[["overview","📋 Vue"], ["messages","💬 Message"], ["progress","📈 Progression"], ["nutrition","🥗 Nutrition"], ["vivante","⚡ Vivante"]].map(([t, l]) => (
               <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>{l}</button>
             ))}
           </div>
@@ -297,6 +297,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           )}
 
           {/* ── PROGRESSION ── */}
+          {tab === "vivante" && (
+            <div style={{ padding: "16px 0" }}>
+              <SeanceVivanteCoach clientId={client.id} clientName={client.full_name} />
+            </div>
+          )}
           {tab === "nutrition" && nutGoals && (
             <div style={{ padding: "16px 0", display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>
@@ -414,6 +419,116 @@ function CoachSkeleton() {
           <div className="skeleton" style={{ width: 50, height: 22, borderRadius: 20 }} />
         </div>
       ))}
+    </div>
+  );
+}
+
+function SeanceVivanteCoach({ clientId, clientName }) {
+  const [text, setText] = React.useState("");
+  const [sending, setSending] = React.useState(false);
+  const [sent, setSent] = React.useState(false);
+  const [isLive, setIsLive] = React.useState(false);
+  const [recording, setRecording] = React.useState(false);
+  const [audioBlob, setAudioBlob] = React.useState(null);
+  const mediaRef = React.useRef(null);
+  const chunksRef = React.useRef([]);
+  const { supabase: sb } = require("../lib/supabase") || {};
+
+  React.useEffect(() => {
+    if (!clientId) return;
+    // Verifier si le client est en seance live
+    const check = async () => {
+      const { data } = await supabase.from("session_live")
+        .select("active, session_name, started_at")
+        .eq("client_id", clientId)
+        .single();
+      if (data?.active) setIsLive(true);
+    };
+    check();
+    const interval = setInterval(check, 10000);
+    return () => clearInterval(interval);
+  }, [clientId]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRef.current = new MediaRecorder(stream);
+      chunksRef.current = [];
+      mediaRef.current.ondataavailable = e => chunksRef.current.push(e.data);
+      mediaRef.current.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        setAudioBlob(blob);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRef.current.start();
+      setRecording(true);
+      setTimeout(() => stopRecording(), 10000);
+    } catch(e) {
+      alert("Micro non disponible");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRef.current?.state === "recording") {
+      mediaRef.current.stop();
+      setRecording(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!text.trim() && !audioBlob) return;
+    setSending(true);
+    let audioUrl = null;
+
+    if (audioBlob) {
+      const fileName = `flash_${clientId}_${Date.now()}.webm`;
+      const { data: uploadData } = await supabase.storage
+        .from("audio-messages")
+        .upload(fileName, audioBlob, { contentType: "audio/webm" });
+      if (uploadData) {
+        const { data: urlData } = supabase.storage.from("audio-messages").getPublicUrl(fileName);
+        audioUrl = urlData?.publicUrl;
+      }
+    }
+
+    await supabase.from("coach_messages_flash").insert({
+      client_id: clientId,
+      text_message: text.trim() || null,
+      audio_url: audioUrl,
+      expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    });
+
+    setSending(false);
+    setSent(true);
+    setText("");
+    setAudioBlob(null);
+    setTimeout(() => setSent(false), 3000);
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, padding: "10px 14px", background: isLive ? "rgba(2,209,186,0.08)" : "rgba(255,255,255,0.03)", border: `1px solid ${isLive ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.07)"}`, borderRadius: 12 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: isLive ? "#02d1ba" : "#444", animation: isLive ? "pulse 2s infinite" : "none" }} />
+        <div style={{ fontSize: 13, color: isLive ? "#02d1ba" : "rgba(255,255,255,0.3)", fontWeight: 600 }}>
+          {isLive ? `${clientName?.split(" ")[0]} est en seance !` : "Pas en seance actuellement"}
+        </div>
+      </div>
+
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Message flash — apparait en plein ecran pendant sa seance</div>
+
+      <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Ex: Dernier set. Donne tout." maxLength={80}
+        style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
+
+      <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          {recording ? "⏹ Stop (10s max)" : "🎙 Enregistrer vocal"}
+        </button>
+        {audioBlob && <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "#02d1ba" }}>✓ Audio pret</div>}
+      </div>
+
+      <button onClick={sendMessage} disabled={sending || (!text.trim() && !audioBlob)} style={{ width: "100%", padding: 14, background: sent ? "rgba(2,209,186,0.1)" : "#02d1ba", color: sent ? "#02d1ba" : "#000", border: sent ? "1px solid rgba(2,209,186,0.3)" : "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+        {sent ? "✓ Message envoye !" : sending ? "Envoi..." : "Envoyer le message flash"}
+      </button>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import { SeanceVivante } from "./SeanceVivante";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -26,6 +27,17 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
+  const [showResume, setShowResume] = useState(false);
+
+  // Detecter seance partielle au chargement
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `sets_done_${activeWeek}_${activeSession}_0_${today}`;
+    try {
+      const val = localStorage.getItem(key);
+      if (val && parseInt(val) > 0) setShowResume(true);
+    } catch {}
+  }, [activeWeek, activeSession]);
   const CHRONO_KEY = "rb_chrono_start";
   const [chrono, setChrono] = useState(() => {
     try {
@@ -124,6 +136,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
   return (
     <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 120 }}>
+      <SeanceVivante clientId={client?.id} sessionName={currentSession?.name} />
 
       {/* HERO */}
       <div style={{ padding: "0px 20px 16px" }}>
@@ -170,6 +183,19 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
           )}
         </div>
       </div>
+
+      {/* BANNER SEANCE PARTIELLE */}
+      {showResume && (
+        <div style={{ margin: "0 20px 16px", padding: "14px 18px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24", marginBottom: 3 }}>Seance en cours</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Tu as commence cette seance. Continue !</div>
+          </div>
+          <button onClick={() => setShowResume(false)} style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 100, padding: "6px 14px", fontSize: 11, color: "#fbbf24", fontWeight: 700, cursor: "pointer" }}>
+            Reprendre
+          </button>
+        </div>
+      )}
 
       {/* SEMAINES */}
       <div style={{ marginBottom: 16 }}>
