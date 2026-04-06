@@ -111,6 +111,18 @@ function playBeep() {
   } catch(e) {}
 }
 
+function unlockAudio() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    ctx.resume();
+  } catch(e) {}
+}
+
 export function RestTimer({ restSeconds, onDismiss, exName }) {
   const [timeLeft, setTimeLeft] = useState(restSeconds);
   
@@ -257,7 +269,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
   const STROKE = 6;
 
   return (
-    <div style={{
+    <div onClick={unlockAudio} style={{
       position: "fixed", inset: 0, zIndex: 999,
       background: "rgba(0,0,0,0.88)",
       backdropFilter: "blur(20px)",
