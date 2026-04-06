@@ -109,8 +109,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const handleBilan = async () => {
     if (!client?.id || sessionTerminee) return;
     setSessionTerminee(true);
-    setChronoOn(false);
-    try { localStorage.removeItem("rb_chrono_start"); } catch {}
+    stopChrono(chrono);
     await supabase.from("session_logs").insert({
       client_id: client.id,
       session_name: currentSession?.name || "Seance",
@@ -209,7 +208,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             const isDone = i < activeWeek;
             const isActive = i === activeWeek;
             return (
-              <div key={i} onClick={() => setActiveWeek(i)} style={{ flexShrink: 0, width: 76, padding: "14px 10px", borderRadius: 18, textAlign: "center", cursor: "pointer", background: isActive ? G_DIM : "rgba(255,255,255,0.02)", border: isActive ? `1.5px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative" }}>
+              <div key={i} onClick={() => { setActiveWeek(i); setActiveSession(0); setShowResume(false); setSessionTerminee(false); setChrono(0); setChronoOn(false); }} style={{ flexShrink: 0, width: 76, padding: "14px 10px", borderRadius: 18, textAlign: "center", cursor: "pointer", background: isActive ? G_DIM : "rgba(255,255,255,0.02)", border: isActive ? `1.5px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative" }}>
                 {isDone && <div style={{ position: "absolute", top: 7, right: 7, width: 7, height: 7, borderRadius: "50%", background: G }} />}
                 <div style={{ fontSize: 22, fontWeight: isActive ? 800 : 200, color: isActive ? G : isDone ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)", letterSpacing: "-1px" }}>S{i + 1}</div>
                 <div style={{ fontSize: 7, color: isActive ? "rgba(2,209,186,0.6)" : "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>{isDone ? "FAIT" : isActive ? "EN COURS" : "A VENIR"}</div>
@@ -230,7 +229,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             const doneS = (s.exercises || []).filter((_, ei) => (getHistory(activeWeek, i, ei) || []).length > 0).length;
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
             return (
-              <div key={i} onClick={() => setActiveSession(i)} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
+              <div key={i} onClick={() => { setActiveSession(i); setShowResume(false); setSessionTerminee(false); setChrono(0); setChronoOn(false); }} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
                 <div style={{ fontSize: 8, color: isDone ? G : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>{isDone ? "✓ COMPLETE" : isActive ? "AUJOURD HUI" : "A VENIR"}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: isDone ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.3)", marginBottom: 3 }}>{s.name || `Seance ${i + 1}`}</div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 8 }}>{sexs} exercices</div>
