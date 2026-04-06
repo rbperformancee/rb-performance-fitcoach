@@ -28,7 +28,12 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
   const [showResume, setShowResume] = useState(false);
-  const [sessionTerminee, setSessionTerminee] = useState(false);
+  const [sessionTerminee, setSessionTerminee] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
+      return saved.status === "done";
+    } catch { return false; }
+  });
 
   // Detecter seance partielle au chargement
   useEffect(() => {
