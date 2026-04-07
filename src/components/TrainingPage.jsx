@@ -106,6 +106,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
   const handleBilan = async () => {
     if (!client?.id) return;
+    stopChrono(chrono);
     await supabase.from("session_logs").insert({
       client_id: client.id,
       session_name: currentSession?.name || "Seance",
@@ -333,20 +334,80 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         </div>
       )}
 
-      {/* MODAL RESSENTI */}
+      {/* MODAL RPE + RECAP */}
       {showRessenti && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 400, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "28px 20px calc(env(safe-area-inset-bottom,0px) + 28px)", width: "100%", maxWidth: 420 }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 6, letterSpacing: "-1px" }}>Seance terminee.</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 24 }}>Comment tu t es senti ?</div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-              {["😤", "😐", "🙂", "💪", "🔥"].map((e, i) => (
-                <div key={i} onClick={() => handleRessenti(i)} style={{ flex: 1, padding: "14px 0", borderRadius: 16, textAlign: "center", cursor: "pointer", background: selectedRessenti === i ? G_DIM : "rgba(255,255,255,0.02)", border: `1.5px solid ${selectedRessenti === i ? G : "rgba(255,255,255,0.05)"}`, transition: "all 0.15s" }}>
-                  <div style={{ fontSize: 24, marginBottom: 4 }}>{e}</div>
-                  <div style={{ fontSize: 8, color: selectedRessenti === i ? G : "rgba(255,255,255,0.2)" }}>{["Dur", "Ok", "Bien", "Fort", "Top"][i]}</div>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)", zIndex: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "0 0 0 0" }}>
+          <div style={{ width: "100%", maxWidth: 420, background: "#0a0a0a", borderRadius: "28px 28px 0 0", padding: "32px 24px calc(env(safe-area-inset-bottom,0px) + 32px)", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none" }}>
+
+            {selectedRessenti === null ? (
+              /* ETAPE 1 : RPE */
+              <>
+                <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>Seance terminee</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px", marginBottom: 6 }}>Comment tu t'es senti ?</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 28 }}>Ton ressenti aide ton coach a ajuster</div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  {["😤", "😐", "🙂", "💪", "🔥"].map((e, i) => (
+                    <div key={i} onClick={() => handleRessenti(i)} style={{ flex: 1, padding: "16px 0", borderRadius: 18, textAlign: "center", cursor: "pointer", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", transition: "all 0.15s", active: "none" }}>
+                      <div style={{ fontSize: 26, marginBottom: 5 }}>{e}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px" }}>{["Dur", "Ok", "Bien", "Fort", "Top"][i]}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              /* ETAPE 2 : RECAP PREMIUM */
+              <>
+                <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 16 }}>Bilan de seance</div>
+
+                {/* Stats principales */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "16px 12px", textAlign: "center" }}>
+                    <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>{fmt(chrono)}</div>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>Duree</div>
+                  </div>
+                  <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, padding: "16px 12px", textAlign: "center" }}>
+                    <div style={{ fontSize: 28, fontWeight: 100, color: G, letterSpacing: "-1.5px", lineHeight: 1 }}>
+                      {Math.round((currentSession?.exercises || []).reduce((tot, ex, ei) => {
+                        const h = getHistory(activeWeek, activeSession, ei) || [];
+                        if (h.length === 0) return tot;
+                        return tot + (parseFloat(h[h.length-1]?.weight) || 0) * (parseInt(ex.sets)||1) * (parseInt(ex.reps)||1);
+                      }, 0))}
+                    </div>
+                    <div style={{ fontSize: 8, color: "rgba(2,209,186,0.4)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>Vol. kg</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "16px 12px", textAlign: "center" }}>
+                    <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>{doneEx}/{totalEx}</div>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>Exercices</div>
+                  </div>
+                </div>
+
+                {/* RPE + XP */}
+                <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+                  <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ fontSize: 28 }}>{["😤","😐","🙂","💪","🔥"][selectedRessenti]}</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{["Difficile","Correct","Bien","Fort","Au top"][selectedRessenti]}</div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Ressenti</div>
+                    </div>
+                  </div>
+                  <div style={{ background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 18, padding: "14px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: G }}>+40</div>
+                    <div style={{ fontSize: 10, color: "rgba(2,209,186,0.5)", lineHeight: 1.3 }}>XP<br/>gagnes</div>
+                  </div>
+                </div>
+
+                {/* Message motivant */}
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "14px 18px", marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontStyle: "italic", lineHeight: 1.5 }}>
+                    {selectedRessenti >= 3 ? "Seance solide. Ton corps s'adapte. Continue." : selectedRessenti === 2 ? "Bonne seance. La regularite construit les champions." : "Le plus dur c'est d'etre la. Et tu l'as fait."}
+                  </div>
+                </div>
+
+                <button onClick={() => setShowRessenti(false)} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
+                  Terminer ✓
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
