@@ -30,27 +30,35 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [chronoOn, setChronoOn] = useState(false);
   const [chronoDone, setChronoDone] = useState(false);
   const intervalRef = useRef(null);
-  const CKEY = `rb_c_${activeWeek}_${activeSession}`;
+  const ckeyRef = useRef(`rb_c_${activeWeek}_${activeSession}`);
 
-  // Charger depuis localStorage au montage
+  // Mettre a jour la cle quand la seance change
   useEffect(() => {
+    ckeyRef.current = `rb_c_${activeWeek}_${activeSession}`;
+    // Reset le chrono quand on change de seance
+    clearInterval(intervalRef.current);
+    setChronoOn(false);
+    setChronoDone(false);
+    setChrono(0);
+    // Charger depuis localStorage
     try {
-      const raw = localStorage.getItem(CKEY);
+      const raw = localStorage.getItem(ckeyRef.current);
       if (!raw) return;
       const s = JSON.parse(raw);
       if (s.done) { setChrono(s.total || 0); setChronoDone(true); return; }
       if (s.start) {
-        setChrono(Math.floor((Date.now() - s.start) / 1000));
+        const elapsed = Math.floor((Date.now() - s.start) / 1000);
+        setChrono(elapsed > 0 ? elapsed : 0);
         setChronoOn(true);
       }
     } catch(e) {}
-  }, [CKEY]);
+  }, [activeWeek, activeSession]);
 
   // Tick
   useEffect(() => {
     if (!chronoOn) { clearInterval(intervalRef.current); return; }
     try {
-      const raw = localStorage.getItem(CKEY);
+      const raw = localStorage.getItem(ckeyRef.current);
       const s = raw ? JSON.parse(raw) : {};
       const start = s.start || Date.now();
       intervalRef.current = setInterval(() => {
@@ -58,18 +66,18 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       }, 1000);
     } catch(e) {}
     return () => clearInterval(intervalRef.current);
-  }, [chronoOn, CKEY]);
+  }, [chronoOn]);
 
   const startChrono = () => {
     const now = Date.now();
-    try { localStorage.setItem(CKEY, JSON.stringify({ start: now })); } catch(e) {}
+    try { localStorage.setItem(ckeyRef.current, JSON.stringify({ start: now })); } catch(e) {}
     setChrono(0); setChronoOn(true);
   };
 
   const stopChrono = (total) => {
     clearInterval(intervalRef.current);
     setChronoOn(false); setChronoDone(true);
-    try { localStorage.setItem(CKEY, JSON.stringify({ done: true, total })); } catch(e) {}
+    try { localStorage.setItem(ckeyRef.current, JSON.stringify({ done: true, total })); } catch(e) {}
   };
 
   const fmt = (s) => String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
