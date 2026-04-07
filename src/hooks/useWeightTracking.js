@@ -19,17 +19,19 @@ export function useWeightTracking(clientId) {
   }, [clientId]);
 
   const addWeight = useCallback(async (weight, note = '') => {
-    if (!clientId) return;
+    if (!clientId) { console.error('addWeight: clientId manquant'); return; }
     const today = new Date();
     const date = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-    const { error } = await supabase.from('weight_logs').upsert({
+    console.log('addWeight:', { clientId, weight, date });
+    const { data, error } = await supabase.from('weight_logs').upsert({
       client_id: clientId,
       weight: parseFloat(weight),
       note,
       date,
     }, { onConflict: 'client_id,date' });
+    console.log('addWeight result:', { data, error });
     if (error) { console.error('Weight error:', error.message); return { error }; }
-    fetchWeights();
+    await fetchWeights();
     return { success: true };
   }, [clientId, fetchWeights]);
 
