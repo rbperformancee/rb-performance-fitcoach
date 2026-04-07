@@ -175,8 +175,19 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
           <div style={{ fontSize: 13, color: G, fontWeight: 600 }}>Semaine {activeWeek + 1}</div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Avancement</div>
-          <div style={{ fontSize: 11, color: G, fontWeight: 700 }}>{doneSessions}/{totalSessions} seances</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Cette semaine</div>
+            <div style={{ fontSize: 11, color: G, fontWeight: 700 }}>
+              {(currentWeek?.sessions || []).filter((_, i) => i < activeSession || (i === activeSession && sessionValidee)).length}/{currentWeek?.sessions?.length || 0} seances
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+            {(currentWeek?.sessions || []).map((_, i) => {
+              const done = i < activeSession || (i === activeSession && sessionValidee);
+              const active = i === activeSession && !sessionValidee;
+              return <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: done ? G : active ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.06)", transition: "background 0.6s ease" }} />;
+            })}
+          </div>
         </div>
         <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1, marginBottom: 16 }}>
           <div style={{ height: "100%", width: globalPct + "%", background: G, borderRadius: 1, transition: "width 0.6s ease" }} />
