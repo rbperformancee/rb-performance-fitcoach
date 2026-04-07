@@ -250,6 +250,12 @@ export function MiroirTransformation({ clientId }) {
             )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
+          {/* Guide retardateur iOS */}
+          <div style={{ padding: "0 20px 8px", textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", lineHeight: 1.6 }}>
+              Le retardateur est disponible dans l'appareil photo iPhone — icône ⏱ en haut de l'écran
+            </div>
+          </div>
 
           {/* OVERLAY COUNTDOWN */}
           {countdown !== null && (
