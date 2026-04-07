@@ -452,8 +452,12 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported("audio/mp4;codecs=mp4a") ? "audio/mp4" :
-        MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm" : "audio/webm";
+      // Priorite absolue mp4 pour compatibilite iOS Safari
+      let mimeType = "audio/webm";
+      if (MediaRecorder.isTypeSupported("audio/mp4")) mimeType = "audio/mp4";
+      else if (MediaRecorder.isTypeSupported("audio/mp4;codecs=avc1")) mimeType = "audio/mp4;codecs=avc1";
+      else if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) mimeType = "audio/webm;codecs=opus";
+      console.log("Recording format:", mimeType);
       mediaRef.current = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => chunksRef.current.push(e.data);
