@@ -32,15 +32,30 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const intervalRef = useRef(null);
   const ckeyRef = useRef(`rb_c_${activeWeek}_${activeSession}`);
 
-  // Mettre a jour la cle quand la seance change
+  // Charger depuis localStorage une seule fois au montage
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ckeyRef.current);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.done) { setChrono(s.total || 0); setChronoDone(true); return; }
+      if (s.start) {
+        const elapsed = Math.floor((Date.now() - s.start) / 1000);
+        setChrono(elapsed > 0 ? elapsed : 0);
+        setChronoOn(true);
+      }
+    } catch(e) {}
+  }, []);
+
+  // Mettre a jour la cle et reset quand on change de seance
+  const prevSessionRef = useRef(`${activeWeek}_${activeSession}`);
+  useEffect(() => {
+    const cur = `${activeWeek}_${activeSession}`;
+    if (prevSessionRef.current === cur) return;
+    prevSessionRef.current = cur;
     ckeyRef.current = `rb_c_${activeWeek}_${activeSession}`;
-    // Reset le chrono quand on change de seance
     clearInterval(intervalRef.current);
-    setChronoOn(false);
-    setChronoDone(false);
-    setChrono(0);
-    // Charger depuis localStorage
+    setChronoOn(false); setChronoDone(false); setChrono(0);
     try {
       const raw = localStorage.getItem(ckeyRef.current);
       if (!raw) return;
