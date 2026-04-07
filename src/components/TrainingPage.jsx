@@ -32,12 +32,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [dragIdx, setDragIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
   const longPressRef = useRef({});
-  const [sessionTerminee, setSessionTerminee] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek || 0}_s${activeSession || 0}`) || "{}");
-      return saved.status === "done";
-    } catch { return false; }
-  });
+  const [sessionTerminee, setSessionTerminee] = useState(false);
 
   // Detecter seance partielle au chargement
   useEffect(() => {
@@ -62,29 +57,30 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     } catch {}
   }, [SESSION_KEY]);
 
-  const [chrono, setChrono] = useState(() => {
+  const [chrono, setChrono] = useState(0);
+  const [chronoStarted, setChronoStarted] = useState(false);
+  const [chronoPaused, setChronoPaused] = useState(false);
+
+  // Charger depuis localStorage apres le montage
+  useEffect(() => {
     try {
-      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek || 0}_s${activeSession || 0}`) || "{}");
-      if (s.status === "done") return s.totalTime || 0;
-      if (s.chronoStart && !s.paused) return Math.floor((Date.now() - s.chronoStart) / 1000) + (s.baseElapsed || 0);
-      if (s.baseElapsed) return s.baseElapsed;
+      const key = `rb_session_w${activeWeek || 0}_s${activeSession || 0}`;
+      const s = JSON.parse(localStorage.getItem(key) || "{}");
+      if (s.status === "done") {
+        setChrono(s.totalTime || 0);
+        setChronoStarted(true);
+      } else if (s.chronoStart && !s.paused) {
+        const elapsed = Math.floor((Date.now() - s.chronoStart) / 1000) + (s.baseElapsed || 0);
+        setChrono(elapsed);
+        setChronoStarted(true);
+        setChronoPaused(false);
+      } else if (s.baseElapsed) {
+        setChrono(s.baseElapsed);
+        setChronoStarted(true);
+        setChronoPaused(!!s.paused);
+      }
     } catch {}
-    return 0;
-  });
-
-  const [chronoStarted, setChronoStarted] = useState(() => {
-    try {
-      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek || 0}_s${activeSession || 0}`) || "{}");
-      return !!(s.chronoStart || s.baseElapsed || s.status === "done");
-    } catch { return false; }
-  });
-
-  const [chronoPaused, setChronoPaused] = useState(() => {
-    try {
-      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek || 0}_s${activeSession || 0}`) || "{}");
-      return !!s.paused;
-    } catch { return false; }
-  });
+  }, [activeWeek, activeSession]);
 
   const fmt = (s) => {
     const h = Math.floor(s / 3600);
