@@ -44,20 +44,19 @@ export function SeanceVivante({ clientId, sessionName }) {
     };
     checkExisting();
 
-    // Realtime - nouveau message instantane
-    const channel = supabase
-      .channel("flash_" + clientId)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "coach_messages_flash",
-        filter: "client_id=eq." + clientId,
-      }, (payload) => {
-        if (payload.new) showMessage(payload.new);
-      })
-      .subscribe();
+    // Polling toutes les 2s + visibilitychange pour iOS
+    const poll = setInterval(checkExisting, 2000);
+    
+    // Verifier immediatement au retour sur l app
+    const onVisible = () => {
+      if (document.visibilityState === "visible") checkExisting();
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [clientId]);
 
   const showMessage = (data) => {
