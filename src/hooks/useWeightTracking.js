@@ -19,19 +19,19 @@ export function useWeightTracking(clientId) {
   }, [clientId]);
 
   const addWeight = useCallback(async (weight, note = '') => {
-    if (!clientId) { console.error('addWeight: clientId manquant'); return; }
+    if (!clientId) return;
     const today = new Date();
     const date = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-    console.log('addWeight:', { clientId, weight, date });
-    const { data, error } = await supabase.from('weight_logs').upsert({
-      client_id: clientId,
-      weight: parseFloat(weight),
-      note,
-      date,
+    const w = parseFloat(weight);
+    // Optimistic update - mise a jour immediate
+    setWeights(prev => {
+      const filtered = prev.filter(e => e.date?.slice(0,10) !== date);
+      return [...filtered, { date, weight: w, note }].sort((a,b) => a.date > b.date ? 1 : -1);
+    });
+    const { error } = await supabase.from('weight_logs').upsert({
+      client_id: clientId, weight: w, note, date,
     }, { onConflict: 'client_id,date' });
-    console.log('addWeight result:', { data, error });
-    if (error) { console.error('Weight error:', error.message); return { error }; }
-    await fetchWeights();
+    if (error) { console.error('Weight error:', error.message); await fetchWeights(); return { error }; }
     return { success: true };
   }, [clientId, fetchWeights]);
 
@@ -50,14 +50,14 @@ export function useWeightTracking(clientId) {
 
   const deleteWeight = useCallback(async (date) => {
     if (!clientId) return;
-    // Couper la date a 10 caracteres YYYY-MM-DD
     const dateStr = date.slice(0, 10);
+    // Optimistic update - suppression immediate
+    setWeights(prev => prev.filter(e => e.date?.slice(0,10) !== dateStr));
     const { error } = await supabase.from('weight_logs')
       .delete()
       .eq('client_id', clientId)
       .eq('date', dateStr);
-    if (error) console.error('deleteWeight error:', error.message);
-    await fetchWeights();
+    if (error) { console.error('deleteWeight error:', error.message); await fetchWeights(); }
   }, [clientId, fetchWeights]);
 
   return { weights, loading, addWeight, deleteWeight, latest, diff, saveGoal };
