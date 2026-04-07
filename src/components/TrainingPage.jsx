@@ -186,22 +186,22 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
               {(currentWeek?.sessions || []).filter((_, i) => {
                 try {
                   const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${i}`) || "{}");
-                  return !!s.validee || !!s.done;
+                  return !!s.validee;
                 } catch(e) { return false; }
               }).length}/{currentWeek?.sessions?.length || 0} seances
             </div>
           </div>
           <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
             {(currentWeek?.sessions || []).map((_, i) => {
-              // Seance validee si : session precedente OU session active validee
-              let done = false;
+              // Seance validee UNIQUEMENT si validee=true (pas done qui est le chrono)
+              let seanceFaite = false;
               try {
                 const key = `rb_c_${activeWeek}_${i}`;
                 const s = JSON.parse(localStorage.getItem(key) || "{}");
-                done = !!s.validee || !!s.done;
+                seanceFaite = !!s.validee;
               } catch(e) {}
-              const active = i === activeSession && !done;
-              return <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: done ? G : active ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.06)", transition: "background 0.6s ease" }} />;
+              const active = i === activeSession && !seanceFaite;
+              return <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: seanceFaite ? G : active ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.06)", transition: "background 0.6s ease" }} />;
             })}
           </div>
         </div>
