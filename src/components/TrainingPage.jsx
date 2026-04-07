@@ -25,13 +25,34 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
 
-  // Recharger sessionValidee quand on change de seance
+  // Recharger depuis Supabase + localStorage quand on change de seance
   useEffect(() => {
+    // D abord localStorage pour reactivite immediate
     try {
       const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${activeSession}`) || "{}");
       setSessionValidee(!!s.validee);
     } catch(e) { setSessionValidee(false); }
-  }, [activeWeek, activeSession]);
+    // Puis Supabase pour sync cross-device
+    if (client?.id) {
+      supabase.from("session_completions")
+        .select("validated_at, chrono_seconds")
+        .eq("client_id", client.id)
+        .eq("week_idx", activeWeek)
+        .eq("session_idx", activeSession)
+        .single()
+        .then(({ data }) => {
+          if (data?.validated_at) {
+            setSessionValidee(true);
+            // Sync localStorage
+            try {
+              const ckey = `rb_c_${activeWeek}_${activeSession}`;
+              const s = JSON.parse(localStorage.getItem(ckey) || "{}");
+              localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true, done: true, total: data.chrono_seconds || 0 }));
+            } catch(e) {}
+          }
+        });
+    }
+  }, [activeWeek, activeSession, client?.id]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
@@ -85,10 +106,16 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     setChrono(0); setChronoDone(false); setChronoOn(true);
   };
 
-  const stopChrono = (total) => {
+  const stopChrono = async (total) => {
     clearInterval(intervalRef.current);
     setChronoOn(false); setChronoDone(true);
     try { localStorage.setItem(CKEY, JSON.stringify({ done: true, total })); } catch(e) {}
+    if (client?.id) {
+      await supabase.from("session_completions").upsert({
+        client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
+        chrono_seconds: total
+      }, { onConflict: "client_id,week_idx,session_idx" });
+    }
   };
 
   const fmt = (s) => String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
@@ -469,11 +496,21 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                 <button onClick={() => {
                     setShowRessenti(false);
                     setSessionValidee(true);
+                    // Sauvegarder dans localStorage
                     try {
                       const ckey = `rb_c_${activeWeek}_${activeSession}`;
                       const s = JSON.parse(localStorage.getItem(ckey) || "{}");
                       localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
                     } catch(e) {}
+                    // Sauvegarder dans Supabase
+                    if (client?.id) {
+                      supabase.from("session_completions").upsert({
+                        client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
+                        validated_at: new Date().toISOString(),
+                        chrono_seconds: chrono,
+                        rpe: selectedRessenti + 1
+                      }, { onConflict: "client_id,week_idx,session_idx" });
+                    }
                   }} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
                   Terminer ✓
                 </button>
