@@ -8,6 +8,7 @@ export function SeanceVivante({ clientId, sessionName }) {
   const [playing, setPlaying] = useState(false);
   const [visible, setVisible] = useState(false);
   const audioRef = useRef(null);
+  const lastMessageIdRef = useRef(null);
 
   // Notifier le coach que la seance a commence
   useEffect(() => {
@@ -60,10 +61,13 @@ export function SeanceVivante({ clientId, sessionName }) {
   }, [clientId]);
 
   const showMessage = (data) => {
+    // Ne pas afficher si deja vu
+    if (lastMessageIdRef.current === data.id) return;
+    lastMessageIdRef.current = data.id;
     setMessage(data);
     setVisible(true);
     if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-    // Marquer comme lu
+    // Marquer comme lu immediatement
     supabase.from("coach_messages_flash")
       .update({ read_at: new Date().toISOString() })
       .eq("id", data.id);
