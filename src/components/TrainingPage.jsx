@@ -23,7 +23,12 @@ function StatusDot({ status }) {
 
 export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta }) {
   const [showRessenti, setShowRessenti] = useState(false);
-  const [sessionValidee, setSessionValidee] = useState(false);
+  const [sessionValidee, setSessionValidee] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${activeSession}`) || "{}");
+      return !!s.validee;
+    } catch(e) { return false; }
+  });
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
@@ -442,7 +447,15 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                   </div>
                 </div>
 
-                <button onClick={() => { setShowRessenti(false); setSessionValidee(true); }} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
+                <button onClick={() => {
+                    setShowRessenti(false);
+                    setSessionValidee(true);
+                    try {
+                      const ckey = `rb_c_${activeWeek}_${activeSession}`;
+                      const s = JSON.parse(localStorage.getItem(ckey) || "{}");
+                      localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
+                    } catch(e) {}
+                  }} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
                   Terminer ✓
                 </button>
               </>
