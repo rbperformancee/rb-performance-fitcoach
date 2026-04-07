@@ -329,11 +329,9 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             </div>
             <button onClick={async (e) => {
               e.stopPropagation();
-              if (window.confirm("Supprimer cette pesee ?")) {
-                await deleteWeight(selectedDay.date);
-                setSelectedDay(null);
-              }
-            }} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 14, color: "#ef4444", flexShrink: 0 }}>✕</button>
+              await deleteWeight(selectedDay.date);
+              setSelectedDay(null);
+            }} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13, color: "#ef4444", flexShrink: 0 }}>✕</button>
           </div>
         )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
