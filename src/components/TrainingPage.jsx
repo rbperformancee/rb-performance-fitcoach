@@ -108,12 +108,37 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const handleBilan = async () => {
     if (!client?.id) return;
     stopChrono(chrono);
+
+    // 1. Logger la seance
     await supabase.from("session_logs").insert({
       client_id: client.id,
       session_name: currentSession?.name || "Seance",
       programme_name: programme?.name || "Programme",
       logged_at: new Date().toISOString(),
     });
+
+    // 2. Compter le nombre de seances completees pour les badges
+    const { data: logs } = await supabase
+      .from("session_logs")
+      .select("id")
+      .eq("client_id", client.id);
+    const totalDone = (logs?.length || 0);
+
+    // 3. Badges automatiques
+    const badges = [];
+    if (totalDone === 1) badges.push({ client_id: client.id, badge_id: "first_session", earned_at: new Date().toISOString() });
+    if (totalDone === 10) badges.push({ client_id: client.id, badge_id: "ten_sessions", earned_at: new Date().toISOString() });
+    if (totalDone === 50) badges.push({ client_id: client.id, badge_id: "fifty_sessions", earned_at: new Date().toISOString() });
+    if (badges.length > 0) {
+      await supabase.from("client_badges").upsert(badges, { onConflict: "client_id,badge_id" });
+    }
+
+    // 4. XP +40 via daily_tracking
+    const today = new Date().toISOString().split("T")[0];
+    const { data: dt } = await supabase.from("daily_tracking").select("xp").eq("client_id", client.id).eq("date", today).single();
+    const currentXP = dt?.xp || 0;
+    await supabase.from("daily_tracking").upsert({ client_id: client.id, date: today, xp: currentXP + 40 }, { onConflict: "client_id,date" });
+
     if (navigator.vibrate) navigator.vibrate([50, 30, 100, 30, 150]);
     setShowRessenti(true);
   };
@@ -140,6 +165,25 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* HERO */}
       <div style={{ padding: "0px 20px 16px" }}>
+        {/* BARRE PROGRESSION SEMAINE */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "2px", textTransform: "uppercase" }}>Semaine {activeWeek + 1}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: G }}>
+              {currentWeek?.sessions?.filter((_, i) => i < activeSession || (i === activeSession && sessionValidee)).length || 0}/{currentWeek?.sessions?.length || 0} seances
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 4 }}>
+            {(currentWeek?.sessions || []).map((_, i) => {
+              const done = i < activeSession || (i === activeSession && sessionValidee);
+              const active = i === activeSession && !sessionValidee;
+              return (
+                <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: done ? G : active ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.07)", transition: "background 0.5s ease" }} />
+              );
+            })}
+          </div>
+        </div>
+
         <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Programme</div>
         <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.9, marginBottom: 10 }}>
           Train<span style={{ color: G }}>.</span>
