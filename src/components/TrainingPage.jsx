@@ -41,10 +41,9 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
   // Detecter seance partielle au chargement
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    const key = `sets_done_${activeWeek}_${activeSession}_0_${today}`;
+    const resumeKey = `sets_done_${activeWeek}_${activeSession}_0_${new Date().toISOString().slice(0, 10)}`;
     try {
-      const val = localStorage.getItem(key);
+      const val = localStorage.getItem(resumeKey);
       if (val && parseInt(val) > 0) setShowResume(true);
     } catch {}
   }, [activeWeek, activeSession]);
@@ -433,10 +432,10 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
               const nom = prompt("Nom de l exercice de remplacement ?");
               if (nom) {
                 try {
-                  const key = `rb_replace_w${activeWeek}_s${activeSession}`;
-                  const existing = JSON.parse(localStorage.getItem(key) || "[]");
-                  existing.push(nom);
-                  localStorage.setItem(key, JSON.stringify(existing));
+                  const replaceKey = `rb_replace_w${activeWeek}_s${activeSession}`;
+                  const replaceList = JSON.parse(localStorage.getItem(replaceKey) || "[]");
+                  replaceList.push(nom);
+                  localStorage.setItem(replaceKey, JSON.stringify(replaceList));
                 } catch {}
                 setShowOptions(false);
               }
