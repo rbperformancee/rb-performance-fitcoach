@@ -48,8 +48,14 @@ export function useWeightTracking(clientId) {
 
   const deleteWeight = useCallback(async (date) => {
     if (!clientId) return;
-    await supabase.from('weight_logs').delete().eq('client_id', clientId).eq('date', date);
-    fetchWeights();
+    // Couper la date a 10 caracteres YYYY-MM-DD
+    const dateStr = date.slice(0, 10);
+    const { error } = await supabase.from('weight_logs')
+      .delete()
+      .eq('client_id', clientId)
+      .eq('date', dateStr);
+    if (error) console.error('deleteWeight error:', error.message);
+    await fetchWeights();
   }, [clientId, fetchWeights]);
 
   return { weights, loading, addWeight, deleteWeight, latest, diff, saveGoal };
