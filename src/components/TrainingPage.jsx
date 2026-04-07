@@ -45,7 +45,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   useEffect(() => {
     if (!chronoOn || chronoPaused) { clearInterval(intervalRef.current); return; }
     try {
-      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
       const start = s.start || Date.now();
       const base = s.base || 0;
       intervalRef.current = setInterval(() => {
@@ -64,7 +63,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const pauseChrono = () => {
     clearInterval(intervalRef.current);
     try {
-      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
       const elapsed = Math.floor((Date.now() - (s.start || Date.now())) / 1000) + (s.base || 0);
       localStorage.setItem(SESSION_KEY, JSON.stringify({ base: elapsed, paused: true }));
     } catch {}
@@ -72,9 +70,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   };
 
   const resumeChrono = () => {
-    const now = Date.now();
     try {
-      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
       localStorage.setItem(SESSION_KEY, JSON.stringify({ start: now, base: s.base || 0, paused: false }));
     } catch {}
     setChronoPaused(false);
@@ -96,7 +92,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
-  const intervalRef = useRef(null);
   const startRef = useRef(null);
 
   useEffect(() => {
@@ -111,7 +106,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     return () => clearInterval(intervalRef.current);
   }, [chronoOn]);
 
-  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const currentWeek = programme?.weeks?.[activeWeek];
   const currentSession = currentWeek?.sessions?.[activeSession];
@@ -123,13 +117,11 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const sessionPct = totalEx > 0 ? Math.round((doneEx / totalEx) * 100) : 0;
 
   const volumeTotal = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
-    const h = getHistory(activeWeek, activeSession, ei) || [];
     if (h.length === 0) return tot;
     return tot + (parseFloat(h[h.length - 1]?.weight) || 0) * (parseInt(ex.sets) || 1) * (parseInt(ex.reps) || 1);
   }, 0);
 
   const seriesDone = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
-    const h = getHistory(activeWeek, activeSession, ei) || [];
     return tot + (h.length > 0 ? parseInt(ex.sets) || 1 : 0);
   }, 0);
 
@@ -235,8 +227,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, padding: "0 20px" }}>Seances</div>
         <div style={{ display: "flex", gap: 10, overflowX: "auto", scrollbarWidth: "none", padding: "0 20px 4px" }}>
           {currentWeek.sessions.map((s, i) => {
-            const isDone = i < activeSession;
-            const isActive = i === activeSession;
             const sexs = s.exercises?.length || 0;
             const doneS = (s.exercises || []).filter((_, ei) => (getHistory(activeWeek, i, ei) || []).length > 0).length;
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
@@ -294,7 +284,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         {(currentSession.exercises || []).map((ex, ei) => {
           const history = getHistory(activeWeek, activeSession, ei) || [];
           const status = getProgressStatus(history);
-          const isDone = history.length > 0;
           const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
           const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
           return (
