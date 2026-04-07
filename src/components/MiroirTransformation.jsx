@@ -51,16 +51,13 @@ export function MiroirTransformation({ clientId }) {
     setLoading(false);
   };
 
-  const startCountdown = () => {
-    setCountdown(3);
+  const startCountdown = (secs = 3) => {
+    setCountdown(secs);
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setTimeout(() => {
-            fileRef.current?.click();
-            setCountdown(null);
-          }, 100);
+          setTimeout(() => { fileRef.current?.click(); setCountdown(null); }, 100);
           return null;
         }
         return prev - 1;
@@ -244,9 +241,14 @@ export function MiroirTransformation({ clientId }) {
                 {uploading ? "Analyse IA en cours... 🧠" : "Lancer l analyse IA"}
               </button>
             ) : (
-              <button onClick={startCountdown} style={{ width: "100%", padding: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 16, fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-                Ajouter photo {ANGLE_LABELS[ANGLES[currentAngle]]}
-              </button>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => fileRef.current?.click()} style={{ flex: 1, padding: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  📷 Photo directe
+                </button>
+                <button onClick={() => startCountdown(3)} style={{ flex: 1, padding: 14, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", color: "#02d1ba", borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  ⏱ 3s retardateur
+                </button>
+              </div>
             )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
