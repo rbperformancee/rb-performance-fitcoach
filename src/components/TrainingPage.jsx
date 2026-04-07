@@ -23,12 +23,15 @@ function StatusDot({ status }) {
 
 export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta }) {
   const [showRessenti, setShowRessenti] = useState(false);
-  const [sessionValidee, setSessionValidee] = useState(() => {
+  const [sessionValidee, setSessionValidee] = useState(false);
+
+  // Recharger sessionValidee quand on change de seance
+  useEffect(() => {
     try {
       const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${activeSession}`) || "{}");
-      return !!s.validee;
-    } catch(e) { return false; }
-  });
+      setSessionValidee(!!s.validee);
+    } catch(e) { setSessionValidee(false); }
+  }, [activeWeek, activeSession]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
