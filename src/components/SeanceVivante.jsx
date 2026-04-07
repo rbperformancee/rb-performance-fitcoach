@@ -9,6 +9,7 @@ export function SeanceVivante({ clientId, sessionName }) {
   const [visible, setVisible] = useState(false);
   const audioRef = useRef(null);
   const lastMessageIdRef = useRef(null);
+  const mountedAtRef = useRef(new Date().toISOString());
 
   // Notifier le coach que la seance a commence
   useEffect(() => {
@@ -38,6 +39,7 @@ export function SeanceVivante({ clientId, sessionName }) {
         .eq("client_id", clientId)
         .is("read_at", null)
         .gt("expires_at", new Date().toISOString())
+        .gt("created_at", mountedAtRef.current)
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
