@@ -79,19 +79,19 @@ export function SeanceVivante({ clientId, sessionName }) {
     if (!message?.audio_url) return;
     try {
       if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-      audioRef.current = new Audio(message.audio_url);
-      audioRef.current.playbackRate = 1.0;
-      await audioRef.current.play();
-      setPlaying(true);
+      // Unlock audio context iOS
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) { const ctx = new AudioCtx(); ctx.resume(); }
+      audioRef.current = new Audio();
+      audioRef.current.src = message.audio_url;
+      audioRef.current.preload = "auto";
+      audioRef.current.onerror = (e) => { console.error("Audio error:", e.target?.error); setPlaying(false); };
       audioRef.current.onended = () => setPlaying(false);
-      audioRef.current.onerror = (e) => {
-        console.error("Audio error:", e);
-        setPlaying(false);
+      audioRef.current.oncanplay = async () => {
+        try { await audioRef.current.play(); setPlaying(true); } catch(e) { console.error("Play:", e); }
       };
-    } catch(e) {
-      console.error("Play failed:", e);
-      setPlaying(false);
-    }
+      audioRef.current.load();
+    } catch(e) { console.error("Audio setup:", e); }
   };
 
   const dismiss = () => {
