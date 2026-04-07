@@ -23,6 +23,7 @@ function StatusDot({ status }) {
 
 export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta }) {
   const [showRessenti, setShowRessenti] = useState(false);
+  const [sessionValidee, setSessionValidee] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
@@ -213,11 +214,13 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
             return (
               <div key={i} onClick={() => setActiveSession(i)} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
-                <div style={{ fontSize: 8, color: isDone ? G : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>{isDone ? "✓ COMPLETE" : isActive ? "AUJOURD HUI" : "A VENIR"}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: isDone ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.3)", marginBottom: 3 }}>{s.name || `Seance ${i + 1}`}</div>
+                <div style={{ fontSize: 8, color: (isDone || (isActive && sessionValidee)) ? G : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>
+                  {isDone || (isActive && sessionValidee) ? "✓ COMPLETE" : isActive ? "AUJOURD HUI" : "A VENIR"}
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: isDone || (isActive && sessionValidee) ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.3)", marginBottom: 3 }}>{s.name || `Seance ${i + 1}`}</div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 8 }}>{sexs} exercices</div>
                 <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
-                  <div style={{ height: "100%", width: pct + "%", background: G, borderRadius: 1 }} />
+                  <div style={{ height: "100%", width: (isActive && sessionValidee) ? "100%" : pct + "%", background: G, borderRadius: 1, transition: "width 0.8s ease" }} />
                 </div>
               </div>
             );
@@ -403,7 +406,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                   </div>
                 </div>
 
-                <button onClick={() => setShowRessenti(false)} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
+                <button onClick={() => { setShowRessenti(false); setSessionValidee(true); }} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
                   Terminer ✓
                 </button>
               </>
