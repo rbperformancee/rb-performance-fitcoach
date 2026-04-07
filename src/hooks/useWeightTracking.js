@@ -46,5 +46,11 @@ export function useWeightTracking(clientId) {
   const first = weights[0];
   const diff = latest && first ? (latest.weight - first.weight).toFixed(1) : null;
 
-  return { weights, loading, addWeight, latest, diff, saveGoal };
+  const deleteWeight = useCallback(async (date) => {
+    if (!clientId) return;
+    await supabase.from('weight_logs').delete().eq('client_id', clientId).eq('date', date);
+    fetchWeights();
+  }, [clientId, fetchWeights]);
+
+  return { weights, loading, addWeight, deleteWeight, latest, diff, saveGoal };
 }
