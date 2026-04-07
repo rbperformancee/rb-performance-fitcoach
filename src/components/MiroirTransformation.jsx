@@ -167,10 +167,20 @@ export function MiroirTransformation({ clientId }) {
           {selectedSession.analyses?.face && (
             <div>
               <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10 }}>Analyse IA</div>
-              {selectedSession.analyses.face.message_coach && (
-                <div style={{ padding: "14px 16px", background: G_DIM, border: "1px solid " + G_BORDER, borderRadius: 16, marginBottom: 12 }}>
-                  <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "2px", marginBottom: 6 }}>MESSAGE IA</div>
-                  <div style={{ fontSize: 14, color: "#fff", fontStyle: "italic", lineHeight: 1.5 }}>"{selectedSession.analyses.face.message_coach}"</div>
+              {(selectedSession.analyses.face.message_client || selectedSession.analyses.face.insight_coach) && (
+                <div style={{ marginBottom: 12 }}>
+                  {selectedSession.analyses.face.message_client && (
+                    <div style={{ padding: "14px 16px", background: G_DIM, border: "1px solid " + G_BORDER, borderRadius: 16, marginBottom: 8 }}>
+                      <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "2px", marginBottom: 6 }}>POUR TOI</div>
+                      <div style={{ fontSize: 14, color: "#fff", fontStyle: "italic", lineHeight: 1.5 }}>"{selectedSession.analyses.face.message_client}"</div>
+                    </div>
+                  )}
+                  {selectedSession.analyses.face.insight_coach && (
+                    <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16 }}>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", marginBottom: 6 }}>INSIGHT COACH</div>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{selectedSession.analyses.face.insight_coach}</div>
+                    </div>
+                  )}
                 </div>
               )}
               {ANGLES.map(angle => {
@@ -182,10 +192,20 @@ export function MiroirTransformation({ clientId }) {
                       <div style={{ fontSize: 12, fontWeight: 700 }}>{ANGLE_LABELS[angle]}</div>
                       {a.score_global && <div style={{ fontSize: 11, color: G, fontWeight: 700 }}>{a.score_global}/10</div>}
                     </div>
-                    {a.posture && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 8, lineHeight: 1.4 }}>{a.posture}</div>}
+                    {a.posture && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 10, lineHeight: 1.4 }}>{a.posture}</div>}
+                    {a.metriques && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
+                        {Object.entries(a.metriques).filter(([,v]) => v !== "baseline").map(([k, v]) => (
+                          <div key={k} style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.05)" }}>
+                            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 3 }}>{k}</div>
+                            <div style={{ fontSize: 11, color: v.includes("+") || v.includes("Amelior") || v.includes("Meilleur") || v.includes("Progression") ? G : v.includes("Regression") || v.includes("corriger") ? "#ef4444" : "rgba(255,255,255,0.6)", fontWeight: 600 }}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {a.points_forts?.map((p, i) => <div key={i} style={{ fontSize: 11, color: G, marginBottom: 3 }}>✓ {p}</div>)}
                     {a.axes_amelioration?.map((p, i) => <div key={i} style={{ fontSize: 11, color: "rgba(251,191,36,0.8)", marginBottom: 3 }}>→ {p}</div>)}
-                    {a.evolution && a.evolution !== "baseline" && <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Evolution: {a.evolution}</div>}
+                    {a.evolution_globale && a.evolution_globale !== "Session initiale" && <div style={{ marginTop: 8, padding: "6px 10px", background: "rgba(2,209,186,0.05)", borderRadius: 8, fontSize: 10, color: G, fontStyle: "italic" }}>{a.evolution_globale}</div>}
                   </div>
                 );
               })}
