@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 
 export default function WeightChart({ clientId, client, programme, appData }) {
-  const tracking = useWeightTracking(appData ? null : clientId);
+  const tracking = useWeightTracking(clientId);
   const weights = appData?.weights?.length > 0 ? appData.weights : tracking.weights;
   const loading = appData ? appData.loading : tracking.loading;
   const { addWeight, deleteWeight, saveGoal } = tracking;
