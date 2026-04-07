@@ -3,8 +3,9 @@ import { useWeightTracking } from "../hooks/useWeightTracking";
 
 export default function WeightChart({ clientId, client, programme, appData }) {
   const tracking = useWeightTracking(clientId);
-  const weights = appData?.weights?.length > 0 ? appData.weights : tracking.weights;
-  const loading = appData ? appData.loading : tracking.loading;
+  // Toujours utiliser tracking.weights pour avoir l optimistic update
+  const weights = tracking.weights.length > 0 ? tracking.weights : (appData?.weights || []);
+  const loading = tracking.loading;
   const { addWeight, deleteWeight, saveGoal } = tracking;
   const latest = weights[weights.length - 1];
   const first = weights[0];
