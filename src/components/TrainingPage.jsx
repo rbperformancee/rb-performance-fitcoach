@@ -125,7 +125,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       rpe: idx + 1,
       date: new Date().toISOString().split("T")[0],
     });
-    setTimeout(() => setShowRessenti(false), 800);
+    // Ne pas fermer automatiquement - laisser l utilisateur voir le recap
   };
 
   if (!programme || !currentWeek || !currentSession) return (
