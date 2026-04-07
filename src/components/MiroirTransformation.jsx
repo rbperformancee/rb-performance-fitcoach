@@ -233,7 +233,7 @@ export function MiroirTransformation({ clientId }) {
                   {currentAngle === 1 && "Tourne-toi completement, dos a l objectif"}
                   {currentAngle === 2 && "Vue de profil, bras le long du corps"}
                 </div>
-                <div style={{ padding: "10px 20px", background: G, borderRadius: 100, fontSize: 13, fontWeight: 700, color: "#000" }}>Prendre la photo</div>
+                <div style={{ padding: "10px 20px", background: G, borderRadius: 100, fontSize: 13, fontWeight: 700, color: "#000" }}>Choisir depuis la galerie</div>
               </div>
             )}
           </div>
@@ -245,15 +245,15 @@ export function MiroirTransformation({ clientId }) {
               </button>
             ) : (
               <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 16, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                📷 Prendre la photo
+                📷 Choisir depuis la galerie
               </button>
             )}
           </div>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
           {/* Guide retardateur iOS */}
           <div style={{ padding: "0 20px 8px", textAlign: "center" }}>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", lineHeight: 1.6 }}>
-              Le retardateur est disponible dans l'appareil photo iPhone — icône ⏱ en haut de l'écran
+              
             </div>
           </div>
 
