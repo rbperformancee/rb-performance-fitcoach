@@ -9,7 +9,6 @@ export function SeanceVivante({ clientId, sessionName }) {
   const [visible, setVisible] = useState(false);
   const audioRef = useRef(null);
   const lastMessageIdRef = useRef(null);
-  const lastMessageIdRef = useRef(null);
 
   // Notifier le coach que la seance a commence
   useEffect(() => {
