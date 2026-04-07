@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { SeanceVivante } from "./SeanceVivante";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -24,113 +23,97 @@ function StatusDot({ status }) {
 
 export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta }) {
   const [showRessenti, setShowRessenti] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);
-  const [selectedRessenti, setSelectedRessenti] = useState(null);
-  const [showResume, setShowResume] = useState(false);
-  const [exercisesOrder, setExercisesOrder] = useState(null);
-  const [dragIdx, setDragIdx] = useState(null);
-  const [dragOverIdx, setDragOverIdx] = useState(null);
-  const longPressRef = useRef({});
-  const [sessionTerminee, setSessionTerminee] = useState(false);
-
-  // Detecter seance partielle au chargement
-  useEffect(() => {
-    const resumeKey = `sets_done_${activeWeek}_${activeSession}_0_${new Date().toISOString().slice(0, 10)}`;
-    try {
-      const val = localStorage.getItem(resumeKey);
-      if (val && parseInt(val) > 0) setShowResume(true);
-    } catch {}
-  }, [activeWeek, activeSession]);
-  // CHRONO — bouton Demarrer manuel, pause, resume, persistant
-  const SESSION_KEY = `rb_session_w${activeWeek || 0}_s${activeSession || 0}`;
-  const intervalRef = useRef(null);
-
-  const getSession = useCallback(() => {
-    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "{}"); } catch { return {}; }
-  }, [SESSION_KEY]);
-
-  const saveSession = useCallback((patch) => {
-    try {
-      const existing = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ ...existing, ...patch }));
-    } catch {}
-  }, [SESSION_KEY]);
-
   const [chrono, setChrono] = useState(0);
-  const [chronoStarted, setChronoStarted] = useState(false);
+  const [chronoOn, setChronoOn] = useState(false);
   const [chronoPaused, setChronoPaused] = useState(false);
+  const intervalRef = useRef(null);
+  const SESSION_KEY = `rb_chrono_${activeWeek}_${activeSession}`;
 
-  // Charger depuis localStorage apres le montage
   useEffect(() => {
     try {
-      const key = `rb_session_w${activeWeek || 0}_s${activeSession || 0}`;
-      const s = JSON.parse(localStorage.getItem(key) || "{}");
-      if (s.status === "done") {
-        setChrono(s.totalTime || 0);
-        setChronoStarted(true);
-      } else if (s.chronoStart && !s.paused) {
-        const elapsed = Math.floor((Date.now() - s.chronoStart) / 1000) + (s.baseElapsed || 0);
-        setChrono(elapsed);
-        setChronoStarted(true);
-        setChronoPaused(false);
-      } else if (s.baseElapsed) {
-        setChrono(s.baseElapsed);
-        setChronoStarted(true);
-        setChronoPaused(!!s.paused);
+      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
+      if (s.done) { setChrono(s.total || 0); setChronoOn(false); return; }
+      if (s.start && !s.paused) {
+        setChrono(Math.floor((Date.now() - s.start) / 1000) + (s.base || 0));
+        setChronoOn(true); setChronoPaused(false);
+      } else if (s.base) {
+        setChrono(s.base); setChronoOn(true); setChronoPaused(true);
       }
     } catch {}
   }, [activeWeek, activeSession]);
+
+  useEffect(() => {
+    if (!chronoOn || chronoPaused) { clearInterval(intervalRef.current); return; }
+    try {
+      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
+      const start = s.start || Date.now();
+      const base = s.base || 0;
+      intervalRef.current = setInterval(() => {
+        setChrono(Math.floor((Date.now() - start) / 1000) + base);
+      }, 1000);
+    } catch {}
+    return () => clearInterval(intervalRef.current);
+  }, [chronoOn, chronoPaused]);
+
+  const startChrono = () => {
+    const now = Date.now();
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify({ start: now, base: 0, paused: false })); } catch {}
+    setChrono(0); setChronoOn(true); setChronoPaused(false);
+  };
+
+  const pauseChrono = () => {
+    clearInterval(intervalRef.current);
+    try {
+      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
+      const elapsed = Math.floor((Date.now() - (s.start || Date.now())) / 1000) + (s.base || 0);
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ base: elapsed, paused: true }));
+    } catch {}
+    setChronoPaused(true);
+  };
+
+  const resumeChrono = () => {
+    const now = Date.now();
+    try {
+      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ start: now, base: s.base || 0, paused: false }));
+    } catch {}
+    setChronoPaused(false);
+  };
+
+  const stopChrono = (total) => {
+    clearInterval(intervalRef.current);
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify({ done: true, total })); } catch {}
+    setChronoOn(false);
+  };
 
   const fmt = (s) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
-    return `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+    if (h > 0) return h + ":" + String(m).padStart(2,"0") + ":" + String(sec).padStart(2,"0");
+    return String(m).padStart(2,"0") + ":" + String(sec).padStart(2,"0");
   };
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const [selectedRessenti, setSelectedRessenti] = useState(null);
+  const [chrono, setChrono] = useState(0);
+  const [chronoOn, setChronoOn] = useState(false);
+  const intervalRef = useRef(null);
+  const startRef = useRef(null);
 
-  // Tick chrono
   useEffect(() => {
-    const s = getSession();
-    if (!s.chronoStart || s.paused || s.status === "done") return;
-    const base = s.baseElapsed || 0;
-    intervalRef.current = setInterval(() => {
-      const sess = getSession();
-      if (sess.chronoStart && !sess.paused) {
-        setChrono(Math.floor((Date.now() - sess.chronoStart) / 1000) + (sess.baseElapsed || base));
-      }
-    }, 1000);
+    if (chronoOn) {
+      startRef.current = Date.now() - chrono * 1000;
+      intervalRef.current = setInterval(() => {
+        setChrono(Math.floor((Date.now() - startRef.current) / 1000));
+      }, 1000);
+    } else {
+      clearInterval(intervalRef.current);
+    }
     return () => clearInterval(intervalRef.current);
-  }, [chronoPaused, chronoStarted, SESSION_KEY]);
+  }, [chronoOn]);
 
-  const startChrono = useCallback(() => {
-    const now = Date.now();
-    saveSession({ chronoStart: now, startedAt: now, status: "active", baseElapsed: 0, paused: false });
-    setChronoStarted(true);
-    setChronoPaused(false);
-    setChrono(0);
-  }, [saveSession]);
-
-  const pauseChrono = useCallback(() => {
-    clearInterval(intervalRef.current);
-    const sess = getSession();
-    const elapsed = Math.floor((Date.now() - (sess.chronoStart || Date.now())) / 1000) + (sess.baseElapsed || 0);
-    saveSession({ paused: true, chronoStart: 0, baseElapsed: elapsed });
-    setChronoPaused(true);
-    setChrono(elapsed);
-  }, [getSession, saveSession]);
-
-  const resumeChrono = useCallback(() => {
-    const now = Date.now();
-    saveSession({ paused: false, chronoStart: now });
-    setChronoPaused(false);
-  }, [saveSession]);
-
-  const stopChrono = useCallback((totalTime) => {
-    clearInterval(intervalRef.current);
-    saveSession({ status: "done", totalTime, chronoStart: 0, paused: false });
-  }, [saveSession]);
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const currentWeek = programme?.weeks?.[activeWeek];
   const currentSession = currentWeek?.sessions?.[activeSession];
@@ -153,8 +136,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   }, 0);
 
   const handleBilan = async () => {
-    if (!client?.id || sessionTerminee) return;
-    setSessionTerminee(true);
+    if (!client?.id) return;
     stopChrono(chrono);
     await supabase.from("session_logs").insert({
       client_id: client.id,
@@ -185,7 +167,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
   return (
     <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 120 }}>
-      <SeanceVivante clientId={client?.id} sessionName={currentSession?.name} />
 
       {/* HERO */}
       <div style={{ padding: "0px 20px 16px" }}>
@@ -206,7 +187,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
           <div style={{ height: "100%", width: globalPct + "%", background: G, borderRadius: 1, transition: "width 0.6s ease" }} />
         </div>
 
-        {/* Stats + Chrono */}
+        {/* Chrono + Stats */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           <div style={{ display: "flex", gap: 20 }}>
             <div>
@@ -218,24 +199,17 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
               <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Completees</div>
             </div>
           </div>
-
-          {/* CHRONO */}
-          {sessionTerminee ? (
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 28, fontWeight: 100, color: "rgba(255,255,255,0.4)", letterSpacing: "-2px" }}>{fmt(chrono)}</div>
-              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>Duree totale</div>
+          {chronoOn ? (
+            <div onClick={() => setChronoOn(false)} style={{ textAlign: "right", cursor: "pointer" }}>
+              <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
+                {fmt(chrono).split(":")[0]}<span style={{ color: "rgba(255,255,255,0.3)" }}>:</span>{fmt(chrono).split(":")[1]}
+              </div>
+              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Chrono</div>
             </div>
-          ) : !chronoStarted ? (
-            <button onClick={startChrono} style={{ background: G, color: "#000", border: "none", borderRadius: 100, padding: "10px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-              ▶ Démarrer
-            </button>
           ) : (
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 28, fontWeight: 100, color: chronoPaused ? "rgba(255,255,255,0.3)" : "#fff", letterSpacing: "-2px", lineHeight: 1 }}>{fmt(chrono)}</div>
-              <button onClick={chronoPaused ? resumeChrono : pauseChrono} style={{ fontSize: 9, color: chronoPaused ? G : "rgba(255,255,255,0.3)", background: "transparent", border: "none", cursor: "pointer", letterSpacing: "1px", textTransform: "uppercase", padding: 0, marginTop: 3 }}>
-                {chronoPaused ? "▶ Reprendre" : "⏸ Pause"}
-              </button>
-            </div>
+            <button onClick={() => setChronoOn(true)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "10px 16px", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              ▶ Chrono
+            </button>
           )}
         </div>
       </div>
@@ -248,7 +222,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             const isDone = i < activeWeek;
             const isActive = i === activeWeek;
             return (
-              <div key={i} onClick={() => { setActiveWeek(i); setActiveSession(0); setShowResume(false); setSessionTerminee(false); setChrono(0); setChronoOn(false); }} style={{ flexShrink: 0, width: 76, padding: "14px 10px", borderRadius: 18, textAlign: "center", cursor: "pointer", background: isActive ? G_DIM : "rgba(255,255,255,0.02)", border: isActive ? `1.5px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative" }}>
+              <div key={i} onClick={() => setActiveWeek(i)} style={{ flexShrink: 0, width: 76, padding: "14px 10px", borderRadius: 18, textAlign: "center", cursor: "pointer", background: isActive ? G_DIM : "rgba(255,255,255,0.02)", border: isActive ? `1.5px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative" }}>
                 {isDone && <div style={{ position: "absolute", top: 7, right: 7, width: 7, height: 7, borderRadius: "50%", background: G }} />}
                 <div style={{ fontSize: 22, fontWeight: isActive ? 800 : 200, color: isActive ? G : isDone ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)", letterSpacing: "-1px" }}>S{i + 1}</div>
                 <div style={{ fontSize: 7, color: isActive ? "rgba(2,209,186,0.6)" : "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>{isDone ? "FAIT" : isActive ? "EN COURS" : "A VENIR"}</div>
@@ -269,7 +243,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             const doneS = (s.exercises || []).filter((_, ei) => (getHistory(activeWeek, i, ei) || []).length > 0).length;
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
             return (
-              <div key={i} onClick={() => { setActiveSession(i); setShowResume(false); setSessionTerminee(false); setChrono(0); setChronoOn(false); }} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
+              <div key={i} onClick={() => setActiveSession(i)} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
                 <div style={{ fontSize: 8, color: isDone ? G : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>{isDone ? "✓ COMPLETE" : isActive ? "AUJOURD HUI" : "A VENIR"}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: isDone ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.3)", marginBottom: 3 }}>{s.name || `Seance ${i + 1}`}</div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 8 }}>{sexs} exercices</div>
@@ -319,36 +293,14 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {/* EXERCICES */}
       <div style={{ padding: "0 20px" }}>
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>Exercices</div>
-        {getExercises().map((ex, ei) => {
+        {(currentSession.exercises || []).map((ex, ei) => {
           const history = getHistory(activeWeek, activeSession, ei) || [];
           const status = getProgressStatus(history);
           const isDone = history.length > 0;
           const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
           const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
-          const isDragging = dragIdx === ei;
-          const isDragOver = dragOverIdx === ei;
           return (
-            <div key={ei}
-              onTouchStart={() => !isDone && handleLongPress(ei)}
-              onTouchEnd={() => { handleLongPressEnd(ei); if (dragIdx !== null) handleDrop(ei); }}
-              onTouchMove={() => handleLongPressEnd(ei)}
-              onMouseEnter={() => handleDragOver(ei)}
-              style={{
-                marginBottom: 10,
-                opacity: isDragging ? 0.4 : isDone ? 1 : (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4,
-                transform: isDragOver && !isDone ? "translateY(-4px)" : "none",
-                transition: "transform 0.15s ease, opacity 0.2s ease",
-                cursor: isDone ? "default" : "grab",
-              }}>
-              {!isDone && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, paddingLeft: 4 }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" style={{ width: 14, height: 14 }}>
-                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-                    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-                  </svg>
-                  <span style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", letterSpacing: "1px" }}>MAINTENIR POUR DEPLACER</span>
-                </div>
-              )}
+            <div key={ei} style={{ marginBottom: 10, opacity: isDone ? 1 : (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4 }}>
               <ExerciseCard
                 ex={ex}
                 weekIdx={activeWeek}
@@ -370,9 +322,9 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* BOUTON TERMINER */}
       <div style={{ padding: "20px 20px 0" }}>
-        <div onClick={() => !sessionTerminee && setShowConfirm(true)} style={{ padding: "16px 20px", background: sessionTerminee ? "rgba(255,255,255,0.03)" : G_DIM, border: `1px solid ${sessionTerminee ? "rgba(255,255,255,0.06)" : G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: sessionTerminee ? "not-allowed" : "pointer", opacity: sessionTerminee ? 0.5 : 1, transition: "all 0.3s ease" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: sessionTerminee ? "rgba(255,255,255,0.3)" : G }}>{sessionTerminee ? "Seance terminee ✓" : "Terminer la seance"}</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{sessionTerminee ? `Duree : ${fmt(chrono)}` : `${doneEx}/${totalEx} · +40 XP`}</div>
+        <div onClick={() => setShowConfirm(true)} style={{ padding: "16px 20px", background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: G }}>Terminer la seance</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{doneEx}/{totalEx} · +40 XP</div>
         </div>
       </div>
 
@@ -380,72 +332,21 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {showOptions && (
         <div onClick={() => setShowOptions(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "24px 20px calc(env(safe-area-inset-bottom,0px) + 24px)", width: "100%", maxWidth: 420 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Options</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>{currentSession?.name}</div>
-
-            {/* Reporter */}
-            <div onClick={async () => {
-              await supabase.from("session_logs").insert({
-                client_id: client?.id,
-                session_name: (currentSession?.name || "Seance") + " (Reportee)",
-                programme_name: programme?.name,
-                logged_at: new Date().toISOString(),
-                note: "REPORTEE",
-              });
-              setShowOptions(false);
-              alert("Seance reportee. Ton coach est notifie.");
-            }} style={{ padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" style={{ width: 18, height: 18 }}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#60a5fa", marginBottom: 2 }}>Reporter la seance</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Notifie ton coach automatiquement</div>
-              </div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Options de seance</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+              {[
+                { label: "Reporter", sub: "Au lendemain" },
+                { label: "Repos", sub: "Journee de repos" },
+                { label: "Remplacer", sub: "Un exercice" },
+                { label: "Reordonner", sub: "Les exercices" },
+              ].map(({ label, sub }) => (
+                <div key={label} onClick={() => setShowOptions(false)} style={{ padding: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer" }}>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 600, marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{sub}</div>
+                </div>
+              ))}
             </div>
-
-            {/* Repos */}
-            <div onClick={async () => {
-              await supabase.from("daily_tracking").upsert({
-                client_id: client?.id,
-                date: new Date().toISOString().split("T")[0],
-                repos: true,
-              }, { onConflict: "client_id,date" });
-              setShowOptions(false);
-              alert("Journee de repos enregistree.");
-            }} style={{ padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" style={{ width: 18, height: 18 }}><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#a78bfa", marginBottom: 2 }}>Journee de repos</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Repos actif — visible par ton coach</div>
-              </div>
-            </div>
-
-            {/* Remplacer exercice */}
-            <div onClick={() => {
-              const nom = prompt("Nom de l exercice de remplacement ?");
-              if (nom) {
-                try {
-                  const replaceKey = `rb_replace_w${activeWeek}_s${activeSession}`;
-                  const replaceList = JSON.parse(localStorage.getItem(replaceKey) || "[]");
-                  replaceList.push(nom);
-                  localStorage.setItem(replaceKey, JSON.stringify(replaceList));
-                } catch {}
-                setShowOptions(false);
-              }
-            }} style={{ padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" style={{ width: 18, height: 18 }}><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#34d399", marginBottom: 2 }}>Remplacer un exercice</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Sauvegarde pour cette seance uniquement</div>
-              </div>
-            </div>
-
-            <button onClick={() => setShowOptions(false)} style={{ width: "100%", padding: 14, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.3)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
+            <button onClick={() => setShowOptions(false)} style={{ width: "100%", padding: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.4)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
           </div>
         </div>
       )}
