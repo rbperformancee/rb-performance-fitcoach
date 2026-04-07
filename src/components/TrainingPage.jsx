@@ -294,9 +294,9 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* BOUTON TERMINER */}
       <div style={{ padding: "20px 20px 0" }}>
-        <div onClick={() => setShowConfirm(true)} style={{ padding: "16px 20px", background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: G }}>Terminer la seance</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{doneEx}/{totalEx} · +40 XP</div>
+        <div onClick={() => !sessionValidee && setShowConfirm(true)} style={{ padding: "16px 20px", background: sessionValidee ? "rgba(2,209,186,0.05)" : G_DIM, border: `1px solid ${sessionValidee ? "rgba(2,209,186,0.15)" : G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: sessionValidee ? "default" : "pointer", opacity: sessionValidee ? 0.7 : 1, transition: "all 0.5s ease" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: G }}>{sessionValidee ? "✓ Seance validee" : "Terminer la seance"}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{sessionValidee ? fmt(chrono) : `${doneEx}/${totalEx} · +40 XP`}</div>
         </div>
       </div>
 
