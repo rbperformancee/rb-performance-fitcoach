@@ -26,11 +26,28 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
-  const [chrono, setChrono] = useState(0);
-  const [chronoOn, setChronoOn] = useState(false);
-  const [chronoDone, setChronoDone] = useState(false);
-  const intervalRef = useRef(null);
   const CKEY = `rb_c_${activeWeek}_${activeSession}`;
+  const [chrono, setChrono] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${activeSession}`) || "{}");
+      if (s.done) return s.total || 0;
+      if (s.start) return Math.floor((Date.now() - s.start) / 1000);
+    } catch(e) {}
+    return 0;
+  });
+  const [chronoOn, setChronoOn] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${activeSession}`) || "{}");
+      return !!(s.start && !s.done);
+    } catch(e) { return false; }
+  });
+  const [chronoDone, setChronoDone] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${activeSession}`) || "{}");
+      return !!s.done;
+    } catch(e) { return false; }
+  });
+  const intervalRef = useRef(null);
 
   // Un seul effet - relit le timestamp a chaque tick
   useEffect(() => {
