@@ -28,22 +28,51 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [selectedRessenti, setSelectedRessenti] = useState(null);
   const [chrono, setChrono] = useState(0);
   const [chronoOn, setChronoOn] = useState(false);
+  const [chronoDone, setChronoDone] = useState(false);
   const intervalRef = useRef(null);
-  const startRef = useRef(null);
+  const CKEY = `rb_c_${activeWeek}_${activeSession}`;
 
+  // Charger depuis localStorage au montage
   useEffect(() => {
-    if (chronoOn) {
-      startRef.current = Date.now() - chrono * 1000;
-      intervalRef.current = setInterval(() => {
-        setChrono(Math.floor((Date.now() - startRef.current) / 1000));
-      }, 1000);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-    return () => clearInterval(intervalRef.current);
-  }, [chronoOn]);
+    try {
+      const raw = localStorage.getItem(CKEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.done) { setChrono(s.total || 0); setChronoDone(true); return; }
+      if (s.start) {
+        setChrono(Math.floor((Date.now() - s.start) / 1000));
+        setChronoOn(true);
+      }
+    } catch(e) {}
+  }, [CKEY]);
 
-  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  // Tick
+  useEffect(() => {
+    if (!chronoOn) { clearInterval(intervalRef.current); return; }
+    try {
+      const raw = localStorage.getItem(CKEY);
+      const s = raw ? JSON.parse(raw) : {};
+      const start = s.start || Date.now();
+      intervalRef.current = setInterval(() => {
+        setChrono(Math.floor((Date.now() - start) / 1000));
+      }, 1000);
+    } catch(e) {}
+    return () => clearInterval(intervalRef.current);
+  }, [chronoOn, CKEY]);
+
+  const startChrono = () => {
+    const now = Date.now();
+    try { localStorage.setItem(CKEY, JSON.stringify({ start: now })); } catch(e) {}
+    setChrono(0); setChronoOn(true);
+  };
+
+  const stopChrono = (total) => {
+    clearInterval(intervalRef.current);
+    setChronoOn(false); setChronoDone(true);
+    try { localStorage.setItem(CKEY, JSON.stringify({ done: true, total })); } catch(e) {}
+  };
+
+  const fmt = (s) => String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
 
   const currentWeek = programme?.weeks?.[activeWeek];
   const currentSession = currentWeek?.sessions?.[activeSession];
@@ -73,6 +102,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       programme_name: programme?.name || "Programme",
       logged_at: new Date().toISOString(),
     });
+    stopChrono(chrono);
     if (navigator.vibrate) navigator.vibrate([50, 30, 100, 30, 150]);
     setShowRessenti(true);
   };
