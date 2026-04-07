@@ -36,19 +36,29 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   // Charger depuis localStorage quand la seance change
   useEffect(() => {
     clearInterval(intervalRef.current);
-    setChronoOn(false); setChronoDone(false); setChrono(0);
     const ckey = getCKey();
     try {
       const raw = localStorage.getItem(ckey);
-      if (!raw) return;
-      const s = JSON.parse(raw);
-      if (!s || typeof s !== 'object') return;
-      if (s.done === true) { setChrono(s.total || 0); setChronoDone(true); return; }
-      if (s.start > 0) {
-        const elapsed = Math.floor((Date.now() - s.start) / 1000);
-        if (elapsed > 0 && elapsed < 86400) { setChrono(elapsed); setChronoOn(true); }
+      if (!raw) {
+        // Nouvelle seance - reset propre
+        setChronoOn(false); setChronoDone(false); setChrono(0);
+        return;
       }
-    } catch(e) {}
+      const s = JSON.parse(raw);
+      if (!s || typeof s !== 'object') { setChronoOn(false); setChronoDone(false); setChrono(0); return; }
+      if (s.done === true) {
+        // Seance terminee - afficher duree totale
+        setChronoOn(false); setChronoDone(true); setChrono(s.total || 0);
+        return;
+      }
+      if (s.start > 0) {
+        // Seance en cours - recalculer le temps ecoule depuis le timestamp
+        const elapsed = Math.floor((Date.now() - s.start) / 1000);
+        setChrono(elapsed > 0 ? elapsed : 0);
+        setChronoDone(false);
+        setChronoOn(true); // Redemarrer le tick
+      }
+    } catch(e) { setChronoOn(false); setChronoDone(false); setChrono(0); }
   }, [activeWeek, activeSession]);
 
   // Tick
