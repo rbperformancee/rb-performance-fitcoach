@@ -452,7 +452,9 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRef.current = new MediaRecorder(stream);
+      const mimeType = MediaRecorder.isTypeSupported("audio/mp4;codecs=mp4a") ? "audio/mp4" :
+        MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm" : "audio/webm";
+      mediaRef.current = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => chunksRef.current.push(e.data);
       mediaRef.current.onstop = () => {
