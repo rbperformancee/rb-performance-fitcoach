@@ -165,25 +165,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* HERO */}
       <div style={{ padding: "0px 20px 16px" }}>
-        {/* BARRE PROGRESSION SEMAINE */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "2px", textTransform: "uppercase" }}>Semaine {activeWeek + 1}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: G }}>
-              {currentWeek?.sessions?.filter((_, i) => i < activeSession || (i === activeSession && sessionValidee)).length || 0}/{currentWeek?.sessions?.length || 0} seances
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 4 }}>
-            {(currentWeek?.sessions || []).map((_, i) => {
-              const done = i < activeSession || (i === activeSession && sessionValidee);
-              const active = i === activeSession && !sessionValidee;
-              return (
-                <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: done ? G : active ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.07)", transition: "background 0.5s ease" }} />
-              );
-            })}
-          </div>
-        </div>
-
         <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Programme</div>
         <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.9, marginBottom: 10 }}>
           Train<span style={{ color: G }}>.</span>
