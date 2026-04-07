@@ -456,7 +456,8 @@ function SeanceVivanteCoach({ clientId, clientName }) {
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => chunksRef.current.push(e.data);
       mediaRef.current.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const mimeType = MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg";
+        const blob = new Blob(chunksRef.current, { type: mimeType });
         setAudioBlob(blob);
         stream.getTracks().forEach(t => t.stop());
       };
@@ -484,7 +485,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
       const fileName = `flash_${clientId}_${Date.now()}.webm`;
       const { data: uploadData } = await supabase.storage
         .from("audio-messages")
-        .upload(fileName, audioBlob, { contentType: "audio/webm" });
+        .upload(fileName, audioBlob, { contentType: audioBlob.type || "audio/webm" });
       if (uploadData) {
         const { data: urlData } = supabase.storage.from("audio-messages").getPublicUrl(fileName);
         audioUrl = urlData?.publicUrl;

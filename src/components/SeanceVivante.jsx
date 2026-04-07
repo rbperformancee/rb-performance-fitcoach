@@ -9,6 +9,7 @@ export function SeanceVivante({ clientId, sessionName }) {
   const [visible, setVisible] = useState(false);
   const audioRef = useRef(null);
   const lastMessageIdRef = useRef(null);
+  const lastMessageIdRef = useRef(null);
 
   // Notifier le coach que la seance a commence
   useEffect(() => {
@@ -73,18 +74,23 @@ export function SeanceVivante({ clientId, sessionName }) {
       .eq("id", data.id);
   };
 
-  const playAudio = () => {
+  const playAudio = async () => {
     if (!message?.audio_url) return;
-    // Unlock AudioContext iOS
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      ctx.resume();
-    } catch(e) {}
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    audioRef.current = new Audio(message.audio_url);
-    audioRef.current.play();
-    setPlaying(true);
-    audioRef.current.onended = () => setPlaying(false);
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+      audioRef.current = new Audio(message.audio_url);
+      audioRef.current.playbackRate = 1.0;
+      await audioRef.current.play();
+      setPlaying(true);
+      audioRef.current.onended = () => setPlaying(false);
+      audioRef.current.onerror = (e) => {
+        console.error("Audio error:", e);
+        setPlaying(false);
+      };
+    } catch(e) {
+      console.error("Play failed:", e);
+      setPlaying(false);
+    }
   };
 
   const dismiss = () => {
