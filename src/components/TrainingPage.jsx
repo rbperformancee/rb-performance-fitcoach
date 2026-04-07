@@ -61,17 +61,20 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     } catch(e) { setChronoOn(false); setChronoDone(false); setChrono(0); }
   }, [activeWeek, activeSession]);
 
-  // Tick
+  // Tick + visibilitychange pour iOS
   useEffect(() => {
     if (!chronoOn) { clearInterval(intervalRef.current); return; }
     const ckey = getCKey();
-    const raw = localStorage.getItem(ckey);
-    const s = raw ? (() => { try { return JSON.parse(raw); } catch(e) { return {}; } })() : {};
-    const start = (s && s.start > 0) ? s.start : Date.now();
-    intervalRef.current = setInterval(() => {
-      setChrono(Math.floor((Date.now() - start) / 1000));
-    }, 1000);
-    return () => clearInterval(intervalRef.current);
+    const getStart = () => {
+      try { const s = JSON.parse(localStorage.getItem(ckey) || "{}"); return s.start || Date.now(); } catch(e) { return Date.now(); }
+    };
+    const tick = () => setChrono(Math.floor((Date.now() - getStart()) / 1000));
+    tick();
+    intervalRef.current = setInterval(tick, 1000);
+    // Quand on revient sur l app apres iOS suspend
+    const onVisible = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(intervalRef.current); document.removeEventListener("visibilitychange", onVisible); };
   }, [chronoOn, activeWeek, activeSession]);
 
   const startChrono = () => {
