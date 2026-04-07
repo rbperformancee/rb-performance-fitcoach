@@ -151,15 +151,15 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             </div>
           </div>
           {chronoOn ? (
-            <div onClick={() => setChronoOn(false)} style={{ textAlign: "right", cursor: "pointer" }}>
+            <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
                 {fmt(chrono).split(":")[0]}<span style={{ color: "rgba(255,255,255,0.3)" }}>:</span>{fmt(chrono).split(":")[1]}
               </div>
               <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Chrono</div>
             </div>
           ) : (
-            <button onClick={() => setChronoOn(true)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "10px 16px", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-              ▶ Chrono
+            <button onClick={startChrono} style={{ background: "#02d1ba", color: "#000", border: "none", borderRadius: 100, padding: "10px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              ▶ Démarrer
             </button>
           )}
         </div>
