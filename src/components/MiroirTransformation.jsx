@@ -201,7 +201,10 @@ export function MiroirTransformation({ clientId }) {
               <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase" }}>Nouvelle analyse</div>
               <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-1px" }}>Photos 3 angles</div>
             </div>
-            <button onClick={() => setShowCapture(false)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "50%", width: 36, height: 36, color: "rgba(255,255,255,0.4)", fontSize: 16, cursor: "pointer" }}>✕</button>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <button onClick={() => startCountdown(3)} style={{ background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, padding: "8px 14px", color: "#02d1ba", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>⏱ 3s</button>
+              <button onClick={() => setShowCapture(false)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "50%", width: 36, height: 36, color: "rgba(255,255,255,0.4)", fontSize: 16, cursor: "pointer" }}>✕</button>
+            </div>
           </div>
 
           <div style={{ padding: "16px 20px" }}>
@@ -222,7 +225,7 @@ export function MiroirTransformation({ clientId }) {
                 <button onClick={() => setCapturedPhotos(prev => { const n = {...prev}; delete n[ANGLES[currentAngle]]; return n; })} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.6)", border: "none", borderRadius: "50%", width: 30, height: 30, color: "#fff", cursor: "pointer" }}>✕</button>
               </div>
             ) : (
-              <div onClick={startCountdown} style={{ width: "100%", maxWidth: 260, aspectRatio: "3/4", borderRadius: 20, background: "rgba(255,255,255,0.02)", border: "2px dashed rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 12 }}>
+              <div onClick={() => fileRef.current?.click()} style={{ width: "100%", maxWidth: 260, aspectRatio: "3/4", borderRadius: 20, background: "rgba(255,255,255,0.02)", border: "2px dashed rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 12 }}>
                 <div style={{ fontSize: 48 }}>{ANGLE_ICONS[ANGLES[currentAngle]]}</div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>Photo {ANGLE_LABELS[ANGLES[currentAngle]]}</div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", lineHeight: 1.5, padding: "0 20px" }}>
@@ -241,14 +244,9 @@ export function MiroirTransformation({ clientId }) {
                 {uploading ? "Analyse IA en cours... 🧠" : "Lancer l analyse IA"}
               </button>
             ) : (
-              <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => fileRef.current?.click()} style={{ flex: 1, padding: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                  📷 Photo directe
-                </button>
-                <button onClick={() => startCountdown(3)} style={{ flex: 1, padding: 14, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", color: "#02d1ba", borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                  ⏱ 3s retardateur
-                </button>
-              </div>
+              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 16, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                📷 Prendre la photo
+              </button>
             )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
