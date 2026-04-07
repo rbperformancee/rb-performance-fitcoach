@@ -1,3 +1,4 @@
+import { MiroirTransformation } from "./MiroirTransformation";
 import React, { useState, useEffect } from "react";
 import AvatarPicker from "./AvatarPicker";
 import { BadgeSystem } from "./BadgeSystem";
@@ -222,6 +223,10 @@ export default function ProfilePage({ client, onLogout, appData }) {
           </button>
         </div>
 
+      </div>
+      {/* MIROIR DE TRANSFORMATION */}
+      <div style={{ margin: "0 0 20px" }}>
+        <MiroirTransformation clientId={client?.id} clientName={client?.full_name} />
       </div>
     </div>
   );
