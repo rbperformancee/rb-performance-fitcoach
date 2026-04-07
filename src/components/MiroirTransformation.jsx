@@ -38,6 +38,7 @@ export function MiroirTransformation({ clientId }) {
   const [capturedPhotos, setCapturedPhotos] = useState({});
   const [uploading, setUploading] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [countdown, setCountdown] = useState(null);
   const fileRef = useRef(null);
 
   useEffect(() => { if (clientId) fetchSessions(); }, [clientId]);
@@ -48,6 +49,23 @@ export function MiroirTransformation({ clientId }) {
     setSessions(data || []);
     if (data?.length > 0) setSelectedSession(data[0]);
     setLoading(false);
+  };
+
+  const startCountdown = () => {
+    setCountdown(3);
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setTimeout(() => {
+            fileRef.current?.click();
+            setCountdown(null);
+          }, 100);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const handleFile = (e) => {
@@ -207,7 +225,7 @@ export function MiroirTransformation({ clientId }) {
                 <button onClick={() => setCapturedPhotos(prev => { const n = {...prev}; delete n[ANGLES[currentAngle]]; return n; })} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.6)", border: "none", borderRadius: "50%", width: 30, height: 30, color: "#fff", cursor: "pointer" }}>✕</button>
               </div>
             ) : (
-              <div onClick={() => fileRef.current?.click()} style={{ width: "100%", maxWidth: 260, aspectRatio: "3/4", borderRadius: 20, background: "rgba(255,255,255,0.02)", border: "2px dashed rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 12 }}>
+              <div onClick={startCountdown} style={{ width: "100%", maxWidth: 260, aspectRatio: "3/4", borderRadius: 20, background: "rgba(255,255,255,0.02)", border: "2px dashed rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 12 }}>
                 <div style={{ fontSize: 48 }}>{ANGLE_ICONS[ANGLES[currentAngle]]}</div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>Photo {ANGLE_LABELS[ANGLES[currentAngle]]}</div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", lineHeight: 1.5, padding: "0 20px" }}>
@@ -226,12 +244,25 @@ export function MiroirTransformation({ clientId }) {
                 {uploading ? "Analyse IA en cours... 🧠" : "Lancer l analyse IA"}
               </button>
             ) : (
-              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 16, fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+              <button onClick={startCountdown} style={{ width: "100%", padding: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 16, fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
                 Ajouter photo {ANGLE_LABELS[ANGLES[currentAngle]]}
               </button>
             )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
+
+          {/* OVERLAY COUNTDOWN */}
+          {countdown !== null && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+              <div style={{ fontSize: 120, fontWeight: 100, color: "#02d1ba", letterSpacing: "-8px", lineHeight: 1, animation: "pulse 1s ease infinite" }}>
+                {countdown}
+              </div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginTop: 16 }}>
+                Prépare-toi...
+              </div>
+              <style>{`@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:0.8} }`}</style>
+            </div>
+          )}
         </div>
       )}
     </div>
