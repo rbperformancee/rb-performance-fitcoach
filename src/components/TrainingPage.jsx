@@ -30,41 +30,23 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [chronoOn, setChronoOn] = useState(false);
   const [chronoDone, setChronoDone] = useState(false);
   const intervalRef = useRef(null);
-  const ckeyRef = useRef(`rb_c_${activeWeek}_${activeSession}`);
+  // Chrono - cle calculee a chaque fois depuis les props actuelles
+  const getCKey = () => `rb_c_${activeWeek}_${activeSession}`;
 
-  // Charger depuis localStorage une seule fois au montage
+  // Charger depuis localStorage quand la seance change
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(ckeyRef.current);
-      if (!raw) return;
-      const s = JSON.parse(raw);
-      if (s.done) { setChrono(s.total || 0); setChronoDone(true); return; }
-      if (s.start) {
-        const elapsed = Math.floor((Date.now() - s.start) / 1000);
-        setChrono(elapsed > 0 ? elapsed : 0);
-        setChronoOn(true);
-      }
-    } catch(e) {}
-  }, []);
-
-  // Mettre a jour la cle et reset quand on change de seance
-  const prevSessionRef = useRef(`${activeWeek}_${activeSession}`);
-  useEffect(() => {
-    const cur = `${activeWeek}_${activeSession}`;
-    if (prevSessionRef.current === cur) return;
-    prevSessionRef.current = cur;
-    ckeyRef.current = `rb_c_${activeWeek}_${activeSession}`;
     clearInterval(intervalRef.current);
     setChronoOn(false); setChronoDone(false); setChrono(0);
+    const ckey = getCKey();
     try {
-      const raw = localStorage.getItem(ckeyRef.current);
+      const raw = localStorage.getItem(ckey);
       if (!raw) return;
       const s = JSON.parse(raw);
-      if (s.done) { setChrono(s.total || 0); setChronoDone(true); return; }
-      if (s.start) {
+      if (!s || typeof s !== 'object') return;
+      if (s.done === true) { setChrono(s.total || 0); setChronoDone(true); return; }
+      if (s.start > 0) {
         const elapsed = Math.floor((Date.now() - s.start) / 1000);
-        setChrono(elapsed > 0 ? elapsed : 0);
-        setChronoOn(true);
+        if (elapsed > 0 && elapsed < 86400) { setChrono(elapsed); setChronoOn(true); }
       }
     } catch(e) {}
   }, [activeWeek, activeSession]);
@@ -72,27 +54,28 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   // Tick
   useEffect(() => {
     if (!chronoOn) { clearInterval(intervalRef.current); return; }
-    try {
-      const raw = localStorage.getItem(ckeyRef.current);
-      const s = raw ? JSON.parse(raw) : {};
-      const start = s.start || Date.now();
-      intervalRef.current = setInterval(() => {
-        setChrono(Math.floor((Date.now() - start) / 1000));
-      }, 1000);
-    } catch(e) {}
+    const ckey = getCKey();
+    const raw = localStorage.getItem(ckey);
+    const s = raw ? (() => { try { return JSON.parse(raw); } catch(e) { return {}; } })() : {};
+    const start = (s && s.start > 0) ? s.start : Date.now();
+    intervalRef.current = setInterval(() => {
+      setChrono(Math.floor((Date.now() - start) / 1000));
+    }, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [chronoOn]);
+  }, [chronoOn, activeWeek, activeSession]);
 
   const startChrono = () => {
     const now = Date.now();
-    try { localStorage.setItem(ckeyRef.current, JSON.stringify({ start: now })); } catch(e) {}
+    const ckey = getCKey();
+    try { localStorage.setItem(ckey, JSON.stringify({ start: now })); } catch(e) {}
     setChrono(0); setChronoOn(true);
   };
 
   const stopChrono = (total) => {
     clearInterval(intervalRef.current);
+    const ckey = getCKey();
     setChronoOn(false); setChronoDone(true);
-    try { localStorage.setItem(ckeyRef.current, JSON.stringify({ done: true, total })); } catch(e) {}
+    try { localStorage.setItem(ckey, JSON.stringify({ done: true, total })); } catch(e) {}
   };
 
   const fmt = (s) => String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
