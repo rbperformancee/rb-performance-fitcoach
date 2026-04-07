@@ -6,6 +6,7 @@ import ProfilePage from "./components/ProfilePage";
 import FuelPage from "./components/FuelPage";
 import MovePage from "./components/MovePage";
 import { useAppData } from "./hooks/useAppData";
+import { SeanceVivante } from "./components/SeanceVivante";
 import TrainingPage from "./components/TrainingPage";
 
 function SkeletonLoader() {
@@ -450,6 +451,7 @@ export default function App() {
       )}
 
       {/* ── App principale ── */}
+      {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
       {programme && !authError && (
         <>
           {page === "training" ? (

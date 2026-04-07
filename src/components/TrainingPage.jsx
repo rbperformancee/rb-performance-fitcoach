@@ -1,4 +1,3 @@
-import { SeanceVivante } from "./SeanceVivante";
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
@@ -198,7 +197,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
   return (
     <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 120 }}>
-      <SeanceVivante clientId={client?.id} sessionName={currentSession?.name} />
 
       {/* HERO */}
       <div style={{ padding: "0px 20px 16px" }}>
