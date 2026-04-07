@@ -96,8 +96,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
-  const [chrono, setChrono] = useState(0);
-  const [chronoOn, setChronoOn] = useState(false);
   const intervalRef = useRef(null);
   const startRef = useRef(null);
 
