@@ -34,7 +34,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const longPressRef = useRef({});
   const [sessionTerminee, setSessionTerminee] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
+      const saved = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek || 0}_s${activeSession || 0}`) || "{}");
       return saved.status === "done";
     } catch { return false; }
   });
@@ -48,7 +48,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     } catch {}
   }, [activeWeek, activeSession]);
   // CHRONO — bouton Demarrer manuel, pause, resume, persistant
-  const SESSION_KEY = `rb_session_w${activeWeek}_s${activeSession}`;
+  const SESSION_KEY = `rb_session_w${activeWeek || 0}_s${activeSession || 0}`;
   const intervalRef = useRef(null);
 
   const getSession = useCallback(() => {
@@ -64,7 +64,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
   const [chrono, setChrono] = useState(() => {
     try {
-      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
+      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek || 0}_s${activeSession || 0}`) || "{}");
       if (s.status === "done") return s.totalTime || 0;
       if (s.chronoStart && !s.paused) return Math.floor((Date.now() - s.chronoStart) / 1000) + (s.baseElapsed || 0);
       if (s.baseElapsed) return s.baseElapsed;
@@ -74,14 +74,14 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
   const [chronoStarted, setChronoStarted] = useState(() => {
     try {
-      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
+      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek || 0}_s${activeSession || 0}`) || "{}");
       return !!(s.chronoStart || s.baseElapsed || s.status === "done");
     } catch { return false; }
   });
 
   const [chronoPaused, setChronoPaused] = useState(() => {
     try {
-      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek}_s${activeSession}`) || "{}");
+      const s = JSON.parse(localStorage.getItem(`rb_session_w${activeWeek || 0}_s${activeSession || 0}`) || "{}");
       return !!s.paused;
     } catch { return false; }
   });
