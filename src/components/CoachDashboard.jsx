@@ -428,21 +428,20 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   const [sending, setSending] = React.useState(false);
   const [sent, setSent] = React.useState(false);
   const [isLive, setIsLive] = React.useState(false);
+  const [liveSession, setLiveSession] = React.useState(null);
   const [recording, setRecording] = React.useState(false);
+  const [recordingTime, setRecordingTime] = React.useState(0);
   const [audioBlob, setAudioBlob] = React.useState(null);
   const mediaRef = React.useRef(null);
   const chunksRef = React.useRef([]);
-  const { supabase: sb } = require("../lib/supabase") || {};
+  const timerRef = React.useRef(null);
 
   React.useEffect(() => {
     if (!clientId) return;
-    // Verifier si le client est en seance live
     const check = async () => {
-      const { data } = await supabase.from("session_live")
-        .select("active, session_name, started_at")
-        .eq("client_id", clientId)
-        .single();
-      if (data?.active) setIsLive(true);
+      const { data } = await supabase.from("session_live").select("active,session_name,started_at").eq("client_id", clientId).single();
+      setIsLive(!!data?.active);
+      setLiveSession(data);
     };
     check();
     const interval = setInterval(check, 10000);
@@ -462,414 +461,88 @@ function SeanceVivanteCoach({ clientId, clientName }) {
       };
       mediaRef.current.start();
       setRecording(true);
-      setTimeout(() => stopRecording(), 10000);
-    } catch(e) {
-      alert("Micro non disponible");
-    }
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => {
+          if (prev >= 9) { stopRecording(); return 10; }
+          return prev + 1;
+        });
+      }, 1000);
+    } catch(e) { alert("Micro non disponible"); }
   };
 
   const stopRecording = () => {
-    if (mediaRef.current?.state === "recording") {
-      mediaRef.current.stop();
-      setRecording(false);
-    }
+    if (mediaRef.current?.state === "recording") mediaRef.current.stop();
+    clearInterval(timerRef.current);
+    setRecording(false);
   };
 
-  const sendMessage = async () => {
+  const send = async () => {
     if (!text.trim() && !audioBlob) return;
     setSending(true);
     let audioUrl = null;
-
     if (audioBlob) {
-      const fileName = `flash_${clientId}_${Date.now()}.webm`;
-      const { data: uploadData } = await supabase.storage
-        .from("audio-messages")
-        .upload(fileName, audioBlob, { contentType: "audio/webm" });
-      if (uploadData) {
-        const { data: urlData } = supabase.storage.from("audio-messages").getPublicUrl(fileName);
-        audioUrl = urlData?.publicUrl;
+      const fileName = "flash_" + clientId + "_" + Date.now() + ".webm";
+      const { data: up } = await supabase.storage.from("audio-messages").upload(fileName, audioBlob, { contentType: "audio/webm" });
+      if (up) {
+        const { data: u } = supabase.storage.from("audio-messages").getPublicUrl(fileName);
+        audioUrl = u?.publicUrl;
       }
     }
-
     await supabase.from("coach_messages_flash").insert({
       client_id: clientId,
       text_message: text.trim() || null,
       audio_url: audioUrl,
       expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     });
-
-    setSending(false);
-    setSent(true);
-    setText("");
-    setAudioBlob(null);
+    setSending(false); setSent(true); setText(""); setAudioBlob(null);
     setTimeout(() => setSent(false), 3000);
   };
 
-  return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, padding: "10px 14px", background: isLive ? "rgba(2,209,186,0.08)" : "rgba(255,255,255,0.03)", border: `1px solid ${isLive ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.07)"}`, borderRadius: 12 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: isLive ? "#02d1ba" : "#444", animation: isLive ? "pulse 2s infinite" : "none" }} />
-        <div style={{ fontSize: 13, color: isLive ? "#02d1ba" : "rgba(255,255,255,0.3)", fontWeight: 600 }}>
-          {isLive ? `${clientName?.split(" ")[0]} est en seance !` : "Pas en seance actuellement"}
-        </div>
-      </div>
-
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Message flash — apparait en plein ecran pendant sa seance</div>
-
-      <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Ex: Dernier set. Donne tout." maxLength={80}
-        style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
-
-      <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-          {recording ? "⏹ Stop (10s max)" : "🎙 Enregistrer vocal"}
-        </button>
-        {audioBlob && <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "#02d1ba" }}>✓ Audio pret</div>}
-      </div>
-
-      <button onClick={sendMessage} disabled={sending || (!text.trim() && !audioBlob)} style={{ width: "100%", padding: 14, background: sent ? "rgba(2,209,186,0.1)" : "#02d1ba", color: sent ? "#02d1ba" : "#000", border: sent ? "1px solid rgba(2,209,186,0.3)" : "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-        {sent ? "✓ Message envoye !" : sending ? "Envoi..." : "Envoyer le message flash"}
-      </button>
-    </div>
-  );
-}
-
-export function CoachDashboard({ onExit }) {
-  const [clients,   setClients]   = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [search,    setSearch]    = useState("");
-  const [showAdd,   setShowAdd]   = useState(false);
-  const [newEmail,  setNewEmail]  = useState("");
-  const [newName,   setNewName]   = useState("");
-  const [toast,     setToast]     = useState(null);
-  const [selected,  setSelected]  = useState(null);
-  const [filter,    setFilter]    = useState("all");
-
-  const showToast = (msg, type = "ok") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
-
-  const loadClients = async () => {
-    setLoading(true);
-    try {
-      const { data: clientsData } = await supabase
-        .from("clients")
-        .select("*, programmes(id, programme_name, uploaded_at, is_active)")
-        .order("created_at", { ascending: false });
-      if (!clientsData) return;
-
-      const enriched = await Promise.all(clientsData.map(async (c) => {
-        const [{ data: logs }, { data: weights }, { data: rpe }] = await Promise.all([
-          supabase.from("exercise_logs").select("*").eq("client_id", c.id).order("logged_at", { ascending: false }).limit(30),
-          supabase.from("weight_logs").select("*").eq("client_id", c.id).order("date", { ascending: false }).limit(10),
-          supabase.from("session_rpe").select("*").eq("client_id", c.id).order("date", { ascending: false }).limit(5),
-        ]);
-        const lastActivity = logs?.[0]?.logged_at || weights?.[0]?.date || null;
-        const inactiveDays = lastActivity ? Math.floor((Date.now() - new Date(lastActivity)) / 86400000) : 999;
-        return {
-          ...c,
-          _logs: logs || [], _weights: weights || [], _rpe: rpe || [],
-          _lastActivity: lastActivity,
-          _inactive: inactiveDays >= 7,
-          _inactiveDays: inactiveDays < 999 ? inactiveDays : null,
-        };
-      }));
-      setClients(enriched);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadClients(); }, []);
-
-  const addClient = async () => {
-    if (!newEmail) return;
-    const email = newEmail.trim().toLowerCase();
-    const fullName = newName.trim() || null;
-    const { error } = await supabase.from("clients").insert({ email, full_name: fullName });
-    if (error) { showToast(error.code === "23505" ? "Email déjà utilisé" : error.message, "err"); return; }
-    // Envoyer l'email de bienvenue
-    try {
-      await supabase.functions.invoke("send-welcome", {
-        body: { email, full_name: fullName },
-      });
-    } catch (e) {
-      console.warn("Email de bienvenue non envoyé:", e);
-    }
-    showToast(`✓ ${email} ajouté — email de bienvenue envoyé !`);
-    setNewEmail(""); setNewName(""); setShowAdd(false);
-    loadClients();
-  };
-
-  const deleteClient = async (id, email) => {
-    if (!window.confirm(`Supprimer ${email} ?`)) return;
-    await supabase.from("clients").delete().eq("id", id);
-    setSelected(null); showToast("Client supprimé"); toast.info("Client supprimé"); loadClients();
-  };
-
-  const uploadProg = async (client, file) => {
-    setUploading(true);
-    try {
-      const html = await file.text();
-      // Parser le HTML pour extraire le nom du programme
-      let progName = file.name.replace(".html", "");
-      try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        const nameEl = doc.getElementById("prog-name");
-        const parsed = (nameEl?.value || nameEl?.getAttribute("value") || "").trim();
-        if (parsed) progName = parsed;
-      } catch(e) { console.warn("Parse name error", e); }
-      await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
-      const { error } = await supabase.from("programmes").insert({
-        client_id: client.id, html_content: html, programme_name: progName || "Programme",
-        is_active: true, uploaded_by: (await supabase.auth.getUser()).data.user?.email,
-      });
-      if (error) throw error;
-      showToast(`✓ Programme uploadé pour ${client.full_name || client.email}`);
-      loadClients();
-    } catch (e) { showToast(e.message, "err"); }
-    finally { setUploading(false); setSelected(null); }
-  };
-
-  // Stats
-  const total        = clients.length;
-  const withProg     = clients.filter(c => c.programmes?.some(p => p.is_active)).length;
-  const activeToday  = clients.filter(c => c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 1).length;
-  const activeWeek   = clients.filter(c => c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7).length;
-  const inactiveAlerts = clients.filter(c => c._inactive && c.programmes?.some(p => p.is_active)).length;
-
-  const filtered = clients
-    .filter(c => {
-      const s = search.toLowerCase();
-      if (s && !c.email.includes(s) && !(c.full_name || "").toLowerCase().includes(s)) return false;
-      if (filter === "active") return c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7;
-      if (filter === "noprog") return !c.programmes?.some(p => p.is_active);
-      if (filter === "inactive") return c._inactive && c.programmes?.some(p => p.is_active);
-      return true;
-    })
-    .sort((a, b) => {
-      if (!a._lastActivity && !b._lastActivity) return 0;
-      if (!a._lastActivity) return 1;
-      if (!b._lastActivity) return -1;
-      return new Date(b._lastActivity) - new Date(a._lastActivity);
-    });
-
-  const inp = {
-    padding: "10px 13px", background: "#141414",
-    border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 9,
-    color: "#f5f5f5", fontFamily: "'Inter',sans-serif", fontSize: 13,
-    outline: "none", width: "100%", boxSizing: "border-box",
-    transition: "border-color 0.15s",
-  };
+  const prenom = clientName?.split(" ")[0] || "le client";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0d0d0d", fontFamily: "'Inter',sans-serif", color: "#f5f5f5" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-        .client-row:hover{background:#1c1c1c!important;cursor:pointer}
-        .client-row:hover .row-arrow{opacity:1!important}
-        .inp-focus:focus{border-color:#02d1ba!important}
-        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
-      `}</style>
-
-      {/* Toast */}
-      {toast && (
-        <div style={{ position:"fixed", top:16, left:"50%", transform:"translateX(-50%)", background: toast.type==="err"?"#1a0a0a":"#0a1a0f", border:`1px solid ${toast.type==="err"?"rgba(239,68,68,0.3)":G_BORDER}`, borderRadius:10, padding:"10px 20px", fontSize:12, fontWeight:600, color:toast.type==="err"?"#ef4444":G, zIndex:500, boxShadow:"0 8px 32px rgba(0,0,0,0.5)", whiteSpace:"nowrap", animation:"fadeUp 0.2s ease" }}>{toast.msg}</div>
-      )}
-      {uploading && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", backdropFilter:"blur(8px)", zIndex:300, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:14 }}>
-          <div style={{ width:44, height:44, border:`3px solid #1a1a1a`, borderTopColor:G, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
-          <div style={{ color:G, fontSize:13, fontWeight:600 }}>Upload en cours...</div>
-        </div>
-      )}
-      {selected && <ClientPanel client={selected} onClose={() => setSelected(null)} onUpload={uploadProg} onDelete={deleteClient} />}
-
-      {/* TOPBAR */}
-      <div style={{ background:"rgba(13,13,13,0.97)", borderBottom:"1px solid rgba(255,255,255,0.07)", padding:"0 32px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100, backdropFilter:"blur(20px)" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-          <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", border:"1px solid rgba(255,255,255,0.1)" }}><img src={LOGO_B64} alt="" style={{ width:"100%", height:"100%", objectFit:"contain" }} /></div>
-          <span style={{ fontSize:14, fontWeight:800, color:"#f5f5f5" }}>RB <span style={{ color:G }}>Performance</span></span>
-          <span style={{ fontSize:10, fontWeight:700, color:"#333", letterSpacing:"2px" }}>COACH</span>
-          {/* Alerte inactifs */}
-          {inactiveAlerts > 0 && (
-            <div style={{ background:"rgba(239,68,68,0.12)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:20, padding:"3px 10px", fontSize:10, fontWeight:700, color:"#ef4444", display:"flex", alignItems:"center", gap:5, animation:"pulse 2s infinite" }}>
-              ⚠ {inactiveAlerts} inactif{inactiveAlerts>1?"s":""} 7j+
-            </div>
+    <div style={{ padding: "0" }}>
+      {/* Status live */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, padding: "12px 14px", background: isLive ? "rgba(2,209,186,0.06)" : "rgba(255,255,255,0.03)", border: "1px solid " + (isLive ? "rgba(2,209,186,0.2)" : "rgba(255,255,255,0.06)"), borderRadius: 14 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: isLive ? "#02d1ba" : "#333", boxShadow: isLive ? "0 0 8px #02d1ba" : "none", flexShrink: 0 }} />
+        <div>
+          <div style={{ fontSize: 13, color: isLive ? "#02d1ba" : "rgba(255,255,255,0.25)", fontWeight: 600 }}>
+            {isLive ? prenom + " est en seance !" : prenom + " n est pas en seance"}
+          </div>
+          {isLive && liveSession?.session_name && (
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{liveSession.session_name}</div>
           )}
         </div>
-        <div style={{ display:"flex", gap:8 }}>
-          <button onClick={loadClients} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:7, padding:"5px 12px", color:"#555", fontSize:11, fontWeight:600, cursor:"pointer" }}>↻ Actualiser</button>
-          <button onClick={onExit} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:7, padding:"5px 12px", color:"#555", fontSize:11, fontWeight:600, cursor:"pointer" }}>← Mon app</button>
-        </div>
       </div>
 
-      <div style={{ maxWidth:"100%", margin:"0 auto", padding:"12px 12px 80px" }}>
-        {/* Titre */}
-        <div style={{ marginBottom:28 }}>
-          <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:"-0.5px", color:"#f5f5f5", marginBottom:4 }}>Dashboard Coach</h1>
-          <p style={{ fontSize:13, color:"#555" }}>Vue d'ensemble de tes {total} client{total>1?"s":""}</p>
-        </div>
+      {/* Zone message texte */}
+      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>Message flash</div>
+      <textarea value={text} onChange={e => setText(e.target.value)} placeholder={"Ex: Dernier set. Donne tout " + prenom + " !"} maxLength={100}
+        style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", resize: "none", height: 72, boxSizing: "border-box", marginBottom: 10 }} />
 
-        {/* Stats cards */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28 }}>
-          {[
-            { label:"Clients total", value:total, icon:"👥", accent:false },
-            { label:"Avec programme", value:withProg, sub:`${total-withProg} sans`, icon:"📋", accent:false },
-            { label:"Actifs aujourd'hui", value:activeToday, icon:"🔥", accent:activeToday>0 },
-            { label:"Actifs cette semaine", value:activeWeek, icon:"📈", accent:activeWeek>0 },
-            { label:"Inactifs 7j+", value:inactiveAlerts, icon:"⚠️", accent:false, warn:inactiveAlerts>0 },
-          ].map((s,i) => (
-            <div key={i} style={{ background:"#141414", border:`1px solid ${s.warn?"rgba(239,68,68,0.2)":s.accent?G_BORDER:"rgba(255,255,255,0.06)"}`, borderRadius:14, padding:"16px 14px" }}>
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                <div style={{ fontSize:9, fontWeight:700, letterSpacing:"1.5px", textTransform:"uppercase", color:"#555" }}>{s.label}</div>
-                <span style={{ fontSize:16 }}>{s.icon}</span>
-              </div>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:26, fontWeight:700, color:s.warn&&s.value>0?"#ef4444":s.accent?G:"#f5f5f5", lineHeight:1.2, marginTop:4 }}>{s.value}</div>
-              {s.sub && <div style={{ fontSize:10, color:"#555", marginTop:2 }}>{s.sub}</div>}
-            </div>
-          ))}
-        </div>
-
-        {/* Barre filtres + actions */}
-        <div style={{ display:"flex", gap:10, marginBottom:16, alignItems:"center", flexWrap:"wrap" }}>
-          <input className="inp-focus" placeholder="🔍  Rechercher..." value={search} onChange={e=>setSearch(e.target.value)} style={{ ...inp, flex:1, minWidth:200 }} />
-          <div style={{ display:"flex", gap:4 }}>
-            {[["all","Tous",total],["active","Actifs 7j",activeWeek],["noprog","Sans prog.",total-withProg],["inactive","⚠ Inactifs",inactiveAlerts]].map(([k,l,n])=>(
-              <button key={k} onClick={()=>setFilter(k)} style={{ padding:"7px 12px", fontSize:10.5, fontWeight:600, background:filter===k?G_DIM:"transparent", border:`1px solid ${filter===k?G_BORDER:"rgba(255,255,255,0.08)"}`, borderRadius:100, color:filter===k?G:"#666", cursor:"pointer", whiteSpace:"nowrap" }}>
-                {l} <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9 }}>({n})</span>
-              </button>
-            ))}
-          </div>
-          <button onClick={()=>setShowAdd(v=>!v)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 18px", background:showAdd?G_DIM:G, border:`1px solid ${showAdd?G_BORDER:G}`, borderRadius:9, color:showAdd?G:"#0d0d0d", fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:showAdd?"none":"0 4px 16px rgba(2,209,186,0.25)" }}>
-            {showAdd?"✕ Annuler":"+ Nouveau client"}
-          </button>
-        </div>
-
-        {/* Formulaire nouveau client */}
-        {showAdd && (
-          <div style={{ background:"#141414", border:`1px solid ${G_BORDER}`, borderRadius:14, padding:20, marginBottom:16, animation:"fadeUp 0.2s ease" }}>
-            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:G, marginBottom:14 }}>Nouveau client</div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:10 }}>
-              <div>
-                <label style={{ fontSize:9, color:"#555", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>Email *</label>
-                <input className="inp-focus" type="email" placeholder="client@email.com" value={newEmail} onChange={e=>setNewEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addClient()} style={inp} />
-              </div>
-              <div>
-                <label style={{ fontSize:9, color:"#555", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>Prénom Nom</label>
-                <input className="inp-focus" type="text" placeholder="Thomas Dupont" value={newName} onChange={e=>setNewName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addClient()} style={inp} />
-              </div>
-              <div style={{ display:"flex", alignItems:"flex-end" }}>
-                <button onClick={addClient} disabled={!newEmail} style={{ padding:"10px 20px", background:newEmail?G:"#1e1e1e", border:"none", borderRadius:9, color:newEmail?"#0d0d0d":"#444", fontSize:12, fontWeight:700, cursor:newEmail?"pointer":"not-allowed", height:40 }}>Créer</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Table clients */}
-        {loading ? (
-          <div style={{ textAlign:"center", padding:60, color:"#555" }}>
-            <div style={{ width:32, height:32, border:`2.5px solid #222`, borderTopColor:G, borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 12px" }} />
-            Chargement...
-          </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign:"center", padding:60, color:"#444", fontSize:13 }}>
-            {search||filter!=="all" ? "Aucun client correspond" : "Aucun client — ajoute ton premier 👆"}
-          </div>
-        ) : (
-          <div style={{ background:"#0f0f0f", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, overflow:"hidden" }}>
-            {/* Header colonnes */}
-            <div style={{ display:"grid", gridTemplateColumns:"2fr 1.4fr 0.8fr 0.8fr 0.9fr 1fr 1fr auto", padding:"10px 20px", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:9, fontWeight:700, letterSpacing:"1.5px", textTransform:"uppercase", color:"#444" }}>
-              <div>Client</div><div>Programme</div><div>Statut</div><div>Séances</div><div>Poids</div><div>RPE</div><div>Dernier contact</div><div></div>
-            </div>
-
-            {filtered.map((c, i) => {
-              const prog     = c.programmes?.find(p => p.is_active);
-              const actColor = activityColor(c._lastActivity);
-              const logsCount = Math.ceil(c._logs.length / 3);
-              const lastW    = c._weights?.[0];
-              const lastRpe  = c._rpe?.[0];
-              const RPE_EMOJIS = ["","😊","💪","😤","😰","🥵"];
-              const RPE_COLORS = ["","#4ade80","#02d1ba","#f97316","#ef4444","#dc2626"];
-              const daysAgoStr = daysAgo(c._lastActivity);
-              const inactiveDays = c._lastActivity ? Math.floor((Date.now()-new Date(c._lastActivity))/86400000) : null;
-
-              return (
-                <div key={c.id} className="client-row" onClick={() => setSelected(c)} style={{
-                  display:"grid", gridTemplateColumns:"2fr 1.4fr 0.8fr 0.8fr 0.9fr 1fr 1fr auto",
-                  padding:"13px 20px", borderBottom: i<filtered.length-1?"1px solid rgba(255,255,255,0.04)":"none",
-                  alignItems:"center", gap:8, transition:"background 0.15s",
-                  animation:`fadeUp ${0.05+i*0.025}s ease both`,
-                }}>
-                  {/* Nom */}
-                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <div style={{ position:"relative" }}>
-                      <Avatar name={c.full_name||c.email} size={34} active={!!prog} />
-                      {c._inactive && c.programmes?.some(p=>p.is_active) && (
-                        <div style={{ position:"absolute", top:-2, right:-2, width:10, height:10, borderRadius:"50%", background:"#ef4444", border:"2px solid #0f0f0f", animation:"pulse 2s infinite" }} />
-                      )}
-                    </div>
-                    <div>
-                      <div style={{ fontSize:12, fontWeight:600, color:"#f5f5f5" }}>{c.full_name||<span style={{color:"#555"}}>Sans nom</span>}</div>
-                      <div style={{ fontSize:10, color:"#555" }}>{c.email}</div>
-                    </div>
-                  </div>
-
-                  {/* Programme */}
-                  <div>
-                    {prog ? (
-                      <>
-                        <div style={{ fontSize:11, fontWeight:600, color:G, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>✓ {prog.programme_name||"Actif"}</div>
-                        <div style={{ fontSize:9, color:"#444" }}>{new Date(prog.uploaded_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})}</div>
-                      </>
-                    ) : <span style={{ fontSize:11, color:"#f97316", fontWeight:600 }}>⚠ Aucun</span>}
-                  </div>
-
-                  {/* Statut / activité */}
-                  <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                    <div style={{ width:7, height:7, borderRadius:"50%", background:actColor, boxShadow: inactiveDays!==null&&inactiveDays<=1?`0 0 6px ${actColor}`:"none" }} />
-                    <span style={{ fontSize:9.5, color:actColor, fontWeight:600 }}>
-                      {!c._lastActivity ? "Jamais" : inactiveDays<=1 ? "Actif" : inactiveDays<=7 ? "Semaine" : `${inactiveDays}j`}
-                    </span>
-                  </div>
-
-                  {/* Séances */}
-                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:15, fontWeight:600, color:logsCount>0?"#f5f5f5":"#444" }}>{logsCount}</div>
-
-                  {/* Poids */}
-                  <div>
-                    {lastW ? (
-                      <>
-                        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:13, fontWeight:600, color:"#f5f5f5" }}>{lastW.weight} kg</div>
-                        <div style={{ fontSize:9, color:"#444" }}>{new Date(lastW.date).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})}</div>
-                      </>
-                    ) : <span style={{ fontSize:11, color:"#444" }}>—</span>}
-                  </div>
-
-                  {/* RPE */}
-                  <div>
-                    {lastRpe ? (
-                      <div style={{ display:"flex", alignItems:"center", gap:4 }}>
-                        <span style={{ fontSize:16 }}>{RPE_EMOJIS[lastRpe.rpe]}</span>
-                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:12, fontWeight:600, color:RPE_COLORS[lastRpe.rpe] }}>{lastRpe.rpe}/5</span>
-                      </div>
-                    ) : <span style={{ fontSize:11, color:"#444" }}>—</span>}
-                  </div>
-
-                  {/* Dernier contact */}
-                  <div style={{ fontSize:11, color: daysAgoStr===null?"#444":daysAgoStr==="Aujourd'hui"||daysAgoStr==="Hier"?G:"#9ca3af" }}>
-                    {daysAgoStr||"Jamais"}
-                  </div>
-
-                  {/* Flèche */}
-                  <div className="row-arrow" style={{ opacity:0, transition:"opacity 0.15s", color:"#555", fontSize:14 }}>→</div>
-                </div>
-              );
-            })}
+      {/* Enregistrement vocal */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: "12px", background: recording ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.04)", border: "1px solid " + (recording ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.08)"), borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          {recording ? (
+            <>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", animation: "pulse 1s infinite" }} />
+              {10 - recordingTime}s
+            </>
+          ) : "🎙 Message vocal"}
+        </button>
+        {audioBlob && (
+          <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 12, fontSize: 11, color: "#02d1ba", display: "flex", alignItems: "center", gap: 6 }}>
+            <span>✓</span> Audio
+            <button onClick={() => setAudioBlob(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 12, padding: 0 }}>✕</button>
           </div>
         )}
       </div>
+
+      {/* Bouton envoyer */}
+      <button onClick={send} disabled={sending || (!text.trim() && !audioBlob)} style={{ width: "100%", padding: 14, background: sent ? "rgba(2,209,186,0.08)" : "#02d1ba", color: sent ? "#02d1ba" : "#000", border: sent ? "1px solid rgba(2,209,186,0.2)" : "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: (!text.trim() && !audioBlob) ? 0.4 : 1 }}>
+        {sent ? "✓ Message envoye !" : sending ? "Envoi..." : "Envoyer le message flash ⚡"}
+      </button>
     </div>
   );
 }

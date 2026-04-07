@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
-const GREEN = "#02d1ba";
+const G = "#02d1ba";
 
 export function SeanceVivante({ clientId, sessionName }) {
   const [message, setMessage] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [visible, setVisible] = useState(false);
   const audioRef = useRef(null);
-  const intervalRef = useRef(null);
 
   // Notifier le coach que la seance a commence
   useEffect(() => {
@@ -19,20 +18,19 @@ export function SeanceVivante({ clientId, sessionName }) {
       started_at: new Date().toISOString(),
       active: true,
     }, { onConflict: "client_id" });
-
     return () => {
       supabase.from("session_live").upsert({
-        client_id: clientId,
-        active: false,
+        client_id: clientId, active: false,
       }, { onConflict: "client_id" });
     };
   }, [clientId, sessionName]);
 
-  // Ecouter les messages flash du coach
+  // Ecouter les messages flash en REALTIME
   useEffect(() => {
     if (!clientId) return;
 
-    const checkMessages = async () => {
+    // Verifier les messages non lus au montage
+    const checkExisting = async () => {
       const { data } = await supabase
         .from("coach_messages_flash")
         .select("*")
@@ -42,87 +40,98 @@ export function SeanceVivante({ clientId, sessionName }) {
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
-
-      if (data) {
-        setMessage(data);
-        setVisible(true);
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-        // Marquer comme lu apres 3 secondes
-        setTimeout(async () => {
-          await supabase.from("coach_messages_flash")
-            .update({ read_at: new Date().toISOString() })
-            .eq("id", data.id);
-        }, 3000);
-      }
+      if (data) showMessage(data);
     };
+    checkExisting();
 
-    // Verifier toutes les 5 secondes
-    intervalRef.current = setInterval(checkMessages, 5000);
-    checkMessages();
+    // Realtime - nouveau message instantane
+    const channel = supabase
+      .channel("flash_" + clientId)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "coach_messages_flash",
+        filter: "client_id=eq." + clientId,
+      }, (payload) => {
+        if (payload.new) showMessage(payload.new);
+      })
+      .subscribe();
 
-    return () => clearInterval(intervalRef.current);
+    return () => supabase.removeChannel(channel);
   }, [clientId]);
+
+  const showMessage = (data) => {
+    setMessage(data);
+    setVisible(true);
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+    // Marquer comme lu
+    supabase.from("coach_messages_flash")
+      .update({ read_at: new Date().toISOString() })
+      .eq("id", data.id);
+  };
 
   const playAudio = () => {
     if (!message?.audio_url) return;
-    if (!audioRef.current) audioRef.current = new Audio(message.audio_url);
+    // Unlock AudioContext iOS
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      ctx.resume();
+    } catch(e) {}
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    audioRef.current = new Audio(message.audio_url);
     audioRef.current.play();
     setPlaying(true);
     audioRef.current.onended = () => setPlaying(false);
   };
 
+  const dismiss = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    setPlaying(false);
+    setVisible(false);
+    setMessage(null);
+  };
+
   if (!visible || !message) return null;
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 500,
-      background: "rgba(0,0,0,0.92)",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      padding: 32, animation: "fadeIn 0.3s ease",
-    }}>
-      {/* Logo RB PERFORM */}
-      <div style={{ fontSize: 10, color: "rgba(2,209,186,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 20 }}>Message de ton coach</div>
+    <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.95)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, animation: "svFadeIn 0.4s ease" }}>
+      <style>{`@keyframes svFadeIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } } @keyframes svWave { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(1.8)} }`}</style>
 
-      {/* Avatar coach */}
-      <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(2,209,186,0.1)", border: "2px solid rgba(2,209,186,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, fontSize: 28 }}>R</div>
+      {/* Badge coach */}
+      <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "4px", textTransform: "uppercase", marginBottom: 24 }}>Message de ton coach</div>
+
+      {/* Avatar */}
+      <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(2,209,186,0.08)", border: "2px solid rgba(2,209,186,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, fontSize: 32, boxShadow: "0 0 40px rgba(2,209,186,0.15)" }}>
+        💪
+      </div>
 
       {/* Message texte */}
       {message.text_message && (
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", textAlign: "center", letterSpacing: "-1px", lineHeight: 1.3, marginBottom: 24, maxWidth: 300 }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", textAlign: "center", letterSpacing: "-1px", lineHeight: 1.3, marginBottom: 28, maxWidth: 300 }}>
           {message.text_message}
         </div>
       )}
 
       {/* Bouton play audio */}
       {message.audio_url && (
-        <button onClick={playAudio} style={{
-          width: 72, height: 72, borderRadius: "50%",
-          background: playing ? "rgba(2,209,186,0.2)" : GREEN,
-          border: "none", cursor: "pointer", marginBottom: 24,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          transition: "all 0.2s",
-        }}>
+        <button onClick={playAudio} style={{ width: 80, height: 80, borderRadius: "50%", background: playing ? "rgba(2,209,186,0.15)" : G, border: playing ? "2px solid " + G : "none", cursor: "pointer", marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s", boxShadow: playing ? "0 0 30px rgba(2,209,186,0.4)" : "none" }}>
           {playing ? (
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              {[1,2,3].map(i => (
-                <div key={i} style={{ width: 4, height: 16 + i * 4, background: GREEN, borderRadius: 2, animation: `wave${i} 0.8s ease-in-out infinite` }} />
+            <div style={{ display: "flex", gap: 4, alignItems: "center", height: 28 }}>
+              {[1,2,3,2,1].map((h, i) => (
+                <div key={i} style={{ width: 4, height: h * 8, background: G, borderRadius: 2, animation: `svWave ${0.6 + i * 0.1}s ease-in-out infinite`, animationDelay: i * 0.1 + "s" }} />
               ))}
             </div>
           ) : (
-            <svg viewBox="0 0 24 24" fill="#000" style={{ width: 28, height: 28, marginLeft: 4 }}>
+            <svg viewBox="0 0 24 24" fill="#000" style={{ width: 30, height: 30, marginLeft: 4 }}>
               <polygon points="5,3 19,12 5,21"/>
             </svg>
           )}
         </button>
       )}
 
-      <button onClick={() => setVisible(false)} style={{
-        background: "transparent", border: "1px solid rgba(255,255,255,0.15)",
-        borderRadius: 100, padding: "10px 24px", color: "rgba(255,255,255,0.4)",
-        fontSize: 13, cursor: "pointer",
-      }}>
-        Fermer
+      {/* Bouton fermer */}
+      <button onClick={dismiss} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 100, padding: "12px 28px", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", letterSpacing: "0.5px" }}>
+        Continuer la seance
       </button>
     </div>
   );
