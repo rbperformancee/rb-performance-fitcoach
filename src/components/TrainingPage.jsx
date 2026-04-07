@@ -187,6 +187,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Cette semaine</div>
             <div style={{ fontSize: 11, color: G, fontWeight: 700 }}>
               {(currentWeek?.sessions || []).filter((_, i) => {
+                if (i === activeSession) return sessionValidee;
                 try {
                   const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${i}`) || "{}");
                   return !!s.validee;
@@ -196,13 +197,17 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
           </div>
           <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
             {(currentWeek?.sessions || []).map((_, i) => {
-              // Seance validee UNIQUEMENT si validee=true (pas done qui est le chrono)
+              // i === activeSession : utiliser sessionValidee (state React reactif)
+              // autres sessions : lire localStorage
               let seanceFaite = false;
-              try {
-                const key = `rb_c_${activeWeek}_${i}`;
-                const s = JSON.parse(localStorage.getItem(key) || "{}");
-                seanceFaite = !!s.validee;
-              } catch(e) {}
+              if (i === activeSession) {
+                seanceFaite = sessionValidee;
+              } else {
+                try {
+                  const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${i}`) || "{}");
+                  seanceFaite = !!s.validee;
+                } catch(e) {}
+              }
               const active = i === activeSession && !seanceFaite;
               return <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: seanceFaite ? G : active ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.06)", transition: "background 0.6s ease" }} />;
             })}
