@@ -283,6 +283,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>Exercices</div>
         {(currentSession.exercises || []).map((ex, ei) => {
           const history = getHistory(activeWeek, activeSession, ei) || [];
+          const isDone = history.length > 0;
           const status = getProgressStatus(history);
           const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
           const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
