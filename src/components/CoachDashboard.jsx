@@ -502,8 +502,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   const prenom = clientName?.split(" ")[0] || "le client";
 
   return (
-    <div style={{ padding: "0" }}>
-      {/* Status live */}
+    <div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, padding: "12px 14px", background: isLive ? "rgba(2,209,186,0.06)" : "rgba(255,255,255,0.03)", border: "1px solid " + (isLive ? "rgba(2,209,186,0.2)" : "rgba(255,255,255,0.06)"), borderRadius: 14 }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: isLive ? "#02d1ba" : "#333", boxShadow: isLive ? "0 0 8px #02d1ba" : "none", flexShrink: 0 }} />
         <div>
@@ -515,33 +514,22 @@ function SeanceVivanteCoach({ clientId, clientName }) {
           )}
         </div>
       </div>
-
-      {/* Zone message texte */}
       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>Message flash</div>
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder={"Ex: Dernier set. Donne tout " + prenom + " !"} maxLength={100}
         style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", resize: "none", height: 72, boxSizing: "border-box", marginBottom: 10 }} />
-
-      {/* Enregistrement vocal */}
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: "12px", background: recording ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.04)", border: "1px solid " + (recording ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.08)"), borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          {recording ? (
-            <>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", animation: "pulse 1s infinite" }} />
-              {10 - recordingTime}s
-            </>
-          ) : "🎙 Message vocal"}
+        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.04)", border: "1px solid " + (recording ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.08)"), borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          {recording ? <><div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444" }} />{10 - recordingTime}s</> : "🎙 Message vocal"}
         </button>
         {audioBlob && (
           <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 12, fontSize: 11, color: "#02d1ba", display: "flex", alignItems: "center", gap: 6 }}>
-            <span>✓</span> Audio
+            ✓ Audio
             <button onClick={() => setAudioBlob(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 12, padding: 0 }}>✕</button>
           </div>
         )}
       </div>
-
-      {/* Bouton envoyer */}
       <button onClick={send} disabled={sending || (!text.trim() && !audioBlob)} style={{ width: "100%", padding: 14, background: sent ? "rgba(2,209,186,0.08)" : "#02d1ba", color: sent ? "#02d1ba" : "#000", border: sent ? "1px solid rgba(2,209,186,0.2)" : "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: (!text.trim() && !audioBlob) ? 0.4 : 1 }}>
-        {sent ? "✓ Message envoye !" : sending ? "Envoi..." : "Envoyer le message flash ⚡"}
+        {sent ? "✓ Message envoye !" : sending ? "Envoi..." : "Envoyer le message flash"}
       </button>
     </div>
   );
