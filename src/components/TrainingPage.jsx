@@ -30,65 +30,39 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const [chronoOn, setChronoOn] = useState(false);
   const [chronoDone, setChronoDone] = useState(false);
   const intervalRef = useRef(null);
-  // Chrono - cle calculee a chaque fois depuis les props actuelles
-  const getCKey = () => `rb_c_${activeWeek}_${activeSession}`;
+  const CKEY = `rb_c_${activeWeek}_${activeSession}`;
 
-  // Charger depuis localStorage quand la seance change
+  // Un seul effet - relit le timestamp a chaque tick
   useEffect(() => {
     clearInterval(intervalRef.current);
-    const ckey = getCKey();
-    try {
-      const raw = localStorage.getItem(ckey);
-      if (!raw) {
-        // Nouvelle seance - reset propre
-        setChronoOn(false); setChronoDone(false); setChrono(0);
-        return;
-      }
-      const s = JSON.parse(raw);
-      if (!s || typeof s !== 'object') { setChronoOn(false); setChronoDone(false); setChrono(0); return; }
-      if (s.done === true) {
-        // Seance terminee - afficher duree totale
-        setChronoOn(false); setChronoDone(true); setChrono(s.total || 0);
-        return;
-      }
-      if (s.start > 0) {
-        // Seance en cours - recalculer le temps ecoule depuis le timestamp
-        const elapsed = Math.floor((Date.now() - s.start) / 1000);
-        setChrono(elapsed > 0 ? elapsed : 0);
-        setChronoDone(false);
-        setChronoOn(true); // Redemarrer le tick
-      }
-    } catch(e) { setChronoOn(false); setChronoDone(false); setChrono(0); }
-  }, [activeWeek, activeSession]);
-
-  // Tick + visibilitychange pour iOS
-  useEffect(() => {
-    if (!chronoOn) { clearInterval(intervalRef.current); return; }
-    const ckey = getCKey();
-    const getStart = () => {
-      try { const s = JSON.parse(localStorage.getItem(ckey) || "{}"); return s.start || Date.now(); } catch(e) { return Date.now(); }
+    if (!chronoOn) return;
+    intervalRef.current = setInterval(() => {
+      try {
+        const s = JSON.parse(localStorage.getItem(CKEY) || "{}");
+        if (s.start) setChrono(Math.floor((Date.now() - s.start) / 1000));
+      } catch(e) {}
+    }, 1000);
+    // Au retour sur l app iOS
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const s = JSON.parse(localStorage.getItem(CKEY) || "{}");
+        if (s.start) setChrono(Math.floor((Date.now() - s.start) / 1000));
+      } catch(e) {}
     };
-    const tick = () => setChrono(Math.floor((Date.now() - getStart()) / 1000));
-    tick();
-    intervalRef.current = setInterval(tick, 1000);
-    // Quand on revient sur l app apres iOS suspend
-    const onVisible = () => { if (document.visibilityState === "visible") tick(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => { clearInterval(intervalRef.current); document.removeEventListener("visibilitychange", onVisible); };
-  }, [chronoOn, activeWeek, activeSession]);
+  }, [chronoOn, CKEY]);
 
   const startChrono = () => {
-    const now = Date.now();
-    const ckey = getCKey();
-    try { localStorage.setItem(ckey, JSON.stringify({ start: now })); } catch(e) {}
-    setChrono(0); setChronoOn(true);
+    try { localStorage.setItem(CKEY, JSON.stringify({ start: Date.now() })); } catch(e) {}
+    setChrono(0); setChronoDone(false); setChronoOn(true);
   };
 
   const stopChrono = (total) => {
     clearInterval(intervalRef.current);
-    const ckey = getCKey();
     setChronoOn(false); setChronoDone(true);
-    try { localStorage.setItem(ckey, JSON.stringify({ done: true, total })); } catch(e) {}
+    try { localStorage.setItem(CKEY, JSON.stringify({ done: true, total })); } catch(e) {}
   };
 
   const fmt = (s) => String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
@@ -121,7 +95,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       programme_name: programme?.name || "Programme",
       logged_at: new Date().toISOString(),
     });
-    stopChrono(chrono);
     if (navigator.vibrate) navigator.vibrate([50, 30, 100, 30, 150]);
     setShowRessenti(true);
   };
