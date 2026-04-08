@@ -205,7 +205,7 @@ export default function App() {
     }
     return (
       <div style={{ position: 'relative' }}>
-        <PricingPage client={null} />
+        <PricingPage client={null} onLogin={() => setShowLogin(true)} />
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center', padding: '16px 24px calc(env(safe-area-inset-bottom,0px) + 16px)', background: 'linear-gradient(to top,rgba(0,0,0,0.95),transparent)' }}>
           <button onClick={() => setShowLogin(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', letterSpacing: '0.3px' }}>
             Déjà membre ? <span style={{ color: '#02d1ba', fontWeight: 600 }}>Se connecter →</span>
