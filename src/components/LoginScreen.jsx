@@ -41,7 +41,7 @@ const PHRASES = [
   ['ZERO EXCUSE.', 'MAX RÉSULTAT.'],
 ];
 
-export function LoginScreen({ onSendMagicLink, loading }) {
+export function LoginScreen({ onSendMagicLink, loading, onBack }) {
   const [email, setEmail] = useState('');
   const [step, setStep] = useState('email'); // email | otp
   const [otp, setOtp] = useState('');
