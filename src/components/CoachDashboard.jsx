@@ -58,6 +58,138 @@ function MiniSparkline({ data, color = G, w = 80, h = 28 }) {
   );
 }
 
+
+/* ── Gestionnaire de créneaux ── */
+function CreneauxManager() {
+  const G = "#02d1ba";
+  const [slots, setSlots] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [date, setDate] = React.useState("");
+  const [heure, setHeure] = React.useState("09:00");
+  const [saving, setSaving] = React.useState(false);
+  const [bookings, setBookings] = React.useState([]);
+
+  React.useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const fetchAll = async () => {
+    setLoading(true);
+    const today = new Date().toISOString().split("T")[0];
+    const [slotsRes, bookingsRes] = await Promise.all([
+      supabase.from("coach_slots").select("*").order("date").order("heure"),
+      supabase.from("bookings").select("*, clients(full_name, email)").order("booked_at", { ascending: false })
+    ]);
+    setSlots(slotsRes.data || []);
+    setBookings(bookingsRes.data || []);
+    setLoading(false);
+  };
+
+  const addSlot = async () => {
+    if (!date || !heure) return;
+    setSaving(true);
+    await supabase.from("coach_slots").insert({ date, heure, is_available: true });
+    setDate("");
+    await fetchAll();
+    setSaving(false);
+  };
+
+  const deleteSlot = async (id) => {
+    await supabase.from("coach_slots").delete().eq("id", id);
+    await fetchAll();
+  };
+
+  const HEURES = ["07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
+
+  return (
+    <div style={{ padding: "16px 0", display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* Réservations */}
+      {bookings.length > 0 && (
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: G, marginBottom: 12 }}>Appels réservés</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {bookings.map(b => {
+              const slot = slots.find(s => s.id === b.slot_id);
+              return (
+                <div key={b.id} style={{ background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{b.clients?.full_name || b.clients?.email}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>
+                      {slot ? new Date(slot.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) + " · " + slot.heure : "Créneau inconnu"}
+                    </div>
+                  </div>
+                  <div style={{ background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, padding: "4px 12px", fontSize: 10, color: G, fontWeight: 700 }}>Confirmé</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Ajouter un créneau */}
+      <div>
+        <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Ajouter un créneau</div>
+        <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)}
+            min={new Date().toISOString().split("T")[0]}
+            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 13, outline: "none", fontFamily: "-apple-system,sans-serif" }} />
+          <select value={heure} onChange={e => setHeure(e.target.value)}
+            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 13, outline: "none", fontFamily: "-apple-system,sans-serif" }}>
+            {HEURES.map(h => <option key={h} value={h} style={{ background: "#1a1a1a" }}>{h}</option>)}
+          </select>
+          <button onClick={addSlot} disabled={saving || !date}
+            style={{ padding: "10px 18px", background: G, border: "none", borderRadius: 10, color: "#000", fontSize: 13, fontWeight: 700, cursor: date ? "pointer" : "not-allowed", opacity: date ? 1 : 0.4 }}>
+            {saving ? "..." : "+ Ajouter"}
+          </button>
+        </div>
+      </div>
+
+      {/* Liste des créneaux */}
+      <div>
+        <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Créneaux disponibles</div>
+        {loading ? (
+          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13 }}>Chargement...</div>
+        ) : slots.filter(s => s.is_available).length === 0 ? (
+          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, fontStyle: "italic" }}>Aucun créneau disponible</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {slots.filter(s => s.is_available).map(slot => (
+              <div key={slot.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
+                    {new Date(slot.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{slot.heure}</div>
+                </div>
+                <button onClick={() => deleteSlot(slot.id)}
+                  style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, width: 30, height: 30, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Créneaux passés/réservés */}
+      {slots.filter(s => !s.is_available).length > 0 && (
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Créneaux réservés / passés</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {slots.filter(s => !s.is_available).map(slot => (
+              <div key={slot.id} style={{ background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.5 }}>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+                  {new Date(slot.date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} · {slot.heure}
+                </div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Réservé</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Panel détail client avec messages ── */
 function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [msgText,   setMsgText]   = useState("");
@@ -167,7 +299,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
           {/* Onglets */}
           <div style={{ display: "flex", gap: 6 }}>
-            {[["overview","📋 Vue"], ["messages","💬 Message"], ["progress","📈 Progression"], ["nutrition","🥗 Nutrition"], ["vivante","⚡ Vivante"]].map(([t, l]) => (
+            {[["overview","📋 Vue"], ["messages","💬 Message"], ["progress","📈 Progression"], ["nutrition","🥗 Nutrition"], ["vivante","⚡ Vivante"], ["creneaux","📅 Créneaux"]].map(([t, l]) => (
               <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>{l}</button>
             ))}
           </div>
@@ -302,6 +434,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
               <SeanceVivanteCoach clientId={client.id} clientName={client.full_name} />
             </div>
           )}
+          {tab === "creneaux" && (
+            <CreneauxManager clientId={client.id} />
+          )}
+
           {tab === "nutrition" && nutGoals && (
             <div style={{ padding: "16px 0", display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>
