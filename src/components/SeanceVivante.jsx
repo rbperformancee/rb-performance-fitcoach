@@ -76,22 +76,35 @@ export function SeanceVivante({ clientId, sessionName }) {
   };
 
   const playAudio = async () => {
-    if (!message?.audio_url) return;
-    try {
-      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-      // Unlock audio context iOS
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) { const ctx = new AudioCtx(); ctx.resume(); }
-      audioRef.current = new Audio();
-      audioRef.current.src = message.audio_url;
-      audioRef.current.preload = "auto";
-      audioRef.current.onerror = (e) => { console.error("Audio error:", e.target?.error); setPlaying(false); };
-      audioRef.current.onended = () => setPlaying(false);
-      audioRef.current.oncanplay = async () => {
-        try { await audioRef.current.play(); setPlaying(true); } catch(e) { console.error("Play:", e); }
-      };
-      audioRef.current.load();
-    } catch(e) { console.error("Audio setup:", e); }
+    // Essayer d abord l audio file
+    if (message?.audio_url) {
+      try {
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+        audioRef.current = new Audio(message.audio_url);
+        audioRef.current.onended = () => setPlaying(false);
+        audioRef.current.onerror = () => {
+          // Fallback: speechSynthesis si audio ne marche pas
+          speakText();
+        };
+        await audioRef.current.play();
+        setPlaying(true);
+        return;
+      } catch(e) {}
+    }
+    // Fallback speechSynthesis
+    speakText();
+  };
+
+  const speakText = () => {
+    if (!message?.text_message) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(message.text_message);
+    utt.lang = "fr-FR";
+    utt.rate = 1.0;
+    utt.pitch = 1.0;
+    utt.onstart = () => setPlaying(true);
+    utt.onend = () => setPlaying(false);
+    window.speechSynthesis.speak(utt);
   };
 
   const dismiss = () => {
@@ -123,7 +136,7 @@ export function SeanceVivante({ clientId, sessionName }) {
       )}
 
       {/* Bouton play audio */}
-      {message.audio_url && (
+      {(message.audio_url || message.text_message) && (
         <button onClick={playAudio} style={{ width: 80, height: 80, borderRadius: "50%", background: playing ? "rgba(2,209,186,0.15)" : G, border: playing ? "2px solid " + G : "none", cursor: "pointer", marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s", boxShadow: playing ? "0 0 30px rgba(2,209,186,0.4)" : "none" }}>
           {playing ? (
             <div style={{ display: "flex", gap: 4, alignItems: "center", height: 28 }}>
