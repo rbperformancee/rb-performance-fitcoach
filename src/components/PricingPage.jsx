@@ -26,7 +26,7 @@ const CSS = `
   @keyframes orb1{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-20px)}}
   @keyframes orb2{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,20px)}}
   @keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-  @keyframes tealPulse{0%,100%{color:#02d1ba;text-shadow:0 0 20px rgba(2,209,186,0.3)}50%{color:#5ee8d4;text-shadow:0 0 40px rgba(2,209,186,0.6),0 0 80px rgba(2,209,186,0.2)}}
+  @keyframes tealPulse{0%{color:#02d1ba;text-shadow:0 0 0px rgba(2,209,186,0)}15%{color:#5ee8d4;text-shadow:0 0 30px rgba(2,209,186,0.8),0 0 60px rgba(2,209,186,0.4),0 0 100px rgba(2,209,186,0.2)}30%{color:#02d1ba;text-shadow:0 0 10px rgba(2,209,186,0.2)}50%{color:#7ff5e8;text-shadow:0 0 40px rgba(2,209,186,1),0 0 80px rgba(2,209,186,0.5),0 0 120px rgba(2,209,186,0.3)}70%{color:#02d1ba;text-shadow:0 0 5px rgba(2,209,186,0.1)}85%{color:#3de0cf;text-shadow:0 0 20px rgba(2,209,186,0.5),0 0 40px rgba(2,209,186,0.2)}100%{color:#02d1ba;text-shadow:0 0 0px rgba(2,209,186,0)}}
   @keyframes shine{0%{left:-100%}100%{left:200%}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
   .rbcard{transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.4s;}
@@ -93,7 +93,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
           <div style={{ fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', color: 'rgba(2,209,186,0.5)', marginBottom: 24 }}>RB Perform · Programme d'élite</div>
           <h1 style={{ fontSize: 'clamp(44px,10vw,64px)', fontWeight: 900, lineHeight: 0.88, letterSpacing: -4, marginBottom: 20 }}>
             <span style={{ display: 'block', color: '#fff' }}>La Performance</span>
-            <span style={{ display: 'block', animation: 'tealPulse 3s ease-in-out infinite' }}>N'Attend Pas.</span>
+            <span style={{ display: 'block', animation: 'tealPulse 4s cubic-bezier(0.45,0,0.55,1) infinite' }}>N'Attend Pas.</span>
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.28)', lineHeight: 1.9, marginBottom: 28 }}>
             Un athlète de haut niveau. Une app unique.<br />Des résultats qui parlent d'eux-mêmes.
