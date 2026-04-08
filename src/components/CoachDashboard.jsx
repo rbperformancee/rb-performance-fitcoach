@@ -429,9 +429,14 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   const [sent, setSent] = React.useState(false);
   const [isLive, setIsLive] = React.useState(false);
   const [recording, setRecording] = React.useState(false);
+  const [recordingTime, setRecordingTime] = React.useState(0);
   const [audioBlob, setAudioBlob] = React.useState(null);
+  const [elevenKey, setElevenKey] = React.useState(() => { try { return localStorage.getItem("rb_eleven_key") || ""; } catch(e) { return ""; } });
+  const [generating, setGenerating] = React.useState(false);
+  const [liveSession, setLiveSession] = React.useState(null);
   const mediaRef = React.useRef(null);
   const chunksRef = React.useRef([]);
+  const timerRef = React.useRef(null);
 
 
   React.useEffect(() => {
