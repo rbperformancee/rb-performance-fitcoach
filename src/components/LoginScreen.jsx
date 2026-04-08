@@ -137,7 +137,13 @@ export function LoginScreen({ onSendMagicLink, loading }) {
         <div style={{ width: '100%', maxWidth: 360 }}>
           {/* Logo + Phrase */}
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <img src={LOGO_B64} alt="RB PERFORM" style={{ width: 88, height: 88, objectFit: 'cover', objectPosition: 'center 60%', display: 'block', margin: '0 auto 20px', borderRadius: 22, boxShadow: '0 0 0 1px rgba(2,209,186,0.2), 0 20px 60px rgba(2,209,186,0.12)' }} />
+            {onBack && (
+            <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 12, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', marginBottom: 28, letterSpacing: '0.3px' }}>
+              <span style={{ fontSize: 16 }}>←</span>
+              <span>Découvrir les offres</span>
+            </button>
+          )}
+          <img src={LOGO_B64} alt="RB PERFORM" style={{ width: 88, height: 88, objectFit: 'cover', objectPosition: 'center 60%', display: 'block', margin: '0 auto 20px', borderRadius: 22, boxShadow: '0 0 0 1px rgba(2,209,186,0.2), 0 20px 60px rgba(2,209,186,0.12)' }} />
             {[phrase[0], phrase[1]].map((line, li) => (
               <div key={li} style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1.05, color: li === 0 ? '#f5f5f5' : '#02d1ba' }}>{line}</div>
             ))}

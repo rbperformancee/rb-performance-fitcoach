@@ -201,7 +201,7 @@ export default function App() {
   // ── Pas connecté → Pricing ou Login ──
   if (!user) {
     if (showLogin) {
-      return <LoginScreen />;
+      return <LoginScreen onBack={() => setShowLogin(false)} />;
     }
     return (
       <div style={{ position: 'relative' }}>
