@@ -431,8 +431,6 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   const [recording, setRecording] = React.useState(false);
   const [recordingTime, setRecordingTime] = React.useState(0);
   const [audioBlob, setAudioBlob] = React.useState(null);
-  const [elevenKey, setElevenKey] = React.useState(() => { try { return localStorage.getItem("rb_eleven_key") || ""; } catch(e) { return ""; } });
-  const [generating, setGenerating] = React.useState(false);
   const [liveSession, setLiveSession] = React.useState(null);
   const mediaRef = React.useRef(null);
   const chunksRef = React.useRef([]);
@@ -453,22 +451,6 @@ function SeanceVivanteCoach({ clientId, clientName }) {
     const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
   }, [clientId]);
-
-  const generateVoice = async () => {
-    if (!text.trim() || !elevenKey) return;
-    setGenerating(true);
-    try {
-      const resp = await fetch("https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM", {
-        method: "POST",
-        headers: { "xi-api-key": elevenKey, "Content-Type": "application/json", "Accept": "audio/mpeg" },
-        body: JSON.stringify({ text, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.5, similarity_boost: 0.75 } })
-      });
-      if (!resp.ok) { alert("Erreur ElevenLabs " + resp.status); setGenerating(false); return; }
-      const buf = await resp.arrayBuffer();
-      setAudioBlob(new Blob([buf], { type: "audio/mpeg" }));
-    } catch(e) { alert("Erreur: " + e.message); }
-    setGenerating(false);
-  };
 
   const startRecording = async () => {
     try {
@@ -544,19 +526,12 @@ function SeanceVivanteCoach({ clientId, clientName }) {
 
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Message flash — apparait en plein ecran pendant sa seance</div>
 
-      {/* Cle ElevenLabs */}
-      <input value={elevenKey} onChange={e => { setElevenKey(e.target.value); localStorage.setItem("rb_eleven_key", e.target.value); }}
-        placeholder="Cle API ElevenLabs (pour voix IA premium)" style={{ width: "100%", padding: "9px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid " + (elevenKey ? "rgba(2,209,186,0.2)" : "rgba(255,165,0,0.4)"), borderRadius: 10, color: "#fff", fontSize: 11, outline: "none", boxSizing: "border-box", marginBottom: 10 }} />
-
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Ex: Dernier set. Donne tout." maxLength={80}
         style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
 
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
         <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
           {recording ? "⏹ Stop (10s max)" : "🎙 Vocal"}
-        </button>
-        <button onClick={generateVoice} disabled={!text.trim() || generating || !elevenKey} style={{ flex: 1, padding: 12, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, color: generating ? "rgba(2,209,186,0.4)" : !elevenKey ? "rgba(255,255,255,0.2)" : "#02d1ba", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-          {generating ? "..." : "✨ Voix IA"}
         </button>
         {audioBlob && <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "#02d1ba" }}>✓ Audio pret</div>}
       </div>
