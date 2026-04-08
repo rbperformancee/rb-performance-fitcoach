@@ -221,9 +221,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
             SSL · Sans engagement caché · TVA non applicable art. 293B CGI
           </div>
         </div>
-        <button onClick={onLogin} style={{ width: '100%', padding: 16, background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, color: 'rgba(255,255,255,0.2)', fontSize: 12, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', transition: 'all 0.3s' }}>
-          Déjà membre ? <span style={{ color: '#02d1ba' }}>Se connecter →</span>
-        </button>
+
         <div style={{ textAlign: 'center', marginTop: 16, fontSize: 9, color: 'rgba(255,255,255,0.06)', letterSpacing: 2, textTransform: 'uppercase' }}>Stripe · SSL · Visa · Mastercard · Apple Pay</div>
       </div>
     </div>
