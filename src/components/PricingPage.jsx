@@ -5,15 +5,15 @@ import { supabase } from '../lib/supabase';
 const stripePromise = loadStripe('pk_test_51T6ePLPFn8e7Xxh2JMIdug1cOOv0JKCl8t3UxDgIQM8hJ7P8fNVGGkwcY6cdHYUdxv78yKIVp7GdvMDhzR6Y5bSs00CMCKSBho');
 
 const PLANS = [
-  { id: '3m', name: '3 Mois', duration: '3 mois', price: 120, total: 360, priceId: 'price_1TJtzFPFn8e7Xxh2TSniccr6', color: '#02d1ba', btnClass: 'b1', popular: false, savings: null, badge: null,
+  { id: '3m', name: '3 Mois', duration: '3 mois', price: 120, total: 360, priceId: 'price_1TK3RzApr7mMXwrlSqOA12aP', color: '#02d1ba', btnClass: 'b1', popular: false, savings: null, badge: null,
     features: ["Programme sur mesure 3 mois","Séance Vivante — coach en direct","Suivi complet dans l'app","Messagerie avec Rayan"] },
-  { id: '6m', name: '6 Mois', duration: '6 mois', price: 110, total: 660, priceId: 'price_1TJtzaPFn8e7Xxh21ah74mco', color: '#a78bfa', btnClass: 'b2', popular: true, savings: '− 60€ vs 3 mois', badge: 'Le plus populaire',
+  { id: '6m', name: '6 Mois', duration: '6 mois', price: 110, total: 660, priceId: 'price_1TK3RIApr7mMXwrlZkRvrGFC', color: '#a78bfa', btnClass: 'b2', popular: true, savings: '− 60€ vs 3 mois', badge: 'Le plus populaire',
     features: ["Programme sur mesure 6 mois","Séance Vivante — coach en direct","Suivi complet dans l'app","Messagerie prioritaire avec Rayan","Ajustements mensuels garantis"] },
-  { id: '12m', name: '12 Mois', duration: '12 mois', price: 100, total: 1200, priceId: 'price_1TJu06PFn8e7Xxh2IOJFQx6t', color: '#fbbf24', btnClass: 'b3', popular: false, savings: '− 240€ vs 3 mois', badge: null,
+  { id: '12m', name: '12 Mois', duration: '12 mois', price: 100, total: 1200, priceId: 'price_1TK3R3Apr7mMXwrlFdO0Sl0a', color: '#fbbf24', btnClass: 'b3', popular: false, savings: '− 240€ vs 3 mois', badge: null,
     features: ["Programme sur mesure 12 mois","Séance Vivante — coach en direct","Suivi complet dans l'app","Messagerie VIP 7j/7","Ajustements mensuels garantis","Bilan transformation complet"] },
 ];
 
-const GENERAL = { id: 'general', name: '8 Semaines', price: 39, priceId: 'price_1TJu3fPFn8e7Xxh2aBOJshzr',
+const GENERAL = { id: 'general', name: '8 Semaines', price: 39, priceId: 'price_1TK3QjApr7mMXwrloye23gi2',
   features: ["Programme général 8 semaines","Accès complet à l'app premium","Suivi poids · nutrition · cardio","Résiliable à tout moment"] };
 
 const TESTIMONIALS = [
