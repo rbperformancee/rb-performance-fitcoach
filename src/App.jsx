@@ -93,6 +93,14 @@ export default function App() {
 
   const isCoach = user?.email === COACH_EMAIL;
   const [showLogin, setShowLogin] = React.useState(false);
+  const [paymentStatus, setPaymentStatus] = React.useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('payment') || null;
+  });
+  const [paymentPlan, setPaymentPlan] = React.useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('plan') || null;
+  });
   const { requestPermission, permission } = usePushNotifications(client?.id);
   
   // Demander permission push au client après connexion
@@ -183,6 +191,60 @@ export default function App() {
   const handleDragOver  = e => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = () => setIsDragging(false);
   const handleDrop      = e => { e.preventDefault(); setIsDragging(false); handleLocalImport(e); };
+
+  // ── Paiement succès ──
+  if (paymentStatus === 'success') {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#000', fontFamily: '-apple-system,Inter,sans-serif', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center', overflow: 'hidden' }}>
+        <style>{`
+          @keyframes successOrb{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+          @keyframes checkIn{0%{opacity:0;transform:scale(0.5)}70%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+          @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+          @keyframes tealPulse{0%,100%{color:#02d1ba;text-shadow:0 0 20px rgba(2,209,186,0.3)}50%{color:#5ee8d4;text-shadow:0 0 40px rgba(2,209,186,0.6)}}
+          @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        `}</style>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', width: 500, height: 500, background: 'radial-gradient(circle,rgba(2,209,186,0.15),transparent 65%)', borderRadius: '50%', filter: 'blur(80px)', animation: 'successOrb 4s ease-in-out infinite', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(2,209,186,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(2,209,186,0.04) 1px,transparent 1px)', backgroundSize: '44px 44px', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 10, maxWidth: 360 }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#02d1ba,#0891b2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', animation: 'checkIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both', fontSize: 36 }}>✓</div>
+          <div style={{ fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', color: 'rgba(2,209,186,0.6)', marginBottom: 16, animation: 'fadeUp 0.6s ease 0.2s both' }}>Bienvenue dans l'élite</div>
+          <h1 style={{ fontSize: 42, fontWeight: 900, letterSpacing: -3, lineHeight: 0.9, marginBottom: 20, animation: 'fadeUp 0.6s ease 0.3s both' }}>
+            <span style={{ display: 'block', color: '#fff' }}>Tu fais partie</span>
+            <span style={{ display: 'block', animation: 'tealPulse 3s ease-in-out infinite' }}>de la Team.</span>
+          </h1>
+          {paymentPlan && <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(2,209,186,0.08)', border: '1px solid rgba(2,209,186,0.2)', borderRadius: 100, padding: '8px 20px', fontSize: 12, color: '#02d1ba', fontWeight: 600, marginBottom: 24, animation: 'fadeUp 0.6s ease 0.4s both' }}>Programme {paymentPlan} activé</div>}
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', lineHeight: 1.8, marginBottom: 40, animation: 'fadeUp 0.6s ease 0.5s both' }}>
+            Un email va t'être envoyé pour accéder à ton espace personnel.<br />
+            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12 }}>Vérifie aussi tes spams.</span>
+          </p>
+          <button onClick={() => { setPaymentStatus(null); setShowLogin(true); window.history.replaceState({}, '', '/'); }} style={{ width: '100%', padding: 18, background: 'linear-gradient(135deg,#02d1ba,#0891b2)', border: 'none', borderRadius: 16, color: '#000', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', letterSpacing: 0.3, position: 'relative', overflow: 'hidden', animation: 'fadeUp 0.6s ease 0.6s both' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg,rgba(255,255,255,0.15),transparent 50%)', pointerEvents: 'none' }} />
+            Accéder à mon espace →
+          </button>
+          <div style={{ marginTop: 20, fontSize: 11, color: 'rgba(255,255,255,0.15)', animation: 'fadeUp 0.6s ease 0.7s both' }}>RB Perform · Programme d'élite</div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Paiement annulé ──
+  if (paymentStatus === 'cancelled') {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#000', fontFamily: '-apple-system,Inter,sans-serif', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', width: 400, height: 400, background: 'radial-gradient(circle,rgba(239,68,68,0.08),transparent 65%)', borderRadius: '50%', filter: 'blur(80px)', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 10, maxWidth: 340 }}>
+          <div style={{ fontSize: 48, marginBottom: 24 }}>←</div>
+          <h1 style={{ fontSize: 32, fontWeight: 900, letterSpacing: -2, marginBottom: 16 }}>Pas encore prêt ?</h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', lineHeight: 1.8, marginBottom: 36 }}>
+            Aucun paiement n'a été effectué.<br />Tu peux revenir quand tu veux.
+          </p>
+          <button onClick={() => { setPaymentStatus(null); window.history.replaceState({}, '', '/'); }} style={{ width: '100%', padding: 18, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif' }}>
+            ← Voir les offres
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── Écran de chargement ──
   if (authLoading) {
