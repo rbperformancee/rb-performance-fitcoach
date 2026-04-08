@@ -449,6 +449,22 @@ function SeanceVivanteCoach({ clientId, clientName }) {
     return () => clearInterval(interval);
   }, [clientId]);
 
+  const generateVoice = async () => {
+    if (!text.trim() || !elevenKey) return;
+    setGenerating(true);
+    try {
+      const resp = await fetch("https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM", {
+        method: "POST",
+        headers: { "xi-api-key": elevenKey, "Content-Type": "application/json", "Accept": "audio/mpeg" },
+        body: JSON.stringify({ text, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.5, similarity_boost: 0.75 } })
+      });
+      if (!resp.ok) { alert("Erreur ElevenLabs " + resp.status); setGenerating(false); return; }
+      const buf = await resp.arrayBuffer();
+      setAudioBlob(new Blob([buf], { type: "audio/mpeg" }));
+    } catch(e) { alert("Erreur: " + e.message); }
+    setGenerating(false);
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -528,7 +544,10 @@ function SeanceVivanteCoach({ clientId, clientName }) {
 
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
         <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-          {recording ? "⏹ Stop (10s max)" : "🎙 Enregistrer vocal"}
+          {recording ? "⏹ Stop (10s max)" : "🎙 Vocal"}
+        </button>
+        <button onClick={generateVoice} disabled={!text.trim() || generating || !elevenKey} style={{ flex: 1, padding: 12, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, color: generating ? "rgba(2,209,186,0.4)" : !elevenKey ? "rgba(255,255,255,0.2)" : "#02d1ba", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          {generating ? "..." : "✨ Voix IA"}
         </button>
         {audioBlob && <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "#02d1ba" }}>✓ Audio pret</div>}
       </div>
