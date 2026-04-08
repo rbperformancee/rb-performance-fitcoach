@@ -1,37 +1,48 @@
-import { serve } from "https://deno.land/x/sift@0.6.0/mod.ts";
-import Stripe from "https://esm.sh/stripe@13.11.0";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
-  apiVersion: "2023-10-16",
-  httpClient: Stripe.createFetchHttpClient(),
-});
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Content-Type": "application/json",
+}
 
 serve(async (req) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Content-Type": "application/json",
-  };
-
-  if (req.method === "OPTIONS") return new Response("ok", { headers });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
 
   try {
-    const { priceId, clientEmail, clientId, planName, planId } = await req.json();
+    const { priceId, clientEmail, clientId, planName, planId } = await req.json()
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") ?? ""
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "subscription",
-      line_items: [{ price: priceId, quantity: 1 }],
-      customer_email: clientEmail,
-      success_url: "https://rb-perfor.vercel.app?payment=success&plan=" + encodeURIComponent(planName),
-      cancel_url: "https://rb-perfor.vercel.app?payment=cancelled",
-      metadata: { clientId, planName, planId },
-      locale: "fr",
-      allow_promotion_codes: true,
-    });
+    const body = new URLSearchParams({
+      "payment_method_types[0]": "card",
+      "mode": "subscription",
+      "line_items[0][price]": priceId,
+      "line_items[0][quantity]": "1",
+      "success_url": "https://rb-perfor.vercel.app?payment=success&plan=" + encodeURIComponent(planName),
+      "cancel_url": "https://rb-perfor.vercel.app?payment=cancelled",
+      "locale": "fr",
+      "allow_promotion_codes": "true",
+    })
 
-    return new Response(JSON.stringify({ url: session.url }), { headers });
+    if (clientEmail) body.append("customer_email", clientEmail)
+    if (clientId) body.append("metadata[clientId]", clientId)
+    if (planName) body.append("metadata[planName]", planName)
+    if (planId) body.append("metadata[planId]", planId)
+
+    const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + stripeKey,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: body.toString(),
+    })
+
+    const session = await res.json()
+    if (!res.ok) throw new Error(session.error?.message ?? "Stripe error")
+
+    return new Response(JSON.stringify({ url: session.url }), { headers: corsHeaders })
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 400, headers });
+    return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: corsHeaders })
   }
-});
+})

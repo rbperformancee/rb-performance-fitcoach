@@ -42,6 +42,7 @@ import { RPEModal } from "./components/RPEModal";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPages";
 import { LoginScreen } from "./components/LoginScreen";
+import PricingPage from "./components/PricingPage";
 import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
@@ -91,6 +92,7 @@ export default function App() {
   } = useAuth();
 
   const isCoach = user?.email === COACH_EMAIL;
+  const [showLogin, setShowLogin] = React.useState(false);
   const { requestPermission, permission } = usePushNotifications(client?.id);
   
   // Demander permission push au client après connexion
@@ -196,10 +198,20 @@ export default function App() {
     );
   }
 
-  // ── Pas connecté → Login ──
+  // ── Pas connecté → Pricing ou Login ──
   if (!user) {
+    if (showLogin) {
+      return <LoginScreen />;
+    }
     return (
-      <LoginScreen />
+      <div style={{ position: 'relative' }}>
+        <PricingPage client={null} />
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center', padding: '16px 24px calc(env(safe-area-inset-bottom,0px) + 16px)', background: 'linear-gradient(to top,rgba(0,0,0,0.95),transparent)' }}>
+          <button onClick={() => setShowLogin(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', letterSpacing: '0.3px' }}>
+            Déjà membre ? <span style={{ color: '#02d1ba', fontWeight: 600 }}>Se connecter →</span>
+          </button>
+        </div>
+      </div>
     );
   }
 
