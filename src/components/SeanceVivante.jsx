@@ -76,23 +76,29 @@ export function SeanceVivante({ clientId, sessionName }) {
   };
 
   const playAudio = async () => {
-    // Essayer d abord l audio file
     if (message?.audio_url) {
       try {
-        if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-        audioRef.current = new Audio(message.audio_url);
-        audioRef.current.onended = () => setPlaying(false);
-        audioRef.current.onerror = () => {
-          // Fallback: speechSynthesis si audio ne marche pas
-          speakText();
-        };
-        await audioRef.current.play();
+        // Web Audio API - bypass restrictions iOS Safari
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        await ctx.resume();
+        const resp = await fetch(message.audio_url);
+        const arrayBuffer = await resp.arrayBuffer();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(ctx.destination);
+        source.onended = () => setPlaying(false);
+        source.start(0);
         setPlaying(true);
         return;
-      } catch(e) {}
+      } catch(e) {
+        console.log("Web Audio failed, fallback speech:", e);
+        speakText();
+      }
+    } else {
+      speakText();
     }
-    // Fallback speechSynthesis
-    speakText();
   };
 
   const speakText = () => {
@@ -101,7 +107,6 @@ export function SeanceVivante({ clientId, sessionName }) {
     const utt = new SpeechSynthesisUtterance(message.text_message);
     utt.lang = "fr-FR";
     utt.rate = 1.0;
-    utt.pitch = 1.0;
     utt.onstart = () => setPlaying(true);
     utt.onend = () => setPlaying(false);
     window.speechSynthesis.speak(utt);
