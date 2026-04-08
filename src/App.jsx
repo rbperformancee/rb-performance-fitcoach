@@ -277,6 +277,11 @@ export default function App() {
     );
   }
 
+  // ── Client connecté sans programme → Onboarding ──
+  if (user && !isCoach && client && !programme && !loading) {
+    return <OnboardingFlow client={client} onComplete={() => window.location.reload()} />;
+  }
+
   // ── Coach → Dashboard admin ──
   if (showHome && !isCoach) {
     const _h = new Date().getHours();
