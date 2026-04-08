@@ -544,6 +544,10 @@ function SeanceVivanteCoach({ clientId, clientName }) {
 
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Message flash — apparait en plein ecran pendant sa seance</div>
 
+      {/* Cle ElevenLabs */}
+      <input value={elevenKey} onChange={e => { setElevenKey(e.target.value); localStorage.setItem("rb_eleven_key", e.target.value); }}
+        placeholder="Cle API ElevenLabs (pour voix IA premium)" style={{ width: "100%", padding: "9px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid " + (elevenKey ? "rgba(2,209,186,0.2)" : "rgba(255,165,0,0.4)"), borderRadius: 10, color: "#fff", fontSize: 11, outline: "none", boxSizing: "border-box", marginBottom: 10 }} />
+
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Ex: Dernier set. Donne tout." maxLength={80}
         style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
 
