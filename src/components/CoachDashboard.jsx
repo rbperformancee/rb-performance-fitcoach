@@ -432,7 +432,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   const [audioBlob, setAudioBlob] = React.useState(null);
   const mediaRef = React.useRef(null);
   const chunksRef = React.useRef([]);
-  const { supabase: sb } = require("../lib/supabase") || {};
+
 
   React.useEffect(() => {
     if (!clientId) return;
