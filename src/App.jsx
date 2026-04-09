@@ -342,7 +342,7 @@ export default function App() {
           <div>
             <div style={{fontSize:10,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'3px',textTransform:'uppercase',marginBottom:12}}>{_days[_now.getDay()]} · {_now.getDate()} {_months[_now.getMonth()]}</div>
             <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontWeight:400,letterSpacing:'1px',marginBottom:6}}>{_g}</div>
-            <div style={{fontSize:44,fontWeight:800,color:'#ffffff',letterSpacing:'-2px',lineHeight:1}}>{_fn}<span style={{color:'#02d1ba'}}>.</span></div>
+            <div style={{fontSize:44,fontWeight:800,color:'#ffffff',letterSpacing:'-2px',lineHeight:1,maxWidth:'55vw',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{_fn}<span style={{color:'#02d1ba'}}>.</span></div>
           </div>
 
           {/* Anneau Tesla + heure Apple */}
