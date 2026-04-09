@@ -525,7 +525,7 @@ export default function App() {
       )}
 
       {/* ── Import local (si pas de cloud) ── */}
-      {!authError && showImportFallback && (
+      {!authError && showImportFallback && isCoach && (
         <div className="import-screen">
           <div className={`import-drop-zone ${isDragging ? "dragging" : ""}`} onClick={() => { const i = document.createElement("input"); i.type = "file"; i.accept = ".html"; i.onchange = handleLocalImport; i.click(); }}>
             <div className="import-icon">
@@ -542,6 +542,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* ── Train verrouillé si pas de programme ── */}
+      {user && !isCoach && !cloudProgramme && client?.onboarding_done && page === "training" && <TrainLocked client={client} />}
 
       {/* ── App principale ── */}
       {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
