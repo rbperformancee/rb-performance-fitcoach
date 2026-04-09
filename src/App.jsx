@@ -548,6 +548,7 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "training" ? (
+            !cloudProgramme ? <TrainLocked client={client} /> :
               <TrainingPage
                 client={client}
                 programme={programme}
