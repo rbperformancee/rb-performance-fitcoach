@@ -22,6 +22,23 @@ async function sendEmail(to: string, subject: string, html: string) {
 
 async function createClient(email: string) {
   if (!SUPABASE_KEY) return
+
+  // 1. Creer le compte Auth Supabase
+  await fetch(SUPABASE_URL + "/auth/v1/admin/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+    },
+    body: JSON.stringify({
+      email: email,
+      email_confirm: true,
+      user_metadata: {}
+    }),
+  })
+
+  // 2. Creer le profil dans la table clients
   await fetch(SUPABASE_URL + "/rest/v1/clients", {
     method: "POST",
     headers: {

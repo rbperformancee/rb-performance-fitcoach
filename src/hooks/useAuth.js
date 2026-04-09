@@ -29,7 +29,6 @@ export function useAuth() {
         .single();
 
       if (cErr || !clientData) {
-        setError("Aucun compte client trouvé pour cet email. Contacte Rayan.");
         setLoading(false);
         return;
       }
