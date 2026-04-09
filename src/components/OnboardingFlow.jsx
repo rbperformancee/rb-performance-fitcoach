@@ -74,16 +74,18 @@ export default function OnboardingFlow({ client, onComplete }) {
 
   const saveForm = async () => {
     setSaving(true);
-    await supabase.from("onboarding_forms").upsert({
-      client_id: client.id, ...form, is_complete: true, submitted_at: new Date().toISOString()
-    }, { onConflict: "client_id" });
+    if (client?.id) {
+      await supabase.from("onboarding_forms").upsert({
+        client_id: client.id, ...form, is_complete: true, submitted_at: new Date().toISOString()
+      }, { onConflict: "client_id" });
+    }
     setSaving(false);
   };
 
   const bookSlot = async () => {
     if (!selectedSlot) return;
     setSaving(true);
-    await supabase.from("bookings").insert({ client_id: client.id, slot_id: selectedSlot.id });
+    if (client?.id) { await supabase.from("bookings").insert({ client_id: client.id, slot_id: selectedSlot.id }); }
     await supabase.from("coach_slots").update({ is_available: false }).eq("id", selectedSlot.id);
     setBookedSlot(selectedSlot);
     setSaving(false);
