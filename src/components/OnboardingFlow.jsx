@@ -52,6 +52,7 @@ export default function OnboardingFlow({ client, onComplete }) {
 
   const [form, setForm] = useState({
     nom_prenom: client?.full_name || "",
+    telephone: "",
     age: "", poids: "", taille: "", passe_sportif: "",
     metier: "", sommeil: "", pas_jour: "", allergies: "", repas: "", jours_entrainement: "", heures_seance: "", diet_actuelle: "",
     points_faibles: "", objectifs_6semaines: "", objectifs_3mois: "", objectifs_6mois: "",
@@ -129,6 +130,7 @@ export default function OnboardingFlow({ client, onComplete }) {
           <Input label="Poids" placeholder="kg" value={form.poids} onChange={set("poids")} half />
         </div>
         <Input label="Taille" placeholder="cm" value={form.taille} onChange={set("taille")} />
+        <Input label="Téléphone" placeholder="+33 6 xx xx xx xx" value={form.telephone} onChange={set("telephone")} />
         <Input label="Passé sportif" placeholder="Sports pratiqués, niveau, expérience..." value={form.passe_sportif} onChange={set("passe_sportif")} textarea />
         <button style={S.btn(!!form.nom_prenom)} onClick={nextStep}>Continuer →</button>
       </div>

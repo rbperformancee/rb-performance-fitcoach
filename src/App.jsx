@@ -292,7 +292,7 @@ export default function App() {
   }
 
   // ── Client connecté sans programme → Onboarding ──
-  if (user && !isCoach && !authLoading && !cloudProgramme) {
+  if (user && !isCoach && !authLoading && !cloudProgramme && !client?.onboarding_done) {
     return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
   }
 
