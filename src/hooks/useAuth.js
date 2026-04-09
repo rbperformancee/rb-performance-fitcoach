@@ -17,41 +17,19 @@ export function useAuth() {
 
   /* ── Charger le profil + programme depuis Supabase ── */
   const loadClientData = useCallback(async (authUser) => {
-    if (!authUser) { setLoading(false); return; }
-    // Le coach n'a pas de profil client — skip
-    if (authUser.email === COACH_EMAIL) { setLoading(false); return; }
     try {
-      // 1. Récupérer le profil client
+      if (!authUser) return;
+      if (authUser.email === COACH_EMAIL) return;
       const { data: clientData } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("email", authUser.email)
-        .single();
-
+        .from("clients").select("*").eq("email", authUser.email).single();
       setClient(clientData || null);
-      if (!clientData) {
-        setLoading(false);
-        return;
-      }
-
-      // 2. Récupérer le programme actif
-      const { data: progData, error: pErr } = await supabase
-        .from("programmes")
-        .select("*")
-        .eq("client_id", clientData.id)
-        .eq("is_active", true)
-        .order("uploaded_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (pErr || !progData) {
-        setLoading(false);
-        return;
-      }
-
-      setProgramme(progData.html_content);
+      if (!clientData) return;
+      const { data: progData } = await supabase
+        .from("programmes").select("*").eq("client_id", clientData.id)
+        .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).single();
+      if (progData) setProgramme(progData.html_content);
     } catch (e) {
-      setError("Erreur de connexion. Réessaie.");
+      console.error("loadClientData error:", e);
     } finally {
       setLoading(false);
     }
