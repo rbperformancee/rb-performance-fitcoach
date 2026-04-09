@@ -93,6 +93,10 @@ export default function App() {
 
   const isCoach = user?.email === COACH_EMAIL;
   const [showLogin, setShowLogin] = React.useState(false);
+  const [clientEmail] = React.useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('email') || '';
+  });
   const [paymentStatus, setPaymentStatus] = React.useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('payment') || null;
@@ -191,6 +195,16 @@ export default function App() {
   const handleDragOver  = e => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = () => setIsDragging(false);
   const handleDrop      = e => { e.preventDefault(); setIsDragging(false); handleLocalImport(e); };
+
+  React.useEffect(() => {
+    if (paymentStatus === 'success' && clientEmail) {
+      fetch('https://pwkajyrpldhlybavmopd.supabase.co/functions/v1/stripe-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud' },
+        body: JSON.stringify({ type: 'checkout.session.completed', data: { object: { customer_email: clientEmail, amount_total: 0, metadata: { planName: paymentPlan || 'RB Perform', planId: '' } } } })
+      }).catch(() => {});
+    }
+  }, [paymentStatus, clientEmail]);
 
   // ── Paiement succès ──
   if (paymentStatus === 'success') {

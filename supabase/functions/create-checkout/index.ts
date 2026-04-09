@@ -18,7 +18,7 @@ serve(async (req) => {
       "mode": "subscription",
       "line_items[0][price]": priceId,
       "line_items[0][quantity]": "1",
-      "success_url": "https://rb-perfor.vercel.app?payment=success&plan=" + encodeURIComponent(planName),
+      "success_url": "https://rb-perfor.vercel.app?payment=success&plan=" + encodeURIComponent(planName) + "&email=" + encodeURIComponent(clientEmail || ""),
       "cancel_url": "https://rb-perfor.vercel.app?payment=cancelled",
       "locale": "fr",
       "allow_promotion_codes": "true",
