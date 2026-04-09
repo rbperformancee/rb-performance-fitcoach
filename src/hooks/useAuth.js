@@ -1,6 +1,3 @@
-/**
- * useAuth.js — Gestion auth Supabase + profil client
- */
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -8,14 +5,13 @@ const COACH_EMAIL = 'rb.performancee@gmail.com';
 
 export function useAuth() {
   const [user,        setUser]        = useState(null);
-  const [client,      setClient]      = useState(null);  // profil clients table
-  const [programme,   setProgramme]   = useState(null);  // HTML du programme
+  const [client,      setClient]      = useState(null);
+  const [programme,   setProgramme]   = useState(null);
   const [loading,     setLoading]     = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [error,       setError]       = useState(null);
   const [magicSent,   setMagicSent]   = useState(false);
 
-  /* ── Charger le profil + programme depuis Supabase ── */
   const loadClientData = useCallback(async (authUser) => {
     try {
       if (!authUser) return;
@@ -29,15 +25,13 @@ export function useAuth() {
         .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).single();
       if (progData) setProgramme(progData.html_content);
     } catch (e) {
-      console.error("loadClientData error:", e);
+      console.error("loadClientData:", e);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  /* ── Écouter les changements auth ── */
   useEffect(() => {
-    // Session au démarrage
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
@@ -45,7 +39,6 @@ export function useAuth() {
       else setLoading(false);
     });
 
-    // Changements en temps réel (magic link callback)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const u = session?.user ?? null;
       setUser(u);
@@ -57,22 +50,20 @@ export function useAuth() {
         setClient(null);
         setProgramme(null);
         setError(null);
+        setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [loadClientData]);
 
-  /* ── Envoyer le magic link ── */
   const sendMagicLink = useCallback(async (email) => {
     setAuthLoading(true);
     setError(null);
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
+        options: { emailRedirectTo: window.location.origin },
       });
       if (error) throw error;
       setMagicSent(true);
@@ -83,14 +74,9 @@ export function useAuth() {
     }
   }, []);
 
-  /* ── Déconnexion ── */
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
   }, []);
 
-  return {
-    user, client, programme,
-    loading, authLoading, error, magicSent,
-    sendMagicLink, signOut,
-  };
+  return { user, client, programme, loading, authLoading, error, magicSent, sendMagicLink, signOut };
 }
