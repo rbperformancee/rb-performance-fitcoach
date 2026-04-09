@@ -22,17 +22,17 @@ export function useAuth() {
     if (authUser.email === COACH_EMAIL) { setLoading(false); return; }
     try {
       // 1. Récupérer le profil client
-      const { data: clientData, error: cErr } = await supabase
+      const { data: clientData } = await supabase
         .from("clients")
         .select("*")
         .eq("email", authUser.email)
         .single();
 
-      if (cErr || !clientData) {
+      setClient(clientData || null);
+      if (!clientData) {
         setLoading(false);
         return;
       }
-      setClient(clientData);
 
       // 2. Récupérer le programme actif
       const { data: progData, error: pErr } = await supabase
