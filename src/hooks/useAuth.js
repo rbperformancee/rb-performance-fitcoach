@@ -46,7 +46,6 @@ export function useAuth() {
         .single();
 
       if (pErr || !progData) {
-        setError("Aucun programme actif. Rayan n'a pas encore uploadé ton programme.");
         setLoading(false);
         return;
       }
