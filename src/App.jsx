@@ -546,6 +546,17 @@ export default function App() {
       {/* ── Train verrouillé si pas de programme ── */}
       {user && !isCoach && !cloudProgramme && client?.onboarding_done && page === "training" && <TrainLocked client={client} />}
 
+      {/* ── Catch-all: client sans programme sur page training ── */}
+      {user && !isCoach && !cloudProgramme && client?.onboarding_done && !showHome && (
+        <div style={{minHeight:'100vh', background:'#050505'}}>
+          {page === 'training' && <TrainLocked client={client} />}
+          {page === 'weight' && <WeightPage client={client} appData={appData} />}
+          {page === 'move' && <MovePage client={client} appData={appData} />}
+          {page === 'fuel' && <FuelPage client={client} appData={appData} />}
+          {page === 'profile' && <ProfilePage client={client} onDeleteRequest={() => setShowDeleteConfirm(true)} onShowPrivacy={() => setShowPrivacy(true)} onShowMentions={() => setShowMentions(true)} onShowCGU={() => setShowCGU(true)} />}
+        </div>
+      )}
+
       {/* ── App principale ── */}
       {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
       {programme && !authError && (
