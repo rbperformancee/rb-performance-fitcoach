@@ -292,8 +292,8 @@ export default function App() {
   }
 
   // ── Client connecté sans programme → Onboarding ──
-  if (user && !isCoach && !cloudProgramme && !authLoading) {
-    return <OnboardingFlow client={client} onComplete={() => window.location.reload()} />;
+  if (user && !isCoach && !authLoading && !cloudProgramme) {
+    return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
   }
 
   // ── Coach → Dashboard admin ──
