@@ -291,7 +291,15 @@ export default function OnboardingFlow({ client, onComplete }) {
           Ton questionnaire a été envoyé à Rayan.<br />
           Il prépare ton programme sur mesure.
         </p>
-        <button style={{ ...S.btn(), animation: "fadeUp 0.6s ease 0.6s both" }} onClick={onComplete}>
+        <button style={{ ...S.btn(), animation: "fadeUp 0.6s ease 0.6s both" }} onClick={async () => {
+          if (client?.id) {
+            await supabase.from("clients").update({ onboarding_done: true }).eq("id", client.id);
+          } else {
+            const { data } = await supabase.from("clients").select("id").eq("email", client?.email || "").single();
+            if (data?.id) await supabase.from("clients").update({ onboarding_done: true }).eq("id", data.id);
+          }
+          onComplete();
+        }}>
           Accéder à mon espace →
         </button>
       </div>
