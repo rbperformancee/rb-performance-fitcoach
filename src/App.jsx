@@ -338,16 +338,16 @@ export default function App() {
         <div style={{position:'absolute',bottom:0,left:0,right:0,height:'40%',background:'radial-gradient(ellipse at 50% 120%, rgba(2,209,186,0.06) 0%, transparent 60%)',pointerEvents:'none'}}/>
 
         {/* TOP BAR — date + heure Tesla style */}
-        <div style={{padding:'calc(env(safe-area-inset-top, 44px) + 12px) 28px 0',display:'flex',justifyContent:'space-between',alignItems:'flex-start',position:'relative',zIndex:2}}>
+        <div style={{padding:'calc(env(safe-area-inset-top, 44px) + 12px) 28px 0',display:'flex',justifyContent:'space-between',alignItems:'flex-start',position:'relative',zIndex:2,gap:8}}>
           <div>
             <div style={{fontSize:10,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'3px',textTransform:'uppercase',marginBottom:12}}>{_days[_now.getDay()]} · {_now.getDate()} {_months[_now.getMonth()]}</div>
             <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontWeight:400,letterSpacing:'1px',marginBottom:6}}>{_g}</div>
-            <div style={{fontSize:44,fontWeight:800,color:'#ffffff',letterSpacing:'-2px',lineHeight:1,maxWidth:'55vw',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{_fn}<span style={{color:'#02d1ba'}}>.</span></div>
+            <div style={{fontSize:44,fontWeight:800,color:'#ffffff',letterSpacing:'-2px',lineHeight:1,wordBreak:'break-word',maxWidth:'54vw'}}>{_fn}<span style={{color:'#02d1ba'}}>.</span></div>
           </div>
 
           {/* Anneau Tesla + heure Apple */}
           <div style={{textAlign:'right'}}>
-            <div style={{fontSize:38,fontWeight:100,color:'rgba(255,255,255,0.8)',letterSpacing:'-2px',fontVariantNumeric:'tabular-nums',lineHeight:1}}>{_time}</div>
+            <div style={{fontSize:38,fontWeight:100,color:'rgba(255,255,255,0.8)',letterSpacing:'-2px',fontVariantNumeric:'tabular-nums',lineHeight:1,flexShrink:0}}>{_time}</div>
             <div style={{display:'flex',justifyContent:'flex-end',marginTop:12}}>
               <div style={{position:'relative',width:52,height:52}}>
                 <svg width="52" height="52" viewBox="0 0 100 100" style={{transform:'rotate(-90deg)'}}>
