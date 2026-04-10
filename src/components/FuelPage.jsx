@@ -60,8 +60,16 @@ export default function FuelPage({ client, appData }) {
   const [quantite, setQuantite] = useState(100);
   const [showWater, setShowWater] = useState(false);
   const [showSleep, setShowSleep] = useState(false);
-  const [tempWater, setTempWater] = useState(0);
-  const [tempSleep, setTempSleep] = useState(0);
+  const [tempWater, setTempWater] = useState(null);
+  const [tempSleep, setTempSleep] = useState(null);
+
+  // Sync avec dailyTracking quand il se charge
+  useEffect(() => {
+    if (dailyTracking) {
+      setTempWater(dailyTracking.eau_ml || 0);
+      setTempSleep(dailyTracking.sommeil_h || 0);
+    }
+  }, [dailyTracking?.eau_ml, dailyTracking?.sommeil_h]);
   const searchTimeout = useRef(null);
 
   const handleSearch = useCallback((q) => {
