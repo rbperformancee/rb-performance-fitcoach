@@ -196,108 +196,217 @@ export default function FuelPage({ client, appData }) {
         {/* DIVIDER */}
         <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 24px 20px" }} />
 
-        {/* REPAS PAR CATEGORIE */}
+        {/* REPAS ULTRA PREMIUM */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase" }}>Mes repas</div>
-            <button onClick={() => setShowAdd(true)} style={{ background: GREEN, color: "#000", border: "none", borderRadius: 100, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Ajouter</button>
+
+          {/* Header + bouton add */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>Journal du jour</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px" }}>Mes repas<span style={{ color: ORANGE }}>.</span></div>
+            </div>
+            <button onClick={() => { setShowAdd(true); setSelectedRepas("Dejeuner"); }} style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 14, padding: "10px 18px", fontSize: 13, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px" }}>+ Ajouter</button>
           </div>
 
-          {REPAS.map(repas => (
-            <div key={repas} style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>{repas}</div>
-              {logsByRepas[repas].length === 0 ? (
-                <div onClick={() => { setSelectedRepas(repas); setShowAdd(true); }} style={{ padding: "12px 16px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 12, fontSize: 12, color: "rgba(255,255,255,0.15)", cursor: "pointer", textAlign: "center" }}>
-                  + Ajouter un aliment
+          {/* Timeline repas */}
+          {REPAS.map((repas, ri) => {
+            const repasLogs = logsByRepas[repas];
+            const repasKcal = repasLogs.reduce((s, l) => s + (l.calories || 0), 0);
+            const emojis = { "Petit-dejeuner": "🌅", "Dejeuner": "☀️", "Collation": "⚡", "Diner": "🌙" };
+            const colors = { "Petit-dejeuner": "#fbbf24", "Dejeuner": ORANGE, "Collation": GREEN, "Diner": PURPLE };
+            const col = colors[repas];
+            return (
+              <div key={repas} style={{ display: "flex", gap: 16, marginBottom: 24 }}>
+                {/* Timeline indicator */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 14, background: repasLogs.length > 0 ? `${col}18` : "rgba(255,255,255,0.03)", border: `1px solid ${repasLogs.length > 0 ? col + "40" : "rgba(255,255,255,0.06)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, transition: "all 0.3s" }}>{emojis[repas]}</div>
+                  {ri < REPAS.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 20, background: "linear-gradient(to bottom, rgba(255,255,255,0.06), transparent)", marginTop: 6 }} />}
                 </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {logsByRepas[repas].map(log => (
-                    <div key={log.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>{log.aliment}</div>
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>{log.quantite_g}g · P:{log.proteines}g · G:{log.glucides}g · L:{log.lipides}g</div>
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: ORANGE, flexShrink: 0 }}>{log.calories} kcal</div>
-                      <button onClick={() => removeFood(log.id)} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, width: 28, height: 28, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>×</button>
-                    </div>
-                  ))}
-                  <div onClick={() => { setSelectedRepas(repas); setShowAdd(true); }} style={{ padding: "10px 14px", background: "transparent", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", cursor: "pointer", textAlign: "center" }}>
-                    + Ajouter
+
+                {/* Contenu repas */}
+                <div style={{ flex: 1, paddingTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: repasLogs.length > 0 ? "#fff" : "rgba(255,255,255,0.3)", letterSpacing: "0.3px" }}>{repas}</div>
+                    {repasKcal > 0 && <div style={{ fontSize: 12, fontWeight: 600, color: col, background: `${col}12`, border: `1px solid ${col}25`, borderRadius: 100, padding: "3px 10px" }}>{repasKcal} kcal</div>}
                   </div>
+
+                  {repasLogs.length === 0 ? (
+                    <div onClick={() => { setSelectedRepas(repas); setShowAdd(true); }} style={{ padding: "14px 16px", background: "rgba(255,255,255,0.015)", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 14, fontSize: 12, color: "rgba(255,255,255,0.2)", cursor: "pointer", textAlign: "center", transition: "all 0.2s" }}>
+                      Tap pour logger ce repas
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {repasLogs.map(log => (
+                        <div key={log.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(255,255,255,0.025)", border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 14, position: "relative", overflow: "hidden" }}>
+                          <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: col, borderRadius: "0 2px 2px 0" }} />
+                          <div style={{ flex: 1, paddingLeft: 4 }}>
+                            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 500, marginBottom: 3 }}>{log.aliment}</div>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{log.quantite_g}g</span>
+                              <span style={{ fontSize: 10, color: GREEN + "99" }}>P {log.proteines}g</span>
+                              <span style={{ fontSize: 10, color: ORANGE + "99" }}>G {log.glucides}g</span>
+                              <span style={{ fontSize: 10, color: BLUE + "99" }}>L {log.lipides}g</span>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: col, flexShrink: 0, marginRight: 4 }}>{log.calories}<span style={{ fontSize: 9, fontWeight: 400, color: "rgba(255,255,255,0.2)" }}> kcal</span></div>
+                          <button onClick={() => removeFood(log.id)} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, width: 26, height: 26, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>×</button>
+                        </div>
+                      ))}
+                      <div onClick={() => { setSelectedRepas(repas); setShowAdd(true); }} style={{ padding: "10px 14px", background: "transparent", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", cursor: "pointer", textAlign: "center" }}>+ Ajouter</div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
       </div>
 
-      {/* MODAL AJOUT ALIMENT */}
+      {/* MODAL AJOUT ALIMENT ULTRA PREMIUM */}
       {showAdd && (
-        <div onClick={(e) => { if (e.target === e.currentTarget) { setShowAdd(false); setQuery(""); setSelectedFood(null); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-          <div style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(env(safe-area-inset-bottom, 0px) + 24px)", maxHeight: "85vh", overflowY: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>Ajouter un aliment</div>
-              <button onClick={() => { setShowAdd(false); setQuery(""); setSelectedFood(null); }} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 100, width: 30, height: 30, color: "#fff", fontSize: 16, cursor: "pointer" }}>×</button>
-            </div>
+        <div onClick={(e) => { if (e.target === e.currentTarget) { setShowAdd(false); setQuery(""); setSelectedFood(null); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end", backdropFilter: "blur(8px)" }}>
+          <div style={{ background: "linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)", borderRadius: "28px 28px 0 0", padding: "6px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none" }}>
+            {/* Handle */}
+            <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "0 auto 20px" }} />
 
-            {/* Repas selector */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4 }}>
-              {REPAS.map(r => (
-                <button key={r} onClick={() => setSelectedRepas(r)} style={{ flexShrink: 0, padding: "8px 14px", borderRadius: 100, border: `1px solid ${selectedRepas === r ? GREEN : "rgba(255,255,255,0.1)"}`, background: selectedRepas === r ? `rgba(2,209,186,0.1)` : "transparent", color: selectedRepas === r ? GREEN : "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{r}</button>
-              ))}
-            </div>
+            <div style={{ padding: "0 24px", overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 9, color: "rgba(249,115,22,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>RB Perform · Fuel</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Logger un aliment</div>
+                </div>
+                <button onClick={() => { setShowAdd(false); setQuery(""); setSelectedFood(null); }} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
 
-            {/* Search */}
-            <input
-              type="text"
-              value={query}
-              onChange={e => handleSearch(e.target.value)}
-              placeholder="Rechercher un aliment..."
-              autoFocus
-              style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 15, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }}
-            />
-
-            {/* Results */}
-            {searching && <div style={{ textAlign: "center", padding: 20, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Recherche...</div>}
-            {!searching && results.length > 0 && !selectedFood && (
-              <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-                {results.map((food, i) => (
-                  <div key={i} onClick={() => setSelectedFood(food)} style={{ padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, cursor: "pointer" }}>
-                    <div style={{ fontSize: 13, color: "#fff", fontWeight: 500 }}>{food.name}</div>
-                    {food.brand && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{food.brand}</div>}
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
-                      {food.calories} kcal · P:{food.proteines}g · G:{food.glucides}g · L:{food.lipides}g (pour 100g)
-                    </div>
-                  </div>
+              {/* Repas selector — pills premium */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
+                {[{ id: "Petit-dejeuner", emoji: "🌅" }, { id: "Dejeuner", emoji: "☀️" }, { id: "Collation", emoji: "⚡" }, { id: "Diner", emoji: "🌙" }].map(r => (
+                  <button key={r.id} onClick={() => setSelectedRepas(r.id)} style={{ flexShrink: 0, padding: "8px 14px", borderRadius: 100, border: `1px solid ${selectedRepas === r.id ? ORANGE : "rgba(255,255,255,0.08)"}`, background: selectedRepas === r.id ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: selectedRepas === r.id ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>{r.emoji} {r.id}</button>
                 ))}
               </div>
-            )}
 
-            {/* Selected food + quantite */}
-            {selectedFood && (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ padding: "14px 16px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 14, marginBottom: 16 }}>
-                  <div style={{ fontSize: 14, color: "#fff", fontWeight: 600, marginBottom: 4 }}>{selectedFood.name}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-                    {Math.round(selectedFood.calories * quantite / 100)} kcal · P:{(selectedFood.proteines * quantite / 100).toFixed(1)}g · G:{(selectedFood.glucides * quantite / 100).toFixed(1)}g · L:{(selectedFood.lipides * quantite / 100).toFixed(1)}g
-                  </div>
-                </div>
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Quantite (grammes)</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <button onClick={() => setQuantite(Math.max(10, quantite - 10))} style={{ width: 40, height: 40, borderRadius: 100, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#fff", fontSize: 20, cursor: "pointer" }}>-</button>
-                    <input type="number" value={quantite} onChange={e => setQuantite(parseInt(e.target.value) || 100)} style={{ flex: 1, textAlign: "center", padding: "10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }} />
-                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>g</span>
-                    <button onClick={() => setQuantite(quantite + 10)} style={{ width: 40, height: 40, borderRadius: 100, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#fff", fontSize: 20, cursor: "pointer" }}>+</button>
-                  </div>
-                </div>
-                <button onClick={handleAddFood} style={{ width: "100%", padding: 16, background: GREEN, color: "#000", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-                  Ajouter au {selectedRepas}
-                </button>
+              {/* Search bar premium */}
+              <div style={{ position: "relative", marginBottom: 16 }}>
+                <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontSize: 16, color: "rgba(255,255,255,0.2)", pointerEvents: "none" }}>🔍</div>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={e => handleSearch(e.target.value)}
+                  placeholder="Rechercher un aliment..."
+                  autoFocus
+                  style={{ width: "100%", padding: "15px 16px 15px 44px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, color: "#fff", fontSize: 15, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", transition: "border 0.2s" }}
+                />
+                {query.length > 0 && (
+                  <button onClick={() => { setQuery(""); setSelectedFood(null); }} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 100, width: 24, height: 24, color: "rgba(255,255,255,0.4)", fontSize: 12, cursor: "pointer" }}>×</button>
+                )}
               </div>
-            )}
+
+              {/* Scroll area */}
+              <div style={{ flex: 1, overflowY: "auto", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)", scrollbarWidth: "none" }}>
+
+                {/* Searching */}
+                {searching && (
+                  <div style={{ textAlign: "center", padding: "32px 0" }}>
+                    <div style={{ width: 32, height: 32, border: "2px solid rgba(249,115,22,0.2)", borderTopColor: ORANGE, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>Recherche en cours...</div>
+                  </div>
+                )}
+
+                {/* Results */}
+                {!searching && results.length > 0 && !selectedFood && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {results.map((food, i) => (
+                      <div key={i} onClick={() => setSelectedFood(food)} style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, cursor: "pointer", transition: "all 0.15s" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 14, color: "#fff", fontWeight: 600, marginBottom: 2 }}>{food.name}</div>
+                            {food.brand && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.5px" }}>{food.brand}</div>}
+                          </div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: ORANGE, flexShrink: 0, marginLeft: 12 }}>{food.calories}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}> kcal</span></div>
+                        </div>
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <span style={{ fontSize: 10, color: GREEN + "aa", background: GREEN + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>P {food.proteines}g</span>
+                          <span style={{ fontSize: 10, color: ORANGE + "aa", background: ORANGE + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>G {food.glucides}g</span>
+                          <span style={{ fontSize: 10, color: BLUE + "aa", background: BLUE + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>L {food.lipides}g</span>
+                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginLeft: "auto" }}>pour 100g</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {!searching && query.length > 2 && results.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "32px 0" }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>Aucun résultat</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.15)" }}>Essaie un nom plus général</div>
+                  </div>
+                )}
+
+                {/* Selected food + quantite */}
+                {selectedFood && (
+                  <div>
+                    {/* Food card sélectionné */}
+                    <div style={{ padding: "16px", background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 18, marginBottom: 20 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 15, color: "#fff", fontWeight: 700, marginBottom: 2 }}>{selectedFood.name}</div>
+                          {selectedFood.brand && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{selectedFood.brand}</div>}
+                        </div>
+                        <button onClick={() => setSelectedFood(null)} style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "4px 10px", color: "rgba(255,255,255,0.4)", fontSize: 11, cursor: "pointer" }}>Changer</button>
+                      </div>
+                      {/* Macros live */}
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(249,115,22,0.1)", borderRadius: 12 }}>
+                          <div style={{ fontSize: 20, fontWeight: 200, color: ORANGE, letterSpacing: "-1px" }}>{Math.round(selectedFood.calories * quantite / 100)}</div>
+                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>kcal</div>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(2,209,186,0.08)", borderRadius: 12 }}>
+                          <div style={{ fontSize: 20, fontWeight: 200, color: GREEN, letterSpacing: "-1px" }}>{(selectedFood.proteines * quantite / 100).toFixed(1)}</div>
+                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>prot g</div>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(249,115,22,0.06)", borderRadius: 12 }}>
+                          <div style={{ fontSize: 20, fontWeight: 200, color: ORANGE + "cc", letterSpacing: "-1px" }}>{(selectedFood.glucides * quantite / 100).toFixed(1)}</div>
+                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>gluc g</div>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(96,165,250,0.08)", borderRadius: 12 }}>
+                          <div style={{ fontSize: 20, fontWeight: 200, color: BLUE, letterSpacing: "-1px" }}>{(selectedFood.lipides * quantite / 100).toFixed(1)}</div>
+                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>lip g</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quantite selector */}
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Quantité</div>
+                      {/* Quick amounts */}
+                      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                        {[50, 100, 150, 200, 250, 300].map(q => (
+                          <button key={q} onClick={() => setQuantite(q)} style={{ padding: "8px 14px", borderRadius: 100, border: `1px solid ${quantite === q ? ORANGE : "rgba(255,255,255,0.08)"}`, background: quantite === q ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: quantite === q ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>{q}g</button>
+                        ))}
+                      </div>
+                      {/* Input manuel */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <button onClick={() => setQuantite(Math.max(10, quantite - 10))} style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                        <div style={{ flex: 1, display: "flex", alignItems: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, overflow: "hidden" }}>
+                          <input type="number" value={quantite} onChange={e => setQuantite(parseInt(e.target.value) || 100)} style={{ flex: 1, textAlign: "center", padding: "12px", background: "transparent", border: "none", color: "#fff", fontSize: 20, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }} />
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", paddingRight: 14 }}>g</span>
+                        </div>
+                        <button onClick={() => setQuantite(quantite + 10)} style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                      </div>
+                    </div>
+
+                    {/* CTA */}
+                    <button onClick={handleAddFood} style={{ width: "100%", padding: 17, background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 18, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase" }}>
+                      Ajouter au {selectedRepas}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
