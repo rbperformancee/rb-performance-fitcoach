@@ -59,6 +59,13 @@ export default function FuelPage({ client, appData }) {
   const [selectedFood, setSelectedFood] = useState(null);
   const [quantite, setQuantite] = useState(100);
   const [showWater, setShowWater] = useState(false);
+  const [showVoice, setShowVoice] = useState(false);
+  const [showScan, setShowScan] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [voiceText, setVoiceText] = useState("");
+  const [voiceLoading, setVoiceLoading] = useState(false);
+  const [voiceResult, setVoiceResult] = useState(null);
+  const recognitionRef = useRef(null);
   const [showSleep, setShowSleep] = useState(false);
   const [tempWater, setTempWater] = useState(null);
   const [tempSleep, setTempSleep] = useState(null);
@@ -109,6 +116,47 @@ export default function FuelPage({ client, appData }) {
     acc[r] = logs.filter(l => l.repas === r);
     return acc;
   }, {});
+
+  const startVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert("Reconnaissance vocale non supportée sur ce navigateur."); return; }
+    const rec = new SR();
+    rec.lang = "fr-FR";
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.onstart = () => setRecording(true);
+    rec.onend = () => setRecording(false);
+    rec.onresult = (e) => { const t = e.results[0][0].transcript; setVoiceText(t); analyzeWithAI(t); };
+    rec.onerror = () => setRecording(false);
+    recognitionRef.current = rec;
+    rec.start();
+  };
+
+  const analyzeWithAI = async (text) => {
+    setVoiceLoading(true);
+    setVoiceResult(null);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514", max_tokens: 500,
+          messages: [{ role: "user", content: "Analyse ce repas et retourne UNIQUEMENT un JSON: { aliment, calories, proteines, glucides, lipides, quantite_g }. Repas: " + text }]
+        })
+      });
+      const data = await res.json();
+      const raw = (data.content?.[0]?.text || "{}").replace(/```json|```/g, "").trim();
+      setVoiceResult(JSON.parse(raw));
+    } catch(e) { console.error(e); }
+    setVoiceLoading(false);
+  };
+
+  const addVoiceFood = async () => {
+    if (!voiceResult) return;
+    await addFood({ repas: selectedRepas, ...voiceResult });
+    setShowVoice(false); setVoiceText(""); setVoiceResult(null);
+    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+  };
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#050505", padding: "0px 24px" }}>
@@ -407,6 +455,54 @@ export default function FuelPage({ client, appData }) {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL VOCAL IA */}
+      {showVoice && (
+        <div onClick={e => { if(e.target===e.currentTarget){setShowVoice(false);setVoiceText("");setVoiceResult(null);}}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(12px)"}}>
+          <div style={{background:"#0a0a0a",borderRadius:"28px 28px 0 0",padding:"20px 24px calc(env(safe-area-inset-bottom,0px) + 32px)",width:"100%",maxWidth:480,border:"1px solid rgba(2,209,186,0.15)",borderBottom:"none"}}>
+            <div style={{width:36,height:4,background:"rgba(255,255,255,0.1)",borderRadius:2,margin:"0 auto 24px"}}/>
+            <div style={{fontSize:9,color:"rgba(2,209,186,0.5)",letterSpacing:"4px",textTransform:"uppercase",marginBottom:8}}>RB Perform · IA Vocal</div>
+            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:24,letterSpacing:"-0.5px"}}>Décris ton repas</div>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
+              <button onClick={recording ? ()=>recognitionRef.current?.stop() : startVoice} style={{width:88,height:88,borderRadius:"50%",border:`2px solid ${recording?"#02d1ba":"rgba(2,209,186,0.3)"}`,background:recording?"rgba(2,209,186,0.15)":"rgba(255,255,255,0.04)",color:"#02d1ba",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.3s",boxShadow:recording?"0 0 40px rgba(2,209,186,0.3)":"none"}}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{width:36,height:36}}><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
+              <div style={{marginTop:12,fontSize:12,color:recording?"#02d1ba":"rgba(255,255,255,0.3)",transition:"all 0.3s"}}>{recording?"Écoute en cours...":"Tap pour parler"}</div>
+            </div>
+            {voiceText && <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"12px 16px",marginBottom:16,fontSize:14,color:"rgba(255,255,255,0.7)",fontStyle:"italic"}}>"{voiceText}"</div>}
+            {voiceLoading && <div style={{textAlign:"center",padding:"16px 0",color:"rgba(2,209,186,0.6)",fontSize:12}}><div style={{width:28,height:28,border:"2px solid rgba(2,209,186,0.2)",borderTopColor:"#02d1ba",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto 8px"}}/>Analyse IA...</div>}
+            {voiceResult && !voiceLoading && (
+              <div>
+                <div style={{background:"rgba(2,209,186,0.06)",border:"1px solid rgba(2,209,186,0.2)",borderRadius:16,padding:16,marginBottom:16}}>
+                  <div style={{fontSize:15,fontWeight:700,color:"#fff",marginBottom:12}}>{voiceResult.aliment}</div>
+                  <div style={{display:"flex",gap:8}}>
+                    {[{v:voiceResult.calories,l:"kcal",c:"#f97316"},{v:voiceResult.proteines,l:"prot",c:"#02d1ba"},{v:voiceResult.glucides,l:"gluc",c:"#f97316"},{v:voiceResult.lipides,l:"lip",c:"#60a5fa"}].map((m,i)=>(
+                      <div key={i} style={{flex:1,textAlign:"center",padding:"8px 4px",background:`${m.c}12`,borderRadius:10}}>
+                        <div style={{fontSize:18,fontWeight:200,color:m.c}}>{m.v}</div>
+                        <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"1px"}}>{m.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <button onClick={addVoiceFood} style={{width:"100%",padding:16,background:"linear-gradient(135deg,#02d1ba,#0891b2)",color:"#000",border:"none",borderRadius:16,fontSize:14,fontWeight:800,cursor:"pointer",textTransform:"uppercase",letterSpacing:"0.5px"}}>Ajouter au {selectedRepas}</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SCAN */}
+      {showScan && (
+        <div onClick={()=>setShowScan(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:24,backdropFilter:"blur(12px)"}}>
+          <div style={{background:"#0a0a0a",borderRadius:24,padding:32,width:"100%",maxWidth:340,border:"1px solid rgba(167,139,250,0.15)",textAlign:"center"}}>
+            <div style={{color:"#a78bfa",marginBottom:16,display:"flex",justifyContent:"center"}}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{width:48,height:48}}><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 2v4M17 2v4M7 18v4M17 18v4M2 7h4M2 17h4M18 7h4M18 17h4"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+            </div>
+            <div style={{fontSize:18,fontWeight:800,color:"#fff",marginBottom:8}}>Scan code-barre</div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,0.3)",lineHeight:1.7}}>Bientôt disponible — scanner un produit pour charger ses macros instantanément.</div>
           </div>
         </div>
       )}
