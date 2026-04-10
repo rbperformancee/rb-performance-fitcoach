@@ -320,7 +320,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#f5f5f5" }}>{prog.programme_name}</div>
                       <div style={{ fontSize: 10, color: G, marginTop: 2 }}>✓ Actif · {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
                     </div>
-                    <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Mettre à jour</button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Mettre à jour</button>
+                      <button onClick={() => deleteProg(prog.id)} style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Supprimer</button>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 10, padding: 14 }}>
@@ -749,6 +752,13 @@ export function CoachDashboard({ onExit }) {
     if (!window.confirm(`Supprimer ${email} ?`)) return;
     await supabase.from("clients").delete().eq("id", id);
     setSelected(null); showToast("Client supprimé"); toast.info("Client supprimé"); loadClients();
+  };
+
+  const deleteProg = async (progId) => {
+    if (!window.confirm("Supprimer ce programme ?")) return;
+    await supabase.from("programmes").update({ is_active: false }).eq("id", progId);
+    setClient(prev => ({ ...prev, programmes: prev.programmes?.map(p => p.id === progId ? { ...p, is_active: false } : p) }));
+    toast("Programme supprimé.");
   };
 
   const uploadProg = async (client, file) => {
