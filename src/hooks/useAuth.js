@@ -20,7 +20,7 @@ export function useAuth() {
         .from("clients").select("*").eq("email", authUser.email).single();
       setClient(clientData || null);
       if (!clientData) return;
-      startRealtime(clientData);
+      startPolling(clientData);
       const { data: progData } = await supabase
         .from("programmes").select("*").eq("client_id", clientData.id)
         .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).single();
@@ -40,30 +40,31 @@ export function useAuth() {
       else setLoading(false);
     });
 
-    // Realtime — écoute les nouveaux programmes
-    let realtimeSub = null;
-    const startRealtime = (clientData) => {
+    // Polling — vérifie le programme toutes les 5 secondes si pas encore chargé
+    let pollInterval = null;
+    const startPolling = (clientData) => {
       if (!clientData?.id) return;
-      realtimeSub = supabase
-        .channel('programme-' + clientData.id)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'programmes',
-          filter: 'client_id=eq.' + clientData.id,
-        }, async (payload) => {
-          if (payload.new?.html_content) {
-            setProgramme(payload.new.html_content);
-            // Notification push
-            if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification('RB Perform 🔥', {
-                body: 'Ton programme est prêt ! Lance-toi.',
-                icon: '/icon-192.png',
-              });
-            }
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
+        const { data } = await supabase
+          .from('programmes')
+          .select('html_content')
+          .eq('client_id', clientData.id)
+          .eq('is_active', true)
+          .order('uploaded_at', { ascending: false })
+          .limit(1)
+          .single();
+        if (data?.html_content) {
+          setProgramme(data.html_content);
+          clearInterval(pollInterval);
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('RB Perform 🔥', {
+              body: 'Ton programme est prêt ! Lance-toi.',
+              icon: '/icon-192.png',
+            });
           }
-        })
-        .subscribe();
+        }
+      }, 5000);
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -83,7 +84,7 @@ export function useAuth() {
 
     return () => {
       subscription.unsubscribe();
-      if (realtimeSub) supabase.removeChannel(realtimeSub);
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [loadClientData]);
 
