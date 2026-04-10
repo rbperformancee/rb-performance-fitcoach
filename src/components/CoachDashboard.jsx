@@ -835,7 +835,7 @@ export function CoachDashboard({ onExit }) {
         <div style={{ position:"fixed", top:16, left:"50%", transform:"translateX(-50%)", background: toast.type==="err"?"#1a0a0a":"#0a1a0f", border:`1px solid ${toast.type==="err"?"rgba(239,68,68,0.3)":G_BORDER}`, borderRadius:10, padding:"10px 20px", fontSize:12, fontWeight:600, color:toast.type==="err"?"#ef4444":G, zIndex:500, boxShadow:"0 8px 32px rgba(0,0,0,0.5)", whiteSpace:"nowrap", animation:"fadeUp 0.2s ease" }}>{toast.msg}</div>
       )}
 
-      {"REMOVED" && (
+      {false && (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
           <div style={{background:"#111",border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:28,maxWidth:320,width:"100%",textAlign:"center"}}>
             <div style={{fontSize:40,marginBottom:16}}>🗑️</div>
