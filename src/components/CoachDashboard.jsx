@@ -751,7 +751,7 @@ export function CoachDashboard({ onExit }) {
   const deleteClient = async (id, email) => {
     // confirmation supprimee
     await supabase.from("clients").delete().eq("id", id);
-    setSelected(null); showToast("Client supprimé"); toast.info("Client supprimé"); loadClients();
+    setSelected(null); showToast("Client supprimé"); loadClients();
   };
 
   const deleteProg = async (progId) => {
