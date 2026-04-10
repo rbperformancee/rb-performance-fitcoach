@@ -115,38 +115,6 @@ function TrainLocked({ client }) {
   );
 }
 
-function TrainLocked({ client }) {
-  const [booking, setBooking] = React.useState(null);
-  React.useEffect(() => {
-    if (!client?.id) return;
-    supabase.from("bookings").select("*, coach_slots(date, heure)")
-      .eq("client_id", client.id).limit(1).single()
-      .then(({ data }) => { if (data) setBooking(data); });
-  }, [client?.id]);
-  const slotDate = booking?.coach_slots?.date;
-  const slotHeure = booking?.coach_slots?.heure;
-  const dateStr = slotDate ? new Date(slotDate + "T12:00:00").toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" }) : null;
-  return (
-    <div style={{minHeight:"calc(100vh - 100px)",background:"#050505",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 28px",fontFamily:"-apple-system,Inter,sans-serif"}}>
-      <div style={{fontSize:56,marginBottom:24}}>🔒</div>
-      <div style={{fontSize:9,letterSpacing:5,textTransform:"uppercase",color:"rgba(2,209,186,0.5)",marginBottom:12}}>Programme en préparation</div>
-      <h2 style={{fontSize:30,fontWeight:900,color:"#fff",textAlign:"center",lineHeight:1.1,marginBottom:16,letterSpacing:-1}}>Ton programme<br/><span style={{color:"#02d1ba"}}>arrive bientôt.</span></h2>
-      <p style={{fontSize:13,color:"rgba(255,255,255,0.3)",lineHeight:1.8,textAlign:"center",marginBottom:32,maxWidth:280}}>Rayan prépare ton programme personnalisé suite à votre appel.</p>
-      {dateStr ? (
-        <div style={{background:"rgba(2,209,186,0.06)",border:"1px solid rgba(2,209,186,0.2)",borderRadius:16,padding:"16px 24px",textAlign:"center"}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:"rgba(2,209,186,0.5)",marginBottom:8}}>Appel réservé</div>
-          <div style={{fontSize:16,fontWeight:700,color:"#fff"}}>📞 {dateStr}</div>
-          <div style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginTop:4}}>{slotHeure}</div>
-        </div>
-      ) : (
-        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"16px 24px",textAlign:"center"}}>
-          <div style={{fontSize:13,color:"rgba(255,255,255,0.3)"}}>Rayan te contacte très prochainement.</div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function App() {
   // Auth
   const {
