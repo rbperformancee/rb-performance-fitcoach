@@ -322,7 +322,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Mettre à jour</button>
-                      <button onClick={() => deleteProg(prog.id)} style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Supprimer</button>
+                      <button onClick={() => setConfirmDelete(prog.id)} style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Supprimer</button>
                     </div>
                   </div>
                 ) : (
@@ -754,10 +754,12 @@ export function CoachDashboard({ onExit }) {
     setSelected(null); showToast("Client supprimé"); toast.info("Client supprimé"); loadClients();
   };
 
+  const [confirmDelete, setConfirmDelete] = React.useState(null);
+
   const deleteProg = async (progId) => {
-    if (!window.confirm("Supprimer ce programme ?")) return;
     await supabase.from("programmes").update({ is_active: false }).eq("id", progId);
     setClient(prev => ({ ...prev, programmes: prev.programmes?.map(p => p.id === progId ? { ...p, is_active: false } : p) }));
+    setConfirmDelete(null);
     toast("Programme supprimé.");
   };
 
