@@ -20,6 +20,7 @@ export function useAuth() {
         .from("clients").select("*").eq("email", authUser.email).single();
       setClient(clientData || null);
       if (!clientData) return;
+      startRealtime(clientData);
       const { data: progData } = await supabase
         .from("programmes").select("*").eq("client_id", clientData.id)
         .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).single();
@@ -39,6 +40,32 @@ export function useAuth() {
       else setLoading(false);
     });
 
+    // Realtime — écoute les nouveaux programmes
+    let realtimeSub = null;
+    const startRealtime = (clientData) => {
+      if (!clientData?.id) return;
+      realtimeSub = supabase
+        .channel('programme-' + clientData.id)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'programmes',
+          filter: 'client_id=eq.' + clientData.id,
+        }, async (payload) => {
+          if (payload.new?.html_content) {
+            setProgramme(payload.new.html_content);
+            // Notification push
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('RB Perform 🔥', {
+                body: 'Ton programme est prêt ! Lance-toi.',
+                icon: '/icon-192.png',
+              });
+            }
+          }
+        })
+        .subscribe();
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const u = session?.user ?? null;
       setUser(u);
@@ -54,7 +81,10 @@ export function useAuth() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (realtimeSub) supabase.removeChannel(realtimeSub);
+    };
   }, [loadClientData]);
 
   const sendMagicLink = useCallback(async (email) => {
