@@ -193,6 +193,7 @@ function CreneauxManager() {
 /* ── Panel détail client avec messages ── */
 function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [msgText,   setMsgText]   = useState("");
+  const [confirmDelete, setConfirmDelete] = React.useState(null);
   const [sending,   setSending]   = useState(false);
   const [messages,  setMessages]  = useState([]);
   const [rpeData,   setRpeData]   = useState([]);
@@ -753,8 +754,6 @@ export function CoachDashboard({ onExit }) {
     await supabase.from("clients").delete().eq("id", id);
     setSelected(null); showToast("Client supprimé"); toast.info("Client supprimé"); loadClients();
   };
-
-  const [confirmDelete, setConfirmDelete] = React.useState(null);
 
   const deleteProg = async (progId) => {
     await supabase.from("programmes").update({ is_active: false }).eq("id", progId);
