@@ -547,7 +547,7 @@ export default function App() {
       {user && !isCoach && !cloudProgramme && !showHome && (
         <div style={{minHeight:'100vh', background:'#050505'}}>
           {page === 'training' && <TrainLocked client={client} />}
-          {page === 'weight' && <WeightPage client={client} appData={appData} />}
+          {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
           {page === 'profile' && <ProfilePage client={client} onDeleteRequest={() => setShowDeleteConfirm(true)} onShowPrivacy={() => setShowPrivacy(true)} onShowMentions={() => setShowMentions(true)} onShowCGU={() => setShowCGU(true)} />}
