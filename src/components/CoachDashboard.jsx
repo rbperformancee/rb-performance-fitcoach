@@ -191,9 +191,8 @@ function CreneauxManager() {
 }
 
 /* ── Panel détail client avec messages ── */
-function ClientPanel({ client, onClose, onUpload, onDelete }) {
+function ClientPanel({ client, onClose, onUpload, onDelete, confirmDeleteProg, setConfirmDeleteProg }) {
   const [msgText,   setMsgText]   = useState("");
-  const [confirmDelete, setConfirmDelete] = React.useState(null);
   const [sending,   setSending]   = useState(false);
   const [messages,  setMessages]  = useState([]);
   const [rpeData,   setRpeData]   = useState([]);
@@ -323,7 +322,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Mettre à jour</button>
-                      <button onClick={() => setConfirmDelete(prog.id)} style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Supprimer</button>
+                      <button onClick={() => setConfirmDeleteProg(prog.id)} style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Supprimer</button>
                     </div>
                   </div>
                 ) : (
@@ -758,7 +757,7 @@ export function CoachDashboard({ onExit }) {
   const deleteProg = async (progId) => {
     await supabase.from("programmes").update({ is_active: false }).eq("id", progId);
     setClient(prev => ({ ...prev, programmes: prev.programmes?.map(p => p.id === progId ? { ...p, is_active: false } : p) }));
-    setConfirmDelete(null);
+    setConfirmDeleteProg(null);
     toast("Programme supprimé.");
   };
 
@@ -841,7 +840,7 @@ export function CoachDashboard({ onExit }) {
           <div style={{ color:G, fontSize:13, fontWeight:600 }}>Upload en cours...</div>
         </div>
       )}
-      {selected && <ClientPanel client={selected} onClose={() => setSelected(null)} onUpload={uploadProg} onDelete={deleteClient} />}
+      {selected && <ClientPanel client={selected} onClose={() => setSelected(null)} onUpload={uploadProg} onDelete={deleteClient} confirmDeleteProg={confirmDeleteProg} setConfirmDeleteProg={setConfirmDeleteProg} />}
 
       {/* TOPBAR */}
       <div style={{ background:"rgba(13,13,13,0.97)", borderBottom:"1px solid rgba(255,255,255,0.07)", padding:"0 32px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100, backdropFilter:"blur(20px)" }}>
