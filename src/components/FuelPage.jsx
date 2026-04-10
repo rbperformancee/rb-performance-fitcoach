@@ -21,6 +21,92 @@ const MacroBar = ({ value, goal, color, label, unit = "g" }) => {
         <div style={{ height: "100%", width: pct + "%", background: color, borderRadius: 2, transition: "width 0.6s ease" }} />
       </div>
     </div>
+
+      {/* MODAL VOCAL IA */}
+      {showVoice && (
+        <div onClick={e => { if (e.target === e.currentTarget) { setShowVoice(false); setVoiceText(""); setVoiceResult(null); }}} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 300, display: "flex", alignItems: "flex-end", justifyContent: "center", backdropFilter: "blur(12px)" }}>
+          <div style={{ background: "#0a0a0a", borderRadius: "28px 28px 0 0", padding: "20px 24px calc(env(safe-area-inset-bottom,0px) + 32px)", width: "100%", maxWidth: 480, border: "1px solid rgba(2,209,186,0.15)", borderBottom: "none" }}>
+            <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 2, margin: "0 auto 24px" }} />
+            <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "4px", textTransform: "uppercase", marginBottom: 8 }}>RB Perform · IA Vocal</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 24, letterSpacing: "-0.5px" }}>Décris ton repas à voix haute</div>
+            
+            {/* Bouton micro */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
+              <button onClick={recording ? () => recognitionRef.current?.stop() : startVoice}
+                style={{ width: 88, height: 88, borderRadius: "50%", border: `2px solid ${recording ? GREEN : "rgba(2,209,186,0.3)"}`, background: recording ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.04)", color: GREEN, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", boxShadow: recording ? "0 0 40px rgba(2,209,186,0.3)" : "none" }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ width: 36, height: 36 }}>
+                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                  <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+              <div style={{ marginTop: 12, fontSize: 12, color: recording ? GREEN : "rgba(255,255,255,0.3)", transition: "all 0.3s" }}>
+                {recording ? "Écoute en cours... Parle maintenant" : "Tap pour parler"}
+              </div>
+            </div>
+
+            {/* Texte reconnu */}
+            {voiceText && (
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: "rgba(255,255,255,0.7)", fontStyle: "italic" }}>
+                "{voiceText}"
+              </div>
+            )}
+
+            {/* Loading IA */}
+            {voiceLoading && (
+              <div style={{ textAlign: "center", padding: "16px 0", color: "rgba(2,209,186,0.6)", fontSize: 12 }}>
+                <div style={{ width: 28, height: 28, border: "2px solid rgba(2,209,186,0.2)", borderTopColor: GREEN, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 8px" }} />
+                Analyse IA en cours...
+              </div>
+            )}
+
+            {/* Résultat IA */}
+            {voiceResult && !voiceLoading && (
+              <div>
+                <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 12 }}>{voiceResult.aliment}</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(249,115,22,0.1)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: ORANGE }}>{voiceResult.calories}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>kcal</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(2,209,186,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: GREEN }}>{voiceResult.proteines}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>prot g</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(96,165,250,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: BLUE }}>{voiceResult.glucides}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>gluc g</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(167,139,250,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: PURPLE }}>{voiceResult.lipides}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>lip g</div>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={addVoiceFood} style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #02d1ba, #0891b2)", color: "#000", border: "none", borderRadius: 16, fontSize: 14, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Ajouter au {selectedRepas}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SCAN — coming soon */}
+      {showScan && (
+        <div onClick={() => setShowScan(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(12px)" }}>
+          <div style={{ background: "#0a0a0a", borderRadius: 24, padding: 32, width: "100%", maxWidth: 340, border: "1px solid rgba(167,139,250,0.15)", textAlign: "center" }}>
+            <div style={{ color: PURPLE, marginBottom: 16 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ width: 48, height: 48 }}><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 2v4M17 2v4M7 18v4M17 18v4M2 7h4M2 17h4M18 7h4M18 17h4"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Scan code-barre</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>Cette fonctionnalité arrive très bientôt. Tu pourras scanner n'importe quel produit pour charger ses macros instantanément.</div>
+          </div>
+        </div>
+      )}
+
   );
 };
 
@@ -42,6 +128,92 @@ const ScoreRing = ({ score }) => {
         <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1px" }}>SCORE</div>
       </div>
     </div>
+
+      {/* MODAL VOCAL IA */}
+      {showVoice && (
+        <div onClick={e => { if (e.target === e.currentTarget) { setShowVoice(false); setVoiceText(""); setVoiceResult(null); }}} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 300, display: "flex", alignItems: "flex-end", justifyContent: "center", backdropFilter: "blur(12px)" }}>
+          <div style={{ background: "#0a0a0a", borderRadius: "28px 28px 0 0", padding: "20px 24px calc(env(safe-area-inset-bottom,0px) + 32px)", width: "100%", maxWidth: 480, border: "1px solid rgba(2,209,186,0.15)", borderBottom: "none" }}>
+            <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 2, margin: "0 auto 24px" }} />
+            <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "4px", textTransform: "uppercase", marginBottom: 8 }}>RB Perform · IA Vocal</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 24, letterSpacing: "-0.5px" }}>Décris ton repas à voix haute</div>
+            
+            {/* Bouton micro */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
+              <button onClick={recording ? () => recognitionRef.current?.stop() : startVoice}
+                style={{ width: 88, height: 88, borderRadius: "50%", border: `2px solid ${recording ? GREEN : "rgba(2,209,186,0.3)"}`, background: recording ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.04)", color: GREEN, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", boxShadow: recording ? "0 0 40px rgba(2,209,186,0.3)" : "none" }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ width: 36, height: 36 }}>
+                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                  <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+              <div style={{ marginTop: 12, fontSize: 12, color: recording ? GREEN : "rgba(255,255,255,0.3)", transition: "all 0.3s" }}>
+                {recording ? "Écoute en cours... Parle maintenant" : "Tap pour parler"}
+              </div>
+            </div>
+
+            {/* Texte reconnu */}
+            {voiceText && (
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: "rgba(255,255,255,0.7)", fontStyle: "italic" }}>
+                "{voiceText}"
+              </div>
+            )}
+
+            {/* Loading IA */}
+            {voiceLoading && (
+              <div style={{ textAlign: "center", padding: "16px 0", color: "rgba(2,209,186,0.6)", fontSize: 12 }}>
+                <div style={{ width: 28, height: 28, border: "2px solid rgba(2,209,186,0.2)", borderTopColor: GREEN, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 8px" }} />
+                Analyse IA en cours...
+              </div>
+            )}
+
+            {/* Résultat IA */}
+            {voiceResult && !voiceLoading && (
+              <div>
+                <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 12 }}>{voiceResult.aliment}</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(249,115,22,0.1)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: ORANGE }}>{voiceResult.calories}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>kcal</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(2,209,186,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: GREEN }}>{voiceResult.proteines}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>prot g</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(96,165,250,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: BLUE }}>{voiceResult.glucides}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>gluc g</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(167,139,250,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: PURPLE }}>{voiceResult.lipides}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>lip g</div>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={addVoiceFood} style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #02d1ba, #0891b2)", color: "#000", border: "none", borderRadius: 16, fontSize: 14, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Ajouter au {selectedRepas}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SCAN — coming soon */}
+      {showScan && (
+        <div onClick={() => setShowScan(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(12px)" }}>
+          <div style={{ background: "#0a0a0a", borderRadius: 24, padding: 32, width: "100%", maxWidth: 340, border: "1px solid rgba(167,139,250,0.15)", textAlign: "center" }}>
+            <div style={{ color: PURPLE, marginBottom: 16 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ width: 48, height: 48 }}><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 2v4M17 2v4M7 18v4M17 18v4M2 7h4M2 17h4M18 7h4M18 17h4"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Scan code-barre</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>Cette fonctionnalité arrive très bientôt. Tu pourras scanner n'importe quel produit pour charger ses macros instantanément.</div>
+          </div>
+        </div>
+      )}
+
   );
 };
 
@@ -59,6 +231,13 @@ export default function FuelPage({ client, appData }) {
   const [selectedFood, setSelectedFood] = useState(null);
   const [quantite, setQuantite] = useState(100);
   const [showWater, setShowWater] = useState(false);
+  const [showVoice, setShowVoice] = useState(false);
+  const [showScan, setShowScan] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [voiceText, setVoiceText] = useState("");
+  const [voiceLoading, setVoiceLoading] = useState(false);
+  const [voiceResult, setVoiceResult] = useState(null);
+  const recognitionRef = useRef(null);
   const [showSleep, setShowSleep] = useState(false);
   const [tempWater, setTempWater] = useState(null);
   const [tempSleep, setTempSleep] = useState(null);
@@ -109,6 +288,64 @@ export default function FuelPage({ client, appData }) {
     acc[r] = logs.filter(l => l.repas === r);
     return acc;
   }, {});
+
+  const startVoice = () => {
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      alert("La reconnaissance vocale n\'est pas supportée sur ce navigateur.");
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = "fr-FR";
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.onstart = () => setRecording(true);
+    rec.onend = () => setRecording(false);
+    rec.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      setVoiceText(text);
+      analyzeWithAI(text);
+    };
+    rec.onerror = () => setRecording(false);
+    recognitionRef.current = rec;
+    rec.start();
+  };
+
+  const analyzeWithAI = async (text) => {
+    setVoiceLoading(true);
+    setVoiceResult(null);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 500,
+          messages: [{
+            role: "user",
+            content: `Analyse ce repas et retourne UNIQUEMENT un JSON valide sans markdown: { "aliment": "nom du repas", "calories": nombre, "proteines": nombre, "glucides": nombre, "lipides": nombre, "quantite_g": nombre }. Repas: "${text}". Estime les valeurs nutritionnelles pour la quantité mentionnée ou 100g par défaut.`
+          }]
+        })
+      });
+      const data = await res.json();
+      const raw = data.content?.[0]?.text || "{}";
+      const clean = raw.replace(/\`\`\`json|\`\`\`/g, "").trim();
+      const parsed = JSON.parse(clean);
+      setVoiceResult(parsed);
+    } catch(e) {
+      console.error("AI error:", e);
+    }
+    setVoiceLoading(false);
+  };
+
+  const addVoiceFood = async () => {
+    if (!voiceResult) return;
+    await addFood({ repas: selectedRepas, ...voiceResult });
+    setShowVoice(false);
+    setVoiceText("");
+    setVoiceResult(null);
+    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+  };
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#050505", padding: "0px 24px" }}>
@@ -212,14 +449,19 @@ export default function FuelPage({ client, appData }) {
           {REPAS.map((repas, ri) => {
             const repasLogs = logsByRepas[repas];
             const repasKcal = repasLogs.reduce((s, l) => s + (l.calories || 0), 0);
-            const emojis = { "Petit-dejeuner": "🌅", "Dejeuner": "☀️", "Collation": "⚡", "Diner": "🌙" };
+            const icons = {
+              "Petit-dejeuner": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{width:18,height:18}}><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
+              "Dejeuner": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{width:18,height:18}}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>,
+              "Collation": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{width:18,height:18}}><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+              "Diner": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{width:18,height:18}}><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            };
             const colors = { "Petit-dejeuner": "#fbbf24", "Dejeuner": ORANGE, "Collation": GREEN, "Diner": PURPLE };
             const col = colors[repas];
             return (
               <div key={repas} style={{ display: "flex", gap: 16, marginBottom: 24 }}>
                 {/* Timeline indicator */}
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 14, background: repasLogs.length > 0 ? `${col}18` : "rgba(255,255,255,0.03)", border: `1px solid ${repasLogs.length > 0 ? col + "40" : "rgba(255,255,255,0.06)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, transition: "all 0.3s" }}>{emojis[repas]}</div>
+                  <div style={{ width: 40, height: 40, borderRadius: 14, background: repasLogs.length > 0 ? `${col}18` : "rgba(255,255,255,0.03)", border: `1px solid ${repasLogs.length > 0 ? col + "40" : "rgba(255,255,255,0.06)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, transition: "all 0.3s" }}>{icons[repas]}</div>
                   {ri < REPAS.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 20, background: "linear-gradient(to bottom, rgba(255,255,255,0.06), transparent)", marginTop: 6 }} />}
                 </div>
 
@@ -282,14 +524,26 @@ export default function FuelPage({ client, appData }) {
 
               {/* Repas selector — pills premium */}
               <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
-                {[{ id: "Petit-dejeuner", emoji: "🌅" }, { id: "Dejeuner", emoji: "☀️" }, { id: "Collation", emoji: "⚡" }, { id: "Diner", emoji: "🌙" }].map(r => (
-                  <button key={r.id} onClick={() => setSelectedRepas(r.id)} style={{ flexShrink: 0, padding: "8px 14px", borderRadius: 100, border: `1px solid ${selectedRepas === r.id ? ORANGE : "rgba(255,255,255,0.08)"}`, background: selectedRepas === r.id ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: selectedRepas === r.id ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>{r.emoji} {r.id}</button>
+                {REPAS.map(r => (
+                  <button key={r} onClick={() => setSelectedRepas(r)} style={{ flexShrink: 0, padding: "8px 14px", borderRadius: 100, border: `1px solid ${selectedRepas === r ? ORANGE : "rgba(255,255,255,0.08)"}`, background: selectedRepas === r ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: selectedRepas === r ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>{r}</button>
                 ))}
+              </div>
+
+              {/* Boutons Micro + Scan */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                <button onClick={() => setShowVoice(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 14, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:18,height:18}}><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                  IA Vocal
+                </button>
+                <button onClick={() => setShowScan(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 14, color: PURPLE, fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:18,height:18}}><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 2v4M17 2v4M7 18v4M17 18v4M2 7h4M2 17h4M18 7h4M18 17h4"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+                  Scanner
+                </button>
               </div>
 
               {/* Search bar premium */}
               <div style={{ position: "relative", marginBottom: 16 }}>
-                <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontSize: 16, color: "rgba(255,255,255,0.2)", pointerEvents: "none" }}>🔍</div>
+                <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.2)", pointerEvents: "none" }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:16,height:16}}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
                 <input
                   type="text"
                   value={query}
@@ -340,7 +594,7 @@ export default function FuelPage({ client, appData }) {
                 {/* Empty state */}
                 {!searching && query.length > 2 && results.length === 0 && (
                   <div style={{ textAlign: "center", padding: "32px 0" }}>
-                    <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+                    <div style={{ marginBottom: 12, color: "rgba(255,255,255,0.15)" }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{width:40,height:40}}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
                     <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>Aucun résultat</div>
                     <div style={{ fontSize: 12, color: "rgba(255,255,255,0.15)" }}>Essaie un nom plus général</div>
                   </div>
@@ -451,5 +705,91 @@ export default function FuelPage({ client, appData }) {
       )}
 
     </div>
+
+      {/* MODAL VOCAL IA */}
+      {showVoice && (
+        <div onClick={e => { if (e.target === e.currentTarget) { setShowVoice(false); setVoiceText(""); setVoiceResult(null); }}} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 300, display: "flex", alignItems: "flex-end", justifyContent: "center", backdropFilter: "blur(12px)" }}>
+          <div style={{ background: "#0a0a0a", borderRadius: "28px 28px 0 0", padding: "20px 24px calc(env(safe-area-inset-bottom,0px) + 32px)", width: "100%", maxWidth: 480, border: "1px solid rgba(2,209,186,0.15)", borderBottom: "none" }}>
+            <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 2, margin: "0 auto 24px" }} />
+            <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "4px", textTransform: "uppercase", marginBottom: 8 }}>RB Perform · IA Vocal</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 24, letterSpacing: "-0.5px" }}>Décris ton repas à voix haute</div>
+            
+            {/* Bouton micro */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
+              <button onClick={recording ? () => recognitionRef.current?.stop() : startVoice}
+                style={{ width: 88, height: 88, borderRadius: "50%", border: `2px solid ${recording ? GREEN : "rgba(2,209,186,0.3)"}`, background: recording ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.04)", color: GREEN, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", boxShadow: recording ? "0 0 40px rgba(2,209,186,0.3)" : "none" }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ width: 36, height: 36 }}>
+                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                  <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+              <div style={{ marginTop: 12, fontSize: 12, color: recording ? GREEN : "rgba(255,255,255,0.3)", transition: "all 0.3s" }}>
+                {recording ? "Écoute en cours... Parle maintenant" : "Tap pour parler"}
+              </div>
+            </div>
+
+            {/* Texte reconnu */}
+            {voiceText && (
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: "rgba(255,255,255,0.7)", fontStyle: "italic" }}>
+                "{voiceText}"
+              </div>
+            )}
+
+            {/* Loading IA */}
+            {voiceLoading && (
+              <div style={{ textAlign: "center", padding: "16px 0", color: "rgba(2,209,186,0.6)", fontSize: 12 }}>
+                <div style={{ width: 28, height: 28, border: "2px solid rgba(2,209,186,0.2)", borderTopColor: GREEN, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 8px" }} />
+                Analyse IA en cours...
+              </div>
+            )}
+
+            {/* Résultat IA */}
+            {voiceResult && !voiceLoading && (
+              <div>
+                <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 12 }}>{voiceResult.aliment}</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(249,115,22,0.1)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: ORANGE }}>{voiceResult.calories}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>kcal</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(2,209,186,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: GREEN }}>{voiceResult.proteines}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>prot g</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(96,165,250,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: BLUE }}>{voiceResult.glucides}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>gluc g</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "rgba(167,139,250,0.08)", borderRadius: 10 }}>
+                      <div style={{ fontSize: 18, fontWeight: 200, color: PURPLE }}>{voiceResult.lipides}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>lip g</div>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={addVoiceFood} style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #02d1ba, #0891b2)", color: "#000", border: "none", borderRadius: 16, fontSize: 14, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Ajouter au {selectedRepas}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SCAN — coming soon */}
+      {showScan && (
+        <div onClick={() => setShowScan(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(12px)" }}>
+          <div style={{ background: "#0a0a0a", borderRadius: 24, padding: 32, width: "100%", maxWidth: 340, border: "1px solid rgba(167,139,250,0.15)", textAlign: "center" }}>
+            <div style={{ color: PURPLE, marginBottom: 16 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ width: 48, height: 48 }}><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 2v4M17 2v4M7 18v4M17 18v4M2 7h4M2 17h4M18 7h4M18 17h4"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Scan code-barre</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>Cette fonctionnalité arrive très bientôt. Tu pourras scanner n'importe quel produit pour charger ses macros instantanément.</div>
+          </div>
+        </div>
+      )}
+
   );
 }
