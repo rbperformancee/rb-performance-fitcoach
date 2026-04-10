@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
 
-const GREEN = "#02d1ba";
+const GREEN = "#02d1ba"; // v2
 const ORANGE = "#f97316";
 const BLUE = "#60a5fa";
 const PURPLE = "#a78bfa";
