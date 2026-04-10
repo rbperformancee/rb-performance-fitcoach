@@ -49,7 +49,7 @@ export default function FuelPage({ client, appData }) {
   const fuelData = useFuel(client?.id);
   const goals = appData?.nutritionGoals || fuelData.goals;
   const logs = fuelData.logs;
-  const dailyTracking = appData?.dailyTracking || fuelData.dailyTracking;
+  const dailyTracking = fuelData.dailyTracking || appData?.dailyTracking;
   const loading = appData ? appData.loading : fuelData.loading;
   const { totals, addFood, removeFood, updateTracking, score } = fuelData;
   const { results, loading: searching, search } = useOpenFoodFacts();
