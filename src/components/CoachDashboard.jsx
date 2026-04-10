@@ -755,10 +755,10 @@ export function CoachDashboard({ onExit }) {
   };
 
   const deleteProg = async (progId) => {
-    await supabase.from("programmes").update({ is_active: false }).eq("id", progId);
-    setClient(prev => ({ ...prev, programmes: prev.programmes?.map(p => p.id === progId ? { ...p, is_active: false } : p) }));
-    void(0);
-    toast("Programme supprimé.");
+    const { error } = await supabase.from("programmes").update({ is_active: false }).eq("id", progId);
+    if (error) { console.error("deleteProg error:", error); showToast("Erreur: " + error.message); return; }
+    showToast("Programme supprimé.");
+    onClose();
   };
 
   const uploadProg = async (client, file) => {
