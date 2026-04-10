@@ -191,7 +191,8 @@ function CreneauxManager() {
 }
 
 /* ── Panel détail client avec messages ── */
-function ClientPanel({ client, onClose, onUpload, onDelete, confirmDeleteProg, setConfirmDeleteProg }) {
+function ClientPanel({ client, onClose, onUpload, onDelete }) {
+  const [confirmDeleteProg, setConfirmDeleteProg] = React.useState(null);
   const [msgText,   setMsgText]   = useState("");
   const [sending,   setSending]   = useState(false);
   const [messages,  setMessages]  = useState([]);
@@ -840,7 +841,7 @@ export function CoachDashboard({ onExit }) {
           <div style={{ color:G, fontSize:13, fontWeight:600 }}>Upload en cours...</div>
         </div>
       )}
-      {selected && <ClientPanel client={selected} onClose={() => setSelected(null)} onUpload={uploadProg} onDelete={deleteClient} confirmDeleteProg={confirmDeleteProg} setConfirmDeleteProg={setConfirmDeleteProg} />}
+      {selected && <ClientPanel client={selected} onClose={() => setSelected(null)} onUpload={uploadProg} onDelete={deleteClient} />}
 
       {/* TOPBAR */}
       <div style={{ background:"rgba(13,13,13,0.97)", borderBottom:"1px solid rgba(255,255,255,0.07)", padding:"0 32px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100, backdropFilter:"blur(20px)" }}>
