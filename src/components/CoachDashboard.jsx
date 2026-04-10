@@ -192,7 +192,6 @@ function CreneauxManager() {
 
 /* ── Panel détail client avec messages ── */
 function ClientPanel({ client, onClose, onUpload, onDelete }) {
-  const [confirmDeleteProg, setConfirmDeleteProg] = React.useState(null);
   const [msgText,   setMsgText]   = useState("");
   const [sending,   setSending]   = useState(false);
   const [messages,  setMessages]  = useState([]);
@@ -323,7 +322,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Mettre à jour</button>
-                      <button onClick={() => setConfirmDeleteProg(prog.id)} style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Supprimer</button>
+                      <button onClick={async () => { if(window.confirm("Supprimer ce programme ?")) { await supabase.from("programmes").update({is_active:false}).eq("id",prog.id); toast("Programme supprime."); onClose(); } }} style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Supprimer</button>
                     </div>
                   </div>
                 ) : (
