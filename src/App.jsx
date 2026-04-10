@@ -543,11 +543,8 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Train verrouillé si pas de programme ── */}
-      {user && !isCoach && !cloudProgramme && client?.onboarding_done && page === "training" && <TrainLocked client={client} />}
-
-      {/* ── Catch-all: client sans programme sur page training ── */}
-      {user && !isCoach && !cloudProgramme && client?.onboarding_done && !showHome && (
+      {/* ── Client sans programme — pages accessibles ── */}
+      {user && !isCoach && !cloudProgramme && !showHome && (
         <div style={{minHeight:'100vh', background:'#050505'}}>
           {page === 'training' && <TrainLocked client={client} />}
           {page === 'weight' && <WeightPage client={client} appData={appData} />}
