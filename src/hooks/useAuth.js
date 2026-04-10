@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 const COACH_EMAIL = 'rb.performancee@gmail.com';
@@ -11,6 +11,39 @@ export function useAuth() {
   const [authLoading, setAuthLoading] = useState(false);
   const [error,       setError]       = useState(null);
   const [magicSent,   setMagicSent]   = useState(false);
+  const pollRef = useRef(null);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const startPolling = useCallback((clientId) => {
+    if (!clientId) return;
+    stopPolling();
+    pollRef.current = setInterval(async () => {
+      const { data } = await supabase
+        .from('programmes')
+        .select('html_content')
+        .eq('client_id', clientId)
+        .eq('is_active', true)
+        .order('uploaded_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (data?.html_content) {
+        setProgramme(data.html_content);
+        stopPolling();
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('RB Perform', {
+            body: 'Ton programme est pret ! Lance-toi.',
+            icon: '/icon-192.png',
+          });
+        }
+      }
+    }, 5000);
+  }, [stopPolling]);
 
   const loadClientData = useCallback(async (authUser) => {
     try {
@@ -20,17 +53,20 @@ export function useAuth() {
         .from("clients").select("*").eq("email", authUser.email).single();
       setClient(clientData || null);
       if (!clientData) return;
-      startPolling(clientData);
       const { data: progData } = await supabase
         .from("programmes").select("*").eq("client_id", clientData.id)
         .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).single();
-      if (progData) setProgramme(progData.html_content);
+      if (progData?.html_content) {
+        setProgramme(progData.html_content);
+      } else {
+        startPolling(clientData.id);
+      }
     } catch (e) {
       console.error("loadClientData:", e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [startPolling]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,33 +75,6 @@ export function useAuth() {
       if (u) loadClientData(u);
       else setLoading(false);
     });
-
-    // Polling — vérifie le programme toutes les 5 secondes si pas encore chargé
-    let pollInterval = null;
-    const startPolling = (clientData) => {
-      if (!clientData?.id) return;
-      if (pollInterval) clearInterval(pollInterval);
-      pollInterval = setInterval(async () => {
-        const { data } = await supabase
-          .from('programmes')
-          .select('html_content')
-          .eq('client_id', clientData.id)
-          .eq('is_active', true)
-          .order('uploaded_at', { ascending: false })
-          .limit(1)
-          .single();
-        if (data?.html_content) {
-          setProgramme(data.html_content);
-          clearInterval(pollInterval);
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('RB Perform 🔥', {
-              body: 'Ton programme est prêt ! Lance-toi.',
-              icon: '/icon-192.png',
-            });
-          }
-        }
-      }, 5000);
-    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const u = session?.user ?? null;
@@ -79,14 +88,15 @@ export function useAuth() {
         setProgramme(null);
         setError(null);
         setLoading(false);
+        stopPolling();
       }
     });
 
     return () => {
       subscription.unsubscribe();
-      if (pollInterval) clearInterval(pollInterval);
+      stopPolling();
     };
-  }, [loadClientData]);
+  }, [loadClientData, stopPolling]);
 
   const sendMagicLink = useCallback(async (email) => {
     setAuthLoading(true);
