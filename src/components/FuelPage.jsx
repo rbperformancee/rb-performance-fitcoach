@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
 
-const GREEN = "#02d1ba"; // v2
+const GREEN = "#02d1ba"; // v3
 const ORANGE = "#f97316";
 const BLUE = "#60a5fa";
 const PURPLE = "#a78bfa";
@@ -502,7 +502,7 @@ export default function FuelPage({ client, appData }) {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{width:48,height:48}}><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 2v4M17 2v4M7 18v4M17 18v4M2 7h4M2 17h4M18 7h4M18 17h4"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
             </div>
             <div style={{fontSize:18,fontWeight:800,color:"#fff",marginBottom:8}}>Scan code-barre</div>
-            <div style={{fontSize:13,color:"rgba(255,255,255,0.3)",lineHeight:1.7}}>Bientôt disponible — scanner un produit pour charger ses macros instantanément.</div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,0.3)",lineHeight:1.7}}>Disponible très prochainement — scanner un produit pour charger ses macros instantanément.</div>
           </div>
         </div>
       )}
