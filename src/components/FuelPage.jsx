@@ -304,7 +304,7 @@ export default function FuelPage({ client, appData }) {
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
               {[150, 250, 330, 500].map(ml => (
-                <button key={ml} onClick={() => { const newVal = (dailyTracking?.eau_ml || 0) + ml; setTempWater(newVal); updateTracking("eau_ml", newVal); }} style={{ flex: 1, padding: "10px 0", background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", borderRadius: 12, color: BLUE, fontSize: 13, fontWeight: 600, cursor: "pointer", minWidth: 60 }}>
+                <button key={ml} onClick={() => { const base = tempWater !== null ? tempWater : (dailyTracking?.eau_ml || 0); const newVal = base + ml; setTempWater(newVal); updateTracking("eau_ml", newVal); }} style={{ flex: 1, padding: "10px 0", background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", borderRadius: 12, color: BLUE, fontSize: 13, fontWeight: 600, cursor: "pointer", minWidth: 60 }}>
                   +{ml}ml
                 </button>
               ))}
@@ -320,15 +320,15 @@ export default function FuelPage({ client, appData }) {
           <div style={{ background: "#111", borderRadius: 24, padding: 24, width: "100%", maxWidth: 360 }}>
             <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Sommeil cette nuit</div>
             <div style={{ fontSize: 44, fontWeight: 100, color: PURPLE, textAlign: "center", marginBottom: 20, letterSpacing: "-2px" }}>
-              {tempSleep || dailyTracking?.sommeil_h || 0} h
+              {tempSleep !== null ? tempSleep : (dailyTracking?.sommeil_h || 0)} h
             </div>
-            <input type="range" min="0" max="12" step="0.5" value={tempSleep || dailyTracking?.sommeil_h || 0}
+            <input type="range" min="0" max="12" step="0.5" value={tempSleep !== null ? tempSleep : (dailyTracking?.sommeil_h || 0)}
               onChange={e => setTempSleep(parseFloat(e.target.value))}
               style={{ width: "100%", marginBottom: 20 }} />
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 20 }}>
               <span>0h</span><span>6h</span><span>8h</span><span>12h</span>
             </div>
-            <button onClick={() => { updateTracking("sommeil_h", tempSleep || dailyTracking?.sommeil_h || 0); setShowSleep(false); }} style={{ width: "100%", padding: 14, background: PURPLE, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
+            <button onClick={() => { updateTracking("sommeil_h", tempSleep !== null ? tempSleep : (dailyTracking?.sommeil_h || 0)); setShowSleep(false); }} style={{ width: "100%", padding: 14, background: PURPLE, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
           </div>
         </div>
       )}
