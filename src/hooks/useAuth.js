@@ -41,6 +41,7 @@ export function useAuth() {
             icon: '/icon-192.png',
           });
         }
+        setTimeout(() => window.location.reload(), 500);
       }
     }, 5000);
   }, [stopPolling]);
