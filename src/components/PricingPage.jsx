@@ -153,7 +153,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
                     ))}
                   </div>
                 </div>
-                <button className={`rbbtn ${plan.btnClass}`} onClick={() => handleCheckout(plan)} disabled={loading === plan.id}>
+                <button className={`rbbtn ${plan.btnClass}`} onClick={() => { const p = {...plan}; handleCheckout(p); }} disabled={loading === plan.id}>
                   {loading === plan.id ? 'Chargement...' : `Commencer — ${plan.price}€/mois →`}
                 </button>
               </div>
@@ -184,7 +184,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
                   ))}
                 </div>
               </div>
-              <button className="bgn" onClick={() => handleCheckout(GENERAL)} disabled={loading === GENERAL.id}>
+              <button className="bgn" onClick={() => { const p = {...GENERAL}; handleCheckout(p); }} disabled={loading === GENERAL.id}>
                 {loading === GENERAL.id ? 'Chargement...' : 'Commencer — 39€/mois →'}
               </button>
             </div>
