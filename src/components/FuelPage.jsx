@@ -46,7 +46,7 @@ const ScoreRing = ({ score }) => {
 };
 
 export default function FuelPage({ client, appData }) {
-  const fuelData = useFuel(appData ? null : client?.id);
+  const fuelData = useFuel(client?.id);
   const goals = appData?.nutritionGoals || fuelData.goals;
   const logs = fuelData.logs;
   const dailyTracking = appData?.dailyTracking || fuelData.dailyTracking;
