@@ -1,42 +1,27 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
-const SCAN_READER_ID = "fuel-scan-reader";
-
-// Formats code-barre a activer explicitement (sinon html5-qrcode ne scanne que les QR codes !).
-// EAN_13 = code-barre produit europeen standard, EAN_8 = version courte,
-// UPC_A/UPC_E = equivalent americain, CODE_128 = courant pour la logistique,
-// QR_CODE garde aussi pour les rares produits avec QR.
-const SCAN_FORMATS = [
-  Html5QrcodeSupportedFormats.EAN_13,
-  Html5QrcodeSupportedFormats.EAN_8,
-  Html5QrcodeSupportedFormats.UPC_A,
-  Html5QrcodeSupportedFormats.UPC_E,
-  Html5QrcodeSupportedFormats.CODE_128,
-  Html5QrcodeSupportedFormats.CODE_39,
-  Html5QrcodeSupportedFormats.QR_CODE,
+// ===== Scanner code-barre via BarcodeDetector API native =====
+// Marche sur : iOS Safari 17+ (donc iOS 18), Chrome Android 83+, Chrome desktop, Edge.
+// Ne marche pas sur : Firefox, vieux Safari < 17 (message clair affiche).
+//
+// On utilise le pattern <input type="file" capture="environment"> qui declenche
+// l'app camera NATIVE de l'OS (iOS Camera, Android Camera). Aucune permission web
+// requise, marche en PWA standalone iOS, marche partout. Une seule photo HD est
+// passee a BarcodeDetector.detect() qui gere le decodage cote OS, beaucoup plus
+// precis et rapide que n'importe quel decodeur JS.
+const BARCODE_FORMATS = [
+  "ean_13", // standard produit europeen
+  "ean_8",  // version courte
+  "upc_a",  // standard produit US
+  "upc_e",  // version courte US
+  "code_128", // logistique
+  "code_39",  // logistique ancien
+  "qr_code",  // rares produits avec QR
 ];
 
-// Config commune passee au constructeur Html5Qrcode.
-// useBarCodeDetectorIfSupported active la BarcodeDetector API native (iOS 17+, Chrome)
-// qui est beaucoup plus rapide et precise que le decodeur JS embarque.
-const SCANNER_CONFIG = {
-  formatsToSupport: SCAN_FORMATS,
-  useBarCodeDetectorIfSupported: true,
-  verbose: false,
-};
-
-// Detection iOS PWA standalone : avant iOS 16.4 (mars 2023), Apple bloquait
-// getUserMedia en mode PWA installee sur l'ecran d'accueil. Aucun workaround JS
-// possible. On detecte ce cas pour afficher un message + lien Safari.
-const isIOSDevice = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent || "") && !window.MSStream;
-const isStandalonePWA = typeof window !== "undefined" && (
-  (window.navigator && window.navigator.standalone === true) ||
-  (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-);
-const isIOSPWA = isIOSDevice && isStandalonePWA;
+const hasBarcodeDetector = typeof window !== "undefined" && "BarcodeDetector" in window;
 
 const GREEN = "#02d1ba"; // v_fupyhdzh
 const ORANGE = "#f97316";
@@ -107,10 +92,8 @@ export default function FuelPage({ client, appData }) {
   const [tempSleep, setTempSleep] = useState(null);
   const [scanError, setScanError] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
-  const [scanActive, setScanActive] = useState(false); // true une fois la camera demarree par tap
   const [scanStatus, setScanStatus] = useState(""); // diagnostic visible
-  const scannerRef = useRef(null); // instance Html5Qrcode
-  const fileInputRef = useRef(null); // <input type=file capture=environment> pour iOS PWA
+  const fileInputRef = useRef(null); // <input type=file capture=environment> qui ouvre la camera native
 
   // Sync avec dailyTracking quand il se charge
   useEffect(() => {
@@ -200,137 +183,12 @@ export default function FuelPage({ client, appData }) {
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
   };
 
-  // ===== Scanner code-barre (html5-qrcode) =====
-  // html5-qrcode cree et gere son propre <video> a l'interieur du div #fuel-scan-reader,
-  // avec tous les workarounds iOS Safari natifs. On ne gere plus le stream/play() a la main.
-  const onBarcodeDetected = useCallback(async (decodedText) => {
-    const scanner = scannerRef.current;
-    if (!scanner) return;
-    // Stop scanner immediately to avoid double-detect
-    try { await scanner.stop(); } catch {}
-    if (navigator.vibrate) navigator.vibrate(60);
+  // ===== Scanner code-barre via BarcodeDetector + camera native OS =====
+  // Pattern : <input type="file" capture="environment"> declenche l'app camera
+  // NATIVE de l'OS (iOS Camera, Android Camera, plein ecran, qualite max).
+  // Snap -> photo Blob -> BarcodeDetector.detect() native -> EAN-13 decode.
+  // Aucune permission web requise, marche en PWA iOS standalone, marche sur Android.
 
-    setScanLoading(true);
-    const food = await scanBarcode(decodedText);
-    setScanLoading(false);
-
-    if (!food || !food.calories) {
-      setScanError("Produit introuvable (" + decodedText + "). Essaie un autre produit ou ajoute-le manuellement.");
-      // Relance le scanner apres l'erreur pour permettre une nouvelle tentative
-      try {
-        await scanner.start(
-          { facingMode: { exact: "environment" } },
-          { fps: 10, qrbox: { width: 240, height: 140 } },
-          onBarcodeDetected,
-          () => {}
-        );
-      } catch {}
-      return;
-    }
-
-    await addFood({
-      repas: selectedRepas,
-      aliment: food.name,
-      calories: food.calories,
-      proteines: food.proteines,
-      glucides: food.glucides,
-      lipides: food.lipides,
-      quantite_g: 100,
-    });
-    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
-    setShowScan(false);
-  }, [scanBarcode, addFood, selectedRepas]);
-
-  const startScanner = useCallback(async () => {
-    setScanError("");
-    setScanLoading(false);
-    setScanStatus("Demarrage...");
-
-    if (typeof window !== "undefined" && window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
-      setScanError("Le scanner necessite HTTPS. Reouvre l'app via https://");
-      setScanStatus("");
-      return;
-    }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setScanError("Ton navigateur ne supporte pas l'acces camera. Utilise Safari ou Chrome.");
-      setScanStatus("");
-      return;
-    }
-
-    // Verifie que le div cible est bien dans le DOM (sinon Html5Qrcode throw)
-    const target = document.getElementById(SCAN_READER_ID);
-    if (!target) {
-      setScanError("Element scanner introuvable (#" + SCAN_READER_ID + "). Reouvre la modal.");
-      setScanStatus("");
-      return;
-    }
-
-    try {
-      setScanStatus("Demande permission camera...");
-      const scanner = new Html5Qrcode(SCAN_READER_ID, SCANNER_CONFIG);
-      scannerRef.current = scanner;
-
-      // On tente d'abord camera arriere stricte (exact), puis fallback ideal, puis n'importe quelle camera.
-      const config = { fps: 10, qrbox: { width: 240, height: 140 }, aspectRatio: 1.0 };
-      const tryStart = async (constraints) => {
-        await scanner.start(constraints, config, onBarcodeDetected, () => {
-          // onScanFailure callback : appele a chaque frame sans code detecte. On ignore.
-        });
-      };
-
-      try {
-        await tryStart({ facingMode: { exact: "environment" } });
-      } catch (e1) {
-        setScanStatus("Camera arriere stricte refusee, tentative ideal...");
-        try {
-          await tryStart({ facingMode: { ideal: "environment" } });
-        } catch (e2) {
-          setScanStatus("Fallback camera frontale...");
-          await tryStart({ facingMode: "user" });
-        }
-      }
-
-      setScanActive(true);
-      setScanStatus("Camera active — vise un code-barre");
-    } catch (e) {
-      console.error("Scanner error:", e);
-      let msg = "Camera indisponible";
-      const errStr = String(e?.message || e?.name || e || "");
-      if (errStr.includes("NotAllowed") || errStr.includes("Permission")) {
-        msg = "Acces camera refuse. Reglages iOS > Safari > Camera > Autoriser, puis recharge l'app.";
-      } else if (errStr.includes("NotFound") || errStr.includes("DevicesNotFound")) {
-        msg = "Aucune camera detectee sur cet appareil.";
-      } else if (errStr.includes("NotReadable") || errStr.includes("TrackStart")) {
-        msg = "La camera est utilisee par une autre app. Ferme-la et reessaie.";
-      } else if (errStr.includes("Overconstrained")) {
-        msg = "Aucune camera disponible avec ces contraintes.";
-      } else if (errStr) {
-        msg = "Camera indisponible: " + errStr.slice(0, 120);
-      }
-      setScanError(msg);
-      setScanStatus("");
-    }
-  }, [onBarcodeDetected]);
-
-  const stopScanner = useCallback(async () => {
-    const scanner = scannerRef.current;
-    if (scanner) {
-      try {
-        if (scanner.isScanning) await scanner.stop();
-        scanner.clear();
-      } catch {}
-    }
-    scannerRef.current = null;
-    setScanActive(false);
-    setScanStatus("");
-  }, []);
-
-  // ===== Mode photo (iOS PWA fallback) =====
-  // En PWA installee sur iOS, la permission camera web est isolee de Safari et
-  // souvent silencieusement bloquee. Le pattern <input type=file capture=environment>
-  // declenche l'app camera NATIVE iOS (pas getUserMedia), retourne la photo prise,
-  // puis html5-qrcode decode le code-barre directement depuis l'image.
-  // Aucune permission web requise, marche dans tous les contextes iOS.
   const triggerPhotoScan = useCallback(() => {
     setScanError("");
     setScanStatus("");
@@ -347,30 +205,55 @@ export default function FuelPage({ client, appData }) {
     setScanLoading(true);
     setScanStatus("Decodage de la photo...");
 
-    // Verifie que le div cible existe (Html5Qrcode l'exige meme pour scanFile)
-    const target = document.getElementById(SCAN_READER_ID);
-    if (!target) {
+    if (!hasBarcodeDetector) {
       setScanLoading(false);
-      setScanError("Element scanner introuvable. Reouvre la modal.");
+      setScanError("Detection de code-barre non supportee par ton navigateur. Utilise Chrome (Android), Edge ou Safari iOS 17+.");
+      setScanStatus("");
       return;
     }
 
     let decodedText = null;
     try {
-      const tmpScanner = new Html5Qrcode(SCAN_READER_ID, SCANNER_CONFIG);
-      decodedText = await tmpScanner.scanFile(file, /* showImage */ false);
-      try { tmpScanner.clear(); } catch {}
+      // Filtre les formats reellement supportes par ce navigateur (certains
+      // browsers ne supportent qu'un sous-ensemble — ex: Chrome desktop n'a pas
+      // tous les barcode formats, mais EAN-13 est partout).
+      let formats = BARCODE_FORMATS;
+      try {
+        const supported = await window.BarcodeDetector.getSupportedFormats();
+        formats = BARCODE_FORMATS.filter((f) => supported.includes(f));
+        if (formats.length === 0) formats = BARCODE_FORMATS; // fallback : on tente tout
+      } catch {}
+
+      const detector = new window.BarcodeDetector({ formats });
+
+      // BarcodeDetector accepte ImageBitmapSource : on cree un ImageBitmap depuis le Blob.
+      // C'est plus rapide qu'un <img> intermediaire et evite les soucis de chargement async.
+      let bitmap;
+      try {
+        bitmap = await createImageBitmap(file);
+      } catch {
+        // Fallback : passer le Blob directement (supporte sur la plupart des impls)
+        bitmap = file;
+      }
+
+      const codes = await detector.detect(bitmap);
+      if (bitmap && bitmap.close) bitmap.close();
+
+      if (codes && codes.length > 0) {
+        decodedText = codes[0].rawValue;
+      }
     } catch (err) {
-      console.warn("scanFile failed:", err);
+      console.error("BarcodeDetector failed:", err);
       setScanLoading(false);
-      setScanError("Aucun code-barre detecte sur la photo. Cadre bien le code et reessaie.");
+      setScanError("Erreur de decodage : " + (err?.message || err?.name || "inconnue"));
       setScanStatus("");
       return;
     }
 
     if (!decodedText) {
       setScanLoading(false);
-      setScanError("Aucun code-barre detecte. Cadre bien le code et reessaie.");
+      setScanError("Aucun code-barre detecte. Cadre bien le code, eclairage suffisant, distance ~15cm.");
+      setScanStatus("");
       return;
     }
 
@@ -398,14 +281,14 @@ export default function FuelPage({ client, appData }) {
     setShowScan(false);
   }, [scanBarcode, addFood, selectedRepas]);
 
-  // Cleanup quand la modal se ferme — PAS d'auto-start (iOS exige un tap utilisateur frais)
+  // Reset des erreurs/status a la fermeture de la modal scan
   useEffect(() => {
     if (!showScan) {
-      stopScanner();
       setScanError("");
+      setScanStatus("");
+      setScanLoading(false);
     }
-    return () => stopScanner();
-  }, [showScan, stopScanner]);
+  }, [showScan]);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#050505", padding: "0px 24px" }}>
@@ -777,63 +660,44 @@ export default function FuelPage({ client, appData }) {
               <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
             </div>
 
-            {/* Zone scanner : html5-qrcode injecte son propre <video> dans #fuel-scan-reader
-                et gere lui-meme tous les workarounds iOS Safari. Le div doit TOUJOURS etre dans
-                le DOM (sinon Html5Qrcode throw au start). */}
-            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", width: "100%", height: 320, marginBottom: 14 }}>
-              <div
-                id={SCAN_READER_ID}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  background: "#000",
-                }}
-              />
-
-              {/* Overlay etat initial. Sur iOS PWA -> mode photo (camera native).
-                  Ailleurs -> mode live (getUserMedia + html5-qrcode). */}
-              {!scanActive && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center", background: "rgba(10,10,10,0.92)" }}>
-                  <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.8 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 48, height: 48 }}>
-                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
-                  </div>
-
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 16, lineHeight: 1.5, maxWidth: 280 }}>
-                    {scanStatus || (isIOSPWA
-                      ? "Prends une photo du code-barre avec ton appareil photo, on decode automatiquement."
-                      : "Touche le bouton puis pointe la camera arriere sur un code-barre.")}
-                  </div>
-
-                  <button
-                    onClick={isIOSPWA ? triggerPhotoScan : startScanner}
-                    style={{
-                      background: "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-                      color: "#0a0a0a",
-                      border: "none",
-                      borderRadius: 14,
-                      padding: "14px 28px",
-                      fontSize: 14,
-                      fontWeight: 800,
-                      cursor: "pointer",
-                      letterSpacing: "0.5px",
-                      textTransform: "uppercase",
-                      boxShadow: "0 6px 24px rgba(167,139,250,0.4)",
-                    }}
-                  >
-                    {isIOSPWA
-                      ? "Prendre la photo"
-                      : (scanStatus && scanStatus.startsWith("Demarrage") ? "Demarrage..." : "Activer la camera")}
-                  </button>
+            {/* Zone scanner : ecran d'invite + bouton qui ouvre la camera native OS */}
+            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#0a0a0a", width: "100%", height: 280, marginBottom: 14 }}>
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
+                <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.85 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 52, height: 52 }}>
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
                 </div>
-              )}
 
-              {/* Input file invisible : declenche l'app camera native iOS quand .click() est appele.
-                  capture="environment" force la camera arriere si dispo. */}
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 290 }}>
+                  {scanLoading
+                    ? (scanStatus || "Decodage en cours...")
+                    : "Touche le bouton, prends une photo du code-barre. On decode automatiquement avec l'appareil photo natif."}
+                </div>
+
+                <button
+                  onClick={triggerPhotoScan}
+                  disabled={scanLoading}
+                  style={{
+                    background: scanLoading ? "rgba(167,139,250,0.3)" : "linear-gradient(135deg, #a78bfa, #8b5cf6)",
+                    color: scanLoading ? "rgba(255,255,255,0.5)" : "#0a0a0a",
+                    border: "none",
+                    borderRadius: 14,
+                    padding: "14px 32px",
+                    fontSize: 14,
+                    fontWeight: 800,
+                    cursor: scanLoading ? "default" : "pointer",
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                    boxShadow: scanLoading ? "none" : "0 6px 24px rgba(167,139,250,0.4)",
+                  }}
+                >
+                  {scanLoading ? "Decodage..." : "Prendre la photo"}
+                </button>
+              </div>
+
+              {/* Input file invisible : declenche l'app camera native (iOS Camera, Android Camera). */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -842,26 +706,6 @@ export default function FuelPage({ client, appData }) {
                 onChange={handlePhotoSelected}
                 style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
               />
-
-              {/* Etat actif : cadre de visee */}
-              {scanActive && (
-                <>
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                    <div style={{ width: "75%", height: "35%", border: "2px solid " + PURPLE, borderRadius: 12, boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
-                  </div>
-                  {/* Status en bas */}
-                  <div style={{ position: "absolute", bottom: 8, left: 0, right: 0, textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.7)", letterSpacing: "0.5px", textTransform: "uppercase", pointerEvents: "none" }}>
-                    {scanStatus}
-                  </div>
-                </>
-              )}
-
-              {/* Recherche produit apres detection */}
-              {scanLoading && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 13, zIndex: 2 }}>
-                  Recherche du produit...
-                </div>
-              )}
             </div>
 
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 10 }}>
