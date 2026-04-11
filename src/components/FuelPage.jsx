@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
-import { BrowserMultiFormatReader } from "@zxing/browser";
+import { Html5Qrcode } from "html5-qrcode";
+
+const SCAN_READER_ID = "fuel-scan-reader";
 
 const GREEN = "#02d1ba"; // v_fupyhdzh
 const ORANGE = "#f97316";
@@ -73,9 +75,8 @@ export default function FuelPage({ client, appData }) {
   const [scanError, setScanError] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
   const [scanActive, setScanActive] = useState(false); // true une fois la camera demarree par tap
-  const [scanStatus, setScanStatus] = useState(""); // diagnostic visible : "Demande permission...", "Stream obtenu...", etc.
-  const videoRef = useRef(null);
-  const scannerRef = useRef(null);
+  const [scanStatus, setScanStatus] = useState(""); // diagnostic visible
+  const scannerRef = useRef(null); // instance Html5Qrcode
 
   // Sync avec dailyTracking quand il se charge
   useEffect(() => {
@@ -165,13 +166,52 @@ export default function FuelPage({ client, appData }) {
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
   };
 
-  // ===== Scanner code-barre (zxing) =====
+  // ===== Scanner code-barre (html5-qrcode) =====
+  // html5-qrcode cree et gere son propre <video> a l'interieur du div #fuel-scan-reader,
+  // avec tous les workarounds iOS Safari natifs. On ne gere plus le stream/play() a la main.
+  const onBarcodeDetected = useCallback(async (decodedText) => {
+    const scanner = scannerRef.current;
+    if (!scanner) return;
+    // Stop scanner immediately to avoid double-detect
+    try { await scanner.stop(); } catch {}
+    if (navigator.vibrate) navigator.vibrate(60);
+
+    setScanLoading(true);
+    const food = await scanBarcode(decodedText);
+    setScanLoading(false);
+
+    if (!food || !food.calories) {
+      setScanError("Produit introuvable (" + decodedText + "). Essaie un autre produit ou ajoute-le manuellement.");
+      // Relance le scanner apres l'erreur pour permettre une nouvelle tentative
+      try {
+        await scanner.start(
+          { facingMode: { exact: "environment" } },
+          { fps: 10, qrbox: { width: 240, height: 140 } },
+          onBarcodeDetected,
+          () => {}
+        );
+      } catch {}
+      return;
+    }
+
+    await addFood({
+      repas: selectedRepas,
+      aliment: food.name,
+      calories: food.calories,
+      proteines: food.proteines,
+      glucides: food.glucides,
+      lipides: food.lipides,
+      quantite_g: 100,
+    });
+    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+    setShowScan(false);
+  }, [scanBarcode, addFood, selectedRepas]);
+
   const startScanner = useCallback(async () => {
     setScanError("");
     setScanLoading(false);
     setScanStatus("Demarrage...");
 
-    // Pre-check : HTTPS requis (sauf localhost) sinon getUserMedia echoue silencieusement
     if (typeof window !== "undefined" && window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
       setScanError("Le scanner necessite HTTPS. Reouvre l'app via https://");
       setScanStatus("");
@@ -183,118 +223,69 @@ export default function FuelPage({ client, appData }) {
       return;
     }
 
-    const video = videoRef.current;
-    if (!video) {
-      setScanError("Element video introuvable (videoRef null). Reouvre la modal.");
+    // Verifie que le div cible est bien dans le DOM (sinon Html5Qrcode throw)
+    const target = document.getElementById(SCAN_READER_ID);
+    if (!target) {
+      setScanError("Element scanner introuvable (#" + SCAN_READER_ID + "). Reouvre la modal.");
       setScanStatus("");
       return;
     }
 
     try {
       setScanStatus("Demande permission camera...");
-      // 1) Demande explicite du flux camera arriere AVANT zxing.
-      //    Important sur iOS Safari : facingMode environment + ideal pour fallback,
-      //    et l'appel doit etre declenche par un geste utilisateur (le clic sur le bouton).
-      let stream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
+      const scanner = new Html5Qrcode(SCAN_READER_ID, { verbose: false });
+      scannerRef.current = scanner;
+
+      // On tente d'abord camera arriere stricte (exact), puis fallback ideal, puis n'importe quelle camera.
+      const config = { fps: 10, qrbox: { width: 240, height: 140 }, aspectRatio: 1.0 };
+      const tryStart = async (constraints) => {
+        await scanner.start(constraints, config, onBarcodeDetected, () => {
+          // onScanFailure callback : appele a chaque frame sans code detecte. On ignore.
         });
-      } catch (firstErr) {
-        // Fallback : si environment refuse, on tente sans contraintes (camera frontale acceptee)
-        if (firstErr?.name === "OverconstrainedError" || firstErr?.name === "ConstraintNotSatisfiedError") {
-          setScanStatus("Camera arriere indispo, fallback frontale...");
-          stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-        } else {
-          throw firstErr;
-        }
-      }
+      };
 
-      setScanStatus("Stream obtenu, attachement video...");
-
-      // Le <video> est deja visible dans le DOM (pas display:none) — c'est essentiel sur iOS,
-      // sinon attacher un srcObject a un element cache empeche le rendu des frames meme apres
-      // re-affichage.
-      video.srcObject = stream;
-      video.setAttribute("playsinline", "true"); // double secu iOS
-      video.setAttribute("webkit-playsinline", "true"); // tres vieux iOS
-      video.muted = true;
-
-      setScanStatus("Lecture video...");
-      // play() doit etre appele dans la meme call stack que le tap utilisateur.
       try {
-        await video.play();
-      } catch (playErr) {
-        console.warn("video.play() rejected:", playErr);
-        setScanStatus("play() rejete: " + (playErr?.name || playErr?.message || "?"));
-        // On continue quand meme : sur certains iOS, play() rejete mais le flux s'affiche apres un tick
+        await tryStart({ facingMode: { exact: "environment" } });
+      } catch (e1) {
+        setScanStatus("Camera arriere stricte refusee, tentative ideal...");
+        try {
+          await tryStart({ facingMode: { ideal: "environment" } });
+        } catch (e2) {
+          setScanStatus("Fallback camera frontale...");
+          await tryStart({ facingMode: "user" });
+        }
       }
 
       setScanActive(true);
       setScanStatus("Camera active — vise un code-barre");
-
-      // 2) zxing decode depuis l'element video deja branche
-      const reader = new BrowserMultiFormatReader();
-      scannerRef.current = reader;
-
-      reader.decodeFromVideoElement(video, async (result, err, controls) => {
-        if (result) {
-          const code = result.getText();
-          if (controls) controls.stop();
-          if (navigator.vibrate) navigator.vibrate(60);
-          setScanLoading(true);
-          const food = await scanBarcode(code);
-          setScanLoading(false);
-          if (!food || !food.calories) {
-            setScanError("Produit introuvable (" + code + "). Essaie un autre produit ou ajoute-le manuellement.");
-            return;
-          }
-          await addFood({
-            repas: selectedRepas,
-            aliment: food.name,
-            calories: food.calories,
-            proteines: food.proteines,
-            glucides: food.glucides,
-            lipides: food.lipides,
-            quantite_g: 100,
-          });
-          if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
-          setShowScan(false);
-        }
-      });
     } catch (e) {
       console.error("Scanner error:", e);
-      // Messages explicites selon le type d'erreur (utile pour iOS Safari)
       let msg = "Camera indisponible";
-      if (e?.name === "NotAllowedError" || e?.name === "PermissionDeniedError") {
+      const errStr = String(e?.message || e?.name || e || "");
+      if (errStr.includes("NotAllowed") || errStr.includes("Permission")) {
         msg = "Acces camera refuse. Reglages iOS > Safari > Camera > Autoriser, puis recharge l'app.";
-      } else if (e?.name === "NotFoundError" || e?.name === "DevicesNotFoundError") {
+      } else if (errStr.includes("NotFound") || errStr.includes("DevicesNotFound")) {
         msg = "Aucune camera detectee sur cet appareil.";
-      } else if (e?.name === "NotReadableError" || e?.name === "TrackStartError") {
+      } else if (errStr.includes("NotReadable") || errStr.includes("TrackStart")) {
         msg = "La camera est utilisee par une autre app. Ferme-la et reessaie.";
-      } else if (e?.name === "OverconstrainedError") {
-        msg = "Aucune camera arriere disponible (camera frontale uniquement).";
-      } else if (e?.message) {
-        msg = "Camera indisponible: " + e.message;
-      } else if (e?.name) {
-        msg = "Camera indisponible (" + e.name + ")";
+      } else if (errStr.includes("Overconstrained")) {
+        msg = "Aucune camera disponible avec ces contraintes.";
+      } else if (errStr) {
+        msg = "Camera indisponible: " + errStr.slice(0, 120);
       }
       setScanError(msg);
       setScanStatus("");
     }
-  }, [scanBarcode, addFood, selectedRepas]);
+  }, [onBarcodeDetected]);
 
-  const stopScanner = useCallback(() => {
-    try {
-      const tracks = videoRef.current?.srcObject?.getTracks?.() || [];
-      tracks.forEach((t) => t.stop());
-      if (videoRef.current) videoRef.current.srcObject = null;
-    } catch {}
+  const stopScanner = useCallback(async () => {
+    const scanner = scannerRef.current;
+    if (scanner) {
+      try {
+        if (scanner.isScanning) await scanner.stop();
+        scanner.clear();
+      } catch {}
+    }
     scannerRef.current = null;
     setScanActive(false);
     setScanStatus("");
@@ -679,21 +670,17 @@ export default function FuelPage({ client, appData }) {
               <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
             </div>
 
-            {/* Zone video : le <video> reste TOUJOURS visible dans le DOM (cle pour iOS Safari)
-                L'overlay "Activer" est superpose tant que scanActive est false. */}
+            {/* Zone scanner : html5-qrcode injecte son propre <video> dans #fuel-scan-reader
+                et gere lui-meme tous les workarounds iOS Safari. Le div doit TOUJOURS etre dans
+                le DOM (sinon Html5Qrcode throw au start). */}
             <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", width: "100%", height: 320, marginBottom: 14 }}>
-              <video
-                ref={videoRef}
-                playsInline
-                muted
-                autoPlay
-                disablePictureInPicture
+              <div
+                id={SCAN_READER_ID}
                 style={{
                   position: "absolute",
                   inset: 0,
                   width: "100%",
                   height: "100%",
-                  objectFit: "cover",
                   background: "#000",
                 }}
               />
