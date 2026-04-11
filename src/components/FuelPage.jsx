@@ -72,6 +72,7 @@ export default function FuelPage({ client, appData }) {
   const [tempSleep, setTempSleep] = useState(null);
   const [scanError, setScanError] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
+  const [scanActive, setScanActive] = useState(false); // true une fois la camera demarree par tap
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
 
@@ -200,8 +201,11 @@ export default function FuelPage({ client, appData }) {
       video.srcObject = stream;
       video.setAttribute("playsinline", "true"); // double secu iOS
       video.muted = true;
-      // play() peut rejeter si l'autoplay policy bloque ; on ignore l'erreur (le user a clique le bouton donc devrait passer)
+      // play() doit etre appele dans la meme call stack que le tap utilisateur,
+      // ce qui est le cas ici car startScanner est invoque directement par onClick
+      // (et plus depuis un useEffect qui casse la chaine du gesture).
       try { await video.play(); } catch (_) {}
+      setScanActive(true);
 
       // 2) zxing decode depuis l'element video deja branche
       const reader = new BrowserMultiFormatReader();
@@ -258,16 +262,17 @@ export default function FuelPage({ client, appData }) {
       if (videoRef.current) videoRef.current.srcObject = null;
     } catch {}
     scannerRef.current = null;
+    setScanActive(false);
   }, []);
 
+  // Cleanup quand la modal se ferme — PAS d'auto-start (iOS exige un tap utilisateur frais)
   useEffect(() => {
-    if (showScan) {
-      startScanner();
-    } else {
+    if (!showScan) {
       stopScanner();
+      setScanError("");
     }
     return () => stopScanner();
-  }, [showScan, startScanner, stopScanner]);
+  }, [showScan, stopScanner]);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#050505", padding: "0px 24px" }}>
@@ -638,18 +643,73 @@ export default function FuelPage({ client, appData }) {
               </div>
               <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
             </div>
-            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", aspectRatio: "1 / 1", marginBottom: 14 }}>
-              <video ref={videoRef} playsInline muted autoPlay disablePictureInPicture style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000" }} />
-              {/* Cadre de visee */}
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                <div style={{ width: "75%", height: "35%", border: "2px solid " + PURPLE, borderRadius: 12, boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
-              </div>
+
+            {/* Zone video / etat initial */}
+            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", width: "100%", height: 320, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {/* Le <video> est TOUJOURS dans le DOM (sinon le ref est null au moment du tap) */}
+              <video
+                ref={videoRef}
+                playsInline
+                muted
+                autoPlay
+                disablePictureInPicture
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  background: "#000",
+                  display: scanActive ? "block" : "none",
+                }}
+              />
+
+              {/* Etat 1 : pas encore demarre -> gros bouton Activer (geste user requis pour iOS) */}
+              {!scanActive && (
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
+                  <div style={{ color: PURPLE, marginBottom: 16, opacity: 0.7 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 56, height: 56 }}>
+                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                  </div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 280 }}>
+                    Touche le bouton ci-dessous puis pointe la camera arriere sur un code-barre produit.
+                  </div>
+                  <button
+                    onClick={startScanner}
+                    style={{
+                      background: "linear-gradient(135deg, #a78bfa, #8b5cf6)",
+                      color: "#0a0a0a",
+                      border: "none",
+                      borderRadius: 14,
+                      padding: "14px 28px",
+                      fontSize: 14,
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                      boxShadow: "0 6px 24px rgba(167,139,250,0.4)",
+                    }}
+                  >
+                    Activer la camera
+                  </button>
+                </div>
+              )}
+
+              {/* Etat 2 : camera active -> cadre de visee */}
+              {scanActive && (
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                  <div style={{ width: "75%", height: "35%", border: "2px solid " + PURPLE, borderRadius: 12, boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
+                </div>
+              )}
+
+              {/* Etat 3 : recherche du produit en cours apres detection */}
               {scanLoading && (
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 13 }}>
                   Recherche du produit...
                 </div>
               )}
             </div>
+
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 10 }}>
               Repas : <span style={{ color: PURPLE, fontWeight: 700 }}>{selectedRepas}</span>
             </div>
