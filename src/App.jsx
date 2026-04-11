@@ -43,6 +43,7 @@ import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPages";
 import { LoginScreen } from "./components/LoginScreen";
 import PricingPage from "./components/PricingPage";
+import ChatCoach from "./components/ChatCoach";
 import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
@@ -83,7 +84,7 @@ function SessionTab({ session, active, onClick, weekIdx, sessionIdx, getHistory,
   );
 }
 
-function TrainLocked({ client, sessionsDone = 0 }) {
+function TrainLocked({ client, sessionsDone = 0, onRenew, onContact }) {
   const [booking, setBooking] = React.useState(null);
   const [firstSessionDate, setFirstSessionDate] = React.useState(null);
 
@@ -135,17 +136,6 @@ function TrainLocked({ client, sessionsDone = 0 }) {
       : Math.max(1, Math.ceil(sessionsDone / 3));
     const avgPerWeek = sessionsDone / weeks;
     const consistency = Math.min(100, Math.round((avgPerWeek / 3) * 100));
-
-    const mailSubject = "Suite de mon cycle - programme suivant";
-    const mailBody =
-      "Salut Rayan,\n\n" +
-      "Je viens de terminer mon cycle (" + sessionsDone + " seances sur " + weeks + " semaines).\n" +
-      "Je suis chaud pour attaquer la suite. Quand peut-on faire le point ?\n\n" +
-      "A tres vite.";
-    const mailtoHref =
-      "mailto:" + COACH_EMAIL +
-      "?subject=" + encodeURIComponent(mailSubject) +
-      "&body=" + encodeURIComponent(mailBody);
 
     return (
       <div style={{ minHeight: "calc(100vh - 100px)", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", padding: "40px 24px 140px", position: "relative", overflow: "hidden" }}>
@@ -214,12 +204,14 @@ function TrainLocked({ client, sessionsDone = 0 }) {
             </div>
           </div>
 
-          {/* CTAs */}
+          {/* CTAs — navigation interne a l'app, pas de mailto */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 360, margin: "0 auto", animation: "tlFadeUp 0.6s ease 0.65s both" }}>
-            <a
-              href={mailtoHref}
+            <button
+              type="button"
+              onClick={onRenew}
               style={{
                 display: "block",
+                width: "100%",
                 textAlign: "center",
                 padding: 18,
                 background: "linear-gradient(135deg, #02d1ba, #0891b2)",
@@ -228,34 +220,45 @@ function TrainLocked({ client, sessionsDone = 0 }) {
                 borderRadius: 16,
                 fontSize: 14,
                 fontWeight: 800,
-                textDecoration: "none",
+                cursor: "pointer",
                 letterSpacing: "0.5px",
                 textTransform: "uppercase",
                 boxShadow: "0 10px 36px rgba(2,209,186,0.35)",
                 WebkitTapHighlightColor: "transparent",
+                WebkitAppearance: "none",
+                fontFamily: "-apple-system,Inter,sans-serif",
               }}
             >
-              Continuer l'aventure →
-            </a>
-            <a
-              href={mailtoHref}
+              Voir les formules →
+            </button>
+            <button
+              type="button"
+              onClick={onContact}
               style={{
-                display: "block",
-                textAlign: "center",
+                display: "flex",
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
                 padding: 14,
                 background: "transparent",
-                color: "rgba(255,255,255,0.5)",
+                color: "rgba(255,255,255,0.55)",
                 border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: 16,
                 fontSize: 12,
                 fontWeight: 600,
-                textDecoration: "none",
+                cursor: "pointer",
                 letterSpacing: "0.3px",
                 WebkitTapHighlightColor: "transparent",
+                WebkitAppearance: "none",
+                fontFamily: "-apple-system,Inter,sans-serif",
               }}
             >
-              Contacter Rayan directement
-            </a>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              Contacter Rayan
+            </button>
           </div>
         </div>
       </div>
@@ -383,6 +386,8 @@ export default function App() {
   const [showMentions,    setShowMentions]    = useState(false);
   const [showCGU,         setShowCGU]         = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRenewalPricing, setShowRenewalPricing] = useState(false);
+  const [showCoachChat, setShowCoachChat] = useState(false);
   const [showHome, setShowHome] = useState(true);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
@@ -762,6 +767,45 @@ export default function App() {
         />
       )}
 
+      {/* ── Overlay : Formules / Renouvellement de cycle ── */}
+      {showRenewalPricing && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+          <PricingPage
+            client={client}
+            onClose={() => setShowRenewalPricing(false)}
+            onLogin={() => {}}
+          />
+        </div>
+      )}
+
+      {/* ── Overlay : Chat avec Rayan ── */}
+      {showCoachChat && client?.id && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setShowCoachChat(false); }}
+          style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+        >
+          <div style={{ width: "100%", maxWidth: 480, height: "88vh", background: "#0a0a0a", borderRadius: "24px 24px 0 0", border: "1px solid rgba(2,209,186,0.15)", borderBottom: "none", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            {/* Header avec close */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div>
+                <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 4, fontWeight: 700 }}>RB Perform · Chat</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>Contacter Rayan</div>
+              </div>
+              <button
+                onClick={() => setShowCoachChat(false)}
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, WebkitTapHighlightColor: "transparent", fontFamily: "-apple-system,Inter,sans-serif" }}
+              >
+                ✕
+              </button>
+            </div>
+            {/* Le composant ChatCoach existant */}
+            <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+              <ChatCoach clientId={client.id} coachEmail={COACH_EMAIL} isCoach={false} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Topbar ── */}
       
 
@@ -800,7 +844,7 @@ export default function App() {
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
         <div style={{minHeight:'100vh', background:'#050505', position:'relative'}}>
-          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} />}
+          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
@@ -826,7 +870,7 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "training" ? (
-            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} /> :
+            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} /> :
               <TrainingPage
                 client={client}
                 programme={programme}
