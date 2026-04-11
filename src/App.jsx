@@ -323,8 +323,18 @@ export default function App() {
     );
   }
 
-  // ── Client connecté sans programme → Onboarding ──
-  if (user && !isCoach && !authLoading && !cloudProgramme && !client?.onboarding_done) {
+  // ── Client sans onboarding fait → Onboarding ──
+  // IMPORTANT : on se base UNIQUEMENT sur client.onboarding_done.
+  // - Si onboarding_done === true (l'utilisateur a deja fait son onboarding),
+  //   on ne montre JAMAIS l'OnboardingFlow, meme si son programme a ete
+  //   supprime entre temps (cloudProgramme === null). Dans ce cas le code
+  //   tombe sur TrainLocked plus bas (avec le polling Supabase qui detecte
+  //   automatiquement quand le coach republie un nouveau programme).
+  // - Si onboarding_done est false, null, undefined, ou si client est null
+  //   (nouveau user sans row dans clients), on montre l'OnboardingFlow.
+  // On NE depend PAS de cloudProgramme : la suppression d'un programme ne
+  // doit jamais reclencher l'onboarding pour un user qui l'a deja fait.
+  if (user && !isCoach && !authLoading && client?.onboarding_done !== true) {
     return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
   }
 
