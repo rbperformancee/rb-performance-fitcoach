@@ -205,49 +205,83 @@ export default function FuelPage({ client, appData }) {
     setScanLoading(true);
     setScanStatus("Decodage de la photo...");
 
-    if (!hasBarcodeDetector) {
-      setScanLoading(false);
-      setScanError("Detection de code-barre non supportee par ton navigateur. Utilise Chrome (Android), Edge ou Safari iOS 17+.");
-      setScanStatus("");
-      return;
+    let decodedText = null;
+
+    // Strategie 1 : BarcodeDetector natif si dispo (Android Chrome, Edge, desktop Chrome).
+    // ~10x plus rapide que zbar-wasm car execute par l'OS, et zero download.
+    if (hasBarcodeDetector) {
+      try {
+        let formats = BARCODE_FORMATS;
+        try {
+          const supported = await window.BarcodeDetector.getSupportedFormats();
+          const filtered = BARCODE_FORMATS.filter((f) => supported.includes(f));
+          if (filtered.length > 0) formats = filtered;
+        } catch {}
+
+        const detector = new window.BarcodeDetector({ formats });
+        let bitmap;
+        try {
+          bitmap = await createImageBitmap(file);
+        } catch {
+          bitmap = file;
+        }
+        const codes = await detector.detect(bitmap);
+        if (bitmap && bitmap.close) bitmap.close();
+        if (codes && codes.length > 0) {
+          decodedText = codes[0].rawValue;
+        }
+      } catch (err) {
+        console.warn("BarcodeDetector failed, fallback to zbar-wasm:", err);
+      }
     }
 
-    let decodedText = null;
-    try {
-      // Filtre les formats reellement supportes par ce navigateur (certains
-      // browsers ne supportent qu'un sous-ensemble — ex: Chrome desktop n'a pas
-      // tous les barcode formats, mais EAN-13 est partout).
-      let formats = BARCODE_FORMATS;
+    // Strategie 2 : zbar-wasm en fallback. Marche PARTOUT, y compris iOS Safari
+    // (qui n'a pas BarcodeDetector). Lazy import : ~250 KB charges seulement
+    // au premier scan, mis en cache ensuite.
+    if (!decodedText) {
       try {
-        const supported = await window.BarcodeDetector.getSupportedFormats();
-        formats = BARCODE_FORMATS.filter((f) => supported.includes(f));
-        if (formats.length === 0) formats = BARCODE_FORMATS; // fallback : on tente tout
-      } catch {}
+        setScanStatus("Decodage avance...");
+        const zbar = await import("@undecaf/zbar-wasm");
 
-      const detector = new window.BarcodeDetector({ formats });
+        // Convert le File en ImageData via canvas
+        const url = URL.createObjectURL(file);
+        try {
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error("Image load failed"));
+            img.src = url;
+          });
+          const canvas = document.createElement("canvas");
+          // Limite la taille pour speed (zbar gere bien meme reduit)
+          const MAX = 1600;
+          let w = img.naturalWidth || img.width;
+          let h = img.naturalHeight || img.height;
+          if (w > MAX || h > MAX) {
+            const ratio = Math.min(MAX / w, MAX / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          const imageData = ctx.getImageData(0, 0, w, h);
 
-      // BarcodeDetector accepte ImageBitmapSource : on cree un ImageBitmap depuis le Blob.
-      // C'est plus rapide qu'un <img> intermediaire et evite les soucis de chargement async.
-      let bitmap;
-      try {
-        bitmap = await createImageBitmap(file);
-      } catch {
-        // Fallback : passer le Blob directement (supporte sur la plupart des impls)
-        bitmap = file;
+          const symbols = await zbar.scanImageData(imageData);
+          if (symbols && symbols.length > 0) {
+            decodedText = symbols[0].decode();
+          }
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      } catch (err) {
+        console.error("zbar-wasm failed:", err);
+        setScanLoading(false);
+        setScanError("Erreur de decodage : " + (err?.message || err?.name || "inconnue"));
+        setScanStatus("");
+        return;
       }
-
-      const codes = await detector.detect(bitmap);
-      if (bitmap && bitmap.close) bitmap.close();
-
-      if (codes && codes.length > 0) {
-        decodedText = codes[0].rawValue;
-      }
-    } catch (err) {
-      console.error("BarcodeDetector failed:", err);
-      setScanLoading(false);
-      setScanError("Erreur de decodage : " + (err?.message || err?.name || "inconnue"));
-      setScanStatus("");
-      return;
     }
 
     if (!decodedText) {
