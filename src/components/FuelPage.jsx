@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 const GREEN = "#02d1ba"; // v_fupyhdzh
 const ORANGE = "#f97316";
@@ -52,7 +53,7 @@ export default function FuelPage({ client, appData }) {
   const dailyTracking = fuelData.dailyTracking || appData?.dailyTracking;
   const loading = appData ? appData.loading : fuelData.loading;
   const { totals, addFood, removeFood, updateTracking, score } = fuelData;
-  const { results, loading: searching, search } = useOpenFoodFacts();
+  const { results, loading: searching, search, scanBarcode } = useOpenFoodFacts();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedRepas, setSelectedRepas] = useState("Dejeuner");
   const [query, setQuery] = useState("");
@@ -69,6 +70,10 @@ export default function FuelPage({ client, appData }) {
   const [showSleep, setShowSleep] = useState(false);
   const [tempWater, setTempWater] = useState(null);
   const [tempSleep, setTempSleep] = useState(null);
+  const [scanError, setScanError] = useState("");
+  const [scanLoading, setScanLoading] = useState(false);
+  const videoRef = useRef(null);
+  const scannerRef = useRef(null);
 
   // Sync avec dailyTracking quand il se charge
   useEffect(() => {
@@ -136,18 +141,18 @@ export default function FuelPage({ client, appData }) {
     setVoiceLoading(true);
     setVoiceResult(null);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/voice-analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514", max_tokens: 500,
-          messages: [{ role: "user", content: "Analyse ce repas et retourne UNIQUEMENT un JSON: { aliment, calories, proteines, glucides, lipides, quantite_g }. Repas: " + text }]
-        })
+        body: JSON.stringify({ text }),
       });
       const data = await res.json();
-      const raw = (data.content?.[0]?.text || "{}").replace(/```json|```/g, "").trim();
-      setVoiceResult(JSON.parse(raw));
-    } catch(e) { console.error(e); }
+      if (!res.ok) throw new Error(data?.error || "Proxy error");
+      setVoiceResult(data);
+    } catch (e) {
+      console.error(e);
+      alert("Analyse IA indisponible: " + (e.message || e));
+    }
     setVoiceLoading(false);
   };
 
@@ -157,6 +162,63 @@ export default function FuelPage({ client, appData }) {
     setShowVoice(false); setVoiceText(""); setVoiceResult(null);
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
   };
+
+  // ===== Scanner code-barre (zxing) =====
+  const startScanner = useCallback(async () => {
+    setScanError("");
+    setScanLoading(false);
+    try {
+      const reader = new BrowserMultiFormatReader();
+      scannerRef.current = reader;
+      // decodeFromVideoDevice : null = camera arriere par defaut
+      await reader.decodeFromVideoDevice(null, videoRef.current, async (result, err, controls) => {
+        if (result) {
+          const code = result.getText();
+          controls.stop();
+          if (navigator.vibrate) navigator.vibrate(60);
+          setScanLoading(true);
+          const food = await scanBarcode(code);
+          setScanLoading(false);
+          if (!food || !food.calories) {
+            setScanError("Produit introuvable (" + code + "). Essaie un autre produit ou ajoute-le manuellement.");
+            return;
+          }
+          await addFood({
+            repas: selectedRepas,
+            aliment: food.name,
+            calories: food.calories,
+            proteines: food.proteines,
+            glucides: food.glucides,
+            lipides: food.lipides,
+            quantite_g: 100,
+          });
+          if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+          setShowScan(false);
+        }
+      });
+    } catch (e) {
+      console.error(e);
+      setScanError("Camera indisponible: " + (e.message || e));
+    }
+  }, [scanBarcode, addFood, selectedRepas]);
+
+  const stopScanner = useCallback(() => {
+    try {
+      const tracks = videoRef.current?.srcObject?.getTracks?.() || [];
+      tracks.forEach((t) => t.stop());
+      if (videoRef.current) videoRef.current.srcObject = null;
+    } catch {}
+    scannerRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (showScan) {
+      startScanner();
+    } else {
+      stopScanner();
+    }
+    return () => stopScanner();
+  }, [showScan, startScanner, stopScanner]);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#050505", padding: "0px 24px" }}>
@@ -247,13 +309,35 @@ export default function FuelPage({ client, appData }) {
         {/* REPAS ULTRA PREMIUM */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
 
-          {/* Header + bouton add */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div>
+          {/* Header + boutons add / vocal / scan */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, gap: 10 }}>
+            <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>Journal du jour</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px" }}>Mes repas<span style={{ color: ORANGE }}>.</span></div>
             </div>
-            <button onClick={() => { setShowAdd(true); setSelectedRepas("Dejeuner"); }} style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 14, padding: "10px 18px", fontSize: 13, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px" }}>+ Ajouter</button>
+            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={() => { setShowVoice(true); }}
+                aria-label="Ajouter par commande vocale (IA)"
+                style={{ background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 14, width: 42, height: 42, color: GREEN, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+                  <rect x="9" y="2" width="6" height="12" rx="3" />
+                  <path d="M19 10v2a7 7 0 01-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="22" />
+                </svg>
+              </button>
+              <button
+                onClick={() => { setShowScan(true); }}
+                aria-label="Scanner un code-barre"
+                style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 14, width: 42, height: 42, color: PURPLE, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+                  <path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14" />
+                </svg>
+              </button>
+              <button onClick={() => { setShowAdd(true); setSelectedRepas("Dejeuner"); }} style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 14, padding: "10px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px" }}>+ Ajouter</button>
+            </div>
           </div>
 
           {/* Timeline repas */}
@@ -494,15 +578,37 @@ export default function FuelPage({ client, appData }) {
         </div>
       )}
 
-      {/* MODAL SCAN */}
+      {/* MODAL SCAN code-barre */}
       {showScan && (
-        <div onClick={()=>setShowScan(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:24,backdropFilter:"blur(12px)"}}>
-          <div style={{background:"#0a0a0a",borderRadius:24,padding:32,width:"100%",maxWidth:340,border:"1px solid rgba(167,139,250,0.15)",textAlign:"center"}}>
-            <div style={{color:"#a78bfa",marginBottom:16,display:"flex",justifyContent:"center"}}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{width:48,height:48}}><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 2v4M17 2v4M7 18v4M17 18v4M2 7h4M2 17h4M18 7h4M18 17h4"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+        <div onClick={(e) => { if (e.target === e.currentTarget) setShowScan(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(12px)" }}>
+          <div style={{ background: "#0a0a0a", borderRadius: 24, padding: 24, width: "100%", maxWidth: 420, border: "1px solid rgba(167,139,250,0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 9, color: "rgba(167,139,250,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>RB Perform · Scan</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Scanner un code-barre</div>
+              </div>
+              <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
             </div>
-            <div style={{fontSize:18,fontWeight:800,color:"#fff",marginBottom:8}}>Scan code-barre</div>
-            <div style={{fontSize:13,color:"rgba(255,255,255,0.3)",lineHeight:1.7}}>Disponible très prochainement — scanner un produit pour charger ses macros instantanément.</div>
+            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", aspectRatio: "1 / 1", marginBottom: 14 }}>
+              <video ref={videoRef} playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              {/* Cadre de visee */}
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <div style={{ width: "75%", height: "35%", border: "2px solid " + PURPLE, borderRadius: 12, boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
+              </div>
+              {scanLoading && (
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 13 }}>
+                  Recherche du produit...
+                </div>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 10 }}>
+              Repas : <span style={{ color: PURPLE, fontWeight: 700 }}>{selectedRepas}</span>
+            </div>
+            {scanError && (
+              <div style={{ fontSize: 12, color: "#ef4444", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "10px 12px", textAlign: "center" }}>
+                {scanError}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -549,4 +655,3 @@ export default function FuelPage({ client, appData }) {
     </div>
   );
 }
-/* cache bust ven. 10 avr. 2026 21:11:01 CEST */

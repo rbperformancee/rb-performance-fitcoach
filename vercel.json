@@ -1,11 +1,6 @@
 {
-  "buildCommand": "CI=true react-scripts build",
+  "buildCommand": "react-scripts build",
   "outputDirectory": "build",
   "framework": "create-react-app",
-  "installCommand": "npm install",
-  "build": {
-    "env": {
-      "REACT_APP_BUILD_TIME": "BUILD_TIMESTAMP"
-    }
-  }
+  "installCommand": "npm install"
 }
