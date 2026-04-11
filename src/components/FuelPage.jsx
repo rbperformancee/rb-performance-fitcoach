@@ -73,6 +73,7 @@ export default function FuelPage({ client, appData }) {
   const [scanError, setScanError] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
   const [scanActive, setScanActive] = useState(false); // true une fois la camera demarree par tap
+  const [scanStatus, setScanStatus] = useState(""); // diagnostic visible : "Demande permission...", "Stream obtenu...", etc.
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
 
@@ -168,44 +169,74 @@ export default function FuelPage({ client, appData }) {
   const startScanner = useCallback(async () => {
     setScanError("");
     setScanLoading(false);
+    setScanStatus("Demarrage...");
 
     // Pre-check : HTTPS requis (sauf localhost) sinon getUserMedia echoue silencieusement
     if (typeof window !== "undefined" && window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
       setScanError("Le scanner necessite HTTPS. Reouvre l'app via https://");
+      setScanStatus("");
       return;
     }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setScanError("Ton navigateur ne supporte pas l'acces camera. Utilise Safari ou Chrome.");
+      setScanStatus("");
+      return;
+    }
+
+    const video = videoRef.current;
+    if (!video) {
+      setScanError("Element video introuvable (videoRef null). Reouvre la modal.");
+      setScanStatus("");
       return;
     }
 
     try {
+      setScanStatus("Demande permission camera...");
       // 1) Demande explicite du flux camera arriere AVANT zxing.
       //    Important sur iOS Safari : facingMode environment + ideal pour fallback,
       //    et l'appel doit etre declenche par un geste utilisateur (le clic sur le bouton).
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
-
-      const video = videoRef.current;
-      if (!video) {
-        stream.getTracks().forEach((t) => t.stop());
-        return;
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        });
+      } catch (firstErr) {
+        // Fallback : si environment refuse, on tente sans contraintes (camera frontale acceptee)
+        if (firstErr?.name === "OverconstrainedError" || firstErr?.name === "ConstraintNotSatisfiedError") {
+          setScanStatus("Camera arriere indispo, fallback frontale...");
+          stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+        } else {
+          throw firstErr;
+        }
       }
 
+      setScanStatus("Stream obtenu, attachement video...");
+
+      // Le <video> est deja visible dans le DOM (pas display:none) — c'est essentiel sur iOS,
+      // sinon attacher un srcObject a un element cache empeche le rendu des frames meme apres
+      // re-affichage.
       video.srcObject = stream;
       video.setAttribute("playsinline", "true"); // double secu iOS
+      video.setAttribute("webkit-playsinline", "true"); // tres vieux iOS
       video.muted = true;
-      // play() doit etre appele dans la meme call stack que le tap utilisateur,
-      // ce qui est le cas ici car startScanner est invoque directement par onClick
-      // (et plus depuis un useEffect qui casse la chaine du gesture).
-      try { await video.play(); } catch (_) {}
+
+      setScanStatus("Lecture video...");
+      // play() doit etre appele dans la meme call stack que le tap utilisateur.
+      try {
+        await video.play();
+      } catch (playErr) {
+        console.warn("video.play() rejected:", playErr);
+        setScanStatus("play() rejete: " + (playErr?.name || playErr?.message || "?"));
+        // On continue quand meme : sur certains iOS, play() rejete mais le flux s'affiche apres un tick
+      }
+
       setScanActive(true);
+      setScanStatus("Camera active — vise un code-barre");
 
       // 2) zxing decode depuis l'element video deja branche
       const reader = new BrowserMultiFormatReader();
@@ -250,8 +281,11 @@ export default function FuelPage({ client, appData }) {
         msg = "Aucune camera arriere disponible (camera frontale uniquement).";
       } else if (e?.message) {
         msg = "Camera indisponible: " + e.message;
+      } else if (e?.name) {
+        msg = "Camera indisponible (" + e.name + ")";
       }
       setScanError(msg);
+      setScanStatus("");
     }
   }, [scanBarcode, addFood, selectedRepas]);
 
@@ -263,6 +297,7 @@ export default function FuelPage({ client, appData }) {
     } catch {}
     scannerRef.current = null;
     setScanActive(false);
+    setScanStatus("");
   }, []);
 
   // Cleanup quand la modal se ferme — PAS d'auto-start (iOS exige un tap utilisateur frais)
@@ -644,9 +679,9 @@ export default function FuelPage({ client, appData }) {
               <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
             </div>
 
-            {/* Zone video / etat initial */}
-            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", width: "100%", height: 320, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {/* Le <video> est TOUJOURS dans le DOM (sinon le ref est null au moment du tap) */}
+            {/* Zone video : le <video> reste TOUJOURS visible dans le DOM (cle pour iOS Safari)
+                L'overlay "Activer" est superpose tant que scanActive est false. */}
+            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", width: "100%", height: 320, marginBottom: 14 }}>
               <video
                 ref={videoRef}
                 playsInline
@@ -654,25 +689,27 @@ export default function FuelPage({ client, appData }) {
                 autoPlay
                 disablePictureInPicture
                 style={{
+                  position: "absolute",
+                  inset: 0,
                   width: "100%",
                   height: "100%",
                   objectFit: "cover",
                   background: "#000",
-                  display: scanActive ? "block" : "none",
                 }}
               />
 
-              {/* Etat 1 : pas encore demarre -> gros bouton Activer (geste user requis pour iOS) */}
+              {/* Overlay etat initial : grand bouton Activer (geste user requis pour iOS).
+                  Visible tant que scanActive est false. */}
               {!scanActive && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
-                  <div style={{ color: PURPLE, marginBottom: 16, opacity: 0.7 }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center", background: "rgba(10,10,10,0.92)" }}>
+                  <div style={{ color: PURPLE, marginBottom: 16, opacity: 0.8 }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 56, height: 56 }}>
                       <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
                       <circle cx="12" cy="13" r="4" />
                     </svg>
                   </div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 280 }}>
-                    Touche le bouton ci-dessous puis pointe la camera arriere sur un code-barre produit.
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 18, lineHeight: 1.5, maxWidth: 280 }}>
+                    {scanStatus || "Touche le bouton ci-dessous puis pointe la camera arriere sur un code-barre produit."}
                   </div>
                   <button
                     onClick={startScanner}
@@ -690,21 +727,27 @@ export default function FuelPage({ client, appData }) {
                       boxShadow: "0 6px 24px rgba(167,139,250,0.4)",
                     }}
                   >
-                    Activer la camera
+                    {scanStatus && scanStatus.startsWith("Demarrage") ? "Demarrage..." : "Activer la camera"}
                   </button>
                 </div>
               )}
 
-              {/* Etat 2 : camera active -> cadre de visee */}
+              {/* Etat actif : cadre de visee */}
               {scanActive && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                  <div style={{ width: "75%", height: "35%", border: "2px solid " + PURPLE, borderRadius: 12, boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
-                </div>
+                <>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                    <div style={{ width: "75%", height: "35%", border: "2px solid " + PURPLE, borderRadius: 12, boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
+                  </div>
+                  {/* Status en bas */}
+                  <div style={{ position: "absolute", bottom: 8, left: 0, right: 0, textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.7)", letterSpacing: "0.5px", textTransform: "uppercase", pointerEvents: "none" }}>
+                    {scanStatus}
+                  </div>
+                </>
               )}
 
-              {/* Etat 3 : recherche du produit en cours apres detection */}
+              {/* Recherche produit apres detection */}
               {scanLoading && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 13 }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 13, zIndex: 2 }}>
                   Recherche du produit...
                 </div>
               )}
