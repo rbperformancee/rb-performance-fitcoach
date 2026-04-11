@@ -180,16 +180,35 @@ export default function FuelPage({ client, appData }) {
 
   const addVoiceFood = async () => {
     if (!voiceResult) return;
-    // On extrait uniquement les champs macros (pas le breakdown ingredients qui polluerait la base)
-    await addFood({
-      repas: selectedRepas,
-      aliment: voiceResult.aliment,
-      calories: voiceResult.calories,
-      proteines: voiceResult.proteines,
-      glucides: voiceResult.glucides,
-      lipides: voiceResult.lipides,
-      quantite_g: voiceResult.quantite_g,
-    });
+
+    // Si on a un breakdown ingredients, on les ajoute SEPAREMENT.
+    // Comme ca chaque aliment apparait sur sa propre ligne dans le repas
+    // et l'utilisateur peut le supprimer/editer independamment des autres.
+    if (Array.isArray(voiceResult.ingredients) && voiceResult.ingredients.length > 0) {
+      for (const ing of voiceResult.ingredients) {
+        await addFood({
+          repas: selectedRepas,
+          aliment: ing.nom,
+          calories: Math.round(ing.calories || 0),
+          proteines: parseFloat((ing.proteines || 0).toFixed(1)),
+          glucides: parseFloat((ing.glucides || 0).toFixed(1)),
+          lipides: parseFloat((ing.lipides || 0).toFixed(1)),
+          quantite_g: ing.quantite_g || 0,
+        });
+      }
+    } else {
+      // Fallback si pas de breakdown : une seule entree avec le total
+      await addFood({
+        repas: selectedRepas,
+        aliment: voiceResult.aliment,
+        calories: voiceResult.calories,
+        proteines: voiceResult.proteines,
+        glucides: voiceResult.glucides,
+        lipides: voiceResult.lipides,
+        quantite_g: voiceResult.quantite_g,
+      });
+    }
+
     setShowVoice(false); setVoiceText(""); setVoiceResult(null);
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
   };
