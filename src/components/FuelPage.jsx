@@ -30,6 +30,60 @@ const PURPLE = "#a78bfa";
 
 const REPAS = ["Petit-dejeuner", "Dejeuner", "Collation", "Diner"];
 
+// ===== Icones SVG premium pour les repas =====
+// Inspirees feather/lucide, monochrome, stroke 1.8 pour la finesse.
+const MealIcon = ({ type, size = 18, color = "currentColor" }) => {
+  const props = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
+  if (type === "Petit-dejeuner") {
+    // Lever de soleil : soleil qui se leve sur l'horizon avec rayons
+    return (
+      <svg {...props}>
+        <path d="M17 18a5 5 0 0 0-10 0" />
+        <line x1="12" y1="2" x2="12" y2="9" />
+        <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
+        <line x1="1" y1="18" x2="3" y2="18" />
+        <line x1="21" y1="18" x2="23" y2="18" />
+        <line x1="18.36" y1="11.64" x2="19.78" y2="10.22" />
+        <line x1="23" y1="22" x2="1" y2="22" />
+        <polyline points="8 6 12 2 16 6" />
+      </svg>
+    );
+  }
+  if (type === "Dejeuner") {
+    // Soleil plein avec rayons
+    return (
+      <svg {...props}>
+        <circle cx="12" cy="12" r="4" />
+        <line x1="12" y1="2" x2="12" y2="4" />
+        <line x1="12" y1="20" x2="12" y2="22" />
+        <line x1="4.93" y1="4.93" x2="6.34" y2="6.34" />
+        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07" />
+        <line x1="2" y1="12" x2="4" y2="12" />
+        <line x1="20" y1="12" x2="22" y2="12" />
+        <line x1="4.93" y1="19.07" x2="6.34" y2="17.66" />
+        <line x1="17.66" y1="6.34" x2="19.07" y2="4.93" />
+      </svg>
+    );
+  }
+  if (type === "Collation") {
+    // Eclair = energie
+    return (
+      <svg {...props}>
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    );
+  }
+  if (type === "Diner") {
+    // Lune croissant
+    return (
+      <svg {...props}>
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    );
+  }
+  return null;
+};
+
 const MacroBar = ({ value, goal, color, label, unit = "g" }) => {
   const pct = goal > 0 ? Math.min(Math.round((value / goal) * 100), 100) : 0;
   return (
@@ -543,14 +597,16 @@ export default function FuelPage({ client, appData }) {
           {REPAS.map((repas, ri) => {
             const repasLogs = logsByRepas[repas];
             const repasKcal = repasLogs.reduce((s, l) => s + (l.calories || 0), 0);
-            const emojis = { "Petit-dejeuner": "🌅", "Dejeuner": "☀️", "Collation": "⚡", "Diner": "🌙" };
             const colors = { "Petit-dejeuner": "#fbbf24", "Dejeuner": ORANGE, "Collation": GREEN, "Diner": PURPLE };
             const col = colors[repas];
+            const filled = repasLogs.length > 0;
             return (
               <div key={repas} style={{ display: "flex", gap: 16, marginBottom: 24 }}>
                 {/* Timeline indicator */}
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 14, background: repasLogs.length > 0 ? `${col}18` : "rgba(255,255,255,0.03)", border: `1px solid ${repasLogs.length > 0 ? col + "40" : "rgba(255,255,255,0.06)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, transition: "all 0.3s" }}>{emojis[repas]}</div>
+                  <div style={{ width: 40, height: 40, borderRadius: 14, background: filled ? `${col}18` : "rgba(255,255,255,0.03)", border: `1px solid ${filled ? col + "40" : "rgba(255,255,255,0.06)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", color: filled ? col : "rgba(255,255,255,0.25)" }}>
+                    <MealIcon type={repas} size={18} />
+                  </div>
                   {ri < REPAS.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 20, background: "linear-gradient(to bottom, rgba(255,255,255,0.06), transparent)", marginTop: 6 }} />}
                 </div>
 
@@ -622,21 +678,53 @@ export default function FuelPage({ client, appData }) {
 
               {/* Repas selector — pills premium */}
               <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
-                {[{ id: "Petit-dejeuner", emoji: "🌅" }, { id: "Dejeuner", emoji: "☀️" }, { id: "Collation", emoji: "⚡" }, { id: "Diner", emoji: "🌙" }].map(r => (
-                  <button key={r.id} onClick={() => setSelectedRepas(r.id)} style={{ flexShrink: 0, padding: "8px 14px", borderRadius: 100, border: `1px solid ${selectedRepas === r.id ? ORANGE : "rgba(255,255,255,0.08)"}`, background: selectedRepas === r.id ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: selectedRepas === r.id ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>{r.emoji} {r.id}</button>
-                ))}
+                {REPAS.map((id) => {
+                  const active = selectedRepas === id;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => setSelectedRepas(id)}
+                      style={{
+                        flexShrink: 0,
+                        padding: "8px 14px",
+                        borderRadius: 100,
+                        border: `1px solid ${active ? ORANGE : "rgba(255,255,255,0.08)"}`,
+                        background: active ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)",
+                        color: active ? ORANGE : "rgba(255,255,255,0.35)",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                        transition: "all 0.2s",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <MealIcon type={id} size={14} />
+                      {id}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Search bar premium */}
               <div style={{ position: "relative", marginBottom: 16 }}>
-                <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontSize: 16, color: "rgba(255,255,255,0.2)", pointerEvents: "none" }}>🔍</div>
+                <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none", display: "flex", alignItems: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </div>
                 <input
                   type="text"
                   value={query}
                   onChange={e => handleSearch(e.target.value)}
-                  placeholder="Rechercher un aliment..."
+                  onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: "center", behavior: "smooth" }), 300)}
+                  placeholder="Rechercher : poulet, riz, pomme, yaourt..."
                   autoFocus
-                  style={{ width: "100%", padding: "15px 16px 15px 44px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, color: "#fff", fontSize: 15, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", transition: "border 0.2s" }}
+                  enterKeyHint="search"
+                  style={{ width: "100%", padding: "15px 16px 15px 44px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, color: "#fff", fontSize: 16, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", transition: "border 0.2s", WebkitAppearance: "none", WebkitTapHighlightColor: "transparent" }}
                 />
                 {query.length > 0 && (
                   <button onClick={() => { setQuery(""); setSelectedFood(null); }} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 100, width: 24, height: 24, color: "rgba(255,255,255,0.4)", fontSize: 12, cursor: "pointer" }}>×</button>
@@ -655,34 +743,51 @@ export default function FuelPage({ client, appData }) {
                 )}
 
                 {/* Results */}
-                {!searching && results.length > 0 && !selectedFood && (
+                {results.length > 0 && !selectedFood && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {results.map((food, i) => (
-                      <div key={i} onClick={() => setSelectedFood(food)} style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, cursor: "pointer", transition: "all 0.15s" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 14, color: "#fff", fontWeight: 600, marginBottom: 2 }}>{food.name}</div>
-                            {food.brand && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.5px" }}>{food.brand}</div>}
+                    {results.map((food, i) => {
+                      const isLocal = food._source === "local";
+                      return (
+                        <div
+                          key={i}
+                          onClick={() => setSelectedFood(food)}
+                          style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, cursor: "pointer", transition: "all 0.15s", WebkitTapHighlightColor: "transparent" }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6, gap: 8 }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                                <div style={{ fontSize: 14, color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{food.name}</div>
+                                {isLocal && (
+                                  <span style={{ fontSize: 8, color: GREEN, background: GREEN + "15", border: `1px solid ${GREEN}30`, borderRadius: 4, padding: "1px 5px", letterSpacing: "0.5px", fontWeight: 700, flexShrink: 0 }}>CIQUAL</span>
+                                )}
+                              </div>
+                              {food.brand && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{food.brand}</div>}
+                            </div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: ORANGE, flexShrink: 0 }}>{food.calories}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}> kcal</span></div>
                           </div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: ORANGE, flexShrink: 0, marginLeft: 12 }}>{food.calories}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}> kcal</span></div>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 10, color: GREEN + "aa", background: GREEN + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>P {food.proteines}g</span>
+                            <span style={{ fontSize: 10, color: ORANGE + "aa", background: ORANGE + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>G {food.glucides}g</span>
+                            <span style={{ fontSize: 10, color: BLUE + "aa", background: BLUE + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>L {food.lipides}g</span>
+                            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginLeft: "auto" }}>pour 100g</span>
+                          </div>
                         </div>
-                        <div style={{ display: "flex", gap: 10 }}>
-                          <span style={{ fontSize: 10, color: GREEN + "aa", background: GREEN + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>P {food.proteines}g</span>
-                          <span style={{ fontSize: 10, color: ORANGE + "aa", background: ORANGE + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>G {food.glucides}g</span>
-                          <span style={{ fontSize: 10, color: BLUE + "aa", background: BLUE + "12", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>L {food.lipides}g</span>
-                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginLeft: "auto" }}>pour 100g</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
                 {/* Empty state */}
                 {!searching && query.length > 2 && results.length === 0 && (
                   <div style={{ textAlign: "center", padding: "32px 0" }}>
-                    <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>Aucun résultat</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.15)" }}>Essaie un nom plus général</div>
+                    <div style={{ marginBottom: 12, color: "rgba(255,255,255,0.2)", display: "flex", justifyContent: "center" }}>
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg>
+                    </div>
+                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 4, fontWeight: 600 }}>Aucun résultat</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>Essaie un nom plus général ou en français</div>
                   </div>
                 )}
 
@@ -761,27 +866,34 @@ export default function FuelPage({ client, appData }) {
 
             {/* Selecteur de repas (theme vert IA Vocal) */}
             <div style={{display:"flex",gap:6,marginBottom:20,overflowX:"auto",scrollbarWidth:"none",paddingBottom:2}}>
-              {[{id:"Petit-dejeuner",emoji:"🌅"},{id:"Dejeuner",emoji:"☀️"},{id:"Collation",emoji:"⚡"},{id:"Diner",emoji:"🌙"}].map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => setSelectedRepas(r.id)}
-                  style={{
-                    flexShrink:0,
-                    padding:"8px 14px",
-                    borderRadius:100,
-                    border:`1px solid ${selectedRepas===r.id?GREEN:"rgba(255,255,255,0.08)"}`,
-                    background:selectedRepas===r.id?"rgba(2,209,186,0.12)":"rgba(255,255,255,0.03)",
-                    color:selectedRepas===r.id?GREEN:"rgba(255,255,255,0.35)",
-                    fontSize:12,
-                    fontWeight:700,
-                    cursor:"pointer",
-                    whiteSpace:"nowrap",
-                    transition:"all 0.2s",
-                  }}
-                >
-                  {r.emoji} {r.id}
-                </button>
-              ))}
+              {REPAS.map((id) => {
+                const active = selectedRepas === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setSelectedRepas(id)}
+                    style={{
+                      flexShrink: 0,
+                      padding: "8px 14px",
+                      borderRadius: 100,
+                      border: `1px solid ${active ? GREEN : "rgba(255,255,255,0.08)"}`,
+                      background: active ? "rgba(2,209,186,0.12)" : "rgba(255,255,255,0.03)",
+                      color: active ? GREEN : "rgba(255,255,255,0.35)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      transition: "all 0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <MealIcon type={id} size={14} />
+                    {id}
+                  </button>
+                );
+              })}
             </div>
 
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
@@ -852,27 +964,34 @@ export default function FuelPage({ client, appData }) {
 
             {/* Selecteur de repas (theme violet Scan) */}
             <div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto",scrollbarWidth:"none",paddingBottom:2}}>
-              {[{id:"Petit-dejeuner",emoji:"🌅"},{id:"Dejeuner",emoji:"☀️"},{id:"Collation",emoji:"⚡"},{id:"Diner",emoji:"🌙"}].map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => setSelectedRepas(r.id)}
-                  style={{
-                    flexShrink:0,
-                    padding:"8px 14px",
-                    borderRadius:100,
-                    border:`1px solid ${selectedRepas===r.id?PURPLE:"rgba(255,255,255,0.08)"}`,
-                    background:selectedRepas===r.id?"rgba(167,139,250,0.12)":"rgba(255,255,255,0.03)",
-                    color:selectedRepas===r.id?PURPLE:"rgba(255,255,255,0.35)",
-                    fontSize:12,
-                    fontWeight:700,
-                    cursor:"pointer",
-                    whiteSpace:"nowrap",
-                    transition:"all 0.2s",
-                  }}
-                >
-                  {r.emoji} {r.id}
-                </button>
-              ))}
+              {REPAS.map((id) => {
+                const active = selectedRepas === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setSelectedRepas(id)}
+                    style={{
+                      flexShrink: 0,
+                      padding: "8px 14px",
+                      borderRadius: 100,
+                      border: `1px solid ${active ? PURPLE : "rgba(255,255,255,0.08)"}`,
+                      background: active ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.03)",
+                      color: active ? PURPLE : "rgba(255,255,255,0.35)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      transition: "all 0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <MealIcon type={id} size={14} />
+                    {id}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Etape 1 : invite photo (tant qu'aucun produit scanne) */}
