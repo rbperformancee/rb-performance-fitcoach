@@ -72,7 +72,7 @@ export default function FuelPage({ client, appData }) {
   const logs = fuelData.logs;
   const dailyTracking = fuelData.dailyTracking || appData?.dailyTracking;
   const loading = appData ? appData.loading : fuelData.loading;
-  const { totals, addFood, removeFood, updateTracking, score } = fuelData;
+  const { totals, addFood, removeFood, updateFood, updateTracking, score } = fuelData;
   const { results, loading: searching, search, scanBarcode } = useOpenFoodFacts();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedRepas, setSelectedRepas] = useState("Dejeuner");
@@ -96,6 +96,60 @@ export default function FuelPage({ client, appData }) {
   const [scannedFood, setScannedFood] = useState(null); // produit decode + lookup OpenFoodFacts
   const [scanQuantite, setScanQuantite] = useState(100); // quantite choisie pour le produit scanne
   const fileInputRef = useRef(null); // <input type=file capture=environment> qui ouvre la camera native
+
+  // Edition d'un aliment deja loggue
+  const [editingFood, setEditingFood] = useState(null); // log d'origine, immutable, pour calculer les ratios
+  const [editAliment, setEditAliment] = useState("");
+  const [editQuantite, setEditQuantite] = useState(0);
+  const [editKcal, setEditKcal] = useState(0);
+  const [editProt, setEditProt] = useState(0);
+  const [editGluc, setEditGluc] = useState(0);
+  const [editLip, setEditLip] = useState(0);
+
+  const openEditFood = useCallback((log) => {
+    setEditingFood(log);
+    setEditAliment(log.aliment || "");
+    setEditQuantite(log.quantite_g || 100);
+    setEditKcal(log.calories || 0);
+    setEditProt(parseFloat(log.proteines || 0));
+    setEditGluc(parseFloat(log.glucides || 0));
+    setEditLip(parseFloat(log.lipides || 0));
+  }, []);
+
+  // Quand l'utilisateur change la quantite, on rescale les macros au prorata
+  // de la quantite originale (pratique : "j'ai logue 100g mais j'ai mange 150g").
+  // L'utilisateur peut toujours modifier chaque macro a la main apres.
+  const handleEditQuantiteChange = useCallback((newQ) => {
+    const q = Math.max(1, parseInt(newQ) || 0);
+    setEditQuantite(q);
+    if (editingFood && editingFood.quantite_g && editingFood.quantite_g > 0) {
+      const ratio = q / editingFood.quantite_g;
+      setEditKcal(Math.round((editingFood.calories || 0) * ratio));
+      setEditProt(parseFloat(((editingFood.proteines || 0) * ratio).toFixed(1)));
+      setEditGluc(parseFloat(((editingFood.glucides || 0) * ratio).toFixed(1)));
+      setEditLip(parseFloat(((editingFood.lipides || 0) * ratio).toFixed(1)));
+    }
+  }, [editingFood]);
+
+  const saveEditFood = useCallback(async () => {
+    if (!editingFood) return;
+    await updateFood(editingFood.id, {
+      aliment: editAliment.trim() || editingFood.aliment,
+      calories: Math.round(editKcal) || 0,
+      proteines: parseFloat(editProt) || 0,
+      glucides: parseFloat(editGluc) || 0,
+      lipides: parseFloat(editLip) || 0,
+      quantite_g: parseInt(editQuantite) || editingFood.quantite_g,
+    });
+    setEditingFood(null);
+    if (navigator.vibrate) navigator.vibrate(30);
+  }, [editingFood, editAliment, editKcal, editProt, editGluc, editLip, editQuantite, updateFood]);
+
+  const deleteEditFood = useCallback(async () => {
+    if (!editingFood) return;
+    await removeFood(editingFood.id);
+    setEditingFood(null);
+  }, [editingFood, removeFood]);
 
   // Sync avec dailyTracking quand il se charge
   useEffect(() => {
@@ -514,7 +568,11 @@ export default function FuelPage({ client, appData }) {
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {repasLogs.map(log => (
-                        <div key={log.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(255,255,255,0.025)", border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 14, position: "relative", overflow: "hidden" }}>
+                        <div
+                          key={log.id}
+                          onClick={() => openEditFood(log)}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(255,255,255,0.025)", border: `1px solid rgba(255,255,255,0.06)`, borderRadius: 14, position: "relative", overflow: "hidden", cursor: "pointer", transition: "background 0.15s" }}
+                        >
                           <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: col, borderRadius: "0 2px 2px 0" }} />
                           <div style={{ flex: 1, paddingLeft: 4 }}>
                             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 500, marginBottom: 3 }}>{log.aliment}</div>
@@ -526,7 +584,12 @@ export default function FuelPage({ client, appData }) {
                             </div>
                           </div>
                           <div style={{ fontSize: 14, fontWeight: 700, color: col, flexShrink: 0, marginRight: 4 }}>{log.calories}<span style={{ fontSize: 9, fontWeight: 400, color: "rgba(255,255,255,0.2)" }}> kcal</span></div>
-                          <button onClick={() => removeFood(log.id)} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, width: 26, height: 26, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>×</button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeFood(log.id); }}
+                            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, width: 26, height: 26, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                          >
+                            ×
+                          </button>
                         </div>
                       ))}
                       <div onClick={() => { setSelectedRepas(repas); setShowAdd(true); }} style={{ padding: "10px 14px", background: "transparent", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", cursor: "pointer", textAlign: "center" }}>+ Ajouter</div>
@@ -1003,6 +1066,124 @@ export default function FuelPage({ client, appData }) {
               <span>0h</span><span>6h</span><span>8h</span><span>12h</span>
             </div>
             <button onClick={() => { updateTracking("sommeil_h", tempSleep !== null ? tempSleep : (dailyTracking?.sommeil_h || 0)); setShowSleep(false); }} style={{ width: "100%", padding: 14, background: PURPLE, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDITION ALIMENT */}
+      {editingFood && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) setEditingFood(null); }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end", backdropFilter: "blur(8px)" }}
+        >
+          <div style={{ background: "linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)", borderRadius: "28px 28px 0 0", padding: "6px 24px calc(env(safe-area-inset-bottom,0px) + 24px)", maxHeight: "92vh", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none", overflowY: "auto" }}>
+            {/* Handle */}
+            <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "0 auto 18px" }} />
+
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div>
+                <div style={{ fontSize: 9, color: "rgba(249,115,22,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>RB Perform · Edition</div>
+                <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Modifier l'aliment</div>
+              </div>
+              <button
+                onClick={() => setEditingFood(null)}
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >✕</button>
+            </div>
+
+            {/* Nom de l'aliment */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Nom</div>
+              <input
+                type="text"
+                value={editAliment}
+                onChange={e => setEditAliment(e.target.value)}
+                placeholder="Nom de l'aliment"
+                style={{ width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }}
+              />
+            </div>
+
+            {/* Quantite — auto-rescale les macros au prorata */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase" }}>Quantite</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>les macros se recalculent au prorata</div>
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+                {[50, 100, 150, 200, 250, 300].map(q => (
+                  <button
+                    key={q}
+                    onClick={() => handleEditQuantiteChange(q)}
+                    style={{ flexShrink: 0, padding: "7px 12px", borderRadius: 100, border: `1px solid ${editQuantite === q ? ORANGE : "rgba(255,255,255,0.08)"}`, background: editQuantite === q ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: editQuantite === q ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    {q}g
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button
+                  onClick={() => handleEditQuantiteChange(Math.max(1, editQuantite - 10))}
+                  style={{ width: 40, height: 40, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                >−</button>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden" }}>
+                  <input
+                    type="number"
+                    value={editQuantite}
+                    onChange={e => handleEditQuantiteChange(e.target.value)}
+                    style={{ flex: 1, textAlign: "center", padding: "10px", background: "transparent", border: "none", color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", minWidth: 0 }}
+                  />
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingRight: 12 }}>g</span>
+                </div>
+                <button
+                  onClick={() => handleEditQuantiteChange(editQuantite + 10)}
+                  style={{ width: 40, height: 40, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                >+</button>
+              </div>
+            </div>
+
+            {/* Macros editables manuellement */}
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Macros (modifiables)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {[
+                  { label: "Calories", value: editKcal, setter: setEditKcal, color: ORANGE, unit: "kcal", step: 1 },
+                  { label: "Proteines", value: editProt, setter: setEditProt, color: GREEN, unit: "g", step: 0.1 },
+                  { label: "Glucides", value: editGluc, setter: setEditGluc, color: ORANGE, unit: "g", step: 0.1 },
+                  { label: "Lipides", value: editLip, setter: setEditLip, color: BLUE, unit: "g", step: 0.1 },
+                ].map((m, i) => (
+                  <div key={i} style={{ background: `${m.color}10`, border: `1px solid ${m.color}25`, borderRadius: 12, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{m.label}</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                      <input
+                        type="number"
+                        step={m.step}
+                        value={m.value}
+                        onChange={e => m.setter(parseFloat(e.target.value) || 0)}
+                        style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", color: m.color, fontSize: 18, fontWeight: 300, outline: "none", padding: 0, fontFamily: "-apple-system,Inter,sans-serif" }}
+                      />
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{m.unit}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CTAs : enregistrer + supprimer */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={deleteEditFood}
+                style={{ flexShrink: 0, padding: "14px 18px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 14, color: "#ef4444", fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: "0.3px" }}
+              >
+                Supprimer
+              </button>
+              <button
+                onClick={saveEditFood}
+                style={{ flex: 1, padding: 14, background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase" }}
+              >
+                Enregistrer
+              </button>
+            </div>
           </div>
         </div>
       )}

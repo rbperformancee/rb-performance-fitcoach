@@ -47,6 +47,24 @@ export function useFuel(clientId) {
     setLogs(prev => prev.filter(l => l.id !== id));
   };
 
+  const updateFood = async (id, updates) => {
+    const { data } = await supabase
+      .from("nutrition_logs")
+      .update({
+        aliment: updates.aliment,
+        calories: updates.calories,
+        proteines: updates.proteines,
+        glucides: updates.glucides,
+        lipides: updates.lipides,
+        quantite_g: updates.quantite_g,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+    if (data) setLogs(prev => prev.map(l => l.id === id ? data : l));
+    return data;
+  };
+
   const updateTracking = async (field, value) => {
     if (!clientId) return;
     const updated = { ...dailyTracking, [field]: value };
@@ -79,5 +97,5 @@ export function useFuel(clientId) {
     return score;
   };
 
-  return { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateTracking, score: calcScore(), fetchAll };
+  return { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateFood, updateTracking, score: calcScore(), fetchAll };
 }
