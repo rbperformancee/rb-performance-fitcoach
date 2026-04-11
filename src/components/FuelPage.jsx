@@ -87,6 +87,7 @@ export default function FuelPage({ client, appData }) {
   const [scanActive, setScanActive] = useState(false); // true une fois la camera demarree par tap
   const [scanStatus, setScanStatus] = useState(""); // diagnostic visible
   const scannerRef = useRef(null); // instance Html5Qrcode
+  const fileInputRef = useRef(null); // <input type=file capture=environment> pour iOS PWA
 
   // Sync avec dailyTracking quand il se charge
   useEffect(() => {
@@ -300,6 +301,79 @@ export default function FuelPage({ client, appData }) {
     setScanActive(false);
     setScanStatus("");
   }, []);
+
+  // ===== Mode photo (iOS PWA fallback) =====
+  // En PWA installee sur iOS, la permission camera web est isolee de Safari et
+  // souvent silencieusement bloquee. Le pattern <input type=file capture=environment>
+  // declenche l'app camera NATIVE iOS (pas getUserMedia), retourne la photo prise,
+  // puis html5-qrcode decode le code-barre directement depuis l'image.
+  // Aucune permission web requise, marche dans tous les contextes iOS.
+  const triggerPhotoScan = useCallback(() => {
+    setScanError("");
+    setScanStatus("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // permet de re-selectionner la meme image
+      fileInputRef.current.click();
+    }
+  }, []);
+
+  const handlePhotoSelected = useCallback(async (e) => {
+    const file = e?.target?.files?.[0];
+    if (!file) return;
+    setScanError("");
+    setScanLoading(true);
+    setScanStatus("Decodage de la photo...");
+
+    // Verifie que le div cible existe (Html5Qrcode l'exige meme pour scanFile)
+    const target = document.getElementById(SCAN_READER_ID);
+    if (!target) {
+      setScanLoading(false);
+      setScanError("Element scanner introuvable. Reouvre la modal.");
+      return;
+    }
+
+    let decodedText = null;
+    try {
+      const tmpScanner = new Html5Qrcode(SCAN_READER_ID, { verbose: false });
+      decodedText = await tmpScanner.scanFile(file, /* showImage */ false);
+      try { tmpScanner.clear(); } catch {}
+    } catch (err) {
+      console.warn("scanFile failed:", err);
+      setScanLoading(false);
+      setScanError("Aucun code-barre detecte sur la photo. Cadre bien le code et reessaie.");
+      setScanStatus("");
+      return;
+    }
+
+    if (!decodedText) {
+      setScanLoading(false);
+      setScanError("Aucun code-barre detecte. Cadre bien le code et reessaie.");
+      return;
+    }
+
+    if (navigator.vibrate) navigator.vibrate(60);
+    setScanStatus("Recherche du produit...");
+    const food = await scanBarcode(decodedText);
+    setScanLoading(false);
+
+    if (!food || !food.calories) {
+      setScanError("Produit introuvable (" + decodedText + "). Essaie un autre produit ou ajoute-le manuellement.");
+      setScanStatus("");
+      return;
+    }
+
+    await addFood({
+      repas: selectedRepas,
+      aliment: food.name,
+      calories: food.calories,
+      proteines: food.proteines,
+      glucides: food.glucides,
+      lipides: food.lipides,
+      quantite_g: 100,
+    });
+    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+    setShowScan(false);
+  }, [scanBarcode, addFood, selectedRepas]);
 
   // Cleanup quand la modal se ferme — PAS d'auto-start (iOS exige un tap utilisateur frais)
   useEffect(() => {
@@ -695,8 +769,8 @@ export default function FuelPage({ client, appData }) {
                 }}
               />
 
-              {/* Overlay etat initial : grand bouton Activer (geste user requis pour iOS).
-                  Visible tant que scanActive est false. */}
+              {/* Overlay etat initial. Sur iOS PWA -> mode photo (camera native).
+                  Ailleurs -> mode live (getUserMedia + html5-qrcode). */}
               {!scanActive && (
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center", background: "rgba(10,10,10,0.92)" }}>
                   <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.8 }}>
@@ -706,19 +780,14 @@ export default function FuelPage({ client, appData }) {
                     </svg>
                   </div>
 
-                  {/* Avertissement specifique iOS PWA standalone */}
-                  {isIOSPWA && (
-                    <div style={{ fontSize: 11, color: "#fbbf24", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 10, padding: "8px 12px", marginBottom: 14, lineHeight: 1.4, maxWidth: 280 }}>
-                      ⚠️ Mode PWA detecte. Si l'ecran reste noir, ton iOS &lt; 16.4 bloque la camera en PWA. Touche "Ouvrir dans Safari" ci-dessous.
-                    </div>
-                  )}
-
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 16, lineHeight: 1.5, maxWidth: 280 }}>
-                    {scanStatus || "Touche le bouton puis pointe la camera arriere sur un code-barre."}
+                    {scanStatus || (isIOSPWA
+                      ? "Prends une photo du code-barre avec ton appareil photo, on decode automatiquement."
+                      : "Touche le bouton puis pointe la camera arriere sur un code-barre.")}
                   </div>
 
                   <button
-                    onClick={startScanner}
+                    onClick={isIOSPWA ? triggerPhotoScan : startScanner}
                     style={{
                       background: "linear-gradient(135deg, #a78bfa, #8b5cf6)",
                       color: "#0a0a0a",
@@ -731,31 +800,25 @@ export default function FuelPage({ client, appData }) {
                       letterSpacing: "0.5px",
                       textTransform: "uppercase",
                       boxShadow: "0 6px 24px rgba(167,139,250,0.4)",
-                      marginBottom: isIOSPWA ? 10 : 0,
                     }}
                   >
-                    {scanStatus && scanStatus.startsWith("Demarrage") ? "Demarrage..." : "Activer la camera"}
+                    {isIOSPWA
+                      ? "Prendre la photo"
+                      : (scanStatus && scanStatus.startsWith("Demarrage") ? "Demarrage..." : "Activer la camera")}
                   </button>
-
-                  {/* Lien d'evasion vers Safari pour iOS PWA */}
-                  {isIOSPWA && (
-                    <a
-                      href={typeof window !== "undefined" ? window.location.href : "/"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        fontSize: 11,
-                        color: PURPLE,
-                        textDecoration: "underline",
-                        marginTop: 4,
-                        opacity: 0.8,
-                      }}
-                    >
-                      Ouvrir dans Safari →
-                    </a>
-                  )}
                 </div>
               )}
+
+              {/* Input file invisible : declenche l'app camera native iOS quand .click() est appele.
+                  capture="environment" force la camera arriere si dispo. */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handlePhotoSelected}
+                style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+              />
 
               {/* Etat actif : cadre de visee */}
               {scanActive && (
