@@ -1,9 +1,32 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 const SCAN_READER_ID = "fuel-scan-reader";
+
+// Formats code-barre a activer explicitement (sinon html5-qrcode ne scanne que les QR codes !).
+// EAN_13 = code-barre produit europeen standard, EAN_8 = version courte,
+// UPC_A/UPC_E = equivalent americain, CODE_128 = courant pour la logistique,
+// QR_CODE garde aussi pour les rares produits avec QR.
+const SCAN_FORMATS = [
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.CODE_128,
+  Html5QrcodeSupportedFormats.CODE_39,
+  Html5QrcodeSupportedFormats.QR_CODE,
+];
+
+// Config commune passee au constructeur Html5Qrcode.
+// useBarCodeDetectorIfSupported active la BarcodeDetector API native (iOS 17+, Chrome)
+// qui est beaucoup plus rapide et precise que le decodeur JS embarque.
+const SCANNER_CONFIG = {
+  formatsToSupport: SCAN_FORMATS,
+  useBarCodeDetectorIfSupported: true,
+  verbose: false,
+};
 
 // Detection iOS PWA standalone : avant iOS 16.4 (mars 2023), Apple bloquait
 // getUserMedia en mode PWA installee sur l'ecran d'accueil. Aucun workaround JS
@@ -244,7 +267,7 @@ export default function FuelPage({ client, appData }) {
 
     try {
       setScanStatus("Demande permission camera...");
-      const scanner = new Html5Qrcode(SCAN_READER_ID, { verbose: false });
+      const scanner = new Html5Qrcode(SCAN_READER_ID, SCANNER_CONFIG);
       scannerRef.current = scanner;
 
       // On tente d'abord camera arriere stricte (exact), puis fallback ideal, puis n'importe quelle camera.
@@ -334,7 +357,7 @@ export default function FuelPage({ client, appData }) {
 
     let decodedText = null;
     try {
-      const tmpScanner = new Html5Qrcode(SCAN_READER_ID, { verbose: false });
+      const tmpScanner = new Html5Qrcode(SCAN_READER_ID, SCANNER_CONFIG);
       decodedText = await tmpScanner.scanFile(file, /* showImage */ false);
       try { tmpScanner.clear(); } catch {}
     } catch (err) {
