@@ -83,34 +83,246 @@ function SessionTab({ session, active, onClick, weekIdx, sessionIdx, getHistory,
   );
 }
 
-function TrainLocked({ client }) {
+function TrainLocked({ client, sessionsDone = 0 }) {
   const [booking, setBooking] = React.useState(null);
+  const [firstSessionDate, setFirstSessionDate] = React.useState(null);
+
+  // Deux etats possibles :
+  // - sessionsDone === 0 : nouveau client qui attend son 1er programme apres l'onboarding
+  // - sessionsDone > 0   : client qui a termine un cycle precedent, pret pour le suivant
+  const isCycleCompleted = sessionsDone > 0;
+
   React.useEffect(() => {
     if (!client?.id) return;
-    supabase.from("bookings").select("*, coach_slots(date, heure)")
-      .eq("client_id", client.id).limit(1).single()
-      .then(({ data }) => { if (data) setBooking(data); });
-  }, [client?.id]);
+    if (isCycleCompleted) {
+      // Date de la premiere seance pour calculer la duree du cycle
+      supabase
+        .from("session_logs")
+        .select("logged_at")
+        .eq("client_id", client.id)
+        .order("logged_at", { ascending: true })
+        .limit(1)
+        .single()
+        .then(({ data }) => { if (data?.logged_at) setFirstSessionDate(data.logged_at); });
+    } else {
+      // Booking pour l'etat "en attente du 1er programme"
+      supabase
+        .from("bookings")
+        .select("*, coach_slots(date, heure)")
+        .eq("client_id", client.id)
+        .limit(1)
+        .single()
+        .then(({ data }) => { if (data) setBooking(data); });
+    }
+  }, [client?.id, isCycleCompleted]);
+
+  // ===== Animations partagees =====
+  const GLOBAL_STYLES = (
+    <style>{`
+      @keyframes tlFadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes tlFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+      @keyframes tlGlow { 0%, 100% { filter: drop-shadow(0 0 24px rgba(2,209,186,0.5)); } 50% { filter: drop-shadow(0 0 44px rgba(2,209,186,0.95)); } }
+      @keyframes tlPulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+    `}</style>
+  );
+
+  // ======================================
+  // ETAT 1 : CYCLE ACCOMPLI (pret pour le suivant)
+  // ======================================
+  if (isCycleCompleted) {
+    const weeks = firstSessionDate
+      ? Math.max(1, Math.ceil((Date.now() - new Date(firstSessionDate).getTime()) / (7 * 86400000)))
+      : Math.max(1, Math.ceil(sessionsDone / 3));
+    const avgPerWeek = sessionsDone / weeks;
+    const consistency = Math.min(100, Math.round((avgPerWeek / 3) * 100));
+
+    const mailSubject = "Suite de mon cycle - programme suivant";
+    const mailBody =
+      "Salut Rayan,\n\n" +
+      "Je viens de terminer mon cycle (" + sessionsDone + " seances sur " + weeks + " semaines).\n" +
+      "Je suis chaud pour attaquer la suite. Quand peut-on faire le point ?\n\n" +
+      "A tres vite.";
+    const mailtoHref =
+      "mailto:" + COACH_EMAIL +
+      "?subject=" + encodeURIComponent(mailSubject) +
+      "&body=" + encodeURIComponent(mailBody);
+
+    return (
+      <div style={{ minHeight: "calc(100vh - 100px)", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", padding: "40px 24px 140px", position: "relative", overflow: "hidden" }}>
+        {GLOBAL_STYLES}
+
+        {/* Ambient radial teal + grille subtile */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+          <div style={{ position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)", width: 620, height: 620, background: "radial-gradient(circle, rgba(2,209,186,0.18), transparent 65%)", borderRadius: "50%", filter: "blur(100px)" }} />
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(2,209,186,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(2,209,186,0.025) 1px, transparent 1px)", backgroundSize: "48px 48px", maskImage: "radial-gradient(ellipse at top, #000 30%, transparent 80%)", WebkitMaskImage: "radial-gradient(ellipse at top, #000 30%, transparent 80%)" }} />
+        </div>
+
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 420, margin: "0 auto", textAlign: "center" }}>
+          {/* Trophy SVG avec glow + float */}
+          <div style={{ marginBottom: 32, display: "flex", justifyContent: "center", animation: "tlFloat 3.5s ease-in-out infinite" }}>
+            <div style={{ animation: "tlGlow 3.5s ease-in-out infinite" }}>
+              <svg width="92" height="92" viewBox="0 0 24 24" fill="none" stroke="#02d1ba" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 4V2h10v2" />
+                <path d="M7 4h10a2 2 0 012 2v3a5 5 0 01-5 5h-4a5 5 0 01-5-5V6a2 2 0 012-2z" />
+                <path d="M4 4v1a3 3 0 003 3" />
+                <path d="M20 4v1a3 3 0 01-3 3" />
+                <path d="M12 14v4" />
+                <path d="M10 18h4a2 2 0 012 2v2H8v-2a2 2 0 012-2z" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Eyebrow */}
+          <div style={{ fontSize: 10, letterSpacing: "5px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", marginBottom: 14, fontWeight: 700, animation: "tlFadeUp 0.6s ease 0.15s both" }}>
+            Cycle accompli
+          </div>
+
+          {/* Titre */}
+          <h1 style={{ fontSize: 46, fontWeight: 900, color: "#fff", letterSpacing: "-2.5px", lineHeight: 0.92, margin: "0 0 22px", animation: "tlFadeUp 0.6s ease 0.25s both" }}>
+            Tu as<br />
+            <span style={{ color: "#02d1ba" }}>tout donne.</span>
+          </h1>
+
+          {/* Message */}
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, margin: "0 auto 32px", maxWidth: 340, animation: "tlFadeUp 0.6s ease 0.35s both" }}>
+            Ton cycle est termine. Ton corps a change, ton mental aussi.<br />
+            Le vrai test maintenant : la constance.
+          </p>
+
+          {/* Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 32, animation: "tlFadeUp 0.6s ease 0.45s both" }}>
+            {[
+              { value: sessionsDone, label: "Seances" },
+              { value: weeks,        label: "Semaines" },
+              { value: consistency + "%", label: "Regularite" },
+            ].map((s, i) => (
+              <div key={i} style={{ padding: "18px 8px 14px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 16, position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: "radial-gradient(circle, rgba(2,209,186,0.12), transparent 70%)", pointerEvents: "none" }} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <div style={{ fontSize: 30, fontWeight: 200, color: "#02d1ba", letterSpacing: "-1.5px", lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.2px", marginTop: 8, fontWeight: 600 }}>{s.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Citation motivationnelle */}
+          <div style={{ fontSize: 13, fontStyle: "italic", color: "rgba(255,255,255,0.5)", lineHeight: 1.6, letterSpacing: "0.2px", marginBottom: 36, maxWidth: 320, marginLeft: "auto", marginRight: "auto", animation: "tlFadeUp 0.6s ease 0.55s both" }}>
+            "Ceux qui durent, ce sont ceux<br />qui recommencent."
+            <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", marginTop: 10, letterSpacing: "3px", textTransform: "uppercase", fontStyle: "normal", fontWeight: 700 }}>
+              — Rayan
+            </div>
+          </div>
+
+          {/* CTAs */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 360, margin: "0 auto", animation: "tlFadeUp 0.6s ease 0.65s both" }}>
+            <a
+              href={mailtoHref}
+              style={{
+                display: "block",
+                textAlign: "center",
+                padding: 18,
+                background: "linear-gradient(135deg, #02d1ba, #0891b2)",
+                color: "#000",
+                border: "none",
+                borderRadius: 16,
+                fontSize: 14,
+                fontWeight: 800,
+                textDecoration: "none",
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+                boxShadow: "0 10px 36px rgba(2,209,186,0.35)",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              Continuer l'aventure →
+            </a>
+            <a
+              href={mailtoHref}
+              style={{
+                display: "block",
+                textAlign: "center",
+                padding: 14,
+                background: "transparent",
+                color: "rgba(255,255,255,0.5)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 16,
+                fontSize: 12,
+                fontWeight: 600,
+                textDecoration: "none",
+                letterSpacing: "0.3px",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              Contacter Rayan directement
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ======================================
+  // ETAT 2 : EN ATTENTE DU 1er PROGRAMME (apres onboarding)
+  // ======================================
   const slotDate = booking?.coach_slots?.date;
   const slotHeure = booking?.coach_slots?.heure;
-  const dateStr = slotDate ? new Date(slotDate + "T12:00:00").toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" }) : null;
+  const dateStr = slotDate
+    ? new Date(slotDate + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })
+    : null;
+
   return (
-    <div style={{minHeight:"calc(100vh - 100px)",background:"#050505",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 28px",fontFamily:"-apple-system,Inter,sans-serif"}}>
-      <div style={{fontSize:56,marginBottom:24}}>🔒</div>
-      <div style={{fontSize:9,letterSpacing:5,textTransform:"uppercase",color:"rgba(2,209,186,0.5)",marginBottom:12}}>Programme en préparation</div>
-      <h2 style={{fontSize:30,fontWeight:900,color:"#fff",textAlign:"center",lineHeight:1.1,marginBottom:16,letterSpacing:-1}}>Ton programme<br/><span style={{color:"#02d1ba"}}>arrive bientôt.</span></h2>
-      <p style={{fontSize:13,color:"rgba(255,255,255,0.3)",lineHeight:1.8,textAlign:"center",marginBottom:32,maxWidth:280}}>Rayan prépare ton programme personnalisé suite à votre appel.</p>
-      {dateStr ? (
-        <div style={{background:"rgba(2,209,186,0.06)",border:"1px solid rgba(2,209,186,0.2)",borderRadius:16,padding:"16px 24px",textAlign:"center"}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:"rgba(2,209,186,0.5)",marginBottom:8}}>Appel réservé</div>
-          <div style={{fontSize:16,fontWeight:700,color:"#fff"}}>📞 {dateStr}</div>
-          <div style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginTop:4}}>{slotHeure}</div>
+    <div style={{ minHeight: "calc(100vh - 100px)", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", position: "relative", overflow: "hidden" }}>
+      {GLOBAL_STYLES}
+
+      {/* Ambient */}
+      <div style={{ position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)", width: 500, height: 500, background: "radial-gradient(circle, rgba(2,209,186,0.12), transparent 65%)", borderRadius: "50%", filter: "blur(90px)", pointerEvents: "none" }} />
+
+      <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 360, animation: "tlFadeUp 0.6s ease both" }}>
+        {/* Icone calendrier premium (remplace l'emoji cadenas) */}
+        <div style={{ marginBottom: 28, display: "flex", justifyContent: "center", color: "#02d1ba", animation: "tlPulse 2.8s ease-in-out infinite" }}>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
         </div>
-      ) : (
-        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"16px 24px",textAlign:"center"}}>
-          <div style={{fontSize:13,color:"rgba(255,255,255,0.3)"}}>Rayan te contacte très prochainement.</div>
+
+        <div style={{ fontSize: 10, letterSpacing: "5px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 14, fontWeight: 700 }}>
+          Programme en preparation
         </div>
-      )}
+
+        <h2 style={{ fontSize: 34, fontWeight: 900, color: "#fff", lineHeight: 0.95, margin: "0 0 18px", letterSpacing: "-1.5px" }}>
+          Ton programme<br />
+          <span style={{ color: "#02d1ba" }}>arrive bientot.</span>
+        </h2>
+
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, marginBottom: 30, maxWidth: 300, marginLeft: "auto", marginRight: "auto" }}>
+          Rayan prepare ton programme personnalise. Tu seras notifie des qu'il est pret.
+        </p>
+
+        {dateStr ? (
+          <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 18, padding: "18px 26px", display: "inline-block", textAlign: "left" }}>
+            <div style={{ fontSize: 10, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 8, fontWeight: 700 }}>
+              Appel reserve
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#02d1ba" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", textTransform: "capitalize" }}>{dateStr}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{slotHeure}</div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "14px 22px", display: "inline-block" }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>Rayan te contacte tres prochainement.</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -588,7 +800,7 @@ export default function App() {
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
         <div style={{minHeight:'100vh', background:'#050505', position:'relative'}}>
-          {page === 'training' && <TrainLocked client={client} />}
+          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
@@ -614,7 +826,7 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "training" ? (
-            !cloudProgramme ? <TrainLocked client={client} /> :
+            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} /> :
               <TrainingPage
                 client={client}
                 programme={programme}
