@@ -44,6 +44,7 @@ import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPage
 import { LoginScreen } from "./components/LoginScreen";
 import PricingPage from "./components/PricingPage";
 import ChatCoach from "./components/ChatCoach";
+import BookingModal from "./components/BookingModal";
 import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
@@ -84,7 +85,7 @@ function SessionTab({ session, active, onClick, weekIdx, sessionIdx, getHistory,
   );
 }
 
-function TrainLocked({ client, sessionsDone = 0, onRenew, onContact }) {
+function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook }) {
   const [booking, setBooking] = React.useState(null);
   const [firstSessionDate, setFirstSessionDate] = React.useState(null);
 
@@ -204,8 +205,9 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact }) {
             </div>
           </div>
 
-          {/* CTAs — navigation interne a l'app, pas de mailto */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 360, margin: "0 auto", animation: "tlFadeUp 0.6s ease 0.65s both" }}>
+          {/* CTAs — 3 actions en-app, theme Cycle accompli */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 360, margin: "0 auto", animation: "tlFadeUp 0.6s ease 0.65s both" }}>
+            {/* Primary : voir les formules */}
             <button
               type="button"
               onClick={onRenew}
@@ -231,6 +233,42 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact }) {
             >
               Voir les formules →
             </button>
+
+            {/* Secondary : reserver un appel direct */}
+            <button
+              type="button"
+              onClick={onBook}
+              style={{
+                display: "flex",
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                padding: 16,
+                background: "rgba(2,209,186,0.06)",
+                color: "#02d1ba",
+                border: "1px solid rgba(2,209,186,0.25)",
+                borderRadius: 16,
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                letterSpacing: "0.4px",
+                textTransform: "uppercase",
+                WebkitTapHighlightColor: "transparent",
+                WebkitAppearance: "none",
+                fontFamily: "-apple-system,Inter,sans-serif",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              Reserver un appel de bilan
+            </button>
+
+            {/* Tertiary : chat */}
             <button
               type="button"
               onClick={onContact}
@@ -240,10 +278,10 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact }) {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 8,
-                padding: 14,
+                padding: 13,
                 background: "transparent",
-                color: "rgba(255,255,255,0.55)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.5)",
+                border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 16,
                 fontSize: 12,
                 fontWeight: 600,
@@ -388,6 +426,7 @@ export default function App() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRenewalPricing, setShowRenewalPricing] = useState(false);
   const [showCoachChat, setShowCoachChat] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const [showHome, setShowHome] = useState(true);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
@@ -841,6 +880,17 @@ export default function App() {
         </div>
       )}
 
+      {/* ── Overlay : Reservation d'appel coach (cycle accompli) ── */}
+      {showBookingModal && client?.id && (
+        <BookingModal
+          client={client}
+          title="Reserver un appel"
+          subtitle="Choisis un creneau avec Rayan pour faire le bilan de ton cycle et definir tes prochains objectifs."
+          onClose={() => setShowBookingModal(false)}
+          onBooked={() => { /* reste ouvert sur l'ecran de confirmation */ }}
+        />
+      )}
+
       {/* ── Overlay : Chat avec Rayan ── */}
       {showCoachChat && client?.id && (
         <div
@@ -907,7 +957,7 @@ export default function App() {
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
         <div style={{minHeight:'100vh', background:'#050505', position:'relative'}}>
-          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} />}
+          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
@@ -933,7 +983,7 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "training" ? (
-            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} /> :
+            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} /> :
               <TrainingPage
                 client={client}
                 programme={programme}

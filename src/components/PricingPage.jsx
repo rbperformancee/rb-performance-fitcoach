@@ -57,9 +57,20 @@ export default function PricingPage({ client, onClose, onLogin }) {
       alert("Erreur interne : plan introuvable (" + planId + ")");
       return;
     }
-    // Log de diagnostic : si l'utilisateur signale encore un mauvais plan,
-    // on verra dans la console quel plan est REELLEMENT envoye a Stripe.
     console.log("[Checkout]", { clicked: planId, resolved: plan.id, name: plan.name, price: plan.price, priceId: plan.priceId });
+
+    // Diagnostic visible : confirmation de l'offre choisie avant le redirect.
+    // Si l'utilisateur voit "3 Mois - 120€" ici mais que Stripe affiche
+    // "8 Semaines - 39€" apres, ca prouve que le priceId dans le code ne
+    // correspond pas au bon prix dans le dashboard Stripe (probleme cote
+    // config Stripe, pas cote app).
+    const confirmed = window.confirm(
+      "Confirmer l'offre :\n\n" +
+      plan.name + " — " + plan.price + " €/mois\n" +
+      (plan.total ? "Total : " + plan.total + " €\n" : "") +
+      "\nOK pour aller sur Stripe ?"
+    );
+    if (!confirmed) return;
 
     setLoading(plan.id);
     if (navigator.vibrate) navigator.vibrate([20, 10, 20]);

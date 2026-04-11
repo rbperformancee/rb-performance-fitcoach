@@ -85,20 +85,46 @@ export default function ChatCoach({ clientId, coachEmail, isCoach }) {
     const content = newMsg.trim();
     if (!content) return;
     setSending(true);
-    // Schema reel de la table messages : from_coach (bool) + read (bool)
-    // PAS sender (string).
-    const { error } = await supabase.from("messages").insert({
+
+    // Optimistic update : on ajoute le message au state local IMMEDIATEMENT
+    // pour qu'il apparaisse tout de suite dans le chat, sans attendre le
+    // realtime channel qui peut avoir du lag. On tag avec _optimistic pour
+    // pouvoir le remplacer par le row reel quand l'insert Supabase resoud.
+    const tempId = "temp-" + Date.now();
+    const createdAt = new Date().toISOString();
+    const optimisticMsg = {
+      id: tempId,
       client_id: clientId,
       content,
       from_coach: isCoach,
       read: false,
-      created_at: new Date().toISOString(),
-    });
+      created_at: createdAt,
+      _optimistic: true,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    setNewMsg("");
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        client_id: clientId,
+        content,
+        from_coach: isCoach,
+        read: false,
+        created_at: createdAt,
+      })
+      .select()
+      .single();
+
     if (error) {
       console.error("sendMessage error:", error);
       alert("Envoi impossible : " + (error.message || "erreur inconnue"));
-    } else {
-      setNewMsg("");
+      // Rollback : on retire le message optimiste
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setNewMsg(content); // remettre le texte dans l'input pour retenter
+    } else if (data) {
+      // Remplacer le temp message par le vrai row (avec le bon id de la DB)
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? data : m)));
       if (navigator.vibrate) navigator.vibrate(10);
     }
     setSending(false);
