@@ -47,7 +47,20 @@ export default function PricingPage({ client, onClose, onLogin }) {
   const [loading, setLoading] = useState(null);
   const [tab, setTab] = useState('team');
 
-  const handleCheckout = async (plan) => {
+  // IMPORTANT : on accepte directement un planId (string) et on resout le plan
+  // depuis PLANS/GENERAL a l'interieur de la fonction. Evite tout risque de
+  // closure stale ou d'objet mute entre le onClick et l'envoi fetch.
+  const handleCheckout = async (planId) => {
+    const allPlans = [...PLANS, GENERAL];
+    const plan = allPlans.find((p) => p.id === planId);
+    if (!plan) {
+      alert("Erreur interne : plan introuvable (" + planId + ")");
+      return;
+    }
+    // Log de diagnostic : si l'utilisateur signale encore un mauvais plan,
+    // on verra dans la console quel plan est REELLEMENT envoye a Stripe.
+    console.log("[Checkout]", { clicked: planId, resolved: plan.id, name: plan.name, price: plan.price, priceId: plan.priceId });
+
     setLoading(plan.id);
     if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
     try {
@@ -59,8 +72,6 @@ export default function PricingPage({ client, onClose, onLogin }) {
       });
       const json = await res.json().catch(() => ({ error: 'Reponse non-JSON du serveur' }));
       if (!res.ok || json.error) {
-        // On affiche l'erreur complete (utile pour diagnostiquer : cle Stripe expiree,
-        // prix inexistant, probleme webhook, etc.)
         const msg = json.error || ('HTTP ' + res.status);
         console.error('create-checkout failed:', msg, json);
         throw new Error(msg);
@@ -163,7 +174,13 @@ export default function PricingPage({ client, onClose, onLogin }) {
                     ))}
                   </div>
                 </div>
-                <button className={`rbbtn ${plan.btnClass}`} onClick={() => { const p = {...plan}; handleCheckout(p); }} disabled={loading === plan.id}>
+                <button
+                  className={`rbbtn ${plan.btnClass}`}
+                  onClick={() => handleCheckout(plan.id)}
+                  disabled={loading === plan.id}
+                  data-plan-id={plan.id}
+                  data-plan-price={plan.price}
+                >
                   {loading === plan.id ? 'Chargement...' : `Commencer — ${plan.price}€/mois →`}
                 </button>
               </div>
@@ -194,7 +211,13 @@ export default function PricingPage({ client, onClose, onLogin }) {
                   ))}
                 </div>
               </div>
-              <button className="bgn" onClick={() => { const p = {...GENERAL}; handleCheckout(p); }} disabled={loading === GENERAL.id}>
+              <button
+                className="bgn"
+                onClick={() => handleCheckout(GENERAL.id)}
+                disabled={loading === GENERAL.id}
+                data-plan-id={GENERAL.id}
+                data-plan-price={GENERAL.price}
+              >
                 {loading === GENERAL.id ? 'Chargement...' : 'Commencer — 39€/mois →'}
               </button>
             </div>
