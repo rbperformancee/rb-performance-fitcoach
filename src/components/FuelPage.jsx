@@ -675,7 +675,33 @@ export default function FuelPage({ client, appData }) {
           <div style={{background:"#0a0a0a",borderRadius:"28px 28px 0 0",padding:"20px 24px calc(env(safe-area-inset-bottom,0px) + 32px)",width:"100%",maxWidth:480,border:"1px solid rgba(2,209,186,0.15)",borderBottom:"none"}}>
             <div style={{width:36,height:4,background:"rgba(255,255,255,0.1)",borderRadius:2,margin:"0 auto 24px"}}/>
             <div style={{fontSize:9,color:"rgba(2,209,186,0.5)",letterSpacing:"4px",textTransform:"uppercase",marginBottom:8}}>RB Perform · IA Vocal</div>
-            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:24,letterSpacing:"-0.5px"}}>Décris ton repas v2</div>
+            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:16,letterSpacing:"-0.5px"}}>Décris ton repas</div>
+
+            {/* Selecteur de repas (theme vert IA Vocal) */}
+            <div style={{display:"flex",gap:6,marginBottom:20,overflowX:"auto",scrollbarWidth:"none",paddingBottom:2}}>
+              {[{id:"Petit-dejeuner",emoji:"🌅"},{id:"Dejeuner",emoji:"☀️"},{id:"Collation",emoji:"⚡"},{id:"Diner",emoji:"🌙"}].map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => setSelectedRepas(r.id)}
+                  style={{
+                    flexShrink:0,
+                    padding:"8px 14px",
+                    borderRadius:100,
+                    border:`1px solid ${selectedRepas===r.id?GREEN:"rgba(255,255,255,0.08)"}`,
+                    background:selectedRepas===r.id?"rgba(2,209,186,0.12)":"rgba(255,255,255,0.03)",
+                    color:selectedRepas===r.id?GREEN:"rgba(255,255,255,0.35)",
+                    fontSize:12,
+                    fontWeight:700,
+                    cursor:"pointer",
+                    whiteSpace:"nowrap",
+                    transition:"all 0.2s",
+                  }}
+                >
+                  {r.emoji} {r.id}
+                </button>
+              ))}
+            </div>
+
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
               <button onClick={recording ? ()=>recognitionRef.current?.stop() : startVoice} style={{width:88,height:88,borderRadius:"50%",border:`2px solid ${recording?"#02d1ba":"rgba(2,209,186,0.3)"}`,background:recording?"rgba(2,209,186,0.15)":"rgba(255,255,255,0.04)",color:"#02d1ba",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.3s",boxShadow:recording?"0 0 40px rgba(2,209,186,0.3)":"none"}}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{width:36,height:36}}><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -740,6 +766,31 @@ export default function FuelPage({ client, appData }) {
                 <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Scanner un code-barre</div>
               </div>
               <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
+            </div>
+
+            {/* Selecteur de repas (theme violet Scan) */}
+            <div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto",scrollbarWidth:"none",paddingBottom:2}}>
+              {[{id:"Petit-dejeuner",emoji:"🌅"},{id:"Dejeuner",emoji:"☀️"},{id:"Collation",emoji:"⚡"},{id:"Diner",emoji:"🌙"}].map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => setSelectedRepas(r.id)}
+                  style={{
+                    flexShrink:0,
+                    padding:"8px 14px",
+                    borderRadius:100,
+                    border:`1px solid ${selectedRepas===r.id?PURPLE:"rgba(255,255,255,0.08)"}`,
+                    background:selectedRepas===r.id?"rgba(167,139,250,0.12)":"rgba(255,255,255,0.03)",
+                    color:selectedRepas===r.id?PURPLE:"rgba(255,255,255,0.35)",
+                    fontSize:12,
+                    fontWeight:700,
+                    cursor:"pointer",
+                    whiteSpace:"nowrap",
+                    transition:"all 0.2s",
+                  }}
+                >
+                  {r.emoji} {r.id}
+                </button>
+              ))}
             </div>
 
             {/* Etape 1 : invite photo (tant qu'aucun produit scanne) */}
