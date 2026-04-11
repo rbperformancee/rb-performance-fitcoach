@@ -85,15 +85,23 @@ export default function ChatCoach({ clientId, coachEmail, isCoach }) {
     const content = newMsg.trim();
     if (!content) return;
     setSending(true);
-    await supabase.from("messages").insert({
+    // Schema reel de la table messages : from_coach (bool) + read (bool)
+    // PAS sender (string).
+    const { error } = await supabase.from("messages").insert({
       client_id: clientId,
       content,
-      sender: isCoach ? "coach" : "client",
+      from_coach: isCoach,
+      read: false,
       created_at: new Date().toISOString(),
     });
-    setNewMsg("");
+    if (error) {
+      console.error("sendMessage error:", error);
+      alert("Envoi impossible : " + (error.message || "erreur inconnue"));
+    } else {
+      setNewMsg("");
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
     setSending(false);
-    if (navigator.vibrate) navigator.vibrate(10);
   };
 
   const groups = groupByDay(messages);
@@ -197,7 +205,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach }) {
             );
           }
           const msg = g.msg;
-          const fromCoach = msg.sender === "coach";
+          const fromCoach = !!msg.from_coach;
           const isMine = isCoach ? fromCoach : !fromCoach;
           return (
             <div key={g.key} className="cc-msg-in" style={{

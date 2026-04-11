@@ -57,10 +57,20 @@ export default function PricingPage({ client, onClose, onLogin }) {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud' },
         body: JSON.stringify({ priceId: plan.priceId, clientEmail: client?.email, clientId: client?.id, planName: plan.name, planId: plan.id }),
       });
-      const { url, error } = await res.json();
-      if (error) throw new Error(error);
-      window.location.href = url;
-    } catch(e) { alert('Erreur: ' + e.message); }
+      const json = await res.json().catch(() => ({ error: 'Reponse non-JSON du serveur' }));
+      if (!res.ok || json.error) {
+        // On affiche l'erreur complete (utile pour diagnostiquer : cle Stripe expiree,
+        // prix inexistant, probleme webhook, etc.)
+        const msg = json.error || ('HTTP ' + res.status);
+        console.error('create-checkout failed:', msg, json);
+        throw new Error(msg);
+      }
+      if (!json.url) throw new Error('Stripe n\'a pas renvoye d\'URL de checkout');
+      window.location.href = json.url;
+    } catch (e) {
+      alert('Erreur paiement : ' + e.message + '\n\nSi l\'erreur persiste, contacte Rayan.');
+      console.error('Checkout error:', e);
+    }
     setLoading(null);
   };
 
