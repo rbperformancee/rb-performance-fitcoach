@@ -746,7 +746,12 @@ export default function FuelPage({ client, appData }) {
                 {results.length > 0 && !selectedFood && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {results.map((food, i) => {
-                      const isLocal = food._source === "local";
+                      const sourceConfig = {
+                        local:  { label: "CIQUAL", color: GREEN },
+                        edamam: { label: "EDAMAM", color: BLUE },
+                        off:    { label: null,     color: null },
+                      };
+                      const cfg = sourceConfig[food._source] || sourceConfig.off;
                       return (
                         <div
                           key={i}
@@ -757,8 +762,8 @@ export default function FuelPage({ client, appData }) {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
                                 <div style={{ fontSize: 14, color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{food.name}</div>
-                                {isLocal && (
-                                  <span style={{ fontSize: 8, color: GREEN, background: GREEN + "15", border: `1px solid ${GREEN}30`, borderRadius: 4, padding: "1px 5px", letterSpacing: "0.5px", fontWeight: 700, flexShrink: 0 }}>CIQUAL</span>
+                                {cfg.label && (
+                                  <span style={{ fontSize: 8, color: cfg.color, background: cfg.color + "15", border: `1px solid ${cfg.color}30`, borderRadius: 4, padding: "1px 5px", letterSpacing: "0.5px", fontWeight: 700, flexShrink: 0 }}>{cfg.label}</span>
                                 )}
                               </div>
                               {food.brand && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{food.brand}</div>}
