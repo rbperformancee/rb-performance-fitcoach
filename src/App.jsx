@@ -456,18 +456,81 @@ export default function App() {
   }, [paymentStatus, clientEmail]);
 
   // ── Paiement succès ──
+  // On distingue deux cas :
+  // 1) Client existant (deja logue + onboarding_done === true) qui renouvelle son
+  //    cycle : on affiche un ecran "Nouveau cycle active" et on le renvoie
+  //    directement dans l'app sans re-login. Il a deja son compte, son historique
+  //    et son onboarding. Zero friction.
+  // 2) Nouveau client qui vient de payer pour la premiere fois : on garde le
+  //    flow existant (email magique -> login -> onboarding).
   if (paymentStatus === 'success') {
-    return (
-      <div style={{ position: 'fixed', inset: 0, background: '#000', fontFamily: '-apple-system,Inter,sans-serif', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center', overflow: 'hidden' }}>
-        <style>{`
-          @keyframes successOrb{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
-          @keyframes checkIn{0%{opacity:0;transform:scale(0.5)}70%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
-          @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-          @keyframes tealPulse{0%,100%{color:#02d1ba;text-shadow:0 0 20px rgba(2,209,186,0.3)}50%{color:#5ee8d4;text-shadow:0 0 40px rgba(2,209,186,0.6)}}
-          @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-        `}</style>
+    const isReturningClient = !!(user && client && client.onboarding_done === true);
+
+    // Commun aux deux branches
+    const sharedStyles = (
+      <style>{`
+        @keyframes successOrb{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+        @keyframes checkIn{0%{opacity:0;transform:scale(0.5)}70%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes tealPulse{0%,100%{color:#02d1ba;text-shadow:0 0 20px rgba(2,209,186,0.3)}50%{color:#5ee8d4;text-shadow:0 0 40px rgba(2,209,186,0.6)}}
+      `}</style>
+    );
+    const sharedBg = (
+      <>
         <div style={{ position: 'absolute', top: '50%', left: '50%', width: 500, height: 500, background: 'radial-gradient(circle,rgba(2,209,186,0.15),transparent 65%)', borderRadius: '50%', filter: 'blur(80px)', animation: 'successOrb 4s ease-in-out infinite', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(2,209,186,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(2,209,186,0.04) 1px,transparent 1px)', backgroundSize: '44px 44px', pointerEvents: 'none' }} />
+      </>
+    );
+
+    // ─── Branche "client existant — renouvellement de cycle" ───
+    if (isReturningClient) {
+      const firstName = (client.full_name || "").split(' ')[0] || "champion";
+      return (
+        <div style={{ position: 'fixed', inset: 0, background: '#050505', fontFamily: '-apple-system,Inter,sans-serif', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center', overflow: 'hidden' }}>
+          {sharedStyles}
+          {sharedBg}
+          <div style={{ position: 'relative', zIndex: 10, maxWidth: 380 }}>
+            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#02d1ba,#0891b2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', animation: 'checkIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both', fontSize: 36, color: '#000', boxShadow: '0 12px 48px rgba(2,209,186,0.4)' }}>✓</div>
+
+            <div style={{ fontSize: 10, letterSpacing: 5, textTransform: 'uppercase', color: 'rgba(2,209,186,0.6)', marginBottom: 16, fontWeight: 700, animation: 'fadeUp 0.6s ease 0.2s both' }}>Nouveau cycle active</div>
+
+            <h1 style={{ fontSize: 44, fontWeight: 900, letterSpacing: -3, lineHeight: 0.9, marginBottom: 22, animation: 'fadeUp 0.6s ease 0.3s both' }}>
+              <span style={{ display: 'block', color: '#fff' }}>On remet</span>
+              <span style={{ display: 'block', animation: 'tealPulse 3s ease-in-out infinite' }}>ca, {firstName}.</span>
+            </h1>
+
+            {paymentPlan && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(2,209,186,0.08)', border: '1px solid rgba(2,209,186,0.25)', borderRadius: 100, padding: '10px 22px', fontSize: 12, color: '#02d1ba', fontWeight: 600, marginBottom: 24, letterSpacing: 0.3, animation: 'fadeUp 0.6s ease 0.4s both' }}>
+                Programme {paymentPlan} renouvele
+              </div>
+            )}
+
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.8, marginBottom: 36, maxWidth: 340, marginLeft: 'auto', marginRight: 'auto', animation: 'fadeUp 0.6s ease 0.5s both' }}>
+              Ton paiement est confirme. Rayan prepare ton nouveau programme<br />
+              et tu seras notifie des qu'il est pret.
+            </p>
+
+            <button
+              onClick={() => { setPaymentStatus(null); setPaymentPlan(null); window.history.replaceState({}, '', '/'); }}
+              style={{ width: '100%', padding: 18, background: 'linear-gradient(135deg,#02d1ba,#0891b2)', border: 'none', borderRadius: 16, color: '#000', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', letterSpacing: 0.5, textTransform: 'uppercase', position: 'relative', overflow: 'hidden', animation: 'fadeUp 0.6s ease 0.6s both', boxShadow: '0 10px 36px rgba(2,209,186,0.35)' }}
+            >
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg,rgba(255,255,255,0.15),transparent 50%)', pointerEvents: 'none' }} />
+              Retour a mon espace →
+            </button>
+
+            <div style={{ marginTop: 20, fontSize: 11, color: 'rgba(255,255,255,0.2)', animation: 'fadeUp 0.6s ease 0.7s both' }}>
+              RB Perform · Programme d'elite
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Branche "nouveau client — premiere inscription" ───
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#000', fontFamily: '-apple-system,Inter,sans-serif', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center', overflow: 'hidden' }}>
+        {sharedStyles}
+        {sharedBg}
         <div style={{ position: 'relative', zIndex: 10, maxWidth: 360 }}>
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#02d1ba,#0891b2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', animation: 'checkIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both', fontSize: 36 }}>✓</div>
           <div style={{ fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', color: 'rgba(2,209,186,0.6)', marginBottom: 16, animation: 'fadeUp 0.6s ease 0.2s both' }}>Bienvenue dans l'élite</div>
