@@ -5,6 +5,16 @@ import { Html5Qrcode } from "html5-qrcode";
 
 const SCAN_READER_ID = "fuel-scan-reader";
 
+// Detection iOS PWA standalone : avant iOS 16.4 (mars 2023), Apple bloquait
+// getUserMedia en mode PWA installee sur l'ecran d'accueil. Aucun workaround JS
+// possible. On detecte ce cas pour afficher un message + lien Safari.
+const isIOSDevice = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent || "") && !window.MSStream;
+const isStandalonePWA = typeof window !== "undefined" && (
+  (window.navigator && window.navigator.standalone === true) ||
+  (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+);
+const isIOSPWA = isIOSDevice && isStandalonePWA;
+
 const GREEN = "#02d1ba"; // v_fupyhdzh
 const ORANGE = "#f97316";
 const BLUE = "#60a5fa";
@@ -688,16 +698,25 @@ export default function FuelPage({ client, appData }) {
               {/* Overlay etat initial : grand bouton Activer (geste user requis pour iOS).
                   Visible tant que scanActive est false. */}
               {!scanActive && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center", background: "rgba(10,10,10,0.92)" }}>
-                  <div style={{ color: PURPLE, marginBottom: 16, opacity: 0.8 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 56, height: 56 }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center", background: "rgba(10,10,10,0.92)" }}>
+                  <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.8 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 48, height: 48 }}>
                       <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
                       <circle cx="12" cy="13" r="4" />
                     </svg>
                   </div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 18, lineHeight: 1.5, maxWidth: 280 }}>
-                    {scanStatus || "Touche le bouton ci-dessous puis pointe la camera arriere sur un code-barre produit."}
+
+                  {/* Avertissement specifique iOS PWA standalone */}
+                  {isIOSPWA && (
+                    <div style={{ fontSize: 11, color: "#fbbf24", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 10, padding: "8px 12px", marginBottom: 14, lineHeight: 1.4, maxWidth: 280 }}>
+                      ⚠️ Mode PWA detecte. Si l'ecran reste noir, ton iOS &lt; 16.4 bloque la camera en PWA. Touche "Ouvrir dans Safari" ci-dessous.
+                    </div>
+                  )}
+
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 16, lineHeight: 1.5, maxWidth: 280 }}>
+                    {scanStatus || "Touche le bouton puis pointe la camera arriere sur un code-barre."}
                   </div>
+
                   <button
                     onClick={startScanner}
                     style={{
@@ -712,10 +731,29 @@ export default function FuelPage({ client, appData }) {
                       letterSpacing: "0.5px",
                       textTransform: "uppercase",
                       boxShadow: "0 6px 24px rgba(167,139,250,0.4)",
+                      marginBottom: isIOSPWA ? 10 : 0,
                     }}
                   >
                     {scanStatus && scanStatus.startsWith("Demarrage") ? "Demarrage..." : "Activer la camera"}
                   </button>
+
+                  {/* Lien d'evasion vers Safari pour iOS PWA */}
+                  {isIOSPWA && (
+                    <a
+                      href={typeof window !== "undefined" ? window.location.href : "/"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: 11,
+                        color: PURPLE,
+                        textDecoration: "underline",
+                        marginTop: 4,
+                        opacity: 0.8,
+                      }}
+                    >
+                      Ouvrir dans Safari →
+                    </a>
+                  )}
                 </div>
               )}
 
