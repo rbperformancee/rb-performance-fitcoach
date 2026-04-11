@@ -93,6 +93,8 @@ export default function FuelPage({ client, appData }) {
   const [scanError, setScanError] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
   const [scanStatus, setScanStatus] = useState(""); // diagnostic visible
+  const [scannedFood, setScannedFood] = useState(null); // produit decode + lookup OpenFoodFacts
+  const [scanQuantite, setScanQuantite] = useState(100); // quantite choisie pour le produit scanne
   const fileInputRef = useRef(null); // <input type=file capture=environment> qui ouvre la camera native
 
   // Sync avec dailyTracking quand il se charge
@@ -295,34 +297,45 @@ export default function FuelPage({ client, appData }) {
     setScanStatus("Recherche du produit...");
     const food = await scanBarcode(decodedText);
     setScanLoading(false);
+    setScanStatus("");
 
     if (!food || !food.calories) {
       setScanError("Produit introuvable (" + decodedText + "). Essaie un autre produit ou ajoute-le manuellement.");
-      setScanStatus("");
       return;
     }
 
-    await addFood({
-      repas: selectedRepas,
-      aliment: food.name,
-      calories: food.calories,
-      proteines: food.proteines,
-      glucides: food.glucides,
-      lipides: food.lipides,
-      quantite_g: 100,
-    });
-    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
-    setShowScan(false);
-  }, [scanBarcode, addFood, selectedRepas]);
+    // Affiche l'etape de selection de quantite (au lieu d'ajouter direct).
+    setScannedFood(food);
+    setScanQuantite(100); // defaut 100g, donnees OpenFoodFacts pour 100g
+  }, [scanBarcode]);
 
-  // Reset des erreurs/status a la fermeture de la modal scan
+  // Reset des erreurs/status/produit scanne a la fermeture de la modal scan
   useEffect(() => {
     if (!showScan) {
       setScanError("");
       setScanStatus("");
       setScanLoading(false);
+      setScannedFood(null);
+      setScanQuantite(100);
     }
   }, [showScan]);
+
+  // Confirme l'ajout du produit scanne avec la quantite choisie
+  const confirmScannedFood = useCallback(async () => {
+    if (!scannedFood) return;
+    const factor = scanQuantite / 100; // OpenFoodFacts donne les valeurs pour 100g
+    await addFood({
+      repas: selectedRepas,
+      aliment: scannedFood.name,
+      calories: Math.round(scannedFood.calories * factor),
+      proteines: parseFloat((scannedFood.proteines * factor).toFixed(1)),
+      glucides: parseFloat((scannedFood.glucides * factor).toFixed(1)),
+      lipides: parseFloat((scannedFood.lipides * factor).toFixed(1)),
+      quantite_g: scanQuantite,
+    });
+    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+    setShowScan(false);
+  }, [scannedFood, scanQuantite, selectedRepas, addFood]);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#050505", padding: "0px 24px" }}>
@@ -694,53 +707,149 @@ export default function FuelPage({ client, appData }) {
               <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
             </div>
 
-            {/* Zone scanner : ecran d'invite + bouton qui ouvre la camera native OS */}
-            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#0a0a0a", width: "100%", height: 280, marginBottom: 14 }}>
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
-                <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.85 }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 52, height: 52 }}>
-                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                    <circle cx="12" cy="13" r="4" />
-                  </svg>
+            {/* Etape 1 : invite photo (tant qu'aucun produit scanne) */}
+            {!scannedFood && (
+              <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#0a0a0a", width: "100%", height: 280, marginBottom: 14 }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
+                  <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.85 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 52, height: 52 }}>
+                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                  </div>
+
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 290 }}>
+                    {scanLoading
+                      ? (scanStatus || "Decodage en cours...")
+                      : "Touche le bouton, prends une photo du code-barre. On decode automatiquement avec l'appareil photo natif."}
+                  </div>
+
+                  <button
+                    onClick={triggerPhotoScan}
+                    disabled={scanLoading}
+                    style={{
+                      background: scanLoading ? "rgba(167,139,250,0.3)" : "linear-gradient(135deg, #a78bfa, #8b5cf6)",
+                      color: scanLoading ? "rgba(255,255,255,0.5)" : "#0a0a0a",
+                      border: "none",
+                      borderRadius: 14,
+                      padding: "14px 32px",
+                      fontSize: 14,
+                      fontWeight: 800,
+                      cursor: scanLoading ? "default" : "pointer",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                      boxShadow: scanLoading ? "none" : "0 6px 24px rgba(167,139,250,0.4)",
+                    }}
+                  >
+                    {scanLoading ? "Decodage..." : "Prendre la photo"}
+                  </button>
                 </div>
 
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 290 }}>
-                  {scanLoading
-                    ? (scanStatus || "Decodage en cours...")
-                    : "Touche le bouton, prends une photo du code-barre. On decode automatiquement avec l'appareil photo natif."}
+                {/* Input file invisible : declenche l'app camera native */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoSelected}
+                  style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+                />
+              </div>
+            )}
+
+            {/* Etape 2 : produit scanne -> selection quantite */}
+            {scannedFood && (
+              <div style={{ marginBottom: 14 }}>
+                {/* Carte produit + macros live */}
+                <div style={{ padding: 16, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 18, marginBottom: 18 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, color: "#fff", fontWeight: 700, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis" }}>{scannedFood.name}</div>
+                      {scannedFood.brand && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{scannedFood.brand}</div>}
+                    </div>
+                    <button
+                      onClick={() => { setScannedFood(null); setScanQuantite(100); setScanError(""); }}
+                      style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "4px 10px", color: "rgba(255,255,255,0.4)", fontSize: 11, cursor: "pointer", flexShrink: 0, marginLeft: 8 }}
+                    >
+                      Re-scanner
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(167,139,250,0.1)", borderRadius: 12 }}>
+                      <div style={{ fontSize: 20, fontWeight: 200, color: PURPLE, letterSpacing: "-1px" }}>{Math.round(scannedFood.calories * scanQuantite / 100)}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>kcal</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(2,209,186,0.08)", borderRadius: 12 }}>
+                      <div style={{ fontSize: 20, fontWeight: 200, color: GREEN, letterSpacing: "-1px" }}>{(scannedFood.proteines * scanQuantite / 100).toFixed(1)}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>prot g</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(249,115,22,0.06)", borderRadius: 12 }}>
+                      <div style={{ fontSize: 20, fontWeight: 200, color: ORANGE, letterSpacing: "-1px" }}>{(scannedFood.glucides * scanQuantite / 100).toFixed(1)}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>gluc g</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(96,165,250,0.08)", borderRadius: 12 }}>
+                      <div style={{ fontSize: 20, fontWeight: 200, color: BLUE, letterSpacing: "-1px" }}>{(scannedFood.lipides * scanQuantite / 100).toFixed(1)}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>lip g</div>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Selecteur de quantite */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Quantite</div>
+                  {/* Quick amounts */}
+                  <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                    {[50, 100, 150, 200, 250, 300].map(q => (
+                      <button
+                        key={q}
+                        onClick={() => setScanQuantite(q)}
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: 100,
+                          border: `1px solid ${scanQuantite === q ? PURPLE : "rgba(255,255,255,0.08)"}`,
+                          background: scanQuantite === q ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.03)",
+                          color: scanQuantite === q ? PURPLE : "rgba(255,255,255,0.35)",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {q}g
+                      </button>
+                    ))}
+                  </div>
+                  {/* Input manuel - + */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <button
+                      onClick={() => setScanQuantite(Math.max(10, scanQuantite - 10))}
+                      style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >−</button>
+                    <div style={{ flex: 1, display: "flex", alignItems: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, overflow: "hidden" }}>
+                      <input
+                        type="number"
+                        value={scanQuantite}
+                        onChange={e => setScanQuantite(Math.max(1, parseInt(e.target.value) || 100))}
+                        style={{ flex: 1, textAlign: "center", padding: "12px", background: "transparent", border: "none", color: "#fff", fontSize: 20, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }}
+                      />
+                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", paddingRight: 14 }}>g</span>
+                    </div>
+                    <button
+                      onClick={() => setScanQuantite(scanQuantite + 10)}
+                      style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >+</button>
+                  </div>
+                </div>
+
+                {/* CTA confirme */}
                 <button
-                  onClick={triggerPhotoScan}
-                  disabled={scanLoading}
-                  style={{
-                    background: scanLoading ? "rgba(167,139,250,0.3)" : "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-                    color: scanLoading ? "rgba(255,255,255,0.5)" : "#0a0a0a",
-                    border: "none",
-                    borderRadius: 14,
-                    padding: "14px 32px",
-                    fontSize: 14,
-                    fontWeight: 800,
-                    cursor: scanLoading ? "default" : "pointer",
-                    letterSpacing: "0.5px",
-                    textTransform: "uppercase",
-                    boxShadow: scanLoading ? "none" : "0 6px 24px rgba(167,139,250,0.4)",
-                  }}
+                  onClick={confirmScannedFood}
+                  style={{ width: "100%", padding: 17, background: "linear-gradient(135deg, #a78bfa, #8b5cf6)", color: "#0a0a0a", border: "none", borderRadius: 18, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase" }}
                 >
-                  {scanLoading ? "Decodage..." : "Prendre la photo"}
+                  Ajouter au {selectedRepas}
                 </button>
               </div>
-
-              {/* Input file invisible : declenche l'app camera native (iOS Camera, Android Camera). */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handlePhotoSelected}
-                style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-              />
-            </div>
+            )}
 
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 10 }}>
               Repas : <span style={{ color: PURPLE, fontWeight: 700 }}>{selectedRepas}</span>
