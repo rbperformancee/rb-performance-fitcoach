@@ -167,14 +167,50 @@ export default function FuelPage({ client, appData }) {
   const startScanner = useCallback(async () => {
     setScanError("");
     setScanLoading(false);
+
+    // Pre-check : HTTPS requis (sauf localhost) sinon getUserMedia echoue silencieusement
+    if (typeof window !== "undefined" && window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+      setScanError("Le scanner necessite HTTPS. Reouvre l'app via https://");
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setScanError("Ton navigateur ne supporte pas l'acces camera. Utilise Safari ou Chrome.");
+      return;
+    }
+
     try {
+      // 1) Demande explicite du flux camera arriere AVANT zxing.
+      //    Important sur iOS Safari : facingMode environment + ideal pour fallback,
+      //    et l'appel doit etre declenche par un geste utilisateur (le clic sur le bouton).
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      });
+
+      const video = videoRef.current;
+      if (!video) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
+      video.srcObject = stream;
+      video.setAttribute("playsinline", "true"); // double secu iOS
+      video.muted = true;
+      // play() peut rejeter si l'autoplay policy bloque ; on ignore l'erreur (le user a clique le bouton donc devrait passer)
+      try { await video.play(); } catch (_) {}
+
+      // 2) zxing decode depuis l'element video deja branche
       const reader = new BrowserMultiFormatReader();
       scannerRef.current = reader;
-      // decodeFromVideoDevice : null = camera arriere par defaut
-      await reader.decodeFromVideoDevice(null, videoRef.current, async (result, err, controls) => {
+
+      reader.decodeFromVideoElement(video, async (result, err, controls) => {
         if (result) {
           const code = result.getText();
-          controls.stop();
+          if (controls) controls.stop();
           if (navigator.vibrate) navigator.vibrate(60);
           setScanLoading(true);
           const food = await scanBarcode(code);
@@ -197,8 +233,21 @@ export default function FuelPage({ client, appData }) {
         }
       });
     } catch (e) {
-      console.error(e);
-      setScanError("Camera indisponible: " + (e.message || e));
+      console.error("Scanner error:", e);
+      // Messages explicites selon le type d'erreur (utile pour iOS Safari)
+      let msg = "Camera indisponible";
+      if (e?.name === "NotAllowedError" || e?.name === "PermissionDeniedError") {
+        msg = "Acces camera refuse. Reglages iOS > Safari > Camera > Autoriser, puis recharge l'app.";
+      } else if (e?.name === "NotFoundError" || e?.name === "DevicesNotFoundError") {
+        msg = "Aucune camera detectee sur cet appareil.";
+      } else if (e?.name === "NotReadableError" || e?.name === "TrackStartError") {
+        msg = "La camera est utilisee par une autre app. Ferme-la et reessaie.";
+      } else if (e?.name === "OverconstrainedError") {
+        msg = "Aucune camera arriere disponible (camera frontale uniquement).";
+      } else if (e?.message) {
+        msg = "Camera indisponible: " + e.message;
+      }
+      setScanError(msg);
     }
   }, [scanBarcode, addFood, selectedRepas]);
 
@@ -590,7 +639,7 @@ export default function FuelPage({ client, appData }) {
               <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
             </div>
             <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", aspectRatio: "1 / 1", marginBottom: 14 }}>
-              <video ref={videoRef} playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <video ref={videoRef} playsInline muted autoPlay disablePictureInPicture style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000" }} />
               {/* Cadre de visee */}
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
                 <div style={{ width: "75%", height: "35%", border: "2px solid " + PURPLE, borderRadius: 12, boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
