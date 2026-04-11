@@ -180,7 +180,16 @@ export default function FuelPage({ client, appData }) {
 
   const addVoiceFood = async () => {
     if (!voiceResult) return;
-    await addFood({ repas: selectedRepas, ...voiceResult });
+    // On extrait uniquement les champs macros (pas le breakdown ingredients qui polluerait la base)
+    await addFood({
+      repas: selectedRepas,
+      aliment: voiceResult.aliment,
+      calories: voiceResult.calories,
+      proteines: voiceResult.proteines,
+      glucides: voiceResult.glucides,
+      lipides: voiceResult.lipides,
+      quantite_g: voiceResult.quantite_g,
+    });
     setShowVoice(false); setVoiceText(""); setVoiceResult(null);
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
   };
@@ -678,7 +687,12 @@ export default function FuelPage({ client, appData }) {
             {voiceResult && !voiceLoading && (
               <div>
                 <div style={{background:"rgba(2,209,186,0.06)",border:"1px solid rgba(2,209,186,0.2)",borderRadius:16,padding:16,marginBottom:16}}>
-                  <div style={{fontSize:15,fontWeight:700,color:"#fff",marginBottom:12}}>{voiceResult.aliment}</div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:12,gap:8}}>
+                    <div style={{fontSize:15,fontWeight:700,color:"#fff",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{voiceResult.aliment}</div>
+                    {typeof voiceResult.quantite_g === "number" && (
+                      <div style={{fontSize:11,color:"rgba(2,209,186,0.7)",fontWeight:600,flexShrink:0}}>{voiceResult.quantite_g}g</div>
+                    )}
+                  </div>
                   <div style={{display:"flex",gap:8}}>
                     {[{v:voiceResult.calories,l:"kcal",c:"#f97316"},{v:voiceResult.proteines,l:"prot",c:"#02d1ba"},{v:voiceResult.glucides,l:"gluc",c:"#f97316"},{v:voiceResult.lipides,l:"lip",c:"#60a5fa"}].map((m,i)=>(
                       <div key={i} style={{flex:1,textAlign:"center",padding:"8px 4px",background:`${m.c}12`,borderRadius:10}}>
@@ -688,6 +702,27 @@ export default function FuelPage({ client, appData }) {
                     ))}
                   </div>
                 </div>
+
+                {/* Breakdown des ingredients (transparence : on montre comment on a calcule) */}
+                {Array.isArray(voiceResult.ingredients) && voiceResult.ingredients.length > 0 && (
+                  <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:14,padding:"10px 14px",marginBottom:16}}>
+                    <div style={{fontSize:9,color:"rgba(2,209,186,0.5)",letterSpacing:"2px",textTransform:"uppercase",marginBottom:8}}>Detail du calcul</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {voiceResult.ingredients.map((ing, i) => (
+                        <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",fontSize:11,gap:8}}>
+                          <div style={{flex:1,color:"rgba(255,255,255,0.7)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                            {ing.nom}
+                            <span style={{color:"rgba(255,255,255,0.3)",marginLeft:6}}>{ing.quantite_g}g</span>
+                          </div>
+                          <div style={{color:"rgba(2,209,186,0.7)",fontWeight:600,flexShrink:0}}>
+                            {ing.calories} kcal
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <button onClick={addVoiceFood} style={{width:"100%",padding:16,background:"linear-gradient(135deg,#02d1ba,#0891b2)",color:"#000",border:"none",borderRadius:16,fontSize:14,fontWeight:800,cursor:"pointer",textTransform:"uppercase",letterSpacing:"0.5px"}}>Ajouter au {selectedRepas}</button>
               </div>
             )}
