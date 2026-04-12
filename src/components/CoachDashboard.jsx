@@ -5,6 +5,7 @@ import ChatCoach from "./ChatCoach";
 import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { generateInvoicePDF } from "../utils/invoicePDF";
 import { LOGO_B64 } from "../utils/logo";
 
 const G = "#02d1ba";
@@ -594,6 +595,17 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                       </div>
                     )}
                   </div>
+                )}
+
+                {/* Bouton facture PDF */}
+                {subStart && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); generateInvoicePDF(client, { full_name: "Rayan Bonte", brand_name: "RB Perform", email: "rb.performancee@gmail.com" }); }}
+                    style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    <Icon name="document" size={12} />
+                    Generer facture PDF
+                  </button>
                 )}
 
                 {/* Alerte expiration */}
