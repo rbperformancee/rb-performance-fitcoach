@@ -342,6 +342,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [daily30d,   setDaily30d]   = useState([]); // 30 jours pour les drawers
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
+  const [exLogs, setExLogs] = useState([]); // exercise_logs pour details seances
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
   const fileRef = useRef();
 
@@ -384,10 +385,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
     supabase.from("daily_tracking").select("date,pas,eau_ml,sommeil_h").eq("client_id", client.id)
       .gte("date", d30.toISOString().split("T")[0]).order("date", { ascending: true })
       .then(({ data }) => setDaily30d(data || []));
-    // Session logs detailles (20 derniers)
+    // Session logs detailles (20 derniers) + exercise_logs pour le detail des poids
     supabase.from("session_logs").select("logged_at,session_name,programme_name,duration_seconds,exercises_count,sets_count")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(20)
       .then(({ data }) => setSessions(data || []));
+    // Exercise logs recents (pour afficher les poids souleves par seance)
+    supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps,sets")
+      .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(100)
+      .then(({ data }) => setExLogs(data || []));
     // Historique poids complet (TOUS depuis le debut de l'abonnement)
     supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
       .order("date", { ascending: false }).limit(500)
@@ -636,7 +641,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
               {/* Pas — cliquable */}
               <div onClick={() => setDrawer("pas")} style={{ ...card, cursor: "pointer", transition: "border-color 0.2s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: G }}>Pas quotidiens</div>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: G }}>Pas quotidiens</div>
+                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2 }}>Objectif : {(nutGoals?.pas || 8000).toLocaleString()} pas</div>
+                  </div>
                   <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.2)" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -708,36 +716,69 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           </div>
         )}
 
-        {/* ===== HISTORIQUE SEANCES ===== */}
+        {/* ===== HISTORIQUE SEANCES — avec detail poids souleves ===== */}
         {sessions.length > 0 && (
           <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.22s both" }}>
             <div style={sectionTitle}>
               <Icon name="flame" size={14} color={G} />
               Historique seances ({sessions.length})
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {sessions.slice(0, 12).map((s, i) => {
                 const date = new Date(s.logged_at);
+                const dateStr = date.toISOString().split("T")[0];
                 const durationMin = s.duration_seconds ? Math.round(s.duration_seconds / 60) : null;
+                // Exercices de cette seance (meme jour)
+                const dayExs = exLogs.filter(e => e.logged_at && e.logged_at.startsWith(dateStr));
+                // Grouper par exercice et prendre le max poids
+                const exSummary = {};
+                dayExs.forEach(e => {
+                  const name = (e.ex_key || "").split("_").slice(-1)[0] || e.ex_key;
+                  if (!exSummary[name] || e.weight > exSummary[name].w) {
+                    exSummary[name] = { w: e.weight, r: e.reps, s: e.sets };
+                  }
+                });
+                const topExos = Object.entries(exSummary).sort((a, b) => b[1].w - a[1].w).slice(0, 4);
+
                 return (
-                  <div key={i} style={{ ...card, padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: G, flexShrink: 0 }}>
-                      <Icon name="check" size={16} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {s.session_name || s.programme_name || "Seance"}
+                  <div key={i} style={{ ...card, padding: "14px 16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: topExos.length > 0 ? 10 : 0 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: G, flexShrink: 0 }}>
+                        <Icon name="check" size={15} />
                       </div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
-                        {date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
-                        {durationMin != null && <span style={{ color: "rgba(255,255,255,0.25)" }}> · {durationMin} min</span>}
-                        {s.exercises_count > 0 && <span style={{ color: "rgba(255,255,255,0.25)" }}> · {s.exercises_count} exos</span>}
-                        {s.sets_count > 0 && <span style={{ color: "rgba(255,255,255,0.25)" }}> · {s.sets_count} series</span>}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {s.session_name || s.programme_name || "Seance"}
+                        </div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                          {date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
+                          {durationMin != null && <span> · {durationMin} min</span>}
+                          {s.exercises_count > 0 && <span> · {s.exercises_count} exos</span>}
+                        </div>
                       </div>
+                      {durationMin != null && (
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: G, flexShrink: 0 }}>
+                          {durationMin}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>min</span>
+                        </div>
+                      )}
                     </div>
-                    {durationMin != null && (
-                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 200, color: G, flexShrink: 0 }}>
-                        {durationMin}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>min</span>
+                    {/* Detail poids souleves par exercice */}
+                    {topExos.length > 0 && (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingLeft: 50 }}>
+                        {topExos.map(([name, d], j) => (
+                          <div key={j} style={{
+                            padding: "4px 10px",
+                            background: "rgba(255,255,255,0.03)",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                            borderRadius: 100,
+                            fontSize: 10,
+                            display: "flex", alignItems: "center", gap: 5,
+                          }}>
+                            <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600, textTransform: "capitalize" }}>{name}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G }}>{d.w}kg</span>
+                            {d.r > 0 && <span style={{ color: "rgba(255,255,255,0.3)" }}>x{d.r}</span>}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -855,8 +896,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
             </div>
           )}
 
-          {/* ClientAnalytics (graphiques existants) */}
-          <ClientAnalytics clientId={client.id} period={30} />
+          {/* ClientAnalytics supprime de la section Progression — les donnees
+              poids et pas sont accessibles via leurs cards cliquables dediees */}
 
           {/* Top exercices avec sparkline */}
           {topEx.length > 0 && (
@@ -1587,10 +1628,10 @@ export function CoachDashboard({ onExit }) {
         </div>
       )}
 
-      {selected && <ClientPanel client={selected} onClose={() => setSelected(null)} onUpload={uploadProg} onDelete={deleteClient} />}
+      {selected && <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} />}
 
-      {/* ========== TOPBAR ========== */}
-      <div style={{
+      {/* ========== TOPBAR (cache quand liste clients ouverte) ========== */}
+      {!showClientList && <div style={{
         background: "rgba(5,5,5,0.85)",
         borderBottom: "1px solid rgba(255,255,255,0.05)",
         padding: "0 28px", height: 64,
@@ -1643,7 +1684,7 @@ export function CoachDashboard({ onExit }) {
             Mon app
           </button>
         </div>
-      </div>
+      </div>}
 
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 28px 80px", position: "relative" }}>
         {/* Ambient */}
