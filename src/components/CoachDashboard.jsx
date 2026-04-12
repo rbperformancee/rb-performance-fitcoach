@@ -1674,7 +1674,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   );
 }
 
-export function CoachDashboard({ onExit }) {
+export function CoachDashboard({ onExit, onSwitchToSuperAdmin }) {
   const [clients,   setClients]   = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -1984,20 +1984,26 @@ export function CoachDashboard({ onExit }) {
           )}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
+          {onSwitchToSuperAdmin && (
+            <button
+              onClick={onSwitchToSuperAdmin}
+              style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 10, padding: "8px 14px", color: "#a78bfa", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}
+            >
+              <Icon name="chart" size={13} />
+              Super Admin
+            </button>
+          )}
           <button
             onClick={loadClients}
-            aria-label="Actualiser"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit", letterSpacing: "0.3px" }}
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}
           >
             <Icon name="refresh" size={13} />
-            Actualiser
           </button>
           <button
             onClick={onExit}
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit", letterSpacing: "0.3px" }}
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}
           >
             <Icon name="arrow-left" size={13} />
-            Mon app
           </button>
         </div>
       </div>}

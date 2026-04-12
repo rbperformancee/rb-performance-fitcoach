@@ -49,9 +49,10 @@ import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
 import { supabase } from "./lib/supabase";
+import SuperAdminDashboard from "./components/SuperAdminDashboard";
 
 const GREEN = "#02d1ba";
-// ⚠️  Email du coach — seul cet email peut accéder au dashboard admin
+// ⚠️ Email du coach historique — sera remplace par la table coaches pour le multi-tenant
 const COACH_EMAIL = 'rb.performancee@gmail.com';
 
 const IconDumbbell = () => (
@@ -377,7 +378,16 @@ export default function App() {
   } = useAuth();
 
   const isCoach = user?.email === COACH_EMAIL;
+  const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
+  const [showSuperAdmin, setShowSuperAdmin] = React.useState(true); // true = super admin view par defaut
   const [showLogin, setShowLogin] = React.useState(false);
+
+  // Detection super-admin depuis la table super_admins
+  React.useEffect(() => {
+    if (!user?.email) { setIsSuperAdmin(false); return; }
+    supabase.from("super_admins").select("id").eq("email", user.email).single()
+      .then(({ data }) => setIsSuperAdmin(!!data));
+  }, [user?.email]);
   const [clientEmail] = React.useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('email') || '';
@@ -790,8 +800,24 @@ export default function App() {
       </div>
     );
   }
+  // ── Super-admin → dashboard plateforme avec toggle coach ──
+  if (isSuperAdmin && isCoach && showSuperAdmin && showCoachDash) {
+    return (
+      <SuperAdminDashboard
+        onSwitchToCoach={() => setShowSuperAdmin(false)}
+        onExit={() => { setShowCoachDash(false); setShowSuperAdmin(false); }}
+      />
+    );
+  }
+
+  // ── Coach → dashboard coach normal ──
   if (isCoach && showCoachDash) {
-    return <CoachDashboard onExit={() => setShowCoachDash(false)} />;
+    return (
+      <CoachDashboard
+        onExit={() => setShowCoachDash(false)}
+        onSwitchToSuperAdmin={isSuperAdmin ? () => setShowSuperAdmin(true) : null}
+      />
+    );
   }
 
   const currentWeek = programme?.weeks[activeWeek];
