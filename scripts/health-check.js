@@ -535,10 +535,14 @@ async function testAPIs() {
     throw new Error("Format invalide");
   });
 
+  // Les APIs publiques ont un Origin check (api/_security.js) : on simule
+  // la requete depuis le domaine autorise pour verifier qu'elle aboutit.
+  const apiHeaders = { "Content-Type": "application/json", Origin: PROD_URL };
+
   await test("Mistral /api/voice-analyze repond", async () => {
     const res = await fetch(`${PROD_URL}/api/voice-analyze`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: apiHeaders,
       body: JSON.stringify({ text: "un oeuf et une banane" }),
     });
     if (res.ok) {
@@ -551,7 +555,7 @@ async function testAPIs() {
   await test("Mistral /api/faq-assistant repond", async () => {
     const res = await fetch(`${PROD_URL}/api/faq-assistant`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: apiHeaders,
       body: JSON.stringify({ messages: [{ role: "user", content: "Test" }] }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -559,10 +563,23 @@ async function testAPIs() {
   });
 
   await test("Edamam /api/food-search repond", async () => {
-    const res = await fetch(`${PROD_URL}/api/food-search?q=banana`);
+    const res = await fetch(`${PROD_URL}/api/food-search?q=banana`, {
+      headers: { Origin: PROD_URL },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json().catch(() => []);
     return `${Array.isArray(data) ? data.length : 0} resultat(s)`;
+  });
+
+  await test("Origin check actif (blocage sans Origin) ", async () => {
+    // Sans header Origin = request cross-origin suspecte → doit etre bloquee
+    const res = await fetch(`${PROD_URL}/api/faq-assistant`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: [{ role: "user", content: "test" }] }),
+    });
+    if (res.status === 403) return "403 bloque (securite OK)";
+    throw new Error(`Origin non verifie — HTTP ${res.status}`);
   });
 
   await test("Edge Function send-push deployee", async () => {
