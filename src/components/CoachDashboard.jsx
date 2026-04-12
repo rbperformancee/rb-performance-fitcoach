@@ -224,12 +224,17 @@ function CreneauxManager() {
 
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
 function ClientPanel({ client, onClose, onUpload, onDelete }) {
-  const [msgText,   setMsgText]   = useState("");
-  const [sending,   setSending]   = useState(false);
-  const [messages,  setMessages]  = useState([]);
-  const [rpeData,   setRpeData]   = useState([]);
-  const [nutGoals,  setNutGoals]  = useState(null);
-  const [nutSaving, setNutSaving] = useState(false);
+  const [msgText,    setMsgText]    = useState("");
+  const [sending,    setSending]    = useState(false);
+  const [messages,   setMessages]   = useState([]);
+  const [rpeData,    setRpeData]    = useState([]);
+  const [nutGoals,   setNutGoals]   = useState(null);
+  const [nutSaving,  setNutSaving]  = useState(false);
+  // ===== Nouvelles donnees client =====
+  const [nutLogs7d,  setNutLogs7d]  = useState([]); // nutrition_logs des 7 derniers jours
+  const [daily7d,    setDaily7d]    = useState([]); // daily_tracking des 7 derniers jours (pas, eau, sommeil)
+  const [sessions,   setSessions]   = useState([]); // session_logs detailles
+  const [allWeights, setAllWeights] = useState([]); // historique complet poids
   const fileRef = useRef();
 
   const prog = client.programmes?.find(p => p.is_active);
@@ -242,8 +247,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const actColor = activityColor(client._lastActivity);
   const inactiveDays = client._inactiveDays;
 
+  const d7ago = new Date(); d7ago.setDate(d7ago.getDate() - 7);
+  const d7str = d7ago.toISOString().split("T")[0];
+
   useEffect(() => {
     if (!client.id) return;
+    // Donnees existantes
     supabase.from("messages").select("*").eq("client_id", client.id)
       .order("created_at", { ascending: false }).limit(20)
       .then(({ data }) => setMessages(data || []));
@@ -252,7 +261,37 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
       .then(({ data }) => setRpeData(data || []));
     supabase.from("nutrition_goals").select("*").eq("client_id", client.id).single()
       .then(({ data }) => setNutGoals(data || { calories: 2000, proteines: 150, glucides: 250, lipides: 70, eau_ml: 2500, pas: 8000 }));
-  }, [client.id]);
+
+    // ===== NOUVELLES DONNEES =====
+    // Nutrition logs 7 jours (kcal par jour)
+    supabase.from("nutrition_logs").select("date,calories,proteines,glucides,lipides").eq("client_id", client.id)
+      .gte("date", d7str).order("date", { ascending: true })
+      .then(({ data }) => setNutLogs7d(data || []));
+    // Daily tracking 7 jours (pas, eau, sommeil)
+    supabase.from("daily_tracking").select("date,pas,eau_ml,sommeil_h").eq("client_id", client.id)
+      .gte("date", d7str).order("date", { ascending: true })
+      .then(({ data }) => setDaily7d(data || []));
+    // Session logs detailles (20 derniers)
+    supabase.from("session_logs").select("logged_at,session_name,programme_name,duration_seconds,exercises_count,sets_count")
+      .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(20)
+      .then(({ data }) => setSessions(data || []));
+    // Historique poids complet (30 derniers)
+    supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
+      .order("date", { ascending: false }).limit(30)
+      .then(({ data }) => setAllWeights(data || []));
+  }, [client.id, d7str]);
+
+  // ===== Agregation nutrition par jour =====
+  const nutByDay = {};
+  nutLogs7d.forEach(n => {
+    if (!nutByDay[n.date]) nutByDay[n.date] = { kcal: 0, prot: 0, gluc: 0, lip: 0 };
+    nutByDay[n.date].kcal += n.calories || 0;
+    nutByDay[n.date].prot += parseFloat(n.proteines || 0);
+    nutByDay[n.date].gluc += parseFloat(n.glucides || 0);
+    nutByDay[n.date].lip += parseFloat(n.lipides || 0);
+  });
+  const nutDays = Object.entries(nutByDay).sort((a, b) => a[0].localeCompare(b[0])).slice(-7);
+  const maxKcal = Math.max(1, ...nutDays.map(([, d]) => d.kcal));
 
   const sendMessage = async () => {
     if (!msgText.trim() || !client.id) return;
@@ -294,57 +333,64 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "0 24px 100px" }}>
 
-        {/* ===== TOPBAR sticky ===== */}
-        <div style={{
-          position: "sticky", top: 0, zIndex: 50,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "20px 0 14px",
-          background: "rgba(5,5,5,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255,255,255,0.04)",
-        }}>
-          <button
-            onClick={onClose}
-            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.55)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
-          >
-            <Icon name="arrow-left" size={14} />
-            Dashboard
-          </button>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => fileRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(2,209,186,0.08)", border: `1px solid ${G_BORDER}`, borderRadius: 10, padding: "8px 14px", color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-              <Icon name="upload" size={12} />
-              Upload programme
-            </button>
-            <button onClick={() => onDelete(client.id, client.email)} style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "8px 12px", color: RED, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-              <Icon name="trash" size={12} />
-            </button>
-          </div>
-        </div>
         <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f); e.target.value = ""; } }} />
 
-        {/* ===== HERO CLIENT ===== */}
-        <div style={{ padding: "32px 0 0", marginBottom: 32, animation: "cpFadeUp 0.4s ease both" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
-            <Avatar name={client.full_name || client.email} size={56} active={!!prog} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", margin: 0, lineHeight: 1 }}>
-                {client.full_name || <span style={{ color: "rgba(255,255,255,0.4)" }}>Sans nom</span>}
-              </h1>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>{client.email}</div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: actColor, boxShadow: inactiveDays != null && inactiveDays <= 1 ? `0 0 10px ${actColor}` : "none" }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: actColor }}>
-                {!client._lastActivity ? "Jamais actif" : inactiveDays <= 1 ? "Actif aujourd'hui" : inactiveDays <= 7 ? "Actif cette semaine" : `Inactif ${inactiveDays}j`}
-              </span>
+        {/* ===== HERO CLIENT (bouton retour integre, pas de topbar sticky) ===== */}
+        <div style={{ padding: "28px 0 0", marginBottom: 28, animation: "cpFadeUp 0.4s ease both" }}>
+          {/* Ligne retour + actions — discrete, pas un topbar */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+            <button
+              onClick={onClose}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, letterSpacing: "0.3px" }}
+            >
+              <Icon name="arrow-left" size={14} />
+              Tous les clients
+            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => fileRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(2,209,186,0.06)", border: `1px solid ${G_BORDER}`, borderRadius: 10, padding: "7px 12px", color: G, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.3px" }}>
+                <Icon name="upload" size={11} />
+                Upload
+              </button>
+              <button onClick={() => onDelete(client.id, client.email)} style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 10, padding: "7px 10px", color: RED, cursor: "pointer" }}>
+                <Icon name="trash" size={12} />
+              </button>
             </div>
           </div>
 
-          {client._inactive && (
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 100, padding: "6px 14px", fontSize: 11, fontWeight: 700, color: RED }}>
-              <Icon name="alert" size={12} />
-              Inactif depuis {client._inactiveDays} jours — relance recommandee
+          {/* Identite + statut */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
+            <Avatar name={client.full_name || client.email} size={60} active={!!prog} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+                {client.full_name || <span style={{ color: "rgba(255,255,255,0.35)" }}>Sans nom</span>}
+              </h1>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{client.email}</div>
             </div>
-          )}
+          </div>
+
+          {/* Statut activite en badge */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: `${actColor}12`, border: `1px solid ${actColor}30`,
+              borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: actColor,
+            }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: actColor, boxShadow: inactiveDays != null && inactiveDays <= 1 ? `0 0 8px ${actColor}` : "none" }} />
+              {!client._lastActivity ? "Jamais actif" : inactiveDays <= 1 ? "Actif aujourd'hui" : inactiveDays <= 7 ? "Actif cette semaine" : `Inactif ${inactiveDays}j`}
+            </div>
+            {client._inactive && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: RED }}>
+                <Icon name="alert" size={11} />
+                Relance recommandee
+              </div>
+            )}
+            {prog && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: G }}>
+                <Icon name="check" size={11} />
+                {prog.programme_name}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ===== STATS RAPIDES (une ligne) ===== */}
@@ -421,6 +467,188 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                 )}
               </div>
               {weights.length >= 2 && <MiniSparkline data={[...weights].reverse()} color={G} w={120} h={40} />}
+            </div>
+          </div>
+        )}
+
+        {/* ===== ALIMENTATION 7 JOURS ===== */}
+        {nutDays.length > 0 && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.18s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="apple" size={14} color={G} />
+              Alimentation — 7 derniers jours
+            </div>
+            <div style={card}>
+              {/* Barres de kcal par jour */}
+              <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 100, marginBottom: 12 }}>
+                {nutDays.map(([date, d], i) => {
+                  const pct = Math.max(4, (d.kcal / maxKcal) * 100);
+                  const goalKcal = nutGoals?.calories || 2000;
+                  const overGoal = d.kcal > goalKcal * 1.1;
+                  const underGoal = d.kcal < goalKcal * 0.7;
+                  const barColor = overGoal ? ORANGE : underGoal ? RED : G;
+                  const dayLabel = new Date(date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short" }).slice(0, 3);
+                  return (
+                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: barColor, fontFamily: "'JetBrains Mono',monospace" }}>{d.kcal}</div>
+                      <div style={{ width: "100%", height: `${pct}%`, minHeight: 4, background: `linear-gradient(to top, ${barColor}50, ${barColor})`, borderRadius: 4 }} />
+                      <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 700 }}>{dayLabel}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Macros moyenne */}
+              {nutDays.length > 0 && (() => {
+                const avg = { kcal: 0, prot: 0, gluc: 0, lip: 0 };
+                nutDays.forEach(([, d]) => { avg.kcal += d.kcal; avg.prot += d.prot; avg.gluc += d.gluc; avg.lip += d.lip; });
+                const n = nutDays.length;
+                return (
+                  <div style={{ display: "flex", gap: 12, justifyContent: "center", paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                    {[
+                      { l: "Moy/j", v: Math.round(avg.kcal / n), u: "kcal", c: ORANGE },
+                      { l: "Prot", v: Math.round(avg.prot / n), u: "g", c: G },
+                      { l: "Gluc", v: Math.round(avg.gluc / n), u: "g", c: "#60a5fa" },
+                      { l: "Lip", v: Math.round(avg.lip / n), u: "g", c: VIOLET },
+                    ].map((m, i) => (
+                      <div key={i} style={{ textAlign: "center" }}>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: m.c }}>{m.v}<span style={{ fontSize: 9, fontWeight: 500, color: "rgba(255,255,255,0.3)" }}>{m.u}</span></div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 2 }}>{m.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* ===== ACTIVITE QUOTIDIENNE 7J (pas, eau, sommeil) ===== */}
+        {daily7d.length > 0 && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.2s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="activity" size={14} color={G} />
+              Activite quotidienne — 7 jours
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+              {/* Pas */}
+              <div style={card}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 10 }}>Pas quotidiens</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {daily7d.slice(-7).map((d, i) => {
+                    const stepsGoal = nutGoals?.pas || 8000;
+                    const pct = Math.min(100, Math.round(((d.pas || 0) / stepsGoal) * 100));
+                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", width: 50, flexShrink: 0, textTransform: "capitalize" }}>{dayLabel}</div>
+                        <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: pct + "%", background: pct >= 100 ? G : ORANGE, borderRadius: 3, transition: "width 0.3s" }} />
+                        </div>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: pct >= 100 ? G : "rgba(255,255,255,0.5)", width: 45, textAlign: "right" }}>{(d.pas || 0).toLocaleString()}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Eau + Sommeil */}
+              <div style={card}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 10 }}>Eau et sommeil</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {daily7d.slice(-7).map((d, i) => {
+                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+                    const waterL = ((d.eau_ml || 0) / 1000).toFixed(1);
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", width: 50, flexShrink: 0, textTransform: "capitalize" }}>{dayLabel}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <Icon name="activity" size={10} color="#38bdf8" />
+                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: "#38bdf8" }}>{waterL}L</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
+                          <Icon name="activity" size={10} color={VIOLET} />
+                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: VIOLET }}>{d.sommeil_h || 0}h</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== HISTORIQUE SEANCES ===== */}
+        {sessions.length > 0 && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.22s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="flame" size={14} color={G} />
+              Historique seances ({sessions.length})
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {sessions.slice(0, 12).map((s, i) => {
+                const date = new Date(s.logged_at);
+                const durationMin = s.duration_seconds ? Math.round(s.duration_seconds / 60) : null;
+                return (
+                  <div key={i} style={{ ...card, padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: G, flexShrink: 0 }}>
+                      <Icon name="check" size={16} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {s.session_name || s.programme_name || "Seance"}
+                      </div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
+                        {date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
+                        {durationMin != null && <span style={{ color: "rgba(255,255,255,0.25)" }}> · {durationMin} min</span>}
+                        {s.exercises_count > 0 && <span style={{ color: "rgba(255,255,255,0.25)" }}> · {s.exercises_count} exos</span>}
+                        {s.sets_count > 0 && <span style={{ color: "rgba(255,255,255,0.25)" }}> · {s.sets_count} series</span>}
+                      </div>
+                    </div>
+                    {durationMin != null && (
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 200, color: G, flexShrink: 0 }}>
+                        {durationMin}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>min</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ===== HISTORIQUE POIDS COMPLET ===== */}
+        {allWeights.length > 1 && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.24s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="trending" size={14} color={G} />
+              Historique poids ({allWeights.length} pesees)
+            </div>
+            <div style={card}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
+                    {allWeights[0].weight}<span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>kg</span>
+                  </div>
+                  {allWeights.length >= 2 && (() => {
+                    const delta = allWeights[0].weight - allWeights[allWeights.length - 1].weight;
+                    return (
+                      <div style={{ fontSize: 12, fontWeight: 700, color: delta > 0 ? ORANGE : delta < 0 ? G : "rgba(255,255,255,0.4)", marginTop: 4 }}>
+                        {delta > 0 ? "+" : ""}{delta.toFixed(1)} kg depuis le debut
+                      </div>
+                    );
+                  })()}
+                </div>
+                <MiniSparkline data={[...allWeights].reverse()} color={G} w={160} h={48} />
+              </div>
+              {/* Derniers poids */}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {allWeights.slice(0, 10).map((w, i) => (
+                  <div key={i} style={{ padding: "6px 10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 8, textAlign: "center" }}>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: "#fff" }}>{w.weight}</div>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)" }}>{new Date(w.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
