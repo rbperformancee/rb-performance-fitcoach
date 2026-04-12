@@ -90,6 +90,112 @@ function MiniSparkline({ data, color = G, w = 80, h = 28 }) {
   );
 }
 
+// Graphique ligne premium avec axes, dates, grille, points
+// Utilise pour le drawer poids (et potentiellement eau/sommeil)
+function LineGraph({ data, color = G, height = 200, unit = "kg", valueKey = "weight" }) {
+  if (!data || data.length < 2) return <div style={{ textAlign: "center", padding: 32, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Pas assez de donnees</div>;
+
+  const W = 100; // pourcentage, le SVG sera responsive
+  const H = height;
+  const PAD = { top: 12, right: 8, bottom: 30, left: 42 };
+  const chartW = W; // on travaille en viewBox, pas en pixels
+  const vbW = 500; // viewBox width fixe
+  const vbH = H;
+  const cW = vbW - PAD.left - PAD.right;
+  const cH = vbH - PAD.top - PAD.bottom;
+
+  const vals = data.map(d => typeof d === "number" ? d : (d[valueKey] || d.value || 0));
+  const dates = data.map(d => d.date || d.logged_at || "");
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+  const yPad = range * 0.1; // 10% padding vertical
+  const yMin = min - yPad;
+  const yMax = max + yPad;
+  const yRange = yMax - yMin || 1;
+
+  // Points du graphique
+  const points = vals.map((v, i) => ({
+    x: PAD.left + (i / (vals.length - 1)) * cW,
+    y: PAD.top + cH - ((v - yMin) / yRange) * cH,
+    v,
+  }));
+
+  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  const areaPath = linePath + ` L ${points[points.length - 1].x} ${PAD.top + cH} L ${points[0].x} ${PAD.top + cH} Z`;
+
+  // Y-axis ticks (4-5 ticks)
+  const yTicks = [];
+  const nTicks = 5;
+  for (let i = 0; i < nTicks; i++) {
+    const v = yMin + (yRange / (nTicks - 1)) * i;
+    const y = PAD.top + cH - ((v - yMin) / yRange) * cH;
+    yTicks.push({ y, label: v.toFixed(1) });
+  }
+
+  // X-axis labels (show ~6 dates evenly spaced)
+  const xLabels = [];
+  const step = Math.max(1, Math.floor(dates.length / 6));
+  for (let i = 0; i < dates.length; i += step) {
+    const dateStr = dates[i];
+    if (!dateStr) continue;
+    const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T12:00:00");
+    xLabels.push({
+      x: points[i].x,
+      label: d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
+    });
+  }
+
+  return (
+    <div style={{ width: "100%", position: "relative" }}>
+      <svg
+        viewBox={`0 0 ${vbW} ${vbH}`}
+        style={{ width: "100%", height: "auto", display: "block" }}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {/* Grid lines */}
+        {yTicks.map((t, i) => (
+          <line key={i} x1={PAD.left} y1={t.y} x2={vbW - PAD.right} y2={t.y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+        ))}
+
+        {/* Area fill */}
+        <path d={areaPath} fill={`url(#lineGrad-${color.replace("#", "")})`} opacity="0.15" />
+        <defs>
+          <linearGradient id={`lineGrad-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* Line */}
+        <path d={linePath} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Data points */}
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={vals.length > 30 ? 2 : 3.5} fill={color} stroke="#050505" strokeWidth="1.5" />
+        ))}
+
+        {/* Y-axis labels */}
+        {yTicks.map((t, i) => (
+          <text key={i} x={PAD.left - 6} y={t.y + 3} textAnchor="end" fill="rgba(255,255,255,0.35)" fontSize="10" fontFamily="'JetBrains Mono',monospace" fontWeight="600">
+            {parseFloat(t.label).toFixed(1)}
+          </text>
+        ))}
+
+        {/* X-axis labels */}
+        {xLabels.map((l, i) => (
+          <text key={i} x={l.x} y={vbH - 6} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="-apple-system,Inter,sans-serif" fontWeight="600">
+            {l.label}
+          </text>
+        ))}
+
+        {/* Unit label */}
+        <text x={4} y={PAD.top + 4} fill="rgba(255,255,255,0.2)" fontSize="9" fontFamily="-apple-system,Inter,sans-serif">{unit}</text>
+      </svg>
+    </div>
+  );
+}
+
 
 /* ── Gestionnaire de créneaux ── */
 function CreneauxManager() {
@@ -282,9 +388,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
     supabase.from("session_logs").select("logged_at,session_name,programme_name,duration_seconds,exercises_count,sets_count")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(20)
       .then(({ data }) => setSessions(data || []));
-    // Historique poids complet (30 derniers)
+    // Historique poids complet (TOUS depuis le debut de l'abonnement)
     supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
-      .order("date", { ascending: false }).limit(30)
+      .order("date", { ascending: false }).limit(500)
       .then(({ data }) => setAllWeights(data || []));
   }, [client.id, d7str]);
 
@@ -546,30 +652,49 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                   })}
                 </div>
               </div>
-              {/* Eau + Sommeil (cliquable) */}
-              <div style={{ ...card, cursor: "pointer" }}>
+              {/* Card Eau — cliquable, ouvre drawer complet */}
+              <div onClick={() => setDrawer("eau")} style={{ ...card, cursor: "pointer", transition: "border-color 0.2s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Eau et sommeil</div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button onClick={(e) => { e.stopPropagation(); setDrawer("eau"); }} style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 100, padding: "3px 8px", cursor: "pointer", fontFamily: "inherit" }}>Eau 30j</button>
-                    <button onClick={(e) => { e.stopPropagation(); setDrawer("sommeil"); }} style={{ fontSize: 9, fontWeight: 700, color: VIOLET, background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 100, padding: "3px 8px", cursor: "pointer", fontFamily: "inherit" }}>Sommeil 30j</button>
-                  </div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#38bdf8" }}>Hydratation</div>
+                  <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.2)" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {daily7d.slice(-7).map((d, i) => {
                     const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
                     const waterL = ((d.eau_ml || 0) / 1000).toFixed(1);
+                    const goal = (nutGoals?.eau_ml || 2500) / 1000;
+                    const ok = parseFloat(waterL) >= goal;
                     return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", width: 50, flexShrink: 0, textTransform: "capitalize" }}>{dayLabel}</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <Icon name="activity" size={10} color="#38bdf8" />
-                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: "#38bdf8" }}>{waterL}L</span>
+                        <div style={{ flex: 1, height: 5, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: Math.min(100, (parseFloat(waterL) / goal) * 100) + "%", background: ok ? "#38bdf8" : "rgba(56,189,248,0.4)", borderRadius: 3 }} />
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
-                          <Icon name="activity" size={10} color={VIOLET} />
-                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: VIOLET }}>{d.sommeil_h || 0}h</span>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: ok ? "#38bdf8" : "rgba(255,255,255,0.4)", width: 32, textAlign: "right" }}>{waterL}L</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Card Sommeil — cliquable, ouvre drawer complet */}
+              <div onClick={() => setDrawer("sommeil")} style={{ ...card, cursor: "pointer", transition: "border-color 0.2s" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: VIOLET }}>Sommeil</div>
+                  <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.2)" />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {daily7d.slice(-7).map((d, i) => {
+                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+                    const sh = d.sommeil_h || 0;
+                    const under = sh < 7;
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", width: 50, flexShrink: 0, textTransform: "capitalize" }}>{dayLabel}</div>
+                        <div style={{ flex: 1, height: 5, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: Math.min(100, (sh / 9) * 100) + "%", background: under ? RED : VIOLET, borderRadius: 3, opacity: under ? 0.8 : 1 }} />
                         </div>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: under ? RED : VIOLET, width: 24, textAlign: "right" }}>{sh}h</span>
                       </div>
                     );
                   })}
@@ -952,63 +1077,97 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
             </div>
 
             <div style={{ flex: 1, overflowY: "auto", padding: "8px 22px 28px", WebkitOverflowScrolling: "touch" }}>
-              {/* ── DRAWER POIDS ── */}
+              {/* ── DRAWER POIDS — graphique complet depuis le debut ── */}
               {drawer === "poids" && (
                 <div>
-                  {allWeights.length >= 2 && (
-                    <div style={{ marginBottom: 20, textAlign: "center" }}>
-                      <MiniSparkline data={[...allWeights].reverse()} color={G} w={480} h={80} />
-                    </div>
-                  )}
+                  {/* Stats headline */}
                   {allWeights.length >= 2 && (() => {
-                    const delta = allWeights[0].weight - allWeights[allWeights.length - 1].weight;
+                    const first = allWeights[allWeights.length - 1];
+                    const last = allWeights[0];
+                    const delta = last.weight - first.weight;
+                    const minW = Math.min(...allWeights.map(w => w.weight));
+                    const maxW = Math.max(...allWeights.map(w => w.weight));
                     return (
-                      <div style={{ textAlign: "center", marginBottom: 20 }}>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 200, color: "#fff" }}>{allWeights[0].weight}</span>
-                        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>kg</span>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: delta > 0 ? ORANGE : delta < 0 ? G : "rgba(255,255,255,0.4)", marginTop: 6 }}>
-                          {delta > 0 ? "+" : ""}{delta.toFixed(1)} kg depuis le debut
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 20 }}>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: "#fff" }}>{last.weight}</div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Actuel</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: delta > 0 ? ORANGE : delta < 0 ? G : "rgba(255,255,255,0.5)" }}>
+                            {delta > 0 ? "+" : ""}{delta.toFixed(1)}
+                          </div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Delta</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: G }}>{minW}</div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Min</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: ORANGE }}>{maxW}</div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Max</div>
                         </div>
                       </div>
                     );
                   })()}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {allWeights.map((w, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10 }}>
-                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-                          {new Date(w.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" })}
+
+                  {/* Graphique ligne complet */}
+                  <div style={{ marginBottom: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 8px 8px" }}>
+                    <LineGraph data={[...allWeights].reverse()} color={G} height={220} unit="kg" valueKey="weight" />
+                  </div>
+
+                  {/* Periode couverte */}
+                  {allWeights.length >= 2 && (
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center", marginBottom: 16 }}>
+                      {allWeights.length} pesees · du {new Date(allWeights[allWeights.length - 1].date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} au {new Date(allWeights[0].date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                    </div>
+                  )}
+
+                  {/* Liste des pesees */}
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Toutes les pesees</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {allWeights.map((w, i) => {
+                      const prev = allWeights[i + 1];
+                      const diff = prev ? w.weight - prev.weight : null;
+                      return (
+                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.03)", borderRadius: 8 }}>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
+                            {new Date(w.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            {diff !== null && (
+                              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: diff > 0 ? ORANGE : diff < 0 ? G : "rgba(255,255,255,0.25)" }}>
+                                {diff > 0 ? "+" : ""}{diff.toFixed(1)}
+                              </span>
+                            )}
+                            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                              {w.weight}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}> kg</span>
+                            </span>
+                          </div>
                         </div>
-                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: "#fff" }}>
-                          {w.weight} <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>kg</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* ── DRAWER EAU ── */}
+              {/* ── DRAWER EAU — graphique 30j ── */}
               {drawer === "eau" && (() => {
                 const data = daily30d.filter(d => d.eau_ml > 0);
                 const avg = data.length > 0 ? Math.round(data.reduce((s, d) => s + d.eau_ml, 0) / data.length) : 0;
+                const graphData = data.map(d => ({ date: d.date, value: d.eau_ml / 1000 }));
                 return (
                   <div>
                     <div style={{ textAlign: "center", marginBottom: 20 }}>
-                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 200, color: "#38bdf8" }}>{(avg / 1000).toFixed(1)}</span>
+                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 36, fontWeight: 200, color: "#38bdf8" }}>{(avg / 1000).toFixed(1)}</span>
                       <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>L / jour</span>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>Moyenne sur {data.length} jours</div>
                     </div>
-                    <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 100, marginBottom: 16 }}>
-                      {daily30d.slice(-30).map((d, i) => {
-                        const h = Math.max(4, ((d.eau_ml || 0) / 3000) * 100);
-                        const ok = (d.eau_ml || 0) >= (nutGoals?.eau_ml || 2500);
-                        return (
-                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                            <div style={{ width: "100%", height: h + "%", minHeight: 3, background: ok ? "#38bdf8" : "rgba(56,189,248,0.3)", borderRadius: 2 }} />
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {graphData.length >= 2 && (
+                      <div style={{ marginBottom: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 8px 8px" }}>
+                        <LineGraph data={graphData} color="#38bdf8" height={180} unit="L" valueKey="value" />
+                      </div>
+                    )}
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       {data.slice(-14).reverse().map((d, i) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, fontSize: 12 }}>
@@ -1021,32 +1180,29 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                 );
               })()}
 
-              {/* ── DRAWER SOMMEIL ── */}
+              {/* ── DRAWER SOMMEIL — graphique 30j ── */}
               {drawer === "sommeil" && (() => {
                 const data = daily30d.filter(d => d.sommeil_h > 0);
                 const avg = data.length > 0 ? (data.reduce((s, d) => s + d.sommeil_h, 0) / data.length).toFixed(1) : 0;
                 const under7 = data.filter(d => d.sommeil_h < 7).length;
+                const graphData = data.map(d => ({ date: d.date, value: d.sommeil_h }));
                 return (
                   <div>
-                    <div style={{ textAlign: "center", marginBottom: 20 }}>
-                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 200, color: VIOLET }}>{avg}</span>
-                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>h / nuit</span>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>
-                        Moyenne sur {data.length} nuits
-                        {under7 > 0 && <span style={{ color: RED }}> · {under7} nuits &lt; 7h</span>}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                      <div style={{ textAlign: "center", padding: 12, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.15)", borderRadius: 12 }}>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: VIOLET }}>{avg}</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>h / nuit</div>
+                      </div>
+                      <div style={{ textAlign: "center", padding: 12, background: under7 > 0 ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${under7 > 0 ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)"}`, borderRadius: 12 }}>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: under7 > 0 ? RED : G }}>{under7}</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Nuits &lt; 7h</div>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 100, marginBottom: 16 }}>
-                      {daily30d.slice(-30).map((d, i) => {
-                        const h = Math.max(4, ((d.sommeil_h || 0) / 10) * 100);
-                        const under = (d.sommeil_h || 0) < 7;
-                        return (
-                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <div style={{ width: "100%", height: h + "%", minHeight: 3, background: under ? RED : VIOLET, borderRadius: 2, opacity: under ? 0.8 : 1 }} />
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {graphData.length >= 2 && (
+                      <div style={{ marginBottom: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 8px 8px" }}>
+                        <LineGraph data={graphData} color={VIOLET} height={180} unit="h" valueKey="value" />
+                      </div>
+                    )}
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       {data.slice(-14).reverse().map((d, i) => {
                         const under = d.sommeil_h < 7;
