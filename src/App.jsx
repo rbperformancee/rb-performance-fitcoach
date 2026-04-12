@@ -4,6 +4,7 @@ import { BadgeSystem } from "./components/BadgeSystem";
 import { ToastProvider, toast } from "./components/Toast";
 import ProfilePage from "./components/ProfilePage";
 import FuelPage from "./components/FuelPage";
+import FaqAssistant from "./components/FaqAssistant";
 import MovePage from "./components/MovePage";
 import { useAppData } from "./hooks/useAppData";
 import { SeanceVivante } from "./components/SeanceVivante";
@@ -1067,6 +1068,8 @@ export default function App() {
 
       {/* ── App principale ── */}
       {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
+      {/* FAQ Assistant — visible uniquement pour les clients, pas les coachs */}
+      {user && !isCoach && client && <FaqAssistant />}
       {programme && !authError && (
         <>
           {page === "training" ? (
