@@ -1,119 +1,129 @@
-# RB Perform — Tests de sante
+# RB Perform — Tests de sante (A to Z)
 
-Script de verification automatique de l'app de A a Z.
+Script de verification complete qui teste l'application en 7 categories.
 
 ## Lancer les tests
 
 ```bash
-# Test rapide (local + prod)
+# Test standard (prod + DB)
 node scripts/health-check.js
 
-# Avec URL de production custom
+# URL prod personnalisee
 node scripts/health-check.js --prod-url=https://rb-perfor.vercel.app
 
 # Mode verbose (detail des erreurs)
 node scripts/health-check.js --verbose
 ```
 
-## Ce qui est teste
+## Ce qui est teste (7 sections)
 
-Le script teste **8 categories** et affiche pour chacune un log colore :
-- `✓` vert = OK
-- `✗` rouge = echec
-- `⚠` jaune = skip (normal, genre RLS bloque volontairement)
+### 1. AUTHENTIFICATION
+- Endpoint Auth `/settings` repond (providers configures)
+- Magic link OTP send fonctionne
+- Super admin enregistre (login super-admin possible)
+- Coach enregistre (login coach possible)
+- Clients enregistres (login client possible)
+- Endpoint logout accessible
 
-### 1. Supabase — Connectivite
-- Ping REST API
-- Ping Auth
-- Cle ANON presente
+### 2. BASE DE DONNEES
+- Ping Supabase
+- Les **19 tables critiques** existent et repondent :
+  clients, programmes, coaches, super_admins, exercise_logs, session_logs,
+  weight_logs, session_rpe, messages, coach_notes, push_subscriptions,
+  bookings, coach_slots, nutrition_logs, daily_tracking, run_logs,
+  nutrition_goals, client_badges, notification_logs
+- RLS desactive sur les bonnes tables (clients, coaches en lecture anon)
+- RLS actif sur notification_logs (protege)
+- Lecture + ecriture + restore sur **daily_tracking** (eau_ml)
+- Insert + delete sur **nutrition_logs**
+- Lecture + update sur **programmes**
 
-### 2. Base de donnees — Tables
-Verifie que les 19 tables critiques existent et repondent :
-clients, programmes, coaches, super_admins, exercise_logs, session_logs, weight_logs, session_rpe, messages, coach_notes, push_subscriptions, bookings, coach_slots, nutrition_logs, daily_tracking, run_logs, nutrition_goals, client_badges, notification_logs.
+### 3. FLOW CLIENT
+- Clients avec `onboarding_done=false` existent (OnboardingFlow s'affiche)
+- Clients avec `onboarding_done=true` existent (App normale)
+- Client sans programme actif → TrainLocked
+- Client avec programme actif → TrainingPage (html_content present)
+- Countdown programme (programme_start_date futur)
+- Signature programme (programme_accepted_at)
+- Persistance eau (`daily_tracking.eau_ml`)
+- Persistance sommeil (`daily_tracking.sommeil_h`)
+- Persistance poids (`weight_logs`)
+- Persistance nutrition (`nutrition_logs`)
+- Persistance seances (session_logs + exercise_logs)
 
-### 3. Base de donnees — RLS
-- `clients` et `coaches` lisibles en anon (OK apres rollback 006)
-- `notification_logs` protege (RLS actif, service_role only)
+### 4. FLOW COACH
+- Dashboard coach charge les clients du coach (filtre coach_id)
+- Panel client — donnees enrichies (logs + rpe + weights)
+- Upload programme — schema valide (toutes colonnes accessibles)
+- Suppression programme ne remet pas onboarding_done a false
+- Date expiration abonnement (subscription_end_date)
+- Coach notes incluent coach_id (multi-tenant)
+- Bookings + coach_slots accessibles
 
-### 4. Base de donnees — Lecture/Ecriture
-- Recupere un client de test
-- Lit programmes, daily_tracking, nutrition_logs, weight_logs
-- Write + verify + restore sur daily_tracking (eau)
+### 5. SUPER ADMIN
+- Dashboard CEO exclusif a `rb.performancee@gmail.com`
+- Coach row existe pour super admin (toggle fonctionne)
+- MRR calcule depuis les abonnements actifs
+- ARR = MRR × 12
+- Retention = actifs / total
+- Toggle Coach/SuperAdmin (les 2 rows existent)
 
-### 5. Super Admin
-- rb.performancee@gmail.com est bien enregistre dans `super_admins`
-- Row `coaches` existe pour lui
-- MRR calculable depuis les abonnements actifs
+### 6. API ET SERVICES EXTERNES
+- Supabase ping (< 500ms ideal)
+- Stripe API reachable
+- Stripe webhook Edge Function deployee
+- Stripe public key configuree (mode TEST ou LIVE)
+- Mistral `/api/voice-analyze` repond avec ingredients
+- Mistral `/api/faq-assistant` repond
+- Edamam `/api/food-search` repond
+- Edge Functions deployees : send-push, send-welcome
+- Push notifications — VAPID configuree dans sw.js
+- Push subscriptions table accessible
+- Cron `/api/cron-relance` (necessite SUPABASE_SERVICE_ROLE_KEY)
+- Cron `/api/cron-weekly-recap`
 
-### 6. APIs & Services externes
-- Mistral `/api/voice-analyze`
-- Edamam `/api/food-search`
-- FAQ `/api/faq-assistant`
-- Cron `/api/cron-relance` (manuel)
-- Cron `/api/cron-weekly-recap` (manuel)
-- Edge Functions Supabase : send-push, send-welcome, stripe-webhook
+### 7. PERFORMANCES
+- Premiere page chargee en moins de 2s
+- Bundle JS telecharge en moins de 3s
+- Service worker actif (sw.js valide)
+- manifest.json valide (nom + icons)
+- CSS bundle accessible
+- Icons PWA (192 + 512) accessibles
 
-### 7. Performances
-- index.html charge < 2s
-- Bundle JS telecharge < 3s
-- sw.js accessible (avec version cache)
-- manifest.json valide
+## Legende
 
-### 8. Stripe
-- Cle publique presente (test ou live)
-- API Stripe reachable
+- `✅` vert — test passe
+- `❌` rouge — test echoue (action requise)
+- `⚠` jaune — test skipe (normal : donnees insuffisantes ou RLS volontaire)
 
-## Interpreter les resultats
+## Interpretation des erreurs communes
 
-### Tout vert
-```
-  12 OK   0 FAIL   0 SKIP   / 12 tests en 2.3s
-```
-L'app est en bonne sante, tous les systemes repondent.
+| Erreur | Cause | Solution |
+|--------|-------|----------|
+| `Legacy API keys are disabled` | Cle service_role Vercel au format JWT ancien | Regenerer la cle dans Supabase > Settings > API (format `sb_secret_*`), mettre a jour dans Vercel env vars |
+| `HTTP 401/403` sur table | RLS actif sans policy | Desactiver RLS ou ajouter policy (cf migration 006) |
+| `Table absente` | Migration SQL non executee | Executer la migration concernee dans Supabase SQL Editor |
+| `HTTP 500` sur /api/voice-analyze | `MISTRAL_API_KEY` manquante ou expire | Renouveler la cle dans Vercel env vars |
+| `HTTP 500` sur /api/food-search | `EDAMAM_APP_ID`/`EDAMAM_APP_KEY` manquants | Ajouter dans Vercel env vars |
+| `Lent: 2500ms` sur premiere page | CDN Vercel froid ou latence | Verifier Vercel dashboard, redeployer |
+| Aucun super admin configure | Table super_admins vide | Inserer row dans SQL : `INSERT INTO super_admins (email) VALUES ('...')` |
 
-### Des echecs
-```
-  10 OK   2 FAIL   0 SKIP
+## Quand lancer ce script
 
-Echecs :
-  • Cron relance — SUPABASE_SERVICE_ROLE_KEY manquant dans Vercel env
-  • Mistral /api/voice-analyze — API error 500
-```
-
-Le script affiche la cause probable. Actions typiques :
-
-| Erreur | Solution |
-|--------|----------|
-| `SUPABASE_SERVICE_ROLE_KEY manquant` | Ajouter la cle dans Vercel > Settings > Env Variables |
-| `API error 500` sur Mistral | Cle `MISTRAL_API_KEY` invalide ou quota depasse |
-| `HTTP 401` sur une table | RLS trop restrictif, a verifier |
-| `Table absente` | Migration SQL pas executee |
-| `Lent: 4500ms` sur bundle | Verifier Vercel CDN, probleme de cache |
-
-### Des skips
-Les skips sont normaux quand :
-- Une table a RLS actif et pas de donnees visibles en anon (ex: `notification_logs`)
-- Un bundle n'est pas detecte dans l'index.html
-
-## Quand lancer le script
-
-- **Avant chaque deploy en prod** : pour ne pas casser l'existant
-- **Apres une migration SQL** : verifier que l'app repond toujours
-- **Si un user signale un bug** : eliminer les causes systemiques
-- **En CI/CD** : `npm run health-check` avec exit code 1 si fail
+- **Avant chaque deploy en prod** — eviter de casser l'existant
+- **Apres une migration SQL** — verifier que l'app repond toujours
+- **Quand un utilisateur signale un bug** — eliminer les causes systemiques
+- **Apres avoir change les env vars Vercel** — verifier que les APIs repondent
+- **En CI/CD** — ajouter `node scripts/health-check.js` qui exit 1 si fail
 
 ## Exit codes
 
-- `0` : tous les tests passent
-- `1` : un ou plusieurs tests ont echoue
-- `2` : erreur fatale du script
+- `0` — tous les tests passent
+- `1` — au moins un test a echoue
+- `2` — erreur fatale du script
 
-## Limitations
+## Limites
 
-Le script **ne teste pas** :
-- Les flows UI (login form, onboarding ecran) — faudrait Playwright/Cypress
-- Les notifications push reellement recues sur un device
-- Le contenu d'un programme specifique
-- Stripe webhook (signature requise — test manuel via Stripe CLI)
+Ce script **ne teste pas** les UI flows (boutons, navigation, formulaires) — pour ca, il faudrait Playwright ou Cypress. Les tests data-level couvrent les prerequis necessaires pour que ces flows fonctionnent.
 
-Pour ces tests-la, utiliser l'app manuellement ou ajouter un framework E2E.
+Il **ne teste pas non plus** le flow Stripe checkout end-to-end (signature requise) ni la reception effective de push notifications sur un device.
