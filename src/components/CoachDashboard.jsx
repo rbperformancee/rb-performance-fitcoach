@@ -1786,330 +1786,144 @@ export function CoachDashboard({ onExit }) {
             </div>
           )}
 
-          {/* ========== LISTE CLIENTS (visible seulement apres clic sur le CTA) ========== */}
-          {showClientList && (
-            <div>
-              {/* Bouton retour a l'overview */}
-              <button
-                onClick={() => setShowClientList(false)}
-                style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}
-              >
+      {/* ========== FENETRE PLEIN ECRAN LISTE CLIENTS ========== */}
+      {showClientList && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+          {/* Ambient */}
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
+
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 640, margin: "0 auto", padding: "0 20px calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
+            {/* Header */}
+            <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
+              <button onClick={() => setShowClientList(false)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}>
                 <Icon name="arrow-left" size={12} />
-                Retour overview
+                Dashboard
               </button>
-
-          {/* ========== BARRE FILTRES + ACTIONS ========== */}
-          <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
-            <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
-              <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}>
-                <Icon name="search" size={15} />
-              </div>
-              <input
-                className="inp-focus"
-                placeholder="Rechercher un client..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{
-                  width: "100%", padding: "13px 16px 13px 42px",
-                  background: "rgba(255,255,255,0.025)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 12, color: "#fff",
-                  fontFamily: "inherit", fontSize: 14,
-                  outline: "none", boxSizing: "border-box",
-                  transition: "border-color 0.2s, background 0.2s",
-                }}
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {[
-                ["all", "Tous", total, null],
-                ["active", "Actifs 7j", activeWeek, null],
-                ["noprog", "Sans prog.", total - withProg, null],
-                ["inactive", "Inactifs", inactiveAlerts, "alert"],
-              ].map(([k, l, n, ic]) => {
-                const active = filter === k;
-                return (
-                  <button
-                    key={k}
-                    onClick={() => setFilter(k)}
-                    style={{
-                      padding: "8px 14px", fontSize: 11, fontWeight: 700,
-                      background: active ? G_DIM : "rgba(255,255,255,0.025)",
-                      border: `1px solid ${active ? G_BORDER : "rgba(255,255,255,0.08)"}`,
-                      borderRadius: 100,
-                      color: active ? G : "rgba(255,255,255,0.45)",
-                      cursor: "pointer", whiteSpace: "nowrap",
-                      display: "flex", alignItems: "center", gap: 6,
-                      fontFamily: "inherit", letterSpacing: "0.2px",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    {ic && <Icon name={ic} size={11} />}
-                    {l}
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: active ? G : "rgba(255,255,255,0.3)", fontWeight: 600 }}>
-                      {n}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setShowAdd((v) => !v)}
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "11px 18px",
-                background: showAdd ? "rgba(255,255,255,0.04)" : `linear-gradient(135deg, ${G}, #0891b2)`,
-                border: `1px solid ${showAdd ? "rgba(255,255,255,0.1)" : G}`,
-                borderRadius: 12,
-                color: showAdd ? "rgba(255,255,255,0.55)" : "#000",
-                fontSize: 12, fontWeight: 800, cursor: "pointer",
-                boxShadow: showAdd ? "none" : "0 8px 24px rgba(2,209,186,0.25)",
-                letterSpacing: "0.3px", textTransform: "uppercase",
-                fontFamily: "inherit",
-              }}
-            >
-              <Icon name={showAdd ? "x" : "plus"} size={13} />
-              {showAdd ? "Annuler" : "Nouveau client"}
-            </button>
-          </div>
-
-          {/* ========== FORMULAIRE NOUVEAU CLIENT ========== */}
-          {showAdd && (
-            <div style={{
-              background: "rgba(2,209,186,0.04)",
-              border: `1px solid ${G_BORDER}`,
-              borderRadius: 18, padding: 24, marginBottom: 20,
-              animation: "fadeUp 0.25s cubic-bezier(0.22,1,0.36,1)",
-            }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", color: G, marginBottom: 18 }}>
-                Nouveau client
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
-                    Email *
-                  </label>
-                  <input
-                    className="inp-focus" type="email" placeholder="client@email.com"
-                    value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addClient()}
-                    style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box", transition: "all 0.2s" }}
-                  />
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 8 }}>Clients</div>
+                  <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+                    Tes athletes<span style={{ color: G }}>.</span>
+                  </h1>
                 </div>
-                <div>
-                  <label style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
-                    Prenom Nom
-                  </label>
-                  <input
-                    className="inp-focus" type="text" placeholder="Thomas Dupont"
-                    value={newName} onChange={(e) => setNewName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addClient()}
-                    style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box", transition: "all 0.2s" }}
-                  />
-                </div>
-                <div style={{ display: "flex", alignItems: "flex-end" }}>
-                  <button
-                    onClick={addClient} disabled={!newEmail}
-                    style={{
-                      padding: "12px 22px",
-                      background: newEmail ? `linear-gradient(135deg, ${G}, #0891b2)` : "rgba(255,255,255,0.04)",
-                      border: "none", borderRadius: 10,
-                      color: newEmail ? "#000" : "rgba(255,255,255,0.25)",
-                      fontSize: 12, fontWeight: 800,
-                      cursor: newEmail ? "pointer" : "not-allowed",
-                      height: 44, fontFamily: "inherit",
-                      textTransform: "uppercase", letterSpacing: "0.5px",
-                      boxShadow: newEmail ? "0 8px 24px rgba(2,209,186,0.25)" : "none",
-                    }}
-                  >
-                    Creer
-                  </button>
-                </div>
+                <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", background: showAdd ? "rgba(255,255,255,0.04)" : `linear-gradient(135deg, ${G}, #0891b2)`, border: `1px solid ${showAdd ? "rgba(255,255,255,0.1)" : G}`, borderRadius: 12, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", fontSize: 11, fontWeight: 800, cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px", flexShrink: 0 }}>
+                  <Icon name={showAdd ? "x" : "plus"} size={12} />
+                  {showAdd ? "Annuler" : "Ajouter"}
+                </button>
               </div>
             </div>
-          )}
 
-          {/* ========== CLIENT LIST ========== */}
-          {loading ? (
-            <div style={{ textAlign: "center", padding: 80, color: "rgba(255,255,255,0.35)" }}>
-              <div style={{ width: 40, height: 40, border: "2.5px solid rgba(2,209,186,0.1)", borderTopColor: G, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
-              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase" }}>Chargement</div>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 80, color: "rgba(255,255,255,0.3)" }}>
-              <div style={{ marginBottom: 14, display: "flex", justifyContent: "center", color: "rgba(255,255,255,0.2)" }}>
-                <Icon name="users" size={40} strokeWidth={1.4} />
-              </div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
-                {search || filter !== "all" ? "Aucun client correspondant" : "Aucun client pour l'instant"}
-              </div>
-              {!search && filter === "all" && (
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>
-                  Ajoute ton premier client avec le bouton ci-dessus
+            {/* Formulaire nouveau client */}
+            {showAdd && (
+              <div style={{ background: "rgba(2,209,186,0.04)", border: `1px solid ${G_BORDER}`, borderRadius: 16, padding: 18, marginBottom: 16, animation: "fadeUp 0.2s ease" }}>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <input className="inp-focus" type="email" placeholder="Email *" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 180, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                  <input className="inp-focus" type="text" placeholder="Prenom Nom" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 140, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                  <button onClick={addClient} disabled={!newEmail} style={{ padding: "12px 20px", background: newEmail ? G : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: newEmail ? "#000" : "rgba(255,255,255,0.25)", fontSize: 12, fontWeight: 800, cursor: newEmail ? "pointer" : "not-allowed", fontFamily: "inherit" }}>Creer</button>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, overflow: "hidden" }}>
-              {/* Header colonnes */}
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "2fr 1.4fr 0.9fr 0.7fr 0.9fr 0.9fr 1fr auto",
-                padding: "14px 22px",
-                borderBottom: "1px solid rgba(255,255,255,0.04)",
-                fontSize: 9, fontWeight: 700, letterSpacing: "2px",
-                textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
-                background: "rgba(255,255,255,0.015)",
-              }}>
-                <div>Client</div><div>Programme</div><div>Statut</div><div>Seances</div><div>Poids</div><div>RPE</div><div>Dernier contact</div><div></div>
               </div>
+            )}
 
-              {filtered.map((c, i) => {
-                const prog = c.programmes?.find((p) => p.is_active);
-                const actColor = activityColor(c._lastActivity);
-                const logsCount = Math.ceil(c._logs.length / 3);
-                const lastW = c._weights?.[0];
-                const lastRpe = c._rpe?.[0];
-                const RPE_COLORS = ["", "#4ade80", G, ORANGE, RED, "#dc2626"];
-                const RPE_LABELS = ["", "Facile", "Moyen", "Dur", "Tres dur", "Max"];
-                const daysAgoStr = daysAgo(c._lastActivity);
-                const inactiveDays = c._lastActivity ? Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) : null;
-                const hasProg = c.programmes?.some((p) => p.is_active);
+            {/* Search + filtres */}
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ position: "relative", marginBottom: 12 }}>
+                <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}><Icon name="search" size={14} /></div>
+                <input className="inp-focus" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: "100%", padding: "12px 14px 12px 38px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
+                {[["all", "Tous", total], ["active", "Actifs", activeWeek], ["noprog", "Sans prog.", total - withProg], ["inactive", "Alertes", inactiveAlerts]].map(([k, l, n]) => {
+                  const on = filter === k;
+                  return <button key={k} onClick={() => setFilter(k)} style={{ padding: "7px 12px", fontSize: 11, fontWeight: 700, background: on ? G_DIM : "transparent", border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.06)"}`, borderRadius: 100, color: on ? G : "rgba(255,255,255,0.4)", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit", flexShrink: 0 }}>{l} <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, opacity: 0.7 }}>{n}</span></button>;
+                })}
+              </div>
+            </div>
 
-                return (
-                  <div
-                    key={c.id}
-                    className="cd-row"
-                    onClick={() => setSelected(c)}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "2fr 1.4fr 0.9fr 0.7fr 0.9fr 0.9fr 1fr auto",
-                      padding: "16px 22px",
-                      borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
-                      alignItems: "center", gap: 10,
-                      transition: "background 0.2s",
-                      animation: `fadeUp ${0.25 + i * 0.03}s ease both`,
-                    }}
-                  >
-                    {/* Nom + avatar */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-                      <div style={{ position: "relative", flexShrink: 0 }}>
-                        <div className="cd-avatar-glow" style={{ position: "absolute", inset: -4, borderRadius: "50%", background: `radial-gradient(circle, ${G}30, transparent 70%)`, opacity: 0, transition: "opacity 0.2s", pointerEvents: "none" }} />
-                        <Avatar name={c.full_name || c.email} size={38} active={!!prog} />
-                        {c._inactive && hasProg && (
-                          <div style={{ position: "absolute", top: -2, right: -2, width: 11, height: 11, borderRadius: "50%", background: RED, border: "2px solid #050505", animation: "pulseDot 2s infinite" }} />
+            {/* Cards clients premium */}
+            {loading ? (
+              <div style={{ textAlign: "center", padding: 60 }}>
+                <div style={{ width: 36, height: 36, border: "2px solid rgba(2,209,186,0.1)", borderTopColor: G, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 60, color: "rgba(255,255,255,0.3)" }}>
+                <Icon name="users" size={36} strokeWidth={1.4} color="rgba(255,255,255,0.2)" />
+                <div style={{ fontSize: 13, marginTop: 12 }}>{search || filter !== "all" ? "Aucun resultat" : "Aucun client"}</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {filtered.map((c, i) => {
+                  const prog = c.programmes?.find((p) => p.is_active);
+                  const actCol = activityColor(c._lastActivity);
+                  const logsCount = Math.ceil(c._logs.length / 3);
+                  const dStr = daysAgo(c._lastActivity);
+                  const inDays = c._lastActivity ? Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) : null;
+                  const hasProg = c.programmes?.some((p) => p.is_active);
+
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => { setSelected(c); setShowClientList(false); }}
+                      style={{
+                        padding: "18px 20px",
+                        background: "rgba(255,255,255,0.025)",
+                        border: c._inactive && hasProg ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: 18,
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        animation: `fadeUp ${0.15 + i * 0.03}s ease both`,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
+                        {/* Avatar */}
+                        <div style={{ position: "relative", flexShrink: 0 }}>
+                          <Avatar name={c.full_name || c.email} size={46} active={!!prog} />
+                          {c._inactive && hasProg && (
+                            <div style={{ position: "absolute", top: -2, right: -2, width: 11, height: 11, borderRadius: "50%", background: RED, border: "2px solid #050505", animation: "pulseDot 2s infinite" }} />
+                          )}
+                        </div>
+                        {/* Nom + email */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {c.full_name || <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Sans nom</span>}
+                          </div>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>{c.email}</div>
+                        </div>
+                        {/* Statut */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: actCol, boxShadow: inDays !== null && inDays <= 1 ? `0 0 8px ${actCol}` : "none" }} />
+                          <span style={{ fontSize: 10, fontWeight: 700, color: actCol }}>
+                            {!c._lastActivity ? "Nouveau" : inDays <= 1 ? "Actif" : inDays <= 7 ? `${inDays}j` : `${inDays}j`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Infos cles en une ligne */}
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                        {prog ? (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: G, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 100, padding: "3px 10px" }}>
+                            <Icon name="check" size={9} />
+                            {prog.programme_name || "Programme actif"}
+                          </span>
+                        ) : (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: ORANGE, background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 100, padding: "3px 10px" }}>
+                            <Icon name="alert" size={9} />
+                            Sans programme
+                          </span>
+                        )}
+                        {logsCount > 0 && (
+                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{logsCount} seances</span>
+                        )}
+                        {dStr && (
+                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Vu {dStr.toLowerCase()}</span>
                         )}
                       </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {c.full_name || <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Sans nom</span>}
-                        </div>
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {c.email}
-                        </div>
-                      </div>
                     </div>
-
-                    {/* Programme */}
-                    <div style={{ minWidth: 0 }}>
-                      {prog ? (
-                        <>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: G, display: "flex", alignItems: "center", gap: 5, overflow: "hidden" }}>
-                            <Icon name="check" size={11} />
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
-                              {prog.programme_name || "Actif"}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
-                            {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
-                          </div>
-                        </>
-                      ) : (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: ORANGE, fontWeight: 700 }}>
-                          <Icon name="alert" size={11} />
-                          Aucun
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Statut / activite */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                      <div style={{
-                        width: 8, height: 8, borderRadius: "50%", background: actColor,
-                        boxShadow: inactiveDays !== null && inactiveDays <= 1 ? `0 0 10px ${actColor}, 0 0 4px ${actColor}` : "none",
-                        flexShrink: 0,
-                      }} />
-                      <span style={{ fontSize: 10.5, color: actColor, fontWeight: 700, letterSpacing: "0.3px" }}>
-                        {!c._lastActivity ? "Jamais" : inactiveDays <= 1 ? "Actif" : inactiveDays <= 7 ? "Cette sem." : inactiveDays + "j"}
-                      </span>
-                    </div>
-
-                    {/* Seances */}
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: logsCount > 0 ? "#fff" : "rgba(255,255,255,0.2)" }}>
-                      {logsCount}
-                    </div>
-
-                    {/* Poids */}
-                    <div>
-                      {lastW ? (
-                        <>
-                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: "#fff" }}>
-                            {lastW.weight}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>
-                          </div>
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
-                            {new Date(lastW.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
-                          </div>
-                        </>
-                      ) : (
-                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>—</span>
-                      )}
-                    </div>
-
-                    {/* RPE (SVG + numero, plus d'emoji) */}
-                    <div>
-                      {lastRpe ? (
-                        <div style={{
-                          display: "inline-flex", alignItems: "center", gap: 6,
-                          padding: "4px 10px",
-                          background: RPE_COLORS[lastRpe.rpe] + "15",
-                          border: "1px solid " + RPE_COLORS[lastRpe.rpe] + "30",
-                          borderRadius: 100,
-                        }}>
-                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 800, color: RPE_COLORS[lastRpe.rpe] }}>
-                            {lastRpe.rpe}
-                          </div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: RPE_COLORS[lastRpe.rpe], textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                            {RPE_LABELS[lastRpe.rpe]}
-                          </div>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>—</span>
-                      )}
-                    </div>
-
-                    {/* Dernier contact */}
-                    <div style={{
-                      fontSize: 11,
-                      color: daysAgoStr === null ? "rgba(255,255,255,0.2)" : daysAgoStr === "Aujourd'hui" || daysAgoStr === "Hier" ? G : "rgba(255,255,255,0.5)",
-                      fontWeight: 600,
-                    }}>
-                      {daysAgoStr || "Jamais"}
-                    </div>
-
-                    {/* Fleche */}
-                    <div className="cd-arrow" style={{ opacity: 0, transition: "all 0.2s", color: G, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                      <Icon name="arrow-right" size={16} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
         </div>
       </div>
     </div>
