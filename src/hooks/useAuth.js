@@ -7,6 +7,7 @@ export function useAuth() {
   const [user,        setUser]        = useState(null);
   const [client,      setClient]      = useState(null);
   const [programme,   setProgramme]   = useState(null);
+  const [programmeMeta, setProgrammeMeta] = useState(null); // { id, programme_name, programme_accepted_at, programme_start_date, accepted_by }
   const [loading,     setLoading]     = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [error,       setError]       = useState(null);
@@ -59,6 +60,7 @@ export function useAuth() {
         .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).single();
       if (progData?.html_content) {
         setProgramme(progData.html_content);
+        setProgrammeMeta({ id: progData.id, programme_name: progData.programme_name, programme_accepted_at: progData.programme_accepted_at, programme_start_date: progData.programme_start_date, accepted_by: progData.accepted_by });
       } else {
         startPolling(clientData.id);
       }
@@ -120,5 +122,5 @@ export function useAuth() {
     await supabase.auth.signOut();
   }, []);
 
-  return { user, client, programme, loading, authLoading, error, magicSent, sendMagicLink, signOut };
+  return { user, client, programme, programmeMeta, loading, authLoading, error, magicSent, sendMagicLink, signOut };
 }

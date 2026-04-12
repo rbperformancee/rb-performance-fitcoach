@@ -51,6 +51,8 @@ import "./App.css";
 import { supabase } from "./lib/supabase";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import CoachOnboarding from "./components/CoachOnboarding";
+import ProgrammeSignature from "./components/ProgrammeSignature";
+import ProgrammeCountdown from "./components/ProgrammeCountdown";
 import SaasLandingPage from "./components/SaasLandingPage";
 
 const GREEN = "#02d1ba";
@@ -374,7 +376,7 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook }) {
 export default function App() {
   // Auth
   const {
-    user, client, programme: cloudProgramme, loading: authLoading,
+    user, client, programme: cloudProgramme, programmeMeta, loading: authLoading,
     authLoading: sendingLink, error: authError, magicSent,
     sendMagicLink, signOut,
   } = useAuth();
@@ -703,6 +705,19 @@ export default function App() {
   }
 
   // ── Coach → Dashboard admin ──
+  // ── Programme avec date de debut future → Countdown ──
+  if (user && !isCoach && cloudProgramme && programmeMeta?.programme_start_date) {
+    const startTime = new Date(programmeMeta.programme_start_date).getTime();
+    if (startTime > Date.now()) {
+      return <ProgrammeCountdown programme={programmeMeta} />;
+    }
+  }
+
+  // ── Programme non signe → Signature ──
+  if (user && !isCoach && cloudProgramme && programmeMeta && !programmeMeta.programme_accepted_at) {
+    return <ProgrammeSignature programme={programmeMeta} client={client} onSigned={() => window.location.reload()} />;
+  }
+
   if (showHome && !isCoach) {
     const _h = new Date().getHours();
     const _g = _h < 12 ? 'Bonjour' : _h < 18 ? 'Bon apres-midi' : 'Bonsoir';
