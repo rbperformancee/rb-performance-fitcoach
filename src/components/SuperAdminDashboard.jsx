@@ -181,23 +181,33 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           </div>
         </div>
 
-        {/* ===== CARDS METRIQUES — style premium comme la liste clients coach ===== */}
+        {/* ===== CARDS METRIQUES — remplies, colorees, comme le CTA "Voir clients" ===== */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 32, animation: "cF 0.4s ease 0.1s both" }}>
           {[
-            { k: "mrr", l: "MRR", v: mrr.toLocaleString() + " €", ic: "chart", c: BLUE, sub: avgPerCoach + " €/coach" },
-            { k: "clients", l: "Clients", v: total, ic: "users", c: "#fff", sub: subs.length + " abos actifs" },
-            { k: "retention", l: "Retention", v: ret + "%", ic: "check", c: ret >= 80 ? G : ORANGE, sub: subs.length + "/" + onb.length },
-            { k: "coachs", l: "Coachs", v: active.length, ic: "flame", c: "#fff", sub: coaches.length + " total" },
-            { k: "growth", l: "Croissance", v: "+" + newCl30, ic: "trending", c: newCl30 > 0 ? G : "rgba(255,255,255,0.4)", sub: "30 derniers jours" },
-            { k: "churn", l: "Risque churn", v: churn.length, ic: "alert", c: churn.length > 0 ? RED : G, sub: churn.length > 0 ? "action requise" : "aucun risque" },
+            { k: "mrr", l: "MRR", v: mrr.toLocaleString() + " €", ic: "chart", bg: `linear-gradient(135deg, ${BLUE}, #2563eb)`, sub: avgPerCoach + " €/coach" },
+            { k: "clients", l: "Clients", v: total, ic: "users", bg: "linear-gradient(135deg, #6366f1, #4f46e5)", sub: subs.length + " abos actifs" },
+            { k: "retention", l: "Retention", v: ret + "%", ic: "check", bg: ret >= 80 ? `linear-gradient(135deg, ${G}, #0891b2)` : `linear-gradient(135deg, ${ORANGE}, #ea580c)`, sub: subs.length + "/" + onb.length },
+            { k: "coachs", l: "Coachs", v: active.length, ic: "flame", bg: "linear-gradient(135deg, #8b5cf6, #7c3aed)", sub: coaches.length + " total" },
+            { k: "growth", l: "Croissance", v: "+" + newCl30, ic: "trending", bg: newCl30 > 0 ? `linear-gradient(135deg, ${G}, #059669)` : "linear-gradient(135deg, #374151, #1f2937)", sub: "30 derniers jours" },
+            { k: "churn", l: "Risque churn", v: churn.length, ic: "alert", bg: churn.length > 0 ? `linear-gradient(135deg, ${RED}, #dc2626)` : `linear-gradient(135deg, ${G}, #059669)`, sub: churn.length > 0 ? "action requise" : "aucun risque" },
           ].map((m, i) => (
-            <div key={m.k} className="sa-c" onClick={() => setDetailView(m.k)} style={{ ...card, animation: `cF ${0.15 + i * 0.04}s ease both` }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>{m.l}</span>
-                <Ic name={m.ic} size={14} color={m.c === "#fff" ? "rgba(255,255,255,0.3)" : m.c} />
+            <div key={m.k} onClick={() => setDetailView(m.k)} style={{
+              background: m.bg,
+              borderRadius: 16, padding: "20px 18px",
+              cursor: "pointer", transition: "transform 0.15s, box-shadow 0.2s",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+              position: "relative", overflow: "hidden",
+              animation: `cF ${0.15 + i * 0.04}s ease both`,
+            }}>
+              <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: "rgba(255,255,255,0.08)", borderRadius: "50%", pointerEvents: "none" }} />
+              <div style={{ position: "relative" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" }}>{m.l}</span>
+                  <Ic name={m.ic} size={16} color="rgba(255,255,255,0.5)" />
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 700, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>{m.v}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", marginTop: 8, fontWeight: 600 }}>{m.sub}</div>
               </div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 26, fontWeight: 200, color: m.c, letterSpacing: "-1px" }}>{m.v}</div>
-              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 6 }}>{m.sub}</div>
             </div>
           ))}
         </div>
