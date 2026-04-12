@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
-// ===== CHARTE CEO : fond noir profond + blanc pur + bleu electrique =====
-const BLUE = "#3b82f6";
-const BLUE_DIM = "rgba(59,130,246,0.08)";
-const BLUE_BORDER = "rgba(59,130,246,0.25)";
+// ===== CHARTE CEO : noir absolu + blanc ivoire + accents sobres =====
+const BLUE = "#818cf8"; // indigo clair — plus raffine que le bleu electrique
+const BLUE_DIM = "rgba(129,140,248,0.08)";
+const BLUE_BORDER = "rgba(129,140,248,0.2)";
+const IVORY = "#f0ece4"; // blanc ivoire chaud — premium
+const CEO_FONT = "'Bebas Neue','DM Sans',-apple-system,sans-serif"; // titres CEO
+const BODY_FONT = "'DM Sans',-apple-system,Inter,sans-serif"; // corps premium
 const G = "#02d1ba";
 const RED = "#ef4444";
 const ORANGE = "#f97316";
@@ -132,9 +135,9 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   if (loading) return <div style={{ minHeight: "100vh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style><div style={{ width: 36, height: 36, border: `2px solid ${BLUE_DIM}`, borderTopColor: BLUE, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /></div>;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
-      <style>{`@keyframes cF{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}.sa-c:hover{border-color:rgba(59,130,246,0.3)!important}`}</style>
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -15%, rgba(59,130,246,0.07), transparent 60%)", pointerEvents: "none" }} />
+    <div style={{ minHeight: "100vh", background: "#030303", fontFamily: BODY_FONT, color: IVORY }}>
+      <style>{`@keyframes cF{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}.sa-c:hover{transform:translateY(-2px)!important;box-shadow:0 12px 32px rgba(0,0,0,0.4)!important}`}</style>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 50% -20%, rgba(129,140,248,0.06), transparent 55%)", pointerEvents: "none" }} />
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 960, margin: "0 auto", padding: "0 24px 100px" }}>
 
@@ -142,7 +145,8 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
         <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ padding: "4px 12px", background: BLUE_DIM, border: `1px solid ${BLUE_BORDER}`, borderRadius: 100, fontSize: 9, fontWeight: 800, letterSpacing: "3px", color: BLUE, textTransform: "uppercase" }}>Plateforme</div>
+              <div style={{ fontFamily: CEO_FONT, fontSize: 18, letterSpacing: "4px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>RB PERFORM</div>
+              <div style={{ padding: "3px 10px", background: BLUE_DIM, border: `1px solid ${BLUE_BORDER}`, borderRadius: 100, fontSize: 8, fontWeight: 800, letterSpacing: "2px", color: BLUE, textTransform: "uppercase" }}>CEO</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Clock />
@@ -153,11 +157,12 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
         </div>
 
         {/* ===== HERO MRR ===== */}
-        <div style={{ marginBottom: 32, animation: "cF 0.4s ease both" }}>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 52, fontWeight: 200, color: "#fff", letterSpacing: "-3px", lineHeight: 1 }}>
+        <div style={{ marginBottom: 36, animation: "cF 0.4s ease both" }}>
+          <div style={{ fontFamily: CEO_FONT, fontSize: 72, color: IVORY, letterSpacing: "2px", lineHeight: 0.9 }}>
             <AnimNum value={mrr} suffix=" €" />
           </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 8 }}>MRR · {subs.length} abos · {active.length} coachs · ARR {arr.toLocaleString()} €</div>
+          <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: "rgba(240,236,228,0.4)", marginTop: 10, fontWeight: 500 }}>Monthly Recurring Revenue · {subs.length} abonnements · {active.length} coachs</div>
+          <div style={{ fontFamily: CEO_FONT, fontSize: 22, color: "rgba(240,236,228,0.25)", letterSpacing: "2px", marginTop: 4 }}>ARR {arr.toLocaleString()} €</div>
           <div style={{ display: "flex", gap: 14, marginTop: 14, flexWrap: "wrap" }}>
             {[
               { v: total, l: "clients" },
@@ -184,29 +189,30 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
         {/* ===== CARDS METRIQUES — remplies, colorees, comme le CTA "Voir clients" ===== */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 32, animation: "cF 0.4s ease 0.1s both" }}>
           {[
-            { k: "mrr", l: "MRR", v: mrr.toLocaleString() + " €", ic: "chart", bg: `linear-gradient(135deg, ${BLUE}, #2563eb)`, sub: avgPerCoach + " €/coach" },
-            { k: "clients", l: "Clients", v: total, ic: "users", bg: "linear-gradient(135deg, #6366f1, #4f46e5)", sub: subs.length + " abos actifs" },
-            { k: "retention", l: "Retention", v: ret + "%", ic: "check", bg: ret >= 80 ? `linear-gradient(135deg, ${G}, #0891b2)` : `linear-gradient(135deg, ${ORANGE}, #ea580c)`, sub: subs.length + "/" + onb.length },
-            { k: "coachs", l: "Coachs", v: active.length, ic: "flame", bg: "linear-gradient(135deg, #8b5cf6, #7c3aed)", sub: coaches.length + " total" },
-            { k: "growth", l: "Croissance", v: "+" + newCl30, ic: "trending", bg: newCl30 > 0 ? `linear-gradient(135deg, ${G}, #059669)` : "linear-gradient(135deg, #374151, #1f2937)", sub: "30 derniers jours" },
-            { k: "churn", l: "Risque churn", v: churn.length, ic: "alert", bg: churn.length > 0 ? `linear-gradient(135deg, ${RED}, #dc2626)` : `linear-gradient(135deg, ${G}, #059669)`, sub: churn.length > 0 ? "action requise" : "aucun risque" },
+            { k: "mrr", l: "Revenus", v: mrr.toLocaleString() + " €", ic: "chart", bg: "linear-gradient(135deg, #1e1b4b, #312e81)", ac: "#818cf8", sub: avgPerCoach + " €/coach" },
+            { k: "clients", l: "Clients", v: total, ic: "users", bg: "linear-gradient(135deg, #0c4a6e, #075985)", ac: "#38bdf8", sub: subs.length + " abonnements" },
+            { k: "retention", l: "Retention", v: ret + "%", ic: "check", bg: ret >= 80 ? "linear-gradient(135deg, #064e3b, #065f46)" : "linear-gradient(135deg, #431407, #7c2d12)", ac: ret >= 80 ? "#34d399" : "#fb923c", sub: subs.length + " sur " + onb.length },
+            { k: "coachs", l: "Coachs", v: active.length, ic: "flame", bg: "linear-gradient(135deg, #2e1065, #4c1d95)", ac: "#a78bfa", sub: coaches.length + " inscrits" },
+            { k: "growth", l: "Croissance", v: "+" + newCl30, ic: "trending", bg: newCl30 > 0 ? "linear-gradient(135deg, #052e16, #14532d)" : "linear-gradient(135deg, #171717, #262626)", ac: newCl30 > 0 ? "#4ade80" : "#525252", sub: "30 derniers jours" },
+            { k: "churn", l: "Risque", v: churn.length, ic: "alert", bg: churn.length > 0 ? "linear-gradient(135deg, #450a0a, #7f1d1d)" : "linear-gradient(135deg, #052e16, #14532d)", ac: churn.length > 0 ? "#f87171" : "#4ade80", sub: churn.length > 0 ? "action requise" : "aucun risque" },
           ].map((m, i) => (
-            <div key={m.k} onClick={() => setDetailView(m.k)} style={{
+            <div key={m.k} className="sa-c" onClick={() => setDetailView(m.k)} style={{
               background: m.bg,
-              borderRadius: 16, padding: "20px 18px",
-              cursor: "pointer", transition: "transform 0.15s, box-shadow 0.2s",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+              border: `1px solid ${m.ac}18`,
+              borderRadius: 18, padding: "22px 20px",
+              cursor: "pointer", transition: "transform 0.2s, box-shadow 0.2s",
+              boxShadow: `0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 ${m.ac}12`,
               position: "relative", overflow: "hidden",
               animation: `cF ${0.15 + i * 0.04}s ease both`,
             }}>
-              <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: "rgba(255,255,255,0.08)", borderRadius: "50%", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, background: `radial-gradient(circle, ${m.ac}15, transparent 70%)`, pointerEvents: "none" }} />
               <div style={{ position: "relative" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" }}>{m.l}</span>
-                  <Ic name={m.ic} size={16} color="rgba(255,255,255,0.5)" />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <span style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: m.ac, opacity: 0.7 }}>{m.l}</span>
+                  <Ic name={m.ic} size={15} color={m.ac} />
                 </div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 700, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>{m.v}</div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", marginTop: 8, fontWeight: 600 }}>{m.sub}</div>
+                <div style={{ fontFamily: CEO_FONT, fontSize: 36, color: IVORY, letterSpacing: "1px", lineHeight: 1 }}>{m.v}</div>
+                <div style={{ fontFamily: BODY_FONT, fontSize: 11, color: "rgba(240,236,228,0.45)", marginTop: 10, fontWeight: 500 }}>{m.sub}</div>
               </div>
             </div>
           ))}
@@ -214,16 +220,16 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
 
       {/* ===== FENETRES PLEIN ECRAN PAR CARTE ===== */}
       {detailView && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "25%", background: "radial-gradient(ellipse at 50% -15%, rgba(59,130,246,0.06), transparent 60%)", pointerEvents: "none" }} />
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#030303", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: BODY_FONT, color: IVORY }}>
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "25%", background: "radial-gradient(ellipse at 50% -15%, rgba(129,140,248,0.05), transparent 55%)", pointerEvents: "none" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 640, margin: "0 auto", padding: "0 20px 80px" }}>
             {/* Header */}
-            <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
-              <button onClick={() => setDetailView(null)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}>
-                <Ic name="arrow-left" size={12} /> Dashboard
+            <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 28 }}>
+              <button onClick={() => setDetailView(null)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(240,236,228,0.3)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: BODY_FONT, padding: 0, marginBottom: 16 }}>
+                <Ic name="arrow-left" size={12} /> Retour
               </button>
-              <h1 style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", margin: 0 }}>
-                {{ mrr: "Revenus", clients: "Clients", retention: "Retention", coachs: "Coachs", growth: "Croissance", churn: "Risque churn" }[detailView]}<span style={{ color: BLUE }}>.</span>
+              <h1 style={{ fontFamily: CEO_FONT, fontSize: 48, color: IVORY, letterSpacing: "2px", margin: 0, lineHeight: 0.95 }}>
+                {{ mrr: "REVENUS", clients: "CLIENTS", retention: "RETENTION", coachs: "COACHS", growth: "CROISSANCE", churn: "RISQUE" }[detailView]}
               </h1>
             </div>
 
