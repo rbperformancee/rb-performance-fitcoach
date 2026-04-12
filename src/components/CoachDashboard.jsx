@@ -231,10 +231,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [nutGoals,   setNutGoals]   = useState(null);
   const [nutSaving,  setNutSaving]  = useState(false);
   // ===== Nouvelles donnees client =====
-  const [nutLogs7d,  setNutLogs7d]  = useState([]); // nutrition_logs des 7 derniers jours
-  const [daily7d,    setDaily7d]    = useState([]); // daily_tracking des 7 derniers jours (pas, eau, sommeil)
-  const [sessions,   setSessions]   = useState([]); // session_logs detailles
-  const [allWeights, setAllWeights] = useState([]); // historique complet poids
+  const [nutLogs7d,  setNutLogs7d]  = useState([]);
+  const [daily7d,    setDaily7d]    = useState([]);
+  const [daily30d,   setDaily30d]   = useState([]); // 30 jours pour les drawers
+  const [sessions,   setSessions]   = useState([]);
+  const [allWeights, setAllWeights] = useState([]);
+  const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil"
   const fileRef = useRef();
 
   const prog = client.programmes?.find(p => p.is_active);
@@ -271,6 +273,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
     supabase.from("daily_tracking").select("date,pas,eau_ml,sommeil_h").eq("client_id", client.id)
       .gte("date", d7str).order("date", { ascending: true })
       .then(({ data }) => setDaily7d(data || []));
+    // Daily tracking 30 jours (pour les drawers eau/sommeil)
+    const d30 = new Date(); d30.setDate(d30.getDate() - 30);
+    supabase.from("daily_tracking").select("date,pas,eau_ml,sommeil_h").eq("client_id", client.id)
+      .gte("date", d30.toISOString().split("T")[0]).order("date", { ascending: true })
+      .then(({ data }) => setDaily30d(data || []));
     // Session logs detailles (20 derniers)
     supabase.from("session_logs").select("logged_at,session_name,programme_name,duration_seconds,exercises_count,sets_count")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(20)
@@ -337,25 +344,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
         {/* ===== HERO CLIENT (bouton retour integre, pas de topbar sticky) ===== */}
         <div style={{ padding: "28px 0 0", marginBottom: 28, animation: "cpFadeUp 0.4s ease both" }}>
-          {/* Ligne retour + actions — discrete, pas un topbar */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-            <button
-              onClick={onClose}
-              style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, letterSpacing: "0.3px" }}
-            >
-              <Icon name="arrow-left" size={14} />
-              Tous les clients
-            </button>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => fileRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(2,209,186,0.06)", border: `1px solid ${G_BORDER}`, borderRadius: 10, padding: "7px 12px", color: G, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.3px" }}>
-                <Icon name="upload" size={11} />
-                Upload
-              </button>
-              <button onClick={() => onDelete(client.id, client.email)} style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 10, padding: "7px 10px", color: RED, cursor: "pointer" }}>
-                <Icon name="trash" size={12} />
-              </button>
-            </div>
-          </div>
+          {/* Ligne retour — mini, discrete */}
+          <button
+            onClick={onClose}
+            style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 20 }}
+          >
+            <Icon name="arrow-left" size={12} />
+            Retour
+          </button>
 
           {/* Identite + statut */}
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
@@ -452,7 +448,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
               <Icon name="trending" size={14} color={G} />
               Poids
             </div>
-            <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div onClick={() => setDrawer("poids")} style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", transition: "border-color 0.2s" }}>
               <div>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
                   {lastWeight.weight}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginLeft: 4 }}>kg</span>
@@ -550,9 +546,15 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                   })}
                 </div>
               </div>
-              {/* Eau + Sommeil */}
-              <div style={card}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 10 }}>Eau et sommeil</div>
+              {/* Eau + Sommeil (cliquable) */}
+              <div style={{ ...card, cursor: "pointer" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Eau et sommeil</div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={(e) => { e.stopPropagation(); setDrawer("eau"); }} style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 100, padding: "3px 8px", cursor: "pointer", fontFamily: "inherit" }}>Eau 30j</button>
+                    <button onClick={(e) => { e.stopPropagation(); setDrawer("sommeil"); }} style={{ fontSize: 9, fontWeight: 700, color: VIOLET, background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 100, padding: "3px 8px", cursor: "pointer", fontFamily: "inherit" }}>Sommeil 30j</button>
+                  </div>
+                </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {daily7d.slice(-7).map((d, i) => {
                     const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
@@ -653,66 +655,151 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           </div>
         )}
 
-        {/* ===== PROGRESSION EXERCICES ===== */}
+        {/* ===== PROGRESSION — SECTION UNIFIEE PREMIUM ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.2s both" }}>
           <div style={sectionTitle}>
             <Icon name="chart" size={14} color={G} />
             Progression
           </div>
+
+          {/* Streak + stats headline */}
+          {(() => {
+            // Calcul du streak actuel
+            let streak = 0;
+            const today = new Date();
+            for (let i = 0; i < 60; i++) {
+              const d = new Date(today); d.setDate(d.getDate() - i);
+              const ds = d.toISOString().split("T")[0];
+              const hasLog = sessions.some(s => s.logged_at?.startsWith(ds));
+              if (hasLog) streak++;
+              else if (i > 0) break;
+            }
+            const totalSessions = sessions.length;
+            const avgRpe = rpeData.length > 0 ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "--";
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+                <div style={{ ...card, textAlign: "center", padding: "14px 8px" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: G, lineHeight: 1 }}>{streak}</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>Jours de streak</div>
+                </div>
+                <div style={{ ...card, textAlign: "center", padding: "14px 8px" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: "#fff", lineHeight: 1 }}>{totalSessions}</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>Seances total</div>
+                </div>
+                <div style={{ ...card, textAlign: "center", padding: "14px 8px" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: ORANGE, lineHeight: 1 }}>{avgRpe}</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>RPE moyen</div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Timeline seances + RPE combine */}
+          {sessions.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Timeline seances</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {sessions.slice(0, 10).map((s, i) => {
+                  const date = new Date(s.logged_at);
+                  const durationMin = s.duration_seconds ? Math.round(s.duration_seconds / 60) : null;
+                  // Trouver RPE du même jour
+                  const dateStr = date.toISOString().split("T")[0];
+                  const dayRpe = rpeData.find(r => r.date === dateStr);
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      {/* Timeline dot + line */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 20, flexShrink: 0 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: G, boxShadow: i === 0 ? `0 0 10px ${G}` : "none" }} />
+                        {i < Math.min(sessions.length, 10) - 1 && <div style={{ width: 1, height: 28, background: "rgba(255,255,255,0.06)", marginTop: 4 }} />}
+                      </div>
+                      {/* Content */}
+                      <div style={{ flex: 1, padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{s.session_name || "Seance"}</div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                            {date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
+                            {durationMin != null && <span> · {durationMin} min</span>}
+                            {s.exercises_count > 0 && <span> · {s.exercises_count} exos</span>}
+                          </div>
+                        </div>
+                        {dayRpe && (
+                          <div style={{
+                            padding: "4px 10px", borderRadius: 100,
+                            background: RPE_COLORS[dayRpe.rpe] + "15",
+                            border: "1px solid " + RPE_COLORS[dayRpe.rpe] + "30",
+                            fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700,
+                            color: RPE_COLORS[dayRpe.rpe],
+                          }}>
+                            RPE {dayRpe.rpe}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* RPE evolution en barres */}
+          {rpeData.length > 2 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Evolution du RPE</div>
+              <div style={{ ...card, padding: "14px 16px" }}>
+                <div style={{ display: "flex", gap: 4, alignItems: "flex-end", height: 60 }}>
+                  {[...rpeData].reverse().slice(-15).map((r, i) => {
+                    const h = (r.rpe / 5) * 100;
+                    return (
+                      <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                        <div style={{ fontSize: 8, fontWeight: 700, color: RPE_COLORS[r.rpe] }}>{r.rpe}</div>
+                        <div style={{ width: "100%", height: h + "%", minHeight: 4, background: RPE_COLORS[r.rpe], borderRadius: 3, opacity: 0.9 }} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ClientAnalytics (graphiques existants) */}
           <ClientAnalytics clientId={client.id} period={30} />
-          {topEx.length === 0 ? (
+
+          {/* Top exercices avec sparkline */}
+          {topEx.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Top exercices</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 10 }}>
+                {topEx.map(([key, data], i) => {
+                  const name = key.split("_").slice(-1)[0] || key;
+                  const latest = data[data.length - 1];
+                  const first = data[0];
+                  const delta = latest.weight - first.weight;
+                  const max = Math.max(...data.map(d => d.weight));
+                  return (
+                    <div key={i} style={card}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2, textTransform: "capitalize" }}>{name}</div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{data.length} seances · max {max} kg</div>
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: delta >= 0 ? G : RED }}>
+                          {delta >= 0 ? "+" : ""}{delta.toFixed(1)} kg
+                        </div>
+                      </div>
+                      <MiniSparkline data={data} color={delta >= 0 ? G : RED} w={200} h={32} />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {sessions.length === 0 && topEx.length === 0 && (
             <div style={{ ...card, textAlign: "center", padding: 28, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
               Pas encore de donnees de progression
             </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 10, marginTop: 14 }}>
-              {topEx.map(([key, data], i) => {
-                const name = key.split("_").slice(-1)[0] || key;
-                const latest = data[data.length - 1];
-                const first = data[0];
-                const delta = latest.weight - first.weight;
-                const max = Math.max(...data.map(d => d.weight));
-                return (
-                  <div key={i} style={card}>
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2, textTransform: "capitalize" }}>{name}</div>
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{data.length} seances · max {max} kg</div>
-                      </div>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: delta >= 0 ? G : RED }}>
-                        {delta >= 0 ? "+" : ""}{delta.toFixed(1)} kg
-                      </div>
-                    </div>
-                    <MiniSparkline data={data} color={delta >= 0 ? G : RED} w={200} h={32} />
-                  </div>
-                );
-              })}
-            </div>
           )}
         </div>
-
-        {/* ===== RPE RECENT ===== */}
-        {rpeData.length > 0 && (
-          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.24s both" }}>
-            <div style={sectionTitle}>
-              <Icon name="activity" size={14} color={G} />
-              Ressenti recent (RPE)
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {rpeData.slice(0, 8).map((r, i) => (
-                <div key={i} style={{
-                  ...card, flex: "0 0 auto", minWidth: 70, textAlign: "center", padding: "12px 10px",
-                  border: `1px solid ${RPE_COLORS[r.rpe]}25`,
-                  background: `${RPE_COLORS[r.rpe]}08`,
-                }}>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 200, color: RPE_COLORS[r.rpe], lineHeight: 1 }}>{r.rpe}</div>
-                  <div style={{ fontSize: 8, color: RPE_COLORS[r.rpe], fontWeight: 700, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>{RPE_LABELS[r.rpe]}</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 4 }}>{new Date(r.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* ===== NUTRITION ===== */}
         {nutGoals && (
@@ -834,18 +921,150 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           </div>
         </div>
 
-        {/* ===== CRENEAUX ===== */}
-        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.4s both" }}>
-          <div style={sectionTitle}>
-            <Icon name="calendar" size={14} color={G} />
-            Creneaux
-          </div>
-          <div style={card}>
-            <CreneauxManager />
-          </div>
+        {/* ===== ZONE DANGEREUSE ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.4s both", paddingTop: 20, borderTop: "1px solid rgba(239,68,68,0.1)" }}>
+          <button
+            onClick={() => { if (window.confirm("Supprimer definitivement " + (client.full_name || client.email) + " ?")) onDelete(client.id, client.email); }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(239,68,68,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+          >
+            <Icon name="trash" size={12} />
+            Supprimer ce client
+          </button>
         </div>
 
       </div>
+
+      {/* ===== DRAWERS DONNEES (Poids / Eau / Sommeil) ===== */}
+      {drawer && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setDrawer(null); }}
+          style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(16px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+        >
+          <div style={{ width: "100%", maxWidth: 560, maxHeight: "85vh", background: "#0a0a0a", borderRadius: "24px 24px 0 0", border: "1px solid rgba(255,255,255,0.08)", borderBottom: "none", display: "flex", flexDirection: "column", overflow: "hidden", animation: "cpFadeUp 0.3s ease both" }}>
+            {/* Handle */}
+            <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "10px auto 0" }} />
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 22px 12px" }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
+                {drawer === "poids" ? "Historique poids" : drawer === "eau" ? "Hydratation 30j" : "Sommeil 30j"}
+              </div>
+              <button onClick={() => setDrawer(null)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: "auto", padding: "8px 22px 28px", WebkitOverflowScrolling: "touch" }}>
+              {/* ── DRAWER POIDS ── */}
+              {drawer === "poids" && (
+                <div>
+                  {allWeights.length >= 2 && (
+                    <div style={{ marginBottom: 20, textAlign: "center" }}>
+                      <MiniSparkline data={[...allWeights].reverse()} color={G} w={480} h={80} />
+                    </div>
+                  )}
+                  {allWeights.length >= 2 && (() => {
+                    const delta = allWeights[0].weight - allWeights[allWeights.length - 1].weight;
+                    return (
+                      <div style={{ textAlign: "center", marginBottom: 20 }}>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 200, color: "#fff" }}>{allWeights[0].weight}</span>
+                        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>kg</span>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: delta > 0 ? ORANGE : delta < 0 ? G : "rgba(255,255,255,0.4)", marginTop: 6 }}>
+                          {delta > 0 ? "+" : ""}{delta.toFixed(1)} kg depuis le debut
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {allWeights.map((w, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10 }}>
+                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+                          {new Date(w.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" })}
+                        </div>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: "#fff" }}>
+                          {w.weight} <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>kg</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── DRAWER EAU ── */}
+              {drawer === "eau" && (() => {
+                const data = daily30d.filter(d => d.eau_ml > 0);
+                const avg = data.length > 0 ? Math.round(data.reduce((s, d) => s + d.eau_ml, 0) / data.length) : 0;
+                return (
+                  <div>
+                    <div style={{ textAlign: "center", marginBottom: 20 }}>
+                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 200, color: "#38bdf8" }}>{(avg / 1000).toFixed(1)}</span>
+                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>L / jour</span>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>Moyenne sur {data.length} jours</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 100, marginBottom: 16 }}>
+                      {daily30d.slice(-30).map((d, i) => {
+                        const h = Math.max(4, ((d.eau_ml || 0) / 3000) * 100);
+                        const ok = (d.eau_ml || 0) >= (nutGoals?.eau_ml || 2500);
+                        return (
+                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                            <div style={{ width: "100%", height: h + "%", minHeight: 3, background: ok ? "#38bdf8" : "rgba(56,189,248,0.3)", borderRadius: 2 }} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {data.slice(-14).reverse().map((d, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, fontSize: 12 }}>
+                          <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
+                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: "#38bdf8" }}>{(d.eau_ml / 1000).toFixed(1)} L</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── DRAWER SOMMEIL ── */}
+              {drawer === "sommeil" && (() => {
+                const data = daily30d.filter(d => d.sommeil_h > 0);
+                const avg = data.length > 0 ? (data.reduce((s, d) => s + d.sommeil_h, 0) / data.length).toFixed(1) : 0;
+                const under7 = data.filter(d => d.sommeil_h < 7).length;
+                return (
+                  <div>
+                    <div style={{ textAlign: "center", marginBottom: 20 }}>
+                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 200, color: VIOLET }}>{avg}</span>
+                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>h / nuit</span>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>
+                        Moyenne sur {data.length} nuits
+                        {under7 > 0 && <span style={{ color: RED }}> · {under7} nuits &lt; 7h</span>}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 100, marginBottom: 16 }}>
+                      {daily30d.slice(-30).map((d, i) => {
+                        const h = Math.max(4, ((d.sommeil_h || 0) / 10) * 100);
+                        const under = (d.sommeil_h || 0) < 7;
+                        return (
+                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <div style={{ width: "100%", height: h + "%", minHeight: 3, background: under ? RED : VIOLET, borderRadius: 2, opacity: under ? 0.8 : 1 }} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {data.slice(-14).reverse().map((d, i) => {
+                        const under = d.sommeil_h < 7;
+                        return (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: under ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.02)", border: under ? "1px solid rgba(239,68,68,0.15)" : "none", borderRadius: 8, fontSize: 12 }}>
+                            <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: under ? RED : VIOLET }}>{d.sommeil_h}h</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
