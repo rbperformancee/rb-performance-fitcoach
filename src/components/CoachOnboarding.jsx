@@ -17,17 +17,48 @@ export default function CoachOnboarding({ coachData, onComplete }) {
   const [brandName, setBrandName] = useState(coachData?.brand_name || "");
   const [fullName, setFullName] = useState(coachData?.full_name || "");
   const [accentColor, setAccentColor] = useState(coachData?.accent_color || "#02d1ba");
+  const [activity, setActivity] = useState(coachData?.activity || "");
+  const [city, setCity] = useState(coachData?.city || "");
+  const [logoUrl, setLogoUrl] = useState(coachData?.logo_url || "");
+  const [paymentLink, setPaymentLink] = useState(coachData?.payment_link || "");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const TOTAL_STEPS = 4;
+
+  const uploadLogo = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert("Logo trop lourd (max 2MB)"); return; }
+    if (!file.type.startsWith("image/")) { alert("Fichier image uniquement"); return; }
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${coachData.id}/logo.${ext}`;
+      const { error: upErr } = await supabase.storage.from("coach-logos").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("coach-logos").getPublicUrl(path);
+      setLogoUrl(data.publicUrl + "?t=" + Date.now());
+    } catch (err) {
+      alert("Erreur upload : " + err.message + "\n\nCreer le bucket 'coach-logos' dans Supabase Storage (public).");
+    }
+    setUploadingLogo(false);
+  };
 
   const save = async () => {
     setSaving(true);
-    await supabase.from("coaches").update({
+    const payload = {
       full_name: fullName.trim(),
       brand_name: brandName.trim(),
       accent_color: accentColor,
-    }).eq("id", coachData.id);
+      activity: activity.trim() || null,
+      city: city.trim() || null,
+      logo_url: logoUrl || null,
+      payment_link: paymentLink.trim() || null,
+    };
+    await supabase.from("coaches").update(payload).eq("id", coachData.id);
     setSaving(false);
-    setStep(3);
+    setStep(4);
   };
 
   return (
@@ -45,10 +76,10 @@ export default function CoachOnboarding({ coachData, onComplete }) {
         {/* Progress */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: `${accentColor}88`, fontWeight: 700 }}>Etape {step} / 3</div>
+            <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: `${accentColor}88`, fontWeight: 700 }}>Etape {step} / {TOTAL_STEPS}</div>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${(step / 3) * 100}%`, background: accentColor, borderRadius: 2, transition: "width 0.5s ease" }} />
+            <div style={{ height: "100%", width: `${(step / TOTAL_STEPS) * 100}%`, background: accentColor, borderRadius: 2, transition: "width 0.5s ease" }} />
           </div>
         </div>
 
@@ -135,10 +166,73 @@ export default function CoachOnboarding({ coachData, onComplete }) {
 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setStep(1)} style={{ flex: 0, padding: "15px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>←</button>
-              <button onClick={save} disabled={saving} style={{
+              <button onClick={() => setStep(3)} style={{
                 flex: 1, padding: 17,
                 background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
                 color: "#000", border: "none", borderRadius: 16, fontSize: 14, fontWeight: 800, cursor: "pointer",
+                fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
+                boxShadow: `0 8px 32px ${accentColor}40`,
+              }}>Continuer</button>
+            </div>
+          </div>
+        )}
+
+        {/* ===== ETAPE 3 : Profil public + logo + paiement ===== */}
+        {step === 3 && (
+          <div style={{ animation: "coFade 0.4s ease both" }}>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>Profil public</div>
+            <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
+              Logo et<br /><span style={{ color: accentColor }}>paiement.</span>
+            </h1>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, marginBottom: 24 }}>
+              Ton logo et tes infos que verront tes clients + ton lien de paiement personnel.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
+              {/* Activite */}
+              <div>
+                <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 6, fontWeight: 600 }}>Activite</div>
+                <input type="text" value={activity} onChange={e => setActivity(e.target.value)} placeholder="Ex: Musculation, Running, Cross-training..." style={{ width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+              </div>
+
+              {/* Ville */}
+              <div>
+                <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 6, fontWeight: 600 }}>Ville</div>
+                <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="Paris, Lyon, Marseille..." style={{ width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+              </div>
+
+              {/* Logo upload */}
+              <div>
+                <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 6, fontWeight: 600 }}>Logo (optionnel, max 2MB)</div>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="logo" style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: `1px solid ${accentColor}50` }} />
+                  ) : (
+                    <div style={{ width: 56, height: 56, borderRadius: "50%", background: `${accentColor}22`, border: `1px dashed ${accentColor}50`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: accentColor, fontWeight: 800, fontFamily: "'Bebas Neue',sans-serif" }}>
+                      {(fullName || brandName || "C").slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <label style={{ flex: 1, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, cursor: "pointer", textAlign: "center", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", letterSpacing: "1px", textTransform: "uppercase" }}>
+                    {uploadingLogo ? "Upload..." : (logoUrl ? "Changer" : "Choisir une image")}
+                    <input type="file" accept="image/*" onChange={uploadLogo} style={{ display: "none" }} />
+                  </label>
+                </div>
+              </div>
+
+              {/* Payment link */}
+              <div>
+                <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 6, fontWeight: 600 }}>Lien de paiement clients (Stripe, PayPal...)</div>
+                <input type="url" value={paymentLink} onChange={e => setPaymentLink(e.target.value)} placeholder="https://buy.stripe.com/..." style={{ width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "'JetBrains Mono',monospace" }} />
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 6, lineHeight: 1.5 }}>Tes clients cliqueront sur ce lien pour s'abonner chez toi. Tu gardes 100% de ton chiffre.</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setStep(2)} style={{ flex: 0, padding: "15px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>←</button>
+              <button onClick={save} disabled={saving} style={{
+                flex: 1, padding: 17,
+                background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
+                color: "#000", border: "none", borderRadius: 16, fontSize: 14, fontWeight: 800, cursor: saving ? "default" : "pointer",
                 fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
                 boxShadow: `0 8px 32px ${accentColor}40`,
               }}>{saving ? "Sauvegarde..." : "Creer mon espace"}</button>
@@ -146,8 +240,8 @@ export default function CoachOnboarding({ coachData, onComplete }) {
           </div>
         )}
 
-        {/* ===== ETAPE 3 : Done ===== */}
-        {step === 3 && (
+        {/* ===== ETAPE 4 : Done ===== */}
+        {step === 4 && (
           <div style={{ textAlign: "center", animation: "coFade 0.5s ease both" }}>
             <div style={{ width: 80, height: 80, borderRadius: "50%", background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px", fontSize: 36, color: "#000", boxShadow: `0 12px 48px ${accentColor}50` }}>✓</div>
             <div style={{ fontSize: 10, letterSpacing: "5px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 14, fontWeight: 700 }}>C'est pret</div>
