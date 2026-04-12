@@ -838,6 +838,28 @@ export function CoachDashboard({ onExit }) {
   const activeWeek   = clients.filter(c => c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7).length;
   const inactiveAlerts = clients.filter(c => c._inactive && c.programmes?.some(p => p.is_active)).length;
 
+  // ===== Clients a agir (inactifs 3j+ OU sans programme) =====
+  const clientsToAct = clients
+    .filter(c => {
+      const hasProg = c.programmes?.some(p => p.is_active);
+      if (!hasProg && c.onboarding_done) return true; // onboarde sans programme
+      if (hasProg && c._inactiveDays >= 3) return true; // inactif 3j+ avec programme
+      return false;
+    })
+    .sort((a, b) => (b._inactiveDays || 999) - (a._inactiveDays || 999))
+    .slice(0, 5);
+  const urgentCount = clientsToAct.length;
+
+  // ===== Score Business (0-100) : note globale du business =====
+  // Pondere : couverture 20% + activite semaine 30% + activite jour 25% + sans alerte 25%
+  const _coverage = total > 0 ? withProg / total : 0;
+  const _act7d = withProg > 0 ? activeWeek / withProg : 1;
+  const _actDay = withProg > 0 ? activeToday / withProg : 0;
+  const _noAlert = withProg > 0 ? Math.max(0, 1 - inactiveAlerts / withProg) : 1;
+  const businessScore = total > 0 ? Math.round((_coverage * 20) + (_act7d * 30) + (_actDay * 25) + (_noAlert * 25)) : 0;
+  const scoreColor = businessScore >= 80 ? G : businessScore >= 50 ? ORANGE : RED;
+  const scoreLabel = businessScore >= 80 ? "Excellent" : businessScore >= 60 ? "Bien" : businessScore >= 40 ? "A ameliorer" : "Critique";
+
   const filtered = clients
     .filter(c => {
       const s = search.toLowerCase();
@@ -968,62 +990,120 @@ export function CoachDashboard({ onExit }) {
         <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 800, height: 400, background: "radial-gradient(ellipse at center, rgba(2,209,186,0.06), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
-          {/* ========== TITRE HERO ========== */}
-          <div style={{ marginBottom: 36 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 12 }}>
-              Vue d'ensemble
+          {/* ========== HERO : phrase d'action + score business ========== */}
+          <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
+            {/* Phrase d'action a gauche */}
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <h1 style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-2.5px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+                {total} client{total > 1 ? "s" : ""}.
+                <br />
+                {urgentCount > 0 ? (
+                  <span style={{ color: urgentCount > 3 ? RED : ORANGE }}>
+                    {urgentCount} a agir maintenant.
+                  </span>
+                ) : (
+                  <span style={{ color: G }}>Tout roule.</span>
+                )}
+              </h1>
+              {/* Stats one-liner : lisible en 2 secondes */}
+              <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
+                {[
+                  { v: withProg, l: "programmes", c: G },
+                  { v: activeToday, l: "en seance", c: activeToday > 0 ? G : "rgba(255,255,255,0.4)" },
+                  { v: activeWeek, l: "actifs 7j", c: "rgba(255,255,255,0.5)" },
+                  { v: inactiveAlerts, l: "inactifs", c: inactiveAlerts > 0 ? RED : "rgba(255,255,255,0.3)" },
+                ].map((s, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 700, color: s.c }}>{s.v}</span>
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>{s.l}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h1 style={{ fontSize: 44, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
-              Dashboard<span style={{ color: G }}>.</span>
-            </h1>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginTop: 10, lineHeight: 1.5 }}>
-              Tu pilotes <strong style={{ color: "#fff", fontWeight: 700 }}>{total}</strong> client{total > 1 ? "s" : ""}. {withProg} avec un programme actif, {activeToday} en seance aujourd'hui.
-            </p>
+
+            {/* Score Business a droite — gros chiffre seul */}
+            <div style={{
+              flexShrink: 0, width: 140, textAlign: "center",
+              background: "rgba(255,255,255,0.025)",
+              border: `1px solid ${scoreColor}30`,
+              borderRadius: 24, padding: "24px 16px 20px",
+              position: "relative", overflow: "hidden",
+              animation: "fadeUp 0.5s ease both",
+            }}>
+              <div style={{ position: "absolute", top: -30, left: "50%", transform: "translateX(-50%)", width: 160, height: 160, background: `radial-gradient(circle, ${scoreColor}20, transparent 70%)`, pointerEvents: "none" }} />
+              <div style={{ position: "relative" }}>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 56, fontWeight: 200, color: scoreColor, letterSpacing: "-4px", lineHeight: 1 }}>
+                  {businessScore}
+                </div>
+                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: scoreColor, marginTop: 8, opacity: 0.8 }}>
+                  Score
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+                  {scoreLabel}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* ========== STATS GRID ========== */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 36 }}>
-            {[
-              { label: "Clients total", value: total, icon: "users", color: "#fff" },
-              { label: "Programme actif", value: withProg, sub: `${total - withProg} sans`, icon: "document", color: "#fff" },
-              { label: "Actifs aujourd'hui", value: activeToday, icon: "flame", color: activeToday > 0 ? G : "rgba(255,255,255,0.5)", accent: activeToday > 0 },
-              { label: "Actifs cette sem.", value: activeWeek, icon: "trending", color: activeWeek > 0 ? G : "rgba(255,255,255,0.5)", accent: activeWeek > 0 },
-              { label: "Inactifs 7j+", value: inactiveAlerts, icon: "alert", color: inactiveAlerts > 0 ? RED : "rgba(255,255,255,0.5)", warn: inactiveAlerts > 0 },
-            ].map((s, i) => (
-              <div key={i} style={{
-                background: "rgba(255,255,255,0.025)",
-                border: `1px solid ${s.warn ? "rgba(239,68,68,0.25)" : s.accent ? G_BORDER : "rgba(255,255,255,0.06)"}`,
-                borderRadius: 18, padding: "20px 20px 18px",
-                position: "relative", overflow: "hidden",
-                animation: `fadeUp ${0.2 + i * 0.06}s ease both`,
-                transition: "transform 0.2s, border-color 0.2s",
-              }}>
-                {s.accent && !s.warn && (
-                  <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120, background: `radial-gradient(circle, ${G}15, transparent 70%)`, pointerEvents: "none" }} />
-                )}
-                <div style={{ position: "relative", display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
-                    {s.label}
-                  </div>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: 10,
-                    background: s.warn ? "rgba(239,68,68,0.12)" : s.accent ? "rgba(2,209,186,0.1)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${s.warn ? "rgba(239,68,68,0.25)" : s.accent ? G_BORDER : "rgba(255,255,255,0.06)"}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: s.warn ? RED : s.accent ? G : "rgba(255,255,255,0.4)",
-                    flexShrink: 0,
-                    animation: s.accent && !s.warn ? "glowFlame 2.5s ease-in-out infinite" : "none",
-                  }}>
-                    <Icon name={s.icon} size={16} />
-                  </div>
+          {/* ========== ALERTES CRITIQUES (clients a agir) ========== */}
+          {urgentCount > 0 && (
+            <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.1s both" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: RED, animation: "pulseDot 2s infinite", flexShrink: 0 }} />
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: RED }}>
+                  A agir maintenant
                 </div>
-                <div style={{ fontSize: 38, fontWeight: 200, color: s.color, letterSpacing: "-2px", lineHeight: 1, fontFamily: "inherit", position: "relative" }}>
-                  {s.value}
-                </div>
-                {s.sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 8, letterSpacing: "0.3px" }}>{s.sub}</div>}
               </div>
-            ))}
-          </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {clientsToAct.map((c) => {
+                  const hasProg = c.programmes?.some((p) => p.is_active);
+                  const isCritical = c._inactiveDays >= 7;
+                  const borderColor = isCritical ? "rgba(239,68,68,0.3)" : "rgba(249,115,22,0.25)";
+                  const bgColor = isCritical ? "rgba(239,68,68,0.04)" : "rgba(249,115,22,0.03)";
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => setSelected(c)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 14,
+                        padding: "14px 18px",
+                        background: bgColor,
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: 14,
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      <Avatar name={c.full_name || c.email} size={34} active={hasProg} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {c.full_name || c.email}
+                        </div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                          {!hasProg ? "Sans programme" : `Inactif ${c._inactiveDays}j`}
+                          {hasProg && c.programmes?.find((p) => p.is_active)?.programme_name && (
+                            <span style={{ color: "rgba(255,255,255,0.25)" }}> · {c.programmes.find((p) => p.is_active).programme_name}</span>
+                          )}
+                        </div>
+                      </div>
+                      {isCritical && (
+                        <div style={{
+                          fontSize: 9, fontWeight: 800, letterSpacing: "1px", textTransform: "uppercase",
+                          color: RED, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)",
+                          borderRadius: 100, padding: "3px 8px", flexShrink: 0,
+                        }}>
+                          Critique
+                        </div>
+                      )}
+                      <div style={{ color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>
+                        <Icon name="arrow-right" size={14} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* ========== BARRE FILTRES + ACTIONS ========== */}
           <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
