@@ -1,11 +1,12 @@
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, { useState, useRef, useCallback, useMemo, Suspense, lazy } from "react";
 import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
 import { BadgeSystem } from "./components/BadgeSystem";
 import { ToastProvider, toast } from "./components/Toast";
 import ProfilePage from "./components/ProfilePage";
-import FuelPage from "./components/FuelPage";
-import FaqAssistant from "./components/FaqAssistant";
-import MovePage from "./components/MovePage";
+// ===== Lazy-loaded : composants lourds charges a la demande pour reduire le bundle initial =====
+const FuelPage = lazy(() => import("./components/FuelPage"));
+const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
+const MovePage = lazy(() => import("./components/MovePage"));
 import { useAppData } from "./hooks/useAppData";
 import { SeanceVivante } from "./components/SeanceVivante";
 import TrainingPage from "./components/TrainingPage";
@@ -20,7 +21,8 @@ function SkeletonLoader() {
   );
 }
 import SessionTimer from "./components/SessionTimer";
-import OnboardingFlow from "./components/OnboardingFlow";
+// OnboardingFlow utilise uniquement si onboarding_done !== true (1 fois par client)
+const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
 import AvatarPicker from "./components/AvatarPicker";
 import GoalWidget from "./components/GoalWidget";
 import { useTheme } from "./hooks/useTheme";
@@ -43,18 +45,27 @@ import { RPEModal } from "./components/RPEModal";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPages";
 import { LoginScreen } from "./components/LoginScreen";
-import PricingPage from "./components/PricingPage";
+// Gros composants : charges a la demande pour booster le TTI cote clients
+const PricingPage = lazy(() => import("./components/PricingPage"));
 import ChatCoach from "./components/ChatCoach";
 import BookingModal from "./components/BookingModal";
-import { CoachDashboard } from "./components/CoachDashboard";
+const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m => ({ default: m.CoachDashboard })));
 import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
 import { supabase } from "./lib/supabase";
-import SuperAdminDashboard from "./components/SuperAdminDashboard";
-import CoachOnboarding from "./components/CoachOnboarding";
+const SuperAdminDashboard = lazy(() => import("./components/SuperAdminDashboard"));
+const CoachOnboarding = lazy(() => import("./components/CoachOnboarding"));
 import ProgrammeSignature from "./components/ProgrammeSignature";
 import ProgrammeCountdown from "./components/ProgrammeCountdown";
-import SaasLandingPage from "./components/SaasLandingPage";
+const SaasLandingPage = lazy(() => import("./components/SaasLandingPage"));
+
+// Fallback minimal pour Suspense (pas de flash blanc)
+const LazyFallback = () => (
+  <div style={{ position: "fixed", inset: 0, background: "#050505", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+    <div style={{ width: 28, height: 28, border: "2px solid rgba(2,209,186,0.15)", borderTopColor: "#02d1ba", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+  </div>
+);
 
 const GREEN = "#02d1ba";
 
@@ -372,7 +383,7 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook, coa
   );
 }
 
-export default function App() {
+function AppInner() {
   // Auth
   const {
     user, client, programme: cloudProgramme, programmeMeta, coachInfo, loading: authLoading,
@@ -1153,5 +1164,14 @@ export default function App() {
         </>
       )}
     </div>
+  );
+}
+
+// Wrapper avec Suspense pour gerer les lazy imports
+export default function App() {
+  return (
+    <Suspense fallback={<LazyFallback />}>
+      <AppInner />
+    </Suspense>
   );
 }

@@ -291,7 +291,7 @@ export default function MovePage({ client, appData }) {
 
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Note (optionnel)</div>
-              <input type="text" value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))} placeholder="Footing matin, trail..." style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 15, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
+              <input type="text" value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))} placeholder="Footing matin, trail..." style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 16, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
             </div>
 
             {form.distance && form.duree && (() => {
