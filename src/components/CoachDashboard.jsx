@@ -6,6 +6,7 @@ import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { generateInvoicePDF } from "../utils/invoicePDF";
+import { useClientRelance } from "../hooks/useClientRelance";
 import { LOGO_B64 } from "../utils/logo";
 
 const G = "#02d1ba";
@@ -515,10 +516,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
               {activityLabel(client._lastActivity).text}
             </div>
             {client._inactive && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: RED }}>
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const name = client.full_name?.split(" ")[0] || "Champion";
+                  const ok = await sendManualPush(client.id, `${name}, ton coach t'attend. Reviens en force !`);
+                  alert(ok ? "Notification envoyee a " + name : "Erreur d'envoi (le client n'a peut-etre pas active les notifs)");
+                }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: RED, cursor: "pointer", fontFamily: "inherit" }}
+              >
                 <Icon name="alert" size={11} />
-                Relance recommandee
-              </div>
+                Relancer ({client._inactiveDays}j)
+              </button>
             )}
             {prog && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: G }}>
@@ -1737,6 +1746,9 @@ export function CoachDashboard({ coachId, onExit, onSwitchToSuperAdmin }) {
   };
 
   useEffect(() => { loadClients(); }, []);
+
+  // Systeme de relance automatique (push notifs aux clients inactifs / abos expirants)
+  const { sent: relanceSent, sendManualPush } = useClientRelance(clients, true);
 
   const addClient = async () => {
     if (!newEmail) return;
