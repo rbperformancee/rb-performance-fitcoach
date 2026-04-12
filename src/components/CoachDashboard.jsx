@@ -361,7 +361,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
   const [exLogs, setExLogs] = useState([]);
-  const [uploadPlanId, setUploadPlanId] = useState("3m"); // plan selectionne pour l'upload
+  const [uploadPlanId, setUploadPlanId] = useState("3m");
+  const [uploadProgWeeks, setUploadProgWeeks] = useState(6); // duree du programme en semaines
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
   const fileRef = useRef();
 
@@ -470,7 +471,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "0 24px 100px" }}>
 
-        <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f, uploadPlanId); e.target.value = ""; } }} />
+        <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f, uploadPlanId, uploadProgWeeks); e.target.value = ""; } }} />
 
         {/* ===== HERO CLIENT (bouton retour integre, pas de topbar sticky) ===== */}
         <div style={{ padding: "28px 0 0", marginBottom: 28, animation: "cpFadeUp 0.4s ease both" }}>
@@ -551,7 +552,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
             const isExpiring = daysLeft !== null && daysLeft <= 14 && daysLeft > 0;
             const isExpired = daysLeft !== null && daysLeft <= 0;
             const subColor = isExpired ? RED : isExpiring ? (daysLeft <= 7 ? RED : ORANGE) : G;
-            const planLabel = { "8sem": "8 Semaines", "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan;
+            const planLabel = { "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan;
 
             return (
               <div style={card}>
@@ -610,32 +611,55 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                 <Icon name="alert" size={14} />
                 Aucun programme assigne
               </div>
-              {/* Selecteur de duree d'abonnement */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>Duree de l'abonnement</div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {[
-                    { id: "8sem", label: "8 Sem" },
-                    { id: "3m", label: "3 Mois" },
-                    { id: "6m", label: "6 Mois" },
-                    { id: "12m", label: "12 Mois" },
-                  ].map(p => {
-                    const on = uploadPlanId === p.id;
+
+              {/* Abonnement : seulement si pas encore defini (premier upload) */}
+              {!client.subscription_start_date && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>Abonnement</div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {SUB_PLANS.map(p => {
+                      const on = uploadPlanId === p.id;
+                      return (
+                        <button key={p.id} onClick={() => setUploadPlanId(p.id)} style={{
+                          padding: "7px 14px", borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                          background: on ? G_DIM : "rgba(255,255,255,0.03)",
+                          border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.08)"}`,
+                          color: on ? G : "rgba(255,255,255,0.4)",
+                        }}>{p.label}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Duree du programme en semaines (toujours visible) */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>Duree du programme</div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  {[4, 6, 8, 10, 12].map(w => {
+                    const on = uploadProgWeeks === w;
                     return (
-                      <button key={p.id} onClick={() => setUploadPlanId(p.id)} style={{
-                        padding: "7px 14px", borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                        background: on ? G_DIM : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.08)"}`,
-                        color: on ? G : "rgba(255,255,255,0.4)",
-                        transition: "all 0.15s",
-                      }}>{p.label}</button>
+                      <button key={w} onClick={() => setUploadProgWeeks(w)} style={{
+                        padding: "7px 12px", borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                        background: on ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${on ? "rgba(167,139,250,0.3)" : "rgba(255,255,255,0.08)"}`,
+                        color: on ? VIOLET : "rgba(255,255,255,0.4)",
+                      }}>{w} sem</button>
                     );
                   })}
+                  <input
+                    type="number"
+                    value={uploadProgWeeks}
+                    onChange={e => setUploadProgWeeks(Math.max(1, parseInt(e.target.value) || 6))}
+                    style={{ width: 50, padding: "7px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, textAlign: "center", outline: "none" }}
+                  />
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>sem</span>
                 </div>
               </div>
+
               <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 12, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(2,209,186,0.25)" }}>
                 <Icon name="upload" size={14} />
-                Uploader le programme
+                Uploader le programme ({uploadProgWeeks} sem)
               </button>
             </div>
           )}
@@ -1609,15 +1633,14 @@ export function CoachDashboard({ onExit }) {
     onClose();
   };
 
-  // Durees d'abonnement disponibles
+  // Durees d'abonnement (global, lie au paiement)
   const SUB_PLANS = [
-    { id: "8sem", label: "8 Semaines", months: 2 },
     { id: "3m", label: "3 Mois", months: 3 },
     { id: "6m", label: "6 Mois", months: 6 },
     { id: "12m", label: "12 Mois", months: 12 },
   ];
 
-  const uploadProg = async (client, file, planId) => {
+  const uploadProg = async (client, file, planId, progWeeks) => {
     setUploading(true);
     try {
       const html = await file.text();
@@ -1630,29 +1653,39 @@ export function CoachDashboard({ onExit }) {
         if (parsed) progName = parsed;
       } catch(e) { console.warn("Parse name error", e); }
 
+      // Ajouter la duree au nom si pas deja inclus
+      const weeks = parseInt(progWeeks) || 6;
+      const displayName = progName + (progName.toLowerCase().includes("sem") ? "" : ` (${weeks} sem)`);
+
       // Desactiver l'ancien programme
       await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
 
       // Inserer le nouveau programme
       const { error } = await supabase.from("programmes").insert({
-        client_id: client.id, html_content: html, programme_name: progName || "Programme",
+        client_id: client.id, html_content: html, programme_name: displayName,
         is_active: true, uploaded_by: (await supabase.auth.getUser()).data.user?.email,
       });
       if (error) throw error;
 
-      // ===== GESTION ABONNEMENT : set les dates au moment de l'upload =====
-      const plan = SUB_PLANS.find(p => p.id === planId);
-      if (plan) {
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setMonth(endDate.getMonth() + plan.months);
-        await supabase.from("clients").update({
-          subscription_plan: plan.id,
-          subscription_duration_months: plan.months,
-          subscription_start_date: startDate.toISOString(),
-          subscription_end_date: endDate.toISOString(),
-          subscription_status: "active",
-        }).eq("id", client.id);
+      // ===== ABONNEMENT : set seulement si pas encore defini =====
+      // L'abonnement (3m/6m/12m) est lie au paiement global, pas au programme.
+      // On le set au PREMIER upload uniquement. Les uploads suivants ne changent
+      // pas les dates d'abonnement — le coach upload plusieurs programmes
+      // pendant la duree de l'abonnement.
+      if (!client.subscription_start_date && planId) {
+        const plan = SUB_PLANS.find(p => p.id === planId);
+        if (plan) {
+          const startDate = new Date();
+          const endDate = new Date();
+          endDate.setMonth(endDate.getMonth() + plan.months);
+          await supabase.from("clients").update({
+            subscription_plan: plan.id,
+            subscription_duration_months: plan.months,
+            subscription_start_date: startDate.toISOString(),
+            subscription_end_date: endDate.toISOString(),
+            subscription_status: "active",
+          }).eq("id", client.id);
+        }
       }
 
       showToast(`Programme uploade pour ${client.full_name || client.email}`);
