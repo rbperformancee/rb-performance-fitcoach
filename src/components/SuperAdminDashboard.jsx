@@ -71,7 +71,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const [allClients, setAllClients] = useState([]);
   const [programmes, setProgrammes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [drawer, setDrawer] = useState(null); // null | "mrr" | "clients" | "retention" | "coachs" | "churn" | "growth"
+  const [detailView, setDetailView] = useState(null); // null | "mrr" | "clients" | "retention" | "coachs" | "churn" | "growth"
   const [expandedCoach, setExpandedCoach] = useState(null);
   const [mrrGoal, setMrrGoal] = useState(() => parseInt(localStorage.getItem("ceo_mrr_goal") || "5000"));
 
@@ -181,7 +181,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           </div>
         </div>
 
-        {/* ===== CARDS METRIQUES CLIQUABLES ===== */}
+        {/* ===== CARDS METRIQUES — style premium comme la liste clients coach ===== */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 32, animation: "cF 0.4s ease 0.1s both" }}>
           {[
             { k: "mrr", l: "MRR", v: mrr.toLocaleString() + " €", ic: "chart", c: BLUE, sub: avgPerCoach + " €/coach" },
@@ -191,7 +191,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             { k: "growth", l: "Croissance", v: "+" + newCl30, ic: "trending", c: newCl30 > 0 ? G : "rgba(255,255,255,0.4)", sub: "30 derniers jours" },
             { k: "churn", l: "Risque churn", v: churn.length, ic: "alert", c: churn.length > 0 ? RED : G, sub: churn.length > 0 ? "action requise" : "aucun risque" },
           ].map((m, i) => (
-            <div key={m.k} className="sa-c" onClick={() => setDrawer(drawer === m.k ? null : m.k)} style={{ ...card, border: drawer === m.k ? `1px solid ${BLUE_BORDER}` : card.border, animation: `cF ${0.15 + i * 0.04}s ease both` }}>
+            <div key={m.k} className="sa-c" onClick={() => setDetailView(m.k)} style={{ ...card, animation: `cF ${0.15 + i * 0.04}s ease both` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>{m.l}</span>
                 <Ic name={m.ic} size={14} color={m.c === "#fff" ? "rgba(255,255,255,0.3)" : m.c} />
@@ -202,106 +202,125 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           ))}
         </div>
 
-        {/* ===== DRAWER DETAIL (sous les cards) ===== */}
-        {drawer && (
-          <div style={{ marginBottom: 32, background: "rgba(59,130,246,0.03)", border: `1px solid ${BLUE_BORDER}`, borderRadius: 18, padding: 20, animation: "cF 0.25s ease both" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>
-                {drawer === "mrr" ? "Detail MRR" : drawer === "clients" ? "Tous les clients" : drawer === "retention" ? "Detail retention" : drawer === "coachs" ? "Tous les coachs" : drawer === "growth" ? "Croissance" : "Risque churn"}
-              </span>
-              <button onClick={() => setDrawer(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer" }}><Ic name="x" size={16} /></button>
+      {/* ===== FENETRES PLEIN ECRAN PAR CARTE ===== */}
+      {detailView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "25%", background: "radial-gradient(ellipse at 50% -15%, rgba(59,130,246,0.06), transparent 60%)", pointerEvents: "none" }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 640, margin: "0 auto", padding: "0 20px 80px" }}>
+            {/* Header */}
+            <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
+              <button onClick={() => setDetailView(null)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}>
+                <Ic name="arrow-left" size={12} /> Dashboard
+              </button>
+              <h1 style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", margin: 0 }}>
+                {{ mrr: "Revenus", clients: "Clients", retention: "Retention", coachs: "Coachs", growth: "Croissance", churn: "Risque churn" }[detailView]}<span style={{ color: BLUE }}>.</span>
+              </h1>
             </div>
 
-            {/* MRR detail */}
-            {drawer === "mrr" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {/* === FENETRE MRR === */}
+            {detailView === "mrr" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 8 }}>
+                  {[{ l: "MRR", v: mrr.toLocaleString() + " €", c: BLUE }, { l: "ARR", v: arr.toLocaleString() + " €", c: "#fff" }, { l: "Moy/coach", v: avgPerCoach + " €", c: BLUE }].map((s, i) => (
+                    <div key={i} style={{ ...card, textAlign: "center", cursor: "default" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: s.c }}>{s.v}</div><div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 6, fontWeight: 700 }}>{s.l}</div></div>
+                  ))}
+                </div>
                 {enriched.filter(c => c._mrr > 0).map(c => (
-                  <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 10, fontSize: 12 }}>
-                    <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>{c.full_name || c.email}</span>
-                    <div style={{ display: "flex", gap: 14 }}>
-                      <span style={{ color: "rgba(255,255,255,0.35)" }}>{c._total} clients</span>
-                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: BLUE }}>{c._mrr} €</span>
+                  <div key={c.id} style={{ padding: "16px 18px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <Ring score={c._health} size={44} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{c.full_name}</div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{c.brand_name} · {c._total} clients · Ret. {c._ret}%</div>
+                      </div>
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: BLUE }}>{c._mrr}<span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>€</span></div>
                     </div>
                   </div>
                 ))}
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>Revenu moyen par coach : {avgPerCoach} €/mois</div>
               </div>
             )}
 
-            {/* Clients detail */}
-            {drawer === "clients" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
-                {allClients.slice(0, 20).map(cl => {
+            {/* === FENETRE CLIENTS === */}
+            {detailView === "clients" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {allClients.map((cl, i) => {
                   const dl = cl.subscription_end_date ? Math.ceil((new Date(cl.subscription_end_date) - Date.now()) / 86400000) : null;
+                  const coach = coaches.find(c => c.id === cl.coach_id);
                   return (
-                    <div key={cl.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "rgba(255,255,255,0.015)", borderRadius: 8, fontSize: 11 }}>
-                      <div><span style={{ color: "#fff", fontWeight: 600 }}>{cl.full_name || cl.email}</span>{cl.subscription_plan && <span style={{ color: "rgba(255,255,255,0.25)", marginLeft: 8 }}>{cl.subscription_plan}</span>}</div>
-                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: dl !== null ? (dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.3)") : "rgba(255,255,255,0.2)" }}>{dl !== null ? (dl <= 0 ? "Expire" : dl + "j") : "—"}</span>
+                    <div key={cl.id} style={{ padding: "16px 18px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, animation: `cF ${0.1 + i * 0.02}s ease both` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                        <div style={{ width: 42, height: 42, borderRadius: "50%", background: cl.subscription_status === "active" ? BLUE_DIM : "rgba(255,255,255,0.03)", border: `2px solid ${cl.subscription_status === "active" ? BLUE_BORDER : "rgba(255,255,255,0.06)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, color: cl.subscription_status === "active" ? BLUE : "rgba(255,255,255,0.3)", flexShrink: 0 }}>{(cl.full_name || cl.email || "?")[0].toUpperCase()}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cl.full_name || cl.email}</div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>{cl.email}{coach ? ` · ${coach.brand_name || coach.full_name}` : ""}</div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          {cl.subscription_plan && <div style={{ fontSize: 10, fontWeight: 700, color: BLUE }}>{cl.subscription_plan}</div>}
+                          {dl !== null && <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.35)", marginTop: 2 }}>{dl <= 0 ? "Expire" : dl + "j"}</div>}
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
               </div>
             )}
 
-            {/* Retention detail */}
-            {drawer === "retention" && (
+            {/* === FENETRE RETENTION === */}
+            {detailView === "retention" && (
               <div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-                  <div style={{ textAlign: "center", padding: 12, background: "rgba(255,255,255,0.02)", borderRadius: 10 }}>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 200, color: G }}>{subs.length}</div>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Actifs</div>
-                  </div>
-                  <div style={{ textAlign: "center", padding: 12, background: "rgba(255,255,255,0.02)", borderRadius: 10 }}>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 200, color: ORANGE }}>{onb.length - subs.length}</div>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Inactifs</div>
-                  </div>
-                  <div style={{ textAlign: "center", padding: 12, background: "rgba(255,255,255,0.02)", borderRadius: 10 }}>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 200, color: ret >= 80 ? G : ORANGE }}>{ret}%</div>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Taux</div>
-                  </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+                  {[{ l: "Actifs", v: subs.length, c: G }, { l: "Inactifs", v: onb.length - subs.length, c: ORANGE }, { l: "Taux", v: ret + "%", c: ret >= 80 ? G : ORANGE }].map((s, i) => (
+                    <div key={i} style={{ ...card, textAlign: "center", cursor: "default", padding: 20 }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: s.c }}>{s.v}</div><div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 8, fontWeight: 700 }}>{s.l}</div></div>
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>
+                  {subs.length} clients avec un abonnement actif sur {onb.length} clients onboardes.
+                  {onb.length - subs.length > 0 && ` ${onb.length - subs.length} client${onb.length - subs.length > 1 ? "s" : ""} sans abonnement actif.`}
                 </div>
               </div>
             )}
 
-            {/* Coachs detail */}
-            {drawer === "coachs" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {enriched.map(c => (
-                  <div key={c.id} onClick={() => setExpandedCoach(expandedCoach === c.id ? null : c.id)} style={{ padding: "12px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 10, cursor: "pointer", border: expandedCoach === c.id ? `1px solid ${BLUE_BORDER}` : "1px solid transparent" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <Ring score={c._health} size={42} />
-                      <div style={{ flex: 1 }}>
+            {/* === FENETRE COACHS === */}
+            {detailView === "coachs" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {enriched.map((c, i) => (
+                  <div key={c.id} onClick={() => setExpandedCoach(expandedCoach === c.id ? null : c.id)} style={{ padding: "16px 18px", background: "rgba(255,255,255,0.025)", border: expandedCoach === c.id ? `1px solid ${BLUE_BORDER}` : "1px solid rgba(255,255,255,0.06)", borderRadius: 16, cursor: "pointer", animation: `cF ${0.1 + i * 0.03}s ease both` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <Ring score={c._health} size={48} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{c.full_name || c.email}</span>
-                          {bestCoach?.id === c.id && enriched.length > 1 && <span style={{ fontSize: 7, fontWeight: 800, color: BLUE, background: BLUE_DIM, border: `1px solid ${BLUE_BORDER}`, borderRadius: 100, padding: "2px 7px" }}>TOP</span>}
+                          <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{c.full_name || c.email}</span>
+                          {bestCoach?.id === c.id && enriched.length > 1 && <span style={{ fontSize: 7, fontWeight: 800, color: BLUE, background: BLUE_DIM, border: `1px solid ${BLUE_BORDER}`, borderRadius: 100, padding: "2px 8px" }}>TOP</span>}
                           {!c.is_active && <span style={{ fontSize: 7, color: RED, background: "rgba(239,68,68,0.08)", borderRadius: 100, padding: "2px 7px", fontWeight: 700 }}>Off</span>}
                         </div>
-                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{c.brand_name}</span>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>{c.brand_name} · {c._total} clients</div>
                       </div>
-                      <div style={{ display: "flex", gap: 14 }}>
-                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 200, color: "#fff" }}>{c._total}</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>CL</div></div>
-                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 200, color: BLUE }}>{c._mrr}€</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>MRR</div></div>
+                      <div style={{ display: "flex", gap: 16, flexShrink: 0 }}>
+                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: BLUE }}>{c._mrr}€</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>MRR</div></div>
+                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: c._ret >= 80 ? G : ORANGE }}>{c._ret}%</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>RET</div></div>
                       </div>
                     </div>
                     {expandedCoach === c.id && (
-                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)", animation: "cF 0.2s ease" }}>
-                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 10 }}>
+                      <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.04)", animation: "cF 0.2s ease" }}>
+                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 12 }}>
                           <span>Inscrit {new Date(c.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span>
                           <span>· {c._progs} programmes</span>
                           <span>· LTV {c._ltv.toLocaleString()} €</span>
-                          <span>· Retention {c._ret}%</span>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); toggleCoach(c); }} style={{ padding: "6px 12px", borderRadius: 8, fontSize: 10, fontWeight: 700, background: c.is_active ? "rgba(239,68,68,0.06)" : BLUE_DIM, border: `1px solid ${c.is_active ? "rgba(239,68,68,0.2)" : BLUE_BORDER}`, color: c.is_active ? RED : BLUE, cursor: "pointer", fontFamily: "inherit" }}>
+                        <button onClick={(e) => { e.stopPropagation(); toggleCoach(c); }} style={{ padding: "7px 14px", borderRadius: 10, fontSize: 10, fontWeight: 700, background: c.is_active ? "rgba(239,68,68,0.06)" : BLUE_DIM, border: `1px solid ${c.is_active ? "rgba(239,68,68,0.2)" : BLUE_BORDER}`, color: c.is_active ? RED : BLUE, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>
                           {c.is_active ? "Desactiver" : "Activer"}
                         </button>
                         {c._cls.length > 0 && (
-                          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
-                            {c._cls.slice(0, 6).map(cl => (
-                              <div key={cl.id} style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "rgba(255,255,255,0.01)", borderRadius: 6, fontSize: 10 }}>
-                                <span style={{ color: "rgba(255,255,255,0.5)" }}>{cl.full_name || cl.email}</span>
-                                <span style={{ color: "rgba(255,255,255,0.2)" }}>{cl.subscription_plan || "—"}</span>
-                              </div>
-                            ))}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {c._cls.map(cl => {
+                              const dl = cl.subscription_end_date ? Math.ceil((new Date(cl.subscription_end_date) - Date.now()) / 86400000) : null;
+                              return (
+                                <div key={cl.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.015)", borderRadius: 8, fontSize: 11 }}>
+                                  <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>{cl.full_name || cl.email}</span>
+                                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: dl !== null ? (dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.3)") : "rgba(255,255,255,0.2)" }}>{dl !== null ? (dl <= 0 ? "Expire" : dl + "j") : "—"}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -311,38 +330,52 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
               </div>
             )}
 
-            {/* Growth detail */}
-            {drawer === "growth" && (
+            {/* === FENETRE CROISSANCE === */}
+            {detailView === "growth" && (
               <div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-                  {[
-                    { l: "Prevision 3m", v: (mrr * 3).toLocaleString() + " €" },
-                    { l: "Prevision 6m", v: Math.round(mrr * 6 * ret / 100).toLocaleString() + " €" },
-                    { l: "Prevision 12m", v: Math.round(mrr * 12 * Math.pow(ret / 100, 2)).toLocaleString() + " €" },
-                  ].map((s, i) => (
-                    <div key={i} style={{ textAlign: "center", padding: 12, background: "rgba(255,255,255,0.02)", borderRadius: 10 }}>
-                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 200, color: "#fff" }}>{s.v}</div>
-                      <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{s.l}</div>
-                    </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+                  {[{ l: "Prevision 3m", v: (mrr * 3).toLocaleString() + " €" }, { l: "Prevision 6m", v: Math.round(mrr * 6 * ret / 100).toLocaleString() + " €" }, { l: "Prevision 12m", v: Math.round(mrr * 12 * Math.pow(ret / 100, 2)).toLocaleString() + " €" }].map((s, i) => (
+                    <div key={i} style={{ ...card, textAlign: "center", cursor: "default", padding: 20 }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: "#fff" }}>{s.v}</div><div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 8, fontWeight: 700 }}>{s.l}</div></div>
                   ))}
                 </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Base : {ret}% de retention, {active.length} coachs actifs</div>
+                <div style={{ ...card, cursor: "default", marginBottom: 14 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Clients par coach</div>
+                  {enriched.filter(c => c._total > 0).map(c => {
+                    const mx = Math.max(1, ...enriched.map(e => e._total));
+                    return (
+                      <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                        <div style={{ width: 70, fontSize: 10, color: "rgba(255,255,255,0.5)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>{c.full_name?.split(" ")[0]}</div>
+                        <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}><div style={{ height: "100%", width: (c._total / mx * 100) + "%", background: BLUE, borderRadius: 3 }} /></div>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: "#fff", width: 30, textAlign: "right" }}>{c._total}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Base : {ret}% retention · {active.length} coachs · {newCl30} nouveaux clients 30j</div>
               </div>
             )}
 
-            {/* Churn detail */}
-            {drawer === "churn" && (
+            {/* === FENETRE CHURN === */}
+            {detailView === "churn" && (
               <div>
-                {churn.length === 0 ? <div style={{ fontSize: 12, color: G, padding: 8 }}>Aucun coach a risque. Tout va bien.</div> : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {churn.map(c => (
-                      <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.12)", borderRadius: 10 }}>
-                        <Ring score={c._health} size={36} />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{c.full_name}</div>
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{c._total} clients · {c._mrr}€ MRR · Score {c._health}</div>
+                {churn.length === 0 ? (
+                  <div style={{ ...card, cursor: "default", textAlign: "center", padding: 40 }}>
+                    <Ic name="check" size={32} color={G} />
+                    <div style={{ fontSize: 16, fontWeight: 800, color: G, marginTop: 12 }}>Aucun risque de churn</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>Tous les coachs ont un score sante superieur a 40.</div>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {churn.map((c, i) => (
+                      <div key={c.id} style={{ padding: "16px 18px", background: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 16, animation: `cF ${0.1 + i * 0.03}s ease both` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                          <Ring score={c._health} size={48} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{c.full_name}</div>
+                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>{c._total} clients · {c._mrr}€ MRR · {c._progs} programmes</div>
+                          </div>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: RED, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 100, padding: "4px 12px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Risque</span>
                         </div>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.1)", borderRadius: 100, padding: "3px 10px" }}>Risque</span>
                       </div>
                     ))}
                   </div>
@@ -350,25 +383,8 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
               </div>
             )}
           </div>
-        )}
-
-        {/* ===== SECTION COACHS RAPIDE ===== */}
-        <div style={{ marginBottom: 32, animation: "cF 0.4s ease 0.2s both" }}>
-          {secTitle("Coachs", "users")}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {enriched.slice(0, 5).map((c, i) => (
-              <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12 }}>
-                <Ring score={c._health} size={40} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.full_name || c.email}</div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{c.brand_name} · {c._total} clients</div>
-                </div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: BLUE }}>{c._mrr}€</div>
-              </div>
-            ))}
-            {enriched.length > 5 && <button onClick={() => setDrawer("coachs")} style={{ fontSize: 11, color: BLUE, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, marginTop: 4 }}>Voir les {enriched.length} coachs →</button>}
-          </div>
         </div>
+      )}
 
       </div>
     </div>
