@@ -4,7 +4,7 @@
 // programme cache proactivement pour acces offline.
 
 const CACHE_VERSION = "rbperf-v" + (self.registration?.scope || "") + "-" + Date.now();
-const STATIC_CACHE = "rbperf-static-v4";
+const STATIC_CACHE = "rbperf-static-v5";
 const DATA_CACHE = "rbperf-data-v1";
 
 // App shell : fichiers critiques pre-caches a l'installation
@@ -16,8 +16,16 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (e) => {
+  // Best-effort: si l'un des fichiers APP_SHELL manque, on continue quand meme
+  // sinon l'install echoue et l'ancien SW reste actif (= ancien bundle casse).
   e.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(STATIC_CACHE).then((cache) =>
+      Promise.all(
+        APP_SHELL.map((url) =>
+          cache.add(url).catch((err) => console.warn("SW cache skip:", url, err))
+        )
+      )
+    )
   );
   self.skipWaiting();
 });
