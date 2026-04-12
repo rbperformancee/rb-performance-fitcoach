@@ -614,11 +614,21 @@ async function testAPIs() {
     return `${Array.isArray(data) ? data.length : 0} subscription(s)`;
   });
 
-  await test("Cron /api/cron-relance (needs SERVICE_ROLE_KEY Vercel)", async () => {
-    const res = await fetch(`${PROD_URL}/api/cron-relance`);
+  // Si CRON_SECRET est defini localement, on l'envoie et on attend 200
+  // Si pas defini, on attend 401 (= preuve que la protection marche)
+  const cronHeaders = process.env.CRON_SECRET
+    ? { Authorization: `Bearer ${process.env.CRON_SECRET}` }
+    : {};
+  const cronSecretPresent = !!process.env.CRON_SECRET;
+
+  await test("Cron /api/cron-relance", async () => {
+    const res = await fetch(`${PROD_URL}/api/cron-relance`, { headers: cronHeaders });
     if (res.ok) {
-      const d = await res.json();
+      const d = await res.json().catch(() => ({}));
       return `OK (${d.sent || 0} notifs)`;
+    }
+    if (res.status === 401 && !cronSecretPresent) {
+      return "401 (protege par CRON_SECRET, OK)";
     }
     const data = await res.json().catch(() => null);
     const msg = data?.detail?.message || data?.error || `HTTP ${res.status}`;
@@ -629,8 +639,11 @@ async function testAPIs() {
   });
 
   await test("Cron /api/cron-weekly-recap", async () => {
-    const res = await fetch(`${PROD_URL}/api/cron-weekly-recap`);
+    const res = await fetch(`${PROD_URL}/api/cron-weekly-recap`, { headers: cronHeaders });
     if (res.ok) return "OK";
+    if (res.status === 401 && !cronSecretPresent) {
+      return "401 (protege par CRON_SECRET, OK)";
+    }
     const data = await res.json().catch(() => null);
     const msg = data?.detail?.message || data?.error || `HTTP ${res.status}`;
     if (msg.includes("Legacy API keys") || msg.includes("SERVICE_ROLE_KEY")) {
