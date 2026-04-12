@@ -222,13 +222,12 @@ function CreneauxManager() {
   );
 }
 
-/* ── Panel détail client avec messages ── */
+/* ── Page plein ecran detail client — TOUT visible d'un coup ── */
 function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [msgText,   setMsgText]   = useState("");
   const [sending,   setSending]   = useState(false);
   const [messages,  setMessages]  = useState([]);
   const [rpeData,   setRpeData]   = useState([]);
-  const [tab,       setTab]       = useState("overview"); // overview | messages | progress | nutrition
   const [nutGoals,  setNutGoals]  = useState(null);
   const [nutSaving, setNutSaving] = useState(false);
   const fileRef = useRef();
@@ -239,18 +238,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const lastWeight = weights[0];
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
   const weekLogs = logs.filter(l => new Date(l.logged_at) >= weekAgo);
+  const firstName = client.full_name?.split(" ")[0] || "Ce client";
+  const actColor = activityColor(client._lastActivity);
+  const inactiveDays = client._inactiveDays;
 
   useEffect(() => {
     if (!client.id) return;
-    // Charger messages
     supabase.from("messages").select("*").eq("client_id", client.id)
       .order("created_at", { ascending: false }).limit(20)
       .then(({ data }) => setMessages(data || []));
-    // Charger RPE
     supabase.from("session_rpe").select("*").eq("client_id", client.id)
       .order("date", { ascending: false }).limit(10)
       .then(({ data }) => setRpeData(data || []));
-    // Charger objectifs nutrition
     supabase.from("nutrition_goals").select("*").eq("client_id", client.id).single()
       .then(({ data }) => setNutGoals(data || { calories: 2000, proteines: 150, glucides: 250, lipides: 70, eau_ml: 2500, pas: 8000 }));
   }, [client.id]);
@@ -268,11 +267,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
     setSending(false);
   };
 
-  const RPE_EMOJIS = ["", "😊", "💪", "😤", "😰", "🥵"];
-  const RPE_LABELS = ["", "Facile", "Correct", "Difficile", "Très dur", "Épuisant"];
-  const RPE_COLORS = ["", "#4ade80", "#02d1ba", "#f97316", "#ef4444", "#dc2626"];
+  const RPE_LABELS = ["", "Facile", "Correct", "Difficile", "Tres dur", "Epuisant"];
+  const RPE_COLORS = ["", "#4ade80", G, ORANGE, RED, "#dc2626"];
 
-  // Exercices distincts avec progression
   const exMap = {};
   [...logs].reverse().forEach(l => {
     if (!exMap[l.ex_key]) exMap[l.ex_key] = [];
@@ -281,294 +278,345 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const topEx = Object.entries(exMap)
     .filter(([, v]) => v.length >= 2)
     .sort((a, b) => b[1].length - a[1].length)
-    .slice(0, 4);
+    .slice(0, 6);
 
-  const tabStyle = (t) => ({
-    padding: "7px 14px", fontSize: 11, fontWeight: 600,
-    background: tab === t ? G_DIM : "transparent",
-    border: `1px solid ${tab === t ? G_BORDER : "rgba(255,255,255,0.07)"}`,
-    borderRadius: 100, color: tab === t ? G : "#666",
-    cursor: "pointer", transition: "all 0.15s",
-  });
+  // Style helpers
+  const section = { marginBottom: 28 };
+  const sectionTitle = { fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 };
+  const card = { background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "16px 18px" };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
-      <div style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, width: "100%", maxWidth: 520, maxHeight: "90vh", display: "flex", flexDirection: "column", animation: "slideUp 0.25s ease" }} onClick={e => e.stopPropagation()}>
-        <style>{`@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+      <style>{`@keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-        {/* Header panel */}
-        <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-            <Avatar name={client.full_name || client.email} size={48} active={!!prog} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#f5f5f5" }}>{client.full_name || "—"}</div>
-              <div style={{ fontSize: 11, color: "#555" }}>{client.email}</div>
-            </div>
-            {/* Alerte inactivité */}
-            {client._inactive && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 100, padding: "5px 10px", fontSize: 10, fontWeight: 700, color: "#ef4444" }}>
-                <Icon name="alert" size={11} />
-                Inactif {client._inactiveDays}j
-              </div>
-            )}
-            <button onClick={onClose} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, width: 30, height: 30, color: "#666", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
-          </div>
+      {/* Ambient teal */}
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 40% -10%, rgba(2,209,186,0.1), transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
-          {/* Stats rapides */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 14 }}>
-            {[
-              { l: "Seances", v: Math.ceil(logs.length / 3) || 0, ic: "activity" },
-              { l: "Cette sem.", v: weekLogs.length, ic: "flame" },
-              { l: "Pesees", v: weights.length, ic: "chart" },
-              { l: "RPE moy.", v: rpeData.length ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "—", ic: "trending" },
-            ].map((s, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "12px 8px 10px", textAlign: "center" }}>
-                <div style={{ color: G, display: "flex", justifyContent: "center", marginBottom: 6, opacity: 0.8 }}>
-                  <Icon name={s.ic} size={13} />
-                </div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 200, color: "#fff", lineHeight: 1, letterSpacing: "-0.5px" }}>{s.v}</div>
-                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 6, fontWeight: 600 }}>{s.l}</div>
-              </div>
-            ))}
-          </div>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "0 24px 100px" }}>
 
-          {/* Onglets */}
-          <div style={{ display: "flex", gap: 6 }}>
-            {[
-              ["overview", "Vue", "view"],
-              ["messages", "Message", "message"],
-              ["progress", "Progression", "chart"],
-              ["nutrition", "Nutrition", "apple"],
-              ["vivante", "Vivante", "lightning"],
-              ["creneaux", "Creneaux", "calendar"],
-            ].map(([t, l, ic]) => (
-              <button key={t} onClick={() => setTab(t)} style={{ ...tabStyle(t), display: "flex", alignItems: "center", gap: 7, justifyContent: "center" }}>
-                <Icon name={ic} size={13} />
-                {l}
-              </button>
-            ))}
+        {/* ===== TOPBAR sticky ===== */}
+        <div style={{
+          position: "sticky", top: 0, zIndex: 50,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "20px 0 14px",
+          background: "rgba(5,5,5,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
+        }}>
+          <button
+            onClick={onClose}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.55)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            <Icon name="arrow-left" size={14} />
+            Dashboard
+          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => fileRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(2,209,186,0.08)", border: `1px solid ${G_BORDER}`, borderRadius: 10, padding: "8px 14px", color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              <Icon name="upload" size={12} />
+              Upload programme
+            </button>
+            <button onClick={() => onDelete(client.id, client.email)} style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "8px 12px", color: RED, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              <Icon name="trash" size={12} />
+            </button>
           </div>
         </div>
+        <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f); e.target.value = ""; } }} />
 
-        {/* Contenu onglet */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+        {/* ===== HERO CLIENT ===== */}
+        <div style={{ padding: "32px 0 0", marginBottom: 32, animation: "cpFadeUp 0.4s ease both" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+            <Avatar name={client.full_name || client.email} size={56} active={!!prog} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1 style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", margin: 0, lineHeight: 1 }}>
+                {client.full_name || <span style={{ color: "rgba(255,255,255,0.4)" }}>Sans nom</span>}
+              </h1>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>{client.email}</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: actColor, boxShadow: inactiveDays != null && inactiveDays <= 1 ? `0 0 10px ${actColor}` : "none" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: actColor }}>
+                {!client._lastActivity ? "Jamais actif" : inactiveDays <= 1 ? "Actif aujourd'hui" : inactiveDays <= 7 ? "Actif cette semaine" : `Inactif ${inactiveDays}j`}
+              </span>
+            </div>
+          </div>
 
-          {/* ── OVERVIEW ── */}
-          {tab === "overview" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {/* Programme */}
+          {client._inactive && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 100, padding: "6px 14px", fontSize: 11, fontWeight: 700, color: RED }}>
+              <Icon name="alert" size={12} />
+              Inactif depuis {client._inactiveDays} jours — relance recommandee
+            </div>
+          )}
+        </div>
+
+        {/* ===== STATS RAPIDES (une ligne) ===== */}
+        <div style={{ ...section, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, animation: "cpFadeUp 0.4s ease 0.08s both" }}>
+          {[
+            { l: "Seances", v: Math.ceil(logs.length / 3) || 0, ic: "activity", c: G },
+            { l: "Cette sem.", v: weekLogs.length, ic: "flame", c: weekLogs.length > 0 ? G : "rgba(255,255,255,0.4)" },
+            { l: "Pesees", v: weights.length, ic: "chart", c: "rgba(255,255,255,0.5)" },
+            { l: "RPE moy.", v: rpeData.length ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "--", ic: "trending", c: "rgba(255,255,255,0.5)" },
+          ].map((s, i) => (
+            <div key={i} style={{ ...card, textAlign: "center", padding: "14px 8px 12px" }}>
+              <div style={{ color: s.c, display: "flex", justifyContent: "center", marginBottom: 8, opacity: 0.9 }}>
+                <Icon name={s.ic} size={15} />
+              </div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 200, color: "#fff", lineHeight: 1, letterSpacing: "-1px" }}>{s.v}</div>
+              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 8, fontWeight: 700 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ===== PROGRAMME ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.12s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="document" size={14} color={G} />
+            Programme
+          </div>
+          {prog ? (
+            <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 8 }}>Programme</div>
-                {prog ? (
-                  <div style={{ background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#f5f5f5" }}>{prog.programme_name}</div>
-                      <div style={{ fontSize: 10, color: G, marginTop: 2 }}>✓ Actif · {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
-                    </div>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Mettre à jour</button>
-                      <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);alert('Erreur: '+error.message);return;} onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer" }}>Supprimer</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 10, padding: 14 }}>
-                    <div style={{ fontSize: 12, color: "#f97316", marginBottom: 8 }}>⚠ Aucun programme assigné</div>
-                    <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: "8px", background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 8, color: G, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>↑ Uploader le programme</button>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{prog.programme_name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: G, marginTop: 4, fontWeight: 600 }}>
+                  <Icon name="check" size={12} />
+                  Actif depuis {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Mettre a jour</button>
+                <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);alert('Erreur: '+error.message);return;} onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Supprimer</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ ...card, background: "rgba(249,115,22,0.04)", border: "1px solid rgba(249,115,22,0.2)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: ORANGE, fontWeight: 700, marginBottom: 10 }}>
+                <Icon name="alert" size={14} />
+                Aucun programme assigne
+              </div>
+              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 10, color: G, fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <Icon name="upload" size={14} />
+                Uploader le programme
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ===== POIDS + SPARKLINE ===== */}
+        {lastWeight && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.16s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="trending" size={14} color={G} />
+              Poids
+            </div>
+            <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
+                  {lastWeight.weight}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginLeft: 4 }}>kg</span>
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
+                  {new Date(lastWeight.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                </div>
+                {weights.length >= 2 && (
+                  <div style={{ fontSize: 11, color: weights[weights.length-1].weight > lastWeight.weight ? RED : G, fontWeight: 700, marginTop: 4 }}>
+                    {(lastWeight.weight - weights[weights.length-1].weight) > 0 ? "+" : ""}{(lastWeight.weight - weights[weights.length-1].weight).toFixed(1)} kg depuis le debut
                   </div>
                 )}
               </div>
+              {weights.length >= 2 && <MiniSparkline data={[...weights].reverse()} color={G} w={120} h={40} />}
+            </div>
+          </div>
+        )}
 
-              {/* Dernier poids */}
-              {lastWeight && (
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 8 }}>Dernier poids</div>
-                  <div style={{ background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div>
-                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 700, color: G }}>{lastWeight.weight} kg</div>
-                      <div style={{ fontSize: 11, color: "#555" }}>{new Date(lastWeight.date).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" })}</div>
-                    </div>
-                    {weights.length >= 2 && <MiniSparkline data={[...weights].reverse()} color={G} />}
-                  </div>
-                </div>
-              )}
-
-              {/* RPE récent */}
-              {rpeData.length > 0 && (
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 8 }}>Ressenti récent</div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {rpeData.slice(0, 5).map((r, i) => (
-                      <div key={i} style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, padding: "8px 4px", textAlign: "center" }}>
-                        <div style={{ fontSize: 18 }}>{RPE_EMOJIS[r.rpe]}</div>
-                        <div style={{ fontSize: 9, color: RPE_COLORS[r.rpe], fontWeight: 700, marginTop: 2 }}>{r.rpe}/5</div>
-                        <div style={{ fontSize: 8, color: "#444" }}>{new Date(r.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
+        {/* ===== PROGRESSION EXERCICES ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.2s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="chart" size={14} color={G} />
+            Progression
+          </div>
+          <ClientAnalytics clientId={client.id} period={30} />
+          {topEx.length === 0 ? (
+            <div style={{ ...card, textAlign: "center", padding: 28, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+              Pas encore de donnees de progression
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 10, marginTop: 14 }}>
+              {topEx.map(([key, data], i) => {
+                const name = key.split("_").slice(-1)[0] || key;
+                const latest = data[data.length - 1];
+                const first = data[0];
+                const delta = latest.weight - first.weight;
+                const max = Math.max(...data.map(d => d.weight));
+                return (
+                  <div key={i} style={card}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2, textTransform: "capitalize" }}>{name}</div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{data.length} seances · max {max} kg</div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Input file toujours présent */}
-              <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }}
-                onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f); e.target.value = ""; } }} />
-              {/* Actions */}
-              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                <button onClick={() => onDelete(client.id, client.email)} style={{ flex: 1, padding: "10px", background: "none", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, color: "#ef4444", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Supprimer</button>
-                <button onClick={onClose} style={{ flex: 2, padding: "10px", background: G, border: "none", borderRadius: 10, color: "#0d0d0d", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>Fermer</button>
-              </div>
-            </div>
-          )}
-
-          {/* ── MESSAGES ── */}
-          {tab === "messages" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ fontSize: 10, color: "#555", textAlign: "center", marginBottom: 4 }}>
-                Envoie un message directement à ton client — il le verra dès sa prochaine connexion
-              </div>
-
-              {/* Saisie message */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <textarea
-                  value={msgText}
-                  onChange={e => setMsgText(e.target.value)}
-                  placeholder="Ex: Super séance ! Augmente de 2.5kg sur le squat la prochaine fois 💪"
-                  rows={3}
-                  style={{
-                    flex: 1, background: "#1a1a1a", border: "1.5px solid rgba(255,255,255,0.08)",
-                    borderRadius: 10, padding: "10px 12px", color: "#f5f5f5",
-                    fontFamily: "'Inter',sans-serif", fontSize: 13, resize: "none", outline: "none",
-                  }}
-                  onKeyDown={e => { if (e.key === "Enter" && e.metaKey) sendMessage(); }}
-                />
-                <button onClick={sendMessage} disabled={!msgText.trim() || sending} style={{
-                  alignSelf: "flex-end", width: 44, height: 44, borderRadius: 10,
-                  background: msgText.trim() ? G : "#1a1a1a",
-                  border: "none", cursor: msgText.trim() ? "pointer" : "not-allowed",
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  fontSize: 18, color: msgText.trim() ? "#0d0d0d" : "#444",
-                }}>
-                  {sending ? "..." : "→"}
-                </button>
-              </div>
-              <div style={{ fontSize: 10, color: "#444", textAlign: "right" }}>⌘+Entrée pour envoyer</div>
-
-              {/* Historique messages */}
-              {messages.length > 0 && (
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 8 }}>Historique</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {messages.map((m, i) => (
-                      <div key={i} style={{
-                        background: "#1a1a1a", borderRadius: 10, padding: "10px 12px",
-                        borderLeft: `3px solid ${m.from_coach ? G : "#6b7280"}`,
-                        opacity: m.read ? 0.6 : 1,
-                      }}>
-                        <div style={{ fontSize: 12, color: "#f5f5f5", lineHeight: 1.5 }}>{m.content}</div>
-                        <div style={{ fontSize: 10, color: "#555", marginTop: 4, display: "flex", justifyContent: "space-between" }}>
-                          <span>{m.from_coach ? "Toi (coach)" : client.full_name || "Client"}</span>
-                          <span>{m.read ? "Lu ✓" : "Non lu"} · {new Date(m.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
-                        </div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: delta >= 0 ? G : RED }}>
+                        {delta >= 0 ? "+" : ""}{delta.toFixed(1)} kg
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── PROGRESSION ── */}
-          {tab === "vivante" && (
-            <div style={{ padding: "16px 0" }}>
-              <SeanceVivanteCoach clientId={client.id} clientName={client.full_name} />
-            </div>
-          )}
-          {tab === "creneaux" && (
-            <CreneauxManager clientId={client.id} />
-          )}
-
-          {tab === "nutrition" && nutGoals && (
-            <div style={{ padding: "16px 0", display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>
-                Definir les objectifs nutritionnels de {client.full_name?.split(" ")[0] || "ce client"}
-              </div>
-              {[
-                { key: "calories", label: "Calories", unit: "kcal", min: 500, max: 5000, step: 50, color: "#f97316" },
-                { key: "proteines", label: "Proteines", unit: "g", min: 50, max: 400, step: 5, color: G },
-                { key: "glucides", label: "Glucides", unit: "g", min: 50, max: 600, step: 10, color: "#60a5fa" },
-                { key: "lipides", label: "Lipides", unit: "g", min: 20, max: 200, step: 5, color: "#a78bfa" },
-                { key: "eau_ml", label: "Eau", unit: "mL", min: 500, max: 5000, step: 250, color: "#38bdf8" },
-                { key: "pas", label: "Pas / jour", unit: "pas", min: 2000, max: 20000, step: 500, color: "#34d399" },
-              ].map(({ key, label, unit, min, max, step, color }) => (
-                <div key={key}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>{label}</div>
-                    <div style={{ fontSize: 13, color, fontWeight: 700 }}>{nutGoals[key]?.toLocaleString()} {unit}</div>
-                  </div>
-                  <input type="range" min={min} max={max} step={step} value={nutGoals[key] || 0}
-                    onChange={e => setNutGoals(prev => ({ ...prev, [key]: parseInt(e.target.value) }))}
-                    style={{ width: "100%", accentColor: color }} />
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>
-                    <span>{min.toLocaleString()}</span><span>{max.toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
-              <button onClick={async () => {
-                setNutSaving(true);
-                await supabase.from("nutrition_goals").upsert({ client_id: client.id, ...nutGoals }, { onConflict: "client_id" });
-                setNutSaving(false);
-                toast("Objectifs nutrition sauvegardes !");
-              }} style={{ padding: "14px", background: G, color: "#000", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", marginTop: 4 }}>
-                {nutSaving ? "Sauvegarde..." : "Sauvegarder les objectifs"}
-              </button>
-            </div>
-          )}
-          {tab === "progress" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <ClientAnalytics clientId={client.id} period={30} />
-              {topEx.length === 0 ? (
-                <div style={{ textAlign: "center", padding: 32, color: "#444", fontSize: 13 }}>Aucune donnée de progression encore</div>
-              ) : (
-                topEx.map(([key, data], i) => {
-                  const name = key.split("_").slice(-1)[0] || key;
-                  const latest = data[data.length - 1];
-                  const first = data[0];
-                  const delta = latest.weight - first.weight;
-                  const max = Math.max(...data.map(d => d.weight));
-                  return (
-                    <div key={i} style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px" }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#f5f5f5", marginBottom: 2 }}>{name}</div>
-                          <div style={{ fontSize: 10, color: "#555" }}>{data.length} séances · max {max} kg</div>
-                        </div>
-                        <div style={{ textAlign: "right" }}>
-                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 700, color: G }}>{latest.weight} kg</div>
-                          <div style={{ fontSize: 10, fontWeight: 600, color: delta > 0 ? G : delta < 0 ? "#ef4444" : "#555" }}>
-                            {delta > 0 ? "+" : ""}{delta.toFixed(1)} kg
-                          </div>
-                        </div>
-                      </div>
-                      <MiniSparkline data={data} color={G} w={440} h={32} />
                     </div>
-                  );
-                })
-              )}
-
-              {/* Courbe poids */}
-              {weights.length >= 2 && (
-                <div style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#f5f5f5" }}>Évolution du poids</div>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "#555" }}>
-                      {weights[weights.length-1]?.weight} → {weights[0]?.weight} kg
-                    </div>
+                    <MiniSparkline data={data} color={delta >= 0 ? G : RED} w={200} h={32} />
                   </div>
-                  <MiniSparkline data={[...weights].reverse()} color={G} w={440} h={40} />
-                </div>
-              )}
+                );
+              })}
             </div>
           )}
         </div>
+
+        {/* ===== RPE RECENT ===== */}
+        {rpeData.length > 0 && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.24s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="activity" size={14} color={G} />
+              Ressenti recent (RPE)
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {rpeData.slice(0, 8).map((r, i) => (
+                <div key={i} style={{
+                  ...card, flex: "0 0 auto", minWidth: 70, textAlign: "center", padding: "12px 10px",
+                  border: `1px solid ${RPE_COLORS[r.rpe]}25`,
+                  background: `${RPE_COLORS[r.rpe]}08`,
+                }}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 200, color: RPE_COLORS[r.rpe], lineHeight: 1 }}>{r.rpe}</div>
+                  <div style={{ fontSize: 8, color: RPE_COLORS[r.rpe], fontWeight: 700, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>{RPE_LABELS[r.rpe]}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 4 }}>{new Date(r.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ===== NUTRITION ===== */}
+        {nutGoals && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.28s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="apple" size={14} color={G} />
+              Objectifs nutritionnels
+            </div>
+            <div style={card}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 14 }}>
+                Definir les objectifs de {firstName}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {[
+                  { key: "calories", label: "Calories", unit: "kcal", min: 500, max: 5000, step: 50, color: ORANGE },
+                  { key: "proteines", label: "Proteines", unit: "g", min: 50, max: 400, step: 5, color: G },
+                  { key: "glucides", label: "Glucides", unit: "g", min: 50, max: 600, step: 10, color: "#60a5fa" },
+                  { key: "lipides", label: "Lipides", unit: "g", min: 20, max: 200, step: 5, color: VIOLET },
+                  { key: "eau_ml", label: "Eau", unit: "mL", min: 500, max: 5000, step: 250, color: "#38bdf8" },
+                  { key: "pas", label: "Pas / jour", unit: "pas", min: 2000, max: 20000, step: 500, color: "#34d399" },
+                ].map(({ key, label, unit, min, max, step, color }) => (
+                  <div key={key}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>{label}</div>
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, color, fontWeight: 700 }}>{nutGoals[key]?.toLocaleString()} {unit}</div>
+                    </div>
+                    <input type="range" min={min} max={max} step={step} value={nutGoals[key] || 0}
+                      onChange={e => setNutGoals(prev => ({ ...prev, [key]: parseInt(e.target.value) }))}
+                      style={{ width: "100%", accentColor: color }} />
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={async () => {
+                  setNutSaving(true);
+                  await supabase.from("nutrition_goals").upsert({ client_id: client.id, ...nutGoals }, { onConflict: "client_id" });
+                  setNutSaving(false);
+                }}
+                style={{ width: "100%", padding: 14, background: `linear-gradient(135deg, ${G}, #0891b2)`, color: "#000", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", marginTop: 16, textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", boxShadow: "0 8px 24px rgba(2,209,186,0.25)" }}
+              >
+                {nutSaving ? "Sauvegarde..." : "Sauvegarder les objectifs"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ===== MESSAGES ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.32s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="message" size={14} color={G} />
+            Messages
+          </div>
+          <div style={card}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+              <textarea
+                value={msgText}
+                onChange={e => setMsgText(e.target.value)}
+                placeholder={"Message a " + firstName + "..."}
+                rows={2}
+                style={{
+                  flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 12, padding: "12px 14px", color: "#fff",
+                  fontFamily: "inherit", fontSize: 14, resize: "none", outline: "none",
+                  transition: "border-color 0.2s",
+                }}
+                onFocus={(e) => { e.target.style.borderColor = "rgba(2,209,186,0.4)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                onKeyDown={e => { if (e.key === "Enter" && e.metaKey) sendMessage(); }}
+              />
+              <button onClick={sendMessage} disabled={!msgText.trim() || sending} style={{
+                alignSelf: "flex-end", width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                background: msgText.trim() ? `linear-gradient(135deg, ${G}, #0891b2)` : "rgba(255,255,255,0.04)",
+                border: "none", cursor: msgText.trim() ? "pointer" : "not-allowed",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: msgText.trim() ? "#000" : "rgba(255,255,255,0.25)",
+                boxShadow: msgText.trim() ? "0 6px 20px rgba(2,209,186,0.3)" : "none",
+                transition: "all 0.2s",
+              }}>
+                <Icon name="arrow-right" size={16} />
+              </button>
+            </div>
+            {messages.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {messages.map((m, i) => (
+                  <div key={i} style={{
+                    background: m.from_coach ? "rgba(2,209,186,0.06)" : "rgba(255,255,255,0.025)",
+                    borderRadius: m.from_coach ? "14px 14px 6px 14px" : "14px 14px 14px 6px",
+                    border: `1px solid ${m.from_coach ? "rgba(2,209,186,0.2)" : "rgba(255,255,255,0.06)"}`,
+                    padding: "10px 14px",
+                    opacity: m.read ? 0.7 : 1,
+                    maxWidth: "85%",
+                    alignSelf: m.from_coach ? "flex-end" : "flex-start",
+                  }}>
+                    <div style={{ fontSize: 13, color: "#fff", lineHeight: 1.5 }}>{m.content}</div>
+                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 4, display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <span>{m.from_coach ? "Toi" : firstName}</span>
+                      <span>{m.read ? "Lu" : "Non lu"} · {new Date(m.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {messages.length === 0 && (
+              <div style={{ textAlign: "center", padding: 20, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
+                Aucun message pour le moment — envoie le premier
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ===== SEANCE VIVANTE ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.36s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="lightning" size={14} color={G} />
+            Seance Vivante
+          </div>
+          <div style={card}>
+            <SeanceVivanteCoach clientId={client.id} clientName={client.full_name} />
+          </div>
+        </div>
+
+        {/* ===== CRENEAUX ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.4s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="calendar" size={14} color={G} />
+            Creneaux
+          </div>
+          <div style={card}>
+            <CreneauxManager />
+          </div>
+        </div>
+
       </div>
     </div>
   );
