@@ -2002,73 +2002,32 @@ export function CoachDashboard({ coachId, onExit, onSwitchToSuperAdmin }) {
 
       {selected && <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} />}
 
-      {/* ========== TOPBAR (cache quand liste clients ouverte) ========== */}
-      {!showClientList && <div style={{
-        background: "rgba(5,5,5,0.85)",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
-        padding: "0 28px", height: 64,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        position: "sticky", top: 0, zIndex: 100,
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", background: "#0a0a0a" }}>
-            <img src={LOGO_B64} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
-            <span style={{ fontSize: 15, fontWeight: 900, color: "#fff", letterSpacing: "-0.3px" }}>
-              RB <span style={{ color: G }}>Performance</span>
-            </span>
-            <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "3px", marginTop: 2 }}>
-              COACH DASHBOARD
-            </span>
-          </div>
-          {inactiveAlerts > 0 && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 6,
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.3)",
-              borderRadius: 100, padding: "5px 12px 5px 10px",
-              fontSize: 10, fontWeight: 700, color: RED,
-              marginLeft: 8,
-              animation: "pulse 2.5s ease-in-out infinite",
-            }}>
-              <Icon name="alert" size={12} />
-              {inactiveAlerts} inactif{inactiveAlerts > 1 ? "s" : ""} 7j+
-            </div>
-          )}
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {onSwitchToSuperAdmin && (
-            <button
-              onClick={onSwitchToSuperAdmin}
-              style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 10, padding: "8px 14px", color: "#a78bfa", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}
-            >
-              <Icon name="chart" size={13} />
-              Super Admin
-            </button>
-          )}
-          <button
-            onClick={loadClients}
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}
-          >
-            <Icon name="refresh" size={13} />
-          </button>
-          <button
-            onClick={onExit}
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}
-          >
-            <Icon name="arrow-left" size={13} />
-          </button>
-        </div>
-      </div>}
-
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 28px 80px", position: "relative" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 28px 80px", position: "relative" }}>
         {/* Ambient */}
         <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 800, height: 400, background: "radial-gradient(ellipse at center, rgba(2,209,186,0.06), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
+
+          {/* ===== MINI NAV (remplace la topbar, discret) ===== */}
+          {!showClientList && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {onSwitchToSuperAdmin && (
+                  <button onClick={onSwitchToSuperAdmin} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(129,140,248,0.06)", border: "1px solid rgba(129,140,248,0.2)", borderRadius: 10, padding: "7px 12px", color: "#818cf8", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                    <Icon name="chart" size={11} /> CEO
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <button onClick={loadClients} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 4 }}>
+                  <Icon name="refresh" size={14} />
+                </button>
+                <button onClick={onExit} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", padding: 4, fontSize: 10, fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
+                  <Icon name="arrow-left" size={12} /> App
+                </button>
+              </div>
+            </div>
+          )}
           {/* ========== HERO : phrase d'action + score business ========== */}
           <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
             {/* Phrase d'action a gauche */}
