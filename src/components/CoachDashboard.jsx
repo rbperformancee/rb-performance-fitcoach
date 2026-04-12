@@ -360,7 +360,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [daily30d,   setDaily30d]   = useState([]); // 30 jours pour les drawers
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
-  const [exLogs, setExLogs] = useState([]); // exercise_logs pour details seances
+  const [exLogs, setExLogs] = useState([]);
+  const [uploadPlanId, setUploadPlanId] = useState("3m"); // plan selectionne pour l'upload
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
   const fileRef = useRef();
 
@@ -469,7 +470,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "0 24px 100px" }}>
 
-        <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f); e.target.value = ""; } }} />
+        <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f, uploadPlanId); e.target.value = ""; } }} />
 
         {/* ===== HERO CLIENT (bouton retour integre, pas de topbar sticky) ===== */}
         <div style={{ padding: "28px 0 0", marginBottom: 28, animation: "cpFadeUp 0.4s ease both" }}>
@@ -537,33 +538,102 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           ))}
         </div>
 
-        {/* ===== PROGRAMME ===== */}
+        {/* ===== PROGRAMME + ABONNEMENT ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.12s both" }}>
           <div style={sectionTitle}>
             <Icon name="document" size={14} color={G} />
-            Programme
+            Programme et abonnement
           </div>
-          {prog ? (
-            <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{prog.programme_name}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: G, marginTop: 4, fontWeight: 600 }}>
-                  <Icon name="check" size={12} />
-                  Actif depuis {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+          {prog ? (() => {
+            const subStart = client.subscription_start_date ? new Date(client.subscription_start_date) : null;
+            const subEnd = client.subscription_end_date ? new Date(client.subscription_end_date) : null;
+            const daysLeft = subEnd ? Math.ceil((subEnd - Date.now()) / 86400000) : null;
+            const isExpiring = daysLeft !== null && daysLeft <= 14 && daysLeft > 0;
+            const isExpired = daysLeft !== null && daysLeft <= 0;
+            const subColor = isExpired ? RED : isExpiring ? (daysLeft <= 7 ? RED : ORANGE) : G;
+            const planLabel = { "8sem": "8 Semaines", "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan;
+
+            return (
+              <div style={card}>
+                {/* Programme actif */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: subStart ? 14 : 0 }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{prog.programme_name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: G, marginTop: 4, fontWeight: 600 }}>
+                      <Icon name="check" size={12} />
+                      Actif depuis {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Maj</button>
+                    <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);alert('Erreur: '+error.message);return;} onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Suppr</button>
+                  </div>
                 </div>
+
+                {/* Infos abonnement */}
+                {subStart && (
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                    {planLabel && (
+                      <div style={{ padding: "4px 10px", background: `${subColor}12`, border: `1px solid ${subColor}30`, borderRadius: 100, fontSize: 10, fontWeight: 700, color: subColor }}>
+                        {planLabel}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+                      {subStart.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} → {subEnd?.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                    </div>
+                    {daysLeft !== null && (
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: subColor }}>
+                        {isExpired ? "Expire" : `${daysLeft}j restants`}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Alerte expiration */}
+                {isExpiring && !isExpired && (
+                  <div style={{ marginTop: 10, padding: "8px 12px", background: daysLeft <= 7 ? "rgba(239,68,68,0.08)" : "rgba(249,115,22,0.06)", border: `1px solid ${daysLeft <= 7 ? "rgba(239,68,68,0.2)" : "rgba(249,115,22,0.2)"}`, borderRadius: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: daysLeft <= 7 ? RED : ORANGE }}>
+                    <Icon name="alert" size={12} />
+                    {daysLeft <= 7 ? "Abonnement expire dans " + daysLeft + " jours !" : "Abonnement expire dans " + daysLeft + " jours"}
+                  </div>
+                )}
+                {isExpired && (
+                  <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: RED }}>
+                    <Icon name="alert" size={12} />
+                    Abonnement expire — renouvellement necessaire
+                  </div>
+                )}
               </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Mettre a jour</button>
-                <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);alert('Erreur: '+error.message);return;} onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Supprimer</button>
-              </div>
-            </div>
-          ) : (
+            );
+          })() : (
             <div style={{ ...card, background: "rgba(249,115,22,0.04)", border: "1px solid rgba(249,115,22,0.2)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: ORANGE, fontWeight: 700, marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: ORANGE, fontWeight: 700, marginBottom: 14 }}>
                 <Icon name="alert" size={14} />
                 Aucun programme assigne
               </div>
-              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 10, color: G, fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {/* Selecteur de duree d'abonnement */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>Duree de l'abonnement</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {[
+                    { id: "8sem", label: "8 Sem" },
+                    { id: "3m", label: "3 Mois" },
+                    { id: "6m", label: "6 Mois" },
+                    { id: "12m", label: "12 Mois" },
+                  ].map(p => {
+                    const on = uploadPlanId === p.id;
+                    return (
+                      <button key={p.id} onClick={() => setUploadPlanId(p.id)} style={{
+                        padding: "7px 14px", borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                        background: on ? G_DIM : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.08)"}`,
+                        color: on ? G : "rgba(255,255,255,0.4)",
+                        transition: "all 0.15s",
+                      }}>{p.label}</button>
+                    );
+                  })}
+                </div>
+              </div>
+              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 12, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(2,209,186,0.25)" }}>
                 <Icon name="upload" size={14} />
                 Uploader le programme
               </button>
@@ -1539,11 +1609,18 @@ export function CoachDashboard({ onExit }) {
     onClose();
   };
 
-  const uploadProg = async (client, file) => {
+  // Durees d'abonnement disponibles
+  const SUB_PLANS = [
+    { id: "8sem", label: "8 Semaines", months: 2 },
+    { id: "3m", label: "3 Mois", months: 3 },
+    { id: "6m", label: "6 Mois", months: 6 },
+    { id: "12m", label: "12 Mois", months: 12 },
+  ];
+
+  const uploadProg = async (client, file, planId) => {
     setUploading(true);
     try {
       const html = await file.text();
-      // Parser le HTML pour extraire le nom du programme
       let progName = file.name.replace(".html", "");
       try {
         const parser = new DOMParser();
@@ -1552,12 +1629,32 @@ export function CoachDashboard({ onExit }) {
         const parsed = (nameEl?.value || nameEl?.getAttribute("value") || "").trim();
         if (parsed) progName = parsed;
       } catch(e) { console.warn("Parse name error", e); }
+
+      // Desactiver l'ancien programme
       await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
+
+      // Inserer le nouveau programme
       const { error } = await supabase.from("programmes").insert({
         client_id: client.id, html_content: html, programme_name: progName || "Programme",
         is_active: true, uploaded_by: (await supabase.auth.getUser()).data.user?.email,
       });
       if (error) throw error;
+
+      // ===== GESTION ABONNEMENT : set les dates au moment de l'upload =====
+      const plan = SUB_PLANS.find(p => p.id === planId);
+      if (plan) {
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + plan.months);
+        await supabase.from("clients").update({
+          subscription_plan: plan.id,
+          subscription_duration_months: plan.months,
+          subscription_start_date: startDate.toISOString(),
+          subscription_end_date: endDate.toISOString(),
+          subscription_status: "active",
+        }).eq("id", client.id);
+      }
+
       showToast(`Programme uploade pour ${client.full_name || client.email}`);
       loadClients();
     } catch (e) { showToast(e.message, "err"); }
@@ -1571,16 +1668,32 @@ export function CoachDashboard({ onExit }) {
   const activeWeek   = clients.filter(c => c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7).length;
   const inactiveAlerts = clients.filter(c => c._inactive && c.programmes?.some(p => p.is_active)).length;
 
-  // ===== Clients a agir (inactifs 3j+ OU sans programme) =====
+  // ===== Expiration abonnements =====
+  const expiringClients = clients.filter(c => {
+    if (!c.subscription_end_date) return false;
+    const dl = Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000);
+    return dl <= 14 && dl > 0;
+  });
+  const expiredClients = clients.filter(c => {
+    if (!c.subscription_end_date) return false;
+    return Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000) <= 0;
+  });
+
+  // ===== Clients a agir (inactifs 3j+ OU sans programme OU abo expirant) =====
   const clientsToAct = clients
     .filter(c => {
       const hasProg = c.programmes?.some(p => p.is_active);
-      if (!hasProg && c.onboarding_done) return true; // onboarde sans programme
-      if (hasProg && c._inactiveDays >= 3) return true; // inactif 3j+ avec programme
+      if (!hasProg && c.onboarding_done) return true;
+      if (hasProg && c._inactiveDays >= 3) return true;
+      // Abonnement expirant dans 14j ou expire
+      if (c.subscription_end_date) {
+        const dl = Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000);
+        if (dl <= 14) return true;
+      }
       return false;
     })
     .sort((a, b) => (b._inactiveDays || 999) - (a._inactiveDays || 999))
-    .slice(0, 5);
+    .slice(0, 8);
   const urgentCount = clientsToAct.length;
 
   // ===== Score Business (0-100) : note globale du business =====
@@ -1813,7 +1926,7 @@ export function CoachDashboard({ onExit }) {
                           {c.full_name || c.email}
                         </div>
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                          {!hasProg ? "Sans programme" : `Inactif ${c._inactiveDays}j`}
+                          {!hasProg ? "Sans programme" : c.subscription_end_date && Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000) <= 14 ? `Abo expire dans ${Math.max(0, Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000))}j` : `Inactif ${c._inactiveDays}j`}
                           {hasProg && c.programmes?.find((p) => p.is_active)?.programme_name && (
                             <span style={{ color: "rgba(255,255,255,0.25)" }}> · {c.programmes.find((p) => p.is_active).programme_name}</span>
                           )}
@@ -1988,6 +2101,14 @@ export function CoachDashboard({ onExit }) {
                         {dStr && (
                           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Vu {dStr.toLowerCase()}</span>
                         )}
+                        {/* Badge abonnement avec jours restants */}
+                        {c.subscription_end_date && (() => {
+                          const dl = Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000);
+                          if (dl <= 0) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "2px 8px" }}>Expire</span>;
+                          if (dl <= 7) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "2px 8px" }}>{dl}j</span>;
+                          if (dl <= 14) return <span style={{ fontSize: 9, fontWeight: 700, color: ORANGE, background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 100, padding: "2px 8px" }}>{dl}j</span>;
+                          return <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{dl}j</span>;
+                        })()}
                       </div>
                     </div>
                   );
