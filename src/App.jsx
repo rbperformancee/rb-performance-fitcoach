@@ -1068,8 +1068,7 @@ export default function App() {
 
       {/* ── App principale ── */}
       {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
-      {/* FAQ Assistant — visible uniquement pour les clients, pas les coachs */}
-      {user && !isCoach && client && <FaqAssistant />}
+      {/* FaqAssistant deplace dans ProfilePage */}
       {programme && !authError && (
         <>
           {page === "training" ? (

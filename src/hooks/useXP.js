@@ -84,9 +84,9 @@ export function useXP(clientId) {
       supabase.from("run_logs").select("id, date, distance_km").eq("client_id", clientId).order("date", { ascending: false }).limit(20),
       supabase.from("daily_tracking").select("date, pas").eq("client_id", clientId).order("date", { ascending: false }).limit(30),
     ]);
-    runCount = runsRes.data?.length || 0;
-    totalKm = (runsRes.data || []).reduce((a, r) => a + (r.distance_km || 0), 0);
-    totalXP += runCount * 10;
+    const localRunCount = runsRes.data?.length || 0;
+    const localTotalKm = (runsRes.data || []).reduce((a, r) => a + (r.distance_km || 0), 0);
+    totalXP += localRunCount * 10;
     runsRes.data?.slice(0, 2).forEach(r => {
       activity.push({ type: "run", label: `Course · ${r.distance_km} km`, meta: "+10 XP", xp: 10, date: r.date, color: "#ef4444" });
     });
@@ -117,8 +117,8 @@ export function useXP(clientId) {
 
     setXP(totalXP);
     setRecentActivity(activity.slice(0, 6));
-    setRunCountState(runCount);
-    setTotalKmState(totalKm);
+    setRunCountState(localRunCount);
+    setTotalKmState(localTotalKm);
     setLoading(false);
   }, [clientId]);
 

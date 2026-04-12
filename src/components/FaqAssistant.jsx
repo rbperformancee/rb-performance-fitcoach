@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 
 const G = "#02d1ba";
 
-export default function FaqAssistant() {
+export default function FaqAssistant({ inline = false }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -39,21 +39,26 @@ export default function FaqAssistant() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Aide"
-        style={{
+        style={inline ? {
+          width: "100%", padding: 15, borderRadius: 14,
+          background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)",
+          color: G, display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+          cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif", fontSize: 13, fontWeight: 700,
+        } : {
           position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)", right: 18,
           width: 44, height: 44, borderRadius: "50%",
           background: "rgba(2,209,186,0.12)", border: `1px solid rgba(2,209,186,0.3)`,
           color: G, display: "flex", alignItems: "center", justifyContent: "center",
           cursor: "pointer", zIndex: 90, boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
           backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-          transition: "transform 0.2s",
         }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
+        {inline && "Besoin d'aide ? Demande a l'assistant"}
       </button>
     );
   }
