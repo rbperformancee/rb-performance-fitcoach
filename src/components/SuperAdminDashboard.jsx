@@ -171,15 +171,6 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
               >
                 <Ic name="users" size={14} color={G} />
               </button>
-              <button
-                onClick={onExit}
-                title="Retour a l'app"
-                style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(240,236,228,0.02)", border: "1px solid rgba(240,236,228,0.06)", color: "rgba(240,236,228,0.4)", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(240,236,228,0.04)"; e.currentTarget.style.color = "rgba(240,236,228,0.7)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(240,236,228,0.02)"; e.currentTarget.style.color = "rgba(240,236,228,0.4)"; }}
-              >
-                <Ic name="arrow-left" size={14} />
-              </button>
             </div>
           </div>
         </div>
