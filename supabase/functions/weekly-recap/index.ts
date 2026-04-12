@@ -12,19 +12,20 @@ serve(async () => {
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString()
 
   const { data: clients } = await (await fetch(`${sUrl}/rest/v1/clients?select=id,full_name`, { headers })).json() || {}
-  
+
   let sent = 0
   for (const client of (clients || [])) {
     const { data: logs } = await (await fetch(`${sUrl}/rest/v1/session_logs?client_id=eq.${client.id}&logged_at=gte.${weekAgo}&select=id`, { headers })).json() || {}
     const sessions = logs?.length || 0
-    
+
     const { data: subs } = await (await fetch(`${sUrl}/rest/v1/push_subscriptions?client_id=eq.${client.id}`, { headers })).json() || {}
-    
+
     for (const sub of (subs || [])) {
       try {
+        const firstName = client.full_name?.split(' ')[0] || ''
         const msg = sessions === 0
-          ? { title: '💪 RB PERFORM', body: 'Cette semaine c'était calme. On repart fort lundi !' }
-          : { title: '🔥 Bilan semaine', body: `${sessions} séance${sessions > 1 ? 's' : ''} cette semaine. Continue comme ça ${client.full_name?.split(' ')[0] || ''} !` }
+          ? { title: 'RB PERFORM', body: 'Cette semaine etait calme. On repart fort lundi !' }
+          : { title: 'Bilan semaine', body: `${sessions} seance${sessions > 1 ? 's' : ''} cette semaine. Continue comme ca ${firstName} !` }
         await webpush.sendNotification(sub.subscription, JSON.stringify(msg))
         sent++
       } catch(e) {}

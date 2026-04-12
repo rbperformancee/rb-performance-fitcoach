@@ -92,12 +92,32 @@ export function useClientRelance(clients, isCoach) {
             const t = TEMPLATES.sub_expiring(name, daysLeft);
             const ok = await sendPush(c.id, t.title, t.body);
             if (ok) results.push({ client: c, type: "sub_expiring", message: t.body });
+            // Email rappel renouvellement
+            if (c.email) {
+              try {
+                await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-welcome`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}` },
+                  body: JSON.stringify({ email: c.email, full_name: c.full_name, type: "renewal_reminder", days_left: daysLeft }),
+                });
+              } catch {}
+            }
           }
           // Abonnement expire
           if (daysLeft <= 0 && canSend(c.id, "sub_expired")) {
             const t = TEMPLATES.sub_expired(name);
             const ok = await sendPush(c.id, t.title, t.body);
             if (ok) results.push({ client: c, type: "sub_expired", message: t.body });
+            // Email abonnement expire
+            if (c.email) {
+              try {
+                await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-welcome`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}` },
+                  body: JSON.stringify({ email: c.email, full_name: c.full_name, type: "subscription_expired" }),
+                });
+              } catch {}
+            }
           }
         }
       }

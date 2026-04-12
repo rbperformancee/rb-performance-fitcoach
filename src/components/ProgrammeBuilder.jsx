@@ -185,6 +185,15 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
         });
       } catch {}
 
+      // Email "programme pret" au client
+      try {
+        await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-welcome`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}` },
+          body: JSON.stringify({ email: client.email, full_name: client.full_name, type: "programme_ready", programme_name: progName.trim() }),
+        });
+      } catch {}
+
       alert("Programme enregistre pour " + (client.full_name || client.email));
       if (onSaved) onSaved();
       if (onClose) onClose();

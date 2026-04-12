@@ -20,10 +20,21 @@ async function sendEmail(to: string, subject: string, html: string) {
   })
 }
 
+async function sendTypedEmail(email: string, fullName: string, type: string, extra: Record<string, any> = {}) {
+  const fnUrl = SUPABASE_URL + "/functions/v1/send-welcome"
+  await fetch(fnUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + SUPABASE_KEY,
+    },
+    body: JSON.stringify({ email, full_name: fullName, type, ...extra }),
+  })
+}
+
 async function createClient(email: string) {
   if (!SUPABASE_KEY) return
 
-  // 1. Creer le compte Auth Supabase
   await fetch(SUPABASE_URL + "/auth/v1/admin/users", {
     method: "POST",
     headers: {
@@ -38,7 +49,6 @@ async function createClient(email: string) {
     }),
   })
 
-  // 2. Creer le profil dans la table clients
   await fetch(SUPABASE_URL + "/rest/v1/clients", {
     method: "POST",
     headers: {
@@ -55,6 +65,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
   try {
     const event = await req.json()
+
+    // ===== Nouveau paiement =====
     if (event.type === "checkout.session.completed") {
       const session = event.data.object
       const email = session.customer_email || ""
@@ -63,42 +75,78 @@ serve(async (req) => {
 
       if (email) {
         await createClient(email)
-        const clientHtml = "<html><body style='background:#000;color:#fff;font-family:sans-serif;padding:32px'>" +
-          "<div style='max-width:520px;margin:0 auto'>" +
-          "<div style='text-align:center;margin-bottom:32px'><div style='font-size:48px'>⚡</div>" +
-          "<div style='font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.6);margin:8px 0'>Bienvenue dans l elite</div>" +
-          "<div style='font-size:32px;font-weight:900;color:#fff'>RB<span style=color:#02d1ba>.</span>Perform</div></div>" +
-          "<div style='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:28px;text-align:center;margin-bottom:24px'>" +
-          "<div style='font-size:40px;margin-bottom:12px'>✅</div>" +
-          "<div style='font-size:22px;font-weight:900;color:#fff;margin-bottom:8px'>Tu fais partie de la Team.</div>" +
-          "<div style='font-size:13px;color:rgba(255,255,255,0.4);line-height:1.7'>Programme <strong style=color:#02d1ba>" + plan + "</strong> active.<br>Rayan va te contacter tres prochainement.</div></div>" +
-          "<div style='background:rgba(2,209,186,0.04);border:1px solid rgba(2,209,186,0.15);border-radius:16px;padding:24px;margin-bottom:24px'>" +
-          "<div style='font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(2,209,186,0.6);margin-bottom:14px'>Prochaines etapes</div>" +
-          "<div style='font-size:13px;color:rgba(255,255,255,0.4);line-height:2.2'>" +
-          "<strong style=color:#fff>1.</strong> Accede a l app sur <strong style=color:#02d1ba>rb-perfor.vercel.app</strong><br>" +
-          "<strong style=color:#fff>2.</strong> Remplis ton questionnaire de demarrage<br>" +
-          "<strong style=color:#fff>3.</strong> Reserve ton appel avec Rayan</div></div>" +
-          "<div style='background:rgba(2,209,186,0.04);border:1px solid rgba(2,209,186,0.15);border-radius:16px;padding:24px;margin-bottom:28px'>" +
-          "<div style='font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(2,209,186,0.6);margin-bottom:14px'>Installer sur iPhone</div>" +
-          "<div style='font-size:13px;color:rgba(255,255,255,0.4);line-height:2.2'>" +
-          "<strong style=color:#fff>1.</strong> Ouvre Safari sur rb-perfor.vercel.app<br>" +
-          "<strong style=color:#fff>2.</strong> Appuie sur Partager en bas<br>" +
-          "<strong style=color:#fff>3.</strong> Selectionne Sur l ecran d accueil</div></div>" +
-          "<div style='text-align:center;margin-bottom:28px'>" +
-          "<a href='" + APP_URL + "' style='display:inline-block;background:linear-gradient(135deg,#02d1ba,#0891b2);color:#000;text-decoration:none;font-weight:800;font-size:14px;padding:16px 40px;border-radius:14px'>Acceder a mon espace</a></div>" +
-          "<div style='text-align:center;font-size:11px;color:rgba(255,255,255,0.15)'>RB Perform · rb.performancee@gmail.com</div></div></body></html>"
-        await sendEmail(email, "Bienvenue dans la Team RB Perform", clientHtml)
+        await sendTypedEmail(email, "", "checkout", { plan_name: plan, amount })
       }
 
-      const coachHtml = "<html><body style='background:#000;color:#fff;font-family:sans-serif;padding:32px'>" +
-        "<div style='max-width:480px;margin:0 auto'><div style='font-size:32px;margin-bottom:16px'>🔥 Nouveau client !</div>" +
-        "<div style='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin-bottom:20px'>" +
-        "<div style='margin-bottom:10px;font-size:13px;color:rgba(255,255,255,0.5)'>Email : <strong style=color:#fff>" + email + "</strong></div>" +
-        "<div style='font-size:13px;color:rgba(255,255,255,0.5)'>Plan : <strong style=color:#02d1ba>" + plan + "</strong></div></div>" +
-        "<a href='" + APP_URL + "' style='display:inline-block;background:#02d1ba;color:#000;text-decoration:none;font-weight:800;font-size:13px;padding:12px 24px;border-radius:10px'>Voir le dashboard</a>" +
-        "</div></body></html>"
+      // Notif coach
+      const coachHtml = `<html><body style="background:#0a0a0a;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;padding:32px;">
+        <div style="max-width:480px;margin:0 auto;">
+          <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.5);margin-bottom:6px;">Notification</div>
+          <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:20px;letter-spacing:-1px;">Nouveau client</div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin-bottom:20px;">
+            <div style="margin-bottom:10px;font-size:13px;color:rgba(255,255,255,0.5);">Email : <strong style="color:#fff;">${email}</strong></div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.5);">Plan : <strong style="color:#02d1ba;">${plan}</strong></div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.5);">Montant : <strong style="color:#fff;">${amount} EUR</strong></div>
+          </div>
+          <a href="${APP_URL}" style="display:inline-block;background:#02d1ba;color:#000;text-decoration:none;font-weight:800;font-size:13px;padding:12px 24px;border-radius:10px;">Voir le dashboard</a>
+        </div>
+      </body></html>`
       await sendEmail(COACH_EMAIL, "Nouveau client — " + plan, coachHtml)
     }
+
+    // ===== Abonnement renouvele =====
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object
+      const email = invoice.customer_email || ""
+      if (email && invoice.billing_reason === "subscription_cycle") {
+        // Renewal auto — confirmer au client
+        const name = invoice.customer_name || ""
+        await sendTypedEmail(email, name, "welcome", { plan_name: "RB Perform" })
+      }
+    }
+
+    // ===== Paiement echoue =====
+    if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object
+      const email = invoice.customer_email || ""
+      if (email) {
+        const name = invoice.customer_name || ""
+        await sendTypedEmail(email, name, "renewal_reminder", { days_left: 3, plan_name: "RB Perform" })
+        // Alert coach
+        await sendEmail(COACH_EMAIL, "Paiement echoue — " + email,
+          `<html><body style="background:#0a0a0a;color:#fff;font-family:sans-serif;padding:32px;">
+            <div style="max-width:480px;margin:0 auto;">
+              <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:#ef4444;margin-bottom:6px;">Alerte</div>
+              <div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:16px;">Paiement echoue</div>
+              <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:20px;">
+                <div style="font-size:13px;color:rgba(255,255,255,0.5);">Client : <strong style="color:#fff;">${email}</strong></div>
+              </div>
+            </div>
+          </body></html>`)
+      }
+    }
+
+    // ===== Abonnement annule/expire =====
+    if (event.type === "customer.subscription.deleted") {
+      const sub = event.data.object
+      const customerId = sub.customer
+      // Lookup customer email via Stripe metadata or stored data
+      const email = sub.metadata?.email || ""
+      if (email) {
+        await sendTypedEmail(email, "", "subscription_expired")
+        await sendEmail(COACH_EMAIL, "Abonnement expire — " + email,
+          `<html><body style="background:#0a0a0a;color:#fff;font-family:sans-serif;padding:32px;">
+            <div style="max-width:480px;margin:0 auto;">
+              <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:#ef4444;margin-bottom:6px;">Alerte</div>
+              <div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:16px;">Abonnement expire</div>
+              <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:20px;">
+                <div style="font-size:13px;color:rgba(255,255,255,0.5);">Client : <strong style="color:#fff;">${email}</strong></div>
+              </div>
+            </div>
+          </body></html>`)
+      }
+    }
+
     return new Response(JSON.stringify({ received: true }), { headers: corsHeaders })
   } catch (e: any) {
     return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: corsHeaders })
