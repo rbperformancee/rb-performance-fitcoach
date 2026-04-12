@@ -342,7 +342,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [daily30d,   setDaily30d]   = useState([]); // 30 jours pour les drawers
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
-  const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil"
+  const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
   const fileRef = useRef();
 
   const prog = client.programmes?.find(p => p.is_active);
@@ -450,14 +450,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
 
         {/* ===== HERO CLIENT (bouton retour integre, pas de topbar sticky) ===== */}
         <div style={{ padding: "28px 0 0", marginBottom: 28, animation: "cpFadeUp 0.4s ease both" }}>
-          {/* Ligne retour — mini, discrete */}
-          <button
-            onClick={onClose}
-            style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 20 }}
-          >
-            <Icon name="arrow-left" size={12} />
-            Retour
-          </button>
+          {/* Ligne retour — integre dans safe-area top */}
+          <div style={{ paddingTop: "env(safe-area-inset-top, 8px)" }}>
+            <button
+              onClick={onClose}
+              style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 14 }}
+            >
+              <Icon name="arrow-left" size={12} />
+              Retour
+            </button>
+          </div>
 
           {/* Identite + statut */}
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
@@ -632,9 +634,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
               Activite quotidienne — 7 jours
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
-              {/* Pas */}
-              <div style={card}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 10 }}>Pas quotidiens</div>
+              {/* Pas — cliquable */}
+              <div onClick={() => setDrawer("pas")} style={{ ...card, cursor: "pointer", transition: "border-color 0.2s" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: G }}>Pas quotidiens</div>
+                  <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.2)" />
+                </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {daily7d.slice(-7).map((d, i) => {
                     const stepsGoal = nutGoals?.pas || 8000;
@@ -743,42 +748,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           </div>
         )}
 
-        {/* ===== HISTORIQUE POIDS COMPLET ===== */}
-        {allWeights.length > 1 && (
-          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.24s both" }}>
-            <div style={sectionTitle}>
-              <Icon name="trending" size={14} color={G} />
-              Historique poids ({allWeights.length} pesees)
-            </div>
-            <div style={card}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
-                    {allWeights[0].weight}<span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>kg</span>
-                  </div>
-                  {allWeights.length >= 2 && (() => {
-                    const delta = allWeights[0].weight - allWeights[allWeights.length - 1].weight;
-                    return (
-                      <div style={{ fontSize: 12, fontWeight: 700, color: delta > 0 ? ORANGE : delta < 0 ? G : "rgba(255,255,255,0.4)", marginTop: 4 }}>
-                        {delta > 0 ? "+" : ""}{delta.toFixed(1)} kg depuis le debut
-                      </div>
-                    );
-                  })()}
-                </div>
-                <MiniSparkline data={[...allWeights].reverse()} color={G} w={160} h={48} />
-              </div>
-              {/* Derniers poids */}
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {allWeights.slice(0, 10).map((w, i) => (
-                  <div key={i} style={{ padding: "6px 10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 8, textAlign: "center" }}>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: "#fff" }}>{w.weight}</div>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)" }}>{new Date(w.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* (historique poids complet supprime : accessible via le drawer sur la card poids) */}
 
         {/* ===== PROGRESSION — SECTION UNIFIEE PREMIUM ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.2s both" }}>
@@ -1071,7 +1041,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 22px 12px" }}>
               <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
-                {drawer === "poids" ? "Historique poids" : drawer === "eau" ? "Hydratation 30j" : "Sommeil 30j"}
+                {drawer === "poids" ? "Historique poids" : drawer === "eau" ? "Hydratation 30j" : drawer === "pas" ? "Pas quotidiens 30j" : "Sommeil 30j"}
               </div>
               <button onClick={() => setDrawer(null)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
@@ -1150,6 +1120,45 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                   </div>
                 </div>
               )}
+
+              {/* ── DRAWER PAS — graphique 30j ── */}
+              {drawer === "pas" && (() => {
+                const data = daily30d.filter(d => d.pas > 0);
+                const avg = data.length > 0 ? Math.round(data.reduce((s, d) => s + d.pas, 0) / data.length) : 0;
+                const goal = nutGoals?.pas || 8000;
+                const daysAtGoal = data.filter(d => d.pas >= goal).length;
+                const graphData = data.map(d => ({ date: d.date, value: d.pas }));
+                return (
+                  <div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                      <div style={{ textAlign: "center", padding: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 12 }}>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: G }}>{avg.toLocaleString()}</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Moy / jour</div>
+                      </div>
+                      <div style={{ textAlign: "center", padding: 12, background: daysAtGoal > 0 ? G_DIM : "rgba(255,255,255,0.02)", border: `1px solid ${daysAtGoal > 0 ? G_BORDER : "rgba(255,255,255,0.05)"}`, borderRadius: 12 }}>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: daysAtGoal > 0 ? G : "rgba(255,255,255,0.4)" }}>{daysAtGoal}</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Jours objectif</div>
+                      </div>
+                    </div>
+                    {graphData.length >= 2 && (
+                      <div style={{ marginBottom: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 8px 8px" }}>
+                        <LineGraph data={graphData} color={G} height={180} unit="pas" valueKey="value" />
+                      </div>
+                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {data.slice(-14).reverse().map((d, i) => {
+                        const atGoal = d.pas >= goal;
+                        return (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: atGoal ? G_DIM : "rgba(255,255,255,0.02)", border: atGoal ? `1px solid ${G_BORDER}` : "none", borderRadius: 8, fontSize: 12 }}>
+                            <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: atGoal ? G : "rgba(255,255,255,0.5)" }}>{d.pas.toLocaleString()}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* ── DRAWER EAU — graphique 30j ── */}
               {drawer === "eau" && (() => {
@@ -1384,6 +1393,7 @@ export function CoachDashboard({ onExit }) {
   const [uploading, setUploading] = useState(false);
   const [search,    setSearch]    = useState("");
   const [showAdd,   setShowAdd]   = useState(false);
+  const [showClientList, setShowClientList] = useState(false);
   const [newEmail,  setNewEmail]  = useState("");
   const [newName,   setNewName]   = useState("");
   const [toast,     setToast]     = useState(null);
@@ -1756,6 +1766,39 @@ export function CoachDashboard({ onExit }) {
             </div>
           )}
 
+          {/* ========== CTA VOIR TOUS LES CLIENTS ========== */}
+          {!showClientList && (
+            <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.2s both" }}>
+              <button
+                onClick={() => setShowClientList(true)}
+                style={{
+                  width: "100%", padding: 18,
+                  background: "linear-gradient(135deg, " + G + ", #0891b2)",
+                  color: "#000", border: "none", borderRadius: 16,
+                  fontSize: 14, fontWeight: 800, cursor: "pointer",
+                  fontFamily: "inherit", letterSpacing: "0.5px", textTransform: "uppercase",
+                  boxShadow: "0 10px 36px rgba(2,209,186,0.3)",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                }}
+              >
+                <Icon name="users" size={16} />
+                Voir tous les clients ({total})
+              </button>
+            </div>
+          )}
+
+          {/* ========== LISTE CLIENTS (visible seulement apres clic sur le CTA) ========== */}
+          {showClientList && (
+            <div>
+              {/* Bouton retour a l'overview */}
+              <button
+                onClick={() => setShowClientList(false)}
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}
+              >
+                <Icon name="arrow-left" size={12} />
+                Retour overview
+              </button>
+
           {/* ========== BARRE FILTRES + ACTIONS ========== */}
           <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
@@ -2063,6 +2106,9 @@ export function CoachDashboard({ onExit }) {
                   </div>
                 );
               })}
+            </div>
+          )}
+
             </div>
           )}
         </div>
