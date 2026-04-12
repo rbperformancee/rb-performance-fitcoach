@@ -3,6 +3,7 @@ import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
 import EmptyState from "./EmptyState";
 import Spinner from "./Spinner";
+import { toast } from "./Toast";
 
 // ===== Scanner code-barre via BarcodeDetector API native =====
 // Marche sur : iOS Safari 17+ (donc iOS 18), Chrome Android 83+, Chrome desktop, Edge.
@@ -256,7 +257,7 @@ export default function FuelPage({ client, appData }) {
 
   const startVoice = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert("Reconnaissance vocale non supportée sur ce navigateur."); return; }
+    if (!SR) { toast.error("Reconnaissance vocale non supportee sur ce navigateur."); return; }
     const rec = new SR();
     rec.lang = "fr-FR";
     rec.continuous = false;
@@ -283,7 +284,7 @@ export default function FuelPage({ client, appData }) {
       setVoiceResult(data);
     } catch (e) {
       console.error(e);
-      alert("Analyse IA indisponible: " + (e.message || e));
+      toast.error("Analyse IA indisponible. Reessaye dans un instant.");
     }
     setVoiceLoading(false);
   };

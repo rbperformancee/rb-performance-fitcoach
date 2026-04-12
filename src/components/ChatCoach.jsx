@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "../lib/supabase";
+import { toast } from "./Toast";
 
 const GREEN = "#02d1ba";
 
@@ -118,7 +119,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName = "
 
     if (error) {
       console.error("sendMessage error:", error);
-      alert("Envoi impossible : " + (error.message || "erreur inconnue"));
+      toast.error("Message non envoye : " + (error.message || "erreur"));
       // Rollback : on retire le message optimiste
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setNewMsg(content); // remettre le texte dans l'input pour retenter

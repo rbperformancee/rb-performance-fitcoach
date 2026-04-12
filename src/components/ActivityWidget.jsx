@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { toast } from './Toast';
 
 const METRICS = [
   { key: 'steps',    label: 'Pas',      icon: '👟', unit: '',    color: '#02d1ba', target: 10000, hint: 'Ouvre Santé → Activité → Pas' },
@@ -56,7 +57,7 @@ export default function ActivityWidget({ clientId }) {
 
   const openHealthApp = (hint) => {
     window.open('x-apple-health://', '_blank');
-    setTimeout(() => alert(`💡 ${hint}\n\nReviens ici pour saisir ta valeur !`), 500);
+    setTimeout(() => toast.info(hint), 500);
   };
 
   const saveMetric = async (key) => {

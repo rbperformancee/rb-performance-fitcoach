@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { LOGO_B64 } from "../utils/logo";
+import { toast } from "./Toast";
 
 const RED = "#c0392b";
 
@@ -155,8 +156,8 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
 
   // ===== SAUVEGARDER =====
   const handleSave = async () => {
-    if (!progName.trim()) { alert("Donne un nom au programme"); return; }
-    if (weeks.length === 0) { alert("Ajoute au moins une semaine"); return; }
+    if (!progName.trim()) { toast.error("Donne un nom au programme"); return; }
+    if (weeks.length === 0) { toast.error("Ajoute au moins une semaine"); return; }
     setSaving(true);
     try {
       const html = generateHTML();
@@ -194,11 +195,11 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
         });
       } catch {}
 
-      alert("Programme enregistre pour " + (client.full_name || client.email));
+      toast.success("Programme enregistre pour " + (client.full_name || client.email));
       if (onSaved) onSaved();
       if (onClose) onClose();
     } catch (e) {
-      alert("Erreur : " + e.message);
+      toast.error("Erreur : " + e.message);
     }
     setSaving(false);
   };

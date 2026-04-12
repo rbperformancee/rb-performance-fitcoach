@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
+import { toast } from "./Toast";
 
 const GREEN = "#02d1ba";
 
@@ -45,7 +46,7 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
       if (onBooked) onBooked(selectedSlot);
       if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
     } catch (e) {
-      alert("Erreur reservation : " + (e.message || "inconnue"));
+      toast.error("Reservation impossible : " + (e.message || "erreur inconnue"));
     }
     setSaving(false);
   };

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { toast } from "./Toast";
 
 const COLORS = [
   { id: "#02d1ba", name: "Teal" },
@@ -29,8 +30,8 @@ export default function CoachOnboarding({ coachData, onComplete }) {
   const uploadLogo = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { alert("Logo trop lourd (max 2MB)"); return; }
-    if (!file.type.startsWith("image/")) { alert("Fichier image uniquement"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Logo trop lourd (max 2MB)"); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Fichier image uniquement"); return; }
     setUploadingLogo(true);
     try {
       const ext = file.name.split(".").pop();
@@ -40,7 +41,8 @@ export default function CoachOnboarding({ coachData, onComplete }) {
       const { data } = supabase.storage.from("coach-logos").getPublicUrl(path);
       setLogoUrl(data.publicUrl + "?t=" + Date.now());
     } catch (err) {
-      alert("Erreur upload : " + err.message + "\n\nCreer le bucket 'coach-logos' dans Supabase Storage (public).");
+      toast.error("Upload echoue. Verifier que le bucket 'coach-logos' existe.");
+      console.error("Logo upload failed:", err);
     }
     setUploadingLogo(false);
   };

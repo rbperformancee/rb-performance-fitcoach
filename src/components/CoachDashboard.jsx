@@ -550,7 +550,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
                   e.stopPropagation();
                   const name = client.full_name?.split(" ")[0] || "Champion";
                   const ok = await sendManualPush(client.id, `${name}, ton coach t'attend. Reviens en force !`);
-                  alert(ok ? "Notification envoyee a " + name : "Erreur d'envoi (le client n'a peut-etre pas active les notifs)");
+                  if (ok) toast.success(`Notification envoyee a ${name}`);
+                  else toast.error(`${name} n'a pas encore active les notifs`);
                 }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: RED, cursor: "pointer", fontFamily: "inherit" }}
               >
@@ -612,7 +613,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Maj</button>
-                    <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);alert('Erreur: '+error.message);return;} onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Suppr</button>
+                    <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);toast.error('Erreur: '+error.message);return;} toast.success('Programme archive'); onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Suppr</button>
                   </div>
                 </div>
 
@@ -1662,7 +1663,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
       setRecording(true);
       setTimeout(() => stopRecording(), 10000);
     } catch(e) {
-      alert("Micro non disponible");
+      toast.error("Micro non disponible");
     }
   };
 
@@ -1829,13 +1830,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     // 1. Taille max 5MB
     const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      alert(`Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: 5MB.`);
+      toast.error(`Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 5MB.`);
       return;
     }
     // 2. Type verifie (HTML uniquement)
     const isHtml = file.type === "text/html" || file.name.toLowerCase().endsWith(".html") || file.name.toLowerCase().endsWith(".htm");
     if (!isHtml) {
-      alert("Seuls les fichiers HTML sont autorises.");
+      toast.error("Seuls les fichiers HTML sont autorises.");
       return;
     }
 

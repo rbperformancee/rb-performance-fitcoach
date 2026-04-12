@@ -3,6 +3,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../lib/supabase';
 import { isRbPerformOwner, getBrandLabel } from '../lib/branding';
 import { CoachLogo } from './CoachBranding';
+import { toast } from './Toast';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
@@ -122,7 +123,7 @@ export default function PricingPage({ client, coachInfo, onClose, onLogin }) {
     const allPlans = [...PLANS, GENERAL];
     const plan = allPlans.find((p) => p.id === planId);
     if (!plan) {
-      alert("Erreur interne : plan introuvable (" + planId + ")");
+      toast.error("Plan introuvable (" + planId + ")");
       return;
     }
     console.log("[Checkout]", { clicked: planId, resolved: plan.id, name: plan.name, price: plan.price, priceId: plan.priceId });
@@ -158,7 +159,7 @@ export default function PricingPage({ client, coachInfo, onClose, onLogin }) {
       if (!json.url) throw new Error('Stripe n\'a pas renvoye d\'URL de checkout');
       window.location.href = json.url;
     } catch (e) {
-      alert('Erreur paiement : ' + e.message + '\n\nSi l\'erreur persiste, contacte ton coach.');
+      toast.error('Paiement indisponible. Contacte ton coach si ca persiste.');
       console.error('Checkout error:', e);
     }
     setLoading(null);
