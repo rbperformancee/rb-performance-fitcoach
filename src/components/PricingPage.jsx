@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../lib/supabase';
+import { isRbPerformOwner, getBrandLabel } from '../lib/branding';
+import { CoachLogo } from './CoachBranding';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
@@ -43,9 +45,75 @@ const CSS = `
   .shine{position:absolute;top:0;bottom:0;width:60px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.02),transparent);pointer-events:none;animation:shine 6s ease-in-out infinite;}
 `;
 
-export default function PricingPage({ client, onClose, onLogin }) {
+export default function PricingPage({ client, coachInfo, onClose, onLogin }) {
   const [loading, setLoading] = useState(null);
   const [tab, setTab] = useState('team');
+
+  // ===== WHITE LABEL : client de coach tiers → pas d'acces aux offres RB Perform =====
+  // Au lieu de Stripe RB, on affiche le payment_link du coach.
+  if (coachInfo && !isRbPerformOwner(coachInfo)) {
+    const brand = getBrandLabel(coachInfo);
+    const accent = coachInfo.accent_color || '#02d1ba';
+    const paymentLink = coachInfo.payment_link;
+
+    return (
+      <div style={{ minHeight: '100vh', background: '#050505', color: '#fff', fontFamily: '-apple-system,Inter,sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', position: 'relative', overflow: 'hidden' }}>
+        <style>{`@keyframes wlFade{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+        <div style={{ position: 'absolute', top: '-5%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, background: `radial-gradient(circle, ${accent}2A, transparent 65%)`, borderRadius: '50%', filter: 'blur(90px)', pointerEvents: 'none' }} />
+
+        {onClose && (
+          <button onClick={onClose} aria-label="Fermer" style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 16px))', right: 16, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '50%', width: 36, height: 36, color: 'rgba(255,255,255,0.45)', fontSize: 16, cursor: 'pointer' }}>✕</button>
+        )}
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 400, textAlign: 'center', animation: 'wlFade 0.5s ease both' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+            <CoachLogo coachInfo={coachInfo} size={72} />
+          </div>
+          <div style={{ fontSize: 10, letterSpacing: '4px', textTransform: 'uppercase', color: accent, opacity: 0.75, marginBottom: 14, fontWeight: 700 }}>
+            Abonnement coaching
+          </div>
+          <h1 style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-1.5px', color: '#fff', margin: '0 0 16px', lineHeight: 0.95 }}>
+            Renouvelle avec<br /><span style={{ color: accent }}>{brand}.</span>
+          </h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, marginBottom: 28, maxWidth: 320, margin: '0 auto 28px' }}>
+            Pour poursuivre ton accompagnement, finalise ton abonnement directement avec ton coach.
+          </p>
+
+          {paymentLink ? (
+            <a
+              href={paymentLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-block',
+                width: '100%',
+                padding: 18,
+                background: `linear-gradient(135deg, ${accent}, ${accent}CC)`,
+                color: '#000',
+                textDecoration: 'none',
+                borderRadius: 14,
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+                boxShadow: `0 8px 30px ${accent}55`,
+              }}
+            >
+              Continuer avec {brand} →
+            </a>
+          ) : (
+            <div style={{ padding: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+              Contacte directement {brand} pour les modalites d'abonnement et de paiement.
+            </div>
+          )}
+
+          <div style={{ marginTop: 28, fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 600 }}>
+            Propulse par <span style={{ color: 'rgba(255,255,255,0.32)' }}>RB Perform</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // IMPORTANT : on accepte directement un planId (string) et on resout le plan
   // depuis PLANS/GENERAL a l'interieur de la fonction. Evite tout risque de

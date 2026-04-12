@@ -7,10 +7,11 @@ import { useXP, getLevelInfo } from "../hooks/useXP";
 import { supabase } from "../lib/supabase";
 import ChatCoach from "./ChatCoach";
 import FaqAssistant from "./FaqAssistant";
+import { PoweredByBadge } from "./CoachBranding";
 
 const GREEN = "#02d1ba";
 
-export default function ProfilePage({ client, onLogout, appData }) {
+export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
   const streakData = useStreak(appData ? null : client?.id);
   const streak = appData?.streak ?? streakData.streak;
   const bestStreak = appData?.bestStreak ?? streakData.bestStreak;
@@ -236,6 +237,9 @@ export default function ProfilePage({ client, onLogout, appData }) {
             Se deconnecter
           </button>
         </div>
+
+        {/* WHITE LABEL : propulse par RB Perform (seulement clients de coach tiers) */}
+        <PoweredByBadge coachInfo={coachInfo} />
 
       </div>
 
