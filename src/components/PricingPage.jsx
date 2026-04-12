@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../lib/supabase';
 
-const stripePromise = loadStripe('pk_test_51T6ePLPFn8e7Xxh2JMIdug1cOOv0JKCl8t3UxDgIQM8hJ7P8fNVGGkwcY6cdHYUdxv78yKIVp7GdvMDhzR6Y5bSs00CMCKSBho');
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 const PLANS = [
   { id: '3m', name: '3 Mois', duration: '3 mois', price: 120, total: 360, priceId: 'price_1TK3RzApr7mMXwrlSqOA12aP', color: '#02d1ba', btnClass: 'b1', popular: false, savings: null, badge: null,
@@ -78,7 +78,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('https://pwkajyrpldhlybavmopd.supabase.co/functions/v1/create-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY },
         body: JSON.stringify({ priceId: plan.priceId, clientEmail: client?.email, clientId: client?.id, planName: plan.name, planId: plan.id }),
       });
       const json = await res.json().catch(() => ({ error: 'Reponse non-JSON du serveur' }));

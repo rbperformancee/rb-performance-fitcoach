@@ -120,13 +120,21 @@ Exemple 3 - Repas : "deux oeufs brouilles avec une tranche de pain complet et un
 
 Maintenant, analyse le repas decrit ci-dessous et reponds UNIQUEMENT par un JSON suivant exactement ce format. Sois aussi precis que possible en t'appuyant sur les valeurs de reference fournies.`;
 
+const { secureRequest } = require("./_security");
+
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // Reflect allowed origin (pas de wildcard)
+  const origin = req.headers.origin || "";
+  res.setHeader("Access-Control-Allow-Origin", origin || "https://rb-perfor.vercel.app");
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  // Securite : origin + rate limit (20 requetes / heure / IP)
+  if (!secureRequest(req, res, { max: 20, windowMs: 3600000 })) return;
 
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey) {

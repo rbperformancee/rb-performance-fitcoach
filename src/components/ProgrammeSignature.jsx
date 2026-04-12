@@ -21,7 +21,7 @@ export default function ProgrammeSignature({ programme, client, onSigned }) {
     try {
       await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-push`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", apikey: "sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud" },
+        headers: { "Content-Type": "application/json", apikey: process.env.REACT_APP_SUPABASE_ANON_KEY },
         body: JSON.stringify({ client_id: client.id, title: "RB PERFORM", body: `${firstName || name.trim()} a accepte son programme. La transformation commence.` }),
       });
     } catch {}

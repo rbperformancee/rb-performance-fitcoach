@@ -1,10 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import Stripe from "https://esm.sh/stripe@14.12.0?target=deno"
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? ""
-const SUPABASE_URL = "https://pwkajyrpldhlybavmopd.supabase.co"
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://pwkajyrpldhlybavmopd.supabase.co"
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET_KEY") ?? ""
+const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? ""
 const COACH_EMAIL = "rb.performancee@gmail.com"
 const APP_URL = "https://rb-perfor.vercel.app"
+
+// Stripe client pour la verification de signature HMAC
+const stripe = STRIPE_SECRET ? new Stripe(STRIPE_SECRET, { apiVersion: "2023-10-16", httpClient: Stripe.createFetchHttpClient() }) : null
+const cryptoProvider = Stripe.createSubtleCryptoProvider()
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,7 +71,40 @@ async function createClient(email: string) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
   try {
-    const event = await req.json()
+    // ===== VERIFICATION SIGNATURE STRIPE =====
+    // Protege contre les evenements forges (voir https://stripe.com/docs/webhooks/signatures)
+    const signature = req.headers.get("stripe-signature")
+    const rawBody = await req.text()
+
+    let event: any
+    if (stripe && STRIPE_WEBHOOK_SECRET && signature) {
+      try {
+        event = await stripe.webhooks.constructEventAsync(
+          rawBody,
+          signature,
+          STRIPE_WEBHOOK_SECRET,
+          undefined,
+          cryptoProvider
+        )
+      } catch (err: any) {
+        console.error("Invalid Stripe signature:", err.message)
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 401,
+          headers: corsHeaders,
+        })
+      }
+    } else if (STRIPE_WEBHOOK_SECRET) {
+      // Secret configure mais signature absente => rejet
+      return new Response(JSON.stringify({ error: "Missing stripe-signature header" }), {
+        status: 401,
+        headers: corsHeaders,
+      })
+    } else {
+      // WARNING : secret non configure, on laisse passer (compatibilite existant)
+      // Ajouter STRIPE_WEBHOOK_SECRET dans Supabase > Edge Functions secrets pour activer la verif
+      console.warn("STRIPE_WEBHOOK_SECRET not set — webhook signature NOT verified")
+      event = JSON.parse(rawBody)
+    }
 
     // ===== Nouveau paiement =====
     if (event.type === "checkout.session.completed") {

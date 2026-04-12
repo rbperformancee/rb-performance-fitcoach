@@ -15,7 +15,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const API_KEY = "sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud";
+const API_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 const TEMPLATES = {
   inactivity_soft: (name, days) => ({

@@ -1818,9 +1818,34 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   ];
 
   const uploadProg = async (client, file, planId, progWeeks) => {
+    // ===== VALIDATION FICHIER =====
+    // 1. Taille max 5MB
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      alert(`Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: 5MB.`);
+      return;
+    }
+    // 2. Type verifie (HTML uniquement)
+    const isHtml = file.type === "text/html" || file.name.toLowerCase().endsWith(".html") || file.name.toLowerCase().endsWith(".htm");
+    if (!isHtml) {
+      alert("Seuls les fichiers HTML sont autorises.");
+      return;
+    }
+
     setUploading(true);
     try {
-      const html = await file.text();
+      let html = await file.text();
+      // 3. Sanitation : strip les <script> et event handlers inline dangereux
+      //    (defense en profondeur meme si React auto-escape l'affichage texte)
+      const scriptsBefore = (html.match(/<script[\s\S]*?<\/script>/gi) || []).length;
+      html = html
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
+        .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
+        .replace(/javascript:/gi, "");
+      if (scriptsBefore > 0) {
+        console.warn(`[upload] ${scriptsBefore} <script> tag(s) stripped from programme HTML`);
+      }
       let progName = file.name.replace(".html", "");
       try {
         const parser = new DOMParser();

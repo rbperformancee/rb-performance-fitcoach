@@ -48,19 +48,29 @@ Reponds : "Pour cette question, je te recommande de contacter directement ton co
 
 FORMAT : Reponds en francais, de maniere concise (2-4 phrases max). Pas de markdown.`;
 
+const { secureRequest } = require("./_security");
+
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin || "";
+  res.setHeader("Access-Control-Allow-Origin", origin || "https://rb-perfor.vercel.app");
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  // Securite : origin + rate limit (30 requetes / heure / IP — chatbot utilise en conversation)
+  if (!secureRequest(req, res, { max: 30, windowMs: 3600000 })) return;
+
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "MISTRAL_API_KEY missing" });
 
   const { messages } = req.body || {};
   if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: "Missing messages array" });
+  // Limiter la taille cumulee des messages pour eviter les abus de tokens
+  const totalChars = messages.reduce((s, m) => s + String(m?.content || "").length, 0);
+  if (totalChars > 4000) return res.status(400).json({ error: "Messages too long" });
 
   try {
     const upstream = await fetch("https://api.mistral.ai/v1/chat/completions", {

@@ -523,7 +523,7 @@ export default function App() {
     if (paymentStatus === 'success' && clientEmail) {
       fetch('https://pwkajyrpldhlybavmopd.supabase.co/functions/v1/stripe-webhook', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud' },
+        headers: { 'Content-Type': 'application/json', 'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY },
         body: JSON.stringify({ type: 'checkout.session.completed', data: { object: { customer_email: clientEmail, amount_total: 0, metadata: { planName: paymentPlan || brandName, planId: '' } } } })
       }).catch(() => {});
     }

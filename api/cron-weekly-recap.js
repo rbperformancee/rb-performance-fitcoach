@@ -5,8 +5,15 @@
  * Envoie un push bilan de la semaine a chaque client
  */
 
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || "https://pwkajyrpldhlybavmopd.supabase.co";
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function isAuthorizedCron(req) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return true;
+  const auth = req.headers.authorization || "";
+  return auth === `Bearer ${cronSecret}`;
+}
 
 async function sbFetch(path) {
   const res = await fetch(`${SUPABASE_URL}${path}`, {
@@ -23,8 +30,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!isAuthorizedCron(req)) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
   if (!SUPABASE_KEY) {
     return res.status(500).json({ error: "Missing SUPABASE_SERVICE_ROLE_KEY" });
+  }
+  if (!SUPABASE_URL) {
+    return res.status(500).json({ error: "Missing SUPABASE_URL" });
   }
 
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();

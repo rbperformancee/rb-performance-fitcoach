@@ -1,6 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import webpush from 'npm:web-push@3.6.7'
-webpush.setVapidDetails('mailto:rb.performancee@gmail.com','BDsvGYLlUUX3tNPCN0AyRbCKN4h_IBY1bpfZB_AFOVyGE7o_4iLPEJ8Yrg9lCVEUJHg3IOLhxM09N3iiaCuf_dM','tBlamzhjULOtfA_nr_lO_qdNrX_94G-WskGL3pVDDyc')
+
+const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
+const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
+const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:rb.performancee@gmail.com'
+
+if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
+  console.error('VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY missing in Edge Function secrets')
+}
+webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
 const cors = {'Access-Control-Allow-Origin':'*','Content-Type':'application/json'}
 serve(async (req) => {
   if (req.method==='OPTIONS') return new Response('ok',{headers:cors})

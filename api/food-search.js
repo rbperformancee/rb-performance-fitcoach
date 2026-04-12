@@ -13,13 +13,20 @@
 // Lit EDAMAM_APP_ID et EDAMAM_APP_KEY depuis les env vars Vercel (jamais
 // exposees au browser).
 
+const { secureRequest } = require("./_security");
+
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin || "";
+  res.setHeader("Access-Control-Allow-Origin", origin || "https://rb-perfor.vercel.app");
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+
+  // Securite : origin + rate limit (60 requetes / heure / IP — recherche en live typing)
+  if (!secureRequest(req, res, { max: 60, windowMs: 3600000 })) return;
 
   const appId = process.env.EDAMAM_APP_ID;
   const appKey = process.env.EDAMAM_APP_KEY;
