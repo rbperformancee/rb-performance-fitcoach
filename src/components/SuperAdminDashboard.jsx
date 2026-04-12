@@ -51,7 +51,7 @@ function AnimNum({ value, suffix = "" }) {
 function Clock() {
   const [t, setT] = useState(new Date());
   useEffect(() => { const i = setInterval(() => setT(new Date()), 30000); return () => clearInterval(i); }, []);
-  return <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 100, color: "rgba(255,255,255,0.5)", letterSpacing: "-1px" }}>{String(t.getHours()).padStart(2, "0")}:{String(t.getMinutes()).padStart(2, "0")}</span>;
+  return <>{String(t.getHours()).padStart(2, "0")}:{String(t.getMinutes()).padStart(2, "0")}</>;
 }
 
 // Score ring
@@ -136,22 +136,50 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#030303", fontFamily: BODY_FONT, color: IVORY }}>
-      <style>{`@keyframes cF{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}.sa-c:hover{transform:translateY(-2px)!important;box-shadow:0 12px 32px rgba(0,0,0,0.4)!important}`}</style>
+      <style>{`@keyframes cF{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes ceoPulse{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.6;transform:scale(1.3)}}.sa-c:hover{transform:translateY(-2px)!important;box-shadow:0 12px 32px rgba(0,0,0,0.4)!important}`}</style>
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 50% -20%, rgba(129,140,248,0.06), transparent 55%)", pointerEvents: "none" }} />
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 960, margin: "0 auto", padding: "0 24px 100px" }}>
 
-        {/* HEADER */}
-        <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 8 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ fontFamily: CEO_FONT, fontSize: 18, letterSpacing: "4px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>RB PERFORM</div>
-              <div style={{ padding: "3px 10px", background: BLUE_DIM, border: `1px solid ${BLUE_BORDER}`, borderRadius: 100, fontSize: 8, fontWeight: 800, letterSpacing: "2px", color: BLUE, textTransform: "uppercase" }}>CEO</div>
+        {/* HEADER PREMIUM CEO */}
+        <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 16px)", paddingBottom: 18, marginBottom: 24, borderBottom: "1px solid rgba(240,236,228,0.05)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {/* Identite CEO */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ position: "relative", width: 8, height: 8 }}>
+                <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: BLUE, boxShadow: `0 0 12px ${BLUE}` }} />
+                <div style={{ position: "absolute", inset: -3, borderRadius: "50%", background: BLUE, opacity: 0.3, animation: "ceoPulse 2s ease-in-out infinite" }} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <div style={{ fontSize: 8, letterSpacing: "4px", color: "rgba(129,140,248,0.7)", fontWeight: 700, textTransform: "uppercase", fontFamily: BODY_FONT }}>Live Cockpit</div>
+                <div style={{ fontFamily: CEO_FONT, fontSize: 15, letterSpacing: "3px", color: IVORY, textTransform: "uppercase" }}>CEO Dashboard</div>
+              </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Clock />
-              <button onClick={onSwitchToCoach} style={{ padding: "7px 14px", background: "rgba(2,209,186,0.06)", border: `1px solid rgba(2,209,186,0.2)`, borderRadius: 10, color: G, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Coach</button>
-              <button onClick={onExit} style={{ padding: "7px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>App</button>
+
+            {/* Horloge + switches */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 300, color: "rgba(240,236,228,0.5)", letterSpacing: "1px", fontVariantNumeric: "tabular-nums" }}>
+                <Clock />
+              </div>
+              <div style={{ width: 1, height: 20, background: "rgba(240,236,228,0.08)" }} />
+              <button
+                onClick={onSwitchToCoach}
+                title="Passer en mode Coach"
+                style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(2,209,186,0.04)", border: `1px solid rgba(2,209,186,0.15)`, color: G, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.1)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.35)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.04)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.15)"; }}
+              >
+                <Ic name="users" size={14} color={G} />
+              </button>
+              <button
+                onClick={onExit}
+                title="Retour a l'app"
+                style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(240,236,228,0.02)", border: "1px solid rgba(240,236,228,0.06)", color: "rgba(240,236,228,0.4)", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(240,236,228,0.04)"; e.currentTarget.style.color = "rgba(240,236,228,0.7)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(240,236,228,0.02)"; e.currentTarget.style.color = "rgba(240,236,228,0.4)"; }}
+              >
+                <Ic name="arrow-left" size={14} />
+              </button>
             </div>
           </div>
         </div>
