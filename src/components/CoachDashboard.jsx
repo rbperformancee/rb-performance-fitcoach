@@ -11,6 +11,13 @@ import { useClientRelance } from "../hooks/useClientRelance";
 import { LOGO_B64 } from "../utils/logo";
 import ErrorBoundary from "./ErrorBoundary";
 
+// Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
+const SUB_PLANS = [
+  { id: "3m", label: "3 Mois", months: 3 },
+  { id: "6m", label: "6 Mois", months: 6 },
+  { id: "12m", label: "12 Mois", months: 12 },
+];
+
 const G = "#02d1ba";
 const ORANGE = "#f97316";
 const VIOLET = "#a78bfa";
@@ -1813,13 +1820,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     showToast("Programme supprimé.");
     onClose();
   };
-
-  // Durees d'abonnement (global, lie au paiement)
-  const SUB_PLANS = [
-    { id: "3m", label: "3 Mois", months: 3 },
-    { id: "6m", label: "6 Mois", months: 6 },
-    { id: "12m", label: "12 Mois", months: 12 },
-  ];
 
   const uploadProg = async (client, file, planId, progWeeks) => {
     // ===== VALIDATION FICHIER =====
