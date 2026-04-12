@@ -50,10 +50,28 @@ function Icon({ name, size = 18, color = "currentColor", strokeWidth = 1.8 }) {
 
 function daysAgo(dateStr) {
   if (!dateStr) return null;
-  const d = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
-  if (d === 0) return "Aujourd'hui";
-  if (d === 1) return "Hier";
-  return `Il y a ${d}j`;
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffH = Math.floor(diffMs / 3600000);
+  const diffD = Math.floor(diffMs / 86400000);
+  if (diffH < 1) return "A l'instant";
+  if (diffH < 24) return `Il y a ${diffH}h`;
+  if (diffD === 1) return "Hier";
+  return `Il y a ${diffD}j`;
+}
+function activityLabel(dateStr) {
+  if (!dateStr) return { text: "Jamais connecte", precise: true };
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffH = Math.floor((now - then) / 3600000);
+  const diffD = Math.floor((now - then) / 86400000);
+  if (diffH < 1) return { text: "En ligne", precise: true };
+  if (diffH < 24) return { text: `Actif il y a ${diffH}h`, precise: true };
+  if (diffD === 1) return { text: "Vu hier", precise: true };
+  if (diffD <= 3) return { text: `Vu il y a ${diffD}j`, precise: true };
+  if (diffD <= 7) return { text: `Vu il y a ${diffD}j`, precise: true };
+  return { text: `Inactif ${diffD}j`, precise: true };
 }
 function activityColor(lastSeen) {
   if (!lastSeen) return "#444";
@@ -485,7 +503,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
               borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: actColor,
             }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: actColor, boxShadow: inactiveDays != null && inactiveDays <= 1 ? `0 0 8px ${actColor}` : "none" }} />
-              {!client._lastActivity ? "Jamais actif" : inactiveDays <= 1 ? "Actif aujourd'hui" : inactiveDays <= 7 ? "Actif cette semaine" : `Inactif ${inactiveDays}j`}
+              {activityLabel(client._lastActivity).text}
             </div>
             {client._inactive && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: RED }}>
@@ -643,7 +661,21 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <div>
                     <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: G }}>Pas quotidiens</div>
-                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2 }}>Objectif : {(nutGoals?.pas || 8000).toLocaleString()} pas</div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const v = window.prompt("Objectif de pas par jour :", String(nutGoals?.pas || 8000));
+                        if (v && !isNaN(parseInt(v))) {
+                          const newGoal = parseInt(v);
+                          setNutGoals(prev => ({ ...prev, pas: newGoal }));
+                          supabase.from("nutrition_goals").upsert({ client_id: client.id, ...nutGoals, pas: newGoal }, { onConflict: "client_id" });
+                        }
+                      }}
+                      style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+                    >
+                      Objectif : {(nutGoals?.pas || 8000).toLocaleString()} pas
+                      <Icon name="view" size={9} color="rgba(255,255,255,0.25)" />
+                    </button>
                   </div>
                   <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.2)" />
                 </div>
@@ -1932,7 +1964,7 @@ export function CoachDashboard({ onExit }) {
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: actCol, boxShadow: inDays !== null && inDays <= 1 ? `0 0 8px ${actCol}` : "none" }} />
                           <span style={{ fontSize: 10, fontWeight: 700, color: actCol }}>
-                            {!c._lastActivity ? "Nouveau" : inDays <= 1 ? "Actif" : inDays <= 7 ? `${inDays}j` : `${inDays}j`}
+                            {activityLabel(c._lastActivity).text}
                           </span>
                         </div>
                       </div>
