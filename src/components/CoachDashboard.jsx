@@ -497,12 +497,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           </div>
         </div>
 
-        {/* ===== STATS RAPIDES (une ligne) ===== */}
-        <div style={{ ...section, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, animation: "cpFadeUp 0.4s ease 0.08s both" }}>
+        {/* ===== STATS RAPIDES (une ligne — sans pesees ni pas, deja dans leurs cards) ===== */}
+        <div style={{ ...section, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, animation: "cpFadeUp 0.4s ease 0.08s both" }}>
           {[
             { l: "Seances", v: Math.ceil(logs.length / 3) || 0, ic: "activity", c: G },
             { l: "Cette sem.", v: weekLogs.length, ic: "flame", c: weekLogs.length > 0 ? G : "rgba(255,255,255,0.4)" },
-            { l: "Pesees", v: weights.length, ic: "chart", c: "rgba(255,255,255,0.5)" },
             { l: "RPE moy.", v: rpeData.length ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "--", ic: "trending", c: "rgba(255,255,255,0.5)" },
           ].map((s, i) => (
             <div key={i} style={{ ...card, textAlign: "center", padding: "14px 8px 12px" }}>
