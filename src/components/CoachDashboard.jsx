@@ -361,6 +361,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
   const [exLogs, setExLogs] = useState([]);
+  const [coachNotes, setCoachNotes] = useState([]);
+  const [newNote, setNewNote] = useState("");
   const [uploadPlanId, setUploadPlanId] = useState("3m");
   const [uploadProgWeeks, setUploadProgWeeks] = useState(6); // duree du programme en semaines
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
@@ -409,6 +411,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
     supabase.from("session_logs").select("logged_at,session_name,programme_name,duration_seconds,exercises_count,sets_count")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(20)
       .then(({ data }) => setSessions(data || []));
+    // Notes coach internes
+    supabase.from("coach_notes").select("id,content,created_at").eq("client_id", client.id)
+      .order("created_at", { ascending: false }).limit(20)
+      .then(({ data }) => setCoachNotes(data || []));
     // Exercise logs recents (pour afficher les poids souleves par seance)
     supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps,sets")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(100)
@@ -1107,6 +1113,121 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
           </div>
         )}
 
+        {/* ===== NIVEAU CLIENT AUTO ===== */}
+        {(() => {
+          const sessCount = sessions.length;
+          const avgWeight = logs.length > 0 ? logs.reduce((s, l) => s + (l.weight || 0), 0) / logs.length : 0;
+          const level = sessCount >= 50 || avgWeight >= 80 ? { name: "Avance", color: G, icon: "trending" }
+            : sessCount >= 15 || avgWeight >= 40 ? { name: "Intermediaire", color: ORANGE, icon: "flame" }
+            : { name: "Debutant", color: VIOLET, icon: "activity" };
+          return (
+            <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.3s both" }}>
+              <div style={sectionTitle}>
+                <Icon name="users" size={14} color={G} />
+                Profil athlete
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ ...card, flex: 1, minWidth: 140, display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: `${level.color}15`, border: `1px solid ${level.color}30`, display: "flex", alignItems: "center", justifyContent: "center", color: level.color }}>
+                    <Icon name={level.icon} size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: level.color }}>{level.name}</div>
+                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{sessCount} seances · moy {Math.round(avgWeight)}kg</div>
+                  </div>
+                </div>
+                <div style={{ ...card, flex: 1, minWidth: 140, textAlign: "center" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: "#fff" }}>{sessCount}</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Seances depuis le debut</div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ===== NOTES COACH (internes, invisibles par le client) ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.32s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="document" size={14} color={G} />
+            Notes internes
+            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "1px", marginLeft: "auto" }}>INVISIBLE PAR LE CLIENT</span>
+          </div>
+          <div style={card}>
+            {/* Input nouvelle note */}
+            <div style={{ display: "flex", gap: 8, marginBottom: coachNotes.length > 0 ? 14 : 0 }}>
+              <textarea
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                placeholder={"Note sur " + firstName + "..."}
+                rows={2}
+                style={{
+                  flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 12, padding: "10px 14px", color: "#fff",
+                  fontFamily: "inherit", fontSize: 13, resize: "none", outline: "none",
+                  transition: "border-color 0.2s",
+                }}
+                onFocus={(e) => { e.target.style.borderColor = "rgba(2,209,186,0.4)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; }}
+              />
+              <button
+                onClick={async () => {
+                  if (!newNote.trim()) return;
+                  const { data } = await supabase.from("coach_notes").insert({
+                    client_id: client.id, content: newNote.trim(),
+                  }).select().single();
+                  if (data) setCoachNotes(prev => [data, ...prev]);
+                  setNewNote("");
+                }}
+                disabled={!newNote.trim()}
+                style={{
+                  alignSelf: "flex-end", width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                  background: newNote.trim() ? `linear-gradient(135deg, ${G}, #0891b2)` : "rgba(255,255,255,0.04)",
+                  border: "none", cursor: newNote.trim() ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: newNote.trim() ? "#000" : "rgba(255,255,255,0.25)",
+                }}
+              >
+                <Icon name="plus" size={16} />
+              </button>
+            </div>
+            {/* Liste des notes */}
+            {coachNotes.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {coachNotes.map((n) => (
+                  <div key={n.id} style={{
+                    padding: "10px 14px",
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.04)",
+                    borderRadius: 10,
+                    position: "relative",
+                  }}>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{n.content}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)" }}>
+                        {new Date(n.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await supabase.from("coach_notes").delete().eq("id", n.id);
+                          setCoachNotes(prev => prev.filter(x => x.id !== n.id));
+                        }}
+                        style={{ background: "none", border: "none", color: "rgba(255,255,255,0.15)", fontSize: 10, cursor: "pointer", padding: 0, fontFamily: "inherit" }}
+                      >
+                        supprimer
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {coachNotes.length === 0 && !newNote && (
+              <div style={{ textAlign: "center", padding: 16, color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
+                Aucune note — ecris tes observations ici
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* ===== MESSAGES ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.32s both" }}>
           <div style={sectionTitle}>
@@ -1739,6 +1860,23 @@ export function CoachDashboard({ onExit }) {
   const scoreColor = businessScore >= 80 ? G : businessScore >= 50 ? ORANGE : RED;
   const scoreLabel = businessScore >= 80 ? "Excellent" : businessScore >= 60 ? "Bien" : businessScore >= 40 ? "A ameliorer" : "Critique";
 
+  // ===== METRIQUES BUSINESS =====
+  // MRR : somme des prix mensuels de tous les clients avec un abonnement actif
+  const PLAN_PRICES = { "3m": 120, "6m": 110, "12m": 100 };
+  const activeSubscriptions = clients.filter(c => c.subscription_status === "active" && c.subscription_plan);
+  const mrr = activeSubscriptions.reduce((sum, c) => sum + (PLAN_PRICES[c.subscription_plan] || 0), 0);
+  // Prevision 90j : MRR actuel * 3 - clients qui expirent dans 90j * leur prix
+  const expiringIn90 = clients.filter(c => {
+    if (!c.subscription_end_date) return false;
+    const dl = Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000);
+    return dl > 0 && dl <= 90;
+  });
+  const churnRisk90 = expiringIn90.reduce((sum, c) => sum + (PLAN_PRICES[c.subscription_plan] || 0), 0);
+  // Retention : clients actifs avec programme / total clients onboardes
+  const onboardedClients = clients.filter(c => c.onboarding_done);
+  const retainedClients = onboardedClients.filter(c => c.programmes?.some(p => p.is_active));
+  const retentionRate = onboardedClients.length > 0 ? Math.round((retainedClients.length / onboardedClients.length) * 100) : 0;
+
   const filtered = clients
     .filter(c => {
       const s = search.toLowerCase();
@@ -1923,6 +2061,27 @@ export function CoachDashboard({ onExit }) {
               </div>
             </div>
           </div>
+
+          {/* ========== METRIQUES BUSINESS ========== */}
+          {mrr > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
+              {[
+                { label: "MRR", value: mrr.toLocaleString() + " €", color: G, sub: mrr > 0 ? activeSubscriptions.length + " abos actifs" : null },
+                { label: "Prevision 90j", value: ((mrr * 3) - churnRisk90).toLocaleString() + " €", color: "#fff", sub: expiringIn90.length > 0 ? expiringIn90.length + " expirent" : "Stable" },
+                { label: "Retention", value: retentionRate + "%", color: retentionRate >= 80 ? G : retentionRate >= 60 ? ORANGE : RED, sub: retainedClients.length + "/" + onboardedClients.length + " actifs" },
+              ].map((m, i) => (
+                <div key={i} style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 16, padding: "16px 14px",
+                }}>
+                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 200, color: m.color, letterSpacing: "-1px" }}>{m.value}</div>
+                  {m.sub && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{m.sub}</div>}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* ========== ALERTES CRITIQUES (clients a agir) ========== */}
           {urgentCount > 0 && (
