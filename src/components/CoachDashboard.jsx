@@ -9,6 +9,7 @@ import { generateInvoicePDF } from "../utils/invoicePDF";
 import ProgrammeBuilder from "./ProgrammeBuilder";
 import { useClientRelance } from "../hooks/useClientRelance";
 import { LOGO_B64 } from "../utils/logo";
+import ErrorBoundary from "./ErrorBoundary";
 
 const G = "#02d1ba";
 const ORANGE = "#f97316";
@@ -350,7 +351,7 @@ function CreneauxManager() {
 }
 
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
-function ClientPanel({ client, onClose, onUpload, onDelete }) {
+function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }) {
   const [msgText,    setMsgText]    = useState("");
   const [sending,    setSending]    = useState(false);
   const [messages,   setMessages]   = useState([]);
@@ -412,7 +413,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
       .gte("date", d30.toISOString().split("T")[0]).order("date", { ascending: true })
       .then(({ data }) => setDaily30d(data || []));
     // Session logs detailles (20 derniers) + exercise_logs pour le detail des poids
-    supabase.from("session_logs").select("logged_at,session_name,programme_name,duration_seconds,exercises_count,sets_count")
+    // NOTE : la table n'a pas les colonnes duration_seconds/exercises_count/sets_count
+    // On selectionne tout — les checks truthy dans le render gerent les colonnes absentes
+    supabase.from("session_logs").select("*")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(20)
       .then(({ data }) => setSessions(data || []));
     // Notes coach internes
@@ -420,7 +423,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
       .order("created_at", { ascending: false }).limit(20)
       .then(({ data }) => setCoachNotes(data || []));
     // Exercise logs recents (pour afficher les poids souleves par seance)
-    supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps,sets")
+    // NOTE : pas de colonne "sets", on lit reps/weight/ex_key/logged_at
+    supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(100)
       .then(({ data }) => setExLogs(data || []));
     // Historique poids complet (TOUS depuis le debut de l'abonnement)
@@ -2025,7 +2029,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         </div>
       )}
 
-      {selected && <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} />}
+      {selected && (
+        <ErrorBoundary name="ClientPanel">
+          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} />
+        </ErrorBoundary>
+      )}
 
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 28px 80px", position: "relative" }}>
         {/* Ambient */}
