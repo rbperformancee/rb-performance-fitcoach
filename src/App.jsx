@@ -377,16 +377,28 @@ export default function App() {
     sendMagicLink, signOut,
   } = useAuth();
 
-  const isCoach = user?.email === COACH_EMAIL;
+  // Detection des roles depuis les tables coaches et super_admins
+  const [coachId, setCoachId] = React.useState(null);
+  const [isCoach, setIsCoach] = React.useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
-  const [showSuperAdmin, setShowSuperAdmin] = React.useState(true); // true = super admin view par defaut
+  const [showSuperAdmin, setShowSuperAdmin] = React.useState(true);
   const [showLogin, setShowLogin] = React.useState(false);
 
-  // Detection super-admin depuis la table super_admins
   React.useEffect(() => {
-    if (!user?.email) { setIsSuperAdmin(false); return; }
-    supabase.from("super_admins").select("id").eq("email", user.email).single()
-      .then(({ data }) => setIsSuperAdmin(!!data));
+    if (!user?.email) {
+      setIsCoach(false); setCoachId(null); setIsSuperAdmin(false);
+      return;
+    }
+    // Check coach + super admin en parallele
+    Promise.all([
+      supabase.from("coaches").select("id").eq("email", user.email).single(),
+      supabase.from("super_admins").select("id").eq("email", user.email).single(),
+    ]).then(([coachRes, adminRes]) => {
+      const cId = coachRes.data?.id || null;
+      setCoachId(cId);
+      setIsCoach(!!cId);
+      setIsSuperAdmin(!!adminRes.data);
+    });
   }, [user?.email]);
   const [clientEmail] = React.useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -814,6 +826,7 @@ export default function App() {
   if (isCoach && showCoachDash) {
     return (
       <CoachDashboard
+        coachId={coachId}
         onExit={() => setShowCoachDash(false)}
         onSwitchToSuperAdmin={isSuperAdmin ? () => setShowSuperAdmin(true) : null}
       />

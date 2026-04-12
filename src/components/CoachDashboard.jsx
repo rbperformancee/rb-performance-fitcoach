@@ -1674,7 +1674,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   );
 }
 
-export function CoachDashboard({ onExit, onSwitchToSuperAdmin }) {
+export function CoachDashboard({ coachId, onExit, onSwitchToSuperAdmin }) {
   const [clients,   setClients]   = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -1692,10 +1692,14 @@ export function CoachDashboard({ onExit, onSwitchToSuperAdmin }) {
   const loadClients = async () => {
     setLoading(true);
     try {
-      const { data: clientsData } = await supabase
+      // ===== MULTI-TENANT : filtrage par coach_id =====
+      let query = supabase
         .from("clients")
         .select("*, programmes(id, programme_name, uploaded_at, is_active)")
         .order("created_at", { ascending: false });
+      // Si coachId est fourni, on filtre. Sinon (fallback legacy) on charge tout.
+      if (coachId) query = query.eq("coach_id", coachId);
+      const { data: clientsData } = await query;
       if (!clientsData) return;
 
       const enriched = await Promise.all(clientsData.map(async (c) => {
@@ -1726,7 +1730,10 @@ export function CoachDashboard({ onExit, onSwitchToSuperAdmin }) {
     if (!newEmail) return;
     const email = newEmail.trim().toLowerCase();
     const fullName = newName.trim() || null;
-    const { error } = await supabase.from("clients").insert({ email, full_name: fullName });
+    // Multi-tenant : lie le nouveau client au coach connecte
+    const insertData = { email, full_name: fullName };
+    if (coachId) insertData.coach_id = coachId;
+    const { error } = await supabase.from("clients").insert(insertData);
     if (error) { showToast(error.code === "23505" ? "Email déjà utilisé" : error.message, "err"); return; }
     // Envoyer l'email de bienvenue
     try {
@@ -1743,8 +1750,11 @@ export function CoachDashboard({ onExit, onSwitchToSuperAdmin }) {
 
   const deleteClient = async (id, email) => {
     // confirmation supprimee
-    await supabase.from("clients").delete().eq("id", id);
-    setSelected(null); showToast("Client supprimé"); loadClients();
+    // Multi-tenant : verifie que le coach possede ce client
+    let del = supabase.from("clients").delete().eq("id", id);
+    if (coachId) del = del.eq("coach_id", coachId);
+    await del;
+    setSelected(null); showToast("Client supprime"); loadClients();
   };
 
   const deleteProg = async (progId) => {
