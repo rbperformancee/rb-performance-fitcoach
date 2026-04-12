@@ -6,6 +6,7 @@ import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { generateInvoicePDF } from "../utils/invoicePDF";
+import ProgrammeBuilder from "./ProgrammeBuilder";
 import { useClientRelance } from "../hooks/useClientRelance";
 import { LOGO_B64 } from "../utils/logo";
 
@@ -366,7 +367,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const [coachNotes, setCoachNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [uploadPlanId, setUploadPlanId] = useState("3m");
-  const [uploadProgWeeks, setUploadProgWeeks] = useState(6); // duree du programme en semaines
+  const [uploadProgWeeks, setUploadProgWeeks] = useState(6);
+  const [showBuilder, setShowBuilder] = useState(false); // duree du programme en semaines
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
   const fileRef = useRef();
 
@@ -471,6 +473,19 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
   const card = { background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "16px 18px" };
 
   return (
+    <>
+    {/* Programme Builder plein ecran */}
+    {showBuilder && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 300 }}>
+        <ProgrammeBuilder
+          client={client}
+          coachData={null}
+          onClose={() => setShowBuilder(false)}
+          onSaved={() => { setShowBuilder(false); onClose(); }}
+        />
+      </div>
+    )}
+
     <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
       <style>{`@keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
@@ -684,10 +699,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                 </div>
               </div>
 
-              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 12, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(2,209,186,0.25)" }}>
-                <Icon name="upload" size={14} />
-                Uploader le programme ({uploadProgWeeks} sem)
-              </button>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => setShowBuilder(true)} style={{ flex: 1, padding: 12, background: "linear-gradient(135deg, #c0392b, #a93226)", border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(192,57,43,0.3)" }}>
+                  <Icon name="document" size={14} />
+                  Creer un programme
+                </button>
+                <button onClick={() => fileRef.current?.click()} style={{ flex: 1, padding: 12, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(2,209,186,0.25)" }}>
+                  <Icon name="upload" size={14} />
+                  Uploader HTML
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1539,6 +1560,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
         </div>
       )}
     </div>
+    </>
   );
 }
 
