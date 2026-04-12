@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-const VAPID_PUBLIC_KEY = 'BDsvGYLlUUX3tNPCN0AyRbCKN4h_IBY1bpfZB_AFOVyGE7o_4iLPEJ8Yrg9lCVEUJHg3IOLhxM09N3iiaCuf_dM';
+const VAPID_PUBLIC_KEY = process.env.REACT_APP_VAPID_PUBLIC_KEY || 'BB6pE7PejIcg-c6yu-7WTKenzorzP6ygGUr59ab1lYTDftfHsM2Fp-xCfSvc1CWotq5PId1Y8gM6TUeuHcnJTAw';
 function urlB64ToUint8Array(b) {
   const pad = '='.repeat((4 - b.length % 4) % 4);
   const base64 = (b + pad).replace(/-/g, '+').replace(/_/g, '/');
