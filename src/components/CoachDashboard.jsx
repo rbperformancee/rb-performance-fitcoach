@@ -624,7 +624,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                 {/* Bouton facture PDF */}
                 {subStart && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); generateInvoicePDF(client, { full_name: "Rayan Bonte", brand_name: "RB Perform", email: "rb.performancee@gmail.com" }); }}
+                    onClick={(e) => { e.stopPropagation(); generateInvoicePDF(client, coachData || { full_name: "Coach", brand_name: "Coaching", email: "" }); }}
                     style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
                   >
                     <Icon name="document" size={12} />
@@ -1215,7 +1215,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
                 onClick={async () => {
                   if (!newNote.trim()) return;
                   const { data } = await supabase.from("coach_notes").insert({
-                    client_id: client.id, content: newNote.trim(),
+                    client_id: client.id, coach_id: coachId, content: newNote.trim(),
                   }).select().single();
                   if (data) setCoachNotes(prev => [data, ...prev]);
                   setNewNote("");
@@ -1717,7 +1717,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   );
 }
 
-export function CoachDashboard({ coachId, onExit, onSwitchToSuperAdmin }) {
+export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmin }) {
   const [clients,   setClients]   = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [uploading, setUploading] = useState(false);

@@ -6,9 +6,9 @@ const stripePromise = loadStripe('pk_test_51T6ePLPFn8e7Xxh2JMIdug1cOOv0JKCl8t3Ux
 
 const PLANS = [
   { id: '3m', name: '3 Mois', duration: '3 mois', price: 120, total: 360, priceId: 'price_1TK3RzApr7mMXwrlSqOA12aP', color: '#02d1ba', btnClass: 'b1', popular: false, savings: null, badge: null,
-    features: ["Programme sur mesure 3 mois","Séance Vivante — coach en direct","Suivi complet dans l'app","Messagerie avec Rayan"] },
+    features: ["Programme sur mesure 3 mois","Séance Vivante — coach en direct","Suivi complet dans l'app","Messagerie directe avec ton coach"] },
   { id: '6m', name: '6 Mois', duration: '6 mois', price: 110, total: 660, priceId: 'price_1TK3RIApr7mMXwrlZkRvrGFC', color: '#a78bfa', btnClass: 'b2', popular: true, savings: '− 60€ vs 3 mois', badge: 'Le plus populaire',
-    features: ["Programme sur mesure 6 mois","Séance Vivante — coach en direct","Suivi complet dans l'app","Messagerie prioritaire avec Rayan","Ajustements mensuels garantis"] },
+    features: ["Programme sur mesure 6 mois","Séance Vivante — coach en direct","Suivi complet dans l'app","Messagerie prioritaire avec ton coach","Ajustements mensuels garantis"] },
   { id: '12m', name: '12 Mois', duration: '12 mois', price: 100, total: 1200, priceId: 'price_1TK3R3Apr7mMXwrlFdO0Sl0a', color: '#fbbf24', btnClass: 'b3', popular: false, savings: '− 240€ vs 3 mois', badge: null,
     features: ["Programme sur mesure 12 mois","Séance Vivante — coach en direct","Suivi complet dans l'app","Messagerie VIP 7j/7","Ajustements mensuels garantis","Bilan transformation complet"] },
 ];
@@ -18,7 +18,7 @@ const GENERAL = { id: 'general', name: '8 Semaines', price: 39, priceId: 'price_
 
 const TESTIMONIALS = [
   { quote: "Je n'aurais jamais cru voir ces résultats aussi vite. L'app change tout.", name: "Thomas, 24 ans", result: "− 12 kg en 3 mois", color: "#02d1ba" },
-  { quote: "La Séance Vivante c'est dingue. Rayan est là comme si il était dans la salle.", name: "Léa, 28 ans", result: "+ 8 kg de muscle", color: "#a78bfa" },
+  { quote: "La Seance Vivante c'est dingue. Mon coach est la comme si il etait dans la salle.", name: "Lea, 28 ans", result: "+ 8 kg de muscle", color: "#a78bfa" },
   { quote: "L'app la plus premium que j'ai utilisée. Rien ne lui ressemble sur le marché.", name: "Mehdi, 31 ans", result: "Record battu S4", color: "#fbbf24" },
 ];
 
@@ -90,7 +90,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
       if (!json.url) throw new Error('Stripe n\'a pas renvoye d\'URL de checkout');
       window.location.href = json.url;
     } catch (e) {
-      alert('Erreur paiement : ' + e.message + '\n\nSi l\'erreur persiste, contacte Rayan.');
+      alert('Erreur paiement : ' + e.message + '\n\nSi l\'erreur persiste, contacte ton coach.');
       console.error('Checkout error:', e);
     }
     setLoading(null);
@@ -122,7 +122,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
 
         {/* HERO */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', color: 'rgba(2,209,186,0.5)', marginBottom: 24 }}>RB Perform · Programme d'élite</div>
+          <div style={{ fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', color: 'rgba(2,209,186,0.5)', marginBottom: 24 }}>Programme d'elite</div>
           <h1 style={{ fontSize: 'clamp(44px,10vw,64px)', fontWeight: 900, lineHeight: 0.88, letterSpacing: -4, marginBottom: 20 }}>
             <span style={{ display: 'block', color: '#fff' }}>La Performance</span>
             <span style={{ display: 'block', animation: 'tealPulse 4s cubic-bezier(0.45,0,0.55,1) infinite' }}>N'Attend Pas.</span>
@@ -142,7 +142,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, textAlign: 'left' }}>
               <span style={{ color: '#02d1ba', display: 'block', fontWeight: 700 }}>+30 transformations réelles</span>
-              cette année avec RB Perform
+              cette annee
             </div>
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
 
         {/* TABS */}
         <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, overflow: 'hidden', marginBottom: 40 }}>
-          {[{ id: 'team', label: 'Team RB Perform' }, { id: 'general', label: 'Programme Général' }].map((t, i) => (
+          {[{ id: 'team', label: 'Coaching Premium' }, { id: 'general', label: 'Programme General' }].map((t, i) => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, padding: 14, background: tab === t.id ? 'rgba(255,255,255,0.04)' : 'transparent', border: 'none', borderRight: i === 0 ? '1px solid rgba(255,255,255,0.07)' : 'none', color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.25)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', transition: 'all 0.3s' }}>{t.label}</button>
           ))}
         </div>
@@ -235,7 +235,7 @@ export default function PricingPage({ client, onClose, onLogin }) {
             <div onClick={() => setTab('team')} style={{ padding: '20px 24px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 16, transition: 'all 0.3s' }}>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Prêt pour le coaching perso ?</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)' }}>Team RB Perform avec Rayan</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)' }}>Coaching Premium</div>
               </div>
               <div style={{ color: 'rgba(2,209,186,0.5)', fontSize: 20 }}>→</div>
             </div>

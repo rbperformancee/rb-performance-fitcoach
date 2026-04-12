@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
-const COACH_EMAIL = 'rb.performancee@gmail.com';
-
 export function useAuth() {
   const [user,        setUser]        = useState(null);
   const [client,      setClient]      = useState(null);
   const [programme,   setProgramme]   = useState(null);
   const [programmeMeta, setProgrammeMeta] = useState(null); // { id, programme_name, programme_accepted_at, programme_start_date, accepted_by }
+  const [coachInfo,   setCoachInfo]   = useState(null); // { full_name, brand_name, accent_color, email, logo_url }
   const [loading,     setLoading]     = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [error,       setError]       = useState(null);
@@ -37,7 +36,7 @@ export function useAuth() {
         setProgramme(data.html_content);
         stopPolling();
         if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('RB Perform', {
+          new Notification('Programme pret', {
             body: 'Ton programme est pret ! Lance-toi.',
             icon: '/icon-192.png',
           });
@@ -50,11 +49,20 @@ export function useAuth() {
   const loadClientData = useCallback(async (authUser) => {
     try {
       if (!authUser) return;
-      if (authUser.email === COACH_EMAIL) return;
+      // Check if user is a coach first
+      const { data: coachCheck } = await supabase.from("coaches").select("id").eq("email", authUser.email).single();
+      if (coachCheck) return; // Coach — skip client loading
       const { data: clientData } = await supabase
         .from("clients").select("*").eq("email", authUser.email).single();
       setClient(clientData || null);
       if (!clientData) return;
+      // Fetch coach branding for this client
+      if (clientData.coach_id) {
+        const { data: coach } = await supabase
+          .from("coaches").select("full_name,brand_name,accent_color,email,logo_url")
+          .eq("id", clientData.coach_id).single();
+        if (coach) setCoachInfo(coach);
+      }
       const { data: progData } = await supabase
         .from("programmes").select("*").eq("client_id", clientData.id)
         .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).single();
@@ -122,5 +130,5 @@ export function useAuth() {
     await supabase.auth.signOut();
   }, []);
 
-  return { user, client, programme, programmeMeta, loading, authLoading, error, magicSent, sendMagicLink, signOut };
+  return { user, client, programme, programmeMeta, coachInfo, loading, authLoading, error, magicSent, sendMagicLink, signOut };
 }

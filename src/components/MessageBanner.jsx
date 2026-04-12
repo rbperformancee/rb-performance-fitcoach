@@ -72,7 +72,7 @@ export function MessageBanner({ clientId }) {
       {/* Contenu */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: GREEN, marginBottom: 4 }}>
-          Message de Rayan
+          Message de ton coach
         </div>
         <div style={{ fontSize: 13, color: "#f5f5f5", lineHeight: 1.55 }}>{msg.content}</div>
         <div style={{ fontSize: 10, color: "#555", marginTop: 5 }}>

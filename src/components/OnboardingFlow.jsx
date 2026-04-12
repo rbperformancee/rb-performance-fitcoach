@@ -511,7 +511,7 @@ export default function OnboardingFlow({ client, onComplete }) {
             <span style={{ color: GREEN }}>ton appel.</span>
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, marginBottom: 28, maxWidth: 400 }}>
-            Choisis un creneau pour ton appel de demarrage avec Rayan. 30 minutes pour construire ton programme sur mesure.
+            Choisis un creneau pour ton appel de demarrage avec ton coach. 30 minutes pour construire ton programme sur mesure.
           </div>
 
           {slots.length === 0 ? (
@@ -530,7 +530,7 @@ export default function OnboardingFlow({ client, onComplete }) {
               Aucun creneau disponible pour le moment.
               <br />
               <span style={{ color: GREEN, fontSize: 11, fontWeight: 600, letterSpacing: "0.5px" }}>
-                Rayan va te contacter directement.
+                Ton coach va te contacter directement.
               </span>
             </div>
           ) : (
@@ -687,7 +687,7 @@ export default function OnboardingFlow({ client, onComplete }) {
             marginRight: "auto",
           }}
         >
-          Ton questionnaire a ete envoye a Rayan.<br />
+          Ton questionnaire a ete envoye a ton coach.<br />
           Il prepare ton programme sur mesure.
         </p>
         <button

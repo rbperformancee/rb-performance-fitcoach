@@ -43,7 +43,7 @@ function groupByDay(messages) {
   return groups;
 }
 
-export default function ChatCoach({ clientId, coachEmail, isCoach }) {
+export default function ChatCoach({ clientId, coachEmail, isCoach, coachName = "Ton coach" }) {
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
   const [sending, setSending] = useState(false);
@@ -206,10 +206,10 @@ export default function ChatCoach({ clientId, coachEmail, isCoach }) {
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px", marginBottom: 10 }}>
               Ton echange avec<br />
-              <span style={{ color: GREEN }}>Rayan.</span>
+              <span style={{ color: GREEN }}>{coachName}.</span>
             </div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, maxWidth: 260 }}>
-              Pose tes questions, envoie une video, partage tes sensations. Rayan te repond directement ici.
+              Pose tes questions, envoie une video, partage tes sensations. {coachName} te repond directement ici.
             </div>
           </div>
         )}
@@ -310,7 +310,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach }) {
               e.target.parentElement.style.borderColor = "rgba(255,255,255,0.08)";
               e.target.parentElement.style.background = "rgba(255,255,255,0.04)";
             }}
-            placeholder={isCoach ? "Message a ton client..." : "Message a Rayan..."}
+            placeholder={isCoach ? "Message a ton client..." : `Message a ${coachName}...`}
             rows={1}
             style={{
               width: "100%",

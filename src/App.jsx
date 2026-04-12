@@ -57,8 +57,6 @@ import ProgrammeCountdown from "./components/ProgrammeCountdown";
 import SaasLandingPage from "./components/SaasLandingPage";
 
 const GREEN = "#02d1ba";
-// ⚠️ Email du coach historique — sera remplace par la table coaches pour le multi-tenant
-const COACH_EMAIL = 'rb.performancee@gmail.com';
 
 const IconDumbbell = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -91,7 +89,7 @@ function SessionTab({ session, active, onClick, weekIdx, sessionIdx, getHistory,
   );
 }
 
-function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook }) {
+function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook, coachName = "Ton coach" }) {
   const [booking, setBooking] = React.useState(null);
   const [firstSessionDate, setFirstSessionDate] = React.useState(null);
 
@@ -207,7 +205,7 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook }) {
           <div style={{ fontSize: 13, fontStyle: "italic", color: "rgba(255,255,255,0.5)", lineHeight: 1.6, letterSpacing: "0.2px", marginBottom: 36, maxWidth: 320, marginLeft: "auto", marginRight: "auto", animation: "tlFadeUp 0.6s ease 0.55s both" }}>
             "Ceux qui durent, ce sont ceux<br />qui recommencent."
             <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", marginTop: 10, letterSpacing: "3px", textTransform: "uppercase", fontStyle: "normal", fontWeight: 700 }}>
-              — Rayan
+              — {coachName}
             </div>
           </div>
 
@@ -301,7 +299,7 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              Contacter Rayan
+              Contacter {coachName}
             </button>
           </div>
         </div>
@@ -346,7 +344,7 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook }) {
         </h2>
 
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, marginBottom: 30, maxWidth: 300, marginLeft: "auto", marginRight: "auto" }}>
-          Rayan prepare ton programme personnalise. Tu seras notifie des qu'il est pret.
+          {coachName} prepare ton programme personnalise. Tu seras notifie des qu'il est pret.
         </p>
 
         {dateStr ? (
@@ -366,7 +364,7 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook }) {
           </div>
         ) : (
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "14px 22px", display: "inline-block" }}>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>Rayan te contacte tres prochainement.</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{coachName} te contacte tres prochainement.</div>
           </div>
         )}
       </div>
@@ -377,10 +375,15 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook }) {
 export default function App() {
   // Auth
   const {
-    user, client, programme: cloudProgramme, programmeMeta, loading: authLoading,
+    user, client, programme: cloudProgramme, programmeMeta, coachInfo, loading: authLoading,
     authLoading: sendingLink, error: authError, magicSent,
     sendMagicLink, signOut,
   } = useAuth();
+
+  // Coach info dynamique — fallback sur valeurs par defaut
+  const coachName = coachInfo?.full_name?.split(' ')[0] || coachData?.full_name?.split(' ')[0] || "Ton coach";
+  const brandName = coachInfo?.brand_name || coachData?.brand_name || "RB Perform";
+  const coachEmail = coachInfo?.email || coachData?.email || "rb.performancee@gmail.com";
 
   // Detection des roles depuis les tables coaches et super_admins
   const [coachId, setCoachId] = React.useState(null);
@@ -521,7 +524,7 @@ export default function App() {
       fetch('https://pwkajyrpldhlybavmopd.supabase.co/functions/v1/stripe-webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud' },
-        body: JSON.stringify({ type: 'checkout.session.completed', data: { object: { customer_email: clientEmail, amount_total: 0, metadata: { planName: paymentPlan || 'RB Perform', planId: '' } } } })
+        body: JSON.stringify({ type: 'checkout.session.completed', data: { object: { customer_email: clientEmail, amount_total: 0, metadata: { planName: paymentPlan || brandName, planId: '' } } } })
       }).catch(() => {});
     }
   }, [paymentStatus, clientEmail]);
@@ -577,7 +580,7 @@ export default function App() {
             )}
 
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.8, marginBottom: 36, maxWidth: 340, marginLeft: 'auto', marginRight: 'auto', animation: 'fadeUp 0.6s ease 0.5s both' }}>
-              Ton paiement est confirme. Rayan prepare ton nouveau programme<br />
+              Ton paiement est confirme. {coachName} prepare ton nouveau programme<br />
               et tu seras notifie des qu'il est pret.
             </p>
 
@@ -590,7 +593,7 @@ export default function App() {
             </button>
 
             <div style={{ marginTop: 20, fontSize: 11, color: 'rgba(255,255,255,0.2)', animation: 'fadeUp 0.6s ease 0.7s both' }}>
-              RB Perform · Programme d'elite
+              {brandName}
             </div>
           </div>
         </div>
@@ -618,7 +621,7 @@ export default function App() {
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg,rgba(255,255,255,0.15),transparent 50%)', pointerEvents: 'none' }} />
             Accéder à mon espace →
           </button>
-          <div style={{ marginTop: 20, fontSize: 11, color: 'rgba(255,255,255,0.15)', animation: 'fadeUp 0.6s ease 0.7s both' }}>RB Perform · Programme d'élite</div>
+          <div style={{ marginTop: 20, fontSize: 11, color: 'rgba(255,255,255,0.15)', animation: 'fadeUp 0.6s ease 0.7s both' }}>{brandName}</div>
         </div>
       </div>
     );
@@ -876,6 +879,7 @@ export default function App() {
     return (
       <CoachDashboard
         coachId={coachId}
+        coachData={coachData}
         onExit={() => setShowCoachDash(false)}
         onSwitchToSuperAdmin={isSuperAdmin ? () => setShowSuperAdmin(true) : null}
       />
@@ -973,7 +977,7 @@ export default function App() {
         <BookingModal
           client={client}
           title="Reserver un appel"
-          subtitle="Choisis un creneau avec Rayan pour faire le bilan de ton cycle et definir tes prochains objectifs."
+          subtitle={`Choisis un creneau avec ${coachName} pour faire le bilan de ton cycle et definir tes prochains objectifs.`}
           onClose={() => setShowBookingModal(false)}
           onBooked={() => { /* reste ouvert sur l'ecran de confirmation */ }}
         />
@@ -989,8 +993,8 @@ export default function App() {
             {/* Header avec close */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div>
-                <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 4, fontWeight: 700 }}>RB Perform · Chat</div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>Contacter Rayan</div>
+                <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 4, fontWeight: 700 }}>{brandName} · Chat</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>Contacter {coachName}</div>
               </div>
               <button
                 onClick={() => setShowCoachChat(false)}
@@ -1001,7 +1005,7 @@ export default function App() {
             </div>
             {/* Le composant ChatCoach existant */}
             <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-              <ChatCoach clientId={client.id} coachEmail={COACH_EMAIL} isCoach={false} />
+              <ChatCoach clientId={client.id} coachEmail={coachEmail} isCoach={false} coachName={coachName} />
             </div>
           </div>
         </div>
@@ -1036,7 +1040,7 @@ export default function App() {
               </svg>
             </div>
             <div className="import-title">Importer un programme</div>
-            <div className="import-sub">Fichier .html exporté depuis le builder RB Perform</div>
+            <div className="import-sub">Fichier .html exporte depuis le builder</div>
             <div className="import-cta">Choisir un fichier</div>
           </div>
         </div>
@@ -1045,7 +1049,7 @@ export default function App() {
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
         <div style={{minHeight:'100vh', background:'#050505', position:'relative'}}>
-          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} />}
+          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
@@ -1072,7 +1076,7 @@ export default function App() {
       {programme && !authError && (
         <>
           {page === "training" ? (
-            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} /> :
+            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
               <TrainingPage
                 client={client}
                 programme={programme}

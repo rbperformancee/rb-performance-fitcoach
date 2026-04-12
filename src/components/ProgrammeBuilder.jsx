@@ -123,7 +123,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
 
     // Cover page
     html += `<div style="min-height:100vh;background:#1d1b1b;color:#faf9f7;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center">
-      <div style="font-size:8px;letter-spacing:4px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:24px">Programme Officiel · RB Performance</div>
+      <div style="font-size:8px;letter-spacing:4px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:24px">Programme Officiel · ${coachData?.brand_name || "Coaching"}</div>
       <div style="font-size:48px;font-weight:900;letter-spacing:-3px;line-height:0.95;margin-bottom:16px">${pName}</div>
       ${objective ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px">Objectif : ${objective}</div>` : ""}
       <div style="font-size:18px;font-weight:700;margin-bottom:24px">${clientName}</div>

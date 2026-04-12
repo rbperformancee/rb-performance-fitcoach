@@ -9,7 +9,7 @@ const GREEN = "#02d1ba";
 // - TrainLocked Cycle accompli (appel de point / renouvellement)
 // - N'importe quel autre endroit qui veut permettre une prise de rdv
 
-export default function BookingModal({ client, onClose, onBooked, title = "Reserver un appel", subtitle = "Choisis un creneau pour ton appel avec Rayan." }) {
+export default function BookingModal({ client, onClose, onBooked, title = "Reserver un appel", subtitle = "Choisis un creneau pour ton appel avec ton coach." }) {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,7 +80,7 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 24px 16px", flexShrink: 0 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 4, fontWeight: 700 }}>
-              RB Perform · Rendez-vous
+              Rendez-vous
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>{title}</div>
           </div>
@@ -163,7 +163,7 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
                     Aucun creneau disponible
                   </div>
                   <div style={{ fontSize: 12, color: GREEN, fontWeight: 600, letterSpacing: "0.3px" }}>
-                    Rayan te contacte directement dans les prochaines 24h.
+                    Ton coach te contacte directement dans les prochaines 24h.
                   </div>
                 </div>
               )}
