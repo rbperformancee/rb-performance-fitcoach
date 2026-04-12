@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
+import Spinner from "./Spinner";
 
 const COLORS = [
   { id: "#02d1ba", name: "Teal" },
@@ -237,7 +238,14 @@ export default function CoachOnboarding({ coachData, onComplete }) {
                 color: "#000", border: "none", borderRadius: 16, fontSize: 14, fontWeight: 800, cursor: saving ? "default" : "pointer",
                 fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
                 boxShadow: `0 8px 32px ${accentColor}40`,
-              }}>{saving ? "Sauvegarde..." : "Creer mon espace"}</button>
+              }}>
+                {saving ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                    <Spinner variant="dots" size={18} color="#000" />
+                    Enregistrement
+                  </span>
+                ) : "Creer mon espace"}
+              </button>
             </div>
           </div>
         )}

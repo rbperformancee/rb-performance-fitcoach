@@ -13,6 +13,7 @@ import ErrorBoundary from "./ErrorBoundary";
 import InvitationPanel from "./InvitationPanel";
 import EmptyState from "./EmptyState";
 import { SkeletonList } from "./Skeleton";
+import Spinner from "./Spinner";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -319,7 +320,7 @@ function CreneauxManager() {
       <div>
         <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Créneaux disponibles</div>
         {loading ? (
-          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13 }}>Chargement...</div>
+          <div style={{ padding: "20px 0" }}><Spinner variant="dots" size={22} /></div>
         ) : slots.filter(s => s.is_available).length === 0 ? (
           <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, fontStyle: "italic" }}>Aucun créneau disponible</div>
         ) : (
@@ -1164,7 +1165,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
                 }}
                 style={{ width: "100%", padding: 14, background: `linear-gradient(135deg, ${G}, #0891b2)`, color: "#000", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", marginTop: 16, textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", boxShadow: "0 8px 24px rgba(2,209,186,0.25)" }}
               >
-                {nutSaving ? "Sauvegarde..." : "Sauvegarder les objectifs"}
+                {nutSaving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={16} color="#000" />Enregistrement</span>) : "Sauvegarder les objectifs"}
               </button>
             </div>
           </div>
@@ -1726,7 +1727,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
       </div>
 
       <button onClick={sendMessage} disabled={sending || (!text.trim() && !audioBlob)} style={{ width: "100%", padding: 14, background: sent ? "rgba(2,209,186,0.1)" : "#02d1ba", color: sent ? "#02d1ba" : "#000", border: sent ? "1px solid rgba(2,209,186,0.3)" : "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-        {sent ? "✓ Message envoye !" : sending ? "Envoi..." : "Envoyer le message flash"}
+        {sent ? "✓ Message envoye !" : sending ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={16} color="#000" />Envoi</span>) : "Envoyer le message flash"}
       </button>
     </div>
   );

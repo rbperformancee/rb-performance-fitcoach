@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { isRbPerformOwner, getBrandLabel } from '../lib/branding';
 import { CoachLogo } from './CoachBranding';
 import { toast } from './Toast';
+import Spinner from './Spinner';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
@@ -261,7 +262,7 @@ export default function PricingPage({ client, coachInfo, onClose, onLogin }) {
                   data-plan-id={plan.id}
                   data-plan-price={plan.price}
                 >
-                  {loading === plan.id ? 'Chargement...' : `Commencer — ${plan.price}€/mois →`}
+                  {loading === plan.id ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><Spinner variant="dots" size={18} color={plan.id === '6m' ? '#fff' : '#000'} />Redirection</span>) : `Commencer — ${plan.price}€/mois →`}
                 </button>
               </div>
             ))}
@@ -298,7 +299,7 @@ export default function PricingPage({ client, coachInfo, onClose, onLogin }) {
                 data-plan-id={GENERAL.id}
                 data-plan-price={GENERAL.price}
               >
-                {loading === GENERAL.id ? 'Chargement...' : 'Commencer — 39€/mois →'}
+                {loading === GENERAL.id ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Redirection</span>) : 'Commencer — 39€/mois →'}
               </button>
             </div>
             <div onClick={() => setTab('team')} style={{ padding: '20px 24px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 16, transition: 'all 0.3s' }}>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { PrivacyPolicy } from './PrivacyPolicy';
 import { LOGO_B64 } from '../utils/logo';
+import Spinner from './Spinner';
 
 function Particles() {
   const canvasRef = React.useRef(null);
@@ -182,7 +183,7 @@ export function LoginScreen({ onSendMagicLink, loading, onBack }) {
 
               <button onClick={handleSendOTP} disabled={!validEmail || !accepted || sending}
                 style={{ marginTop: 4, width: '100%', padding: '17px', borderRadius: 14, border: 'none', background: validEmail && accepted ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: validEmail && accepted ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', cursor: validEmail && accepted ? 'pointer' : 'not-allowed', transition: 'all 0.15s' }}>
-                {sending ? 'Envoi...' : 'Recevoir mon code →'}
+                {sending ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Envoi</span>) : 'Recevoir mon code →'}
               </button>
               <p style={{ textAlign: 'center', fontSize: 11, color: '#374151', margin: '4px 0 0' }}>Code à 6 chiffres par email — sans mot de passe</p>
             </div>
@@ -216,7 +217,7 @@ export function LoginScreen({ onSendMagicLink, loading, onBack }) {
 
               <button onClick={handleSendOTP} disabled={sending}
                 style={{ background: 'none', border: 'none', color: '#02d1ba', fontSize: 12, cursor: 'pointer' }}>
-                {sending ? 'Envoi...' : 'Renvoyer le code'}
+                {sending ? 'Envoi…' : 'Renvoyer le code'}
               </button>
             </div>
           )}
