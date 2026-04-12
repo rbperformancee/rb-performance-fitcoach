@@ -8,13 +8,45 @@ import { supabase } from "../lib/supabase";
 import { LOGO_B64 } from "../utils/logo";
 
 const G = "#02d1ba";
+const ORANGE = "#f97316";
+const VIOLET = "#a78bfa";
+const RED = "#ef4444";
 const PREMIUM_STYLES = {
   card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)" },
   badge: (color) => ({ display: "inline-flex", alignItems: "center", gap: 4, background: color + "15", border: "1px solid " + color + "30", color, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, letterSpacing: 0.5 }),
 };
-// PREMIUM;
 const G_DIM = "rgba(2,209,186,0.12)";
 const G_BORDER = "rgba(2,209,186,0.25)";
+
+// ===== Icon component premium (lucide/feather style) =====
+// Remplace TOUS les emojis du dashboard. stroke 1.8 pour finesse, size par defaut 18.
+function Icon({ name, size = 18, color = "currentColor", strokeWidth = 1.8 }) {
+  const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth, strokeLinecap: "round", strokeLinejoin: "round" };
+  const map = {
+    users: <svg {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
+    document: <svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>,
+    flame: <svg {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>,
+    trending: <svg {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>,
+    alert: <svg {...p}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
+    search: <svg {...p}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
+    plus: <svg {...p}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
+    x: <svg {...p}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
+    check: <svg {...p}><polyline points="20 6 9 17 4 12" /></svg>,
+    refresh: <svg {...p}><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>,
+    "arrow-left": <svg {...p}><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>,
+    "arrow-right": <svg {...p}><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>,
+    message: <svg {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+    calendar: <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
+    chart: <svg {...p}><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>,
+    apple: <svg {...p}><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06z" /><path d="M10 2c1 .5 2 2 2 5" /></svg>,
+    lightning: <svg {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>,
+    view: <svg {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>,
+    trash: <svg {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>,
+    upload: <svg {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
+    activity: <svg {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
+  };
+  return map[name] || null;
+}
 
 function daysAgo(dateStr) {
   if (!dateStr) return null;
@@ -274,33 +306,46 @@ function ClientPanel({ client, onClose, onUpload, onDelete }) {
             </div>
             {/* Alerte inactivité */}
             {client._inactive && (
-              <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#ef4444" }}>
-                ⚠ Inactif {client._inactiveDays}j
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 100, padding: "5px 10px", fontSize: 10, fontWeight: 700, color: "#ef4444" }}>
+                <Icon name="alert" size={11} />
+                Inactif {client._inactiveDays}j
               </div>
             )}
             <button onClick={onClose} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, width: 30, height: 30, color: "#666", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
           </div>
 
           {/* Stats rapides */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 14 }}>
             {[
-              { l: "Séances", v: Math.ceil(logs.length / 3) || 0, icon: "💪" },
-              { l: "Cette sem.", v: weekLogs.length, icon: "🔥" },
-              { l: "Pesées", v: weights.length, icon: "⚖️" },
-              { l: "RPE moy.", v: rpeData.length ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "—", icon: "🧠" },
+              { l: "Seances", v: Math.ceil(logs.length / 3) || 0, ic: "activity" },
+              { l: "Cette sem.", v: weekLogs.length, ic: "flame" },
+              { l: "Pesees", v: weights.length, ic: "chart" },
+              { l: "RPE moy.", v: rpeData.length ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "—", ic: "trending" },
             ].map((s, i) => (
-              <div key={i} style={{ background: "#1a1a1a", borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
-                <div style={{ fontSize: 16 }}>{s.icon}</div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: G, lineHeight: 1.2 }}>{s.v}</div>
-                <div style={{ fontSize: 9, color: "#555", textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.l}</div>
+              <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "12px 8px 10px", textAlign: "center" }}>
+                <div style={{ color: G, display: "flex", justifyContent: "center", marginBottom: 6, opacity: 0.8 }}>
+                  <Icon name={s.ic} size={13} />
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 200, color: "#fff", lineHeight: 1, letterSpacing: "-0.5px" }}>{s.v}</div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 6, fontWeight: 600 }}>{s.l}</div>
               </div>
             ))}
           </div>
 
           {/* Onglets */}
           <div style={{ display: "flex", gap: 6 }}>
-            {[["overview","📋 Vue"], ["messages","💬 Message"], ["progress","📈 Progression"], ["nutrition","🥗 Nutrition"], ["vivante","⚡ Vivante"], ["creneaux","📅 Créneaux"]].map(([t, l]) => (
-              <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>{l}</button>
+            {[
+              ["overview", "Vue", "view"],
+              ["messages", "Message", "message"],
+              ["progress", "Progression", "chart"],
+              ["nutrition", "Nutrition", "apple"],
+              ["vivante", "Vivante", "lightning"],
+              ["creneaux", "Creneaux", "calendar"],
+            ].map(([t, l, ic]) => (
+              <button key={t} onClick={() => setTab(t)} style={{ ...tabStyle(t), display: "flex", alignItems: "center", gap: 7, justifyContent: "center" }}>
+                <Icon name={ic} size={13} />
+                {l}
+              </button>
             ))}
           </div>
         </div>
@@ -743,7 +788,7 @@ export function CoachDashboard({ onExit }) {
     } catch (e) {
       console.warn("Email de bienvenue non envoyé:", e);
     }
-    showToast(`✓ ${email} ajouté — email de bienvenue envoyé !`);
+    showToast(`${email} ajoute — email de bienvenue envoye`);
     setNewEmail(""); setNewName(""); setShowAdd(false);
     loadClients();
   };
@@ -780,7 +825,7 @@ export function CoachDashboard({ onExit }) {
         is_active: true, uploaded_by: (await supabase.auth.getUser()).data.user?.email,
       });
       if (error) throw error;
-      showToast(`✓ Programme uploadé pour ${client.full_name || client.email}`);
+      showToast(`Programme uploade pour ${client.full_name || client.email}`);
       loadClients();
     } catch (e) { showToast(e.message, "err"); }
     finally { setUploading(false); setSelected(null); }
@@ -818,228 +863,478 @@ export function CoachDashboard({ onExit }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0d0d0d", fontFamily: "'Inter',sans-serif", color: "#f5f5f5" }}>
+    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-        .client-row:hover{background:#1c1c1c!important;cursor:pointer}
-        .client-row:hover .row-arrow{opacity:1!important}
-        .inp-focus:focus{border-color:#02d1ba!important}
-        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+        @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+        @keyframes glowFlame{0%,100%{filter:drop-shadow(0 0 8px rgba(2,209,186,0.4))}50%{filter:drop-shadow(0 0 16px rgba(2,209,186,0.7))}}
+        .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
+        .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
+        .cd-row:hover .cd-avatar-glow{opacity:1!important}
+        .inp-focus:focus{border-color:#02d1ba!important;background:rgba(2,209,186,0.04)!important}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:rgba(2,209,186,0.3)}
       `}</style>
 
       {/* Toast */}
       {toast && (
-        <div style={{ position:"fixed", top:16, left:"50%", transform:"translateX(-50%)", background: toast.type==="err"?"#1a0a0a":"#0a1a0f", border:`1px solid ${toast.type==="err"?"rgba(239,68,68,0.3)":G_BORDER}`, borderRadius:10, padding:"10px 20px", fontSize:12, fontWeight:600, color:toast.type==="err"?"#ef4444":G, zIndex:500, boxShadow:"0 8px 32px rgba(0,0,0,0.5)", whiteSpace:"nowrap", animation:"fadeUp 0.2s ease" }}>{toast.msg}</div>
-      )}
-
-      {false && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
-          <div style={{background:"#111",border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:28,maxWidth:320,width:"100%",textAlign:"center"}}>
-            <div style={{fontSize:40,marginBottom:16}}>🗑️</div>
-            <div style={{fontSize:17,fontWeight:800,color:"#fff",marginBottom:8}}>Supprimer le programme ?</div>
-            <div style={{fontSize:13,color:"rgba(255,255,255,0.4)",lineHeight:1.7,marginBottom:24}}>Le client n'aura plus accès à Train. Il retombera sur l'écran d'attente.</div>
-            <div style={{display:"flex",gap:10}}>
-              <button onClick={() => void(0)} style={{flex:1,padding:13,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,color:"rgba(255,255,255,0.5)",fontSize:14,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-              <button onClick={async () => { await supabase.from("programmes").update({is_active:false}).eq("id","REMOVED"); void(0); toast("Programme supprimé."); onClose(); }} style={{flex:1,padding:13,background:"#ef4444",border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Supprimer</button>
-            </div>
-          </div>
+        <div style={{
+          position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
+          background: toast.type === "err" ? "rgba(239,68,68,0.12)" : "rgba(2,209,186,0.1)",
+          border: `1px solid ${toast.type === "err" ? "rgba(239,68,68,0.35)" : G_BORDER}`,
+          borderRadius: 100, padding: "12px 22px", fontSize: 12, fontWeight: 700,
+          color: toast.type === "err" ? RED : G,
+          zIndex: 500, boxShadow: "0 16px 40px rgba(0,0,0,0.6), 0 0 30px rgba(2,209,186,0.1)",
+          whiteSpace: "nowrap", animation: "fadeUp 0.25s cubic-bezier(0.22,1,0.36,1)",
+          display: "flex", alignItems: "center", gap: 8,
+          backdropFilter: "blur(20px)",
+        }}>
+          <Icon name={toast.type === "err" ? "alert" : "check"} size={14} />
+          {toast.msg}
         </div>
       )}
 
       {uploading && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", backdropFilter:"blur(8px)", zIndex:300, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:14 }}>
-          <div style={{ width:44, height:44, border:`3px solid #1a1a1a`, borderTopColor:G, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
-          <div style={{ color:G, fontSize:13, fontWeight:600 }}>Upload en cours...</div>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(5,5,5,0.85)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18 }}>
+          <div style={{ width: 48, height: 48, border: "2.5px solid rgba(2,209,186,0.12)", borderTopColor: G, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+          <div style={{ color: G, fontSize: 12, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" }}>Upload en cours</div>
         </div>
       )}
+
       {selected && <ClientPanel client={selected} onClose={() => setSelected(null)} onUpload={uploadProg} onDelete={deleteClient} />}
 
-      {/* TOPBAR */}
-      <div style={{ background:"rgba(13,13,13,0.97)", borderBottom:"1px solid rgba(255,255,255,0.07)", padding:"0 32px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100, backdropFilter:"blur(20px)" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-          <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", border:"1px solid rgba(255,255,255,0.1)" }}><img src={LOGO_B64} alt="" style={{ width:"100%", height:"100%", objectFit:"contain" }} /></div>
-          <span style={{ fontSize:14, fontWeight:800, color:"#f5f5f5" }}>RB <span style={{ color:G }}>Performance</span></span>
-          <span style={{ fontSize:10, fontWeight:700, color:"#333", letterSpacing:"2px" }}>COACH</span>
-          {/* Alerte inactifs */}
+      {/* ========== TOPBAR ========== */}
+      <div style={{
+        background: "rgba(5,5,5,0.85)",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        padding: "0 28px", height: 64,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        position: "sticky", top: 0, zIndex: 100,
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", background: "#0a0a0a" }}>
+            <img src={LOGO_B64} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
+            <span style={{ fontSize: 15, fontWeight: 900, color: "#fff", letterSpacing: "-0.3px" }}>
+              RB <span style={{ color: G }}>Performance</span>
+            </span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "3px", marginTop: 2 }}>
+              COACH DASHBOARD
+            </span>
+          </div>
           {inactiveAlerts > 0 && (
-            <div style={{ background:"rgba(239,68,68,0.12)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:20, padding:"3px 10px", fontSize:10, fontWeight:700, color:"#ef4444", display:"flex", alignItems:"center", gap:5, animation:"pulse 2s infinite" }}>
-              ⚠ {inactiveAlerts} inactif{inactiveAlerts>1?"s":""} 7j+
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "rgba(239,68,68,0.1)",
+              border: "1px solid rgba(239,68,68,0.3)",
+              borderRadius: 100, padding: "5px 12px 5px 10px",
+              fontSize: 10, fontWeight: 700, color: RED,
+              marginLeft: 8,
+              animation: "pulse 2.5s ease-in-out infinite",
+            }}>
+              <Icon name="alert" size={12} />
+              {inactiveAlerts} inactif{inactiveAlerts > 1 ? "s" : ""} 7j+
             </div>
           )}
         </div>
-        <div style={{ display:"flex", gap:8 }}>
-          <button onClick={loadClients} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:7, padding:"5px 12px", color:"#555", fontSize:11, fontWeight:600, cursor:"pointer" }}>↻ Actualiser</button>
-          <button onClick={onExit} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:7, padding:"5px 12px", color:"#555", fontSize:11, fontWeight:600, cursor:"pointer" }}>← Mon app</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={loadClients}
+            aria-label="Actualiser"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit", letterSpacing: "0.3px" }}
+          >
+            <Icon name="refresh" size={13} />
+            Actualiser
+          </button>
+          <button
+            onClick={onExit}
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit", letterSpacing: "0.3px" }}
+          >
+            <Icon name="arrow-left" size={13} />
+            Mon app
+          </button>
         </div>
       </div>
 
-      <div style={{ maxWidth:"100%", margin:"0 auto", padding:"12px 12px 80px" }}>
-        {/* Titre */}
-        <div style={{ marginBottom:28 }}>
-          <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:"-0.5px", color:"#f5f5f5", marginBottom:4 }}>Dashboard Coach</h1>
-          <p style={{ fontSize:13, color:"#555" }}>Vue d'ensemble de tes {total} client{total>1?"s":""}</p>
-        </div>
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 28px 80px", position: "relative" }}>
+        {/* Ambient */}
+        <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 800, height: 400, background: "radial-gradient(ellipse at center, rgba(2,209,186,0.06), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
-        {/* Stats cards */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28 }}>
-          {[
-            { label:"Clients total", value:total, icon:"👥", accent:false },
-            { label:"Avec programme", value:withProg, sub:`${total-withProg} sans`, icon:"📋", accent:false },
-            { label:"Actifs aujourd'hui", value:activeToday, icon:"🔥", accent:activeToday>0 },
-            { label:"Actifs cette semaine", value:activeWeek, icon:"📈", accent:activeWeek>0 },
-            { label:"Inactifs 7j+", value:inactiveAlerts, icon:"⚠️", accent:false, warn:inactiveAlerts>0 },
-          ].map((s,i) => (
-            <div key={i} style={{ background:"#141414", border:`1px solid ${s.warn?"rgba(239,68,68,0.2)":s.accent?G_BORDER:"rgba(255,255,255,0.06)"}`, borderRadius:14, padding:"16px 14px" }}>
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                <div style={{ fontSize:9, fontWeight:700, letterSpacing:"1.5px", textTransform:"uppercase", color:"#555" }}>{s.label}</div>
-                <span style={{ fontSize:16 }}>{s.icon}</span>
-              </div>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:26, fontWeight:700, color:s.warn&&s.value>0?"#ef4444":s.accent?G:"#f5f5f5", lineHeight:1.2, marginTop:4 }}>{s.value}</div>
-              {s.sub && <div style={{ fontSize:10, color:"#555", marginTop:2 }}>{s.sub}</div>}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          {/* ========== TITRE HERO ========== */}
+          <div style={{ marginBottom: 36 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 12 }}>
+              Vue d'ensemble
             </div>
-          ))}
-        </div>
+            <h1 style={{ fontSize: 44, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+              Dashboard<span style={{ color: G }}>.</span>
+            </h1>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginTop: 10, lineHeight: 1.5 }}>
+              Tu pilotes <strong style={{ color: "#fff", fontWeight: 700 }}>{total}</strong> client{total > 1 ? "s" : ""}. {withProg} avec un programme actif, {activeToday} en seance aujourd'hui.
+            </p>
+          </div>
 
-        {/* Barre filtres + actions */}
-        <div style={{ display:"flex", gap:10, marginBottom:16, alignItems:"center", flexWrap:"wrap" }}>
-          <input className="inp-focus" placeholder="🔍  Rechercher..." value={search} onChange={e=>setSearch(e.target.value)} style={{ ...inp, flex:1, minWidth:200 }} />
-          <div style={{ display:"flex", gap:4 }}>
-            {[["all","Tous",total],["active","Actifs 7j",activeWeek],["noprog","Sans prog.",total-withProg],["inactive","⚠ Inactifs",inactiveAlerts]].map(([k,l,n])=>(
-              <button key={k} onClick={()=>setFilter(k)} style={{ padding:"7px 12px", fontSize:10.5, fontWeight:600, background:filter===k?G_DIM:"transparent", border:`1px solid ${filter===k?G_BORDER:"rgba(255,255,255,0.08)"}`, borderRadius:100, color:filter===k?G:"#666", cursor:"pointer", whiteSpace:"nowrap" }}>
-                {l} <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9 }}>({n})</span>
-              </button>
+          {/* ========== STATS GRID ========== */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 36 }}>
+            {[
+              { label: "Clients total", value: total, icon: "users", color: "#fff" },
+              { label: "Programme actif", value: withProg, sub: `${total - withProg} sans`, icon: "document", color: "#fff" },
+              { label: "Actifs aujourd'hui", value: activeToday, icon: "flame", color: activeToday > 0 ? G : "rgba(255,255,255,0.5)", accent: activeToday > 0 },
+              { label: "Actifs cette sem.", value: activeWeek, icon: "trending", color: activeWeek > 0 ? G : "rgba(255,255,255,0.5)", accent: activeWeek > 0 },
+              { label: "Inactifs 7j+", value: inactiveAlerts, icon: "alert", color: inactiveAlerts > 0 ? RED : "rgba(255,255,255,0.5)", warn: inactiveAlerts > 0 },
+            ].map((s, i) => (
+              <div key={i} style={{
+                background: "rgba(255,255,255,0.025)",
+                border: `1px solid ${s.warn ? "rgba(239,68,68,0.25)" : s.accent ? G_BORDER : "rgba(255,255,255,0.06)"}`,
+                borderRadius: 18, padding: "20px 20px 18px",
+                position: "relative", overflow: "hidden",
+                animation: `fadeUp ${0.2 + i * 0.06}s ease both`,
+                transition: "transform 0.2s, border-color 0.2s",
+              }}>
+                {s.accent && !s.warn && (
+                  <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120, background: `radial-gradient(circle, ${G}15, transparent 70%)`, pointerEvents: "none" }} />
+                )}
+                <div style={{ position: "relative", display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
+                    {s.label}
+                  </div>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 10,
+                    background: s.warn ? "rgba(239,68,68,0.12)" : s.accent ? "rgba(2,209,186,0.1)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${s.warn ? "rgba(239,68,68,0.25)" : s.accent ? G_BORDER : "rgba(255,255,255,0.06)"}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: s.warn ? RED : s.accent ? G : "rgba(255,255,255,0.4)",
+                    flexShrink: 0,
+                    animation: s.accent && !s.warn ? "glowFlame 2.5s ease-in-out infinite" : "none",
+                  }}>
+                    <Icon name={s.icon} size={16} />
+                  </div>
+                </div>
+                <div style={{ fontSize: 38, fontWeight: 200, color: s.color, letterSpacing: "-2px", lineHeight: 1, fontFamily: "inherit", position: "relative" }}>
+                  {s.value}
+                </div>
+                {s.sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 8, letterSpacing: "0.3px" }}>{s.sub}</div>}
+              </div>
             ))}
           </div>
-          <button onClick={()=>setShowAdd(v=>!v)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 18px", background:showAdd?G_DIM:G, border:`1px solid ${showAdd?G_BORDER:G}`, borderRadius:9, color:showAdd?G:"#0d0d0d", fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:showAdd?"none":"0 4px 16px rgba(2,209,186,0.25)" }}>
-            {showAdd?"✕ Annuler":"+ Nouveau client"}
-          </button>
-        </div>
 
-        {/* Formulaire nouveau client */}
-        {showAdd && (
-          <div style={{ background:"#141414", border:`1px solid ${G_BORDER}`, borderRadius:14, padding:20, marginBottom:16, animation:"fadeUp 0.2s ease" }}>
-            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:G, marginBottom:14 }}>Nouveau client</div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:10 }}>
-              <div>
-                <label style={{ fontSize:9, color:"#555", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>Email *</label>
-                <input className="inp-focus" type="email" placeholder="client@email.com" value={newEmail} onChange={e=>setNewEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addClient()} style={inp} />
+          {/* ========== BARRE FILTRES + ACTIONS ========== */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
+              <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}>
+                <Icon name="search" size={15} />
               </div>
-              <div>
-                <label style={{ fontSize:9, color:"#555", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>Prénom Nom</label>
-                <input className="inp-focus" type="text" placeholder="Thomas Dupont" value={newName} onChange={e=>setNewName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addClient()} style={inp} />
-              </div>
-              <div style={{ display:"flex", alignItems:"flex-end" }}>
-                <button onClick={addClient} disabled={!newEmail} style={{ padding:"10px 20px", background:newEmail?G:"#1e1e1e", border:"none", borderRadius:9, color:newEmail?"#0d0d0d":"#444", fontSize:12, fontWeight:700, cursor:newEmail?"pointer":"not-allowed", height:40 }}>Créer</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Table clients */}
-        {loading ? (
-          <div style={{ textAlign:"center", padding:60, color:"#555" }}>
-            <div style={{ width:32, height:32, border:`2.5px solid #222`, borderTopColor:G, borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 12px" }} />
-            Chargement...
-          </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign:"center", padding:60, color:"#444", fontSize:13 }}>
-            {search||filter!=="all" ? "Aucun client correspond" : "Aucun client — ajoute ton premier 👆"}
-          </div>
-        ) : (
-          <div style={{ background:"#0f0f0f", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, overflow:"hidden" }}>
-            {/* Header colonnes */}
-            <div style={{ display:"grid", gridTemplateColumns:"2fr 1.4fr 0.8fr 0.8fr 0.9fr 1fr 1fr auto", padding:"10px 20px", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:9, fontWeight:700, letterSpacing:"1.5px", textTransform:"uppercase", color:"#444" }}>
-              <div>Client</div><div>Programme</div><div>Statut</div><div>Séances</div><div>Poids</div><div>RPE</div><div>Dernier contact</div><div></div>
+              <input
+                className="inp-focus"
+                placeholder="Rechercher un client..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{
+                  width: "100%", padding: "13px 16px 13px 42px",
+                  background: "rgba(255,255,255,0.025)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 12, color: "#fff",
+                  fontFamily: "inherit", fontSize: 14,
+                  outline: "none", boxSizing: "border-box",
+                  transition: "border-color 0.2s, background 0.2s",
+                }}
+              />
             </div>
 
-            {filtered.map((c, i) => {
-              const prog     = c.programmes?.find(p => p.is_active);
-              const actColor = activityColor(c._lastActivity);
-              const logsCount = Math.ceil(c._logs.length / 3);
-              const lastW    = c._weights?.[0];
-              const lastRpe  = c._rpe?.[0];
-              const RPE_EMOJIS = ["","😊","💪","😤","😰","🥵"];
-              const RPE_COLORS = ["","#4ade80","#02d1ba","#f97316","#ef4444","#dc2626"];
-              const daysAgoStr = daysAgo(c._lastActivity);
-              const inactiveDays = c._lastActivity ? Math.floor((Date.now()-new Date(c._lastActivity))/86400000) : null;
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {[
+                ["all", "Tous", total, null],
+                ["active", "Actifs 7j", activeWeek, null],
+                ["noprog", "Sans prog.", total - withProg, null],
+                ["inactive", "Inactifs", inactiveAlerts, "alert"],
+              ].map(([k, l, n, ic]) => {
+                const active = filter === k;
+                return (
+                  <button
+                    key={k}
+                    onClick={() => setFilter(k)}
+                    style={{
+                      padding: "8px 14px", fontSize: 11, fontWeight: 700,
+                      background: active ? G_DIM : "rgba(255,255,255,0.025)",
+                      border: `1px solid ${active ? G_BORDER : "rgba(255,255,255,0.08)"}`,
+                      borderRadius: 100,
+                      color: active ? G : "rgba(255,255,255,0.45)",
+                      cursor: "pointer", whiteSpace: "nowrap",
+                      display: "flex", alignItems: "center", gap: 6,
+                      fontFamily: "inherit", letterSpacing: "0.2px",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {ic && <Icon name={ic} size={11} />}
+                    {l}
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: active ? G : "rgba(255,255,255,0.3)", fontWeight: 600 }}>
+                      {n}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
 
-              return (
-                <div key={c.id} className="client-row" onClick={() => setSelected(c)} style={{
-                  display:"grid", gridTemplateColumns:"2fr 1.4fr 0.8fr 0.8fr 0.9fr 1fr 1fr auto",
-                  padding:"13px 20px", borderBottom: i<filtered.length-1?"1px solid rgba(255,255,255,0.04)":"none",
-                  alignItems:"center", gap:8, transition:"background 0.15s",
-                  animation:`fadeUp ${0.05+i*0.025}s ease both`,
-                }}>
-                  {/* Nom */}
-                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <div style={{ position:"relative" }}>
-                      <Avatar name={c.full_name||c.email} size={34} active={!!prog} />
-                      {c._inactive && c.programmes?.some(p=>p.is_active) && (
-                        <div style={{ position:"absolute", top:-2, right:-2, width:10, height:10, borderRadius:"50%", background:"#ef4444", border:"2px solid #0f0f0f", animation:"pulse 2s infinite" }} />
+            <button
+              onClick={() => setShowAdd((v) => !v)}
+              style={{
+                display: "flex", alignItems: "center", gap: 7,
+                padding: "11px 18px",
+                background: showAdd ? "rgba(255,255,255,0.04)" : `linear-gradient(135deg, ${G}, #0891b2)`,
+                border: `1px solid ${showAdd ? "rgba(255,255,255,0.1)" : G}`,
+                borderRadius: 12,
+                color: showAdd ? "rgba(255,255,255,0.55)" : "#000",
+                fontSize: 12, fontWeight: 800, cursor: "pointer",
+                boxShadow: showAdd ? "none" : "0 8px 24px rgba(2,209,186,0.25)",
+                letterSpacing: "0.3px", textTransform: "uppercase",
+                fontFamily: "inherit",
+              }}
+            >
+              <Icon name={showAdd ? "x" : "plus"} size={13} />
+              {showAdd ? "Annuler" : "Nouveau client"}
+            </button>
+          </div>
+
+          {/* ========== FORMULAIRE NOUVEAU CLIENT ========== */}
+          {showAdd && (
+            <div style={{
+              background: "rgba(2,209,186,0.04)",
+              border: `1px solid ${G_BORDER}`,
+              borderRadius: 18, padding: 24, marginBottom: 20,
+              animation: "fadeUp 0.25s cubic-bezier(0.22,1,0.36,1)",
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", color: G, marginBottom: 18 }}>
+                Nouveau client
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                    Email *
+                  </label>
+                  <input
+                    className="inp-focus" type="email" placeholder="client@email.com"
+                    value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addClient()}
+                    style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box", transition: "all 0.2s" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                    Prenom Nom
+                  </label>
+                  <input
+                    className="inp-focus" type="text" placeholder="Thomas Dupont"
+                    value={newName} onChange={(e) => setNewName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addClient()}
+                    style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box", transition: "all 0.2s" }}
+                  />
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-end" }}>
+                  <button
+                    onClick={addClient} disabled={!newEmail}
+                    style={{
+                      padding: "12px 22px",
+                      background: newEmail ? `linear-gradient(135deg, ${G}, #0891b2)` : "rgba(255,255,255,0.04)",
+                      border: "none", borderRadius: 10,
+                      color: newEmail ? "#000" : "rgba(255,255,255,0.25)",
+                      fontSize: 12, fontWeight: 800,
+                      cursor: newEmail ? "pointer" : "not-allowed",
+                      height: 44, fontFamily: "inherit",
+                      textTransform: "uppercase", letterSpacing: "0.5px",
+                      boxShadow: newEmail ? "0 8px 24px rgba(2,209,186,0.25)" : "none",
+                    }}
+                  >
+                    Creer
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========== CLIENT LIST ========== */}
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 80, color: "rgba(255,255,255,0.35)" }}>
+              <div style={{ width: 40, height: 40, border: "2.5px solid rgba(2,209,186,0.1)", borderTopColor: G, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase" }}>Chargement</div>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 80, color: "rgba(255,255,255,0.3)" }}>
+              <div style={{ marginBottom: 14, display: "flex", justifyContent: "center", color: "rgba(255,255,255,0.2)" }}>
+                <Icon name="users" size={40} strokeWidth={1.4} />
+              </div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+                {search || filter !== "all" ? "Aucun client correspondant" : "Aucun client pour l'instant"}
+              </div>
+              {!search && filter === "all" && (
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>
+                  Ajoute ton premier client avec le bouton ci-dessus
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, overflow: "hidden" }}>
+              {/* Header colonnes */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "2fr 1.4fr 0.9fr 0.7fr 0.9fr 0.9fr 1fr auto",
+                padding: "14px 22px",
+                borderBottom: "1px solid rgba(255,255,255,0.04)",
+                fontSize: 9, fontWeight: 700, letterSpacing: "2px",
+                textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+                background: "rgba(255,255,255,0.015)",
+              }}>
+                <div>Client</div><div>Programme</div><div>Statut</div><div>Seances</div><div>Poids</div><div>RPE</div><div>Dernier contact</div><div></div>
+              </div>
+
+              {filtered.map((c, i) => {
+                const prog = c.programmes?.find((p) => p.is_active);
+                const actColor = activityColor(c._lastActivity);
+                const logsCount = Math.ceil(c._logs.length / 3);
+                const lastW = c._weights?.[0];
+                const lastRpe = c._rpe?.[0];
+                const RPE_COLORS = ["", "#4ade80", G, ORANGE, RED, "#dc2626"];
+                const RPE_LABELS = ["", "Facile", "Moyen", "Dur", "Tres dur", "Max"];
+                const daysAgoStr = daysAgo(c._lastActivity);
+                const inactiveDays = c._lastActivity ? Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) : null;
+                const hasProg = c.programmes?.some((p) => p.is_active);
+
+                return (
+                  <div
+                    key={c.id}
+                    className="cd-row"
+                    onClick={() => setSelected(c)}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1.4fr 0.9fr 0.7fr 0.9fr 0.9fr 1fr auto",
+                      padding: "16px 22px",
+                      borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+                      alignItems: "center", gap: 10,
+                      transition: "background 0.2s",
+                      animation: `fadeUp ${0.25 + i * 0.03}s ease both`,
+                    }}
+                  >
+                    {/* Nom + avatar */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                      <div style={{ position: "relative", flexShrink: 0 }}>
+                        <div className="cd-avatar-glow" style={{ position: "absolute", inset: -4, borderRadius: "50%", background: `radial-gradient(circle, ${G}30, transparent 70%)`, opacity: 0, transition: "opacity 0.2s", pointerEvents: "none" }} />
+                        <Avatar name={c.full_name || c.email} size={38} active={!!prog} />
+                        {c._inactive && hasProg && (
+                          <div style={{ position: "absolute", top: -2, right: -2, width: 11, height: 11, borderRadius: "50%", background: RED, border: "2px solid #050505", animation: "pulseDot 2s infinite" }} />
+                        )}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {c.full_name || <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Sans nom</span>}
+                        </div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {c.email}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Programme */}
+                    <div style={{ minWidth: 0 }}>
+                      {prog ? (
+                        <>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: G, display: "flex", alignItems: "center", gap: 5, overflow: "hidden" }}>
+                            <Icon name="check" size={11} />
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
+                              {prog.programme_name || "Actif"}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                            {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
+                          </div>
+                        </>
+                      ) : (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: ORANGE, fontWeight: 700 }}>
+                          <Icon name="alert" size={11} />
+                          Aucun
+                        </span>
                       )}
                     </div>
+
+                    {/* Statut / activite */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <div style={{
+                        width: 8, height: 8, borderRadius: "50%", background: actColor,
+                        boxShadow: inactiveDays !== null && inactiveDays <= 1 ? `0 0 10px ${actColor}, 0 0 4px ${actColor}` : "none",
+                        flexShrink: 0,
+                      }} />
+                      <span style={{ fontSize: 10.5, color: actColor, fontWeight: 700, letterSpacing: "0.3px" }}>
+                        {!c._lastActivity ? "Jamais" : inactiveDays <= 1 ? "Actif" : inactiveDays <= 7 ? "Cette sem." : inactiveDays + "j"}
+                      </span>
+                    </div>
+
+                    {/* Seances */}
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: logsCount > 0 ? "#fff" : "rgba(255,255,255,0.2)" }}>
+                      {logsCount}
+                    </div>
+
+                    {/* Poids */}
                     <div>
-                      <div style={{ fontSize:12, fontWeight:600, color:"#f5f5f5" }}>{c.full_name||<span style={{color:"#555"}}>Sans nom</span>}</div>
-                      <div style={{ fontSize:10, color:"#555" }}>{c.email}</div>
+                      {lastW ? (
+                        <>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                            {lastW.weight}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>
+                          </div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                            {new Date(lastW.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
+                          </div>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>—</span>
+                      )}
+                    </div>
+
+                    {/* RPE (SVG + numero, plus d'emoji) */}
+                    <div>
+                      {lastRpe ? (
+                        <div style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          padding: "4px 10px",
+                          background: RPE_COLORS[lastRpe.rpe] + "15",
+                          border: "1px solid " + RPE_COLORS[lastRpe.rpe] + "30",
+                          borderRadius: 100,
+                        }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 800, color: RPE_COLORS[lastRpe.rpe] }}>
+                            {lastRpe.rpe}
+                          </div>
+                          <div style={{ fontSize: 9, fontWeight: 700, color: RPE_COLORS[lastRpe.rpe], textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            {RPE_LABELS[lastRpe.rpe]}
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>—</span>
+                      )}
+                    </div>
+
+                    {/* Dernier contact */}
+                    <div style={{
+                      fontSize: 11,
+                      color: daysAgoStr === null ? "rgba(255,255,255,0.2)" : daysAgoStr === "Aujourd'hui" || daysAgoStr === "Hier" ? G : "rgba(255,255,255,0.5)",
+                      fontWeight: 600,
+                    }}>
+                      {daysAgoStr || "Jamais"}
+                    </div>
+
+                    {/* Fleche */}
+                    <div className="cd-arrow" style={{ opacity: 0, transition: "all 0.2s", color: G, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      <Icon name="arrow-right" size={16} />
                     </div>
                   </div>
-
-                  {/* Programme */}
-                  <div>
-                    {prog ? (
-                      <>
-                        <div style={{ fontSize:11, fontWeight:600, color:G, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>✓ {prog.programme_name||"Actif"}</div>
-                        <div style={{ fontSize:9, color:"#444" }}>{new Date(prog.uploaded_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})}</div>
-                      </>
-                    ) : <span style={{ fontSize:11, color:"#f97316", fontWeight:600 }}>⚠ Aucun</span>}
-                  </div>
-
-                  {/* Statut / activité */}
-                  <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                    <div style={{ width:7, height:7, borderRadius:"50%", background:actColor, boxShadow: inactiveDays!==null&&inactiveDays<=1?`0 0 6px ${actColor}`:"none" }} />
-                    <span style={{ fontSize:9.5, color:actColor, fontWeight:600 }}>
-                      {!c._lastActivity ? "Jamais" : inactiveDays<=1 ? "Actif" : inactiveDays<=7 ? "Semaine" : `${inactiveDays}j`}
-                    </span>
-                  </div>
-
-                  {/* Séances */}
-                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:15, fontWeight:600, color:logsCount>0?"#f5f5f5":"#444" }}>{logsCount}</div>
-
-                  {/* Poids */}
-                  <div>
-                    {lastW ? (
-                      <>
-                        <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:13, fontWeight:600, color:"#f5f5f5" }}>{lastW.weight} kg</div>
-                        <div style={{ fontSize:9, color:"#444" }}>{new Date(lastW.date).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})}</div>
-                      </>
-                    ) : <span style={{ fontSize:11, color:"#444" }}>—</span>}
-                  </div>
-
-                  {/* RPE */}
-                  <div>
-                    {lastRpe ? (
-                      <div style={{ display:"flex", alignItems:"center", gap:4 }}>
-                        <span style={{ fontSize:16 }}>{RPE_EMOJIS[lastRpe.rpe]}</span>
-                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:12, fontWeight:600, color:RPE_COLORS[lastRpe.rpe] }}>{lastRpe.rpe}/5</span>
-                      </div>
-                    ) : <span style={{ fontSize:11, color:"#444" }}>—</span>}
-                  </div>
-
-                  {/* Dernier contact */}
-                  <div style={{ fontSize:11, color: daysAgoStr===null?"#444":daysAgoStr==="Aujourd'hui"||daysAgoStr==="Hier"?G:"#9ca3af" }}>
-                    {daysAgoStr||"Jamais"}
-                  </div>
-
-                  {/* Flèche */}
-                  <div className="row-arrow" style={{ opacity:0, transition:"opacity 0.15s", color:"#555", fontSize:14 }}>→</div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
