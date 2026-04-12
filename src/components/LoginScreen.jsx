@@ -158,8 +158,8 @@ export function LoginScreen({ onSendMagicLink, loading, onBack }) {
               <input type="email" placeholder="ton@email.com" value={email}
                 onChange={e => setEmail(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
                 onKeyDown={e => e.key === 'Enter' && handleSendOTP()}
-                autoFocus
-                style={{ width: '100%', boxSizing: 'border-box', background: focused ? 'rgba(2,209,186,0.04)' : 'rgba(255,255,255,0.03)', border: '1.5px solid ' + (focused ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.08)'), borderRadius: 14, padding: '16px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s' }} />
+                autoFocus enterKeyHint="next"
+                style={{ width: '100%', boxSizing: 'border-box', background: focused ? 'rgba(2,209,186,0.04)' : 'rgba(255,255,255,0.03)', border: '1.5px solid ' + (focused ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.08)'), borderRadius: 14, padding: '16px 18px', color: '#f5f5f5', fontSize: 16, fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s' }} />
 
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
                 <div onClick={() => setAccepted(a => !a)} style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2, background: accepted ? '#02d1ba' : 'transparent', border: '1.5px solid ' + (accepted ? '#02d1ba' : 'rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
