@@ -50,6 +50,7 @@ import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
 import { supabase } from "./lib/supabase";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
+import CoachOnboarding from "./components/CoachOnboarding";
 
 const GREEN = "#02d1ba";
 // ⚠️ Email du coach historique — sera remplace par la table coaches pour le multi-tenant
@@ -379,6 +380,7 @@ export default function App() {
 
   // Detection des roles depuis les tables coaches et super_admins
   const [coachId, setCoachId] = React.useState(null);
+  const [coachData, setCoachData] = React.useState(null); // full row de la table coaches
   const [isCoach, setIsCoach] = React.useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [showSuperAdmin, setShowSuperAdmin] = React.useState(true);
@@ -391,12 +393,13 @@ export default function App() {
     }
     // Check coach + super admin en parallele
     Promise.all([
-      supabase.from("coaches").select("id").eq("email", user.email).single(),
+      supabase.from("coaches").select("*").eq("email", user.email).single(),
       supabase.from("super_admins").select("id").eq("email", user.email).single(),
     ]).then(([coachRes, adminRes]) => {
-      const cId = coachRes.data?.id || null;
-      setCoachId(cId);
-      setIsCoach(!!cId);
+      const cData = coachRes.data || null;
+      setCoachData(cData);
+      setCoachId(cData?.id || null);
+      setIsCoach(!!cData);
       setIsSuperAdmin(!!adminRes.data);
     });
   }, [user?.email]);
@@ -812,6 +815,16 @@ export default function App() {
       </div>
     );
   }
+  // ── Coach sans brand_name → onboarding coach (premiere config) ──
+  if (isCoach && coachData && !coachData.brand_name && showCoachDash) {
+    return (
+      <CoachOnboarding
+        coachData={coachData}
+        onComplete={() => window.location.reload()}
+      />
+    );
+  }
+
   // ── Super-admin → dashboard plateforme avec toggle coach ──
   if (isSuperAdmin && isCoach && showSuperAdmin && showCoachDash) {
     return (

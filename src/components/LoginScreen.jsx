@@ -58,6 +58,8 @@ export function LoginScreen({ onSendMagicLink, loading, onBack }) {
   const [pwdFocused, setPwdFocused] = useState(false);
   const [coachError, setCoachError] = useState('');
   const [coachLoading, setCoachLoading] = useState(false);
+  const [coachSignup, setCoachSignup] = useState(false); // toggle login/signup
+  const [coachName, setCoachName] = useState('');
   const otpRefs = React.useRef([]);
   const phrase = PHRASES[phraseIdx];
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -219,17 +221,55 @@ export function LoginScreen({ onSendMagicLink, loading, onBack }) {
             </div>
           )}
 
-          {/* Espace Coach */}
+          {/* Espace Coach — login OU inscription */}
           {coachMode && (
-            <form onSubmit={handleCoachLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input type="email" placeholder="coach@email.com" value={email} onChange={e => setEmail(e.target.value)} autoFocus
-                style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none' }} />
-              <input type="password" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} onFocus={() => setPwdFocused(true)} onBlur={() => setPwdFocused(false)}
-                style={{ width: '100%', boxSizing: 'border-box', background: pwdFocused ? 'rgba(2,209,186,0.04)' : 'rgba(255,255,255,0.03)', border: '1.5px solid ' + (pwdFocused ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.08)'), borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 15, fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s' }} />
+            <form onSubmit={coachSignup ? async (e) => {
+              e.preventDefault();
+              setCoachLoading(true); setCoachError('');
+              try {
+                // 1. Creer le compte auth Supabase
+                const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+                  email: email.trim().toLowerCase(),
+                  password,
+                  options: { data: { full_name: coachName.trim() } },
+                });
+                if (signUpErr) throw signUpErr;
+                // 2. Inserer dans la table coaches
+                const { error: insErr } = await supabase.from("coaches").insert({
+                  email: email.trim().toLowerCase(),
+                  full_name: coachName.trim() || null,
+                  is_active: true,
+                });
+                if (insErr && insErr.code !== "23505") throw insErr; // 23505 = email deja existant
+                // 3. Auto-login (signUp auto-login si email_confirm = false dans les settings Supabase)
+                // Si email_confirm est active, on tente un login direct
+                if (!signUpData?.session) {
+                  await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+                }
+              } catch(err) {
+                setCoachError(err.message || 'Erreur inscription');
+              }
+              setCoachLoading(false);
+            } : handleCoachLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+              {/* Toggle login / signup */}
+              <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden', marginBottom: 4 }}>
+                <button type="button" onClick={() => { setCoachSignup(false); setCoachError(''); }} style={{ flex: 1, padding: '10px', border: 'none', background: !coachSignup ? 'rgba(2,209,186,0.1)' : 'transparent', color: !coachSignup ? '#02d1ba' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Se connecter</button>
+                <button type="button" onClick={() => { setCoachSignup(true); setCoachError(''); }} style={{ flex: 1, padding: '10px', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.08)', background: coachSignup ? 'rgba(2,209,186,0.1)' : 'transparent', color: coachSignup ? '#02d1ba' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>S'inscrire</button>
+              </div>
+
+              {coachSignup && (
+                <input type="text" placeholder="Ton nom complet" value={coachName} onChange={e => setCoachName(e.target.value)} autoFocus
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 16, fontFamily: 'inherit', outline: 'none' }} />
+              )}
+              <input type="email" placeholder="coach@email.com" value={email} onChange={e => setEmail(e.target.value)} autoFocus={!coachSignup}
+                style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 16, fontFamily: 'inherit', outline: 'none' }} />
+              <input type="password" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 16, fontFamily: 'inherit', outline: 'none' }} />
               {coachError && <div style={{ fontSize: 12, color: '#ef4444', textAlign: 'center', background: 'rgba(239,68,68,0.1)', padding: '8px', borderRadius: 8 }}>{coachError}</div>}
-              <button type="submit" disabled={!password || !email || coachLoading}
-                style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: password && email ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: password && email ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, cursor: password && email ? 'pointer' : 'not-allowed', letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.15s' }}>
-                {coachLoading ? 'Connexion...' : 'Accéder au dashboard →'}
+              <button type="submit" disabled={!password || !email || coachLoading || (coachSignup && !coachName.trim())}
+                style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: password && email ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: password && email ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, cursor: password && email ? 'pointer' : 'not-allowed', letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.15s', fontFamily: 'inherit' }}>
+                {coachLoading ? (coachSignup ? 'Inscription...' : 'Connexion...') : (coachSignup ? 'Creer mon compte coach →' : 'Acceder au dashboard →')}
               </button>
             </form>
           )}
