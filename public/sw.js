@@ -1,24 +1,34 @@
 // RB Perform — Service Worker
 // Strategie : network-first pour HTML/navigation (toujours frais),
-// cache-first pour assets statiques hashes (immutables).
-// Le CACHE_VERSION change a chaque build via le timestamp injecte par CRA.
+// cache-first pour assets statiques hashes (immutables),
+// programme cache proactivement pour acces offline.
 
 const CACHE_VERSION = "rbperf-v" + (self.registration?.scope || "") + "-" + Date.now();
-const STATIC_CACHE = "rbperf-static-v3";
+const STATIC_CACHE = "rbperf-static-v4";
+const DATA_CACHE = "rbperf-data-v1";
+
+// App shell : fichiers critiques pre-caches a l'installation
+const APP_SHELL = [
+  "/",
+  "/index.html",
+  "/icon-192.png",
+  "/manifest.json",
+];
 
 self.addEventListener("install", (e) => {
-  // Active immediatement le nouveau SW sans attendre la fermeture des onglets
+  e.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(APP_SHELL))
+  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     (async () => {
-      // Purge tous les anciens caches
       const keys = await caches.keys();
       await Promise.all(
         keys
-          .filter((k) => k !== STATIC_CACHE && k !== CACHE_VERSION)
+          .filter((k) => k !== STATIC_CACHE && k !== CACHE_VERSION && k !== DATA_CACHE)
           .map((k) => caches.delete(k))
       );
       await self.clients.claim();
@@ -44,8 +54,7 @@ self.addEventListener("fetch", (e) => {
     url.pathname === "/" ||
     url.pathname.endsWith(".html");
 
-  // HTML : network-first (sinon les utilisateurs PWA reste bloques sur un vieux index.html
-  // qui pointe vers un ancien hash de bundle => bug "feature pas visible apres deploy")
+  // HTML : network-first (toujours frais), fallback cache pour offline
   if (isHTML) {
     e.respondWith(
       fetch(req)
@@ -75,11 +84,39 @@ self.addEventListener("fetch", (e) => {
   );
 });
 
+// ===== MESSAGE API : cache programme depuis l'app =====
+// L'app envoie { type: "CACHE_PROGRAMME", html: "..." } quand un programme est charge
+self.addEventListener("message", (e) => {
+  if (e.data?.type === "CACHE_PROGRAMME" && e.data.html) {
+    caches.open(DATA_CACHE).then((cache) => {
+      const blob = new Blob([e.data.html], { type: "text/html" });
+      const response = new Response(blob, {
+        headers: { "Content-Type": "text/html", "X-Cached-At": new Date().toISOString() },
+      });
+      cache.put("/offline-programme", response);
+    });
+  }
+
+  if (e.data?.type === "GET_CACHED_PROGRAMME") {
+    caches.open(DATA_CACHE).then((cache) => {
+      cache.match("/offline-programme").then((res) => {
+        if (res) {
+          res.text().then((html) => {
+            e.source.postMessage({ type: "CACHED_PROGRAMME", html });
+          });
+        } else {
+          e.source.postMessage({ type: "CACHED_PROGRAMME", html: null });
+        }
+      });
+    });
+  }
+});
+
 // Push notifications
 self.addEventListener("push", (e) => {
   const d = e.data ? e.data.json() : {};
   e.waitUntil(
-    self.registration.showNotification(d.title || "RB PERFORM", {
+    self.registration.showNotification(d.title || "Notification", {
       body: d.body || "Message de ton coach",
       icon: "/icon-192.png",
       badge: "/icon-192.png",
