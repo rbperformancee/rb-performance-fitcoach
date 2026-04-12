@@ -61,11 +61,12 @@ import ProgrammeCountdown from "./components/ProgrammeCountdown";
 const SaasLandingPage = lazy(() => import("./components/SaasLandingPage"));
 const CoachCodeGate = lazy(() => import("./components/CoachCodeGate"));
 
+import Spinner from "./components/Spinner";
+
 // Fallback minimal pour Suspense (pas de flash blanc)
 const LazyFallback = () => (
   <div style={{ position: "fixed", inset: 0, background: "#050505", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
-    <div style={{ width: 28, height: 28, border: "2px solid rgba(2,209,186,0.15)", borderTopColor: "#02d1ba", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <Spinner variant="dots" size={36} />
   </div>
 );
 
@@ -673,11 +674,9 @@ function AppInner() {
     return (
       <div style={{
         minHeight: "100vh", background: "#0d0d0d",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       }}>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ width: 32, height: 32, border: "2.5px solid #1a1a1a", borderTopColor: GREEN, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-        <div style={{ fontSize: 12, color: "#555" }}>Chargement...</div>
+        <Spinner variant="dots" size={36} label="Chargement" />
       </div>
     );
   }

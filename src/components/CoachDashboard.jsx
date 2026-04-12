@@ -11,6 +11,8 @@ import { useClientRelance } from "../hooks/useClientRelance";
 import { LOGO_B64 } from "../utils/logo";
 import ErrorBoundary from "./ErrorBoundary";
 import InvitationPanel from "./InvitationPanel";
+import EmptyState from "./EmptyState";
+import { SkeletonList } from "./Skeleton";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -2280,14 +2282,25 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
             {/* Cards clients premium */}
             {loading ? (
-              <div style={{ textAlign: "center", padding: 60 }}>
-                <div style={{ width: 36, height: 36, border: "2px solid rgba(2,209,186,0.1)", borderTopColor: G, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-              </div>
+              <SkeletonList count={5} gap={10} />
             ) : filtered.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 60, color: "rgba(255,255,255,0.3)" }}>
-                <Icon name="users" size={36} strokeWidth={1.4} color="rgba(255,255,255,0.2)" />
-                <div style={{ fontSize: 13, marginTop: 12 }}>{search || filter !== "all" ? "Aucun resultat" : "Aucun client"}</div>
-              </div>
+              search || filter !== "all" ? (
+                <EmptyState
+                  icon="search"
+                  title="Aucun resultat"
+                  subtitle={`Aucun client ne correspond ${search ? `a "${search}"` : "au filtre"}.`}
+                  action={{ label: "Reinitialiser", onClick: () => { setSearch(""); setFilter("all"); } }}
+                  size="md"
+                />
+              ) : (
+                <EmptyState
+                  icon="users"
+                  title="Ton premier client t'attend."
+                  subtitle="Partage ton code d'invitation pour qu'ils rejoignent ton espace, ou ajoute-les manuellement."
+                  action={{ label: "Ajouter un client", onClick: () => setShowAdd(true) }}
+                  size="lg"
+                />
+              )
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {filtered.map((c, i) => {

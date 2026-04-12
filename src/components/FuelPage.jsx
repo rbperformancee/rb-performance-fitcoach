@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
+import EmptyState from "./EmptyState";
+import Spinner from "./Spinner";
 
 // ===== Scanner code-barre via BarcodeDetector API native =====
 // Marche sur : iOS Safari 17+ (donc iOS 18), Chrome Android 83+, Chrome desktop, Edge.
@@ -737,8 +739,7 @@ export default function FuelPage({ client, appData }) {
                 {/* Searching */}
                 {searching && (
                   <div style={{ textAlign: "center", padding: "32px 0" }}>
-                    <div style={{ width: 32, height: 32, border: "2px solid rgba(249,115,22,0.2)", borderTopColor: ORANGE, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>Recherche en cours...</div>
+                    <Spinner variant="dots" size={28} color="#f97316" label="Recherche en cours" />
                   </div>
                 )}
 
@@ -784,16 +785,13 @@ export default function FuelPage({ client, appData }) {
 
                 {/* Empty state */}
                 {!searching && query.length > 2 && results.length === 0 && (
-                  <div style={{ textAlign: "center", padding: "32px 0" }}>
-                    <div style={{ marginBottom: 12, color: "rgba(255,255,255,0.2)", display: "flex", justifyContent: "center" }}>
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </svg>
-                    </div>
-                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 4, fontWeight: 600 }}>Aucun résultat</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>Essaie un nom plus général ou en français</div>
-                  </div>
+                  <EmptyState
+                    icon="search"
+                    title="Rien trouve"
+                    subtitle={`Aucun aliment pour "${query}". Essaie un nom plus general ou en francais (ex: poulet, pates, yaourt).`}
+                    size="md"
+                    style={{ padding: "24px 0" }}
+                  />
                 )}
 
                 {/* Selected food + quantite */}
@@ -908,7 +906,7 @@ export default function FuelPage({ client, appData }) {
               <div style={{marginTop:12,fontSize:12,color:recording?"#02d1ba":"rgba(255,255,255,0.3)",transition:"all 0.3s"}}>{recording?"Écoute en cours...":"Tap pour parler"}</div>
             </div>
             {voiceText && <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"12px 16px",marginBottom:16,fontSize:14,color:"rgba(255,255,255,0.7)",fontStyle:"italic"}}>"{voiceText}"</div>}
-            {voiceLoading && <div style={{textAlign:"center",padding:"16px 0",color:"rgba(2,209,186,0.6)",fontSize:12}}><div style={{width:28,height:28,border:"2px solid rgba(2,209,186,0.2)",borderTopColor:"#02d1ba",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto 8px"}}/>Analyse IA...</div>}
+            {voiceLoading && <div style={{textAlign:"center",padding:"16px 0"}}><Spinner variant="dots" size={26} label="Analyse IA" /></div>}
             {voiceResult && !voiceLoading && (
               <div>
                 <div style={{background:"rgba(2,209,186,0.06)",border:"1px solid rgba(2,209,186,0.2)",borderRadius:16,padding:16,marginBottom:16}}>

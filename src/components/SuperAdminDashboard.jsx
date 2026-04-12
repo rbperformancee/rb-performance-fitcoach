@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import Spinner from "./Spinner";
 
 // ===== CHARTE CEO : noir absolu + blanc ivoire + accents sobres =====
 const BLUE = "#818cf8"; // indigo clair — plus raffine que le bleu electrique
@@ -132,7 +133,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const card = { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" };
   const secTitle = (t, ic) => (<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}><Ic name={ic} size={14} color={BLUE} /><span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(59,130,246,0.6)" }}>{t}</span></div>);
 
-  if (loading) return <div style={{ minHeight: "100vh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style><div style={{ width: 36, height: 36, border: `2px solid ${BLUE_DIM}`, borderTopColor: BLUE, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /></div>;
+  if (loading) return <div style={{ minHeight: "100vh", background: "#030303", display: "flex", alignItems: "center", justifyContent: "center" }}><Spinner variant="dots" size={40} color={BLUE} /></div>;
 
   return (
     <div style={{ minHeight: "100vh", background: "#030303", fontFamily: BODY_FONT, color: IVORY }}>

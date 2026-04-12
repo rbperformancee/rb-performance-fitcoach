@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import haptic from "../lib/haptic";
+import Spinner from "./Spinner";
 
 const G = "#02d1ba";
 
@@ -75,6 +77,7 @@ export default function CoachCodeGate({ client, onLinked }) {
     }
     setLoading(true);
     setError(null);
+    haptic.light();
     try {
       // Trouver le coach
       const { data: coach, error: coachErr } = await supabase
@@ -84,6 +87,7 @@ export default function CoachCodeGate({ client, onLinked }) {
         .maybeSingle();
 
       if (coachErr || !coach) {
+        haptic.error();
         setError("Code invalide. Verifie avec ton coach.");
         setLoading(false);
         return;
@@ -112,6 +116,7 @@ export default function CoachCodeGate({ client, onLinked }) {
       });
 
       setFoundCoach(coach);
+      haptic.success();
       setTimeout(() => onLinked?.(coach), 900);
     } catch (e) {
       setError(e.message || "Erreur, reessaye.");
@@ -229,7 +234,12 @@ export default function CoachCodeGate({ client, onLinked }) {
                 marginBottom: 20,
               }}
             >
-              {loading ? "Verification..." : "Rejoindre"}
+              {loading ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                  <Spinner variant="dots" size={18} color="#000" />
+                  Verification
+                </span>
+              ) : "Rejoindre"}
             </button>
 
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>

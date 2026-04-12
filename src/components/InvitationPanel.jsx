@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import haptic from "../lib/haptic";
 
 const G = "#02d1ba";
 
@@ -26,6 +27,7 @@ export default function InvitationPanel({ coach }) {
   const shareMessage = `Rejoins mon espace coaching ${displayName} !\n\nTelecharge l'app RB Perform et entre le code ${code}\n\nOu clique directement : ${link}`;
 
   const copy = async (text, tag) => {
+    haptic.light();
     try {
       await navigator.clipboard.writeText(text);
       setCopied(tag);
