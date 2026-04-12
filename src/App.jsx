@@ -380,14 +380,14 @@ export default function App() {
     sendMagicLink, signOut,
   } = useAuth();
 
+  // Detection des roles depuis les tables coaches et super_admins
+  const [coachId, setCoachId] = React.useState(null);
+  const [coachData, setCoachData] = React.useState(null); // full row de la table coaches
+
   // Coach info dynamique — fallback sur valeurs par defaut
   const coachName = coachInfo?.full_name?.split(' ')[0] || coachData?.full_name?.split(' ')[0] || "Ton coach";
   const brandName = coachInfo?.brand_name || coachData?.brand_name || "RB Perform";
   const coachEmail = coachInfo?.email || coachData?.email || "rb.performancee@gmail.com";
-
-  // Detection des roles depuis les tables coaches et super_admins
-  const [coachId, setCoachId] = React.useState(null);
-  const [coachData, setCoachData] = React.useState(null); // full row de la table coaches
   const [isCoach, setIsCoach] = React.useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [showSuperAdmin, setShowSuperAdmin] = React.useState(true);
