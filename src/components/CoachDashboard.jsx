@@ -10,6 +10,7 @@ import ProgrammeBuilder from "./ProgrammeBuilder";
 import { useClientRelance } from "../hooks/useClientRelance";
 import { LOGO_B64 } from "../utils/logo";
 import ErrorBoundary from "./ErrorBoundary";
+import InvitationPanel from "./InvitationPanel";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -2194,6 +2195,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* ========== INVITATION CLIENTS (code + lien) ========== */}
+          {!showClientList && coachData && (
+            <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
+              <InvitationPanel coach={coachData} />
             </div>
           )}
 

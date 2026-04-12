@@ -53,11 +53,13 @@ const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m =
 import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
 import { supabase } from "./lib/supabase";
+import ErrorBoundaryApp from "./components/ErrorBoundary";
 const SuperAdminDashboard = lazy(() => import("./components/SuperAdminDashboard"));
 const CoachOnboarding = lazy(() => import("./components/CoachOnboarding"));
 import ProgrammeSignature from "./components/ProgrammeSignature";
 import ProgrammeCountdown from "./components/ProgrammeCountdown";
 const SaasLandingPage = lazy(() => import("./components/SaasLandingPage"));
+const CoachCodeGate = lazy(() => import("./components/CoachCodeGate"));
 
 // Fallback minimal pour Suspense (pas de flash blanc)
 const LazyFallback = () => (
@@ -391,6 +393,15 @@ function AppInner() {
     sendMagicLink, signOut,
   } = useAuth();
 
+  // Deep link /rejoindre/[slug] → convertit en ?coach=slug (lu par CoachCodeGate)
+  React.useEffect(() => {
+    const m = window.location.pathname.match(/^\/rejoindre\/([a-z0-9-]+)/i);
+    if (m) {
+      const slug = m[1];
+      window.history.replaceState({}, "", `/?coach=${encodeURIComponent(slug)}`);
+    }
+  }, []);
+
   // Detection des roles depuis les tables coaches et super_admins
   const [coachId, setCoachId] = React.useState(null);
   const [coachData, setCoachData] = React.useState(null); // full row de la table coaches
@@ -715,6 +726,17 @@ function AppInner() {
   //   (nouveau user sans row dans clients), on montre l'OnboardingFlow.
   // On NE depend PAS de cloudProgramme : la suppression d'un programme ne
   // doit jamais reclencher l'onboarding pour un user qui l'a deja fait.
+  // Gate code coach : si le client n'a pas de coach_id assigne, demander le code
+  // avant de montrer l'onboarding. Ne concerne PAS les clients existants qui ont
+  // deja coach_id (backfill migration 001).
+  if (user && !isCoach && !authLoading && client && !client.coach_id) {
+    return <CoachCodeGate client={client} onLinked={() => window.location.reload()} />;
+  }
+  // Cas client n'existe pas encore en DB : on ouvre aussi le gate
+  if (user && !isCoach && !authLoading && !client) {
+    return <CoachCodeGate client={{ email: user.email, id: null }} onLinked={() => window.location.reload()} />;
+  }
+
   if (user && !isCoach && !authLoading && client?.onboarding_done !== true) {
     return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
   }
@@ -1167,11 +1189,15 @@ function AppInner() {
   );
 }
 
-// Wrapper avec Suspense pour gerer les lazy imports
+// Wrapper avec Suspense pour gerer les lazy imports + ErrorBoundary pour
+// isoler les crashs. L'ErrorBoundary de index.js protege deja globalement,
+// celui-ci permet de rester dans l'app en cas de crash d'AppInner.
 export default function App() {
   return (
-    <Suspense fallback={<LazyFallback />}>
-      <AppInner />
-    </Suspense>
+    <ErrorBoundaryApp>
+      <Suspense fallback={<LazyFallback />}>
+        <AppInner />
+      </Suspense>
+    </ErrorBoundaryApp>
   );
 }

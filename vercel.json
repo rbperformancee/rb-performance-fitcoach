@@ -13,6 +13,9 @@
       "schedule": "0 8 * * 1"
     }
   ],
+  "rewrites": [
+    { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

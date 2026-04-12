@@ -63,7 +63,7 @@ export function useAuth() {
       // Fetch coach branding for this client
       if (clientData.coach_id) {
         const { data: coach } = await supabase
-          .from("coaches").select("full_name,brand_name,accent_color,email,logo_url")
+          .from("coaches").select("full_name,brand_name,accent_color,email,logo_url,coach_code,coach_slug,payment_link")
           .eq("id", clientData.coach_id).single();
         if (coach) setCoachInfo(coach);
       }
