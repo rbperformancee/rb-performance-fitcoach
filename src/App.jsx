@@ -51,6 +51,7 @@ import "./App.css";
 import { supabase } from "./lib/supabase";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import CoachOnboarding from "./components/CoachOnboarding";
+import SaasLandingPage from "./components/SaasLandingPage";
 
 const GREEN = "#02d1ba";
 // ⚠️ Email du coach historique — sera remplace par la table coaches pour le multi-tenant
@@ -385,6 +386,9 @@ export default function App() {
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [showSuperAdmin, setShowSuperAdmin] = React.useState(true);
   const [showLogin, setShowLogin] = React.useState(false);
+  const [showSaasLanding, setShowSaasLanding] = React.useState(() => {
+    return new URLSearchParams(window.location.search).get("coach") === "true";
+  });
 
   React.useEffect(() => {
     if (!user?.email) {
@@ -650,18 +654,34 @@ export default function App() {
     );
   }
 
-  // ── Pas connecté → Pricing ou Login ──
+  // ── Pas connecté → Landing SaaS / Pricing client / Login ──
   if (!user) {
     if (showLogin) {
       return <LoginScreen onBack={() => setShowLogin(false)} />;
     }
+    // Landing page SaaS pour les coachs (accessible via ?coach=true ou toggle)
+    if (showSaasLanding) {
+      return (
+        <SaasLandingPage
+          onSignup={() => { setShowLogin(true); setShowSaasLanding(false); }}
+          onBack={() => setShowSaasLanding(false)}
+        />
+      );
+    }
+    // Pricing page pour les clients (athletes)
     return (
       <div style={{ position: 'relative' }}>
         <PricingPage client={null} onLogin={() => setShowLogin(true)} />
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center', padding: '20px 24px calc(env(safe-area-inset-bottom,0px) + 20px)', background: 'linear-gradient(to top, rgba(0,0,0,0.98) 60%, transparent)' }}>
-          <button onClick={() => setShowLogin(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 13, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', letterSpacing: '0.3px' }}>
-            Déjà membre ? <span style={{ color: '#02d1ba', fontWeight: 700 }}>Se connecter →</span>
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, alignItems: 'center' }}>
+            <button onClick={() => setShowLogin(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 13, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', letterSpacing: '0.3px' }}>
+              Deja membre ? <span style={{ color: '#02d1ba', fontWeight: 700 }}>Se connecter →</span>
+            </button>
+            <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+            <button onClick={() => setShowSaasLanding(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 12, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif' }}>
+              Tu es coach ?
+            </button>
+          </div>
         </div>
       </div>
     );
