@@ -137,14 +137,10 @@ html.has-cursor a,html.has-cursor button{cursor:none}
 nav.topnav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 40px;display:flex;justify-content:space-between;align-items:center;transition:transform 0.4s var(--ease-out),background 0.3s,backdrop-filter 0.3s,border-color 0.3s;border-bottom:1px solid transparent}
 nav.topnav.scrolled{background:rgba(3,3,3,0.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom-color:var(--border)}
 nav.topnav.hidden{transform:translateY(-100%)}
-.nav-logo{display:inline-flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2.5px;color:#fff;line-height:1}
-.nav-logo .mark{flex-shrink:0;filter:drop-shadow(0 0 10px rgba(2,209,186,0.4))}
-.nav-logo b{color:var(--teal);font-weight:400;letter-spacing:3px}
-.nav-links{display:flex;gap:24px;align-items:center}
-.nav-link{font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s;padding:8px 4px;display:inline-block}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#fff;line-height:1}
+.nav-logo .dot{color:var(--orange)}
+.nav-link{font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s;padding:8px 4px;display:inline-block}
 .nav-link:hover{color:#fff}
-.nav-link.cta{padding:10px 20px;border:1px solid rgba(255,255,255,0.18);border-radius:100px;color:#fff;transition:all 0.3s var(--ease-out)}
-.nav-link.cta:hover{background:#fff;color:#000;border-color:#fff;transform:translateY(-1px)}
 
 /* ========== HERO (centered Ferrari-style, epure) ========== */
 .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:80px 24px}
@@ -157,7 +153,7 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:10px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:24px;padding:8px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:100px;background:rgba(255,255,255,0.02);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 10px var(--orange);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.8)}}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(72px,13vw,210px);letter-spacing:-3px;line-height:0.88;font-weight:400;margin-bottom:28px}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,13vw,160px);letter-spacing:-3px;line-height:0.88;font-weight:400;margin-bottom:28px}
 .hero-title .char{display:inline-block}
 .hero-accent-bar{width:120px;height:3px;background:linear-gradient(90deg,transparent,var(--orange),transparent);margin:0 auto 32px}
 .hero-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);margin:0 auto 44px;font-weight:400;letter-spacing:0.2px;max-width:620px}
@@ -647,11 +643,8 @@ html.js-reveal .manifeste-line.visible{width:120px}
 }
 @media(max-width:768px){
   nav.topnav{padding:16px 20px}
-  .nav-logo{font-size:18px;gap:8px;letter-spacing:2px}
-  .nav-logo .mark{width:11px;height:26px}
-  .nav-links{gap:14px}
+  .nav-logo{font-size:20px;letter-spacing:2.5px}
   .nav-link{font-size:11px;letter-spacing:1px}
-  .nav-link.cta{padding:8px 14px}
   .hero{padding:100px 16px 80px}
   .trust-strip{padding:24px 20px}
   .trust-inner{flex-direction:column;align-items:flex-start;gap:14px}
@@ -705,25 +698,8 @@ html.js-reveal .manifeste-line.visible{width:120px}
 <div class="cursor" id="cursor" aria-hidden="true"></div>
 
 <nav class="topnav" id="nav">
-  <a href="#" class="nav-logo" aria-label="RB Perform — accueil">
-    <svg class="mark" viewBox="170 50 180 410" width="13" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba"/>
-    </svg>
-    <span>RB <b>PERFORM</b></span>
-  </a>
-  <div class="nav-links">
-    <a href="#features" class="nav-link" data-i18n="nav.features">Features</a>
-    <a href="#pricing" class="nav-link" data-i18n="nav.pricing">Tarifs</a>
-    <div class="lang-toggle" role="group" aria-label="Choix de langue">
-      <button data-lang="fr" class="active" aria-pressed="true" aria-label="Français">FR</button>
-      <button data-lang="en" aria-pressed="false" aria-label="English">EN</button>
-    </div>
-    <button class="theme-toggle" id="themeToggle" aria-label="Changer de thème">
-      <svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-    </button>
-    <a href="https://rb-perfor.vercel.app" class="nav-link cta magnetic" target="_blank" rel="noopener" data-i18n="nav.login">Connexion</a>
-  </div>
+  <a href="#" class="nav-logo" aria-label="RB Perform — accueil">RB<span class="dot">.</span></a>
+  <a href="https://rb-perfor.vercel.app" class="nav-link" target="_blank" rel="noopener">Connexion</a>
 </nav>
 
 <!-- ========== HERO ========== -->
@@ -741,12 +717,9 @@ html.js-reveal .manifeste-line.visible{width:120px}
     <div class="hero-accent-bar"></div>
     <p class="hero-sub">La plateforme qui transforme<br/>chaque coach en CEO.</p>
     <div class="hero-cta-row">
-      <a href="https://rb-perfor.vercel.app/?coach=true" class="btn btn-orange magnetic" target="_blank" rel="noopener">
+      <a href="https://rb-perfor.vercel.app/?coach=true" class="btn btn-ghost magnetic" target="_blank" rel="noopener">
         Accéder à la beta
         <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </a>
-      <a href="#how" class="btn btn-ghost magnetic">
-        Voir comment ça marche
       </a>
     </div>
   </div>
@@ -1518,11 +1491,11 @@ html.js-reveal .manifeste-line.visible{width:120px}
 
     chars.forEach(function(char, i) {
       char.style.transition = 'opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1)';
-      char.style.transitionDelay = (0.5 + i * 0.06) + 's';
+      char.style.transitionDelay = (0.5 + i * 0.08) + 's';
       char.style.opacity = '1';
       char.style.transform = 'translateY(0)';
     });
-    var d = 500 + chars.length * 60;
+    var d = 500 + chars.length * 80;
 
     setTimeout(function() { if (bar) { bar.style.transition = 'width 0.8s cubic-bezier(0.22,1,0.36,1)'; bar.style.width = '120px'; } }, d + 200);
     setTimeout(function() { if (sub) { sub.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; } }, d + 400);
@@ -1530,7 +1503,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
     setTimeout(function() { if (scrollHint) { scrollHint.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; scrollHint.style.opacity = '1'; scrollHint.style.transform = 'translateY(0)'; } }, d + 900);
   }
 
-  // ===== Reveals =====
+  // ===== Reveals (avec safety net : rien ne doit rester invisible) =====
   function initReveals() {
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(e) {
@@ -1541,6 +1514,25 @@ html.js-reveal .manifeste-line.visible{width:120px}
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+
+    // SAFETY NET : si un .reveal n'a pas ete revele apres 3.5s
+    // (cas d'un IO qui aurait plante en silence), on force visible.
+    // Garantit qu'aucun element ne reste cache. Animations = bonus, jamais condition d'affichage.
+    setTimeout(function() {
+      document.querySelectorAll('.reveal:not(.visible)').forEach(function(el) {
+        el.classList.add('visible');
+      });
+      // Pareil pour les chars du hero si le timeout d'animation a foire
+      document.querySelectorAll('.hero-title .char').forEach(function(c) {
+        if (parseFloat(getComputedStyle(c).opacity) < 0.5) {
+          c.style.opacity = '1';
+          c.style.transform = 'translateY(0)';
+        }
+      });
+      // Pareil pour le manifeste line
+      var line = document.getElementById('manifesteLine');
+      if (line) line.classList.add('visible');
+    }, 3500);
   }
 
   // ===== Manifeste =====
