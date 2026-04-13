@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import AppIcon from "./AppIcon";
 
 const GREEN = "#02d1ba";
 
@@ -9,7 +10,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
     let prs = [];
     let exercises = [];
 
-    session.exercises.forEach((ex, ei) => {
+    (session?.exercises || []).forEach((ex, ei) => {
       const history = getHistory(weekIdx, sessionIdx, ei);
       if (!history.length) return;
       const latest = history[history.length - 1];
@@ -63,7 +64,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
           { label: "Volume total", value: stats.totalVolume > 1000 ? `${(stats.totalVolume/1000).toFixed(1)}t` : `${stats.totalVolume} kg`, sub: "levé cette séance" },
           { label: "Complétion", value: `${completion}%`, sub: `${stats.exDone} / ${stats.exTotal} exercices` },
           { label: "Séries", value: stats.totalSets, sub: "séries effectuées" },
-          { label: "Records", value: stats.prs.length, sub: stats.prs.length > 0 ? "PR battus 🔥" : "continue comme ça" },
+          { label: "Records", value: stats.prs.length, sub: stats.prs.length > 0 ? "PR battus" : "continue comme ca" },
         ].map((s, i) => (
           <div key={i} style={{
             background: "#141414",
@@ -80,7 +81,10 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
       {/* PRs */}
       {stats.prs.length > 0 && (
         <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 8 }}>🏆 Records battus</div>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 8, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <AppIcon name="trophy" size={12} color={GREEN} />
+            Records battus
+          </div>
           {stats.prs.map((name, i) => (
             <div key={i} style={{ fontSize: 12, color: "#f5f5f5", display: "flex", alignItems: "center", gap: 8, padding: "3px 0" }}>
               <span style={{ color: GREEN, fontSize: 10 }}>▲</span>{name}
@@ -148,7 +152,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
           borderRadius: 12, color: "#0d0d0d", fontSize: 12, fontWeight: 800,
           cursor: "pointer", boxShadow: "0 4px 20px rgba(2,209,186,0.35)",
         }}>
-          Continuer 💪
+          Continuer
         </button>
       </div>
     </div>

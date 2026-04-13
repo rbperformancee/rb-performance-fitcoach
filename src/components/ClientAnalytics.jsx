@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import AppIcon from './AppIcon';
 
 function BarChart({ data, color = '#02d1ba', label }) {
   if (!data || data.length === 0) return null;
@@ -127,8 +128,9 @@ export default function ClientAnalytics({ clientId, period = 30 }) {
         </div>
         <div>
           <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>SCORE DE PERFORMANCE</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#f5f5f5' }}>
-            {data.perfScore >= 75 ? '🔥 Excellent' : data.perfScore >= 50 ? '⚡ Bien' : '💪 À améliorer'}
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#f5f5f5', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <AppIcon name={data.perfScore >= 75 ? 'flame' : data.perfScore >= 50 ? 'lightning' : 'dumbbell'} size={18} color={scoreColor} />
+            {data.perfScore >= 75 ? 'Excellent' : data.perfScore >= 50 ? 'Bien' : 'A ameliorer'}
           </div>
           <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{data.totalSessions} séances sur {period} jours{data.avgRpe ? ` · RPE moy. ${data.avgRpe}` : ''}</div>
         </div>
@@ -136,15 +138,19 @@ export default function ClientAnalytics({ clientId, period = 30 }) {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-        {[['sessions','💪 Séances'],['weight','⚖️ Poids'],['steps','👟 Pas']].map(([t,l]) => (
+        {[['sessions','dumbbell','Seances'],['weight','scale','Poids'],['steps','shoe','Pas']].map(([t,ic,l]) => (
           <button key={t} onClick={() => setTab(t)} style={{
-            flex: 1, padding: '8px 4px', borderRadius: 10, border: 'none',
+            flex: 1, padding: '10px 4px', borderRadius: 10, border: 'none',
             background: tab===t ? 'rgba(2,209,186,0.12)' : 'rgba(255,255,255,0.03)',
             color: tab===t ? '#02d1ba' : '#6b7280',
             fontSize: 11, fontWeight: 700, cursor: 'pointer',
             borderBottom: tab===t ? '2px solid #02d1ba' : '2px solid transparent',
             transition: 'all 0.2s',
-          }}>{l}</button>
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 36,
+          }}>
+            <AppIcon name={ic} size={12} color={tab===t ? '#02d1ba' : '#6b7280'} />
+            {l}
+          </button>
         ))}
       </div>
 

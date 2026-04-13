@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import AppIcon from "./AppIcon";
 
 const G = "#02d1ba";
 
@@ -129,8 +130,8 @@ export function SeanceVivante({ clientId, sessionName }) {
       <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "4px", textTransform: "uppercase", marginBottom: 24 }}>Message de ton coach</div>
 
       {/* Avatar */}
-      <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(2,209,186,0.08)", border: "2px solid rgba(2,209,186,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, fontSize: 32, boxShadow: "0 0 40px rgba(2,209,186,0.15)" }}>
-        💪
+      <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(2,209,186,0.08)", border: "2px solid rgba(2,209,186,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, color: G, boxShadow: "0 0 40px rgba(2,209,186,0.15)" }}>
+        <AppIcon name="dumbbell" size={36} color={G} strokeWidth={1.6} />
       </div>
 
       {/* Message texte */}
