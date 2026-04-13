@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import AppIcon from "../AppIcon";
 import { toast } from "../Toast";
@@ -21,18 +21,32 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
   const [dragged, setDragged] = useState(null);
   const [hoveredCol, setHoveredCol] = useState(null);
   const [localStatuses, setLocalStatuses] = useState({}); // id -> status (optimistic)
+  const [search, setSearch] = useState("");
+
+  // Escape key pour fermer
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose?.(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   const getStatus = (c) => localStatuses[c.id] || c.pipeline_status || "new";
 
   const grouped = useMemo(() => {
     const g = { new: [], active: [], at_risk: [], to_renew: [], completed: [] };
+    const q = search.trim().toLowerCase();
     clients.forEach((c) => {
+      // Filtre search par nom/email/tag
+      if (q) {
+        const haystack = [c.full_name, c.email, ...(c.tags || [])].filter(Boolean).join(" ").toLowerCase();
+        if (!haystack.includes(q)) return;
+      }
       const s = getStatus(c);
       if (g[s]) g[s].push(c);
       else g.new.push(c);
     });
     return g;
-  }, [clients, localStatuses]); // eslint-disable-line
+  }, [clients, localStatuses, search]); // eslint-disable-line
 
   const moveClient = async (client, newStatus) => {
     if (getStatus(client) === newStatus) return;
@@ -56,7 +70,12 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 250, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Pipeline clients"
+      style={{ position: "fixed", inset: 0, zIndex: 250, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
+    >
       <style>{`@keyframes kanFade{from{opacity:0}to{opacity:1}} @keyframes kanSlide{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
 
       {/* Header */}
@@ -69,9 +88,22 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
           >
             <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,0.6)" />
           </button>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>Vue Pipeline</div>
             <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: "-0.3px" }}>Gestion des clients</div>
+          </div>
+        </div>
+        {/* Search input */}
+        <div style={{ marginTop: 12, position: "relative" }}>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher un client, email, tag..."
+            style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px 10px 38px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }}
+          />
+          <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}>
+            <AppIcon name="search" size={14} color="rgba(255,255,255,0.4)" />
           </div>
         </div>
       </div>
@@ -166,8 +198,8 @@ function KanbanCard({ client, onOpen, onMoveTo, onDragStart, onDragEnd }) {
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setShowMenu((s) => !s); }}
-          aria-label="Menu"
-          style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
+          aria-label="Menu actions client"
+          style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", minWidth: 32, minHeight: 32 }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
         </button>

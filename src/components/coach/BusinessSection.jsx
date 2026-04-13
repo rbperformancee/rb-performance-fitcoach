@@ -60,66 +60,59 @@ export default function BusinessSection({ coachData, clients = [] }) {
   const clientsToGoal = goal > 0 ? clientsNeededForGoal(mrr, goal, clients) : 0;
   const goalPct = goal > 0 ? Math.min(100, Math.round((mrr / goal) * 100)) : 0;
 
-  // Load historique + mois dernier + benchmark plateforme
+  // Load historique + mois dernier + benchmark plateforme — batch parallele
   useEffect(() => {
     if (!coachData?.id) return;
-
-    // Snapshots 30j pour le sparkline score
-    supabase
-      .from("coach_business_snapshots")
-      .select("snapshot_date, business_score, mrr")
-      .eq("coach_id", coachData.id)
-      .gte("snapshot_date", new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0])
-      .order("snapshot_date", { ascending: true })
-      .then(({ data }) => setHistory30d(data || []));
-
-    // MRR mois dernier (dernier jour du mois precedent)
+    let mounted = true;
     const lastMonthEnd = new Date();
-    lastMonthEnd.setDate(0); // dernier jour du mois precedent
-    supabase
-      .from("coach_business_snapshots")
-      .select("mrr")
-      .eq("coach_id", coachData.id)
-      .lte("snapshot_date", lastMonthEnd.toISOString().split("T")[0])
-      .order("snapshot_date", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setLastMonthMrr(data.mrr);
-      });
+    lastMonthEnd.setDate(0);
+    const todayStr = new Date().toISOString().split("T")[0];
+    const since30Str = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
 
-    // Benchmark plateforme (moyenne des scores de tous les coachs actifs)
-    supabase
-      .from("coach_business_snapshots")
-      .select("business_score, retention_pct")
-      .eq("snapshot_date", new Date().toISOString().split("T")[0])
-      .then(({ data }) => {
-        if (!data || data.length === 0) return;
+    Promise.all([
+      // Snapshots 30j
+      supabase.from("coach_business_snapshots")
+        .select("snapshot_date, business_score, mrr")
+        .eq("coach_id", coachData.id).gte("snapshot_date", since30Str)
+        .order("snapshot_date", { ascending: true }),
+      // MRR mois dernier
+      supabase.from("coach_business_snapshots")
+        .select("mrr")
+        .eq("coach_id", coachData.id).lte("snapshot_date", lastMonthEnd.toISOString().split("T")[0])
+        .order("snapshot_date", { ascending: false }).limit(1).maybeSingle(),
+      // Benchmark plateforme
+      supabase.from("coach_business_snapshots")
+        .select("business_score, retention_pct")
+        .eq("snapshot_date", todayStr),
+    ]).then(([histRes, lastMonthRes, benchRes]) => {
+      if (!mounted) return;
+      setHistory30d(histRes.data || []);
+      if (lastMonthRes.data) setLastMonthMrr(lastMonthRes.data.mrr);
+      if (benchRes.data && benchRes.data.length > 0) {
+        const data = benchRes.data;
         const avgScore = Math.round(data.reduce((s, r) => s + (r.business_score || 0), 0) / data.length);
         const avgRetention = Math.round(data.reduce((s, r) => s + (r.retention_pct || 0), 0) / data.length);
         setPlatformBenchmark({ score: avgScore, retention: avgRetention });
-      });
+      }
+    }).catch((e) => console.warn("[BusinessSection load]", e));
+
+    return () => { mounted = false; };
   }, [coachData?.id]);
 
-  // Snapshot au load (une fois par jour) pour tracker l'evolution
+  // Snapshot une seule fois par session (sentinel localStorage par jour)
   useEffect(() => {
     if (!coachData?.id || clients.length === 0) return;
     const today = new Date().toISOString().split("T")[0];
-    supabase
-      .from("coach_business_snapshots")
-      .upsert(
-        {
-          coach_id: coachData.id,
-          snapshot_date: today,
-          mrr,
-          active_clients: active,
-          retention_pct: retention,
-          business_score: score,
-          activity_score: activity,
-        },
-        { onConflict: "coach_id,snapshot_date" }
-      )
-      .then(() => {});
+    const sentinel = `bs_snap_${coachData.id}_${today}`;
+    try { if (sessionStorage.getItem(sentinel)) return; } catch {}
+    supabase.from("coach_business_snapshots").upsert({
+      coach_id: coachData.id,
+      snapshot_date: today,
+      mrr, active_clients: active, retention_pct: retention,
+      business_score: score, activity_score: activity,
+    }, { onConflict: "coach_id,snapshot_date" }).then(() => {
+      try { sessionStorage.setItem(sentinel, "1"); } catch {}
+    });
   }, [coachData?.id, mrr, active, retention, score, activity, clients.length]);
 
   const saveGoal = async () => {

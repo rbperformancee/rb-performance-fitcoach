@@ -28,8 +28,16 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
   const [data, setData] = useState({});
   const [period, setPeriod] = useState(90); // 30/90/180/365
 
+  // Escape key pour fermer
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose?.(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   useEffect(() => {
     if (!coachId || clients.length === 0) return;
+    let mounted = true;
     const load = async () => {
       setLoading(true);
       const ids = clients.map((c) => c.id);
@@ -80,10 +88,13 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
       const evolution = globalWeightEvolution(weightsRes.data || [], period);
       const progression = progressionRate(clients, evolution);
 
-      setData({ heatmap, heatmapMax, peak, sleepRpeCorr, programmes, evolution, progression });
-      setLoading(false);
+      if (mounted) {
+        setData({ heatmap, heatmapMax, peak, sleepRpeCorr, programmes, evolution, progression });
+        setLoading(false);
+      }
     };
     load();
+    return () => { mounted = false; };
   }, [coachId, clients, period]);
 
   return (

@@ -2065,7 +2065,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const filtered = clients
     .filter(c => {
       const s = search.toLowerCase();
-      if (s && !c.email.includes(s) && !(c.full_name || "").toLowerCase().includes(s)) return false;
+      // Search inclut maintenant les tags
+      if (s) {
+        const hay = [c.email, c.full_name, ...(c.tags || [])].filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(s)) return false;
+      }
       if (filter === "active") return c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7;
       if (filter === "noprog") return !c.programmes?.some(p => p.is_active);
       if (filter === "inactive") return c._inactive && c.programmes?.some(p => p.is_active);

@@ -62,8 +62,9 @@ export default function TagManager({ client, onUpdate }) {
   const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const addTag = async () => {
-    const t = input.trim();
+  // Direct add (sans dependre du state input — evite race avec setTimeout)
+  const addTagDirect = async (rawTag) => {
+    const t = (rawTag || "").trim();
     if (!t || tags.includes(t) || saving) return;
     if (t.length > 30) { toast.error("Tag trop long (max 30)"); return; }
     const next = [...tags, t];
@@ -80,6 +81,8 @@ export default function TagManager({ client, onUpdate }) {
     }
     onUpdate?.(next);
   };
+
+  const addTag = () => addTagDirect(input);
 
   const removeTag = async (tag) => {
     const next = tags.filter((t) => t !== tag);
@@ -147,15 +150,17 @@ export default function TagManager({ client, onUpdate }) {
             {unusedSuggestions.slice(0, 5).map((s) => (
               <button
                 key={s}
-                onClick={() => { haptic.light(); setInput(s); setTimeout(() => addTag(), 50); }}
+                onClick={() => addTagDirect(s)}
+                aria-label={`Ajouter le tag ${s}`}
                 style={{
-                  padding: "4px 10px",
+                  padding: "6px 12px",
                   background: "rgba(255,255,255,0.03)",
                   border: "1px dashed rgba(255,255,255,0.12)",
                   borderRadius: 100,
                   color: "rgba(255,255,255,0.5)",
                   fontSize: 10, fontWeight: 600, cursor: "pointer",
                   fontFamily: "inherit",
+                  minHeight: 32,
                 }}
               >
                 + {s}

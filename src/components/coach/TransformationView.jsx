@@ -22,11 +22,20 @@ export default function TransformationView({ client, coach, onClose }) {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
+  // Escape key pour fermer
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose?.(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   useEffect(() => {
     if (!client?.id) return;
+    let mounted = true;
     fetchTransformation(client.id, client.subscription_start_date)
-      .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { console.error(e); toast.error("Donnees non chargees"); setLoading(false); });
+      .then((d) => { if (mounted) { setData(d); setLoading(false); } })
+      .catch((e) => { console.error(e); if (mounted) { toast.error("Donnees non chargees"); setLoading(false); } });
+    return () => { mounted = false; };
   }, [client?.id, client?.subscription_start_date]);
 
   const downloadPdf = async () => {

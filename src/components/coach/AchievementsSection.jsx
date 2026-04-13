@@ -16,6 +16,7 @@ import {
 } from "../../lib/coachBusiness";
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
+import { toast } from "../Toast";
 
 const G = "#02d1ba";
 const VIOLET = "#a78bfa";
@@ -51,21 +52,20 @@ export default function AchievementsSection({ coachData, clients = [] }) {
 
   useEffect(() => {
     if (!coachData?.id) return;
+    let mounted = true;
     const load = async () => {
-      // Load existing badges
-      const { data: existing } = await supabase
-        .from("coach_badges")
-        .select("badge_id, earned_at")
-        .eq("coach_id", coachData.id);
+      // Batch parallele : badges + snapshots streak + scores plateforme
+      const since90 = new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0];
+      const todayStr = new Date().toISOString().split("T")[0];
+      const [existingRes, snapsRes, allScoresRes] = await Promise.all([
+        supabase.from("coach_badges").select("badge_id, earned_at").eq("coach_id", coachData.id),
+        supabase.from("coach_business_snapshots").select("snapshot_date, activity_score").eq("coach_id", coachData.id).gte("snapshot_date", since90).order("snapshot_date", { ascending: false }),
+        supabase.from("coach_business_snapshots").select("business_score").eq("snapshot_date", todayStr),
+      ]);
+      if (!mounted) return;
+      const existing = existingRes.data;
+      const snaps = snapsRes.data;
       const existingIds = new Set((existing || []).map((b) => b.badge_id));
-
-      // Load streak from snapshots 90j
-      const { data: snaps } = await supabase
-        .from("coach_business_snapshots")
-        .select("snapshot_date, activity_score")
-        .eq("coach_id", coachData.id)
-        .gte("snapshot_date", new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0])
-        .order("snapshot_date", { ascending: false });
 
       const s = calculateCoachStreak(snaps || []);
       setStreak(s);
@@ -81,33 +81,34 @@ export default function AchievementsSection({ coachData, clients = [] }) {
       });
       const toUnlock = eligible.filter((id) => !existingIds.has(id));
       if (toUnlock.length > 0) {
-        // Unlock in DB
         await supabase.from("coach_badges").insert(
           toUnlock.map((id) => ({ coach_id: coachData.id, badge_id: id }))
         );
-        // Merge locally
+        if (!mounted) return;
         const merged = [
           ...(existing || []),
           ...toUnlock.map((id) => ({ badge_id: id, earned_at: new Date().toISOString() })),
         ];
         setEarnedBadges(merged);
-        // Haptic celebration
         haptic.success();
+        // Toast pour chaque badge debloque (max 3 affiches)
+        toUnlock.slice(0, 3).forEach((bid, i) => {
+          const badge = BADGES.find((b) => b.id === bid);
+          if (badge) setTimeout(() => toast.success(`Badge debloque : ${badge.label}`), i * 600);
+        });
       } else {
         setEarnedBadges(existing || []);
       }
 
-      // Load platform rank (anonyme, aggregate)
-      const { data: allScores } = await supabase
-        .from("coach_business_snapshots")
-        .select("business_score")
-        .eq("snapshot_date", new Date().toISOString().split("T")[0]);
+      // Platform rank (deja batche dans Promise.all ci-dessus)
+      const allScores = allScoresRes.data;
       if (allScores && allScores.length > 0) {
         const scores = allScores.map((r) => r.business_score || 0);
         setPlatformRank(calculatePlatformRank(score, scores));
       }
     };
     load();
+    return () => { mounted = false; };
   }, [coachData?.id, active, retention, mrr, score, transformations]);
 
   const earnedIds = new Set(earnedBadges.map((b) => b.badge_id));
