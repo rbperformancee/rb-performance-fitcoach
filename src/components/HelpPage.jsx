@@ -107,7 +107,7 @@ const SECTIONS = [
       },
       {
         q: "Comment renouveler ?",
-        a: "Quand ton abonnement approche de la fin, un bouton 'Renouveler' apparait. Choisis ton plan et finalise via Stripe (paiement securise).",
+        a: "Quand ton abonnement approche de la fin, un bouton 'Renouveler' apparait. Tu es redirige vers notre site securise rbperform.app pour finaliser le paiement.",
       },
       {
         q: "Que se passe-t-il si je ne renouvelle pas ?",

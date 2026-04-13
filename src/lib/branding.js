@@ -2,10 +2,10 @@
  * Branding helpers — regles white label.
  *
  * REGLE ABSOLUE :
- *   - Coach proprietaire (rb.performancee@gmail.com) = interface RB Perform originale
- *     avec acces aux offres Stripe RB Perform.
- *   - Tous les autres coachs = white label complet, pas de reference aux offres RB,
- *     paiement via leur propre payment_link.
+ *   - Coach proprietaire (rb.performancee@gmail.com) = interface RB Perform originale.
+ *   - Tous les autres coachs = white label complet, pas de reference aux offres RB.
+ *   - Les paiements se font hors-app : redirect vers rbperform.app (coach RB)
+ *     ou vers le payment_link personnel du coach (white label).
  */
 
 const RB_PERFORM_OWNER_EMAIL = "rb.performancee@gmail.com";

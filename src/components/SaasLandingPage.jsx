@@ -197,7 +197,7 @@ export default function SaasLandingPage({ onSignup, onBack }) {
         {/* ===== FOOTER ===== */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", padding: "28px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>
-            RB Perform · SaaS de coaching sportif premium · Stripe · SSL
+            RB Perform · SaaS de coaching sportif premium · SSL
           </div>
         </div>
       </div>

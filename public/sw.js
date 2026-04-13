@@ -50,7 +50,7 @@ self.addEventListener("fetch", (e) => {
 
   const url = new URL(req.url);
 
-  // Ne jamais toucher aux APIs externes (Supabase, OpenFoodFacts, Anthropic, Stripe)
+  // Ne jamais toucher aux APIs externes (Supabase, OpenFoodFacts, Anthropic)
   if (url.origin !== self.location.origin) return;
 
   // Ne jamais cacher les fonctions serverless

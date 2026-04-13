@@ -224,8 +224,8 @@ export default function CoachOnboarding({ coachData, onComplete }) {
 
               {/* Payment link */}
               <div>
-                <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 6, fontWeight: 600 }}>Lien de paiement clients (Stripe, PayPal...)</div>
-                <input type="url" value={paymentLink} onChange={e => setPaymentLink(e.target.value)} placeholder="https://buy.stripe.com/..." style={{ width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "'JetBrains Mono',monospace" }} />
+                <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 6, fontWeight: 600 }}>Lien de paiement clients</div>
+                <input type="url" value={paymentLink} onChange={e => setPaymentLink(e.target.value)} placeholder="https://ton-site.com/abonnement" style={{ width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "'JetBrains Mono',monospace" }} />
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 6, lineHeight: 1.5 }}>Tes clients cliqueront sur ce lien pour s'abonner chez toi. Tu gardes 100% de ton chiffre.</div>
               </div>
             </div>

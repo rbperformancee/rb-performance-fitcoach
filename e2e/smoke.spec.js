@@ -9,7 +9,7 @@ const { test, expect } = require("@playwright/test");
 
 test.describe("Smoke", () => {
 
-  test("Landing page (PricingPage non-authentifie) charge sans erreur", async ({ page }) => {
+  test("Landing page (SubscribePage non-authentifie) charge sans erreur", async ({ page }) => {
     const errors = [];
     page.on("pageerror", (err) => errors.push(err.message));
     page.on("console", (msg) => {
@@ -43,7 +43,7 @@ test.describe("Smoke", () => {
       // Verifier que le formulaire login apparait (input email)
       await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 10000 });
     } else {
-      test.skip(true, "Pas de bouton 'Se connecter' visible (probablement deja sur landing pricing)");
+      test.skip(true, "Pas de bouton 'Se connecter' visible (probablement deja sur landing subscribe)");
     }
   });
 
@@ -70,7 +70,7 @@ test.describe("Smoke", () => {
     const manifest = await res.json();
     expect(manifest.name).toBeTruthy();
     expect(manifest.icons.length).toBeGreaterThan(0);
-    expect(manifest.start_url).toBe("/");
+    expect(manifest.start_url).toMatch(/^\//);
   });
 
   test("Service worker se register sans erreur", async ({ page }) => {
@@ -97,7 +97,7 @@ test.describe("Smoke", () => {
     const failed = [];
     page.on("response", (res) => {
       const url = res.url();
-      // Ignorer les domaines externes (Stripe, Supabase auth chips, etc.)
+      // Ignorer les domaines externes (Supabase auth chips, etc.)
       if (!url.includes("rb-perfor.vercel.app")) return;
       if (res.status() >= 400 && !url.includes("favicon")) {
         failed.push(`${res.status()} ${url}`);

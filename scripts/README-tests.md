@@ -70,9 +70,6 @@ node scripts/health-check.js --verbose
 
 ### 6. API ET SERVICES EXTERNES
 - Supabase ping (< 500ms ideal)
-- Stripe API reachable
-- Stripe webhook Edge Function deployee
-- Stripe public key configuree (mode TEST ou LIVE)
 - Mistral `/api/voice-analyze` repond avec ingredients
 - Mistral `/api/faq-assistant` repond
 - Edamam `/api/food-search` repond
@@ -126,4 +123,4 @@ node scripts/health-check.js --verbose
 
 Ce script **ne teste pas** les UI flows (boutons, navigation, formulaires) — pour ca, il faudrait Playwright ou Cypress. Les tests data-level couvrent les prerequis necessaires pour que ces flows fonctionnent.
 
-Il **ne teste pas non plus** le flow Stripe checkout end-to-end (signature requise) ni la reception effective de push notifications sur un device.
+Il **ne teste pas non plus** le flow de paiement (hors-app, sur rbperform.app) ni la reception effective de push notifications sur un device.

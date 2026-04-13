@@ -1,6 +1,6 @@
 # RB Perform — Coaching Premium SaaS
 
-Application PWA de coaching sportif premium. Multi-tenant, white label, Stripe, Mistral AI, Supabase.
+Application PWA de coaching sportif premium. Multi-tenant, white label, Mistral AI, Supabase.
 
 ---
 
@@ -8,7 +8,7 @@ Application PWA de coaching sportif premium. Multi-tenant, white label, Stripe, 
 
 - **Frontend** : React 18 (CRA) + lazy loading + Suspense
 - **Backend** : Supabase (Postgres + Auth + Edge Functions + Storage)
-- **Paiements** : Stripe (test mode actuellement)
+- **Paiements** : hors-app (traites sur le site de vente rbperform.app uniquement)
 - **AI** : Mistral La Plateforme (voice nutrition + FAQ chatbot)
 - **Food DB** : Edamam Nutrition API
 - **Hosting** : Vercel (frontend + Edge serverless)
@@ -52,7 +52,6 @@ npm run test:e2e:mobile # iPhone 14 simulator
 ```
 REACT_APP_SUPABASE_URL=https://xxx.supabase.co
 REACT_APP_SUPABASE_ANON_KEY=sb_publishable_xxx
-REACT_APP_STRIPE_PUBLIC_KEY=pk_test_xxx (ou pk_live_xxx en prod)
 REACT_APP_VAPID_PUBLIC_KEY=BB...    # optionnel, fallback hardcoded
 REACT_APP_SENTRY_DSN=https://xxx@sentry.io/xxx  # optionnel, error tracking
 REACT_APP_RELEASE=rb-perform@1.0    # optionnel, pour Sentry releases
@@ -72,11 +71,15 @@ CRON_SECRET=xxx                           # auth cron Vercel (auto par Vercel Cr
 
 ```
 RESEND_API_KEY=re_xxx
-STRIPE_SECRET_KEY=sk_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx           # signature validation
 VAPID_PUBLIC_KEY=BB...
 VAPID_PRIVATE_KEY=xxx
 VAPID_SUBJECT=mailto:contact@example.com
+
+# Les secrets Stripe sont configures sur le site de vente (rbperform.app),
+# pas sur l'app React. La fonction Supabase stripe-webhook reste deployee
+# pour recevoir les events depuis Stripe via le site de vente.
+STRIPE_SECRET_KEY=sk_xxx                  # utilise par stripe-webhook uniquement
+STRIPE_WEBHOOK_SECRET=whsec_xxx           # signature validation
 ```
 
 ---
@@ -123,7 +126,7 @@ supabase/
 └── functions/           # Edge functions (Deno)
     ├── send-welcome/    # multi-type emails
     ├── send-push/       # web push notifications
-    ├── stripe-webhook/  # Stripe events (signature verified)
+    ├── stripe-webhook/  # receveur des events Stripe (declenche par rbperform.app)
     └── weekly-recap/    # cron trigger
 
 scripts/
@@ -150,11 +153,11 @@ public/
 - Les clients sont rattaches via `clients.coach_id`
 - Coach proprietaire (`rb.performancee@gmail.com`) = interface RB Perform originale
 - Tous les autres coachs = white label : leur logo/nom/couleur, badge "Propulse par RB Perform" en bas
-- Paiements coach tiers : via `payment_link` du coach (Stripe Payment Link, PayPal, etc.)
+- Paiements : hors-app (site de vente rbperform.app). Coachs tiers : via leur `payment_link` personnel.
 
 ### Securite
 - Origin check + rate limiting sur APIs publiques (`api/_security.js`)
-- Stripe webhook signature validation (HMAC SHA256)
+- Webhook Supabase : validation signature HMAC SHA256
 - VAPID keys en env vars (jamais hardcodees)
 - Edge Functions secrets via Supabase Dashboard
 - ErrorBoundary globale + une dediee ClientPanel

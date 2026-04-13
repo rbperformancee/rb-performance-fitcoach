@@ -46,7 +46,7 @@ import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPages";
 import { LoginScreen } from "./components/LoginScreen";
 // Gros composants : charges a la demande pour booster le TTI cote clients
-const PricingPage = lazy(() => import("./components/PricingPage"));
+const SubscribePage = lazy(() => import("./components/SubscribePage"));
 import ChatCoach from "./components/ChatCoach";
 import BookingModal from "./components/BookingModal";
 const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m => ({ default: m.CoachDashboard })));
@@ -502,7 +502,7 @@ function AppInner() {
   const [showMentions,    setShowMentions]    = useState(false);
   const [showCGU,         setShowCGU]         = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showRenewalPricing, setShowRenewalPricing] = useState(false);
+  const [showSubscribe, setShowSubscribe] = useState(false);
   const [showCoachChat, setShowCoachChat] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showHome, setShowHome] = useState(true);
@@ -562,15 +562,9 @@ function AppInner() {
   const handleDragLeave = () => setIsDragging(false);
   const handleDrop      = e => { e.preventDefault(); setIsDragging(false); handleLocalImport(e); };
 
-  React.useEffect(() => {
-    if (paymentStatus === 'success' && clientEmail) {
-      fetch('https://pwkajyrpldhlybavmopd.supabase.co/functions/v1/stripe-webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY },
-        body: JSON.stringify({ type: 'checkout.session.completed', data: { object: { customer_email: clientEmail, amount_total: 0, metadata: { planName: paymentPlan || brandName, planId: '' } } } })
-      }).catch(() => {});
-    }
-  }, [paymentStatus, clientEmail]);
+  // Note : les paiements sont desormais traites uniquement sur le site
+  // de vente (rbperform.app). Le webhook Stripe est appele directement
+  // par Stripe vers la fonction Supabase, sans passer par l'app React.
 
   // ── Paiement succès ──
   // On distingue deux cas :
@@ -715,20 +709,14 @@ function AppInner() {
         />
       );
     }
-    // Pricing page pour les clients (athletes)
+    // Page d'abonnement pour les clients non-connectes (redirect vers site de vente)
     return (
       <div style={{ position: 'relative' }}>
-        <PricingPage client={null} onLogin={() => setShowLogin(true)} />
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center', padding: '20px 24px calc(env(safe-area-inset-bottom,0px) + 20px)', background: 'linear-gradient(to top, rgba(0,0,0,0.98) 60%, transparent)' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, alignItems: 'center' }}>
-            <button onClick={() => setShowLogin(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 13, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', letterSpacing: '0.3px' }}>
-              Deja membre ? <span style={{ color: '#02d1ba', fontWeight: 700 }}>Se connecter →</span>
-            </button>
-            <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
-            <button onClick={() => setShowSaasLanding(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 12, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif' }}>
-              Tu es coach ?
-            </button>
-          </div>
+        <SubscribePage client={null} onLogin={() => setShowLogin(true)} />
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center', padding: '14px 24px calc(env(safe-area-inset-bottom,0px) + 14px)', background: 'linear-gradient(to top, rgba(0,0,0,0.98) 60%, transparent)', pointerEvents: 'none' }}>
+          <button onClick={() => setShowSaasLanding(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 12, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', pointerEvents: 'auto' }}>
+            Tu es coach ?
+          </button>
         </div>
       </div>
     );
@@ -1025,16 +1013,12 @@ function AppInner() {
         />
       )}
 
-      {/* ── Overlay : Formules / Renouvellement de cycle ── */}
-      {showRenewalPricing && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-          <PricingPage
-            client={client}
-            coachInfo={coachInfo}
-            onClose={() => setShowRenewalPricing(false)}
-            onLogin={() => {}}
-          />
-        </div>
+      {/* ── Overlay : S'abonner (redirect vers site de vente) ── */}
+      {showSubscribe && (
+        <SubscribePage
+          client={client}
+          onClose={() => setShowSubscribe(false)}
+        />
       )}
 
       {/* ── Overlay : Reservation d'appel coach (cycle accompli) ── */}
@@ -1114,7 +1098,7 @@ function AppInner() {
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
         <div style={{minHeight:'100vh', background:'#050505', position:'relative'}}>
-          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
+          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
@@ -1141,7 +1125,7 @@ function AppInner() {
       {programme && !authError && (
         <>
           {page === "training" ? (
-            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowRenewalPricing(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
+            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
               <TrainingPage
                 client={client}
                 programme={programme}

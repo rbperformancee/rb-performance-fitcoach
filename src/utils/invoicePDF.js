@@ -160,7 +160,7 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   doc.setFontSize(7);
   doc.setTextColor(80, 80, 80);
   doc.text("TVA non applicable - art. 293 B du CGI", M, legalY);
-  doc.text("Paiement par carte bancaire via Stripe", M, legalY + 5);
+  doc.text("Paiement par carte bancaire securise", M, legalY + 5);
   doc.text("SIRET : 99063780300018", M, legalY + 10);
 
   // ===== FOOTER =====

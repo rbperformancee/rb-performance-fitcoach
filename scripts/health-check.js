@@ -512,28 +512,9 @@ async function testAPIs() {
     return `${ms}ms`;
   });
 
-  await test("Stripe API reachable", async () => {
-    const res = await fetch("https://api.stripe.com/v1/");
-    if (res.status >= 500) throw new Error(`HTTP ${res.status}`);
-    return `reachable`;
-  });
-
-  await test("Stripe webhook deployee (Edge Function)", async () => {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/stripe-webhook`, {
-      method: "OPTIONS",
-      headers: { Authorization: `Bearer ${SUPABASE_ANON}` },
-    });
-    if (res.ok || res.status === 204) return "deployed";
-    throw new Error(`HTTP ${res.status}`);
-  });
-
-  await test("Stripe public key configuree", async () => {
-    const key = process.env.REACT_APP_STRIPE_PUBLIC_KEY || "";
-    if (!key) throw new Error("Absente");
-    if (key.startsWith("pk_test")) return "mode TEST";
-    if (key.startsWith("pk_live")) return "mode LIVE";
-    throw new Error("Format invalide");
-  });
+  // Note : Stripe n'est plus dans l'app React. Paiements geres par rbperform.app.
+  // Le webhook Supabase (stripe-webhook) reste deploye pour recevoir les events
+  // depuis Stripe, mais il est declencheur externe, pas teste ici.
 
   // Les APIs publiques ont un Origin check (api/_security.js) : on simule
   // la requete depuis le domaine autorise pour verifier qu'elle aboutit.
