@@ -23,6 +23,7 @@ import PipelineKanban from "./coach/PipelineKanban";
 import TagManager, { TagBadge } from "./coach/TagManager";
 import ActivityTimeline from "./coach/ActivityTimeline";
 import AnalyticsSection from "./coach/AnalyticsSection";
+import AchievementsSection from "./coach/AchievementsSection";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -2296,6 +2297,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== CLIENTS A RISQUE (intelligence predictive) ========== */}
           {!showClientList && clients.length > 0 && (
             <ChurnAlertsSection clients={clients} onOpenClient={(c) => setSelected(c)} />
+          )}
+
+          {/* ========== ACHIEVEMENTS (badges + streak + rank) ========== */}
+          {!showClientList && coachData && clients.length > 0 && (
+            <AchievementsSection coachData={coachData} clients={clients} />
           )}
 
           {/* ========== INVITATION CLIENTS (code + lien) ========== */}
