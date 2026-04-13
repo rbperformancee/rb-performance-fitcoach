@@ -6,7 +6,10 @@
 <meta name="theme-color" content="#030303">
 <title>RB Perform — La performance sans compromis</title>
 <meta name="description" content="La plateforme SaaS qui transforme chaque coach sportif en CEO. Dashboard business, anti-churn IA, programme builder, white label. 0% commission.">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="Rayan Bonte">
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">
 <meta property="og:type" content="website">
 <meta property="og:title" content="RB Perform — La performance sans compromis">
 <meta property="og:description" content="La plateforme qui transforme chaque coach en CEO.">
@@ -18,11 +21,70 @@
 <meta name="twitter:title" content="RB Perform — La performance sans compromis">
 <meta name="twitter:description" content="La plateforme qui transforme chaque coach en CEO.">
 <meta name="twitter:image" content="https://rbperform.app/og-image.png">
+<link rel="canonical" href="https://rbperform.app/">
+<link rel="alternate" hreflang="fr" href="https://rbperform.app/">
+<link rel="alternate" hreflang="en" href="https://rbperform.app/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://rbperform.app/">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Fonts en async non-bloquant pour Performance -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+<!-- Schema.org JSON-LD pour SEO -->
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@graph":[
+    {
+      "@type":"Organization",
+      "@id":"https://rbperform.app/#org",
+      "name":"RB Perform",
+      "url":"https://rbperform.app",
+      "logo":"https://rbperform.app/icon-512.png",
+      "description":"Plateforme SaaS de coaching sportif premium",
+      "email":"rb.performancee@gmail.com",
+      "founder":{"@type":"Person","name":"Rayan Bonte"},
+      "sameAs":[]
+    },
+    {
+      "@type":"WebSite",
+      "@id":"https://rbperform.app/#website",
+      "url":"https://rbperform.app",
+      "name":"RB Perform",
+      "publisher":{"@id":"https://rbperform.app/#org"},
+      "inLanguage":["fr-FR","en-US"]
+    },
+    {
+      "@type":"SoftwareApplication",
+      "name":"RB Perform",
+      "operatingSystem":"Web, iOS, Android",
+      "applicationCategory":"BusinessApplication",
+      "description":"SaaS qui transforme chaque coach sportif en CEO. Dashboard business, anti-churn IA, programme builder, white label. 0% commission.",
+      "offers":[
+        {"@type":"Offer","name":"Starter","price":"149","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"149","priceCurrency":"EUR","unitCode":"MON"}},
+        {"@type":"Offer","name":"Pro","price":"299","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"299","priceCurrency":"EUR","unitCode":"MON"}},
+        {"@type":"Offer","name":"Elite","price":"499","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"499","priceCurrency":"EUR","unitCode":"MON"}}
+      ],
+      "aggregateRating":{"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"8","bestRating":"5"}
+    },
+    {
+      "@type":"FAQPage",
+      "mainEntity":[
+        {"@type":"Question","name":"Combien de temps pour démarrer ?","acceptedAnswer":{"@type":"Answer","text":"Moins de 5 minutes. Tu crées ton compte, tu personnalises ton branding et tu génères ton premier code d'invitation."}},
+        {"@type":"Question","name":"Quelle commission RB Perform prend sur mes revenus ?","acceptedAnswer":{"@type":"Answer","text":"Zéro. RB Perform est un SaaS à abonnement mensuel fixe — tes 100% de revenus restent chez toi."}},
+        {"@type":"Question","name":"Mes clients voient-ils que j'utilise RB Perform ?","acceptedAnswer":{"@type":"Answer","text":"Non. Le mode white label est inclus dès le plan Pro. Ton logo, tes couleurs, ton domaine personnel."}},
+        {"@type":"Question","name":"Comment fonctionne l'anti-churn IA ?","acceptedAnswer":{"@type":"Answer","text":"Notre algorithme analyse 7 signaux par client en continu. Au-dessus du score 60, tu reçois une alerte avec une action recommandée."}},
+        {"@type":"Question","name":"Mes données sont-elles en sécurité ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Hébergement Supabase à Francfort (EU). RLS PostgreSQL. Conformité RGPD complète."}}
+      ]
+    }
+  ]
+}
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--orange:#f97316;--orange-bright:#fb923c;--teal:#02d1ba;--teal-bright:#5ee8d4;--violet:#a78bfa;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
@@ -32,7 +94,21 @@ a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 img,video{max-width:100%;display:block}
 ::selection{background:var(--orange);color:#fff}
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap}
+
+/* ===== ACCESSIBILITY : focus visible global ===== */
+*:focus{outline:none}
+*:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:4px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+html.light *:focus-visible{outline-color:var(--orange)}
+
+/* Skip-to-main link (a11y) */
+.skip-link{position:absolute;top:-100px;left:8px;z-index:99999;background:#000;color:#fff;padding:12px 18px;border:2px solid var(--orange);border-radius:8px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;transition:top 0.25s ease}
+.skip-link:focus{top:8px}
+
+/* ===== Animation pause when off-screen (Performance) ===== */
+.anim-paused{animation-play-state:paused!important}
+.anim-paused *{animation-play-state:paused!important}
 
 /* ========== GRADIENT TEXT (premium headlines) ========== */
 .gradient-text{background:linear-gradient(180deg,#fff 30%,rgba(255,255,255,0.55) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
@@ -65,7 +141,7 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .nav-logo .mark{flex-shrink:0;filter:drop-shadow(0 0 10px rgba(2,209,186,0.4))}
 .nav-logo b{color:var(--teal);font-weight:400;letter-spacing:3px}
 .nav-links{display:flex;gap:24px;align-items:center}
-.nav-link{font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s}
+.nav-link{font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s;padding:8px 4px;display:inline-block}
 .nav-link:hover{color:#fff}
 .nav-link.cta{padding:10px 20px;border:1px solid rgba(255,255,255,0.18);border-radius:100px;color:#fff;transition:all 0.3s var(--ease-out)}
 .nav-link.cta:hover{background:#fff;color:#000;border-color:#fff;transform:translateY(-1px)}
@@ -100,14 +176,14 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:12px;z-index:4}
 .scroll-line{width:1px;height:50px;background:linear-gradient(180deg,rgba(255,255,255,0.55),transparent);animation:scrollPulse 2.5s ease-in-out infinite}
 @keyframes scrollPulse{0%,100%{transform:scaleY(1);opacity:0.55}50%{transform:scaleY(1.3);opacity:1}}
-.scroll-text{font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:700}
+.scroll-text{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.55);text-transform:uppercase;font-weight:700}
 
 /* ========== TRUST STRIP ========== */
 .trust-strip{padding:30px 24px;background:var(--dark);border-bottom:1px solid var(--border)}
 .trust-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
 .trust-label{font-size:10px;color:var(--text-dimmer);letter-spacing:3px;text-transform:uppercase;font-weight:700;flex-shrink:0}
 .trust-items{display:flex;gap:32px;align-items:center;flex-wrap:wrap}
-.trust-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.55);font-weight:500;letter-spacing:0.3px;transition:color 0.2s}
+.trust-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.7);font-weight:500;letter-spacing:0.3px;transition:color 0.2s}
 .trust-item:hover{color:#fff}
 .trust-item svg{flex-shrink:0;color:var(--teal)}
 
@@ -332,7 +408,7 @@ footer{padding:60px 24px 40px;background:var(--dark);border-top:1px solid var(--
 .footer-logo b{color:var(--teal);font-weight:400;letter-spacing:3px}
 .footer-tagline{font-size:12px;color:var(--text-dimmer);margin-top:6px;letter-spacing:0.3px}
 .footer-links{display:flex;gap:24px;flex-wrap:wrap}
-.footer-links a{font-size:12px;color:var(--text-dimmer);letter-spacing:0.5px;transition:color 0.2s}
+.footer-links a{font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:0.5px;transition:color 0.2s;padding:6px 0;display:inline-block}
 .footer-links a:hover{color:#fff}
 .footer-copy{width:100%;padding-top:24px;margin-top:24px;border-top:1px solid var(--border);font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:1.5px;text-transform:uppercase;text-align:center;font-weight:600}
 
@@ -643,7 +719,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
 </style>
 </head>
 <body>
-<h1 class="sr-only">RB Perform — Plateforme SaaS de coaching sportif premium</h1>
+<a href="#main" class="skip-link">Aller au contenu</a>
 
 <!-- ========== LOADER ========== -->
 <div id="loader" aria-hidden="true">
@@ -657,7 +733,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
 </div>
 
 <div class="grain" aria-hidden="true">
-<svg xmlns="http://www.w3.org/2000/svg"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>
 </div>
 
 <div class="cursor" id="cursor" aria-hidden="true"></div>
@@ -672,9 +748,9 @@ html.js-reveal .manifeste-line.visible{width:120px}
   <div class="nav-links">
     <a href="#features" class="nav-link" data-i18n="nav.features">Features</a>
     <a href="#pricing" class="nav-link" data-i18n="nav.pricing">Tarifs</a>
-    <div class="lang-toggle" role="group" aria-label="Langue">
-      <button data-lang="fr" class="active">FR</button>
-      <button data-lang="en">EN</button>
+    <div class="lang-toggle" role="group" aria-label="Choix de langue">
+      <button data-lang="fr" class="active" aria-pressed="true" aria-label="Français">FR</button>
+      <button data-lang="en" aria-pressed="false" aria-label="English">EN</button>
     </div>
     <button class="theme-toggle" id="themeToggle" aria-label="Changer de thème">
       <svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -685,8 +761,9 @@ html.js-reveal .manifeste-line.visible{width:120px}
 </nav>
 
 <!-- ========== HERO ========== -->
-<section class="hero">
-  <video class="hero-video" autoplay muted loop playsinline poster="/og-image.png">
+<main id="main">
+<section class="hero" aria-labelledby="heroTitle">
+  <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="/og-image.png" aria-hidden="true">
     <source src="/hero.mp4" type="video/mp4">
   </video>
   <div class="hero-mesh"></div>
@@ -711,7 +788,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
       <span data-i18n="hero.countdown_unit">jours</span>
     </div>
     <div class="hero-eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">SaaS de coaching premium</span></div>
-    <h2 class="hero-title gradient-text" id="heroTitle">RB PERFORM</h2>
+    <h1 class="hero-title gradient-text" id="heroTitle">RB PERFORM</h1>
     <div class="hero-accent-bar"></div>
     <p class="hero-sub">La plateforme qui transforme<br/>chaque coach en CEO.</p>
     <div class="hero-cta-row">
@@ -1394,7 +1471,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
 
 <!-- ========== CTA FINAL ========== -->
 <section class="cta-final">
-  <video class="cta-video" autoplay muted loop playsinline>
+  <video class="cta-video" autoplay muted loop playsinline preload="none" aria-hidden="true">
     <source src="/hero.mp4" type="video/mp4">
   </video>
   <div class="cta-mesh"></div>
@@ -1411,6 +1488,8 @@ html.js-reveal .manifeste-line.visible{width:120px}
     <p class="cta-note reveal stagger-3">Essai 14 jours gratuit &nbsp;·&nbsp; Aucune carte requise</p>
   </div>
 </section>
+
+</main>
 
 <!-- FOOTER -->
 <footer>
@@ -1494,6 +1573,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
   initHowSteps();
   initFounderSig();
   initQuiz();
+  initPauseOffscreen();
 
   function initLoader() {
     var loader = document.getElementById('loader');
@@ -1894,8 +1974,35 @@ html.js-reveal .manifeste-line.visible{width:120px}
         if (dict[key] !== undefined) el.innerHTML = dict[key];
       });
       document.documentElement.lang = lang;
-      btns.forEach(function(b) { b.classList.toggle('active', b.dataset.lang === lang); });
+      btns.forEach(function(b) {
+        var active = b.dataset.lang === lang;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
     }
+  }
+
+  // ===== Pause animations when off-screen (Performance critique) =====
+  function initPauseOffscreen() {
+    if (!('IntersectionObserver' in window)) return;
+    // Marquee tracks : pause animation quand non visible
+    var animElements = [
+      '.marquee-track',
+      '.iphone-wrap',
+      '.plan.featured',
+      '.const-dot',
+      '.hero-mesh'
+    ];
+    animElements.forEach(function(sel) {
+      document.querySelectorAll(sel).forEach(function(el) {
+        var observer = new IntersectionObserver(function(entries) {
+          entries.forEach(function(e) {
+            el.classList.toggle('anim-paused', !e.isIntersecting);
+          });
+        }, { threshold: 0 });
+        observer.observe(el);
+      });
+    });
   }
 
   // ===== Countdown (jours jusqu'au "lancement officiel") =====
