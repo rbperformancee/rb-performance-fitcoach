@@ -24,6 +24,7 @@ import TagManager, { TagBadge } from "./coach/TagManager";
 import ActivityTimeline from "./coach/ActivityTimeline";
 import AnalyticsSection from "./coach/AnalyticsSection";
 import AchievementsSection from "./coach/AchievementsSection";
+import TransformationView from "./coach/TransformationView";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -373,6 +374,7 @@ function CreneauxManager() {
 
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
 function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }) {
+  const [showTransformation, setShowTransformation] = React.useState(false);
   const [msgText,    setMsgText]    = useState("");
   const [sending,    setSending]    = useState(false);
   const [messages,   setMessages]   = useState([]);
@@ -1216,6 +1218,33 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
           );
         })()}
 
+        {/* ===== VOIR LA TRANSFORMATION ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.26s both" }}>
+          <button
+            onClick={() => setShowTransformation(true)}
+            style={{
+              width: "100%", padding: "16px 20px",
+              background: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(249,115,22,0.04))",
+              border: "1px solid rgba(251,191,36,0.25)",
+              borderRadius: 16,
+              color: "#fff",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              display: "flex", alignItems: "center", gap: 14,
+              textAlign: "left",
+            }}
+          >
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.35)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", flexShrink: 0 }}>
+              <Icon name="trending" size={18} color="#fbbf24" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 2 }}>Voir la transformation</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>Timeline complete depuis le jour 1 + PDF partageable</div>
+            </div>
+            <Icon name="arrow-right" size={14} color="rgba(255,255,255,0.4)" />
+          </button>
+        </div>
+
         {/* ===== TAGS CRM ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.28s both" }}>
           <div style={sectionTitle}>
@@ -1423,6 +1452,13 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
         </div>
 
       </div>
+
+      {/* ===== TRANSFORMATION VIEW (overlay) ===== */}
+      {showTransformation && (
+        <ErrorBoundary name="TransformationView">
+          <TransformationView client={client} coach={coachData} onClose={() => setShowTransformation(false)} />
+        </ErrorBoundary>
+      )}
 
       {/* ===== DRAWERS DONNEES (Poids / Eau / Sommeil) ===== */}
       {drawer && (
