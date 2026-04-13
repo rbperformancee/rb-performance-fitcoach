@@ -212,7 +212,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>Definis ton objectif de poids</div>
             {editGoal ? (
               <div style={{ display: "flex", gap: 10 }}>
-                <input type="number" step="0.1" placeholder="Ex: 75" value={newGoal}
+                <input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 75" value={newGoal}
                   onChange={e => setNewGoal(e.target.value)}
                   style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
                 <button onClick={async () => { const g = parseFloat(newGoal); if (isNaN(g)) return; haptic.success(); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
@@ -228,7 +228,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
         )}
         {editGoal && goal && (
           <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-            <input type="number" step="0.1" placeholder={"Actuel: " + goal + " kg"} value={newGoal}
+            <input type="number" inputMode="decimal" step="0.1" placeholder={"Actuel: " + goal + " kg"} value={newGoal}
               onChange={e => setNewGoal(e.target.value)}
               style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
             <button onClick={async () => { const g = parseFloat(newGoal); if (isNaN(g)) return; haptic.success(); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
@@ -372,7 +372,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       <div style={{ padding: "0 24px", position: "relative", zIndex: 1 }}>
         {showInput ? (
           <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-            <input type="number" step="0.1" placeholder="Ex: 75.5" value={newWeight}
+            <input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 75.5" value={newWeight}
               onChange={e => setNewWeight(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleAdd()}
               style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 14, padding: "14px 16px", color: "#fff", fontSize: 16, outline: "none" }} />

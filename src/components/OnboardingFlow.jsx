@@ -51,7 +51,7 @@ const Input = ({ label, placeholder, type = "text", value, onChange, textarea = 
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        inputMode={type === "number" ? "numeric" : undefined}
+        inputMode={type === "number" ? "decimal" : undefined}
         style={{
           width: "100%",
           background: "rgba(255,255,255,0.04)",

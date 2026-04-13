@@ -283,16 +283,16 @@ export default function MovePage({ client, appData }) {
             <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Distance (km)</div>
-                <input type="number" step="0.1" value={form.distance} onChange={e => setForm(p => ({ ...p, distance: e.target.value }))} placeholder="6.2" style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
+                <input type="number" inputMode="decimal" step="0.1" value={form.distance} onChange={e => setForm(p => ({ ...p, distance: e.target.value }))} placeholder="6.2" style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
               </div>
               <div style={{ flex: 1, display: "flex", gap: 6 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Heures</div>
-                  <input type="number" min="0" max="10" value={form.heures} onChange={e => setForm(p => ({ ...p, heures: e.target.value }))} placeholder="0" style={{ width: "100%", padding: "14px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", textAlign: "center" }} />
+                  <input type="number" inputMode="numeric" min="0" max="10" value={form.heures} onChange={e => setForm(p => ({ ...p, heures: e.target.value }))} placeholder="0" style={{ width: "100%", padding: "14px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", textAlign: "center" }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Minutes</div>
-                  <input type="number" min="0" max="59" value={form.minutes} onChange={e => setForm(p => ({ ...p, minutes: e.target.value }))} placeholder="35" style={{ width: "100%", padding: "14px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", textAlign: "center" }} />
+                  <input type="number" inputMode="numeric" min="0" max="59" value={form.minutes} onChange={e => setForm(p => ({ ...p, minutes: e.target.value }))} placeholder="35" style={{ width: "100%", padding: "14px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", textAlign: "center" }} />
                 </div>
               </div>
             </div>

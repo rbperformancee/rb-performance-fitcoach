@@ -172,6 +172,7 @@ export default function ActivityWidget({ clientId }) {
                   <input
                     autoFocus
                     type="number"
+                    inputMode={m.key === 'sleep' ? 'decimal' : 'numeric'}
                     placeholder={`Ex: ${m.key === 'steps' ? '8500' : m.key === 'calories' ? '2200' : '7.5'}`}
                     value={inputVal}
                     onChange={e => setInputVal(e.target.value)}
