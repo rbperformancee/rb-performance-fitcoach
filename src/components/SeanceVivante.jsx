@@ -43,7 +43,7 @@ export function SeanceVivante({ clientId, sessionName }) {
         .gt("created_at", mountedAtRef.current)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
       if (data) showMessage(data);
     };
     checkExisting();

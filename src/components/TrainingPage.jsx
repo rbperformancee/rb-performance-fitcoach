@@ -39,7 +39,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         .eq("client_id", client.id)
         .eq("week_idx", activeWeek)
         .eq("session_idx", activeSession)
-        .single()
+        .maybeSingle()
         .then(({ data }) => {
           if (data?.validated_at) {
             setSessionValidee(true);
@@ -170,7 +170,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
     // 4. XP +40 via daily_tracking
     const today = new Date().toISOString().split("T")[0];
-    const { data: dt } = await supabase.from("daily_tracking").select("xp").eq("client_id", client.id).eq("date", today).single();
+    const { data: dt } = await supabase.from("daily_tracking").select("xp").eq("client_id", client.id).eq("date", today).maybeSingle();
     const currentXP = dt?.xp || 0;
     await supabase.from("daily_tracking").upsert({ client_id: client.id, date: today, xp: currentXP + 40 }, { onConflict: "client_id,date" });
 

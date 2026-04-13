@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import haptic from '../lib/haptic';
 
 export function useAvatar(clientId) {
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -11,7 +12,7 @@ export function useAvatar(clientId) {
       .from('clients')
       .select('avatar_url')
       .eq('id', clientId)
-      .single();
+      .maybeSingle();
     if (data?.avatar_url) setAvatarUrl(data.avatar_url);
   }, [clientId]);
 
@@ -28,7 +29,7 @@ export function useAvatar(clientId) {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
       await supabase.from('clients').update({ avatar_url: publicUrl }).eq('id', clientId);
       setAvatarUrl(publicUrl);
-      if (navigator.vibrate) navigator.vibrate([20, 10, 40]);
+      haptic.success();
     } catch(e) { console.error(e); }
     setUploading(false);
   }, [clientId]);

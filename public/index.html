@@ -76,6 +76,15 @@
         var s=document.getElementById('sp');
         if(s){s.style.opacity='0';setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s)},600)}
       },2000);
+      // ===== Service Worker registration =====
+      // Sans ca : pas de cache offline, pas de push notifications, pas de PWA fullsize.
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').catch(function(err) {
+            console.warn('[SW] registration failed:', err);
+          });
+        });
+      }
     </script>
   </body>
 </html>

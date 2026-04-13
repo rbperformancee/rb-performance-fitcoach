@@ -2,10 +2,12 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
+import OfflineBanner from "./components/OfflineBanner";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <ErrorBoundary name="App">
+    <OfflineBanner />
     <App />
   </ErrorBoundary>
 );
