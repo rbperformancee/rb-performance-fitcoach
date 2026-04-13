@@ -36,6 +36,13 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
     fetchSlots();
   }, [fetchSlots]);
 
+  // Escape key = fermer
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose?.(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const bookSlot = async () => {
     if (!selectedSlot || !client?.id) return;
     setSaving(true);

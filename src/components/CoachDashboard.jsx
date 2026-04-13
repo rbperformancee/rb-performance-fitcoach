@@ -379,6 +379,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
   const [exLogs, setExLogs] = useState([]);
   const [coachNotes, setCoachNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
   const [uploadPlanId, setUploadPlanId] = useState("3m");
   const [uploadProgWeeks, setUploadProgWeeks] = useState(6);
   const [showBuilder, setShowBuilder] = useState(false); // duree du programme en semaines
@@ -1232,14 +1233,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
               />
               <button
                 onClick={async () => {
-                  if (!newNote.trim()) return;
-                  const { data } = await supabase.from("coach_notes").insert({
+                  if (!newNote.trim() || noteSaving) return;
+                  setNoteSaving(true);
+                  const { data, error } = await supabase.from("coach_notes").insert({
                     client_id: client.id, coach_id: coachId, content: newNote.trim(),
                   }).select().single();
+                  setNoteSaving(false);
+                  if (error) { toast.error("Note non enregistree"); return; }
                   if (data) setCoachNotes(prev => [data, ...prev]);
                   setNewNote("");
+                  haptic.light();
                 }}
-                disabled={!newNote.trim()}
+                disabled={!newNote.trim() || noteSaving}
                 style={{
                   alignSelf: "flex-end", width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
                   background: newNote.trim() ? `linear-gradient(135deg, ${G}, #0891b2)` : "rgba(255,255,255,0.04)",

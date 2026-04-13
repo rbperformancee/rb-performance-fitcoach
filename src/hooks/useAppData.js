@@ -30,8 +30,8 @@ export function useAppData(clientId) {
       supabase.from("weight_logs").select("weight,date,note,fat_pct").eq("client_id", clientId).order("date", { ascending: true }).limit(30),
       supabase.from("run_logs").select("*").eq("client_id", clientId).order("date", { ascending: false }).limit(20),
       supabase.from("nutrition_logs").select("*").eq("client_id", clientId).eq("date", today).order("logged_at", { ascending: true }),
-      supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).single(),
-      supabase.from("nutrition_goals").select("*").eq("client_id", clientId).single(),
+      supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).maybeSingle(),
+      supabase.from("nutrition_goals").select("*").eq("client_id", clientId).maybeSingle(),
       supabase.from("session_logs").select("logged_at").eq("client_id", clientId).order("logged_at", { ascending: false }).limit(60),
     ]);
 

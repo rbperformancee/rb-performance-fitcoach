@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 import EmptyState from "./EmptyState";
 import haptic from "../lib/haptic";
+import Spinner from "./Spinner";
 
 export default function WeightChart({ clientId, client, programme, appData }) {
   const tracking = useWeightTracking(clientId);
@@ -14,6 +15,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
   const diff = latest && first ? (latest.weight - first.weight).toFixed(1) : null;
   const [editGoal, setEditGoal] = useState(false);
   const [newGoal, setNewGoal] = useState("");
+  const [savingGoal, setSavingGoal] = useState(false);
   const [showInput, setShowInput] = useState(false);
   const [newWeight, setNewWeight] = useState("");
   const [saving, setSaving] = useState(false);
@@ -215,8 +217,10 @@ export default function WeightChart({ clientId, client, programme, appData }) {
                 <input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 75" value={newGoal}
                   onChange={e => setNewGoal(e.target.value)}
                   style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
-                <button onClick={async () => { const g = parseFloat(newGoal); if (isNaN(g)) return; haptic.success(); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
-                  style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer" }}>OK</button>
+                <button
+                  onClick={async () => { const g = parseFloat(newGoal); if (isNaN(g) || savingGoal) return; setSavingGoal(true); haptic.success(); try { await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); } finally { setSavingGoal(false); } }}
+                  disabled={savingGoal}
+                  style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: savingGoal ? "default" : "pointer", minWidth: 60, display: "inline-flex", alignItems: "center", justifyContent: "center", opacity: savingGoal ? 0.7 : 1 }}>{savingGoal ? <Spinner variant="dots" size={14} color="#000" /> : "OK"}</button>
               </div>
             ) : (
               <button onClick={() => setEditGoal(true)}

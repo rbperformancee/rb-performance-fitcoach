@@ -13,9 +13,9 @@ export function useFuel(clientId) {
     if (!clientId) return;
     setLoading(true);
     const [goalsRes, logsRes, trackingRes] = await Promise.all([
-      supabase.from("nutrition_goals").select("*").eq("client_id", clientId).single(),
+      supabase.from("nutrition_goals").select("*").eq("client_id", clientId).maybeSingle(),
       supabase.from("nutrition_logs").select("*").eq("client_id", clientId).eq("date", today).order("logged_at", { ascending: true }),
-      supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).single(),
+      supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).maybeSingle(),
     ]);
     setGoals(goalsRes.data || { calories: 2000, proteines: 150, glucides: 250, lipides: 70, eau_ml: 2500, pas: 8000 });
     setLogs(logsRes.data || []);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import AppIcon from "./AppIcon";
 import haptic from "../lib/haptic";
@@ -14,6 +14,13 @@ export function RPEModal({ clientId, sessionName, onClose }) {
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState(false);
 
+  // Escape key = fermer
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose?.(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const handleSave = async () => {
     if (!rpe || !clientId) return;
     haptic.success();
@@ -28,12 +35,18 @@ export function RPEModal({ clientId, sessionName, onClose }) {
   };
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 997,
-      background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "24px", fontFamily: "'Inter',sans-serif",
-    }}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rpe-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 997,
+        background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "24px", fontFamily: "'Inter',sans-serif",
+      }}
+    >
       <div style={{
         background: "#141414", border: "1px solid rgba(255,255,255,0.1)",
         borderRadius: 20, padding: 28, width: "100%", maxWidth: 400,

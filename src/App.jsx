@@ -426,14 +426,17 @@ function AppInner() {
     }
     // Check coach + super admin en parallele
     Promise.all([
-      supabase.from("coaches").select("*").eq("email", user.email).single(),
-      supabase.from("super_admins").select("id").eq("email", user.email).single(),
+      supabase.from("coaches").select("*").eq("email", user.email).maybeSingle(),
+      supabase.from("super_admins").select("id").eq("email", user.email).maybeSingle(),
     ]).then(([coachRes, adminRes]) => {
       const cData = coachRes.data || null;
       setCoachData(cData);
       setCoachId(cData?.id || null);
       setIsCoach(!!cData);
       setIsSuperAdmin(!!adminRes.data);
+    }).catch((e) => {
+      // Silent fail : si la requete echoue on assume client standard
+      console.error("[roles check]", e);
     });
   }, [user?.email]);
   const [clientEmail] = React.useState(() => {
@@ -940,14 +943,26 @@ function AppInner() {
     if (!client) return;
     const clientEmail = client.email;
     const clientName = client.full_name;
-    // Supprimer toutes les données
-    await supabase.from("weight_logs").delete().eq("client_id", client.id);
-    await supabase.from("exercise_logs").delete().eq("client_id", client.id);
-    await supabase.from("session_rpe").delete().eq("client_id", client.id);
-    await supabase.from("messages").delete().eq("client_id", client.id);
-    await supabase.from("programmes").delete().eq("client_id", client.id);
-    await supabase.from("clients").delete().eq("id", client.id);
-    // Envoyer email de confirmation de suppression
+    // Supprimer toutes les donnees — on log les erreurs mais on continue le cascade
+    // pour que la sign-out finale s'execute meme si une table rate
+    const deletions = [
+      ["weight_logs",   supabase.from("weight_logs").delete().eq("client_id", client.id)],
+      ["exercise_logs", supabase.from("exercise_logs").delete().eq("client_id", client.id)],
+      ["session_rpe",   supabase.from("session_rpe").delete().eq("client_id", client.id)],
+      ["messages",      supabase.from("messages").delete().eq("client_id", client.id)],
+      ["programmes",    supabase.from("programmes").delete().eq("client_id", client.id)],
+      ["clients",       supabase.from("clients").delete().eq("id", client.id)],
+    ];
+    const errors = [];
+    for (const [name, q] of deletions) {
+      const { error } = await q;
+      if (error) { console.error(`[delete ${name}]`, error); errors.push(name); }
+    }
+    if (errors.length) {
+      // Best-effort : on continue quand meme, mais on loggue pour debug
+      console.warn("Tables non supprimees :", errors.join(", "));
+    }
+    // Email de confirmation de suppression
     try {
       await supabase.functions.invoke("send-welcome", {
         body: {
@@ -956,7 +971,7 @@ function AppInner() {
           type: "deletion_confirmation",
         },
       });
-    } catch (e) { console.warn("Email suppression non envoyé", e); }
+    } catch (e) { console.warn("Email suppression non envoye", e); }
     await supabase.auth.signOut();
   };
 

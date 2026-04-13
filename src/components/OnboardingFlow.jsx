@@ -694,19 +694,27 @@ export default function OnboardingFlow({ client, onComplete }) {
           Il prepare ton programme sur mesure.
         </p>
         <button
-          style={{ ...S.btn(), animation: "fadeUp 0.6s ease 0.6s both" }}
+          style={{ ...S.btn(), animation: "fadeUp 0.6s ease 0.6s both", opacity: saving ? 0.7 : 1 }}
+          disabled={saving}
           onClick={async () => {
-            if (client?.id) {
-              await supabase.from("clients").update({ onboarding_done: true }).eq("id", client.id);
-            } else {
-              const { data } = await supabase.from("clients").select("id").eq("email", client?.email || "").single();
-              if (data?.id) await supabase.from("clients").update({ onboarding_done: true }).eq("id", data.id);
+            if (saving) return;
+            setSaving(true);
+            try {
+              if (client?.id) {
+                await supabase.from("clients").update({ onboarding_done: true }).eq("id", client.id);
+              } else {
+                const { data } = await supabase.from("clients").select("id").eq("email", client?.email || "").maybeSingle();
+                if (data?.id) await supabase.from("clients").update({ onboarding_done: true }).eq("id", data.id);
+              }
+              haptic.success();
+              onComplete();
+            } catch (e) {
+              console.error("Finalize onboarding:", e);
+              setSaving(false);
             }
-            haptic.success();
-            onComplete();
           }}
         >
-          Acceder a mon espace
+          {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10, justifyContent: "center" }}><Spinner variant="dots" size={18} color="#000" />Finalisation</span>) : "Acceder a mon espace"}
         </button>
       </div>
     </div>
