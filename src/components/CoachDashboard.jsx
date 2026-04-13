@@ -16,6 +16,9 @@ import { SkeletonList } from "./Skeleton";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
 import BusinessSection from "./coach/BusinessSection";
+import ChurnAlertsSection from "./coach/ChurnAlertsSection";
+import { BehavioralBadge } from "./coach/BehavioralBadge";
+import { enrichClientsForIntelligence } from "../lib/enrichClients";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -1786,7 +1789,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           _inactiveDays: inactiveDays < 999 ? inactiveDays : null,
         };
       }));
-      setClients(enriched);
+      // Enrichissement pour intelligence predictive (1 volee de queries parallele)
+      try {
+        const enrichedWithIntel = await enrichClientsForIntelligence(enriched);
+        setClients(enrichedWithIntel);
+      } catch (e) {
+        console.warn("[enrichIntelligence]", e);
+        setClients(enriched);
+      }
     } finally {
       setLoading(false);
     }
@@ -2216,6 +2226,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             <BusinessSection coachData={coachData} clients={clients} />
           )}
 
+          {/* ========== CLIENTS A RISQUE (intelligence predictive) ========== */}
+          {!showClientList && clients.length > 0 && (
+            <ChurnAlertsSection clients={clients} onOpenClient={(c) => setSelected(c)} />
+          )}
+
           {/* ========== INVITATION CLIENTS (code + lien) ========== */}
           {!showClientList && coachData && (
             <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
@@ -2366,7 +2381,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                       </div>
 
                       {/* Infos cles en une ligne */}
-                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                        {/* Profil comportemental (intelligence) */}
+                        {c._sessionsLast7d !== undefined && <BehavioralBadge client={c} compact />}
                         {prog ? (
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: G, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 100, padding: "3px 10px" }}>
                             <Icon name="check" size={9} />
