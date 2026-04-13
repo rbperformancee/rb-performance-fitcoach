@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
+import EmptyState from "./EmptyState";
+import Spinner from "./Spinner";
+import haptic from "../lib/haptic";
 
 const GREEN = "#34d399";
 const RED = "#ef4444";
@@ -71,7 +74,7 @@ export default function MovePage({ client, appData }) {
     setForm({ distance: "", heures: "0", minutes: "", note: "" });
     setShowAdd(false);
     setSaving(false);
-    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+    haptic.success();
     // Log XP dans session_logs pour que useXP le compte
     await supabase.from("session_logs").insert({
       client_id: client.id,
@@ -230,10 +233,15 @@ export default function MovePage({ client, appData }) {
           </div>
 
           {runs.length === 0 ? (
-            <div onClick={() => setShowAdd(true)} style={{ padding: "24px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 16, textAlign: "center", cursor: "pointer" }}>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.2)", marginBottom: 6 }}>Aucune sortie enregistree</div>
-              <div style={{ fontSize: 11, color: "rgba(239,68,68,0.5)" }}>+ Ajouter ta premiere course</div>
-            </div>
+            <EmptyState
+              icon="activity"
+              title="Ta premiere sortie."
+              subtitle="Course, trail, footing — trace ton premier kilometre."
+              action={{ label: "Ajouter une sortie", onClick: () => setShowAdd(true) }}
+              accent={RED}
+              size="md"
+              style={{ padding: "24px 16px" }}
+            />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {runs.map((run, i) => {
@@ -312,7 +320,7 @@ export default function MovePage({ client, appData }) {
             })()}
 
             <button onClick={addRun} disabled={saving || !form.distance || !form.minutes} style={{ width: "100%", padding: 16, background: form.distance && form.minutes ? RED : "rgba(255,255,255,0.06)", color: form.distance && form.duree ? "#fff" : "rgba(255,255,255,0.2)", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: form.distance && form.minutes ? "pointer" : "not-allowed" }}>
-              {saving ? "Enregistrement..." : "Enregistrer la sortie"}
+              {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#fff" />Enregistrement</span>) : "Enregistrer la sortie"}
             </button>
           </div>
         </div>

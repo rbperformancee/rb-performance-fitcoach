@@ -8,6 +8,7 @@ import { supabase } from "../lib/supabase";
 import ChatCoach from "./ChatCoach";
 import FaqAssistant from "./FaqAssistant";
 import { PoweredByBadge } from "./CoachBranding";
+import haptic from "../lib/haptic";
 
 const GREEN = "#02d1ba";
 
@@ -233,7 +234,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
 
         {/* LOGOUT */}
         <div style={{ padding: "0 24px" }}>
-          <button onClick={onLogout} style={{ width: "100%", padding: "15px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.07)", background: "transparent", color: "rgba(255,255,255,0.18)", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px" }}>
+          <button onClick={() => { haptic.medium(); onLogout?.(); }} style={{ width: "100%", padding: "15px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.07)", background: "transparent", color: "rgba(255,255,255,0.18)", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px" }}>
             Se deconnecter
           </button>
         </div>

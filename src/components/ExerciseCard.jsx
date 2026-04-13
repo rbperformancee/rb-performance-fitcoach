@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Sparkline } from "./Sparkline";
 import { RestTimer, parseRestSeconds } from "./RestTimer";
+import haptic from "../lib/haptic";
 
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
@@ -163,11 +164,11 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     const n = completedSetsRef.current.length;
     setDoneCount(n);
     try { localStorage.setItem(storageKey, String(n)); } catch {}
-    if (navigator.vibrate) navigator.vibrate([20, 10, 40]);
+    haptic.medium(); // Set valide
     if (n >= setsCount) {
       const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
       saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n - 1].reps, completedSetsRef.current);
-      if (navigator.vibrate) navigator.vibrate([30, 20, 60, 20, 100]);
+      haptic.success(); // Exercice termine
       if (restSecs) setTimeout(() => setShowTimer(true), 600);
     } else if (restSecs) {
       setTimeout(() => setShowTimer(true), 400);

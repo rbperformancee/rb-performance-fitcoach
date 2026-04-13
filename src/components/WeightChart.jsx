@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
+import EmptyState from "./EmptyState";
+import haptic from "../lib/haptic";
 
 export default function WeightChart({ clientId, client, programme, appData }) {
   const tracking = useWeightTracking(clientId);
@@ -168,7 +170,13 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             <circle cx={toX(vals.length - 1)} cy={toY(vals[vals.length - 1])} r={12} fill="rgba(2,209,186,0.12)" />
           </svg>
         ) : (
-          <div style={{ textAlign: "center", padding: "32px 24px", color: "rgba(255,255,255,0.15)", fontSize: 13 }}>Ajoute ta premiere pesee pour voir ton evolution</div>
+          <EmptyState
+            icon="scale"
+            title="Ta premiere pesee."
+            subtitle="Pese-toi ce matin pour voir ton evolution ici."
+            size="md"
+            style={{ padding: "24px 16px 12px" }}
+          />
         )}
       </div>
 
@@ -207,7 +215,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
                 <input type="number" step="0.1" placeholder="Ex: 75" value={newGoal}
                   onChange={e => setNewGoal(e.target.value)}
                   style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
-                <button onClick={async () => { const g = parseFloat(newGoal); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
+                <button onClick={async () => { const g = parseFloat(newGoal); if (isNaN(g)) return; haptic.success(); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
                   style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer" }}>OK</button>
               </div>
             ) : (
@@ -223,7 +231,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             <input type="number" step="0.1" placeholder={"Actuel: " + goal + " kg"} value={newGoal}
               onChange={e => setNewGoal(e.target.value)}
               style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
-            <button onClick={async () => { const g = parseFloat(newGoal); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
+            <button onClick={async () => { const g = parseFloat(newGoal); if (isNaN(g)) return; haptic.success(); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
               style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer" }}>OK</button>
             <button onClick={() => setEditGoal(false)}
               style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 14px", color: "rgba(255,255,255,0.3)", cursor: "pointer" }}>✕</button>
