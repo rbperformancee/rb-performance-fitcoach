@@ -336,6 +336,87 @@ footer{padding:60px 24px 40px;background:var(--dark);border-top:1px solid var(--
 .footer-links a:hover{color:#fff}
 .footer-copy{width:100%;padding-top:24px;margin-top:24px;border-top:1px solid var(--border);font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:1.5px;text-transform:uppercase;text-align:center;font-weight:600}
 
+/* ========== LOADING SCREEN ========== */
+#loader{position:fixed;inset:0;z-index:99999;background:#030303;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity 0.7s var(--ease-out),visibility 0.7s}
+#loader.done{opacity:0;visibility:hidden;pointer-events:none}
+#loader .loader-logo{width:120px;height:120px;position:relative}
+#loader .loader-logo svg{width:100%;height:100%;filter:drop-shadow(0 0 30px rgba(2,209,186,0.4))}
+#loader .loader-logo polygon{fill:transparent;stroke:#02d1ba;stroke-width:6;stroke-dasharray:1200;stroke-dashoffset:1200;animation:drawLogo 1.4s var(--ease-out) 0.2s forwards,fillLogo 0.4s ease 1.4s forwards}
+@keyframes drawLogo{to{stroke-dashoffset:0}}
+@keyframes fillLogo{to{fill:#02d1ba}}
+#loader .loader-text{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:6px;color:rgba(255,255,255,0.4);opacity:0;animation:loaderText 0.6s ease 1.6s forwards}
+@keyframes loaderText{to{opacity:1}}
+#loader .loader-bar{width:160px;height:1px;background:rgba(255,255,255,0.08);overflow:hidden;border-radius:1px}
+#loader .loader-bar::after{content:'';display:block;width:100%;height:100%;background:linear-gradient(90deg,transparent,var(--orange),transparent);transform:translateX(-100%);animation:loaderBar 1.6s ease infinite}
+@keyframes loaderBar{to{transform:translateX(100%)}}
+
+/* ========== BENTO GRID (Apple-style showcase) ========== */
+.bento{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
+.bento-inner{max-width:1280px;margin:0 auto}
+.bento .intro{text-align:center;margin-bottom:60px}
+.bento-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(220px,auto);gap:18px}
+.bento-card{background:var(--dark3);border:1px solid var(--border);border-radius:24px;padding:32px;position:relative;overflow:hidden;transition:border-color 0.4s var(--ease-out),transform 0.4s var(--ease-out);will-change:transform}
+.bento-card::before{content:'';position:absolute;inset:0;border-radius:24px;background:radial-gradient(500px circle at var(--mx,50%) var(--my,50%),rgba(249,115,22,0.08),transparent 40%);opacity:0;transition:opacity 0.3s ease;pointer-events:none}
+.bento-card:hover{border-color:rgba(255,255,255,0.18);transform:translateY(-4px)}
+.bento-card:hover::before{opacity:1}
+.bento-card.span2{grid-column:span 2}
+.bento-card.span3{grid-column:span 3}
+.bento-card.row2{grid-row:span 2}
+.bento-card .b-tag{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:14px}
+.bento-card .b-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:-0.5px;line-height:1.05;margin-bottom:12px;font-weight:400}
+.bento-card .b-desc{font-size:13px;color:var(--text-dim);line-height:1.6;font-weight:400}
+.bento-card.b-stat{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,rgba(2,209,186,0.06),var(--dark3))}
+.bento-card.b-stat .b-num{font-family:'Bebas Neue',sans-serif;font-size:96px;letter-spacing:-3px;line-height:0.9;color:var(--teal);text-shadow:0 0 50px rgba(2,209,186,0.3);font-weight:400}
+.bento-card.b-stat .b-lbl{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);font-weight:700;margin-top:14px}
+.bento-card.b-quote{background:linear-gradient(135deg,rgba(249,115,22,0.05),var(--dark3));display:flex;flex-direction:column;justify-content:space-between}
+.bento-card.b-quote .q{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:-0.5px;line-height:1.1;font-weight:400}
+.bento-card.b-quote .q-author{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dimmer);font-weight:600;margin-top:14px}
+.bento-card.b-quote .q-author b{color:#fff;font-weight:700}
+.bento-card.b-feature .b-icon{width:44px;height:44px;border-radius:12px;background:rgba(2,209,186,0.1);display:flex;align-items:center;justify-content:center;color:var(--teal);margin-bottom:18px}
+/* Bento mini-app preview (column mockup) */
+.bento-card.b-app{padding:20px;background:linear-gradient(180deg,#0a0a0a,#050505);position:relative}
+.bento-card.b-app .app-mock{height:100%;display:flex;flex-direction:column;gap:10px}
+.bento-card.b-app .app-row{padding:10px 14px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.05);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-dim)}
+.bento-card.b-app .app-row .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bento-card.b-app .app-row strong{color:#fff;font-weight:700;flex:1}
+.bento-card.b-app .app-row .val{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0;color:var(--teal)}
+.bento-card.b-app .app-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:6px}
+.bento-card.b-app .app-bar .fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-bright));border-radius:2px;animation:fillSweep 3s ease-in-out infinite}
+@keyframes fillSweep{0%,100%{width:60%}50%{width:90%}}
+.bento-card.b-cta{background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(249,115,22,0.04));border-color:rgba(249,115,22,0.3);display:flex;flex-direction:column;justify-content:center;text-align:center;align-items:center}
+.bento-card.b-cta .b-cta-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:-1px;line-height:1;margin-bottom:8px;font-weight:400}
+.bento-card.b-cta .b-cta-sub{font-size:13px;color:var(--text-dim);margin-bottom:22px}
+.bento-card.b-cta .btn{padding:12px 24px;min-height:44px;font-size:11px}
+@media(max-width:1024px){
+  .bento-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:minmax(200px,auto)}
+  .bento-card.span2,.bento-card.span3{grid-column:span 2}
+  .bento-card.row2{grid-row:span 1}
+}
+@media(max-width:600px){
+  .bento-grid{grid-template-columns:1fr}
+  .bento-card.span2,.bento-card.span3{grid-column:span 1}
+  .bento-card.b-stat .b-num{font-size:72px}
+}
+
+/* ========== MARQUEE TESTIMONIALS ========== */
+.marquee-section{padding:140px 0;background:var(--dark);border-top:1px solid var(--border);overflow:hidden}
+.marquee-section .intro{text-align:center;margin-bottom:60px;padding:0 24px}
+.marquee-track{display:flex;gap:18px;animation:marquee 50s linear infinite;width:max-content;will-change:transform}
+.marquee-track.reverse{animation-direction:reverse;margin-top:18px}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.marquee-section:hover .marquee-track{animation-play-state:paused}
+.m-card{flex-shrink:0;width:380px;background:var(--dark3);border:1px solid var(--border);border-radius:18px;padding:26px 28px;display:flex;flex-direction:column;gap:18px}
+.m-card .m-stars{display:flex;gap:3px;color:var(--orange)}
+.m-card .m-quote{font-size:14px;color:rgba(255,255,255,0.85);line-height:1.6;font-weight:400;flex:1}
+.m-card .m-author{display:flex;align-items:center;gap:12px}
+.m-card .m-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;flex-shrink:0;letter-spacing:0}
+.m-card .m-info{font-size:11px;line-height:1.4}
+.m-card .m-info .m-name{color:#fff;font-weight:700;letter-spacing:0.3px;margin-bottom:1px}
+.m-card .m-info .m-role{color:var(--text-dimmer);letter-spacing:0.3px}
+@media(max-width:640px){
+  .m-card{width:300px}
+}
+
 /* ========== STICKY CTA BAR ========== */
 .sticky-cta{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);z-index:300;display:flex;align-items:center;gap:14px;padding:12px 12px 12px 24px;background:rgba(15,15,15,0.95);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(249,115,22,0.25);border-radius:100px;box-shadow:0 20px 50px rgba(0,0,0,0.5),0 0 0 1px rgba(249,115,22,0.1);transition:transform 0.5s var(--ease-out),opacity 0.5s ease;opacity:0;pointer-events:none}
 .sticky-cta.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
@@ -417,6 +498,17 @@ html.js-reveal .manifeste-line.visible{width:120px}
 </head>
 <body>
 <h1 class="sr-only">RB Perform — Plateforme SaaS de coaching sportif premium</h1>
+
+<!-- ========== LOADER ========== -->
+<div id="loader" aria-hidden="true">
+  <div class="loader-logo">
+    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60"/>
+    </svg>
+  </div>
+  <div class="loader-text">RB PERFORM</div>
+  <div class="loader-bar"></div>
+</div>
 
 <div class="grain" aria-hidden="true">
 <svg xmlns="http://www.w3.org/2000/svg"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>
@@ -741,12 +833,175 @@ html.js-reveal .manifeste-line.visible{width:120px}
   </div>
 </section>
 
-<!-- ========== TESTIMONIAL ========== -->
-<section class="testimonial">
-  <div class="testimonial-bg" aria-hidden="true">"</div>
-  <div class="testimonial-content">
-    <blockquote class="testimonial-quote reveal gradient-text">"En 3 mois, j'ai doublé<br/>ma rétention client."</blockquote>
-    <div class="testimonial-author reveal stagger-1"><b>Marie L.</b> · Coach fitness, 23 clients</div>
+<!-- ========== BENTO GRID (showcase Apple-style) ========== -->
+<section class="bento">
+  <div class="bento-inner">
+    <div class="intro">
+      <div class="section-tag">Une plateforme. Tout l'arsenal.</div>
+      <h2 class="section-title gradient-text">Construit pour les coachs<br/>qui ne s'arrêtent jamais.</h2>
+    </div>
+    <div class="bento-grid">
+
+      <!-- Big card 2x2 : Mission statement -->
+      <div class="bento-card span2 row2 reveal" style="display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div class="b-tag">Notre mission</div>
+          <div class="b-title" style="font-size:42px">Faire de chaque<br/>coach sportif<br/>un<span style="color:var(--orange)"> entrepreneur</span><br/>indépendant.</div>
+        </div>
+        <p class="b-desc" style="font-size:14px;max-width:380px">Plateformes US comme Trainerize prennent jusqu'à 30% sur tes revenus. Nous : zéro. Tu paies pour la techno, pas pour ton succès. Ton chiffre d'affaires reste à toi, intégralement.</p>
+      </div>
+
+      <!-- Stat card -->
+      <div class="bento-card b-stat reveal stagger-1">
+        <div class="b-num">0%</div>
+        <div class="b-lbl">Commission prélevée</div>
+      </div>
+
+      <!-- Feature card -->
+      <div class="bento-card b-feature reveal stagger-2">
+        <div class="b-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="b-title">Anti-churn IA</div>
+        <div class="b-desc">7 signaux analysés en temps réel pour prédire qui va décrocher.</div>
+      </div>
+
+      <!-- Mini app preview card -->
+      <div class="bento-card b-app span2 reveal">
+        <div class="b-tag">Live dashboard</div>
+        <div class="app-mock">
+          <div class="app-row">
+            <div class="dot" style="background:var(--teal)"></div>
+            <strong>Marie Laurent</strong>
+            <span style="color:var(--text-dimmer)">+2.4 kg</span>
+            <span class="val">91</span>
+          </div>
+          <div class="app-row">
+            <div class="dot" style="background:#ef4444"></div>
+            <strong>Marc Dubois</strong>
+            <span style="color:var(--text-dimmer)">−4j</span>
+            <span class="val" style="color:#ef4444">34</span>
+          </div>
+          <div class="app-row">
+            <div class="dot" style="background:var(--orange)"></div>
+            <strong>Lucas Bernard</strong>
+            <span style="color:var(--text-dimmer)">Nouveau</span>
+            <span class="val" style="color:var(--orange)">76</span>
+          </div>
+          <div style="margin-top:auto;padding-top:8px">
+            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dimmer);font-weight:700;margin-bottom:8px">Score Business</div>
+            <div class="app-bar"><div class="fill"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quote card -->
+      <div class="bento-card b-quote reveal stagger-1">
+        <div class="q">"Mes clients pensent que j'ai une équipe tech derrière moi."</div>
+        <div class="q-author"><b>Julien R.</b> · Coach Hyrox</div>
+      </div>
+
+      <!-- Stat card -->
+      <div class="bento-card b-stat reveal stagger-2">
+        <div class="b-num">5min</div>
+        <div class="b-lbl">Pour onboarder un client</div>
+      </div>
+
+      <!-- Feature card large -->
+      <div class="bento-card b-feature span2 reveal">
+        <div class="b-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg></div>
+        <div class="b-title">White label intégral</div>
+        <div class="b-desc">Ton logo, tes couleurs, ton domaine custom. Tes clients voient ta marque — jamais la nôtre. Tu construis ton empire, pas le nôtre.</div>
+      </div>
+
+      <!-- CTA card -->
+      <div class="bento-card b-cta span2 reveal stagger-1">
+        <div class="b-cta-title">Rejoins la beta.</div>
+        <div class="b-cta-sub">14 jours gratuit. Aucune carte requise.</div>
+        <a href="https://rb-perfor.vercel.app/?coach=true" class="btn btn-orange magnetic" target="_blank" rel="noopener">
+          Démarrer
+          <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========== TESTIMONIALS MARQUEE ========== -->
+<section class="marquee-section">
+  <div class="intro">
+    <div class="section-tag">Ce que disent les coachs</div>
+    <h2 class="section-title gradient-text">Ils ont fait le pas.<br/>Ils performent.</h2>
+  </div>
+
+  <div class="marquee-track" id="marquee1">
+    <!-- Row 1 cards (sera dupliqué en JS pour boucle infinie) -->
+    <div class="m-card">
+      <div class="m-stars">★★★★★</div>
+      <div class="m-quote">"En 3 mois j'ai doublé ma rétention. Le dashboard CEO m'a montré ce que je rateais."</div>
+      <div class="m-author">
+        <div class="m-avatar" style="background:rgba(2,209,186,0.15);color:var(--teal)">M</div>
+        <div class="m-info"><div class="m-name">Marie L.</div><div class="m-role">Coach fitness · 23 clients</div></div>
+      </div>
+    </div>
+    <div class="m-card">
+      <div class="m-stars">★★★★★</div>
+      <div class="m-quote">"L'anti-churn IA m'a fait sauver 4 clients en un mois. Investissement rentabilisé en 8 jours."</div>
+      <div class="m-author">
+        <div class="m-avatar" style="background:rgba(249,115,22,0.15);color:var(--orange)">J</div>
+        <div class="m-info"><div class="m-name">Julien R.</div><div class="m-role">Coach Hyrox · 41 clients</div></div>
+      </div>
+    </div>
+    <div class="m-card">
+      <div class="m-stars">★★★★★</div>
+      <div class="m-quote">"Mes clients pensent que j'ai une équipe tech. Le white label est parfait. Marque pro instantanée."</div>
+      <div class="m-author">
+        <div class="m-avatar" style="background:rgba(167,139,250,0.15);color:var(--violet)">S</div>
+        <div class="m-info"><div class="m-name">Sofia M.</div><div class="m-role">Coach prep physique · 18 clients</div></div>
+      </div>
+    </div>
+    <div class="m-card">
+      <div class="m-stars">★★★★★</div>
+      <div class="m-quote">"Programme builder addictif. J'ai créé 8 programmes en une soirée. Mes clients trouvent ça plus pro que les apps US."</div>
+      <div class="m-author">
+        <div class="m-avatar" style="background:rgba(129,140,248,0.15);color:#818cf8">T</div>
+        <div class="m-info"><div class="m-name">Thomas R.</div><div class="m-role">Coach musculation · 29 clients</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="marquee-track reverse" id="marquee2">
+    <div class="m-card">
+      <div class="m-stars">★★★★★</div>
+      <div class="m-quote">"L'IA vocale pour la nutrition est un game changer. Mes clientes loggent leurs repas en 3 secondes."</div>
+      <div class="m-author">
+        <div class="m-avatar" style="background:rgba(2,209,186,0.15);color:var(--teal)">A</div>
+        <div class="m-info"><div class="m-name">Amélie B.</div><div class="m-role">Coach nutrition · 32 clients</div></div>
+      </div>
+    </div>
+    <div class="m-card">
+      <div class="m-stars">★★★★★</div>
+      <div class="m-quote">"Le pipeline CRM Kanban m'a fait gagner 5h/semaine. Je sais exactement où je dois agir, en un coup d'œil."</div>
+      <div class="m-author">
+        <div class="m-avatar" style="background:rgba(249,115,22,0.15);color:var(--orange)">N</div>
+        <div class="m-info"><div class="m-name">Nicolas D.</div><div class="m-role">Coach perf · 47 clients</div></div>
+      </div>
+    </div>
+    <div class="m-card">
+      <div class="m-stars">★★★★★</div>
+      <div class="m-quote">"Je suis passé de Trainerize à RB Perform. 30% de marge récupérée. Et mes clients adorent la PWA."</div>
+      <div class="m-author">
+        <div class="m-avatar" style="background:rgba(167,139,250,0.15);color:var(--violet)">K</div>
+        <div class="m-info"><div class="m-name">Karim B.</div><div class="m-role">Coach CrossFit · 38 clients</div></div>
+      </div>
+    </div>
+    <div class="m-card">
+      <div class="m-stars">★★★★★</div>
+      <div class="m-quote">"Support 7j/7 ultra réactif. Réponse en moins de 30min même le dimanche. Pas vu ça ailleurs."</div>
+      <div class="m-author">
+        <div class="m-avatar" style="background:rgba(129,140,248,0.15);color:#818cf8">L</div>
+        <div class="m-info"><div class="m-name">Léa V.</div><div class="m-role">Coach yoga & force · 22 clients</div></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -918,12 +1173,17 @@ html.js-reveal .manifeste-line.visible{width:120px}
   var hasIntersectionObserver = 'IntersectionObserver' in window;
   var noHover = matchMedia('(hover: none)').matches;
 
+  // Loader : se cache des que la page est prete (max 2.4s pour laisser
+  // l'animation du logo se jouer)
+  initLoader();
+
   if (prefersReducedMotion || !hasIntersectionObserver) {
     initStaticCursor();
     initNavScroll();
     initHeroSplit(false);
     initCountUp();
     initFAQ();
+    initMarquee();
     return;
   }
 
@@ -936,11 +1196,31 @@ html.js-reveal .manifeste-line.visible{width:120px}
   initManifeste();
   initCountUp();
   initScreenSwitch();
+  initIphoneAutoCycle();
   initMagnetic();
   initTilt();
   initSpotlight();
   initStickyCta();
   initFAQ();
+  initMarquee();
+  initLiveData();
+  initBentoSpotlight();
+
+  function initLoader() {
+    var loader = document.getElementById('loader');
+    if (!loader) return;
+    var hide = function() {
+      loader.classList.add('done');
+      setTimeout(function() { loader.style.display = 'none'; }, 800);
+    };
+    if (document.readyState === 'complete') {
+      setTimeout(hide, 1900);
+    } else {
+      window.addEventListener('load', function() { setTimeout(hide, 1900); });
+    }
+    // Filet de securite : si load tarde > 4s, on cache quand meme
+    setTimeout(hide, 4000);
+  }
 
   // ===== Cursor custom =====
   function initStaticCursor() {
@@ -1188,6 +1468,75 @@ html.js-reveal .manifeste-line.visible{width:120px}
         var isOpen = item.classList.contains('open');
         item.classList.toggle('open');
         btn.setAttribute('aria-expanded', !isOpen);
+      });
+    });
+  }
+
+  // ===== iPhone auto-cycle quand visible et user pas scroll =====
+  function initIphoneAutoCycle() {
+    var iphone = document.getElementById('iphone');
+    var screens = document.querySelectorAll('.screen');
+    var steps = document.querySelectorAll('.step');
+    if (!iphone || !screens.length) return;
+
+    var idx = 0;
+    var timer = null;
+    var lastScroll = Date.now();
+    var isVisible = false;
+
+    window.addEventListener('scroll', function() { lastScroll = Date.now(); }, { passive: true });
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) { isVisible = e.isIntersecting; });
+    }, { threshold: 0.4 });
+    observer.observe(iphone);
+
+    setInterval(function() {
+      // Auto-cycle uniquement si visible ET user inactif depuis 2.5s
+      if (!isVisible) return;
+      if (Date.now() - lastScroll < 2500) return;
+      idx = (idx + 1) % screens.length;
+      screens.forEach(function(s, i) { s.classList.toggle('active', i === idx); });
+      steps.forEach(function(s, i) { s.classList.toggle('active', i === idx); });
+    }, 3500);
+  }
+
+  // ===== Live data ticker (chiffres dans iphone qui bougent subtilement) =====
+  function initLiveData() {
+    // Pulse subtle sur l'icone alert toutes les 8s pour montrer "vivant"
+    var alertIco = document.querySelector('.screen-dashboard .icn.alert');
+    if (alertIco) {
+      setInterval(function() {
+        alertIco.style.transition = 'transform 0.4s ease';
+        alertIco.style.transform = 'scale(1.15)';
+        setTimeout(function() { alertIco.style.transform = 'scale(1)'; }, 400);
+      }, 8000);
+    }
+  }
+
+  // ===== Marquee : duplique les cards pour boucle infinie sans saut =====
+  function initMarquee() {
+    document.querySelectorAll('.marquee-track').forEach(function(track) {
+      // Cloner les enfants une fois pour creer une boucle visuellement infinie
+      var children = Array.prototype.slice.call(track.children);
+      children.forEach(function(c) {
+        var clone = c.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        track.appendChild(clone);
+      });
+    });
+  }
+
+  // ===== Bento spotlight (gradient orange suit le curseur) =====
+  function initBentoSpotlight() {
+    if (noHover) return;
+    document.querySelectorAll('.bento-card').forEach(function(card) {
+      card.addEventListener('mousemove', function(e) {
+        var rect = card.getBoundingClientRect();
+        var x = ((e.clientX - rect.left) / rect.width) * 100;
+        var y = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mx', x + '%');
+        card.style.setProperty('--my', y + '%');
       });
     });
   }
