@@ -22,219 +22,312 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+/* ===== RESET ===== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--orange:#f97316;--teal:#02d1ba;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f}
-html{scroll-behavior:smooth}
-body{background:var(--dark);color:#fff;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+:root{--orange:#f97316;--teal:#02d1ba;--violet:#a78bfa;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35)}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--dark);color:#fff;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
 a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img,video{max-width:100%;display:block}
 ::selection{background:var(--orange);color:#fff}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 
-/* CURSOR (desktop only) */
-.cursor{position:fixed;width:20px;height:20px;border:1px solid rgba(255,255,255,0.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform 0.15s ease,width 0.2s ease,height 0.2s ease;top:-50px;left:-50px}
-.cursor.grow{width:40px;height:40px;border-color:var(--orange)}
-@media(hover:none){.cursor{display:none}html{cursor:auto}}
+/* ===== CURSOR ===== */
+.cursor{position:fixed;width:20px;height:20px;border:1.5px solid rgba(255,255,255,0.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform 0.15s ease,width 0.25s cubic-bezier(0.22,1,0.36,1),height 0.25s cubic-bezier(0.22,1,0.36,1),background 0.25s,border-color 0.25s;top:-50px;left:-50px;mix-blend-mode:difference}
+.cursor.grow{width:48px;height:48px;background:rgba(255,255,255,0.85);border-color:rgba(255,255,255,0.85)}
+@media(hover:none){.cursor{display:none}}
 html.has-cursor{cursor:none}
 html.has-cursor a,html.has-cursor button{cursor:none}
 
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-
-/* GRAIN */
-.grain{position:fixed;inset:0;pointer-events:none;z-index:1000;opacity:0.03}
+/* ===== GRAIN ===== */
+.grain{position:fixed;inset:0;pointer-events:none;z-index:9997;opacity:0.035;mix-blend-mode:overlay}
 .grain svg{width:100%;height:100%}
 
-/* NAV */
-nav.topnav{position:fixed;top:0;left:0;right:0;z-index:100;padding:24px 48px;display:flex;justify-content:space-between;align-items:center;transition:transform 0.4s ease,background 0.3s,backdrop-filter 0.3s}
+/* ===== NAV ===== */
+nav.topnav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 40px;display:flex;justify-content:space-between;align-items:center;transition:transform 0.4s cubic-bezier(0.22,1,0.36,1),background 0.3s,backdrop-filter 0.3s,border-color 0.3s;border-bottom:1px solid transparent}
+nav.topnav.scrolled{background:rgba(3,3,3,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom-color:var(--border)}
 nav.topnav.hidden{transform:translateY(-100%)}
-nav.topnav.scrolled{background:rgba(3,3,3,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.06)}
 .nav-logo{display:inline-flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2.5px;color:#fff;line-height:1}
 .nav-logo .mark{flex-shrink:0;filter:drop-shadow(0 0 10px rgba(2,209,186,0.35))}
 .nav-logo b{color:var(--teal);font-weight:400;letter-spacing:3px}
-.nav-link{font-size:13px;color:rgba(255,255,255,0.5);letter-spacing:1px;transition:color 0.2s}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-link{font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s}
 .nav-link:hover{color:#fff}
+.nav-link.cta{padding:9px 18px;border:1px solid rgba(255,255,255,0.2);border-radius:100px;color:#fff}
+.nav-link.cta:hover{background:#fff;color:#000;border-color:#fff}
 
-/* HERO */
+/* ===== SECTION 1 — HERO ===== */
 .hero{position:relative;height:100vh;min-height:640px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.45;z-index:1}
-.hero-fallback{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 30% 30%,rgba(249,115,22,0.15),transparent 55%),radial-gradient(ellipse at 70% 60%,rgba(2,209,186,0.1),transparent 55%),linear-gradient(135deg,#0a0a0a 0%,#030303 100%)}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(3,3,3,0.3) 0%,rgba(3,3,3,0.7) 100%);z-index:2}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.5;z-index:1}
+.hero-fallback{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 30% 30%,rgba(249,115,22,0.18),transparent 55%),radial-gradient(ellipse at 70% 60%,rgba(2,209,186,0.12),transparent 55%),linear-gradient(135deg,#0a0a0a 0%,#030303 100%)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,3,3,0.2) 0%,rgba(3,3,3,0.55) 50%,rgba(3,3,3,0.9) 100%);z-index:2}
 .hero-content{position:relative;z-index:3;text-align:center;padding:0 24px;max-width:1100px}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(72px,12vw,180px);letter-spacing:-2px;line-height:0.9}
-.hero-sub{font-size:clamp(15px,2vw,20px);color:rgba(255,255,255,0.55);margin-top:28px;font-weight:400;letter-spacing:0.3px;max-width:580px;margin-left:auto;margin-right:auto}
-.hero-cta{margin-top:44px}
+.hero-eyebrow{font-size:10px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:24px}
+.hero-eyebrow::before{content:'';display:inline-block;width:24px;height:1px;background:var(--orange);vertical-align:middle;margin-right:12px;margin-bottom:3px}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(72px,13vw,200px);letter-spacing:-2px;line-height:0.9;font-weight:400;margin-bottom:24px}
+.hero-title .char{display:inline-block}
+.hero-accent-bar{width:120px;height:3px;background:var(--orange);margin:0 auto 28px}
+.hero-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);margin:0 auto 42px;font-weight:400;letter-spacing:0.2px;max-width:580px}
 .btn-primary{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border:1px solid rgba(255,255,255,0.4);border-radius:100px;color:#fff;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;transition:all 0.3s cubic-bezier(0.22,1,0.36,1);min-height:52px}
-.btn-primary:hover{background:#fff;color:#000;transform:translateY(-2px)}
-.btn-orange{background:var(--orange);border-color:var(--orange);color:#000;font-weight:700;box-shadow:0 15px 35px rgba(249,115,22,0.3)}
-.btn-orange:hover{background:#fb923c;border-color:#fb923c;color:#000;box-shadow:0 20px 45px rgba(249,115,22,0.4)}
+.btn-primary:hover{background:#fff;color:#000;border-color:#fff;transform:translateY(-2px)}
+.btn-primary .arrow{transition:transform 0.3s}
+.btn-primary:hover .arrow{transform:translateX(4px)}
+.btn-orange{background:linear-gradient(135deg,var(--orange),#ea580c);border-color:var(--orange);color:#000;font-weight:800;box-shadow:0 15px 35px rgba(249,115,22,0.3)}
+.btn-orange:hover{background:linear-gradient(135deg,#fb923c,#f97316);border-color:#fb923c;color:#000;box-shadow:0 20px 45px rgba(249,115,22,0.4)}
 .scroll-hint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:12px;z-index:3}
-.scroll-line{width:1px;height:50px;background:linear-gradient(180deg,rgba(255,255,255,0.5),transparent);animation:scrollPulse 2.5s ease-in-out infinite}
-@keyframes scrollPulse{0%,100%{transform:scaleY(1);opacity:0.5}50%{transform:scaleY(1.3);opacity:1}}
-.scroll-text{font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.35);text-transform:uppercase;font-weight:600}
+.scroll-line{width:1px;height:50px;background:linear-gradient(180deg,rgba(255,255,255,0.55),transparent);animation:scrollPulse 2.5s ease-in-out infinite}
+@keyframes scrollPulse{0%,100%{transform:scaleY(1);opacity:0.55}50%{transform:scaleY(1.3);opacity:1}}
+.scroll-text{font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.35);text-transform:uppercase;font-weight:700}
 
-/* MANIFESTE */
-.manifeste{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:140px 48px;text-align:center;background:var(--dark)}
-.manifeste-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,82px);max-width:1000px;line-height:1.05;letter-spacing:-1px;font-weight:400}
-.manifeste-line{width:120px;height:2px;background:var(--orange);margin:40px auto}
-.manifeste-sub{font-size:clamp(18px,2.5vw,32px);color:rgba(255,255,255,0.55);font-family:'Bebas Neue',sans-serif;letter-spacing:1px}
-.manifeste-sub b{color:#fff;font-weight:400}
+/* ===== SECTION 2 — MANIFESTE ===== */
+.manifeste{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:180px 24px;text-align:center;background:var(--dark)}
+.manifeste-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6.5vw,88px);max-width:1000px;line-height:1.03;letter-spacing:-1px;font-weight:400;margin:0 auto}
+.manifeste-line{width:120px;height:2px;background:var(--orange);margin:50px auto}
+.manifeste-sub{font-size:clamp(18px,2.5vw,28px);color:var(--text-dim);font-weight:400;letter-spacing:0.2px}
+.manifeste-sub b{color:#fff;font-weight:600}
 
-/* CHIFFRES */
-.chiffres{padding:120px 48px;background:var(--dark);border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05)}
-.chiffres-grid{display:grid;grid-template-columns:repeat(3,1fr);max-width:1000px;margin:0 auto;position:relative}
-.chiffres-grid::before,.chiffres-grid::after{content:'';position:absolute;top:25%;bottom:25%;width:1px;background:rgba(255,255,255,0.08)}
+/* ===== SECTION 3 — CHIFFRES ===== */
+.chiffres{padding:130px 24px;background:var(--dark);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.chiffres-grid{display:grid;grid-template-columns:repeat(3,1fr);max-width:1200px;margin:0 auto;position:relative}
+.chiffres-grid::before,.chiffres-grid::after{content:'';position:absolute;top:20%;bottom:20%;width:1px;background:var(--border)}
 .chiffres-grid::before{left:33.33%}
 .chiffres-grid::after{right:33.33%}
 .chiffre-item{text-align:center;padding:30px 20px}
-.chiffre-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,9vw,110px);color:var(--teal);letter-spacing:-2px;line-height:1}
-.chiffre-label{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-top:14px;font-weight:700}
+.chiffre-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,9vw,120px);color:var(--teal);letter-spacing:-2px;line-height:0.9}
+.chiffre-label{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:16px;font-weight:700}
 
-/* PRODUCT REVEAL */
-.product{padding:120px 48px;background:var(--dark2)}
-.product-wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
-.product-wrap.reverse{direction:rtl}
-.product-wrap.reverse>*{direction:ltr}
-.phone-frame{width:260px;height:520px;border:2px solid rgba(255,255,255,0.12);border-radius:40px;background:var(--dark);position:relative;overflow:hidden;margin:0 auto;box-shadow:0 40px 80px rgba(0,0,0,0.6),0 0 0 2px rgba(255,255,255,0.04)}
-.phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:90px;height:28px;background:var(--dark);border-radius:0 0 18px 18px;z-index:2}
-.phone-screen{position:absolute;inset:0;padding:38px 14px 14px;overflow:hidden}
-.screen-1{background:var(--dark);height:100%;border-radius:28px;padding:18px;overflow:hidden}
-.screen-header{font-size:8px;color:rgba(255,255,255,0.25);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;font-weight:700}
-.screen-score{display:flex;align-items:center;gap:14px;margin-bottom:18px}
-.score-ring{width:52px;height:52px;border-radius:50%;background:conic-gradient(var(--teal) 0deg 280deg,rgba(255,255,255,0.08) 280deg 360deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
-.score-ring::before{content:'';position:absolute;inset:5px;background:var(--dark);border-radius:50%}
-.score-ring span{position:relative;z-index:1;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--teal)}
-.screen-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:-0.5px}
-.screen-sub{font-size:9px;color:rgba(255,255,255,0.35)}
-.screen-stat{background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 12px;margin-bottom:8px}
-.stat-label{font-size:7px;color:rgba(255,255,255,0.3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:4px;font-weight:700}
-.stat-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:4px}
-.stat-fill{height:100%;border-radius:2px}
-.stat-val{font-size:12px;font-weight:600;margin-top:2px}
-.client-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-.client-row:last-child{border-bottom:none}
-.client-av{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
-.client-name{font-size:10px;font-weight:600;flex:1}
-.client-score{font-size:11px;font-weight:700;font-family:'Bebas Neue',sans-serif}
-.product-text{padding:20px 0}
-.product-tag{font-size:10px;color:var(--orange);letter-spacing:4px;text-transform:uppercase;margin-bottom:18px;font-weight:700}
-.product-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(38px,4.5vw,60px);letter-spacing:-1px;line-height:1.02;margin-bottom:22px}
-.product-desc{font-size:16px;color:rgba(255,255,255,0.5);line-height:1.75;font-weight:400;max-width:440px}
+/* ===== SECTION 4 — PRODUCT REVEAL (sticky iPhone + 4 screens) ===== */
+.product-reveal{position:relative;background:var(--dark);padding:120px 24px 160px}
+.product-reveal-inner{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:80px;align-items:start}
+.product-sticky-wrap{position:sticky;top:100px;display:flex;justify-content:center;align-items:center;min-height:700px}
+.iphone{width:340px;height:690px;background:var(--dark2);border-radius:52px;border:8px solid #1a1a1a;box-shadow:0 40px 80px rgba(0,0,0,0.6),0 0 0 2px rgba(255,255,255,0.05),inset 0 0 0 1px rgba(255,255,255,0.06);position:relative;overflow:hidden}
+.iphone::before{content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:28px;background:#000;border-radius:20px;z-index:10}
+.iphone-screen{position:absolute;inset:0;border-radius:44px;overflow:hidden;background:var(--dark)}
+.screen{position:absolute;inset:0;opacity:0;transition:opacity 0.5s cubic-bezier(0.22,1,0.36,1);padding:52px 14px 20px;overflow:hidden;color:#fff;font-size:11px}
+.screen.active{opacity:1}
+/* Fallback: si JS KO, le premier ecran reste visible */
+.screen:first-of-type{opacity:1}
+html.js-reveal .screen:first-of-type:not(.active){opacity:0}
 
-/* FEATURES */
-.features{padding:120px 48px;background:var(--dark)}
-.section-tag{font-size:10px;color:var(--orange);letter-spacing:4px;text-transform:uppercase;text-align:center;margin-bottom:18px;font-weight:700}
-.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6.5vw,84px);text-align:center;letter-spacing:-1.5px;line-height:0.95;margin-bottom:80px;max-width:900px;margin-left:auto;margin-right:auto}
-.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.05);max-width:1200px;margin:0 auto;border-radius:20px;overflow:hidden}
-.feature-card{background:var(--dark3);padding:44px 36px;transition:background 0.3s,transform 0.3s}
-.feature-card:hover{background:#131313}
-.feature-icon{width:48px;height:48px;border-radius:12px;background:rgba(2,209,186,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:24px;color:var(--teal)}
-.feature-icon svg{width:22px;height:22px}
-.feature-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:-0.5px;margin-bottom:12px}
-.feature-desc{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.65;font-weight:400}
+/* Screen 1 — Dashboard Coach */
+.screen-dashboard{background:var(--dark)}
+.screen-dashboard .s-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.screen-dashboard .s-nav .pill{font-size:9px;padding:4px 9px;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.2);border-radius:100px;color:#818cf8;font-weight:700;letter-spacing:1px}
+.screen-dashboard .s-nav .icons{display:flex;gap:6px}
+.screen-dashboard .s-nav .icn{width:28px;height:28px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);position:relative}
+.screen-dashboard .s-nav .icn.alert::after{content:'';position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--dark)}
+.screen-dashboard h1{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:-1.5px;line-height:0.95;margin-bottom:4px;font-weight:400}
+.screen-dashboard h1 .teal{color:var(--teal)}
+.screen-dashboard .stats-row{display:flex;gap:10px;margin:10px 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:9px}
+.screen-dashboard .stats-row .st strong{color:var(--teal);font-size:14px;font-family:'Bebas Neue',sans-serif;letter-spacing:0;display:block;line-height:1}
+.screen-dashboard .stats-row .st span{color:rgba(255,255,255,0.4);font-size:8px;letter-spacing:1px;text-transform:uppercase;font-weight:700}
+.screen-dashboard .score-card{background:rgba(2,209,186,0.05);border:1px solid rgba(2,209,186,0.2);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.screen-dashboard .score-ring{width:60px;height:60px;border-radius:50%;background:conic-gradient(var(--teal) 0deg 313deg,rgba(255,255,255,0.08) 313deg 360deg);position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.screen-dashboard .score-ring::before{content:'';position:absolute;inset:6px;background:var(--dark);border-radius:50%}
+.screen-dashboard .score-ring span{position:relative;z-index:1;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--teal);letter-spacing:0}
+.screen-dashboard .score-label .t1{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:2px;font-weight:700}
+.screen-dashboard .score-label .t2{font-size:13px;font-weight:700;color:#fff}
+.screen-dashboard .score-label .t3{font-size:9px;color:var(--text-dimmer);margin-top:2px}
+.screen-dashboard .tabs{display:flex;gap:5px;margin-bottom:10px;overflow:hidden}
+.screen-dashboard .tab{font-size:8px;font-weight:700;padding:6px 9px;border-radius:100px;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);white-space:nowrap;letter-spacing:0.5px}
+.screen-dashboard .tab.active{background:rgba(2,209,186,0.1);border-color:rgba(2,209,186,0.3);color:var(--teal)}
+.screen-dashboard .alert{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.18);border-radius:12px;padding:10px;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.screen-dashboard .alert .a-ico{width:26px;height:26px;background:rgba(239,68,68,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#ef4444}
+.screen-dashboard .alert .a-title{font-size:11px;font-weight:700;margin-bottom:2px}
+.screen-dashboard .alert .a-desc{font-size:9px;color:var(--text-dimmer);line-height:1.5}
 
-/* TESTIMONIAL */
-.testimonial{padding:160px 48px;background:var(--dark2);position:relative;overflow:hidden;text-align:center}
-.testimonial-bg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:clamp(260px,40vw,500px);color:rgba(249,115,22,0.05);pointer-events:none;line-height:0.8;white-space:nowrap;user-select:none}
-.testimonial-quote{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,68px);font-weight:400;line-height:1.05;letter-spacing:-1px;max-width:1000px;margin:0 auto 40px;position:relative;z-index:1}
-.testimonial-author{font-size:13px;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;font-weight:600;position:relative;z-index:1}
+/* Screen 2 — Clients */
+.screen-clients{background:var(--dark)}
+.screen-clients .title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:-1px;margin-bottom:12px}
+.screen-clients .search{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;margin-bottom:14px}
+.screen-clients .search span{font-size:9px;color:rgba(255,255,255,0.3)}
+.screen-clients .c-card{display:flex;align-items:center;gap:10px;padding:11px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:12px;margin-bottom:7px}
+.screen-clients .av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;flex-shrink:0;letter-spacing:0}
+.screen-clients .info{flex:1;min-width:0}
+.screen-clients .c-name{font-size:11px;font-weight:700;margin-bottom:2px}
+.screen-clients .meta{font-size:9px;color:var(--text-dimmer);display:flex;gap:6px;align-items:center}
+.screen-clients .badge{font-size:8px;padding:2px 6px;border-radius:100px;font-weight:700;letter-spacing:0.5px}
+.screen-clients .risk{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* Screen 3 — Fuel */
+.screen-fuel{background:var(--dark)}
+.screen-fuel .title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:-1px;margin-bottom:4px}
+.screen-fuel .sub{font-size:9px;color:var(--text-dimmer);margin-bottom:14px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+.screen-fuel .macros{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.screen-fuel .macro{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:10px 8px;text-align:center}
+.screen-fuel .ring{width:38px;height:38px;margin:0 auto 5px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center}
+.screen-fuel .ring::before{content:'';position:absolute;inset:4px;background:var(--dark);border-radius:50%}
+.screen-fuel .ring span{position:relative;z-index:1;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0}
+.screen-fuel .lbl{font-size:8px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.screen-fuel .tl-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--text-dimmer);text-transform:uppercase;margin-bottom:8px}
+.screen-fuel .meal{display:flex;gap:10px;padding:9px 10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;margin-bottom:6px;align-items:center}
+.screen-fuel .time{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--orange);min-width:34px;letter-spacing:0}
+.screen-fuel .name{font-size:10px;font-weight:600;flex:1}
+.screen-fuel .kcal{font-size:9px;color:var(--text-dimmer);font-weight:600}
+
+/* Screen 4 — Builder */
+.screen-builder{background:#1d1b1b}
+.screen-builder .bbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.screen-builder .tag{font-size:11px;font-weight:800;letter-spacing:0.5px}
+.screen-builder .tag span{color:#c0392b}
+.screen-builder .save{font-size:9px;font-weight:800;background:#c0392b;color:#fff;padding:5px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px}
+.screen-builder .f{margin-bottom:8px}
+.screen-builder .f-lbl{font-size:7px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:3px}
+.screen-builder .f-inp{padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;font-size:10px;color:#faf9f7}
+.screen-builder .week{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;margin-top:10px}
+.screen-builder .w-head{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#1d1b1b}
+.screen-builder .pill-s{background:#c0392b;color:#fff;font-size:7px;padding:2px 6px;border-radius:4px;font-weight:800;letter-spacing:1px}
+.screen-builder .ex{margin:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px}
+.screen-builder .ex-t{background:#1d1b1b;color:#fff;font-size:7px;padding:2px 6px;border-radius:3px;font-weight:800;letter-spacing:1px}
+.screen-builder .ex-n{font-size:10px;font-weight:700;margin:4px 0 5px}
+.screen-builder .ex-s{display:flex;gap:8px;font-size:8px}
+.screen-builder .ex-s .k{color:rgba(255,255,255,0.4);font-size:6px;letter-spacing:1px;text-transform:uppercase;display:block;font-weight:700}
+.screen-builder .ex-s .v{font-weight:800;color:#fff}
+.screen-builder .ex-s .v.red{color:#c0392b}
+
+/* Product steps (right column) */
+.product-steps{padding:40px 0}
+.step{min-height:550px;display:flex;flex-direction:column;justify-content:center;padding:40px 0;transition:opacity 0.5s ease}
+.step:not(.active){opacity:0.25}
+html:not(.js-reveal) .step{opacity:1}
+.step .num{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--orange);margin-bottom:14px;font-weight:400}
+.step h3{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,4.5vw,62px);font-weight:400;letter-spacing:-1px;line-height:1;margin-bottom:22px}
+.step p{font-size:16px;color:var(--text-dim);max-width:460px;line-height:1.7;font-weight:400}
+
+/* ===== SECTION 5 — FEATURES ===== */
+.features{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
+.features-inner{max-width:1200px;margin:0 auto}
+.features .intro{text-align:center;margin-bottom:80px}
+.section-tag{font-size:10px;color:var(--orange);letter-spacing:4px;text-transform:uppercase;margin-bottom:18px;font-weight:700}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6.5vw,88px);letter-spacing:-1.5px;line-height:0.95;max-width:900px;margin:0 auto;font-weight:400}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.feature-card{background:var(--dark3);border:1px solid var(--border);border-radius:20px;padding:32px;transition:all 0.4s cubic-bezier(0.22,1,0.36,1)}
+.feature-card:hover{border-color:rgba(249,115,22,0.3);transform:translateY(-4px);box-shadow:0 20px 60px rgba(249,115,22,0.08)}
+.feature-icon{width:44px;height:44px;border-radius:12px;background:rgba(2,209,186,0.08);display:flex;align-items:center;justify-content:center;color:var(--teal);margin-bottom:22px}
+.feature-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:-0.5px;margin-bottom:10px;font-weight:400}
+.feature-desc{font-size:14px;color:var(--text-dim);line-height:1.65;font-weight:400}
+
+/* ===== SECTION 6 — TESTIMONIAL ===== */
+.testimonial{position:relative;padding:180px 24px;background:var(--dark);overflow:hidden;text-align:center;border-top:1px solid var(--border)}
+.testimonial-bg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:clamp(280px,42vw,540px);color:var(--orange);opacity:0.05;line-height:0.75;pointer-events:none;user-select:none;font-weight:400}
+.testimonial-content{position:relative;z-index:2;max-width:1100px;margin:0 auto}
+.testimonial-quote{font-family:'Bebas Neue',sans-serif;font-size:clamp(38px,5.5vw,76px);font-weight:400;letter-spacing:-1px;line-height:1.03;margin-bottom:40px}
+.testimonial-author{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dimmer);font-weight:600}
 .testimonial-author b{color:#fff;font-weight:700}
 
-/* PRICING */
-.pricing{padding:120px 48px;background:var(--dark)}
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1200px;margin:60px auto 0}
-.price-card{background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:40px 32px;transition:all 0.3s;position:relative}
-.price-card:hover{border-color:rgba(255,255,255,0.15);transform:translateY(-4px)}
-.price-card.featured{border-color:rgba(249,115,22,0.4);background:linear-gradient(180deg,rgba(249,115,22,0.05),var(--dark3))}
-.price-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--orange);color:#000;font-size:10px;font-weight:800;letter-spacing:1.5px;padding:5px 14px;text-transform:uppercase;border-radius:100px}
-.price-plan{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:-0.5px;margin-bottom:6px}
-.price-desc{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px;min-height:38px}
-.price-amount{font-family:'Bebas Neue',sans-serif;font-size:68px;color:#fff;letter-spacing:-2px;line-height:1}
-.price-amount .currency{font-size:28px;vertical-align:top;margin-right:4px;color:rgba(255,255,255,0.5)}
-.price-period{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:28px;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
-.price-features{list-style:none;margin-bottom:32px}
-.price-features li{font-size:13px;color:rgba(255,255,255,0.55);padding:8px 0;font-weight:400;display:flex;gap:10px;align-items:flex-start}
-.price-features li::before{content:'✓';color:var(--teal);font-weight:700;flex-shrink:0}
-.price-cta{display:flex;align-items:center;justify-content:center;width:100%;padding:14px;border:1px solid rgba(255,255,255,0.15);border-radius:100px;color:#fff;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;transition:all 0.3s;min-height:48px}
-.price-cta:hover{background:#fff;color:#000;border-color:#fff}
-.price-cta.featured-cta{background:var(--orange);border-color:var(--orange);color:#000;font-weight:700}
-.price-cta.featured-cta:hover{background:#fb923c;border-color:#fb923c}
-.pricing-note{text-align:center;margin-top:32px;font-size:12px;color:rgba(255,255,255,0.35);letter-spacing:1.5px;text-transform:uppercase}
-.pricing-guarantee{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:100px;color:var(--teal);font-weight:600}
+/* ===== SECTION 7 — PRICING ===== */
+.pricing{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
+.pricing-inner{max-width:1280px;margin:0 auto}
+.pricing .intro{text-align:center;margin-bottom:70px}
+.pricing .intro p{font-size:15px;color:var(--text-dim);max-width:500px;margin:16px auto 0}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:48px}
+.plan{background:var(--dark3);border:1px solid var(--border);border-radius:24px;padding:36px 28px;position:relative;transition:all 0.3s}
+.plan:hover{border-color:rgba(255,255,255,0.15);transform:translateY(-4px)}
+.plan.featured{border-color:rgba(249,115,22,0.4);background:linear-gradient(180deg,rgba(249,115,22,0.05),var(--dark3))}
+.plan .badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--orange);color:#000;font-size:10px;font-weight:800;padding:5px 14px;border-radius:100px;letter-spacing:1.5px;text-transform:uppercase}
+.plan .name{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:-0.5px;margin-bottom:6px;font-weight:400}
+.plan .desc{font-size:13px;color:var(--text-dim);margin-bottom:26px;min-height:40px;line-height:1.5}
+.plan .price{font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:1;letter-spacing:-2px;margin-bottom:2px;font-weight:400}
+.plan .price .currency{font-size:32px;vertical-align:top;margin-right:4px;color:var(--text-dim)}
+.plan .period{font-size:12px;color:var(--text-dimmer);text-transform:uppercase;letter-spacing:2px;margin-bottom:28px;font-weight:700}
+.plan .f-list{list-style:none;margin-bottom:32px}
+.plan .f-list li{padding:8px 0;font-size:13px;color:var(--text-dim);display:flex;gap:10px;align-items:flex-start}
+.plan .f-list li .check{flex-shrink:0;margin-top:2px;color:var(--teal)}
+.plan .cta-plan{display:flex;align-items:center;justify-content:center;width:100%;padding:14px;border-radius:100px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;transition:all 0.3s;min-height:50px}
+.plan:not(.featured) .cta-plan{background:transparent;border:1px solid var(--border-strong);color:#fff}
+.plan:not(.featured) .cta-plan:hover{background:#fff;color:#000;border-color:#fff}
+.plan.featured .cta-plan{background:var(--orange);color:#000;border:1px solid var(--orange)}
+.plan.featured .cta-plan:hover{background:#fb923c;border-color:#fb923c}
+.pricing-meta{text-align:center;font-size:12px;color:var(--text-dimmer);letter-spacing:2px;text-transform:uppercase;font-weight:600}
+.pricing-meta .guarantee{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:10px 18px;border:1px solid var(--border-strong);border-radius:100px;color:var(--teal);font-weight:600}
 
-/* CTA FINAL */
-.cta-final{position:relative;min-height:70vh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:120px 24px}
-.cta-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.35;z-index:1}
-.cta-fallback{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 50% 50%,rgba(249,115,22,0.12),transparent 60%),var(--dark)}
-.cta-overlay{position:absolute;inset:0;background:rgba(3,3,3,0.5);z-index:2}
-.cta-content{position:relative;z-index:3;max-width:1100px}
-.cta-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(100px,18vw,240px);letter-spacing:-4px;line-height:0.9;margin-bottom:28px}
-.cta-sub{font-size:clamp(16px,2vw,22px);color:rgba(255,255,255,0.55);margin-bottom:40px;font-weight:400;max-width:600px;margin-left:auto;margin-right:auto}
-.cta-note{margin-top:20px;font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase}
+/* ===== SECTION 8 — CTA FINAL ===== */
+.cta-final{position:relative;padding:180px 24px;background:var(--dark);overflow:hidden;text-align:center;border-top:1px solid var(--border)}
+.cta-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0.4}
+.cta-fallback{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 50% 50%,rgba(249,115,22,0.15),transparent 60%),var(--dark)}
+.cta-overlay{position:absolute;inset:0;background:rgba(3,3,3,0.6);z-index:2}
+.cta-content{position:relative;z-index:3;max-width:1100px;margin:0 auto}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(96px,18vw,260px);letter-spacing:-4px;line-height:0.9;margin-bottom:30px;font-weight:400}
+.cta-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);max-width:600px;margin:0 auto 42px}
+.cta-note{margin-top:20px;font-size:12px;color:var(--text-dimmer);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
 
-/* FOOTER */
-footer{padding:60px 48px 40px;background:var(--dark);border-top:1px solid rgba(255,255,255,0.06)}
-.footer-inner{display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;gap:20px;flex-wrap:wrap}
-.footer-logo{display:inline-flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;line-height:1}
+/* ===== FOOTER ===== */
+footer{padding:60px 24px 40px;background:var(--dark);border-top:1px solid var(--border)}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.footer-logo{display:inline-flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2.5px;line-height:1}
 .footer-logo svg{flex-shrink:0}
 .footer-logo b{color:var(--teal);font-weight:400;letter-spacing:3px}
-.footer-tagline{font-size:12px;color:rgba(255,255,255,0.3);margin-top:6px;letter-spacing:0.3px}
-.footer-links{display:flex;gap:28px;flex-wrap:wrap}
-.footer-links a{font-size:12px;color:rgba(255,255,255,0.35);letter-spacing:0.5px;transition:color 0.2s}
+.footer-tagline{font-size:12px;color:var(--text-dimmer);margin-top:6px;letter-spacing:0.3px}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap}
+.footer-links a{font-size:12px;color:var(--text-dimmer);letter-spacing:0.5px;transition:color 0.2s}
 .footer-links a:hover{color:#fff}
-.footer-copy{font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:1.5px;text-transform:uppercase;width:100%;text-align:center;margin-top:24px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.04)}
+.footer-copy{width:100%;padding-top:24px;margin-top:24px;border-top:1px solid var(--border);font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:1.5px;text-transform:uppercase;text-align:center;font-weight:600}
 
 /* ===== PROGRESSIVE ENHANCEMENT ===== */
-/*
-  REGLE : tout est visible par defaut. Si JS + IntersectionObserver
-  fonctionnent, on ajoute .js-reveal sur <html> qui masque les .reveal
-  pour ensuite les animer. Si JS plante, la page reste entierement lisible.
-*/
+/* Tout visible par defaut. Les animations s'activent uniquement si
+   le navigateur supporte IntersectionObserver ET que prefers-reduced-motion
+   est inactif. Le JS ajoute alors la classe .js-reveal sur <html>. */
 .reveal{opacity:1;transform:none;transition:opacity 0.9s cubic-bezier(0.22,1,0.36,1),transform 0.9s cubic-bezier(0.22,1,0.36,1)}
 html.js-reveal .reveal{opacity:0;transform:translateY(40px)}
 html.js-reveal .reveal.visible{opacity:1;transform:translateY(0)}
-.stagger-1{transition-delay:0.12s}
-.stagger-2{transition-delay:0.24s}
-.stagger-3{transition-delay:0.36s}
+.stagger-1{transition-delay:0.1s}
+.stagger-2{transition-delay:0.2s}
+.stagger-3{transition-delay:0.3s}
 
-/* Hero entrance animations — only active if .js-reveal */
-.hero-title .char{display:inline-block}
-html.js-reveal .hero-title .char{opacity:0;transform:translateY(100%)}
-html.js-reveal .hero-sub,html.js-reveal .hero-cta,html.js-reveal .scroll-hint{opacity:0;transform:translateY(20px)}
+/* Hero entrance : gate par js-reveal */
+html.js-reveal .hero-eyebrow,html.js-reveal .hero-sub,html.js-reveal .hero-cta,html.js-reveal .scroll-hint,html.js-reveal .hero-accent-bar{opacity:0;transform:translateY(20px);transition:opacity 0.9s ease,transform 0.9s ease,width 0.9s ease}
+html.js-reveal .hero-accent-bar{width:0;transform:none}
+html.js-reveal .hero-title .char{opacity:0;transform:translateY(80px);transition:opacity 0.9s cubic-bezier(0.22,1,0.36,1),transform 0.9s cubic-bezier(0.22,1,0.36,1)}
 
-/* Manifeste — only hide/animate if JS */
-html.js-reveal .manifeste-line{width:0;transition:width 1s ease 0.3s}
-html.js-reveal .manifeste .visible ~ .manifeste-line,
-html.js-reveal .manifeste .manifeste-line.visible{width:120px}
+/* Manifeste line gate */
+html.js-reveal .manifeste-line{width:0;transition:width 0.9s cubic-bezier(0.22,1,0.36,1)}
+html.js-reveal .manifeste-line.visible{width:120px}
 
-/* RESPONSIVE */
+/* ===== RESPONSIVE ===== */
+@media(max-width:1024px){
+  .product-reveal-inner{grid-template-columns:1fr;gap:40px}
+  .product-sticky-wrap{position:static;min-height:auto}
+  .step{min-height:auto;opacity:1!important}
+  html.js-reveal .step:not(.active){opacity:1}
+  .iphone{transform:scale(0.9)}
+}
 @media(max-width:900px){
   .features-grid{grid-template-columns:repeat(2,1fr)}
-  .pricing-grid{grid-template-columns:1fr;gap:16px}
+  .plans{grid-template-columns:1fr;gap:16px}
 }
 @media(max-width:768px){
-  nav.topnav{padding:18px 24px}
+  nav.topnav{padding:16px 20px}
   .nav-logo{font-size:18px;gap:8px;letter-spacing:2px}
-  .product{padding:80px 24px}
-  .product-wrap{grid-template-columns:1fr;gap:50px}
-  .product-wrap.reverse{direction:ltr}
-  .features{padding:80px 24px}
-  .features-grid{grid-template-columns:1fr}
-  .chiffres{padding:80px 24px}
-  .chiffres-grid{grid-template-columns:1fr;gap:40px}
+  .nav-logo .mark{width:11px;height:26px}
+  .nav-links{gap:14px}
+  .nav-link{font-size:11px;letter-spacing:1px}
+  .hero{padding:0 16px}
+  .manifeste{padding:100px 20px}
+  .chiffres{padding:80px 20px}
+  .chiffres-grid{grid-template-columns:1fr;gap:48px}
   .chiffres-grid::before,.chiffres-grid::after{display:none}
-  .pricing{padding:80px 24px}
-  .testimonial{padding:100px 24px}
-  .manifeste{padding:90px 24px}
-  .cta-final{padding:80px 24px}
-  footer{padding:50px 24px 32px}
+  .product-reveal{padding:80px 20px}
+  .features{padding:80px 20px}
+  .features-grid{grid-template-columns:1fr}
+  .testimonial{padding:110px 20px}
+  .pricing{padding:80px 20px}
+  .cta-final{padding:110px 20px}
+  footer{padding:50px 20px 32px}
   .footer-inner{justify-content:center;text-align:center}
   .footer-links{justify-content:center}
 }
+@media(max-width:420px){
+  .iphone{width:300px;height:610px}
+}
 
-/* REDUCED MOTION */
-@media (prefers-reduced-motion: reduce) {
+/* ===== REDUCED MOTION ===== */
+@media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
-  html.js-reveal .reveal,html.js-reveal .hero-title .char,html.js-reveal .hero-sub,html.js-reveal .hero-cta,html.js-reveal .scroll-hint,html.js-reveal .manifeste-line{opacity:1!important;transform:none!important;width:120px}
+  html.js-reveal .reveal,html.js-reveal .hero-title .char,html.js-reveal .hero-eyebrow,html.js-reveal .hero-sub,html.js-reveal .hero-cta,html.js-reveal .scroll-hint,html.js-reveal .manifeste-line,html.js-reveal .hero-accent-bar{opacity:1!important;transform:none!important;width:120px}
+  html.js-reveal .step{opacity:1!important}
 }
 </style>
 </head>
@@ -243,7 +336,7 @@ html.js-reveal .manifeste .manifeste-line.visible{width:120px}
 
 <!-- GRAIN -->
 <div class="grain" aria-hidden="true">
-<svg xmlns="http://www.w3.org/2000/svg"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>
 </div>
 
 <!-- CURSOR -->
@@ -251,16 +344,19 @@ html.js-reveal .manifeste .manifeste-line.visible{width:120px}
 
 <!-- NAV -->
 <nav class="topnav" id="nav">
-  <a href="#" class="nav-logo" aria-label="RB Perform">
+  <a href="#" class="nav-logo" aria-label="RB Perform — accueil">
     <svg class="mark" viewBox="170 50 180 410" width="13" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
       <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba"/>
     </svg>
     <span>RB <b>PERFORM</b></span>
   </a>
-  <a href="#pricing" class="nav-link">Tarifs</a>
+  <div class="nav-links">
+    <a href="#pricing" class="nav-link">Tarifs</a>
+    <a href="https://rb-perfor.vercel.app" class="nav-link cta" target="_blank" rel="noopener">Connexion</a>
+  </div>
 </nav>
 
-<!-- HERO -->
+<!-- ===== SECTION 1 — HERO ===== -->
 <section class="hero">
   <video class="hero-video" autoplay muted loop playsinline poster="/og-image.png">
     <source src="/hero.mp4" type="video/mp4">
@@ -268,28 +364,33 @@ html.js-reveal .manifeste .manifeste-line.visible{width:120px}
   <div class="hero-fallback"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <div class="hero-title" id="heroTitle">RB PERFORM</div>
-    <p class="hero-sub" id="heroSub">La plateforme qui transforme chaque coach en CEO.</p>
-    <div class="hero-cta" id="heroCta">
-      <a href="https://rb-perfor.vercel.app/?coach=true" class="btn-primary" target="_blank" rel="noopener">Accéder à la beta</a>
+    <div class="hero-eyebrow">SaaS de coaching premium</div>
+    <h2 class="hero-title" id="heroTitle">RB PERFORM</h2>
+    <div class="hero-accent-bar"></div>
+    <p class="hero-sub">La plateforme qui transforme chaque coach en CEO.</p>
+    <div class="hero-cta">
+      <a href="https://rb-perfor.vercel.app/?coach=true" class="btn-primary" target="_blank" rel="noopener">
+        Accéder à la beta
+        <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
     </div>
   </div>
-  <div class="scroll-hint" id="scrollHint">
+  <div class="scroll-hint">
     <div class="scroll-line"></div>
     <span class="scroll-text">Scroll</span>
   </div>
 </section>
 
-<!-- MANIFESTE -->
+<!-- ===== SECTION 2 — MANIFESTE ===== -->
 <section class="manifeste">
   <div>
-    <p class="manifeste-text reveal" id="manifeste">Certains coachs ont du talent. Les meilleurs ont un système.</p>
+    <p class="manifeste-text reveal" id="manifesteText">Certains coachs ont du talent. Les meilleurs ont un système.</p>
     <div class="manifeste-line" id="manifesteLine"></div>
-    <p class="manifeste-sub reveal stagger-2" id="manifesteSub">RB Perform est <b>ce système.</b></p>
+    <p class="manifeste-sub reveal stagger-2">RB Perform est <b>ce système</b>.</p>
   </div>
 </section>
 
-<!-- CHIFFRES -->
+<!-- ===== SECTION 3 — CHIFFRES ===== -->
 <section class="chiffres">
   <div class="chiffres-grid">
     <div class="chiffre-item reveal">
@@ -307,201 +408,320 @@ html.js-reveal .manifeste .manifeste-line.visible{width:120px}
   </div>
 </section>
 
-<!-- PRODUCT 1 -->
-<section class="product">
-  <div class="product-wrap reveal">
-    <div>
-      <div class="phone-frame">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <div class="screen-1">
-            <div class="screen-header">Dashboard Coach</div>
-            <div class="screen-score">
-              <div class="score-ring"><span>78</span></div>
+<!-- ===== SECTION 4 — PRODUCT REVEAL (iPhone sticky + 4 ecrans) ===== -->
+<section class="product-reveal">
+  <div class="product-reveal-inner">
+    <!-- iPhone sticky (4 screens empiles) -->
+    <div class="product-sticky-wrap">
+      <div class="iphone" id="iphone">
+        <div class="iphone-screen">
+
+          <!-- Screen 1 : Dashboard -->
+          <div class="screen screen-dashboard active" data-screen="0">
+            <div class="s-nav">
+              <span class="pill">CEO</span>
+              <div class="icons">
+                <div class="icn alert"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+                <div class="icn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+              </div>
+            </div>
+            <h1>5 clients.<br/><span class="teal">Tout roule.</span></h1>
+            <div class="stats-row">
+              <div class="st"><strong>3</strong><span>Actifs 7j</span></div>
+              <div class="st"><strong>2</strong><span>En séance</span></div>
+              <div class="st"><strong>87%</strong><span>Rétention</span></div>
+            </div>
+            <div class="score-card">
+              <div class="score-ring"><span>87</span></div>
+              <div class="score-label">
+                <div class="t1">Score Business</div>
+                <div class="t2">Excellent</div>
+                <div class="t3">+4 points cette semaine</div>
+              </div>
+            </div>
+            <div class="tabs">
+              <span class="tab active">Vue</span>
+              <span class="tab">Business</span>
+              <span class="tab">Clients</span>
+              <span class="tab">Analytics</span>
+            </div>
+            <div class="alert">
+              <div class="a-ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
               <div>
-                <div class="screen-title">Score Business</div>
-                <div class="screen-sub">En progression ce mois</div>
+                <div class="a-title">Marc à risque élevé</div>
+                <div class="a-desc">Score churn 72/100 — appelle-le aujourd'hui</div>
               </div>
             </div>
-            <div class="screen-stat">
-              <div class="stat-label">MRR</div>
-              <div class="stat-val" style="color:var(--orange)">4 680 €</div>
+          </div>
+
+          <!-- Screen 2 : Clients -->
+          <div class="screen screen-clients" data-screen="1">
+            <div class="title">Clients</div>
+            <div class="search">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Rechercher...</span>
             </div>
-            <div class="screen-stat">
-              <div class="stat-label">Rétention</div>
-              <div class="stat-bar"><div class="stat-fill" style="width:87%;background:var(--teal)"></div></div>
-              <div class="stat-val" style="color:var(--teal)">87%</div>
+            <div class="c-card">
+              <div class="av" style="background:rgba(2,209,186,0.15);color:var(--teal)">M</div>
+              <div class="info">
+                <div class="c-name">Marie Laurent</div>
+                <div class="meta"><span class="badge" style="background:rgba(2,209,186,0.12);color:var(--teal)">Discipliné</span><span>· 18 séances</span></div>
+              </div>
+              <div class="risk" style="background:var(--teal)"></div>
             </div>
-            <div class="screen-stat">
-              <div class="stat-label">Clients actifs</div>
-              <div class="stat-val" style="color:#fff">15 / 15</div>
+            <div class="c-card">
+              <div class="av" style="background:rgba(239,68,68,0.15);color:#ef4444">M</div>
+              <div class="info">
+                <div class="c-name">Marc Dubois</div>
+                <div class="meta"><span class="badge" style="background:rgba(239,68,68,0.12);color:#ef4444">À risque</span><span>· 4j inactif</span></div>
+              </div>
+              <div class="risk" style="background:#ef4444"></div>
+            </div>
+            <div class="c-card">
+              <div class="av" style="background:rgba(167,139,250,0.15);color:var(--violet)">S</div>
+              <div class="info">
+                <div class="c-name">Sofia Moreau</div>
+                <div class="meta"><span class="badge" style="background:rgba(167,139,250,0.12);color:var(--violet)">Perfectionniste</span><span>· 12 séances</span></div>
+              </div>
+              <div class="risk" style="background:var(--teal)"></div>
+            </div>
+            <div class="c-card">
+              <div class="av" style="background:rgba(249,115,22,0.15);color:var(--orange)">L</div>
+              <div class="info">
+                <div class="c-name">Lucas Bernard</div>
+                <div class="meta"><span class="badge" style="background:rgba(249,115,22,0.12);color:var(--orange)">Ambitieux</span><span>· Nouveau</span></div>
+              </div>
+              <div class="risk" style="background:var(--orange)"></div>
+            </div>
+            <div class="c-card">
+              <div class="av" style="background:rgba(129,140,248,0.15);color:#818cf8">T</div>
+              <div class="info">
+                <div class="c-name">Thomas Rossi</div>
+                <div class="meta"><span class="badge" style="background:rgba(129,140,248,0.12);color:#818cf8">Régulier</span><span>· 9 séances</span></div>
+              </div>
+              <div class="risk" style="background:var(--teal)"></div>
             </div>
           </div>
+
+          <!-- Screen 3 : Fuel -->
+          <div class="screen screen-fuel" data-screen="2">
+            <div class="title">Fuel</div>
+            <div class="sub">Mardi · 1847 kcal / 2200</div>
+            <div class="macros">
+              <div class="macro">
+                <div class="ring" style="background:conic-gradient(var(--teal) 0deg 288deg, rgba(255,255,255,0.08) 288deg 360deg)"><span style="color:var(--teal)">142</span></div>
+                <div class="lbl">Protéines</div>
+              </div>
+              <div class="macro">
+                <div class="ring" style="background:conic-gradient(var(--orange) 0deg 216deg, rgba(255,255,255,0.08) 216deg 360deg)"><span style="color:var(--orange)">184</span></div>
+                <div class="lbl">Glucides</div>
+              </div>
+              <div class="macro">
+                <div class="ring" style="background:conic-gradient(var(--violet) 0deg 252deg, rgba(255,255,255,0.08) 252deg 360deg)"><span style="color:var(--violet)">62</span></div>
+                <div class="lbl">Lipides</div>
+              </div>
+            </div>
+            <div class="tl-title">Repas du jour</div>
+            <div class="meal"><div class="time">8h</div><div class="name">Avoine + œufs + banane</div><div class="kcal">540</div></div>
+            <div class="meal"><div class="time">12h</div><div class="name">Poulet, riz, brocolis</div><div class="kcal">680</div></div>
+            <div class="meal"><div class="time">16h</div><div class="name">Shake protéiné + amandes</div><div class="kcal">320</div></div>
+            <div class="meal"><div class="time">20h</div><div class="name">Saumon, patate douce, salade</div><div class="kcal">307</div></div>
+          </div>
+
+          <!-- Screen 4 : Builder -->
+          <div class="screen screen-builder" data-screen="3">
+            <div class="bbar">
+              <div class="tag">RB <span>Builder</span></div>
+              <div class="save">Enregistrer</div>
+            </div>
+            <div class="f"><div class="f-lbl">Nom du programme</div><div class="f-inp">PUSH PULL LEGS — HYPERTROPHIE</div></div>
+            <div class="f" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div><div class="f-lbl">Objectif</div><div class="f-inp">Prise de masse</div></div>
+              <div><div class="f-lbl">Durée</div><div class="f-inp">8 semaines</div></div>
+            </div>
+            <div class="week">
+              <div class="w-head">
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="pill-s">S1</span>
+                  <span style="font-size:9px;font-weight:600">Semaine 1 — Push</span>
+                </div>
+                <span style="color:rgba(255,255,255,0.3);font-size:10px">▾</span>
+              </div>
+              <div class="ex">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span class="ex-t">EX 1</span>
+                </div>
+                <div class="ex-n">Développé couché haltères</div>
+                <div class="ex-s">
+                  <div><span class="k">Rep.</span><span class="v">4x8</span></div>
+                  <div><span class="k">Tempo</span><span class="v">30X0</span></div>
+                  <div><span class="k">RIR</span><span class="v">2</span></div>
+                  <div><span class="k">Charge</span><span class="v red">32 kg</span></div>
+                </div>
+              </div>
+              <div class="ex">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span class="ex-t">EX 2</span>
+                </div>
+                <div class="ex-n">Dips lestés</div>
+                <div class="ex-s">
+                  <div><span class="k">Rep.</span><span class="v">3x10</span></div>
+                  <div><span class="k">Tempo</span><span class="v">20X1</span></div>
+                  <div><span class="k">RIR</span><span class="v">1</span></div>
+                  <div><span class="k">Charge</span><span class="v red">15 kg</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
-    <div class="product-text">
-      <div class="product-tag">Dashboard CEO</div>
-      <div class="product-title">Pilote ton activité.<br>En temps réel.</div>
-      <p class="product-desc">MRR, taux de rétention, score business global — tout ce dont tu as besoin pour prendre les bonnes décisions, en un coup d'œil.</p>
+
+    <!-- 4 steps text -->
+    <div class="product-steps">
+      <div class="step active" data-step="0">
+        <div class="num">01 · DASHBOARD CEO</div>
+        <h3>Ton business en<br/>une seule vue.</h3>
+        <p>Score business calculé en temps réel. MRR, rétention, activité client, alertes d'expiration, churn IA. Le cockpit que les plateformes concurrentes cachent derrière 3 onglets, tu l'as en hero.</p>
+      </div>
+      <div class="step" data-step="1">
+        <div class="num">02 · INTELLIGENCE CLIENT</div>
+        <h3>Chaque client.<br/>Chaque signal.</h3>
+        <p>Profils comportementaux automatiques, score de risque de churn, dernière activité, tags CRM, pipeline de renouvellement. Tu sais qui appeler avant même qu'il pense à partir.</p>
+      </div>
+      <div class="step" data-step="2">
+        <div class="num">03 · NUTRITION</div>
+        <h3>Suivi macro<br/>au gramme près.</h3>
+        <p>IA vocale pour logger un repas en 2 secondes, scanner de codes-barres, base de 450K aliments Edamam. Protéines, glucides, lipides, hydratation, sommeil. Tout relié au programme.</p>
+      </div>
+      <div class="step" data-step="3">
+        <div class="num">04 · PROGRAMME BUILDER</div>
+        <h3>Des programmes<br/>qui claquent.</h3>
+        <p>Interface drag-and-drop pour construire des programmes multi-semaines. Tempo, RIR, charges, vidéos YouTube, notes motivation, finisher. Preview live. Export PDF signé. Zéro Excel.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- PRODUCT 2 -->
-<section class="product" style="background:var(--dark)">
-  <div class="product-wrap reverse reveal">
-    <div class="product-text">
-      <div class="product-tag">Intelligence IA</div>
-      <div class="product-title">Sais quand un client<br>va décrocher. Avant lui.</div>
-      <p class="product-desc">L'algorithme anti-churn analyse les patterns de comportement et t'alerte avant qu'il soit trop tard. Zéro client perdu par surprise.</p>
-    </div>
-    <div>
-      <div class="phone-frame">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <div class="screen-1">
-            <div class="screen-header">Mes Clients</div>
-            <div class="client-row">
-              <div class="client-av" style="background:rgba(239,68,68,0.15);color:#ef4444">TB</div>
-              <div style="flex:1;min-width:0">
-                <div class="client-name">Thomas Bernard</div>
-                <div style="font-size:8px;color:rgba(239,68,68,0.7)">Inactif 4j — À risque</div>
-              </div>
-              <div class="client-score" style="color:#ef4444">34</div>
-            </div>
-            <div class="client-row">
-              <div class="client-av" style="background:rgba(2,209,186,0.15);color:var(--teal)">ML</div>
-              <div style="flex:1;min-width:0">
-                <div class="client-name">Marie Laurent</div>
-                <div style="font-size:8px;color:rgba(2,209,186,0.6)">Champion · Actif</div>
-              </div>
-              <div class="client-score" style="color:var(--teal)">91</div>
-            </div>
-            <div class="client-row">
-              <div class="client-av" style="background:rgba(249,115,22,0.15);color:var(--orange)">KD</div>
-              <div style="flex:1;min-width:0">
-                <div class="client-name">Kevin Dupont</div>
-                <div style="font-size:8px;color:rgba(249,115,22,0.6)">Expire dans 8j</div>
-              </div>
-              <div class="client-score" style="color:var(--orange)">76</div>
-            </div>
-            <div style="margin-top:14px;padding:11px;background:rgba(239,68,68,0.08);border-radius:10px;border:1px solid rgba(239,68,68,0.18)">
-              <div style="font-size:8px;color:rgba(239,68,68,0.8);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;font-weight:700">Alerte Anti-churn</div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.55);line-height:1.5">Thomas décroche. Contacte-le maintenant.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
+<!-- ===== SECTION 5 — FEATURES ===== -->
 <section class="features">
-  <div class="section-tag">Fonctionnalités</div>
-  <div class="section-title">Tout ce dont tu as besoin.<br>Rien de superflu.</div>
-  <div class="features-grid">
-    <div class="feature-card reveal">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-      <div class="feature-title">Dashboard CEO</div>
-      <div class="feature-desc">MRR, rétention, objectifs — pilote ton business comme un CEO.</div>
+  <div class="features-inner">
+    <div class="intro">
+      <div class="section-tag">Ce qui rend RB différent</div>
+      <h2 class="section-title">Tout ce dont tu as besoin.<br/>Rien de superflu.</h2>
     </div>
-    <div class="feature-card reveal stagger-1">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
-      <div class="feature-title">Anti-churn IA</div>
-      <div class="feature-desc">Détecte les signaux de décrochage avant qu'il soit trop tard.</div>
-    </div>
-    <div class="feature-card reveal stagger-2">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-      <div class="feature-title">Programme Builder</div>
-      <div class="feature-desc">Crée des programmes pro directement dans l'app en 10 minutes.</div>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg></div>
-      <div class="feature-title">White Label</div>
-      <div class="feature-desc">Tes clients voient ton nom et ton logo. Pas le nôtre.</div>
-    </div>
-    <div class="feature-card reveal stagger-1">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <div class="feature-title">Analytics Avancées</div>
-      <div class="feature-desc">Corrélations sommeil/performance, heatmaps, vue transformation.</div>
-    </div>
-    <div class="feature-card reveal stagger-2">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <div class="feature-title">CRM Intelligent</div>
-      <div class="feature-desc">Notes, tags, pipeline Kanban — une mémoire parfaite de chaque client.</div>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div class="feature-title">Dashboard CEO</div>
+        <div class="feature-desc">MRR, ARR, rétention, score business calculé live. Tous les KPIs d'un SaaS à la performance de ton coaching.</div>
+      </div>
+      <div class="feature-card reveal stagger-1">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="feature-title">Anti-churn IA</div>
+        <div class="feature-desc">Score de risque calculé par ML sur 7 signaux. Alertes proactives. Tu sauves tes clients avant qu'ils partent.</div>
+      </div>
+      <div class="feature-card reveal stagger-2">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="feature-title">Programme Builder</div>
+        <div class="feature-desc">Multi-semaines, drag-and-drop, vidéos YouTube, notes motivation, preview live. Addictif.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg></div>
+        <div class="feature-title">White Label</div>
+        <div class="feature-desc">Ton logo, tes couleurs, ton domaine. Tes clients voient ta marque, jamais RB. Tu bâtis ton empire.</div>
+      </div>
+      <div class="feature-card reveal stagger-1">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="feature-title">Analytics Pro</div>
+        <div class="feature-desc">Heatmap d'activité, corrélations de Pearson, courbes de progression, rapports hebdo auto-envoyés.</div>
+      </div>
+      <div class="feature-card reveal stagger-2">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="feature-title">CRM Intelligent</div>
+        <div class="feature-desc">Pipeline Kanban, tags automatiques, historique d'activité, rappels programmés. Ton business sous contrôle.</div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- TESTIMONIAL -->
+<!-- ===== SECTION 6 — TESTIMONIAL ===== -->
 <section class="testimonial">
   <div class="testimonial-bg" aria-hidden="true">"</div>
-  <p class="testimonial-quote reveal">"En 3 mois, j'ai doublé ma rétention client<br>et enfin compris où perdait mon business."</p>
-  <p class="testimonial-author reveal stagger-1"><b>Marie L.</b> &nbsp;·&nbsp; Coach fitness, 23 clients</p>
+  <div class="testimonial-content">
+    <blockquote class="testimonial-quote reveal">"En 3 mois, j'ai doublé<br/>ma rétention client."</blockquote>
+    <div class="testimonial-author reveal stagger-1"><b>Marie L.</b> · Coach fitness, 23 clients</div>
+  </div>
 </section>
 
-<!-- PRICING -->
+<!-- ===== SECTION 7 — PRICING ===== -->
 <section class="pricing" id="pricing">
-  <div class="section-tag">Tarifs coach</div>
-  <div class="section-title">Choisis ton niveau.</div>
-  <div class="pricing-grid">
-    <div class="price-card reveal">
-      <div class="price-plan">Starter</div>
-      <div class="price-desc">Pour les coachs qui démarrent leur activité.</div>
-      <div class="price-amount"><span class="currency">€</span>149</div>
-      <div class="price-period">Par mois</div>
-      <ul class="price-features">
-        <li>Jusqu'à 10 clients</li>
-        <li>Dashboard business complet</li>
-        <li>Programme builder illimité</li>
-        <li>Messagerie + push notifs</li>
-        <li>0% commission sur tes revenus</li>
-      </ul>
-      <a href="https://rb-perfor.vercel.app/?coach=true&plan=starter" class="price-cta" target="_blank" rel="noopener">Commencer</a>
+  <div class="pricing-inner">
+    <div class="intro">
+      <div class="section-tag">Tarifs coach</div>
+      <h2 class="section-title">Choisis ton niveau.</h2>
+      <p>Sans engagement. Résiliation en 1 clic. Support 7j/7.</p>
     </div>
-    <div class="price-card featured reveal stagger-1">
-      <div class="price-badge">Recommandé</div>
-      <div class="price-plan">Pro</div>
-      <div class="price-desc">Pour les coachs établis qui passent à l'échelle.</div>
-      <div class="price-amount"><span class="currency">€</span>299</div>
-      <div class="price-period">Par mois</div>
-      <ul class="price-features">
-        <li>Jusqu'à 30 clients</li>
-        <li>Intelligence anti-churn IA</li>
-        <li>Analytics avancées + corrélations</li>
-        <li>White label complet</li>
-        <li>CRM intelligent</li>
-        <li>Rapports hebdo automatiques</li>
-      </ul>
-      <a href="https://rb-perfor.vercel.app/?coach=true&plan=pro" class="price-cta featured-cta" target="_blank" rel="noopener">Commencer</a>
+    <div class="plans">
+      <div class="plan reveal">
+        <div class="name">Starter</div>
+        <div class="desc">Pour les coachs qui démarrent leur activité.</div>
+        <div class="price"><span class="currency">€</span>149</div>
+        <div class="period">Par mois</div>
+        <ul class="f-list">
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Jusqu'à 10 clients</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Dashboard coach complet</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Programme builder illimité</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Messagerie + push notifs</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>0% commission sur tes revenus</li>
+        </ul>
+        <a href="https://rb-perfor.vercel.app/?coach=true&plan=starter" class="cta-plan" target="_blank" rel="noopener">Commencer</a>
+      </div>
+      <div class="plan featured reveal stagger-1">
+        <div class="badge">Recommandé</div>
+        <div class="name">Pro</div>
+        <div class="desc">Pour les coachs établis qui passent à l'échelle.</div>
+        <div class="price"><span class="currency">€</span>299</div>
+        <div class="period">Par mois</div>
+        <ul class="f-list">
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Jusqu'à 30 clients</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Tout Starter +</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Anti-churn IA avancé</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Analytics + corrélations</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>White label complet</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Rapports hebdo auto</li>
+        </ul>
+        <a href="https://rb-perfor.vercel.app/?coach=true&plan=pro" class="cta-plan" target="_blank" rel="noopener">Commencer</a>
+      </div>
+      <div class="plan reveal stagger-2">
+        <div class="name">Elite</div>
+        <div class="desc">Pour les coachs qui veulent tout — et plus encore.</div>
+        <div class="price"><span class="currency">€</span>499</div>
+        <div class="period">Par mois</div>
+        <ul class="f-list">
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Clients illimités</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Tout Pro +</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Support prioritaire 7j/7</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Onboarding personnalisé 1:1</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accès anticipé aux nouveautés</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Domaine custom inclus</li>
+        </ul>
+        <a href="https://rb-perfor.vercel.app/?coach=true&plan=elite" class="cta-plan" target="_blank" rel="noopener">Commencer</a>
+      </div>
     </div>
-    <div class="price-card reveal stagger-2">
-      <div class="price-plan">Elite</div>
-      <div class="price-desc">Pour les coachs qui veulent tout — et plus encore.</div>
-      <div class="price-amount"><span class="currency">€</span>499</div>
-      <div class="price-period">Par mois</div>
-      <ul class="price-features">
-        <li>Clients illimités</li>
-        <li>Support prioritaire 7j/7</li>
-        <li>Onboarding personnalisé 1:1</li>
-        <li>Accès anticipé aux nouveautés</li>
-        <li>Domaine custom inclus</li>
-      </ul>
-      <a href="https://rb-perfor.vercel.app/?coach=true&plan=elite" class="price-cta" target="_blank" rel="noopener">Commencer</a>
+    <div class="pricing-meta">
+      Sans engagement · Résiliation en 1 clic · Support 7j/7
+      <br/>
+      <span class="guarantee">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Garantie 14 jours satisfait ou remboursé
+      </span>
     </div>
   </div>
-  <p class="pricing-note reveal">
-    Sans engagement &nbsp;·&nbsp; Résiliation en 1 clic &nbsp;·&nbsp; Support 7j/7<br>
-    <span class="pricing-guarantee">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Garantie 14 jours satisfait ou remboursé
-    </span>
-  </p>
 </section>
 
-<!-- CTA FINAL -->
+<!-- ===== SECTION 8 — CTA FINAL ===== -->
 <section class="cta-final">
   <video class="cta-video" autoplay muted loop playsinline>
     <source src="/hero.mp4" type="video/mp4">
@@ -509,7 +729,7 @@ html.js-reveal .manifeste .manifeste-line.visible{width:120px}
   <div class="cta-fallback"></div>
   <div class="cta-overlay"></div>
   <div class="cta-content">
-    <div class="cta-title reveal">Prêt ?</div>
+    <h2 class="cta-title reveal">Prêt&nbsp;?</h2>
     <p class="cta-sub reveal stagger-1">Rejoins les coachs qui ont choisi de performer.</p>
     <div class="reveal stagger-2">
       <a href="https://rb-perfor.vercel.app/?coach=true" class="btn-primary btn-orange" target="_blank" rel="noopener">
@@ -542,15 +762,7 @@ html.js-reveal .manifeste .manifeste-line.visible{width:120px}
   </div>
 </footer>
 
-<!-- ===== SCRIPTS : progressive enhancement ===== -->
-<!--
-  GSAP/ScrollTrigger en deferred. Si le CDN ne repond pas, la page reste
-  entierement visible et fonctionnelle grace au fallback CSS (pas de opacity:0
-  par defaut — voir .reveal qui est visible tant que .js-reveal n'est pas
-  ajoute sur <html>).
--->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<!-- ===== SCRIPTS ===== -->
 <script>
 (function() {
   'use strict';
@@ -558,42 +770,51 @@ html.js-reveal .manifeste .manifeste-line.visible{width:120px}
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var hasIntersectionObserver = 'IntersectionObserver' in window;
 
-  // Garde fous : si l'utilisateur preferers-reduced-motion OU que IntersectionObserver
-  // n'existe pas, on ne cache rien et on n'anime rien. La page est statique mais visible.
+  // Detection : si l'utilisateur prefere pas de motion OU que IntersectionObserver
+  // n'existe pas, on n'active PAS le gate .js-reveal. La page reste 100% visible.
   if (prefersReducedMotion || !hasIntersectionObserver) {
     initStaticCursor();
     initNavScroll();
-    initHeroTextSplit(false); // split sans animation
+    initHeroSplit(false);
+    initCountUp();
+    initScreenSwitchBasic();
     return;
   }
 
-  // OK, on peut activer les animations — on ajoute le gate CSS
+  // OK, les animations peuvent rouler
   document.documentElement.classList.add('js-reveal');
 
   initStaticCursor();
   initNavScroll();
-  initHeroTextSplit(true);
+  initHeroSplit(true);
   initReveals();
   initManifeste();
   initCountUp();
-  initGSAPWhenReady();
+  initScreenSwitch();
 
-  // ===== Custom cursor (desktop only, pas de hover:none) =====
+  // ===== Cursor custom (desktop) =====
   function initStaticCursor() {
     if (matchMedia('(hover: none)').matches) return;
     document.documentElement.classList.add('has-cursor');
     var cursor = document.getElementById('cursor');
     if (!cursor) return;
+    var tx = 0, ty = 0, cx = 0, cy = 0;
     document.addEventListener('mousemove', function(e) {
-      cursor.style.transform = 'translate(' + e.clientX + 'px, ' + e.clientY + 'px) translate(-50%, -50%)';
+      tx = e.clientX; ty = e.clientY;
     }, { passive: true });
+    (function animate() {
+      cx += (tx - cx) * 0.22;
+      cy += (ty - cy) * 0.22;
+      cursor.style.transform = 'translate(' + cx + 'px, ' + cy + 'px) translate(-50%, -50%)';
+      requestAnimationFrame(animate);
+    })();
     document.querySelectorAll('a, button').forEach(function(el) {
       el.addEventListener('mouseenter', function() { cursor.classList.add('grow'); });
       el.addEventListener('mouseleave', function() { cursor.classList.remove('grow'); });
     });
   }
 
-  // ===== Nav scroll hide/show + blur =====
+  // ===== Nav scroll =====
   function initNavScroll() {
     var nav = document.getElementById('nav');
     if (!nav) return;
@@ -608,146 +829,160 @@ html.js-reveal .manifeste .manifeste-line.visible{width:120px}
     }, { passive: true });
   }
 
-  // ===== Split "RB PERFORM" en caracteres =====
-  function initHeroTextSplit(animate) {
+  // ===== Hero split + entrance =====
+  function initHeroSplit(animate) {
     var title = document.getElementById('heroTitle');
     if (!title) return;
-    var text = title.textContent;
+    var text = title.textContent.trim();
     title.innerHTML = text.split('').map(function(c) {
       return c === ' ' ? '<span class="char">&nbsp;</span>' : '<span class="char">' + c + '</span>';
     }).join('');
     if (!animate) return;
-    // Animation au load (via GSAP si dispo, sinon CSS transition)
+
+    // Animations via CSS transitions + setTimeout (zero dependency)
+    var eyebrow = document.querySelector('.hero-eyebrow');
+    var bar = document.querySelector('.hero-accent-bar');
+    var sub = document.querySelector('.hero-sub');
+    var cta = document.querySelector('.hero-cta');
+    var scrollHint = document.querySelector('.scroll-hint');
+    var chars = title.querySelectorAll('.char');
+
     setTimeout(function() {
-      var chars = title.querySelectorAll('.char');
-      chars.forEach(function(char, i) {
-        char.style.transition = 'opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1)';
-        char.style.transitionDelay = (0.3 + i * 0.05) + 's';
-        char.style.opacity = '1';
-        char.style.transform = 'translateY(0)';
-      });
-      setTimeout(function() {
-        var sub = document.getElementById('heroSub');
-        if (sub) { sub.style.transition = 'opacity 0.8s ease, transform 0.8s ease'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; }
-      }, 1200);
-      setTimeout(function() {
-        var cta = document.getElementById('heroCta');
-        if (cta) { cta.style.transition = 'opacity 0.8s ease, transform 0.8s ease'; cta.style.opacity = '1'; cta.style.transform = 'translateY(0)'; }
-      }, 1600);
-      setTimeout(function() {
-        var sh = document.getElementById('scrollHint');
-        if (sh) { sh.style.transition = 'opacity 0.8s ease'; sh.style.opacity = '1'; sh.style.transform = 'translateY(0)'; }
-      }, 2000);
-    }, 100);
+      if (eyebrow) { eyebrow.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; eyebrow.style.opacity = '1'; eyebrow.style.transform = 'translateY(0)'; }
+    }, 200);
+
+    chars.forEach(function(char, i) {
+      char.style.transition = 'opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1)';
+      char.style.transitionDelay = (0.5 + i * 0.06) + 's';
+      char.style.opacity = '1';
+      char.style.transform = 'translateY(0)';
+    });
+    var totalCharsDelay = 500 + chars.length * 60;
+
+    setTimeout(function() {
+      if (bar) { bar.style.transition = 'width 0.8s cubic-bezier(0.22,1,0.36,1)'; bar.style.width = '120px'; }
+    }, totalCharsDelay + 200);
+
+    setTimeout(function() {
+      if (sub) { sub.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; }
+    }, totalCharsDelay + 400);
+
+    setTimeout(function() {
+      if (cta) { cta.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; cta.style.opacity = '1'; cta.style.transform = 'translateY(0)'; }
+    }, totalCharsDelay + 600);
+
+    setTimeout(function() {
+      if (scrollHint) { scrollHint.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; scrollHint.style.opacity = '1'; scrollHint.style.transform = 'translateY(0)'; }
+    }, totalCharsDelay + 900);
   }
 
-  // ===== Reveals via IntersectionObserver =====
+  // ===== Reveals genericiques (.reveal) =====
   function initReveals() {
     var observer = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
+      entries.forEach(function(e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
         }
       });
-    }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
   }
 
-  // ===== Manifeste : mots reveles un par un =====
+  // ===== Manifeste : mots un par un + ligne orange =====
   function initManifeste() {
-    var manifeste = document.getElementById('manifeste');
+    var m = document.getElementById('manifesteText');
     var line = document.getElementById('manifesteLine');
-    var sub = document.getElementById('manifesteSub');
-    if (!manifeste) return;
-
-    var words = manifeste.textContent.split(' ');
-    manifeste.innerHTML = words.map(function(w) {
-      return '<span style="display:inline-block;opacity:0;transform:translateY(12px);transition:opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)">' + w + '</span>';
+    if (!m) return;
+    var words = m.textContent.trim().split(' ');
+    m.innerHTML = words.map(function(w) {
+      return '<span style="display:inline-block;opacity:0;transform:translateY(14px);transition:opacity 0.6s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1)">' + w + '</span>';
     }).join(' ');
 
     var observer = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (entry.isIntersecting) {
-          // Mots reveles
-          manifeste.style.opacity = '1';
-          manifeste.style.transform = 'none';
-          manifeste.classList.add('visible');
-          var spans = manifeste.querySelectorAll('span');
-          spans.forEach(function(s, i) {
-            setTimeout(function() {
-              s.style.opacity = '1';
-              s.style.transform = 'translateY(0)';
-            }, i * 90);
-          });
-          // Ligne orange qui s'etend
-          if (line) {
-            setTimeout(function() {
-              line.style.transition = 'width 0.9s cubic-bezier(0.22,1,0.36,1)';
-              line.style.width = '120px';
-            }, spans.length * 90 + 200);
-          }
-          observer.unobserve(manifeste);
+      entries.forEach(function(e) {
+        if (!e.isIntersecting) return;
+        m.style.opacity = '1';
+        m.style.transform = 'none';
+        m.classList.add('visible');
+        var spans = m.querySelectorAll('span');
+        spans.forEach(function(s, i) {
+          setTimeout(function() {
+            s.style.opacity = '1';
+            s.style.transform = 'translateY(0)';
+          }, i * 85);
+        });
+        if (line) {
+          setTimeout(function() {
+            line.classList.add('visible');
+          }, spans.length * 85 + 300);
         }
+        observer.unobserve(m);
       });
-    }, { threshold: 0.3 });
-    observer.observe(manifeste);
+    }, { threshold: 0.25 });
+    observer.observe(m);
   }
 
   // ===== CountUp =====
   function initCountUp() {
-    var countEls = document.querySelectorAll('[data-count]');
+    var els = document.querySelectorAll('[data-count]');
     var observer = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (!entry.isIntersecting) return;
-        var el = entry.target;
+      entries.forEach(function(e) {
+        if (!e.isIntersecting) return;
+        var el = e.target;
         var target = parseInt(el.dataset.count, 10);
         var suffix = el.dataset.suffix || '';
         var prefix = el.dataset.prefix || '';
         if (isNaN(target)) { observer.unobserve(el); return; }
-        var current = 0;
-        var steps = 60;
-        var increment = target / steps;
-        var tick = 0;
-        // Start with proper formatted value if target=0
         el.textContent = prefix + '0' + suffix;
+        var current = 0;
+        var steps = 50;
+        var inc = target / steps;
+        var tick = 0;
         var timer = setInterval(function() {
           tick++;
-          current += increment;
+          current += inc;
           if (tick >= steps || current >= target) {
             current = target;
             clearInterval(timer);
           }
           el.textContent = prefix + Math.round(current) + suffix;
-        }, 20);
+        }, 22);
         observer.unobserve(el);
       });
     }, { threshold: 0.5 });
-    countEls.forEach(function(el) { observer.observe(el); });
+    els.forEach(function(el) { observer.observe(el); });
   }
 
-  // ===== GSAP optionnel : reveals plus smooth + parallax =====
-  function initGSAPWhenReady() {
-    var attempts = 0;
-    var maxAttempts = 50; // 5 secondes max
-    function check() {
-      if (typeof window.gsap === 'undefined' || typeof window.ScrollTrigger === 'undefined') {
-        attempts++;
-        if (attempts < maxAttempts) setTimeout(check, 100);
-        return;
-      }
-      // GSAP dispo — on n'a PAS besoin de GSAP pour faire marcher la page
-      // (tout fonctionne deja via IntersectionObserver + CSS transitions).
-      // GSAP ajoute juste des ameliorations optionnelles.
-      try {
-        window.gsap.registerPlugin(window.ScrollTrigger);
-        // Refresh ScrollTrigger au cas ou le layout change
-        window.ScrollTrigger.refresh();
-      } catch (e) {
-        // Silencieux — pas bloquant
-      }
+  // ===== iPhone screen switch : le screen actif correspond a la step visible =====
+  function initScreenSwitch() {
+    var steps = document.querySelectorAll('.step');
+    var screens = document.querySelectorAll('.screen');
+    if (!steps.length || !screens.length) return;
+
+    function switchTo(idx) {
+      screens.forEach(function(s, i) { s.classList.toggle('active', i === idx); });
+      steps.forEach(function(s, i) { s.classList.toggle('active', i === idx); });
     }
-    check();
+
+    // Chaque step a son observer : quand son centre passe la mi-viewport, on switche
+    steps.forEach(function(step, i) {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (e.isIntersecting) switchTo(i);
+        });
+      }, {
+        threshold: 0,
+        rootMargin: '-40% 0px -40% 0px'
+      });
+      observer.observe(step);
+    });
+  }
+
+  // Basic version sans reveals (reduced-motion / no-IO) : tout visible
+  function initScreenSwitchBasic() {
+    // Sur reduced-motion ou pas d'IO : on laisse le premier screen visible
+    // (deja l'etat par defaut en CSS). Pas d'animation, page statique.
   }
 })();
 </script>
