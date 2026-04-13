@@ -15,6 +15,7 @@ import EmptyState from "./EmptyState";
 import { SkeletonList } from "./Skeleton";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
+import BusinessSection from "./coach/BusinessSection";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -2208,6 +2209,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 })}
               </div>
             </div>
+          )}
+
+          {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
+          {!showClientList && coachData && clients.length > 0 && (
+            <BusinessSection coachData={coachData} clients={clients} />
           )}
 
           {/* ========== INVITATION CLIENTS (code + lien) ========== */}
