@@ -9,10 +9,14 @@ import ChatCoach from "./ChatCoach";
 import FaqAssistant from "./FaqAssistant";
 import { PoweredByBadge } from "./CoachBranding";
 import haptic from "../lib/haptic";
+import LanguageToggle from "./LanguageToggle";
+import HelpPage from "./HelpPage";
+import AppIcon from "./AppIcon";
 
 const GREEN = "#02d1ba";
 
 export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
+  const [showHelp, setShowHelp] = useState(false);
   const streakData = useStreak(appData ? null : client?.id);
   const streak = appData?.streak ?? streakData.streak;
   const bestStreak = appData?.bestStreak ?? streakData.bestStreak;
@@ -231,6 +235,22 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
           <FaqAssistant inline={true} />
         </div>
+
+        {/* LANGUE */}
+        <div style={{ padding: "0 24px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 600 }}>Langue / Language</span>
+          <LanguageToggle compact />
+        </div>
+
+        {/* AIDE */}
+        <div style={{ padding: "0 24px", marginBottom: 14 }}>
+          <button onClick={() => { haptic.light(); setShowHelp(true); }} style={{ width: "100%", padding: "13px 18px", borderRadius: 14, border: "1px solid rgba(2,209,186,0.18)", background: "rgba(2,209,186,0.04)", color: "#02d1ba", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <AppIcon name="alert" size={14} color="#02d1ba" />
+            Centre d'aide
+          </button>
+        </div>
+
+        {showHelp && <HelpPage onClose={() => setShowHelp(false)} />}
 
         {/* LOGOUT */}
         <div style={{ padding: "0 24px" }}>
