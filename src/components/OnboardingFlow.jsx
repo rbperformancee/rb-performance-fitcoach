@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import Spinner from "./Spinner";
+import haptic from "../lib/haptic";
 
 // ========== CHARTE RB PERFORM ==========
 const GREEN = "#02d1ba";
@@ -206,6 +208,7 @@ export default function OnboardingFlow({ client, onComplete }) {
   };
 
   const nextStep = async () => {
+    haptic.selection();
     if (step === 5) await saveForm();
     setStep((s) => s + 1);
     window.scrollTo(0, 0);
@@ -490,7 +493,7 @@ export default function OnboardingFlow({ client, onComplete }) {
           <Input label="Risques d'abandon" placeholder="Qu'est-ce qui pourrait faire que tu abandonnes ?" value={form.risques_abandon} onChange={set("risques_abandon")} textarea />
           <Input label="Autres informations" placeholder="Tout ce que tu juges utile de mentionner..." value={form.autres_infos} onChange={set("autres_infos")} textarea />
           <button style={S.btn()} onClick={nextStep} disabled={saving}>
-            {saving ? "Enregistrement..." : "Reserver mon appel"}
+            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Enregistrement</span>) : "Reserver mon appel"}
           </button>
           <button style={S.back} onClick={() => setStep(4)}>← Retour</button>
         </div>
@@ -597,7 +600,7 @@ export default function OnboardingFlow({ client, onComplete }) {
             onClick={slots.length === 0 ? () => setStep(7) : bookSlot}
             disabled={saving}
           >
-            {saving ? "Reservation..." : slots.length === 0 ? "Continuer" : "Confirmer ce creneau"}
+            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Reservation</span>) : slots.length === 0 ? "Continuer" : "Confirmer ce creneau"}
           </button>
           <button style={S.back} onClick={() => setStep(5)}>← Retour</button>
         </div>
@@ -699,6 +702,7 @@ export default function OnboardingFlow({ client, onComplete }) {
               const { data } = await supabase.from("clients").select("id").eq("email", client?.email || "").single();
               if (data?.id) await supabase.from("clients").update({ onboarding_done: true }).eq("id", data.id);
             }
+            haptic.success();
             onComplete();
           }}
         >

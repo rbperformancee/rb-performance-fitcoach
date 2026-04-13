@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import Spinner from "./Spinner";
+import haptic from "../lib/haptic";
 
 // ===== CHARTE CEO : noir absolu + blanc ivoire + accents sobres =====
 const BLUE = "#818cf8"; // indigo clair — plus raffine que le bleu electrique
@@ -164,7 +165,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
               </div>
               <div style={{ width: 1, height: 20, background: "rgba(240,236,228,0.08)" }} />
               <button
-                onClick={onSwitchToCoach}
+                onClick={() => { haptic.medium(); onSwitchToCoach?.(); }}
                 title="Passer en mode Coach"
                 style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(2,209,186,0.04)", border: `1px solid rgba(2,209,186,0.15)`, color: G, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.1)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.35)"; }}
@@ -216,7 +217,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             { k: "growth", l: "Croissance", v: "+" + newCl30, ic: "trending", bg: newCl30 > 0 ? "linear-gradient(135deg, #052e16, #14532d)" : "linear-gradient(135deg, #171717, #262626)", ac: newCl30 > 0 ? "#4ade80" : "#525252", sub: "30 derniers jours" },
             { k: "churn", l: "Risque", v: churn.length, ic: "alert", bg: churn.length > 0 ? "linear-gradient(135deg, #450a0a, #7f1d1d)" : "linear-gradient(135deg, #052e16, #14532d)", ac: churn.length > 0 ? "#f87171" : "#4ade80", sub: churn.length > 0 ? "action requise" : "aucun risque" },
           ].map((m, i) => (
-            <div key={m.k} className="sa-c" onClick={() => setDetailView(m.k)} style={{
+            <div key={m.k} className="sa-c" onClick={() => { haptic.selection(); setDetailView(m.k); }} style={{
               background: m.bg,
               border: `1px solid ${m.ac}18`,
               borderRadius: 18, padding: "22px 20px",

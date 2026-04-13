@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
+import haptic from "../lib/haptic";
+import { SkeletonBox } from "./Skeleton";
 
 const GREEN = "#02d1ba";
 
@@ -85,6 +87,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName = "
   const sendMessage = async () => {
     const content = newMsg.trim();
     if (!content) return;
+    haptic.light();
     setSending(true);
 
     // Optimistic update : on ajoute le message au state local IMMEDIATEMENT
@@ -173,17 +176,16 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName = "
           WebkitOverflowScrolling: "touch",
         }}
       >
-        {/* Loading state */}
+        {/* Loading state — skeleton messages (alterne gauche/droite) */}
         {loading && (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-            <div style={{ display: "flex", gap: 5 }}>
-              {[0, 1, 2].map((i) => (
-                <div key={i} style={{
-                  width: 6, height: 6, borderRadius: "50%", background: GREEN,
-                  animation: `dotPulse 1.2s ease-in-out ${i * 0.15}s infinite`,
-                }} />
-              ))}
-            </div>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, padding: "8px 4px" }}>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} style={{ display: "flex", justifyContent: i % 2 === 0 ? "flex-start" : "flex-end" }}>
+                <div style={{ maxWidth: `${50 + i * 8}%`, minWidth: 120 }}>
+                  <SkeletonBox height={i === 2 ? 48 : 32} radius={i % 2 === 0 ? "16px 16px 16px 4px" : "16px 16px 4px 16px"} />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

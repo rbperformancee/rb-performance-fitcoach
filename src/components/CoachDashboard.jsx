@@ -14,6 +14,7 @@ import InvitationPanel from "./InvitationPanel";
 import EmptyState from "./EmptyState";
 import { SkeletonList } from "./Skeleton";
 import Spinner from "./Spinner";
+import haptic from "../lib/haptic";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -1160,8 +1161,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
               <button
                 onClick={async () => {
                   setNutSaving(true);
-                  await supabase.from("nutrition_goals").upsert({ client_id: client.id, ...nutGoals }, { onConflict: "client_id" });
+                  const { error } = await supabase.from("nutrition_goals").upsert({ client_id: client.id, ...nutGoals }, { onConflict: "client_id" });
                   setNutSaving(false);
+                  if (error) toast.error("Objectifs non enregistres");
+                  else { haptic.success(); toast.success("Objectifs mis a jour"); }
                 }}
                 style={{ width: "100%", padding: 14, background: `linear-gradient(135deg, ${G}, #0891b2)`, color: "#000", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", marginTop: 16, textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", boxShadow: "0 8px 24px rgba(2,209,186,0.25)" }}
               >
