@@ -6,7 +6,14 @@ import { CoachLogo } from './CoachBranding';
 import { toast } from './Toast';
 import Spinner from './Spinner';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
+// Guard : si la cle n'est pas configuree, on ne tente pas de charger Stripe
+// (eviter "Expected publishable key to be of type string" en console)
+const STRIPE_PK = process.env.REACT_APP_STRIPE_PUBLIC_KEY;
+const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null;
+if (!STRIPE_PK && process.env.NODE_ENV === "development") {
+  // eslint-disable-next-line no-console
+  console.warn("[Stripe] REACT_APP_STRIPE_PUBLIC_KEY non defini — checkout disabled");
+}
 
 const PLANS = [
   { id: '3m', name: '3 Mois', duration: '3 mois', price: 120, total: 360, priceId: 'price_1TK3RzApr7mMXwrlSqOA12aP', color: '#02d1ba', btnClass: 'b1', popular: false, savings: null, badge: null,
