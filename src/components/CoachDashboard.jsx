@@ -19,6 +19,7 @@ import BusinessSection from "./coach/BusinessSection";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
 import { BehavioralBadge } from "./coach/BehavioralBadge";
 import { enrichClientsForIntelligence } from "../lib/enrichClients";
+import { suggestPipelineStatus, canAutoUpdate } from "../lib/pipelineAuto";
 import PipelineKanban from "./coach/PipelineKanban";
 import TagManager, { TagBadge } from "./coach/TagManager";
 import ActivityTimeline from "./coach/ActivityTimeline";
@@ -1869,6 +1870,29 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       try {
         const enrichedWithIntel = await enrichClientsForIntelligence(enriched);
         setClients(enrichedWithIntel);
+
+        // Smart pipeline auto-update (1 fois par session, batche)
+        const sentinel = `pipeline_auto_${coachId}_${new Date().toISOString().split("T")[0]}`;
+        if (!sessionStorage.getItem(sentinel)) {
+          const updates = [];
+          for (const c of enrichedWithIntel) {
+            const suggested = suggestPipelineStatus(c);
+            if (canAutoUpdate(c.pipeline_status || "new", suggested)) {
+              updates.push({ id: c.id, pipeline_status: suggested });
+            }
+          }
+          if (updates.length > 0) {
+            // Update en parallele (max 5 a la fois pour pas DDoS)
+            for (let i = 0; i < updates.length; i += 5) {
+              const batch = updates.slice(i, i + 5);
+              await Promise.all(batch.map((u) =>
+                supabase.from("clients").update({ pipeline_status: u.pipeline_status }).eq("id", u.id)
+              ));
+            }
+            console.info(`[pipeline-auto] ${updates.length} client(s) deplaces automatiquement`);
+          }
+          try { sessionStorage.setItem(sentinel, "1"); } catch {}
+        }
       } catch (e) {
         console.warn("[enrichIntelligence]", e);
         setClients(enriched);

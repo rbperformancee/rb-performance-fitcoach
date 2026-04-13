@@ -17,6 +17,7 @@ import {
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
 import { toast } from "../Toast";
+import Confetti from "../Confetti";
 
 const G = "#02d1ba";
 const VIOLET = "#a78bfa";
@@ -31,6 +32,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
   const [earnedBadges, setEarnedBadges] = useState([]);
   const [streak, setStreak] = useState({ current: 0, best: 0 });
   const [platformRank, setPlatformRank] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Metrics calcules en live
   const mrr = useMemo(() => calculateMRR(clients), [clients]);
@@ -91,6 +93,9 @@ export default function AchievementsSection({ coachData, clients = [] }) {
         ];
         setEarnedBadges(merged);
         haptic.success();
+        // CONFETTI celebration !
+        setShowConfetti(true);
+        setTimeout(() => mounted && setShowConfetti(false), 3000);
         // Toast pour chaque badge debloque (max 3 affiches)
         toUnlock.slice(0, 3).forEach((bid, i) => {
           const badge = BADGES.find((b) => b.id === bid);
@@ -117,6 +122,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
 
   return (
     <div style={{ marginBottom: 40, animation: "fadeUp 0.4s ease both" }}>
+      <Confetti active={showConfetti} duration={3000} count={50} />
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <AppIcon name="trophy" size={16} color={GOLD} />
