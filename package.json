@@ -12,7 +12,12 @@
     "react-scripts": "^5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "health": "node scripts/health-check.js",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:mobile": "playwright test --project=mobile-safari",
+    "test:e2e:headed": "playwright test --headed --project=chromium"
   },
   "browserslist": {
     "production": [
@@ -25,5 +30,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
   }
 }
