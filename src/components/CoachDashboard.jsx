@@ -19,6 +19,9 @@ import BusinessSection from "./coach/BusinessSection";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
 import { BehavioralBadge } from "./coach/BehavioralBadge";
 import { enrichClientsForIntelligence } from "../lib/enrichClients";
+import PipelineKanban from "./coach/PipelineKanban";
+import TagManager, { TagBadge } from "./coach/TagManager";
+import ActivityTimeline from "./coach/ActivityTimeline";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -1211,6 +1214,29 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
           );
         })()}
 
+        {/* ===== TAGS CRM ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.28s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="lightning" size={14} color={G} />
+            Tags
+            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "1px", marginLeft: "auto" }}>POUR FILTRER TES CLIENTS</span>
+          </div>
+          <div style={card}>
+            <TagManager client={client} onUpdate={(newTags) => { client.tags = newTags; }} />
+          </div>
+        </div>
+
+        {/* ===== TIMELINE ACTIVITY ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.30s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="activity" size={14} color={G} />
+            Timeline
+          </div>
+          <div style={{ ...card, padding: "18px 18px 14px" }}>
+            <ActivityTimeline clientId={client.id} coachId={coachId} />
+          </div>
+        </div>
+
         {/* ===== NOTES COACH (internes, invisibles par le client) ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.32s both" }}>
           <div style={sectionTitle}>
@@ -1239,14 +1265,24 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
                 onClick={async () => {
                   if (!newNote.trim() || noteSaving) return;
                   setNoteSaving(true);
+                  const content = newNote.trim();
                   const { data, error } = await supabase.from("coach_notes").insert({
-                    client_id: client.id, coach_id: coachId, content: newNote.trim(),
+                    client_id: client.id, coach_id: coachId, content,
                   }).select().single();
                   setNoteSaving(false);
                   if (error) { toast.error("Note non enregistree"); return; }
                   if (data) setCoachNotes(prev => [data, ...prev]);
                   setNewNote("");
                   haptic.light();
+                  // Log dans activity feed (non bloquant)
+                  if (coachId) {
+                    supabase.from("coach_activity_log").insert({
+                      coach_id: coachId,
+                      client_id: client.id,
+                      activity_type: "note",
+                      details: content.slice(0, 120),
+                    }).then(() => {});
+                  }
                 }}
                 disabled={!newNote.trim() || noteSaving}
                 style={{
@@ -1752,6 +1788,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [search,    setSearch]    = useState("");
   const [showAdd,   setShowAdd]   = useState(false);
   const [showClientList, setShowClientList] = useState(false);
+  const [showPipeline, setShowPipeline] = useState(false);
   const [newEmail,  setNewEmail]  = useState("");
   const [newName,   setNewName]   = useState("");
   const [toast,     setToast]     = useState(null);
@@ -2058,6 +2095,15 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} />
         </ErrorBoundary>
       )}
+      {showPipeline && (
+        <ErrorBoundary name="PipelineKanban">
+          <PipelineKanban
+            clients={clients}
+            onClose={() => setShowPipeline(false)}
+            onOpenClient={(c) => { setShowPipeline(false); setSelected(c); }}
+          />
+        </ErrorBoundary>
+      )}
 
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 28px 80px", position: "relative" }}>
         {/* Ambient */}
@@ -2072,6 +2118,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 {onSwitchToSuperAdmin && (
                   <button onClick={onSwitchToSuperAdmin} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(129,140,248,0.06)", border: "1px solid rgba(129,140,248,0.2)", borderRadius: 10, padding: "7px 12px", color: "#818cf8", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                     <Icon name="chart" size={11} /> CEO
+                  </button>
+                )}
+                {clients.length > 0 && (
+                  <button onClick={() => { haptic.light(); setShowPipeline(true); }} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 10, padding: "7px 12px", color: "#f97316", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                    <Icon name="view" size={11} /> Pipeline
                   </button>
                 )}
               </div>
@@ -2379,6 +2430,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                           </span>
                         </div>
                       </div>
+
+                      {/* Tags CRM si presents */}
+                      {c.tags && c.tags.length > 0 && (
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 6 }}>
+                          {c.tags.slice(0, 4).map((t) => <TagBadge key={t} tag={t} compact />)}
+                          {c.tags.length > 4 && <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", padding: "2px 6px" }}>+{c.tags.length - 4}</span>}
+                        </div>
+                      )}
 
                       {/* Infos cles en une ligne */}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
