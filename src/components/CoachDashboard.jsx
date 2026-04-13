@@ -22,6 +22,7 @@ import { enrichClientsForIntelligence } from "../lib/enrichClients";
 import PipelineKanban from "./coach/PipelineKanban";
 import TagManager, { TagBadge } from "./coach/TagManager";
 import ActivityTimeline from "./coach/ActivityTimeline";
+import AnalyticsSection from "./coach/AnalyticsSection";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -1789,6 +1790,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showAdd,   setShowAdd]   = useState(false);
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [newEmail,  setNewEmail]  = useState("");
   const [newName,   setNewName]   = useState("");
   const [toast,     setToast]     = useState(null);
@@ -2104,6 +2106,15 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           />
         </ErrorBoundary>
       )}
+      {showAnalytics && (
+        <ErrorBoundary name="AnalyticsSection">
+          <AnalyticsSection
+            coachId={coachId}
+            clients={clients}
+            onClose={() => setShowAnalytics(false)}
+          />
+        </ErrorBoundary>
+      )}
 
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 28px 80px", position: "relative" }}>
         {/* Ambient */}
@@ -2123,6 +2134,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 {clients.length > 0 && (
                   <button onClick={() => { haptic.light(); setShowPipeline(true); }} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 10, padding: "7px 12px", color: "#f97316", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                     <Icon name="view" size={11} /> Pipeline
+                  </button>
+                )}
+                {clients.length > 0 && (
+                  <button onClick={() => { haptic.light(); setShowAnalytics(true); }} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 10, padding: "7px 12px", color: "#a78bfa", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                    <Icon name="chart" size={11} /> Analytics
                   </button>
                 )}
               </div>
