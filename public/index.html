@@ -40,8 +40,9 @@
     <link rel="dns-prefetch" href="https://api.stripe.com" />
     <link rel="dns-prefetch" href="https://api.mistral.ai" />
     <!-- Fonts en async (display=swap permet le rendu avec font fallback pendant le chargement) -->
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" /></noscript>
+    <!-- Fonts : 3 weights essentiels seulement (etait 5) pour reduire la taille -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" /></noscript>
     <style>
       * { -webkit-tap-highlight-color: transparent; }
       /* Fix iOS Safari 100vh bug : 100vh inclut la barre URL sur iOS.
