@@ -134,7 +134,6 @@ export default function PricingPage({ client, coachInfo, onClose, onLogin }) {
       toast.error("Plan introuvable (" + planId + ")");
       return;
     }
-    console.log("[Checkout]", { clicked: planId, resolved: plan.id, name: plan.name, price: plan.price, priceId: plan.priceId });
 
     // Diagnostic visible : confirmation de l'offre choisie avant le redirect.
     // Si l'utilisateur voit "3 Mois - 120€" ici mais que Stripe affiche

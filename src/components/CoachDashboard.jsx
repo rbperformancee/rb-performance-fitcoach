@@ -1745,7 +1745,6 @@ function SeanceVivanteCoach({ clientId, clientName }) {
       if (MediaRecorder.isTypeSupported("audio/mp4")) mimeType = "audio/mp4";
       else if (MediaRecorder.isTypeSupported("audio/mp4;codecs=avc1")) mimeType = "audio/mp4;codecs=avc1";
       else if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) mimeType = "audio/webm;codecs=opus";
-      console.log("Recording format:", mimeType);
       mediaRef.current = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => chunksRef.current.push(e.data);
