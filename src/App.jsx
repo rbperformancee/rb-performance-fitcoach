@@ -54,6 +54,7 @@ import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
 import { supabase } from "./lib/supabase";
 import ErrorBoundaryApp from "./components/ErrorBoundary";
+import { setSentryRole } from "./lib/sentry";
 const SuperAdminDashboard = lazy(() => import("./components/SuperAdminDashboard"));
 const CoachOnboarding = lazy(() => import("./components/CoachOnboarding"));
 import ProgrammeSignature from "./components/ProgrammeSignature";
@@ -434,6 +435,8 @@ function AppInner() {
       setCoachId(cData?.id || null);
       setIsCoach(!!cData);
       setIsSuperAdmin(!!adminRes.data);
+      // Tag Sentry pour filtrage par role
+      setSentryRole(adminRes.data ? "super_admin" : cData ? "coach" : "client");
     }).catch((e) => {
       // Silent fail : si la requete echoue on assume client standard
       console.error("[roles check]", e);

@@ -33,6 +33,8 @@ function ThumbWithFallback({ id, thumbUrl, alt }) {
   if (!srcs.length) return null;
   return (
     <img src={srcs[idx]} alt={alt}
+      loading="lazy"
+      decoding="async"
       onError={() => idx < srcs.length - 1 && setIdx(i => i + 1)}
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
     />

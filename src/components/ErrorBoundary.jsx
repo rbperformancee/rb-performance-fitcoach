@@ -1,4 +1,5 @@
 import React from "react";
+import { captureError } from "../lib/sentry";
 
 /**
  * ErrorBoundary — capture les erreurs React au render et affiche un fallback.
@@ -23,6 +24,11 @@ export default class ErrorBoundary extends React.Component {
     this.setState({ info });
     // eslint-disable-next-line no-console
     console.error(`[ErrorBoundary:${this.props.name || "unnamed"}]`, error, info);
+    // Forward a Sentry avec le contexte (boundary name + composant React stack)
+    captureError(error, {
+      boundary: this.props.name || "unnamed",
+      componentStack: info?.componentStack,
+    });
   }
 
   reset = () => this.setState({ hasError: false, error: null, info: null });

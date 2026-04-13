@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { setSentryUser } from "../lib/sentry";
 
 export function useAuth() {
   const [user,        setUser]        = useState(null);
@@ -91,6 +92,7 @@ export function useAuth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
+      setSentryUser(u);
       if (u) loadClientData(u);
       else setLoading(false);
     });
@@ -98,6 +100,7 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const u = session?.user ?? null;
       setUser(u);
+      setSentryUser(u);
       if (event === "SIGNED_IN" && u) {
         setLoading(true);
         loadClientData(u);

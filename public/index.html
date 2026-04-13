@@ -32,9 +32,16 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-title" content="RB PERFORM" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
+    <!-- Performance : preconnect aux origines critiques pour reduire latency -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://pwkajyrpldhlybavmopd.supabase.co" crossorigin />
+    <!-- DNS prefetch pour les services secondaires -->
+    <link rel="dns-prefetch" href="https://api.stripe.com" />
+    <link rel="dns-prefetch" href="https://api.mistral.ai" />
+    <!-- Fonts en async (display=swap permet le rendu avec font fallback pendant le chargement) -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" /></noscript>
     <style>
       * { -webkit-tap-highlight-color: transparent; }
       /* Fix iOS Safari 100vh bug : 100vh inclut la barre URL sur iOS.
