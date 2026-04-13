@@ -76,8 +76,9 @@
     }
     #loader.done { opacity: 0; visibility: hidden; pointer-events: none; }
     #loader .logo {
-      width: 64px; height: 64px;
+      width: 100px; height: 100px;
       animation: loaderPulse 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+      filter: drop-shadow(0 10px 30px rgba(2, 209, 186, 0.25));
     }
     @keyframes loaderPulse {
       0% { transform: scale(0.8); opacity: 0; }
@@ -132,12 +133,22 @@
     }
     nav.topnav.hidden { transform: translateY(-100%); }
     nav.topnav .logo {
+      display: inline-flex; align-items: center; gap: 10px;
       font-family: var(--bebas);
-      font-size: 28px;
-      letter-spacing: 2px;
+      font-size: 24px;
+      letter-spacing: 2.5px;
       color: #fff;
+      line-height: 1;
     }
-    nav.topnav .logo span { color: var(--orange); }
+    nav.topnav .logo .mark {
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(2, 209, 186, 0.35));
+    }
+    nav.topnav .logo b {
+      color: var(--teal);
+      font-weight: 400;
+      letter-spacing: 3px;
+    }
     nav.topnav .login {
       font-size: 13px;
       font-weight: 500;
@@ -148,7 +159,8 @@
     nav.topnav .login:hover { color: #fff; }
     @media (max-width: 640px) {
       nav.topnav { padding: 16px 20px; }
-      nav.topnav .logo { font-size: 22px; }
+      nav.topnav .logo { font-size: 18px; gap: 8px; letter-spacing: 2px; }
+      nav.topnav .logo .mark { width: 11px; height: 26px; }
     }
 
     /* ===== SECTION 1 — HERO ===== */
@@ -1178,11 +1190,20 @@
       flex-wrap: wrap;
     }
     footer .logo-mark {
+      display: inline-flex; align-items: center; gap: 10px;
       font-family: var(--bebas);
-      font-size: 24px;
-      letter-spacing: 2px;
+      font-size: 22px;
+      letter-spacing: 2.5px;
+      line-height: 1;
     }
-    footer .logo-mark span { color: var(--orange); }
+    footer .logo-mark svg {
+      flex-shrink: 0;
+    }
+    footer .logo-mark b {
+      color: var(--teal);
+      font-weight: 400;
+      letter-spacing: 3px;
+    }
     footer .tagline {
       font-size: 12px;
       color: var(--text-dimmer);
@@ -1233,12 +1254,24 @@
 </head>
 <body>
 
-  <!-- ===== LOADER ===== -->
+  <!-- ===== LOADER — vrai logo RB Perform ===== -->
   <div id="loader" aria-hidden="true">
     <svg class="logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-      <rect width="512" height="512" rx="110" fill="#0d0d0d"/>
-      <rect width="512" height="512" rx="110" fill="none" stroke="rgba(249,115,22,0.4)" stroke-width="8"/>
-      <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#f97316"/>
+      <defs>
+        <linearGradient id="loaderBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#111111"/>
+          <stop offset="100%" style="stop-color:#0d0d0d"/>
+        </linearGradient>
+        <filter id="loaderGlow">
+          <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <rect width="512" height="512" rx="110" fill="url(#loaderBg)"/>
+      <rect width="512" height="512" rx="110" fill="none" stroke="rgba(2,209,186,0.3)" stroke-width="8"/>
+      <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba" filter="url(#loaderGlow)"/>
+      <text x="90" y="460" font-family="Arial Black, Arial" font-weight="900" font-size="64" fill="white" letter-spacing="-2">RB</text>
+      <text x="90" y="510" font-family="Arial Black, Arial" font-weight="900" font-size="36" fill="#02d1ba" letter-spacing="2">PERFORM</text>
     </svg>
   </div>
 
@@ -1258,7 +1291,12 @@
 
   <!-- ===== NAV ===== -->
   <nav class="topnav" id="topnav">
-    <a href="#" class="logo">RB<span>.</span></a>
+    <a href="#" class="logo" aria-label="RB Perform — accueil">
+      <svg class="mark" viewBox="170 50 180 410" width="13" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba"/>
+      </svg>
+      <span>RB <b>PERFORM</b></span>
+    </a>
     <a href="https://rb-perfor.vercel.app" class="login" target="_blank" rel="noopener">Connexion →</a>
   </nav>
 
@@ -1744,8 +1782,13 @@
   <footer>
     <div class="inner">
       <div class="left">
-        <div class="logo-mark">RB<span>.</span></div>
-        <div class="tagline">RB Perform — La performance sans compromis.</div>
+        <div class="logo-mark" aria-label="RB Perform">
+          <svg viewBox="170 50 180 410" width="12" height="28" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba"/>
+          </svg>
+          <span>RB <b>PERFORM</b></span>
+        </div>
+        <div class="tagline">La performance sans compromis.</div>
       </div>
       <div class="links">
         <a href="https://rb-perfor.vercel.app" target="_blank" rel="noopener">Accéder à l'app</a>
