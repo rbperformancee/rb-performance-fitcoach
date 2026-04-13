@@ -336,6 +336,152 @@ footer{padding:60px 24px 40px;background:var(--dark);border-top:1px solid var(--
 .footer-links a:hover{color:#fff}
 .footer-copy{width:100%;padding-top:24px;margin-top:24px;border-top:1px solid var(--border);font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:1.5px;text-transform:uppercase;text-align:center;font-weight:600}
 
+/* ========== LIGHT MODE (toggle) ========== */
+html.light{--dark:#fafaf9;--dark2:#f5f5f4;--dark3:#fff;--text:#0a0a0a;--text-dim:rgba(0,0,0,0.65);--text-dimmer:rgba(0,0,0,0.4);--border:rgba(0,0,0,0.08);--border-strong:rgba(0,0,0,0.14)}
+html.light body{background:#fafaf9;color:#0a0a0a}
+html.light .grain{opacity:0.025;mix-blend-mode:multiply}
+html.light nav.topnav.scrolled{background:rgba(250,250,249,0.85);border-bottom-color:rgba(0,0,0,0.06)}
+html.light .nav-logo{color:#0a0a0a}
+html.light .nav-link{color:rgba(0,0,0,0.55)}
+html.light .nav-link.cta{color:#0a0a0a;border-color:rgba(0,0,0,0.18)}
+html.light .nav-link.cta:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+html.light .gradient-text{background:linear-gradient(180deg,#0a0a0a 30%,rgba(0,0,0,0.55) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+html.light .hero-overlay{background:linear-gradient(180deg,rgba(250,250,249,0.5) 0%,rgba(250,250,249,0.85) 50%,rgba(250,250,249,0.95) 100%)}
+html.light .hero-mesh{background:radial-gradient(ellipse 80% 60% at 20% 25%,rgba(249,115,22,0.18),transparent 60%),radial-gradient(ellipse 70% 60% at 80% 75%,rgba(2,209,186,0.13),transparent 60%),#fafaf9}
+html.light .hero-grid-overlay{background-image:linear-gradient(rgba(0,0,0,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.04) 1px,transparent 1px)}
+html.light .btn-ghost{color:#0a0a0a;border-color:rgba(0,0,0,0.2);background:rgba(255,255,255,0.5)}
+html.light .btn-ghost:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+html.light .iphone{background:#0a0a0a;border-color:#1a1a1a}
+html.light .scroll-text,html.light .trust-label,html.light .trust-item{color:rgba(0,0,0,0.55)}
+html.light .feature-card,html.light .bento-card,html.light .plan,html.light .faq-item,html.light .m-card,html.light .comp-table{background:#fff;border-color:rgba(0,0,0,0.08)}
+html.light .feature-card:hover,html.light .bento-card:hover,html.light .plan:hover{border-color:rgba(249,115,22,0.4);box-shadow:0 20px 50px rgba(0,0,0,0.08)}
+html.light .faq-q{color:#0a0a0a}
+html.light .testimonial-bg{opacity:0.08}
+html.light .footer-copy,html.light .footer-tagline,html.light .footer-links a{color:rgba(0,0,0,0.4)}
+html.light .footer-links a:hover{color:#0a0a0a}
+html.light .sticky-cta{background:rgba(255,255,255,0.95);border-color:rgba(249,115,22,0.3)}
+html.light .sticky-cta .label{color:#0a0a0a}
+html.light .cursor{mix-blend-mode:multiply;border-color:rgba(0,0,0,0.5)}
+
+/* ========== THEME TOGGLE ========== */
+.theme-toggle{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);transition:all 0.25s var(--ease-out);flex-shrink:0}
+.theme-toggle:hover{background:rgba(255,255,255,0.08);color:#fff;transform:rotate(15deg)}
+html.light .theme-toggle{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1);color:rgba(0,0,0,0.7)}
+html.light .theme-toggle:hover{background:rgba(0,0,0,0.08);color:#0a0a0a}
+.theme-toggle .sun{display:none}
+.theme-toggle .moon{display:block}
+html.light .theme-toggle .sun{display:block}
+html.light .theme-toggle .moon{display:none}
+
+/* ========== LANG TOGGLE ========== */
+.lang-toggle{display:inline-flex;border:1px solid rgba(255,255,255,0.1);border-radius:100px;overflow:hidden;font-size:11px;font-weight:700;letter-spacing:1.5px}
+.lang-toggle button{padding:6px 11px;color:rgba(255,255,255,0.5);transition:all 0.2s;font-family:inherit;text-transform:uppercase}
+.lang-toggle button.active{background:rgba(255,255,255,0.08);color:#fff}
+.lang-toggle button:hover:not(.active){color:rgba(255,255,255,0.8)}
+html.light .lang-toggle{border-color:rgba(0,0,0,0.1)}
+html.light .lang-toggle button{color:rgba(0,0,0,0.5)}
+html.light .lang-toggle button.active{background:rgba(0,0,0,0.08);color:#0a0a0a}
+
+/* ========== HERO CONSTELLATION (logos en orbite) ========== */
+.constellation{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.const-dot{position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(2,209,186,0.4);box-shadow:0 0 12px rgba(2,209,186,0.6);animation:floatDot 12s ease-in-out infinite}
+.const-dot:nth-child(1){top:18%;left:12%;animation-delay:0s;width:8px;height:8px;background:rgba(249,115,22,0.5)}
+.const-dot:nth-child(2){top:65%;left:18%;animation-delay:1.5s;background:rgba(167,139,250,0.4)}
+.const-dot:nth-child(3){top:30%;right:15%;animation-delay:3s}
+.const-dot:nth-child(4){top:75%;right:20%;animation-delay:4.5s;width:5px;height:5px}
+.const-dot:nth-child(5){top:45%;left:8%;animation-delay:6s;width:4px;height:4px;background:rgba(249,115,22,0.4)}
+.const-dot:nth-child(6){top:55%;right:10%;animation-delay:7.5s;width:5px;height:5px;background:rgba(167,139,250,0.4)}
+.const-dot:nth-child(7){top:20%;right:30%;animation-delay:9s;width:4px;height:4px}
+.const-dot:nth-child(8){top:80%;left:35%;animation-delay:10.5s;width:6px;height:6px;background:rgba(249,115,22,0.5)}
+@keyframes floatDot{0%,100%{transform:translate(0,0) scale(1);opacity:0.6}25%{transform:translate(20px,-15px) scale(1.2);opacity:1}50%{transform:translate(-10px,-25px) scale(0.9);opacity:0.8}75%{transform:translate(-20px,10px) scale(1.1);opacity:0.9}}
+
+/* ========== HERO REACTIVE BLOB ========== */
+.hero-blob{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,0.18),transparent 70%);filter:blur(60px);pointer-events:none;z-index:1;left:var(--bx,50%);top:var(--by,50%);transform:translate(-50%,-50%);transition:left 0.4s ease-out,top 0.4s ease-out;mix-blend-mode:screen}
+
+/* ========== COUNTDOWN BADGE ========== */
+.countdown-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:100px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin-bottom:18px}
+.countdown-badge .live{width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 8px var(--orange);animation:pulse 1.5s ease infinite}
+.countdown-badge strong{color:#fff;font-weight:800;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;margin:0 2px}
+html.light .countdown-badge strong{color:#0a0a0a}
+
+/* ========== HOW IT WORKS ========== */
+.how{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
+.how-inner{max-width:1200px;margin:0 auto}
+.how .intro{text-align:center;margin-bottom:80px}
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;position:relative}
+.how-steps::before{content:'';position:absolute;top:42px;left:14%;right:14%;height:1px;background:linear-gradient(90deg,transparent,var(--border-strong) 20%,var(--border-strong) 80%,transparent);z-index:1}
+html.js-reveal .how-steps::before{transform:scaleX(0);transform-origin:left;transition:transform 1.4s var(--ease-out)}
+html.js-reveal .how-steps.in::before{transform:scaleX(1)}
+.how-step{text-align:center;padding:0 20px;position:relative;z-index:2;background:var(--dark)}
+.how-step .num-circle{width:84px;height:84px;border-radius:50%;background:var(--dark3);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--orange);letter-spacing:0;position:relative;transition:transform 0.4s var(--ease-out),box-shadow 0.4s var(--ease-out)}
+.how-step:hover .num-circle{transform:scale(1.05);box-shadow:0 0 0 8px rgba(249,115,22,0.05),0 12px 30px rgba(249,115,22,0.15)}
+.how-step .num-circle::after{content:'';position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(var(--orange),transparent 30%,transparent 70%,var(--orange));opacity:0;transition:opacity 0.3s ease;animation:rotateBorder 6s linear infinite;z-index:-1}
+.how-step:hover .num-circle::after{opacity:1}
+@keyframes rotateBorder{to{transform:rotate(360deg)}}
+.how-step h3{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:-0.5px;margin-bottom:12px;font-weight:400}
+.how-step p{font-size:14px;color:var(--text-dim);line-height:1.65;max-width:280px;margin:0 auto}
+@media(max-width:768px){
+  .how-steps{grid-template-columns:1fr;gap:40px}
+  .how-steps::before{display:none}
+}
+
+/* ========== STACKING CARDS (Apple AirPods-style) ========== */
+.stacking{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
+.stacking-inner{max-width:1100px;margin:0 auto}
+.stacking .intro{text-align:center;margin-bottom:60px}
+.stack-list{position:relative}
+.stack-card{background:var(--dark3);border:1px solid var(--border);border-radius:28px;padding:60px 50px;margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;position:sticky;top:80px;transition:transform 0.4s var(--ease-out)}
+.stack-card:nth-child(1){top:80px;background:linear-gradient(135deg,rgba(2,209,186,0.06),var(--dark3))}
+.stack-card:nth-child(2){top:100px;background:linear-gradient(135deg,rgba(249,115,22,0.06),var(--dark3))}
+.stack-card:nth-child(3){top:120px;background:linear-gradient(135deg,rgba(167,139,250,0.06),var(--dark3))}
+.stack-card .s-content .s-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:14px}
+.stack-card .s-content h3{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,4.5vw,56px);letter-spacing:-1.5px;line-height:1;margin-bottom:18px;font-weight:400}
+.stack-card .s-content p{font-size:15px;color:var(--text-dim);line-height:1.7;max-width:420px}
+.stack-visual{aspect-ratio:1;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.stack-visual.viz-1{background:radial-gradient(circle at 50% 50%,rgba(2,209,186,0.15),transparent 70%)}
+.stack-visual.viz-2{background:radial-gradient(circle at 50% 50%,rgba(249,115,22,0.15),transparent 70%)}
+.stack-visual.viz-3{background:radial-gradient(circle at 50% 50%,rgba(167,139,250,0.15),transparent 70%)}
+.stack-visual .big-icon{width:120px;height:120px;color:var(--teal);opacity:0.6}
+.stack-visual.viz-2 .big-icon{color:var(--orange)}
+.stack-visual.viz-3 .big-icon{color:var(--violet)}
+@media(max-width:768px){
+  .stack-card{grid-template-columns:1fr;padding:40px 28px;gap:30px;position:relative;top:auto!important}
+}
+
+/* ========== FOUNDER NOTE ========== */
+.founder{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
+.founder-inner{max-width:920px;margin:0 auto;text-align:center}
+.founder-photo{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#01a89a);display:inline-flex;align-items:center;justify-content:center;color:#000;font-family:'Bebas Neue',sans-serif;font-size:54px;letter-spacing:-1px;margin-bottom:32px;box-shadow:0 20px 50px rgba(2,209,186,0.25);position:relative}
+.founder-photo::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(var(--teal),var(--orange),var(--violet),var(--teal));opacity:0.4;z-index:-1;animation:rotateBorder 8s linear infinite}
+.founder .role{font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:14px}
+.founder .name{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:-1px;margin-bottom:28px;font-weight:400}
+.founder-message{font-size:18px;color:var(--text-dim);line-height:1.75;max-width:720px;margin:0 auto 32px;font-weight:400}
+.founder-message strong{color:#fff;font-weight:600}
+html.light .founder-message strong{color:#0a0a0a}
+.founder-signature{display:inline-block;color:var(--orange);max-width:200px;margin-top:8px}
+.founder-signature svg{width:100%;height:auto}
+.founder-signature path{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1000;stroke-dashoffset:1000}
+.founder-signature.in path{animation:drawSig 2s var(--ease-out) forwards}
+@keyframes drawSig{to{stroke-dashoffset:0}}
+
+/* ========== QUIZ (Quel coach es-tu) ========== */
+.quiz{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
+.quiz-inner{max-width:780px;margin:0 auto;text-align:center}
+.quiz .quiz-q{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,64px);letter-spacing:-1px;line-height:1;margin-bottom:42px;font-weight:400}
+.quiz-options{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}
+.quiz-opt{background:var(--dark3);border:1px solid var(--border);border-radius:18px;padding:24px 20px;text-align:center;transition:all 0.3s var(--ease-out);cursor:pointer;font-family:inherit;font-size:14px;color:var(--text-dim);font-weight:600;position:relative;overflow:hidden}
+.quiz-opt:hover{border-color:var(--border-strong);transform:translateY(-3px);color:#fff}
+.quiz-opt.selected{border-color:var(--orange);background:linear-gradient(135deg,rgba(249,115,22,0.08),var(--dark3));color:#fff}
+.quiz-opt.selected::after{content:'✓';position:absolute;top:8px;right:12px;color:var(--orange);font-weight:800;font-size:14px}
+.quiz-opt .q-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--orange);display:block;margin-bottom:6px;letter-spacing:-1px;line-height:1}
+.quiz-opt .q-lbl{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dimmer);font-weight:700}
+.quiz-result{margin-top:32px;padding:28px;background:linear-gradient(135deg,rgba(249,115,22,0.06),var(--dark3));border:1px solid rgba(249,115,22,0.25);border-radius:20px;opacity:0;transform:translateY(20px);transition:all 0.5s var(--ease-out);max-height:0;overflow:hidden}
+.quiz-result.show{opacity:1;transform:translateY(0);max-height:400px;margin-top:32px;padding:28px}
+.quiz-result .r-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:10px}
+.quiz-result .r-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:-1px;margin-bottom:12px;font-weight:400}
+.quiz-result .r-desc{font-size:14px;color:var(--text-dim);line-height:1.6;margin-bottom:20px;max-width:480px;margin-left:auto;margin-right:auto}
+@media(max-width:640px){.quiz-options{grid-template-columns:1fr}}
+
 /* ========== LOADING SCREEN ========== */
 #loader{position:fixed;inset:0;z-index:99999;background:#030303;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity 0.7s var(--ease-out),visibility 0.7s}
 #loader.done{opacity:0;visibility:hidden;pointer-events:none}
@@ -524,9 +670,17 @@ html.js-reveal .manifeste-line.visible{width:120px}
     <span>RB <b>PERFORM</b></span>
   </a>
   <div class="nav-links">
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#pricing" class="nav-link">Tarifs</a>
-    <a href="https://rb-perfor.vercel.app" class="nav-link cta magnetic" target="_blank" rel="noopener">Connexion</a>
+    <a href="#features" class="nav-link" data-i18n="nav.features">Features</a>
+    <a href="#pricing" class="nav-link" data-i18n="nav.pricing">Tarifs</a>
+    <div class="lang-toggle" role="group" aria-label="Langue">
+      <button data-lang="fr" class="active">FR</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Changer de thème">
+      <svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <a href="https://rb-perfor.vercel.app" class="nav-link cta magnetic" target="_blank" rel="noopener" data-i18n="nav.login">Connexion</a>
   </div>
 </nav>
 
@@ -536,10 +690,27 @@ html.js-reveal .manifeste-line.visible{width:120px}
     <source src="/hero.mp4" type="video/mp4">
   </video>
   <div class="hero-mesh"></div>
+  <div class="hero-blob" id="heroBlob"></div>
+  <div class="constellation" aria-hidden="true">
+    <span class="const-dot"></span>
+    <span class="const-dot"></span>
+    <span class="const-dot"></span>
+    <span class="const-dot"></span>
+    <span class="const-dot"></span>
+    <span class="const-dot"></span>
+    <span class="const-dot"></span>
+    <span class="const-dot"></span>
+  </div>
   <div class="hero-grid-overlay"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <div class="hero-eyebrow"><span class="dot"></span>SaaS de coaching premium</div>
+    <div class="countdown-badge" id="countdownBadge">
+      <span class="live"></span>
+      <span data-i18n="hero.countdown_label">Lancement officiel dans</span>
+      <strong id="countdownNum">--</strong>
+      <span data-i18n="hero.countdown_unit">jours</span>
+    </div>
+    <div class="hero-eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">SaaS de coaching premium</span></div>
     <h2 class="hero-title gradient-text" id="heroTitle">RB PERFORM</h2>
     <div class="hero-accent-bar"></div>
     <p class="hero-sub">La plateforme qui transforme<br/>chaque coach en CEO.</p>
@@ -569,6 +740,33 @@ html.js-reveal .manifeste-line.visible{width:120px}
       <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Stripe sécurisé</div>
       <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by Mistral AI</div>
       <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Disponible 24/7</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== HOW IT WORKS ========== -->
+<section class="how">
+  <div class="how-inner">
+    <div class="intro">
+      <div class="section-tag" data-i18n="how.tag">Comment ça marche</div>
+      <h2 class="section-title gradient-text" data-i18n="how.title">3 étapes.<br/>Pas une de plus.</h2>
+    </div>
+    <div class="how-steps" id="howSteps">
+      <div class="how-step reveal">
+        <div class="num-circle">01</div>
+        <h3 data-i18n="how.s1_title">Crée ton compte</h3>
+        <p data-i18n="how.s1_desc">Configure ton branding (logo, couleurs), ton lien de paiement et ton premier code d'invitation. 2 minutes chrono.</p>
+      </div>
+      <div class="how-step reveal stagger-1">
+        <div class="num-circle">02</div>
+        <h3 data-i18n="how.s2_title">Invite tes clients</h3>
+        <p data-i18n="how.s2_desc">Partage ton code 6 chiffres ou ton lien d'invitation personnalisé. Tes clients s'inscrivent en 30 secondes.</p>
+      </div>
+      <div class="how-step reveal stagger-2">
+        <div class="num-circle">03</div>
+        <h3 data-i18n="how.s3_title">Pilote et performe</h3>
+        <p data-i18n="how.s3_desc">Crée des programmes, suis l'activité, anticipe le churn, fais grandir ton business. RB s'occupe du reste.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -756,6 +954,48 @@ html.js-reveal .manifeste-line.visible{width:120px}
         <div class="num">04 · PROGRAMME BUILDER</div>
         <h3 class="gradient-text">Des programmes<br/>qui claquent.</h3>
         <p>Interface drag-and-drop pour construire des programmes multi-semaines. Tempo, RIR, charges, vidéos YouTube, notes motivation, finisher. Preview live. Export PDF signé. Zéro Excel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STACKING CARDS ========== -->
+<section class="stacking">
+  <div class="stacking-inner">
+    <div class="intro">
+      <div class="section-tag" data-i18n="stack.tag">Pensé pour les coachs sérieux</div>
+      <h2 class="section-title gradient-text" data-i18n="stack.title">Plus qu'une app.<br/>Un système.</h2>
+    </div>
+    <div class="stack-list">
+      <div class="stack-card">
+        <div class="s-content">
+          <div class="s-tag" data-i18n="stack.c1_tag">Performance</div>
+          <h3 data-i18n="stack.c1_title">Score business<br/>en temps réel.</h3>
+          <p data-i18n="stack.c1_desc">Un seul chiffre qui résume la santé de ton activité. Calculé live à partir de la rétention, du MRR, de l'activité client et du momentum. Tu sais en 2 secondes si ton mois est solide.</p>
+        </div>
+        <div class="stack-visual viz-1">
+          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+      </div>
+      <div class="stack-card">
+        <div class="s-content">
+          <div class="s-tag" data-i18n="stack.c2_tag">Anticipation</div>
+          <h3 data-i18n="stack.c2_title">L'IA voit avant toi.</h3>
+          <p data-i18n="stack.c2_desc">7 signaux par client analysés en continu. Quand un score de churn dépasse 60, tu reçois une alerte avec l'action recommandée. Tu sauves les clients que d'autres laissent partir.</p>
+        </div>
+        <div class="stack-visual viz-2">
+          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
+      </div>
+      <div class="stack-card">
+        <div class="s-content">
+          <div class="s-tag" data-i18n="stack.c3_tag">Marque</div>
+          <h3 data-i18n="stack.c3_title">Ton empire,<br/>ta marque.</h3>
+          <p data-i18n="stack.c3_desc">White label complet inclus dès le plan Pro. Logo, couleurs, domaine custom. Tes clients voient ta marque, jamais "RB Perform". Tu construis ton actif, pas le nôtre.</p>
+        </div>
+        <div class="stack-visual viz-3">
+          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg>
+        </div>
       </div>
     </div>
   </div>
@@ -1005,6 +1245,21 @@ html.js-reveal .manifeste-line.visible{width:120px}
   </div>
 </section>
 
+<!-- ========== FOUNDER NOTE ========== -->
+<section class="founder">
+  <div class="founder-inner">
+    <div class="founder-photo">RB</div>
+    <div class="role" data-i18n="founder.role">Mot du fondateur</div>
+    <div class="name">Rayan Bonte</div>
+    <p class="founder-message" data-i18n="founder.message">J'ai construit RB Perform parce que les outils existants <strong>volaient les coachs</strong> — 30% de commission, interfaces décennales, support inexistant. J'ai voulu un système qui te donne <strong>les armes des CEO</strong>, sans te prendre un centime sur tes revenus. Tu paies pour la techno, point. Le reste, c'est à toi.</p>
+    <div class="founder-signature" id="founderSig">
+      <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 10 40 Q 20 10, 35 30 T 60 30 Q 70 15, 80 35 L 95 25 Q 105 40, 120 28 T 145 30 Q 160 20, 175 35 L 190 30"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
 <!-- ========== FAQ ========== -->
 <section class="faq">
   <div class="faq-inner">
@@ -1046,6 +1301,29 @@ html.js-reveal .manifeste-line.visible{width:120px}
         <div class="faq-a">Tous les plans incluent le chat support 7j/7 avec réponse en moins de 2h. Le plan Elite ajoute un onboarding personnalisé 1:1 + un Slack privé avec l'équipe + accès anticipé aux nouvelles features.</div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ========== QUIZ ========== -->
+<section class="quiz">
+  <div class="quiz-inner">
+    <div class="section-tag" data-i18n="quiz.tag">Trouve ton plan en 5 secondes</div>
+    <div class="quiz-q" data-i18n="quiz.q">Tu coaches combien de clients&nbsp;?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" data-result="starter">
+        <span class="q-num">1-10</span>
+        <span class="q-lbl" data-i18n="quiz.opt1">Je démarre</span>
+      </button>
+      <button class="quiz-opt" data-result="pro">
+        <span class="q-num">11-30</span>
+        <span class="q-lbl" data-i18n="quiz.opt2">J'établis</span>
+      </button>
+      <button class="quiz-opt" data-result="elite">
+        <span class="q-num">30+</span>
+        <span class="q-lbl" data-i18n="quiz.opt3">Je scale</span>
+      </button>
+    </div>
+    <div class="quiz-result" id="quizResult" aria-live="polite"></div>
   </div>
 </section>
 
@@ -1184,6 +1462,10 @@ html.js-reveal .manifeste-line.visible{width:120px}
     initCountUp();
     initFAQ();
     initMarquee();
+    initThemeToggle();
+    initLangToggle();
+    initCountdown();
+    initQuiz();
     return;
   }
 
@@ -1205,6 +1487,13 @@ html.js-reveal .manifeste-line.visible{width:120px}
   initMarquee();
   initLiveData();
   initBentoSpotlight();
+  initThemeToggle();
+  initLangToggle();
+  initCountdown();
+  initHeroBlob();
+  initHowSteps();
+  initFounderSig();
+  initQuiz();
 
   function initLoader() {
     var loader = document.getElementById('loader');
@@ -1527,7 +1816,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
     });
   }
 
-  // ===== Bento spotlight (gradient orange suit le curseur) =====
+  // ===== Bento spotlight =====
   function initBentoSpotlight() {
     if (noHover) return;
     document.querySelectorAll('.bento-card').forEach(function(card) {
@@ -1537,6 +1826,196 @@ html.js-reveal .manifeste-line.visible{width:120px}
         var y = ((e.clientY - rect.top) / rect.height) * 100;
         card.style.setProperty('--mx', x + '%');
         card.style.setProperty('--my', y + '%');
+      });
+    });
+  }
+
+  // ===== Theme toggle (dark / light) =====
+  function initThemeToggle() {
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    var saved = null;
+    try { saved = localStorage.getItem('rb_theme'); } catch (e) {}
+    if (saved === 'light') document.documentElement.classList.add('light');
+    btn.addEventListener('click', function() {
+      var isLight = document.documentElement.classList.toggle('light');
+      try { localStorage.setItem('rb_theme', isLight ? 'light' : 'dark'); } catch (e) {}
+    });
+  }
+
+  // ===== Lang toggle FR/EN =====
+  var I18N = {
+    fr: {
+      'nav.features':'Features','nav.pricing':'Tarifs','nav.login':'Connexion',
+      'hero.eyebrow':'SaaS de coaching premium','hero.countdown_label':'Lancement officiel dans','hero.countdown_unit':'jours',
+      'how.tag':'Comment ça marche','how.title':'3 étapes.<br/>Pas une de plus.',
+      'how.s1_title':'Crée ton compte','how.s1_desc':"Configure ton branding (logo, couleurs), ton lien de paiement et ton premier code d'invitation. 2 minutes chrono.",
+      'how.s2_title':'Invite tes clients','how.s2_desc':"Partage ton code 6 chiffres ou ton lien d'invitation personnalisé. Tes clients s'inscrivent en 30 secondes.",
+      'how.s3_title':'Pilote et performe','how.s3_desc':"Crée des programmes, suis l'activité, anticipe le churn, fais grandir ton business. RB s'occupe du reste.",
+      'stack.tag':'Pensé pour les coachs sérieux','stack.title':'Plus qu\'une app.<br/>Un système.',
+      'stack.c1_tag':'Performance','stack.c1_title':'Score business<br/>en temps réel.','stack.c1_desc':'Un seul chiffre qui résume la santé de ton activité. Calculé live à partir de la rétention, du MRR, de l\'activité client et du momentum. Tu sais en 2 secondes si ton mois est solide.',
+      'stack.c2_tag':'Anticipation','stack.c2_title':'L\'IA voit avant toi.','stack.c2_desc':'7 signaux par client analysés en continu. Quand un score de churn dépasse 60, tu reçois une alerte avec l\'action recommandée. Tu sauves les clients que d\'autres laissent partir.',
+      'stack.c3_tag':'Marque','stack.c3_title':'Ton empire,<br/>ta marque.','stack.c3_desc':'White label complet inclus dès le plan Pro. Logo, couleurs, domaine custom. Tes clients voient ta marque, jamais "RB Perform". Tu construis ton actif, pas le nôtre.',
+      'founder.role':'Mot du fondateur','founder.message':'J\'ai construit RB Perform parce que les outils existants <strong>volaient les coachs</strong> — 30% de commission, interfaces décennales, support inexistant. J\'ai voulu un système qui te donne <strong>les armes des CEO</strong>, sans te prendre un centime sur tes revenus. Tu paies pour la techno, point. Le reste, c\'est à toi.',
+      'quiz.tag':'Trouve ton plan en 5 secondes','quiz.q':'Tu coaches combien de clients&nbsp;?','quiz.opt1':'Je démarre','quiz.opt2':'J\'établis','quiz.opt3':'Je scale'
+    },
+    en: {
+      'nav.features':'Features','nav.pricing':'Pricing','nav.login':'Sign in',
+      'hero.eyebrow':'Premium coaching SaaS','hero.countdown_label':'Official launch in','hero.countdown_unit':'days',
+      'how.tag':'How it works','how.title':'3 steps.<br/>Not one more.',
+      'how.s1_title':'Create your account','how.s1_desc':'Set up your branding (logo, colors), your payment link and your first invitation code. 2 minutes flat.',
+      'how.s2_title':'Invite your clients','how.s2_desc':'Share your 6-digit code or personalized invitation link. Your clients sign up in 30 seconds.',
+      'how.s3_title':'Steer and perform','how.s3_desc':'Build programs, track activity, anticipate churn, grow your business. RB handles the rest.',
+      'stack.tag':'Built for serious coaches','stack.title':'More than an app.<br/>A system.',
+      'stack.c1_tag':'Performance','stack.c1_title':'Real-time<br/>business score.','stack.c1_desc':'One number that sums up your business health. Live-computed from retention, MRR, client activity and momentum. You know in 2 seconds if your month is solid.',
+      'stack.c2_tag':'Anticipation','stack.c2_title':'AI sees before you.','stack.c2_desc':'7 signals per client analyzed continuously. When a churn score exceeds 60, you get an alert with the recommended action. You save clients others let go.',
+      'stack.c3_tag':'Brand','stack.c3_title':'Your empire,<br/>your brand.','stack.c3_desc':'Full white label included from the Pro plan. Logo, colors, custom domain. Your clients see your brand — never "RB Perform". You build your asset, not ours.',
+      'founder.role':'Founder note','founder.message':'I built RB Perform because the existing tools were <strong>robbing coaches</strong> — 30% commission, dated interfaces, non-existent support. I wanted a system that gives you <strong>CEO-level weapons</strong>, without taking a cent of your revenue. You pay for the tech, period. The rest is yours.',
+      'quiz.tag':'Find your plan in 5 seconds','quiz.q':'How many clients do you coach?','quiz.opt1':'Starting out','quiz.opt2':'Established','quiz.opt3':'Scaling'
+    }
+  };
+  function initLangToggle() {
+    var btns = document.querySelectorAll('.lang-toggle button');
+    if (!btns.length) return;
+    var saved = 'fr';
+    try { saved = localStorage.getItem('rb_lang') || 'fr'; } catch (e) {}
+    applyLang(saved);
+    btns.forEach(function(b) {
+      b.addEventListener('click', function() {
+        var lang = b.dataset.lang;
+        applyLang(lang);
+        try { localStorage.setItem('rb_lang', lang); } catch (e) {}
+      });
+    });
+    function applyLang(lang) {
+      var dict = I18N[lang] || I18N.fr;
+      document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        var key = el.dataset.i18n;
+        if (dict[key] !== undefined) el.innerHTML = dict[key];
+      });
+      document.documentElement.lang = lang;
+      btns.forEach(function(b) { b.classList.toggle('active', b.dataset.lang === lang); });
+    }
+  }
+
+  // ===== Countdown (jours jusqu'au "lancement officiel") =====
+  function initCountdown() {
+    var el = document.getElementById('countdownNum');
+    if (!el) return;
+    // Date cible : 30 jours apres aujourd'hui, deterministic-ish (1er du mois prochain + 30j)
+    var target = new Date();
+    target.setDate(target.getDate() + 21);
+    target.setHours(0, 0, 0, 0);
+    function update() {
+      var diff = target - new Date();
+      var days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+      el.textContent = days;
+    }
+    update();
+    setInterval(update, 60000);
+  }
+
+  // ===== Hero blob reactif a la souris =====
+  function initHeroBlob() {
+    if (noHover) return;
+    var blob = document.getElementById('heroBlob');
+    var hero = document.querySelector('.hero');
+    if (!blob || !hero) return;
+    blob.style.setProperty('--bx', '50%');
+    blob.style.setProperty('--by', '50%');
+    hero.addEventListener('mousemove', function(e) {
+      var rect = hero.getBoundingClientRect();
+      var x = ((e.clientX - rect.left) / rect.width) * 100;
+      var y = ((e.clientY - rect.top) / rect.height) * 100;
+      blob.style.setProperty('--bx', x + '%');
+      blob.style.setProperty('--by', y + '%');
+    });
+  }
+
+  // ===== How steps : ligne se draws au scroll =====
+  function initHowSteps() {
+    var steps = document.getElementById('howSteps');
+    if (!steps) return;
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) {
+          steps.classList.add('in');
+          observer.unobserve(steps);
+        }
+      });
+    }, { threshold: 0.3 });
+    observer.observe(steps);
+  }
+
+  // ===== Founder signature : draw on scroll =====
+  function initFounderSig() {
+    var sig = document.getElementById('founderSig');
+    if (!sig) return;
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) {
+          sig.classList.add('in');
+          observer.unobserve(sig);
+        }
+      });
+    }, { threshold: 0.5 });
+    observer.observe(sig);
+  }
+
+  // ===== Quiz =====
+  function initQuiz() {
+    var opts = document.querySelectorAll('.quiz-opt');
+    var result = document.getElementById('quizResult');
+    if (!opts.length || !result) return;
+    var RESULTS = {
+      starter: {
+        tag: 'Plan recommandé',
+        title: 'Starter — 149€/mois',
+        desc: 'Parfait pour bâtir tes fondations : dashboard, programme builder, messagerie, jusqu\'à 10 clients. Tu démarres carré, sans surpayer.',
+        href: 'https://rb-perfor.vercel.app/?coach=true&plan=starter',
+        cta: 'Démarrer Starter'
+      },
+      pro: {
+        tag: 'Plan recommandé',
+        title: 'Pro — 299€/mois',
+        desc: 'Le plan le plus choisi. Anti-churn IA, analytics avancées, white label complet, jusqu\'à 30 clients. C\'est le standard pour les coachs établis.',
+        href: 'https://rb-perfor.vercel.app/?coach=true&plan=pro',
+        cta: 'Démarrer Pro'
+      },
+      elite: {
+        tag: 'Plan recommandé',
+        title: 'Elite — 499€/mois',
+        desc: 'Pour scale sans limite : clients illimités, support prioritaire 7j/7, onboarding 1:1, domaine custom inclus. Le maximum.',
+        href: 'https://rb-perfor.vercel.app/?coach=true&plan=elite',
+        cta: 'Démarrer Elite'
+      }
+    };
+    opts.forEach(function(opt) {
+      opt.addEventListener('click', function() {
+        opts.forEach(function(o) { o.classList.remove('selected'); });
+        opt.classList.add('selected');
+        var key = opt.dataset.result;
+        var r = RESULTS[key];
+        if (!r) return;
+        result.innerHTML =
+          '<div class="r-tag">' + r.tag + '</div>' +
+          '<div class="r-title">' + r.title + '</div>' +
+          '<p class="r-desc">' + r.desc + '</p>' +
+          '<a href="' + r.href + '" class="btn btn-orange magnetic" target="_blank" rel="noopener">' + r.cta +
+            ' <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
+          '</a>';
+        result.classList.add('show');
+        // Re-init magnetic sur le bouton genere
+        var newBtn = result.querySelector('.magnetic');
+        if (newBtn && !noHover) {
+          newBtn.addEventListener('mousemove', function(e) {
+            var rect = newBtn.getBoundingClientRect();
+            var x = e.clientX - rect.left - rect.width / 2;
+            var y = e.clientY - rect.top - rect.height / 2;
+            newBtn.style.transform = 'translate(' + Math.max(-8, Math.min(8, x * 0.25)) + 'px, ' + Math.max(-8, Math.min(8, y * 0.25)) + 'px)';
+          });
+          newBtn.addEventListener('mouseleave', function() { newBtn.style.transform = ''; });
+        }
       });
     });
   }
