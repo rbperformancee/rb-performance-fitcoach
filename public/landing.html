@@ -146,22 +146,75 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .nav-link.cta{padding:10px 20px;border:1px solid rgba(255,255,255,0.18);border-radius:100px;color:#fff;transition:all 0.3s var(--ease-out)}
 .nav-link.cta:hover{background:#fff;color:#000;border-color:#fff;transform:translateY(-1px)}
 
-/* ========== HERO ========== */
-.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:80px 24px}
-.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.45;z-index:1}
-.hero-mesh{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 80% 60% at 20% 25%,rgba(249,115,22,0.18),transparent 60%),radial-gradient(ellipse 70% 60% at 80% 75%,rgba(2,209,186,0.13),transparent 60%),radial-gradient(ellipse 50% 40% at 50% 50%,rgba(167,139,250,0.08),transparent 60%),linear-gradient(135deg,#0a0a0a 0%,#030303 100%);animation:meshShift 18s ease-in-out infinite}
+/* ========== HERO (asymetric premium) ========== */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding:120px 40px 80px}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.35;z-index:1}
+.hero-mesh{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 70% 60% at 15% 30%,rgba(249,115,22,0.15),transparent 60%),radial-gradient(ellipse 80% 70% at 85% 70%,rgba(2,209,186,0.1),transparent 60%),radial-gradient(ellipse 50% 40% at 60% 40%,rgba(167,139,250,0.06),transparent 60%),linear-gradient(135deg,#0a0a0a 0%,#030303 100%);animation:meshShift 18s ease-in-out infinite}
 @keyframes meshShift{0%,100%{filter:hue-rotate(0deg)}50%{filter:hue-rotate(15deg)}}
-.hero-grid-overlay{position:absolute;inset:0;z-index:2;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 70%);pointer-events:none}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,3,3,0.15) 0%,rgba(3,3,3,0.5) 50%,rgba(3,3,3,0.92) 100%);z-index:3}
-.hero-content{position:relative;z-index:4;text-align:center;max-width:1100px;width:100%}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:10px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:24px;padding:8px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:100px;background:rgba(255,255,255,0.02);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.hero-grid-overlay{position:absolute;inset:0;z-index:2;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 70%);pointer-events:none}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,3,3,0.1) 0%,rgba(3,3,3,0.4) 50%,rgba(3,3,3,0.85) 100%);z-index:3}
+.hero-content{position:relative;z-index:4;width:100%;max-width:1340px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:80px;align-items:center;text-align:left}
+
+.hero-text{max-width:640px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:32px;padding:8px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:100px;background:rgba(255,255,255,0.03);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 10px var(--orange);animation:pulse 2s ease-in-out infinite}
+.hero-eyebrow .v{display:inline-block;padding:2px 8px;background:rgba(2,209,186,0.12);color:var(--teal);border-radius:100px;font-size:9px;letter-spacing:1.5px;margin-left:4px}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.8)}}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(72px,13vw,210px);letter-spacing:-3px;line-height:0.88;font-weight:400;margin-bottom:28px}
+
+.hero-mini-logo{display:inline-flex;align-items:center;gap:8px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:rgba(255,255,255,0.5);margin-bottom:18px}
+.hero-mini-logo b{color:var(--teal);font-weight:400}
+.hero-mini-logo svg{filter:drop-shadow(0 0 8px rgba(2,209,186,0.4))}
+
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(54px,7vw,108px);letter-spacing:-2.5px;line-height:0.95;font-weight:400;margin-bottom:28px}
 .hero-title .char{display:inline-block}
-.hero-accent-bar{width:120px;height:3px;background:linear-gradient(90deg,transparent,var(--orange),transparent);margin:0 auto 32px}
-.hero-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);margin:0 auto 44px;font-weight:400;letter-spacing:0.2px;max-width:620px}
-.hero-cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.hero-title .accent{color:var(--orange);position:relative;display:inline-block}
+.hero-title .accent::after{content:'';position:absolute;left:-2%;right:-2%;bottom:8%;height:18%;background:rgba(249,115,22,0.18);z-index:-1;border-radius:6px;transform:scaleX(0);transform-origin:left;animation:underline 1s var(--ease-out) 1.6s forwards}
+@keyframes underline{to{transform:scaleX(1)}}
+
+.hero-accent-bar{width:80px;height:2px;background:linear-gradient(90deg,var(--orange),transparent);margin-bottom:28px}
+.hero-sub{font-size:clamp(15px,1.4vw,18px);color:var(--text-dim);margin-bottom:36px;font-weight:400;letter-spacing:0.1px;max-width:540px;line-height:1.65}
+.hero-sub b{color:#fff;font-weight:600}
+html.light .hero-sub b{color:#0a0a0a}
+.hero-cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:32px}
+.hero-trust-line{display:flex;gap:18px;flex-wrap:wrap;font-size:11px;color:var(--text-dimmer);font-weight:600;letter-spacing:0.5px}
+.hero-trust-line span{display:inline-flex;align-items:center;gap:6px}
+.hero-trust-line svg{color:var(--teal);flex-shrink:0}
+
+/* Floating stats cards (right side hero) */
+.hero-visual{position:relative;height:520px;perspective:1500px}
+.float-card{position:absolute;background:rgba(15,15,15,0.7);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:18px 20px;box-shadow:0 30px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);will-change:transform;animation:floatY 6s ease-in-out infinite}
+html.light .float-card{background:rgba(255,255,255,0.85);border-color:rgba(0,0,0,0.06)}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.float-card.fc-1{top:10%;left:5%;width:240px;animation-delay:0s;transform:rotate(-2deg)}
+.float-card.fc-2{top:35%;right:0%;width:260px;animation-delay:1.5s;transform:rotate(1.5deg);z-index:2}
+.float-card.fc-3{bottom:15%;left:10%;width:230px;animation-delay:3s;transform:rotate(-1deg)}
+.float-card.fc-4{bottom:5%;right:10%;width:200px;animation-delay:4.5s;transform:rotate(2deg)}
+.fc-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dimmer);font-weight:700;margin-bottom:6px}
+.fc-value{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;letter-spacing:-1px;font-weight:400;display:flex;align-items:baseline;gap:4px}
+.fc-value .delta{font-size:12px;color:var(--teal);font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0;margin-left:6px}
+.fc-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:10px}
+.fc-bar .fc-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-bright));border-radius:2px;transition:width 1.2s var(--ease-out);width:0%}
+.fc-mini-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-dim);margin-top:6px}
+.fc-mini-row .fc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.fc-mini-row strong{color:#fff;font-weight:700;flex:1}
+html.light .fc-mini-row strong{color:#0a0a0a}
+.fc-live-pill{position:absolute;top:14px;right:14px;display:inline-flex;align-items:center;gap:5px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:700}
+.fc-live-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:pulse 1.5s ease infinite}
+
+@media(max-width:1024px){
+  .hero-content{grid-template-columns:1fr;gap:40px;text-align:center}
+  .hero-text{max-width:none;margin:0 auto}
+  .hero-accent-bar{margin-left:auto;margin-right:auto}
+  .hero-cta-row,.hero-trust-line{justify-content:center}
+  .hero-visual{height:360px;max-width:480px;margin:0 auto;width:100%}
+  .float-card.fc-1{left:0%}
+  .float-card.fc-3{left:5%}
+}
+@media(max-width:640px){
+  .hero{padding:100px 20px 60px}
+  .hero-visual{display:none}
+  .hero-content{gap:0}
+}
 
 /* Magnetic / premium buttons */
 .btn{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:100px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;transition:all 0.3s var(--ease-out);min-height:54px;position:relative;overflow:hidden;will-change:transform}
@@ -458,6 +511,33 @@ html.light .lang-toggle{border-color:rgba(0,0,0,0.1)}
 html.light .lang-toggle button{color:rgba(0,0,0,0.5)}
 html.light .lang-toggle button.active{background:rgba(0,0,0,0.08);color:#0a0a0a}
 
+/* ========== STACKING CARDS (fix : fade quand suivante arrive) ========== */
+.stacking{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
+.stacking-inner{max-width:1100px;margin:0 auto}
+.stacking .intro{text-align:center;margin-bottom:60px}
+.stack-list{position:relative;display:flex;flex-direction:column;gap:24px}
+.stack-card{background:var(--dark3);border:1px solid var(--border);border-radius:28px;padding:60px 50px;display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;position:sticky;top:90px;transition:opacity 0.6s var(--ease-out),transform 0.6s var(--ease-out);box-shadow:0 30px 80px rgba(0,0,0,0.4)}
+html.light .stack-card{box-shadow:0 30px 80px rgba(0,0,0,0.06)}
+.stack-card:nth-child(1){background:linear-gradient(135deg,rgba(2,209,186,0.06),var(--dark3));border-color:rgba(2,209,186,0.2)}
+.stack-card:nth-child(2){background:linear-gradient(135deg,rgba(249,115,22,0.06),var(--dark3));border-color:rgba(249,115,22,0.2)}
+.stack-card:nth-child(3){background:linear-gradient(135deg,rgba(167,139,250,0.06),var(--dark3));border-color:rgba(167,139,250,0.2)}
+/* FIX : la card actuelle disparait quand la suivante arrive (lecture propre) */
+.stack-card.faded{opacity:0;transform:scale(0.94) translateY(-10px);pointer-events:none}
+.stack-card .s-content .s-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:14px}
+.stack-card .s-content h3{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,4.5vw,60px);letter-spacing:-1.5px;line-height:1;margin-bottom:18px;font-weight:400}
+.stack-card .s-content p{font-size:15px;color:var(--text-dim);line-height:1.7;max-width:420px}
+.stack-visual{aspect-ratio:1;border-radius:20px;background:rgba(255,255,255,0.025);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.stack-visual.viz-1{background:radial-gradient(circle at 50% 50%,rgba(2,209,186,0.18),transparent 70%)}
+.stack-visual.viz-2{background:radial-gradient(circle at 50% 50%,rgba(249,115,22,0.18),transparent 70%)}
+.stack-visual.viz-3{background:radial-gradient(circle at 50% 50%,rgba(167,139,250,0.18),transparent 70%)}
+.stack-visual .big-icon{width:120px;height:120px;color:var(--teal);opacity:0.7;filter:drop-shadow(0 0 30px currentColor)}
+.stack-visual.viz-2 .big-icon{color:var(--orange)}
+.stack-visual.viz-3 .big-icon{color:var(--violet)}
+@media(max-width:768px){
+  .stack-card{grid-template-columns:1fr;padding:40px 28px;gap:30px;position:relative;top:auto!important}
+  .stack-card.faded{opacity:1;transform:none}
+}
+
 /* ========== HOW IT WORKS ========== */
 .how{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
 .how-inner{max-width:1200px;margin:0 auto}
@@ -598,9 +678,8 @@ html.js-reveal .reveal.visible{opacity:1;transform:translateY(0)}
 .stagger-2{transition-delay:0.2s}
 .stagger-3{transition-delay:0.3s}
 
-html.js-reveal .hero-eyebrow,html.js-reveal .hero-sub,html.js-reveal .hero-cta-row,html.js-reveal .scroll-hint,html.js-reveal .hero-accent-bar{opacity:0;transform:translateY(20px);transition:opacity 0.9s ease,transform 0.9s ease,width 0.9s ease}
+html.js-reveal .hero-eyebrow,html.js-reveal .hero-sub,html.js-reveal .hero-cta-row,html.js-reveal .scroll-hint,html.js-reveal .hero-accent-bar,html.js-reveal .hero-mini-logo,html.js-reveal .hero-title,html.js-reveal .hero-trust-line,html.js-reveal .hero-visual{opacity:0;transform:translateY(20px);transition:opacity 0.9s ease,transform 0.9s ease,width 0.9s ease}
 html.js-reveal .hero-accent-bar{width:0;transform:none}
-html.js-reveal .hero-title .char{opacity:0;transform:translateY(80px);transition:opacity 0.9s var(--ease-out),transform 0.9s var(--ease-out)}
 html.js-reveal .manifeste-line{width:0;transition:width 0.9s var(--ease-out)}
 html.js-reveal .manifeste-line.visible{width:120px}
 
@@ -649,7 +728,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
 
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
-  html.js-reveal .reveal,html.js-reveal .hero-title .char,html.js-reveal .hero-eyebrow,html.js-reveal .hero-sub,html.js-reveal .hero-cta-row,html.js-reveal .scroll-hint,html.js-reveal .manifeste-line,html.js-reveal .hero-accent-bar{opacity:1!important;transform:none!important;width:120px}
+  html.js-reveal .reveal,html.js-reveal .hero-title,html.js-reveal .hero-eyebrow,html.js-reveal .hero-sub,html.js-reveal .hero-cta-row,html.js-reveal .scroll-hint,html.js-reveal .manifeste-line,html.js-reveal .hero-accent-bar,html.js-reveal .hero-mini-logo,html.js-reveal .hero-trust-line,html.js-reveal .hero-visual{opacity:1!important;transform:none!important;width:80px}
   html.js-reveal .step{opacity:1!important}
 }
 </style>
@@ -706,19 +785,68 @@ html.js-reveal .manifeste-line.visible{width:120px}
   <div class="hero-grid-overlay"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <div class="hero-eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">SaaS de coaching premium</span></div>
-    <h1 class="hero-title gradient-text" id="heroTitle">RB PERFORM</h1>
-    <div class="hero-accent-bar"></div>
-    <p class="hero-sub">La plateforme qui transforme<br/>chaque coach en CEO.</p>
-    <div class="hero-cta-row">
-      <a href="https://rb-perfor.vercel.app/?coach=true" class="btn btn-orange magnetic" target="_blank" rel="noopener">
-        Accéder à la beta
-        <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </a>
-      <a href="#features" class="btn btn-ghost magnetic">
-        Voir comment ça marche
-      </a>
+
+    <!-- LEFT : text -->
+    <div class="hero-text">
+      <div class="hero-mini-logo">
+        <svg viewBox="170 50 180 410" width="11" height="26" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba"/>
+        </svg>
+        <span>RB <b>PERFORM</b></span>
+      </div>
+      <div class="hero-eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">Plateforme premium pour coachs ambitieux</span><span class="v">BETA</span></div>
+      <h1 class="hero-title">La plateforme qui transforme chaque coach en <span class="accent">CEO</span>.</h1>
+      <div class="hero-accent-bar"></div>
+      <p class="hero-sub">Programmes, anti-churn IA, white label, analytics : <b>un seul outil</b> pour piloter ton activité de coach comme un vrai SaaS. Zéro commission. Zéro friction.</p>
+      <div class="hero-cta-row">
+        <a href="https://rb-perfor.vercel.app/?coach=true" class="btn btn-orange magnetic" target="_blank" rel="noopener">
+          Démarrer la beta
+          <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="#how" class="btn btn-ghost magnetic">
+          Voir comment ça marche
+        </a>
+      </div>
+      <div class="hero-trust-line">
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>0% commission</span>
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>14 jours garantis</span>
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sans engagement</span>
+      </div>
     </div>
+
+    <!-- RIGHT : floating live preview cards -->
+    <div class="hero-visual" aria-hidden="true">
+      <div class="float-card fc-1">
+        <div class="fc-live-pill">Live</div>
+        <div class="fc-label">Score Business</div>
+        <div class="fc-value"><span id="hsScore">87</span><span class="delta">↗ +4</span></div>
+        <div class="fc-bar"><div class="fc-fill" id="hsBar" style="width:87%"></div></div>
+      </div>
+      <div class="float-card fc-2">
+        <div class="fc-label">MRR mensuel</div>
+        <div class="fc-value"><span id="hsMrr">4 680</span> €</div>
+        <div class="fc-mini-row">
+          <span class="fc-dot" style="background:var(--teal)"></span>
+          <strong>+12%</strong>
+          <span style="color:var(--text-dimmer);font-size:10px">vs M-1</span>
+        </div>
+      </div>
+      <div class="float-card fc-3">
+        <div class="fc-label">Clients actifs</div>
+        <div class="fc-value"><span id="hsClients">23</span><span style="color:var(--text-dimmer);font-size:18px;margin-left:2px">/25</span></div>
+        <div class="fc-mini-row">
+          <span class="fc-dot" style="background:var(--teal)"></span><strong>20 actifs cette semaine</strong>
+        </div>
+      </div>
+      <div class="float-card fc-4">
+        <div class="fc-label">Anti-churn IA</div>
+        <div class="fc-value" style="color:#ef4444"><span>2</span></div>
+        <div class="fc-mini-row">
+          <span class="fc-dot" style="background:#ef4444"></span><strong style="color:#ef4444">Alertes urgentes</strong>
+        </div>
+      </div>
+    </div>
+
   </div>
   <div class="scroll-hint">
     <div class="scroll-line"></div>
@@ -950,6 +1078,48 @@ html.js-reveal .manifeste-line.visible{width:120px}
         <div class="num">04 · PROGRAMME BUILDER</div>
         <h3 class="gradient-text">Des programmes<br/>qui claquent.</h3>
         <p>Interface drag-and-drop pour construire des programmes multi-semaines. Tempo, RIR, charges, vidéos YouTube, notes motivation, finisher. Preview live. Export PDF signé. Zéro Excel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STACKING CARDS ========== -->
+<section class="stacking">
+  <div class="stacking-inner">
+    <div class="intro">
+      <div class="section-tag" data-i18n="stack.tag">Pensé pour les coachs sérieux</div>
+      <h2 class="section-title gradient-text" data-i18n="stack.title">Plus qu'une app.<br/>Un système.</h2>
+    </div>
+    <div class="stack-list" id="stackList">
+      <div class="stack-card">
+        <div class="s-content">
+          <div class="s-tag" data-i18n="stack.c1_tag">Performance</div>
+          <h3 data-i18n="stack.c1_title">Score business<br/>en temps réel.</h3>
+          <p data-i18n="stack.c1_desc">Un seul chiffre qui résume la santé de ton activité. Calculé live à partir de la rétention, du MRR, de l'activité client et du momentum. Tu sais en 2 secondes si ton mois est solide.</p>
+        </div>
+        <div class="stack-visual viz-1">
+          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+      </div>
+      <div class="stack-card">
+        <div class="s-content">
+          <div class="s-tag" data-i18n="stack.c2_tag">Anticipation</div>
+          <h3 data-i18n="stack.c2_title">L'IA voit avant toi.</h3>
+          <p data-i18n="stack.c2_desc">7 signaux par client analysés en continu. Quand un score de churn dépasse 60, tu reçois une alerte avec l'action recommandée. Tu sauves les clients que d'autres laissent partir.</p>
+        </div>
+        <div class="stack-visual viz-2">
+          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
+      </div>
+      <div class="stack-card">
+        <div class="s-content">
+          <div class="s-tag" data-i18n="stack.c3_tag">Marque</div>
+          <h3 data-i18n="stack.c3_title">Ton empire,<br/>ta marque.</h3>
+          <p data-i18n="stack.c3_desc">White label complet inclus dès le plan Pro. Logo, couleurs, domaine custom. Tes clients voient ta marque, jamais "RB Perform". Tu construis ton actif, pas le nôtre.</p>
+        </div>
+        <div class="stack-visual viz-3">
+          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg>
+        </div>
       </div>
     </div>
   </div>
@@ -1367,6 +1537,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
   initHowSteps();
   initFounderSig();
   initQuiz();
+  initStackingCards();
   initPauseOffscreen();
 
   function initLoader() {
@@ -1422,39 +1593,38 @@ html.js-reveal .manifeste-line.visible{width:120px}
     }, { passive: true });
   }
 
-  // ===== Hero split =====
+  // ===== Hero entrance (no split, animation directe) =====
   function initHeroSplit(animate) {
-    var title = document.getElementById('heroTitle');
-    if (!title) return;
-    var text = title.textContent.trim();
-    title.innerHTML = text.split('').map(function(c) {
-      return c === ' ' ? '<span class="char">&nbsp;</span>' : '<span class="char">' + c + '</span>';
-    }).join('');
     if (!animate) return;
-
+    var miniLogo = document.querySelector('.hero-mini-logo');
     var eyebrow = document.querySelector('.hero-eyebrow');
+    var title = document.querySelector('.hero-title');
     var bar = document.querySelector('.hero-accent-bar');
     var sub = document.querySelector('.hero-sub');
     var cta = document.querySelector('.hero-cta-row');
+    var trust = document.querySelector('.hero-trust-line');
+    var visual = document.querySelector('.hero-visual');
     var scrollHint = document.querySelector('.scroll-hint');
-    var chars = title.querySelectorAll('.char');
 
-    setTimeout(function() {
-      if (eyebrow) { eyebrow.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; eyebrow.style.opacity = '1'; eyebrow.style.transform = 'translateY(0)'; }
-    }, 200);
-
-    chars.forEach(function(char, i) {
-      char.style.transition = 'opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1)';
-      char.style.transitionDelay = (0.5 + i * 0.06) + 's';
-      char.style.opacity = '1';
-      char.style.transform = 'translateY(0)';
+    var seq = [
+      { el: miniLogo, delay: 100 },
+      { el: eyebrow, delay: 250 },
+      { el: title, delay: 400 },
+      { el: bar, delay: 650, css: 'width' },
+      { el: sub, delay: 800 },
+      { el: cta, delay: 1000 },
+      { el: trust, delay: 1200 },
+      { el: visual, delay: 600 },
+      { el: scrollHint, delay: 1500 }
+    ];
+    seq.forEach(function(item) {
+      if (!item.el) return;
+      setTimeout(function() {
+        item.el.style.transition = 'opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1)';
+        item.el.style.opacity = '1';
+        item.el.style.transform = 'translateY(0)';
+      }, item.delay);
     });
-    var d = 500 + chars.length * 60;
-
-    setTimeout(function() { if (bar) { bar.style.transition = 'width 0.8s cubic-bezier(0.22,1,0.36,1)'; bar.style.width = '120px'; } }, d + 200);
-    setTimeout(function() { if (sub) { sub.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; } }, d + 400);
-    setTimeout(function() { if (cta) { cta.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; cta.style.opacity = '1'; cta.style.transform = 'translateY(0)'; } }, d + 600);
-    setTimeout(function() { if (scrollHint) { scrollHint.style.transition = 'opacity 0.9s ease, transform 0.9s ease'; scrollHint.style.opacity = '1'; scrollHint.style.transform = 'translateY(0)'; } }, d + 900);
   }
 
   // ===== Reveals =====
@@ -1664,9 +1834,8 @@ html.js-reveal .manifeste-line.visible{width:120px}
     }, 3500);
   }
 
-  // ===== Live data ticker (chiffres dans iphone qui bougent subtilement) =====
+  // ===== Live data ticker (subtle dans iphone + hero float cards) =====
   function initLiveData() {
-    // Pulse subtle sur l'icone alert toutes les 8s pour montrer "vivant"
     var alertIco = document.querySelector('.screen-dashboard .icn.alert');
     if (alertIco) {
       setInterval(function() {
@@ -1674,6 +1843,25 @@ html.js-reveal .manifeste-line.visible{width:120px}
         alertIco.style.transform = 'scale(1.15)';
         setTimeout(function() { alertIco.style.transform = 'scale(1)'; }, 400);
       }, 8000);
+    }
+    // Hero float cards : MRR ticker subtle (4680 → 4720 → 4690 etc)
+    var hsMrr = document.getElementById('hsMrr');
+    var hsScore = document.getElementById('hsScore');
+    var hsBar = document.getElementById('hsBar');
+    if (hsMrr) {
+      var baseMrr = 4680;
+      setInterval(function() {
+        var v = baseMrr + Math.floor(Math.random() * 80) - 20;
+        hsMrr.textContent = v.toLocaleString('fr-FR').replace(/,/g, ' ');
+      }, 5500);
+    }
+    if (hsScore && hsBar) {
+      var baseScore = 87;
+      setInterval(function() {
+        var s = baseScore + Math.floor(Math.random() * 5) - 2;
+        hsScore.textContent = s;
+        hsBar.style.width = s + '%';
+      }, 7000);
     }
   }
 
@@ -1760,6 +1948,33 @@ html.js-reveal .manifeste-line.visible{width:120px}
         b.classList.toggle('active', active);
         b.setAttribute('aria-pressed', active ? 'true' : 'false');
       });
+    }
+  }
+
+  // ===== Stacking cards : la card actuelle disparait quand la suivante arrive =====
+  function initStackingCards() {
+    var list = document.getElementById('stackList');
+    if (!list) return;
+    var cards = list.querySelectorAll('.stack-card');
+    if (cards.length < 2) return;
+    // Pour chaque card sauf la derniere : observer la card SUIVANTE.
+    // Quand la suivante depasse 50% du viewport vers le top, la card courante fade.
+    for (var i = 0; i < cards.length - 1; i++) {
+      (function(currentCard, nextCard) {
+        var observer = new IntersectionObserver(function(entries) {
+          entries.forEach(function(e) {
+            // Quand le top de la card suivante depasse 60% de la hauteur du viewport
+            // (c-a-d que ~40% est visible et que ca commence a recouvrir la courante)
+            currentCard.classList.toggle('faded', e.isIntersecting);
+          });
+        }, {
+          // rootMargin negatif sur le top : trigger quand nextCard est dans les 60% bas
+          // et seulement quand elle commence a remonter (fade quand on continue scroll)
+          rootMargin: '-40% 0px 0px 0px',
+          threshold: 0
+        });
+        observer.observe(nextCard);
+      })(cards[i], cards[i + 1]);
     }
   }
 
