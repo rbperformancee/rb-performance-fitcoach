@@ -71,7 +71,7 @@ export default function FaqAssistant({ inline = false }) {
           <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.5)", fontWeight: 700 }}>Assistant</div>
           <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>Assistant</div>
         </div>
-        <button onClick={() => setOpen(false)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 28, height: 28, color: "rgba(255,255,255,0.4)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+        <button onClick={() => setOpen(false)} aria-label="Fermer l'assistant" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, minWidth: 36, color: "rgba(255,255,255,0.5)", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
       </div>
 
       {/* Messages */}

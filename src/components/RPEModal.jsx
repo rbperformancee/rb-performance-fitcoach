@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
+import AppIcon from "./AppIcon";
+import haptic from "../lib/haptic";
 
 const GREEN = "#02d1ba";
 
@@ -14,6 +16,7 @@ export function RPEModal({ clientId, sessionName, onClose }) {
 
   const handleSave = async () => {
     if (!rpe || !clientId) return;
+    haptic.success();
     await supabase.from("session_rpe").upsert({
       client_id: clientId,
       date: new Date().toISOString().slice(0, 10),
@@ -40,7 +43,9 @@ export function RPEModal({ clientId, sessionName, onClose }) {
 
         {saved ? (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: `${GREEN}18`, border: `1px solid ${GREEN}40`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", color: GREEN }}>
+              <AppIcon name="check" size={28} color={GREEN} strokeWidth={2.5} />
+            </div>
             <div style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f5" }}>Ressenti enregistré !</div>
           </div>
         ) : (
@@ -101,7 +106,7 @@ export function RPEModal({ clientId, sessionName, onClose }) {
                 color: rpe ? "#0d0d0d" : "#444",
                 fontSize: 13, fontWeight: 800, cursor: rpe ? "pointer" : "not-allowed",
                 boxShadow: rpe ? "0 4px 16px rgba(2,209,186,0.3)" : "none",
-              }}>Enregistrer 💪</button>
+              }}>Enregistrer</button>
             </div>
           </>
         )}

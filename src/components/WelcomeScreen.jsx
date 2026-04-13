@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { LOGO_B64 } from '../utils/logo';
+import AppIcon from './AppIcon';
+import haptic from '../lib/haptic';
 
 const MOTIVATIONS = [
-  "Chaque rep te rapproche de la meilleure version de toi-même. 💪",
-  "La discipline d'aujourd'hui, c'est la performance de demain. ⚡",
-  "Tu n'es pas là par hasard. Maintenant, travaille. 🔥",
-  "Les résultats ne mentent pas. Continue. 🏆",
+  "Chaque rep te rapproche de la meilleure version de toi-meme.",
+  "La discipline d'aujourd'hui, c'est la performance de demain.",
+  "Tu n'es pas la par hasard. Maintenant, travaille.",
+  "Les resultats ne mentent pas. Continue.",
 ];
 
 export default function WelcomeScreen({ client, onContinue }) {
@@ -13,6 +15,7 @@ export default function WelcomeScreen({ client, onContinue }) {
   const quote = MOTIVATIONS[Math.floor(Math.random() * MOTIVATIONS.length)];
 
   const handleContinue = () => {
+    haptic.success();
     setVisible(false);
     setTimeout(onContinue, 400);
     localStorage.setItem(`welcome_shown_${client?.id}`, '1');
@@ -42,7 +45,7 @@ export default function WelcomeScreen({ client, onContinue }) {
         fontSize: 32, fontWeight: 900, color: '#f5f5f5',
         marginBottom: 8, textAlign: 'center', lineHeight: 1.2,
       }}>
-        {client?.prenom || client?.name || 'Athlète'} 👋
+        {client?.prenom || client?.name || 'Athlete'}<span style={{ color: '#02d1ba' }}>.</span>
       </h1>
       <p style={{
         fontSize: 14, color: '#6b7280', marginBottom: 40,
@@ -66,8 +69,10 @@ export default function WelcomeScreen({ client, onContinue }) {
         padding: '16px 48px', fontSize: 15, fontWeight: 800,
         cursor: 'pointer', letterSpacing: 0.5,
         boxShadow: '0 4px 20px rgba(2,209,186,0.35)',
+        display: 'inline-flex', alignItems: 'center', gap: 10,
       }}>
-        C'EST PARTI ⚡
+        C'EST PARTI
+        <AppIcon name="lightning" size={16} color="#0d0d0d" strokeWidth={2.5} />
       </button>
     </div>
   );

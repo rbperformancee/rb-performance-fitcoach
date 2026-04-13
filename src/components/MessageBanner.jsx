@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import AppIcon from "./AppIcon";
 
 const GREEN = "#02d1ba";
 
@@ -61,13 +62,15 @@ export function MessageBanner({ clientId }) {
       {/* Ligne verte gauche */}
       <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: GREEN, borderRadius: "14px 0 0 14px" }} />
 
-      {/* Icône */}
+      {/* Icone */}
       <div style={{
         width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
         background: "rgba(2,209,186,0.15)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 16,
-      }}>💬</div>
+        color: GREEN,
+      }}>
+        <AppIcon name="chat-bubble" size={16} color={GREEN} />
+      </div>
 
       {/* Contenu */}
       <div style={{ flex: 1, minWidth: 0 }}>

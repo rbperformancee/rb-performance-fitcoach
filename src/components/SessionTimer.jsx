@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import AppIcon from './AppIcon';
 
 function formatTime(secs) {
   const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -139,17 +140,19 @@ export default function SessionTimer({ clientId, onClose }) {
     const secs = sessionSecs % 60;
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 8000, background: '#0d0d0d', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <div style={{ fontSize: 64, marginBottom: 16, animation: 'bounceIn 0.5s ease' }}>🏆</div>
-        <h2 style={{ fontSize: 28, fontWeight: 900, color: '#f5f5f5', margin: '0 0 8px' }}>Séance terminée !</h2>
-        <p style={{ color: '#6b7280', fontSize: 14, margin: '0 0 32px' }}>Excellent travail 💪</p>
+        <div style={{ width: 88, height: 88, borderRadius: "50%", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, animation: 'bounceIn 0.5s ease', boxShadow: "0 0 40px rgba(251,191,36,0.2)" }}>
+          <AppIcon name="trophy" size={40} color="#fbbf24" strokeWidth={1.6} />
+        </div>
+        <h2 style={{ fontSize: 28, fontWeight: 900, color: '#f5f5f5', margin: '0 0 8px' }}>Seance terminee.</h2>
+        <p style={{ color: '#6b7280', fontSize: 14, margin: '0 0 32px' }}>Excellent travail.</p>
         <div style={{ display: 'flex', gap: 12, marginBottom: 40 }}>
           {[
-            { label: 'DURÉE', value: `${mins}m${secs < 10 ? '0' : ''}${secs}s`, icon: '⏱️', color: '#02d1ba' },
-            { label: 'EXERCICES', value: exercises, icon: '💪', color: '#a78bfa' },
-            { label: 'SÉRIES', value: sets, icon: '🔥', color: '#fb923c' },
+            { label: 'DUREE', value: `${mins}m${secs < 10 ? '0' : ''}${secs}s`, icon: 'clock', color: '#02d1ba' },
+            { label: 'EXERCICES', value: exercises, icon: 'dumbbell', color: '#a78bfa' },
+            { label: 'SERIES', value: sets, icon: 'flame', color: '#fb923c' },
           ].map((s, i) => (
             <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '14px 18px', textAlign: 'center', animation: `fadeInUp 0.4s ease ${i*0.1}s both` }}>
-              <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
+              <div style={{ marginBottom: 6, display: 'flex', justifyContent: 'center', color: s.color }}><AppIcon name={s.icon} size={20} color={s.color} /></div>
               <div style={{ fontSize: 24, fontWeight: 900, color: s.color }}>{s.value}</div>
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 700, letterSpacing: 1 }}>{s.label}</div>
             </div>
@@ -179,13 +182,16 @@ export default function SessionTimer({ clientId, onClose }) {
 
       {phase === 'idle' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, width: '100%', maxWidth: 360 }}>
-          <div style={{ fontSize: 72, animation: 'pulse 2s ease infinite' }}>⚡</div>
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#f5f5f5', margin: '0 0 8px' }}>Prêt à performer ?</h2>
-            <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Lance le timer pour démarrer ta séance</p>
+          <div style={{ width: 96, height: 96, borderRadius: "50%", background: "rgba(2,209,186,0.12)", border: "1px solid rgba(2,209,186,0.3)", display: "flex", alignItems: "center", justifyContent: "center", animation: 'pulse 2s ease infinite', boxShadow: "0 0 40px rgba(2,209,186,0.25)" }}>
+            <AppIcon name="lightning" size={44} color="#02d1ba" strokeWidth={1.6} />
           </div>
-          <button onClick={startSession} style={{ background: '#02d1ba', color: '#0d0d0d', border: 'none', borderRadius: 16, padding: '18px 56px', fontSize: 17, fontWeight: 900, cursor: 'pointer', boxShadow: '0 4px 24px rgba(2,209,186,0.35)', letterSpacing: 0.5 }}>
-            Démarrer ⚡
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#f5f5f5', margin: '0 0 8px' }}>Pret a performer ?</h2>
+            <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Lance le timer pour demarrer ta seance</p>
+          </div>
+          <button onClick={startSession} style={{ background: '#02d1ba', color: '#0d0d0d', border: 'none', borderRadius: 16, padding: '18px 56px', fontSize: 17, fontWeight: 900, cursor: 'pointer', boxShadow: '0 4px 24px rgba(2,209,186,0.35)', letterSpacing: 0.5, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            Demarrer
+            <AppIcon name="lightning" size={18} color="#0d0d0d" strokeWidth={2.5} />
           </button>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#4b5563', fontSize: 13, cursor: 'pointer' }}>Annuler</button>
         </div>
@@ -204,8 +210,9 @@ export default function SessionTimer({ clientId, onClose }) {
             <button onClick={logSet} style={{ flex: 1, background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 14, padding: '14px', color: '#a78bfa', fontWeight: 800, fontSize: 14, cursor: 'pointer', transition: 'all 0.15s' }}>
               ✓ Série validée
             </button>
-            <button onClick={logExercise} style={{ flex: 1, background: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.25)', borderRadius: 14, padding: '14px', color: '#fb923c', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
-              💪 Exercice suivant
+            <button onClick={logExercise} style={{ flex: 1, background: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.25)', borderRadius: 14, padding: '14px', color: '#fb923c', fontWeight: 800, fontSize: 14, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <AppIcon name="dumbbell" size={14} color="#fb923c" />
+              Exercice suivant
             </button>
           </div>
 
@@ -231,8 +238,9 @@ export default function SessionTimer({ clientId, onClose }) {
             </div>
             <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, letterSpacing: 1 }}>secondes</div>
           </CircleTimer>
-          <p style={{ color: '#4b5563', fontSize: 13, textAlign: 'center' }}>
-            {restSecs <= 5 ? '🔥 Prépare-toi !' : restSecs <= 15 ? '⚡ Bientôt !' : '💤 Récupère bien...'}
+          <p style={{ color: '#4b5563', fontSize: 13, textAlign: 'center', display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+            <AppIcon name={restSecs <= 5 ? 'flame' : restSecs <= 15 ? 'lightning' : 'zzz'} size={14} color={restSecs <= 5 ? '#ef4444' : restSecs <= 15 ? '#fb923c' : '#4b5563'} />
+            {restSecs <= 5 ? 'Prepare-toi !' : restSecs <= 15 ? 'Bientot !' : 'Recupere bien'}
           </p>
           <button onClick={() => { setPhase('active'); setRestSecs(0); }} style={{ background: 'rgba(2,209,186,0.12)', border: '1px solid rgba(2,209,186,0.25)', borderRadius: 12, padding: '12px 28px', color: '#02d1ba', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
             Passer le repos →

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import AppIcon from './AppIcon';
+import Spinner from './Spinner';
 
 export default function CoachStats({ clients }) {
   const [weeklyLogs, setWeeklyLogs] = useState([]);
@@ -28,28 +30,31 @@ export default function CoachStats({ clients }) {
   const maxBar = Math.max(...last7, 1);
   const days = ['L','M','M','J','V','S','D'];
 
-  if (loading) return <div style={{ color: '#6b7280', fontSize: 12, padding: '8px 0' }}>Chargement stats...</div>;
+  if (loading) return <div style={{ padding: '12px 0', display: 'flex', justifyContent: 'center' }}><Spinner variant="dots" size={20} /></div>;
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5, marginBottom: 12 }}>📊 VUE D'ENSEMBLE</div>
-      
+      <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5, marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <AppIcon name="chart" size={12} color="#6b7280" />
+        VUE D'ENSEMBLE
+      </div>
+
       {/* Cartes stats */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         {[
-          { label: 'CLIENTS ACTIFS', value: active, sub: `${total - active} inactifs`, icon: '👥', color: '#02d1ba' },
-          { label: 'SÉANCES 7J', value: total7j, sub: `${(total7j/7).toFixed(1)}/jour`, icon: '💪', color: '#a78bfa' },
-          { label: 'MESSAGES 30J', value: msgCount, sub: 'échanges', icon: '💬', color: '#fb923c' },
-          { label: 'TAUX ACTIVITÉ', value: `${total > 0 ? Math.round((active/total)*100) : 0}%`, sub: 'ce mois', icon: '📈', color: '#34d399' },
+          { label: 'CLIENTS ACTIFS', value: active, sub: `${total - active} inactifs`, icon: 'users', color: '#02d1ba' },
+          { label: 'SEANCES 7J', value: total7j, sub: `${(total7j/7).toFixed(1)}/jour`, icon: 'dumbbell', color: '#a78bfa' },
+          { label: 'MESSAGES 30J', value: msgCount, sub: 'echanges', icon: 'chat-bubble', color: '#fb923c' },
+          { label: 'TAUX ACTIVITE', value: `${total > 0 ? Math.round((active/total)*100) : 0}%`, sub: 'ce mois', icon: 'trending-up', color: '#34d399' },
         ].map((s, i) => (
           <div key={i} style={{
             flex: '1 1 120px', background: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 14px',
             animation: `fadeInUp 0.4s ease ${i * 0.07}s both`,
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 700, letterSpacing: 1 }}>{s.label}</div>
-              <span style={{ fontSize: 16 }}>{s.icon}</span>
+              <AppIcon name={s.icon} size={14} color={s.color} />
             </div>
             <div style={{ fontSize: 26, fontWeight: 900, color: '#f5f5f5', lineHeight: 1 }}>{s.value}</div>
             <div style={{ fontSize: 10, color: s.color, fontWeight: 600, marginTop: 2 }}>{s.sub}</div>
@@ -83,13 +88,17 @@ export default function CoachStats({ clients }) {
 
       {/* Classement clients */}
       <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '12px 14px' }}>
-        <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>🏆 CLASSEMENT ACTIVITÉ SEMAINE</div>
+        <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 700, letterSpacing: 1, marginBottom: 10, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <AppIcon name="trophy" size={11} color="#fbbf24" />
+          CLASSEMENT ACTIVITE SEMAINE
+        </div>
         {[...( clients || [])].sort((a, b) => (b._weekSessions || 0) - (a._weekSessions || 0)).slice(0, 5).map((c, i) => {
           const maxS = Math.max(...(clients || []).map(x => x._weekSessions || 0), 1);
-          const medals = ['🥇','🥈','🥉'];
+          const medalColors = ['#fbbf24', '#cbd5e1', '#cd7f32'];
+          const medalColor = medalColors[i] || '#4b5563';
           return (
             <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-              <span style={{ fontSize: 14, width: 20, textAlign: 'center' }}>{medals[i] || i + 1}</span>
+              <span style={{ fontSize: 13, fontWeight: 900, color: medalColor, width: 20, textAlign: 'center', letterSpacing: '-0.5px' }}>{i + 1}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#f5f5f5' }}>{c.full_name || c.email?.split('@')[0]}</div>
                 <div style={{ fontSize: 10, color: '#6b7280' }}>{c._weekSessions || 0} séance{(c._weekSessions||0) !== 1 ? 's' : ''}</div>

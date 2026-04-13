@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { toast } from './Toast';
+import AppIcon from './AppIcon';
 
 const METRICS = [
-  { key: 'steps',    label: 'Pas',      icon: '👟', unit: '',    color: '#02d1ba', target: 10000, hint: 'Ouvre Santé → Activité → Pas' },
-  { key: 'calories', label: 'Calories', icon: '🔥', unit: 'kcal', color: '#fb923c', target: 2500,  hint: 'Ouvre Santé → Activité → Calories actives' },
-  { key: 'sleep',    label: 'Sommeil',  icon: '🌙', unit: 'h',   color: '#a78bfa', target: 8,     hint: 'Ouvre Santé → Sommeil' },
+  { key: 'steps',    label: 'Pas',      icon: 'shoe',     unit: '',    color: '#02d1ba', target: 10000, hint: 'Ouvre Sante → Activite → Pas' },
+  { key: 'calories', label: 'Calories', icon: 'flame',    unit: 'kcal', color: '#fb923c', target: 2500,  hint: 'Ouvre Sante → Activite → Calories actives' },
+  { key: 'sleep',    label: 'Sommeil',  icon: 'zzz',      unit: 'h',   color: '#a78bfa', target: 8,     hint: 'Ouvre Sante → Sommeil' },
 ];
 
 function RingProgress({ value, target, color, size = 56 }) {
@@ -95,16 +96,20 @@ export default function ActivityWidget({ clientId }) {
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5 }}>⚡ ACTIVITÉ DU JOUR</div>
+        <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <AppIcon name="lightning" size={12} color="#6b7280" />
+          ACTIVITE DU JOUR
+        </div>
         <button
           onClick={() => window.open('x-apple-health://', '_blank')}
           style={{
             background: 'rgba(255,45,85,0.1)', border: '1px solid rgba(255,45,85,0.2)',
-            borderRadius: 8, padding: '5px 10px', color: '#ff2d55',
-            fontSize: 10, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.5,
-            display: 'flex', alignItems: 'center', gap: 5,
+            borderRadius: 10, padding: '7px 12px', color: '#ff2d55',
+            fontSize: 11, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.5,
+            display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 32,
           }}>
-          ❤️ Ouvrir Santé
+          <AppIcon name="heart" size={12} color="#ff2d55" strokeWidth={2.2} />
+          Ouvrir Sante
         </button>
       </div>
 
@@ -129,8 +134,8 @@ export default function ActivityWidget({ clientId }) {
                   <div style={{
                     position: 'absolute', inset: 0, display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18,
-                  }}>{m.icon}</div>
+                    color: m.color,
+                  }}><AppIcon name={m.icon} size={18} color={m.color} /></div>
                 </div>
 
                 {/* Infos */}
@@ -196,9 +201,13 @@ export default function ActivityWidget({ clientId }) {
                     style={{
                       flex: 1, background: 'rgba(255,45,85,0.08)',
                       border: '1px solid rgba(255,45,85,0.15)',
-                      borderRadius: 10, padding: '8px', color: '#ff2d55',
+                      borderRadius: 10, padding: '10px', color: '#ff2d55',
                       fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                    }}>❤️ Voir dans Santé</button>
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 36,
+                    }}>
+                    <AppIcon name="heart" size={12} color="#ff2d55" strokeWidth={2.2} />
+                    Voir dans Sante
+                  </button>
                   <button
                     onClick={() => { setEditing(m.key); setInputVal(''); }}
                     style={{

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
+import haptic from "../lib/haptic";
+import Spinner from "./Spinner";
 
 const G = "#02d1ba";
 
@@ -11,6 +13,7 @@ export default function ProgrammeSignature({ programme, client, onSigned }) {
 
   const handleSign = async () => {
     if (!name.trim() || !checked) return;
+    haptic.success();
     setSaving(true);
     await supabase.from("programmes").update({
       programme_accepted_at: new Date().toISOString(),
@@ -106,7 +109,7 @@ export default function ProgrammeSignature({ programme, client, onSigned }) {
             boxShadow: name.trim() && checked ? "0 10px 36px rgba(2,209,186,0.35)" : "none",
           }}
         >
-          {saving ? "Signature en cours..." : "Accepter et commencer"}
+          {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Signature</span>) : "Accepter et commencer"}
         </button>
       </div>
     </div>

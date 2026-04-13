@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import haptic from '../lib/haptic';
 
 export default function AvatarPicker({ clientId, name, size = 72 }) {
   const [url, setUrl] = useState(null);
@@ -22,7 +23,7 @@ export default function AvatarPicker({ clientId, name, size = 72 }) {
     await supabase.from('clients').update({ avatar_url: publicUrl }).eq('id', clientId);
     setUrl(publicUrl);
     setLoading(false);
-    if (navigator.vibrate) navigator.vibrate([20,10,40]);
+    haptic.success();
   };
 
   const initials = (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
