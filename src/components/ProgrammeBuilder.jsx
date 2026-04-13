@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
-import { LOGO_B64 } from "../utils/logo";
 import { toast } from "./Toast";
 
 const RED = "#c0392b";
+const DESKTOP_MIN = 1024;
 
 let _uid = Date.now();
 const uid = () => "id_" + (++_uid);
@@ -28,11 +28,20 @@ const emptyWeek = () => ({
   seances: [emptySeance()],
 });
 
-// ===== Styles editeur (dark pro, meme feeling que le HTML original) =====
+// ===== Styles editeur =====
 const S = {
-  wrap: { minHeight: "100vh", background: "#1d1b1b", fontFamily: "-apple-system,Inter,sans-serif", color: "#faf9f7" },
-  topbar: { background: "#1d1b1b", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 56, borderBottom: "1px solid rgba(255,255,255,0.06)", position: "sticky", top: 0, zIndex: 50 },
-  sidebar: { padding: "16px 16px 80px", maxWidth: 600, margin: "0 auto" },
+  wrap: { height: "100vh", background: "#1d1b1b", fontFamily: "-apple-system,Inter,sans-serif", color: "#faf9f7", display: "flex", flexDirection: "column", overflow: "hidden" },
+  topbar: { background: "#1d1b1b", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 56, borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, gap: 10 },
+  mainContainer: { flex: 1, display: "flex", minHeight: 0 },
+  tabsBar: { display: "flex", background: "#1d1b1b", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 },
+  tabBtn: { flex: 1, padding: "13px 16px", background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit", borderBottom: "2px solid transparent", transition: "all 0.2s" },
+  tabBtnActive: { color: "#faf9f7", borderBottomColor: RED, background: "rgba(192,57,43,0.06)" },
+  leftPane: { flex: "1 1 50%", minWidth: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", background: "#1d1b1b" },
+  rightPane: { flex: "1 1 50%", minWidth: 0, overflowY: "hidden", background: "#0a0a0a", borderLeft: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column" },
+  previewHeader: { padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 },
+  previewLabel: { fontSize: 9, fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" },
+  previewIframe: { flex: 1, width: "100%", border: "none", background: "#f4f2ef" },
+  form: { padding: "20px 20px 80px", maxWidth: 640, margin: "0 auto" },
   label: { fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 6 },
   input: { width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#faf9f7", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit" },
   textarea: { width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#faf9f7", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", minHeight: 60 },
@@ -41,13 +50,30 @@ const S = {
   weekHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#1d1b1b", cursor: "pointer", borderRadius: "10px 10px 0 0" },
   seanceHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.03)", cursor: "pointer", borderRadius: "8px 8px 0 0" },
   exCard: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 },
-  btnRed: { padding: "10px 20px", background: RED, color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px" },
-  btnGhost: { padding: "8px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" },
-  btnAdd: { width: "100%", padding: "8px", background: "none", border: "1.5px dashed rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px" },
-  btnRemove: { background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 18, cursor: "pointer", padding: "2px 6px", borderRadius: 4 },
-  row2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
-  row4: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 },
+  btnRed: { padding: "10px 18px", background: RED, color: "#fff", border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap", minHeight: 38 },
+  btnGhost: { padding: "8px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" },
+  btnAdd: { width: "100%", padding: "10px", background: "none", border: "1.5px dashed rgba(255,255,255,0.12)", borderRadius: 8, color: "rgba(255,255,255,0.45)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px", minHeight: 38 },
+  btnRemove: { background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 18, cursor: "pointer", padding: "2px 6px", borderRadius: 4, lineHeight: 1 },
+  row2: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 },
+  row4: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 8 },
 };
+
+// ===== Hook : isDesktop responsive =====
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== "undefined" && window.innerWidth >= DESKTOP_MIN);
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${DESKTOP_MIN}px)`);
+    const h = (e) => setIsDesktop(e.matches);
+    // Safari < 14 compat
+    if (mq.addEventListener) mq.addEventListener("change", h);
+    else mq.addListener(h);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", h);
+      else mq.removeListener(h);
+    };
+  }, []);
+  return isDesktop;
+}
 
 export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }) {
   const [progName, setProgName] = useState("");
@@ -57,8 +83,13 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
   const [level, setLevel] = useState("Intermediaire");
   const [weeks, setWeeks] = useState([emptyWeek()]);
   const [saving, setSaving] = useState(false);
-  const [accessMode, setAccessMode] = useState("immediate"); // immediate | scheduled
+  const [accessMode, setAccessMode] = useState("immediate");
   const [scheduledDate, setScheduledDate] = useState("");
+
+  const isDesktop = useIsDesktop();
+  const [mobileTab, setMobileTab] = useState("edit"); // edit | preview
+  const [previewHTML, setPreviewHTML] = useState("");
+  const previewTimer = useRef(null);
 
   // ===== Helpers mutation state =====
   const updateWeek = useCallback((wid, fn) => setWeeks(ws => ws.map(w => w.id === wid ? fn(w) : w)), []);
@@ -83,18 +114,17 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
   // ===== Auto-thumbnail YouTube =====
   const ytId = (url) => { try { const u = new URL(url); if (u.hostname.includes("youtube.com")) { if (u.pathname.includes("/shorts/")) return u.pathname.split("/shorts/")[1].split("?")[0]; return u.searchParams.get("v"); } if (u.hostname.includes("youtu.be")) return u.pathname.slice(1).split("?")[0]; } catch {} return null; };
 
-  // ===== GENERER HTML du programme (meme format que l'original) =====
+  // ===== GENERER HTML du programme =====
   const generateHTML = useCallback(() => {
     const clientName = client?.full_name || "Athlete";
     const pName = (progName || "PROGRAMME").toUpperCase();
     const totalSeances = weeks.reduce((a, w) => a + w.seances.length, 0);
 
-    // Exercise card HTML
     const exCardHTML = (ex, n) => {
-      const chargeHtml = ex.charge ? `<div class="stat-it"><span class="stat-lbl">Charge</span><span class="stat-val">${ex.charge} kg</span></div><div class="stat-sep"></div>` : "";
       const noteHtml = ex.note ? `<div style="margin-top:6px;font-size:10px;color:#928e89;font-style:italic">${ex.note}</div>` : "";
       const motivHtml = ex.motivNote ? `<div style="margin-top:4px;font-size:10px;color:#c0392b;font-weight:600">${ex.motivNote}</div>` : "";
-      let vid = ex.vidUrl
+      const chargeHtml = ex.charge ? `<div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Charge</span><span style="font-size:13px;font-weight:700;color:${RED}">${ex.charge} kg</span></div>` : "";
+      const vid = ex.vidUrl
         ? (ex.thumbUrl
           ? `<a href="${ex.vidUrl}" target="_blank" style="display:block;width:120px;height:68px;border-radius:6px;overflow:hidden;position:relative"><img src="${ex.thumbUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/></a>`
           : `<a href="${ex.vidUrl}" target="_blank" style="color:${RED};font-size:10px;font-weight:700">Voir la video</a>`)
@@ -107,7 +137,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
             <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Rep.</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.reps || "—"}</span></div>
             <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Tempo</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.tempo || "—"}</span></div>
             <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">RIR</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.rir}</span></div>
-            ${chargeHtml ? `<div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Charge</span><span style="font-size:13px;font-weight:700;color:${RED}">${ex.charge} kg</span></div>` : ""}
+            ${chargeHtml}
             <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Repos</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.rest || "—"}</span></div>
           </div>
           ${noteHtml}${motivHtml}
@@ -116,7 +146,6 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
       </div>`;
     };
 
-    // Build seance pages
     let html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <input type="hidden" id="prog-name" value="${progName}">
 <title>${pName}</title>
@@ -136,7 +165,6 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
       <div style="margin-top:32px;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.3);text-transform:uppercase">${tagline}</div>
     </div>`;
 
-    // Seance pages
     weeks.forEach((w, wi) => {
       w.seances.forEach((s, si) => {
         html += `<div style="min-height:100vh;background:#f4f2ef;padding:24px 20px">
@@ -152,7 +180,14 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
 
     html += "</body></html>";
     return html;
-  }, [client, progName, tagline, duration, objective, weeks]);
+  }, [client, progName, tagline, duration, objective, weeks, coachData]);
+
+  // ===== Preview live : debounce 400ms pour pas regenerer a chaque touche =====
+  useEffect(() => {
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    previewTimer.current = setTimeout(() => setPreviewHTML(generateHTML()), 400);
+    return () => { if (previewTimer.current) clearTimeout(previewTimer.current); };
+  }, [generateHTML]);
 
   // ===== SAUVEGARDER =====
   const handleSave = async () => {
@@ -161,9 +196,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
     setSaving(true);
     try {
       const html = generateHTML();
-      // Desactiver les anciens programmes
       await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
-      // Inserer le nouveau
       const insertData = {
         client_id: client.id,
         html_content: html,
@@ -204,144 +237,225 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
     setSaving(false);
   };
 
-  // ===== RENDER =====
+  // ===== RENDER form =====
+  const renderForm = () => (
+    <div style={S.form}>
+      {/* ===== INFOS PROGRAMME ===== */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={S.sectionLabel}>Programme</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div><div style={S.label}>Nom du programme</div><input style={S.input} value={progName} onChange={e => setProgName(e.target.value)} placeholder="PUSH PULL LEGS" /></div>
+          <div style={S.row2}>
+            <div><div style={S.label}>Objectif</div><input style={S.input} value={objective} onChange={e => setObjective(e.target.value)} placeholder="Prise de masse, seche..." /></div>
+            <div><div style={S.label}>Duree</div><input style={S.input} value={duration} onChange={e => setDuration(e.target.value)} placeholder="6 semaines" /></div>
+          </div>
+          <div style={S.row2}>
+            <div><div style={S.label}>Niveau</div><select style={S.select} value={level} onChange={e => setLevel(e.target.value)}>{LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select></div>
+            <div><div style={S.label}>Tagline</div><input style={S.input} value={tagline} onChange={e => setTagline(e.target.value)} /></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Client (auto) */}
+      <div style={{ marginBottom: 24, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Client</div>
+        <div style={{ fontSize: 14, fontWeight: 700 }}>{client?.full_name || client?.email || "—"}</div>
+      </div>
+
+      {/* Acces programme */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={S.sectionLabel}>Acces au programme</div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+          {[{ id: "immediate", label: "Acces immediat" }, { id: "scheduled", label: "Date programmee" }].map(m => (
+            <button key={m.id} onClick={() => setAccessMode(m.id)} style={{ ...S.btnGhost, background: accessMode === m.id ? "rgba(192,57,43,0.12)" : "rgba(255,255,255,0.04)", borderColor: accessMode === m.id ? RED : "rgba(255,255,255,0.1)", color: accessMode === m.id ? RED : "rgba(255,255,255,0.6)" }}>{m.label}</button>
+          ))}
+        </div>
+        {accessMode === "scheduled" && (
+          <div><div style={S.label}>Date d'acces</div><input type="datetime-local" style={S.input} value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} /></div>
+        )}
+      </div>
+
+      {/* ===== SEMAINES ===== */}
+      <div style={S.sectionLabel}>Semaines</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {weeks.map((w, wi) => (
+          <div key={w.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, overflow: "hidden" }}>
+            <div style={S.weekHeader} onClick={() => updateWeek(w.id, wk => ({ ...wk, open: !wk.open }))}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ background: RED, color: "#fff", fontSize: 8, fontWeight: 700, letterSpacing: "1.5px", padding: "3px 8px", borderRadius: 5, textTransform: "uppercase" }}>S{wi + 1}</span>
+                <span style={{ fontSize: 12, fontWeight: 600 }}>Semaine {wi + 1}</span>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button onClick={(e) => { e.stopPropagation(); dupWeek(w.id); }} style={S.btnRemove} title="Dupliquer">⧉</button>
+                <button onClick={(e) => { e.stopPropagation(); rmWeek(w.id); }} style={S.btnRemove} title="Supprimer">×</button>
+                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>{w.open ? "▾" : "▸"}</span>
+              </div>
+            </div>
+
+            {w.open && (
+              <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                {w.seances.map((s, si) => (
+                  <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 8, overflow: "hidden" }}>
+                    <div style={S.seanceHeader} onClick={() => updateSeance(w.id, s.id, sn => ({ ...sn, open: !sn.open }))}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1 }}>
+                        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "2px", color: RED, textTransform: "uppercase", flexShrink: 0 }}>Seance {si + 1}</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name ? "— " + s.name.toUpperCase() : ""}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                        <button onClick={(e) => { e.stopPropagation(); rmSeance(w.id, s.id); }} style={S.btnRemove}>×</button>
+                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>{s.open ? "▾" : "▸"}</span>
+                      </div>
+                    </div>
+
+                    {s.open && (
+                      <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div style={S.row2}>
+                          <div><div style={S.label}>Nom</div><input style={S.input} value={s.name} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, name: e.target.value }))} placeholder="PUSH / JAMBES / etc." /></div>
+                          <div><div style={S.label}>Description</div><input style={S.input} value={s.desc} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, desc: e.target.value }))} placeholder="Description..." /></div>
+                        </div>
+                        <div><div style={S.label}>Echauffement</div><textarea style={S.textarea} value={s.warmup} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, warmup: e.target.value }))} placeholder="5 min rameur, mobilite epaules..." rows={2} /></div>
+
+                        {s.exercises.map((ex, ei) => (
+                          <div key={ex.id} style={S.exCard}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ background: "#1d1b1b", color: "#fff", fontSize: 8, fontWeight: 700, padding: "2px 8px", borderRadius: 4, letterSpacing: "1px" }}>EX {ei + 1}</span>
+                              <button onClick={() => rmEx(w.id, s.id, ex.id)} style={S.btnRemove}>×</button>
+                            </div>
+                            <div><div style={S.label}>Exercice</div><input style={S.input} value={ex.name} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, name: e.target.value }))} placeholder="Developpe couche halteres" /></div>
+                            <div style={S.row4}>
+                              <div><div style={S.label}>Rep.</div><input style={S.input} value={ex.reps} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, reps: e.target.value }))} placeholder="4x8" /></div>
+                              <div><div style={S.label}>Tempo</div><input style={S.input} value={ex.tempo} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, tempo: e.target.value }))} placeholder="30X0" /></div>
+                              <div><div style={S.label}>RIR</div><select style={S.select} value={ex.rir} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, rir: e.target.value }))}>{RIR_OPTS.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+                              <div><div style={S.label}>Repos</div><input style={S.input} value={ex.rest} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, rest: e.target.value }))} placeholder="2 min" /></div>
+                            </div>
+                            <div style={S.row2}>
+                              <div><div style={S.label}>Charge (kg)</div><input style={S.input} value={ex.charge} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, charge: e.target.value }))} placeholder="80" /></div>
+                              <div><div style={S.label}>Groupe</div><input style={{ ...S.input, textTransform: "uppercase" }} value={ex.group} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, group: e.target.value }))} placeholder="A" maxLength={3} /></div>
+                              <div><div style={S.label}>Type</div><select style={S.select} value={ex.groupType} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, groupType: e.target.value }))}>{GROUP_TYPES.map(t => <option key={t} value={t}>{t || "Isole"}</option>)}</select></div>
+                            </div>
+                            <div><div style={S.label}>Lien video YouTube</div><input style={S.input} value={ex.vidUrl} onChange={e => { const url = e.target.value; updateEx(w.id, s.id, ex.id, x => { const id = ytId(url); return { ...x, vidUrl: url, thumbUrl: id && !x.thumbUrl ? "https://img.youtube.com/vi/" + id + "/hqdefault.jpg" : x.thumbUrl }; }); }} placeholder="https://youtube.com/..." /></div>
+                            <div><div style={S.label}>Note technique</div><input style={S.input} value={ex.note} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, note: e.target.value }))} placeholder="Coudes a 45 degres..." /></div>
+                            <div><div style={S.label}>Note motivation</div><input style={{ ...S.input, borderColor: "rgba(192,57,43,0.2)" }} value={ex.motivNote} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, motivNote: e.target.value }))} placeholder="Tu peux faire mieux que la semaine derniere" /></div>
+                          </div>
+                        ))}
+                        <button style={S.btnAdd} onClick={() => addEx(w.id, s.id)}>+ Exercice</button>
+                        <div><div style={S.label}>Finisher (optionnel)</div><textarea style={S.textarea} value={s.finisher} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, finisher: e.target.value }))} placeholder="AMRAP 5 min : 10 burpees, 15 KB swings..." rows={2} /></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <button style={S.btnAdd} onClick={() => addSeance(w.id)}>+ Seance</button>
+              </div>
+            )}
+          </div>
+        ))}
+        <button style={{ ...S.btnGhost, width: "100%", padding: 12, marginTop: 8, minHeight: 44 }} onClick={addWeek}>+ Ajouter une semaine</button>
+      </div>
+    </div>
+  );
+
+  // ===== RENDER preview =====
+  const renderPreview = () => (
+    <div style={S.rightPane}>
+      <div style={S.previewHeader}>
+        <div style={S.previewLabel}>Preview en direct</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
+          {weeks.length} sem · {weeks.reduce((a, w) => a + w.seances.length, 0)} seances
+        </div>
+      </div>
+      {previewHTML ? (
+        <iframe
+          title="Preview du programme"
+          srcDoc={previewHTML}
+          style={S.previewIframe}
+          sandbox="allow-same-origin"
+        />
+      ) : (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
+          Generation de la preview...
+        </div>
+      )}
+    </div>
+  );
+
+  // ===== RENDER main =====
+  const totalSeances = weeks.reduce((a, w) => a + w.seances.length, 0);
+
   return (
     <div style={S.wrap}>
       {/* Topbar */}
       <div style={S.topbar}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
           <button onClick={onClose} style={{ ...S.btnGhost, padding: "6px 12px" }}>← Retour</button>
-          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: "1px", color: "rgba(255,255,255,0.7)" }}>RB <span style={{ color: RED }}>Builder</span></span>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", alignSelf: "center" }}>
-            {weeks.length} sem · {weeks.reduce((a, w) => a + w.seances.length, 0)} seances
+          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: "1px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+            RB <span style={{ color: RED }}>Builder</span>
           </span>
-          <button onClick={handleSave} disabled={saving} style={S.btnRed}>
-            {saving ? "Enregistrement..." : "Enregistrer le programme"}
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {isDesktop && (
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>
+              {weeks.length} sem · {totalSeances} seances
+            </span>
+          )}
+          <button onClick={handleSave} disabled={saving} style={{ ...S.btnRed, opacity: saving ? 0.6 : 1 }}>
+            {saving ? "..." : (isDesktop ? "Enregistrer le programme" : "Enregistrer")}
           </button>
         </div>
       </div>
 
-      <div style={S.sidebar}>
-        {/* ===== INFOS PROGRAMME ===== */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={S.sectionLabel}>Programme</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div><div style={S.label}>Nom du programme</div><input style={S.input} value={progName} onChange={e => setProgName(e.target.value)} placeholder="PUSH PULL LEGS" /></div>
-            <div style={S.row2}>
-              <div><div style={S.label}>Objectif</div><input style={S.input} value={objective} onChange={e => setObjective(e.target.value)} placeholder="Prise de masse, seche..." /></div>
-              <div><div style={S.label}>Duree</div><input style={S.input} value={duration} onChange={e => setDuration(e.target.value)} placeholder="6 semaines" /></div>
-            </div>
-            <div style={S.row2}>
-              <div><div style={S.label}>Niveau</div><select style={S.select} value={level} onChange={e => setLevel(e.target.value)}>{LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select></div>
-              <div><div style={S.label}>Tagline</div><input style={S.input} value={tagline} onChange={e => setTagline(e.target.value)} /></div>
-            </div>
-          </div>
+      {/* Mobile : tabs Edit / Preview */}
+      {!isDesktop && (
+        <div style={S.tabsBar} role="tablist">
+          <button
+            role="tab"
+            aria-selected={mobileTab === "edit"}
+            onClick={() => setMobileTab("edit")}
+            style={{ ...S.tabBtn, ...(mobileTab === "edit" ? S.tabBtnActive : {}) }}
+          >
+            Edition
+          </button>
+          <button
+            role="tab"
+            aria-selected={mobileTab === "preview"}
+            onClick={() => setMobileTab("preview")}
+            style={{ ...S.tabBtn, ...(mobileTab === "preview" ? S.tabBtnActive : {}) }}
+          >
+            Preview
+          </button>
         </div>
+      )}
 
-        {/* Client (auto) */}
-        <div style={{ marginBottom: 24, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Client</div>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{client?.full_name || client?.email || "—"}</div>
-        </div>
-
-        {/* Acces programme */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={S.sectionLabel}>Acces au programme</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-            {[{ id: "immediate", label: "Acces immediat" }, { id: "scheduled", label: "Date programmee" }].map(m => (
-              <button key={m.id} onClick={() => setAccessMode(m.id)} style={{ ...S.btnGhost, background: accessMode === m.id ? "rgba(192,57,43,0.12)" : undefined, borderColor: accessMode === m.id ? RED : undefined, color: accessMode === m.id ? RED : undefined }}>{m.label}</button>
-            ))}
-          </div>
-          {accessMode === "scheduled" && (
-            <div><div style={S.label}>Date d'acces</div><input type="datetime-local" style={S.input} value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} /></div>
-          )}
-        </div>
-
-        {/* ===== SEMAINES ===== */}
-        <div style={S.sectionLabel}>Semaines</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {weeks.map((w, wi) => (
-            <div key={w.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, overflow: "hidden" }}>
-              {/* Week header */}
-              <div style={S.weekHeader} onClick={() => updateWeek(w.id, wk => ({ ...wk, open: !wk.open }))}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ background: RED, color: "#fff", fontSize: 8, fontWeight: 700, letterSpacing: "1.5px", padding: "3px 8px", borderRadius: 5, textTransform: "uppercase" }}>S{wi + 1}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>Semaine {wi + 1}</span>
-                </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <button onClick={(e) => { e.stopPropagation(); dupWeek(w.id); }} style={S.btnRemove} title="Dupliquer">⧉</button>
-                  <button onClick={(e) => { e.stopPropagation(); rmWeek(w.id); }} style={S.btnRemove}>×</button>
-                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>{w.open ? "▾" : "▸"}</span>
-                </div>
+      {/* Split content */}
+      <div style={S.mainContainer}>
+        {isDesktop ? (
+          <>
+            <div style={S.leftPane}>{renderForm()}</div>
+            {renderPreview()}
+          </>
+        ) : mobileTab === "edit" ? (
+          <div style={{ ...S.leftPane, flex: 1 }}>{renderForm()}</div>
+        ) : (
+          <div style={{ ...S.rightPane, flex: 1, borderLeft: "none" }}>
+            <div style={S.previewHeader}>
+              <div style={S.previewLabel}>Preview en direct</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
+                {weeks.length} sem · {totalSeances} seances
               </div>
-
-              {/* Week body */}
-              {w.open && (
-                <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-                  {w.seances.map((s, si) => (
-                    <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 8, overflow: "hidden" }}>
-                      {/* Seance header */}
-                      <div style={S.seanceHeader} onClick={() => updateSeance(w.id, s.id, sn => ({ ...sn, open: !sn.open }))}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "2px", color: RED, textTransform: "uppercase" }}>Seance {si + 1}</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>{s.name ? "— " + s.name.toUpperCase() : ""}</span>
-                        </div>
-                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          <button onClick={(e) => { e.stopPropagation(); rmSeance(w.id, s.id); }} style={S.btnRemove}>×</button>
-                          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>{s.open ? "▾" : "▸"}</span>
-                        </div>
-                      </div>
-
-                      {/* Seance body */}
-                      {s.open && (
-                        <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-                          <div style={S.row2}>
-                            <div><div style={S.label}>Nom</div><input style={S.input} value={s.name} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, name: e.target.value }))} placeholder="PUSH / JAMBES / etc." /></div>
-                            <div><div style={S.label}>Description</div><input style={S.input} value={s.desc} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, desc: e.target.value }))} placeholder="Description..." /></div>
-                          </div>
-                          <div><div style={S.label}>Echauffement</div><textarea style={S.textarea} value={s.warmup} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, warmup: e.target.value }))} placeholder="5 min rameur, mobilite epaules..." rows={2} /></div>
-
-                          {/* Exercises */}
-                          {s.exercises.map((ex, ei) => (
-                            <div key={ex.id} style={S.exCard}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span style={{ background: "#1d1b1b", color: "#fff", fontSize: 8, fontWeight: 700, padding: "2px 8px", borderRadius: 4, letterSpacing: "1px" }}>EX {ei + 1}</span>
-                                <button onClick={() => rmEx(w.id, s.id, ex.id)} style={S.btnRemove}>×</button>
-                              </div>
-                              <div><div style={S.label}>Exercice</div><input style={S.input} value={ex.name} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, name: e.target.value }))} placeholder="Developpe couche halteres" /></div>
-                              <div style={S.row4}>
-                                <div><div style={S.label}>Rep.</div><input style={S.input} value={ex.reps} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, reps: e.target.value }))} placeholder="4x8" /></div>
-                                <div><div style={S.label}>Tempo</div><input style={S.input} value={ex.tempo} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, tempo: e.target.value }))} placeholder="30X0" /></div>
-                                <div><div style={S.label}>RIR</div><select style={S.select} value={ex.rir} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, rir: e.target.value }))}>{RIR_OPTS.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
-                                <div><div style={S.label}>Repos</div><input style={S.input} value={ex.rest} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, rest: e.target.value }))} placeholder="2 min" /></div>
-                              </div>
-                              <div style={S.row2}>
-                                <div><div style={S.label}>Charge (kg)</div><input style={S.input} value={ex.charge} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, charge: e.target.value }))} placeholder="80" /></div>
-                                <div style={S.row2}>
-                                  <div><div style={S.label}>Groupe</div><input style={{ ...S.input, textTransform: "uppercase" }} value={ex.group} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, group: e.target.value }))} placeholder="A" maxLength={3} /></div>
-                                  <div><div style={S.label}>Type</div><select style={S.select} value={ex.groupType} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, groupType: e.target.value }))}>{GROUP_TYPES.map(t => <option key={t} value={t}>{t || "Isole"}</option>)}</select></div>
-                                </div>
-                              </div>
-                              <div><div style={S.label}>Lien video YouTube</div><input style={S.input} value={ex.vidUrl} onChange={e => { const url = e.target.value; updateEx(w.id, s.id, ex.id, x => { const id = ytId(url); return { ...x, vidUrl: url, thumbUrl: id && !x.thumbUrl ? "https://img.youtube.com/vi/" + id + "/hqdefault.jpg" : x.thumbUrl }; }); }} placeholder="https://youtube.com/..." /></div>
-                              <div><div style={S.label}>Note technique</div><input style={S.input} value={ex.note} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, note: e.target.value }))} placeholder="Coudes a 45 degres..." /></div>
-                              <div><div style={S.label}>Note motivation</div><input style={{ ...S.input, borderColor: "rgba(192,57,43,0.2)" }} value={ex.motivNote} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, motivNote: e.target.value }))} placeholder="Tu peux faire mieux que la semaine derniere" /></div>
-                            </div>
-                          ))}
-                          <button style={S.btnAdd} onClick={() => addEx(w.id, s.id)}>+ Exercice</button>
-                          <div><div style={S.label}>Finisher (optionnel)</div><textarea style={S.textarea} value={s.finisher} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, finisher: e.target.value }))} placeholder="AMRAP 5 min : 10 burpees, 15 KB swings..." rows={2} /></div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  <button style={S.btnAdd} onClick={() => addSeance(w.id)}>+ Seance</button>
-                </div>
-              )}
             </div>
-          ))}
-          <button style={{ ...S.btnGhost, width: "100%", padding: 12, marginTop: 8 }} onClick={addWeek}>+ Ajouter une semaine</button>
-        </div>
+            {previewHTML ? (
+              <iframe
+                title="Preview du programme"
+                srcDoc={previewHTML}
+                style={S.previewIframe}
+                sandbox="allow-same-origin"
+              />
+            ) : (
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
+                Generation de la preview...
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
