@@ -4,9 +4,13 @@ import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineBanner from "./components/OfflineBanner";
 import { initSentry, captureError } from "./lib/sentry";
+import { applyTheme, getStoredTheme } from "./lib/theme";
 
 // Init Sentry AVANT le render — captures errors during initial mount
 initSentry();
+
+// Init theme avant le render pour eviter le flash
+applyTheme(getStoredTheme());
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

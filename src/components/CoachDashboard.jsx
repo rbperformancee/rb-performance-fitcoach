@@ -26,6 +26,14 @@ import ActivityTimeline from "./coach/ActivityTimeline";
 import AnalyticsSection from "./coach/AnalyticsSection";
 import AchievementsSection from "./coach/AchievementsSection";
 import TransformationView from "./coach/TransformationView";
+import DashboardTabs from "./coach/DashboardTabs";
+import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
+import NotificationBell from "./coach/NotificationBell";
+import CommandPalette from "./coach/CommandPalette";
+import PullToRefreshIndicator from "./PullToRefreshIndicator";
+import usePullToRefresh from "../hooks/usePullToRefresh";
+import ThemeSwitcher from "./ThemeSwitcher";
+import { calculateChurnRisk } from "../lib/coachIntelligence";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 const SUB_PLANS = [
@@ -1829,6 +1837,30 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showCmdK, setShowCmdK] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Effet : si le coach passe sur l'onglet "clients", ouvre la liste full-screen
+  React.useEffect(() => {
+    if (activeTab === "clients") setShowClientList(true);
+  }, [activeTab]);
+
+  // Reciproquement : si la liste est fermee, repasse sur overview
+  React.useEffect(() => {
+    if (!showClientList && activeTab === "clients") setActiveTab("overview");
+  }, [showClientList, activeTab]);
+
+  // Raccourci clavier global : Cmd+K / Ctrl+K ouvre la palette
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowCmdK((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const [newEmail,  setNewEmail]  = useState("");
   const [newName,   setNewName]   = useState("");
   const [toast,     setToast]     = useState(null);
@@ -1903,6 +1935,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   useEffect(() => { loadClients(); }, []);
+
+  // Pull-to-refresh mobile (desactive pendant les overlays full-screen)
+  const ptr = usePullToRefresh({
+    onRefresh: async () => { haptic.success(); await loadClients(); },
+    disabled: showClientList || !!selected || showPipeline || showAnalytics || showCmdK,
+  });
 
   // Systeme de relance automatique (push notifs aux clients inactifs / abos expirants)
   const { sent: relanceSent, sendManualPush } = useClientRelance(clients, true);
@@ -2181,6 +2219,27 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         </ErrorBoundary>
       )}
 
+      <PullToRefreshIndicator pulling={ptr.pulling} progress={ptr.progress} refreshing={ptr.refreshing} />
+
+      <CommandPalette
+        open={showCmdK}
+        onClose={() => setShowCmdK(false)}
+        clients={clients}
+        commands={[
+          { id: "open_client", run: (c) => setSelected(c) },
+          { id: "tab_overview", label: "Vue d'ensemble", group: "Navigation", icon: "chart", run: () => setActiveTab("overview") },
+          { id: "tab_business", label: "Business", desc: "MRR, churn, retention", group: "Navigation", icon: "trending-up", run: () => setActiveTab("business") },
+          { id: "tab_clients", label: "Liste des clients", group: "Navigation", icon: "users", run: () => { setShowClientList(true); setActiveTab("clients"); } },
+          { id: "tab_analytics", label: "Analytics", desc: "Heatmap, correlations", group: "Navigation", icon: "activity", run: () => setShowAnalytics(true) },
+          { id: "tab_achievements", label: "Achievements", desc: "Badges & streak", group: "Navigation", icon: "trophy", run: () => setActiveTab("achievements") },
+          { id: "open_pipeline", label: "Pipeline CRM", desc: "Kanban des clients", group: "Actions", icon: "view", run: () => setShowPipeline(true) },
+          { id: "action_add_client", label: "Ajouter un client", group: "Actions", icon: "plus", run: () => { setShowClientList(true); setShowAdd(true); } },
+          { id: "action_refresh", label: "Rafraichir les donnees", group: "Actions", icon: "refresh", run: () => loadClients() },
+          ...(onSwitchToSuperAdmin ? [{ id: "nav_superadmin", label: "Super Admin (CEO)", group: "Navigation", icon: "chart", run: () => onSwitchToSuperAdmin() }] : []),
+          { id: "action_exit", label: "Quitter le dashboard coach", group: "Actions", icon: "arrow-left", run: () => onExit?.() },
+        ]}
+      />
+
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 28px 80px", position: "relative" }}>
         {/* Ambient */}
         <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 800, height: 400, background: "radial-gradient(ellipse at center, rgba(2,209,186,0.06), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
@@ -2208,6 +2267,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 )}
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
+                <ThemeSwitcher />
                 <button onClick={loadClients} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 4 }}>
                   <Icon name="refresh" size={14} />
                 </button>
@@ -2353,33 +2414,83 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             </div>
           )}
 
-          {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
+          {/* ========== ONBOARDING WIZARD (nouveau coach 0 client) ========== */}
+          {!showClientList && coachData && !loading && clients.length === 0 && (
+            <>
+              <CoachOnboardingWizard
+                coach={coachData}
+                onScrollToInvitation={() => {
+                  const el = document.getElementById("invitation-panel-anchor");
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+              />
+              <div id="invitation-panel-anchor" style={{ marginBottom: 28 }}>
+                <InvitationPanel coach={coachData} />
+              </div>
+            </>
+          )}
+
+          {/* ========== TABS NAVIGATION ========== */}
           {!showClientList && coachData && clients.length > 0 && (
+            <DashboardTabs
+              active={activeTab}
+              onChange={setActiveTab}
+              alerts={clients.filter((c) => calculateChurnRisk(c) >= 40 || (c.subscription_end_date && new Date(c.subscription_end_date) < new Date(Date.now() + 14 * 86400000))).length}
+            />
+          )}
+
+          {/* ========== VUE D'ENSEMBLE (overview = churn + invitation) ========== */}
+          {!showClientList && (activeTab === "overview" || clients.length === 0) && (
+            <>
+              {clients.length > 0 && <ChurnAlertsSection clients={clients} onOpenClient={(c) => setSelected(c)} />}
+              {coachData && (
+                <div id="invitation-panel-anchor" style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
+                  <InvitationPanel coach={coachData} />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
+          {!showClientList && activeTab === "business" && coachData && clients.length > 0 && (
             <BusinessSection coachData={coachData} clients={clients} />
           )}
 
-          {/* ========== CLIENTS A RISQUE (intelligence predictive) ========== */}
-          {!showClientList && clients.length > 0 && (
-            <ChurnAlertsSection clients={clients} onOpenClient={(c) => setSelected(c)} />
-          )}
-
           {/* ========== ACHIEVEMENTS (badges + streak + rank) ========== */}
-          {!showClientList && coachData && clients.length > 0 && (
+          {!showClientList && activeTab === "achievements" && coachData && clients.length > 0 && (
             <AchievementsSection coachData={coachData} clients={clients} />
           )}
 
-          {/* ========== INVITATION CLIENTS (code + lien) ========== */}
-          {!showClientList && coachData && (
-            <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
-              <InvitationPanel coach={coachData} />
+          {/* ========== ANALYTICS (placeholder, ouvre le full overlay) ========== */}
+          {!showClientList && activeTab === "analytics" && clients.length > 0 && (
+            <div style={{ marginBottom: 28 }}>
+              <button
+                onClick={() => { haptic.light(); setShowAnalytics(true); }}
+                style={{
+                  width: "100%", padding: "20px",
+                  background: "linear-gradient(135deg, rgba(167,139,250,0.08), rgba(2,209,186,0.04))",
+                  border: "1px solid rgba(167,139,250,0.25)",
+                  borderRadius: 18, color: "#fff", cursor: "pointer", fontFamily: "inherit",
+                  display: "flex", alignItems: "center", gap: 14, textAlign: "left",
+                }}
+              >
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon name="chart" size={20} color="#a78bfa" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 3 }}>Ouvrir Analytics avancees</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Heatmap, correlations, performance programmes</div>
+                </div>
+                <Icon name="arrow-right" size={14} color="rgba(255,255,255,0.4)" />
+              </button>
             </div>
           )}
 
           {/* ========== CTA VOIR TOUS LES CLIENTS ========== */}
-          {!showClientList && (
+          {!showClientList && activeTab !== "clients" && (
             <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.2s both" }}>
               <button
-                onClick={() => setShowClientList(true)}
+                onClick={() => { setShowClientList(true); setActiveTab("clients"); }}
                 style={{
                   width: "100%", padding: 18,
                   background: "linear-gradient(135deg, " + G + ", #0891b2)",

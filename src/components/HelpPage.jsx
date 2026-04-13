@@ -225,6 +225,37 @@ export default function HelpPage({ onClose }) {
           ))}
         </div>
 
+        {/* Keyboard shortcuts (desktop) */}
+        <div style={{ marginTop: 28, padding: 20, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <AppIcon name="keyboard" size={16} color="rgba(255,255,255,0.7)" />
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>
+              Raccourcis clavier
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {[
+              { keys: ["⌘", "K"], label: "Palette de commandes (rechercher / naviguer)" },
+              { keys: ["⌘", "/"], label: "Ouvrir l'aide" },
+              { keys: ["Esc"], label: "Fermer un panneau ouvert" },
+              { keys: ["↑", "↓"], label: "Naviguer dans une liste" },
+              { keys: ["↵"], label: "Valider l'element selectionne" },
+            ].map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8 }}>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)" }}>{s.label}</div>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {s.keys.map((k, ki) => (
+                    <kbd key={ki} style={{ fontSize: 10, color: "rgba(255,255,255,0.85)", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 5, padding: "2px 7px", fontFamily: "'JetBrains Mono',monospace", minWidth: 18, textAlign: "center" }}>{k}</kbd>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 10, lineHeight: 1.5 }}>
+            Sur Windows / Linux, utilise <kbd style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.05)", padding: "1px 4px", borderRadius: 3 }}>Ctrl</kbd> a la place de <kbd style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.05)", padding: "1px 4px", borderRadius: 3 }}>⌘</kbd>.
+          </div>
+        </div>
+
         {/* Contact coach CTA */}
         <div style={{ marginTop: 28, padding: 20, background: `${G}08`, border: `1px solid ${G}25`, borderRadius: 16, textAlign: "center" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: G, marginBottom: 8 }}>Pas de reponse ?</div>

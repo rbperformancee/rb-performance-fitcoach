@@ -61,6 +61,7 @@ import ProgrammeSignature from "./components/ProgrammeSignature";
 import ProgrammeCountdown from "./components/ProgrammeCountdown";
 const SaasLandingPage = lazy(() => import("./components/SaasLandingPage"));
 const CoachCodeGate = lazy(() => import("./components/CoachCodeGate"));
+const HelpPage = lazy(() => import("./components/HelpPage"));
 
 import Spinner from "./components/Spinner";
 
@@ -464,6 +465,19 @@ function AppInner() {
   }, [client?.id, isCoach, permission, requestPermission]);
   const [splashDone, setSplashDone] = React.useState(false);
   const [showCoachDash, setShowCoachDash] = useState(true);
+  const [showGlobalHelp, setShowGlobalHelp] = useState(false);
+
+  // Raccourci clavier global : Cmd+/ ou Ctrl+/ ouvre l'aide
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "/") {
+        e.preventDefault();
+        setShowGlobalHelp((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Programme (cloud si connecté, sinon local)
   const [localProgramme,  setLocalProgramme]  = useState(null);
@@ -1202,6 +1216,11 @@ function AppInner() {
         )}
       </div>
         </>
+      )}
+      {showGlobalHelp && (
+        <Suspense fallback={null}>
+          <HelpPage onClose={() => setShowGlobalHelp(false)} />
+        </Suspense>
       )}
     </div>
   );
