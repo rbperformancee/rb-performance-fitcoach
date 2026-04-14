@@ -230,9 +230,12 @@ input:focus {
 }
 
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@200;400;500;700&display=swap');
 
 :root {
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'DM Sans', -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
   --bg: #050505;
   --bg-2: rgba(255,255,255,0.025);
   --bg-3: rgba(255,255,255,0.04);
@@ -309,28 +312,37 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* ── NAV TABS (bottom) ── */
 .bottom-nav {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 100%; max-width: 680px;
-  background: rgba(13,13,13,0.97);
-  border-top: 1px solid var(--border);
-  display: flex;
-  backdrop-filter: blur(20px);
-  z-index: 99;
+  background: rgba(10,10,10,0.97) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-top: 1px solid rgba(255,255,255,0.05) !important;
+  padding: 8px 16px calc(env(safe-area-inset-bottom,0px) + 8px) !important;
+  display: flex !important;
+  justify-content: space-around !important;
+  align-items: center !important;
 }
 .nav-tab {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; padding: 10px 0;
-  background: none; border: none; cursor: pointer;
-  color: var(--text-3); font-family: var(--font);
-  font-size: 9.5px; font-weight: 600; letter-spacing: 0.3px;
-  transition: color 0.15s; position: relative;
+  padding: 8px 16px !important;
+  border-radius: 100px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s cubic-bezier(0.22,1,0.36,1) !important;
+  border: none !important;
+  background: transparent !important;
 }
-.nav-tab svg { width: 20px; height: 20px; }
-.nav-tab.active { color: var(--accent); }
-.nav-tab.active::after {
-  content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 24px; height: 2px; background: var(--accent); border-radius: 0 0 3px 3px;
+.nav-tab.active {
+  background: #02d1ba !important;
+  color: #000 !important;
 }
+.nav-tab.active svg,
+.nav-tab.active path,
+.nav-tab.active circle,
+.nav-tab.active line,
+.nav-tab.active polyline {
+  stroke: #000 !important;
+}
+.nav-tab.active::after { display: none !important; }
 
 /* ── IMPORT SCREEN ── */
 .import-screen { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 24px 100px; }

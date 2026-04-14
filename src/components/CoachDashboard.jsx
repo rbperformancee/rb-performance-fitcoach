@@ -2152,9 +2152,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "'DM Sans', -apple-system, sans-serif", color: "#fff" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@200;400;500;700&display=swap');
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
@@ -2281,7 +2281,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
             {/* Phrase d'action a gauche */}
             <div style={{ flex: 1, minWidth: 280 }}>
-              <h1 style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-2.5px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(38px, 7vw, 60px)", fontWeight: 900, letterSpacing: "-2.5px", color: "#fff", margin: 0, lineHeight: 0.92 }}>
                 {total} client{total > 1 ? "s" : ""}.
                 <br />
                 {urgentCount > 0 ? (
@@ -2301,33 +2301,85 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   { v: inactiveAlerts, l: "inactifs", c: inactiveAlerts > 0 ? RED : "rgba(255,255,255,0.3)" },
                 ].map((s, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 700, color: s.c }}>{s.v}</span>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: s.c, letterSpacing: "-1px" }}>{s.v}</span>
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>{s.l}</span>
                   </div>
                 ))}
               </div>
+
+              {/* Citation motivationnelle (uniquement si tout roule) */}
+              {urgentCount === 0 && total > 0 && (
+                <div style={{
+                  marginTop: 16,
+                  fontSize: 11,
+                  fontStyle: "italic",
+                  color: "rgba(255,255,255,0.18)",
+                  letterSpacing: "0.03em",
+                  lineHeight: 1.6,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}>
+                  " Tes clients progressent. Continue sur cette lancée. "
+                  <span style={{
+                    display: "block",
+                    fontStyle: "normal",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: "2.5px",
+                    textTransform: "uppercase",
+                    color: G,
+                    marginTop: 4,
+                  }}>RB PERFORM</span>
+                </div>
+              )}
             </div>
 
-            {/* Score Business a droite — gros chiffre seul */}
+            {/* Score Business a droite — anneau SVG progress */}
             <div style={{
-              flexShrink: 0, width: 140, textAlign: "center",
-              background: "rgba(255,255,255,0.025)",
-              border: `1px solid ${scoreColor}30`,
-              borderRadius: 24, padding: "24px 16px 20px",
-              position: "relative", overflow: "hidden",
-              animation: "fadeUp 0.5s ease both",
+              position: "relative",
+              width: 120, height: 120,
+              flexShrink: 0,
             }}>
-              <div style={{ position: "absolute", top: -30, left: "50%", transform: "translateX(-50%)", width: 160, height: 160, background: `radial-gradient(circle, ${scoreColor}20, transparent 70%)`, pointerEvents: "none" }} />
-              <div style={{ position: "relative" }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 56, fontWeight: 200, color: scoreColor, letterSpacing: "-4px", lineHeight: 1 }}>
-                  {businessScore}
-                </div>
-                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: scoreColor, marginTop: 8, opacity: 0.8 }}>
-                  Score
-                </div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
-                  {scoreLabel}
-                </div>
+              <svg
+                width="120" height="120"
+                viewBox="0 0 120 120"
+                style={{ position:"absolute", top:0, left:0, transform:"rotate(-90deg)" }}
+              >
+                <circle cx="60" cy="60" r="50"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.04)"
+                  strokeWidth="3.5"
+                />
+                <circle cx="60" cy="60" r="50"
+                  fill="none"
+                  stroke={scoreColor}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 50}`}
+                  strokeDashoffset={`${2 * Math.PI * 50 * (1 - businessScore / 100)}`}
+                  style={{ transition: "stroke-dashoffset 1s ease" }}
+                />
+              </svg>
+              <div style={{
+                position: "absolute", inset: 0,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                gap: 2,
+              }}>
+                <div style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 34, fontWeight: 200,
+                  color: scoreColor, letterSpacing: "-2px",
+                  lineHeight: 1,
+                }}>{businessScore}</div>
+                <div style={{
+                  fontSize: 8, fontWeight: 700,
+                  letterSpacing: "2.5px", textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.25)",
+                }}>Score</div>
+                <div style={{
+                  fontSize: 9, fontWeight: 600,
+                  color: scoreColor, opacity: 0.8,
+                }}>{scoreLabel}</div>
               </div>
             </div>
           </div>
@@ -2346,7 +2398,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   borderRadius: 16, padding: "16px 14px",
                 }}>
                   <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 200, color: m.color, letterSpacing: "-1px" }}>{m.value}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: m.color, letterSpacing: "-1px" }}>{m.value}</div>
                   {m.sub && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{m.sub}</div>}
                 </div>
               ))}
