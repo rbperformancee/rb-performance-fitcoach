@@ -90,8 +90,12 @@
 /* Navigation par chapitres : pas de scroll global */
 html,body{overflow:hidden;height:100%}
 /* Chaque section = ecran fullscreen, switching via .active */
+/* Chaque section a un fond opaque pour couvrir les sections derriere */
+section{background:#080808 !important}
 section{position:fixed !important;inset:0 !important;width:100% !important;height:100% !important;opacity:0 !important;pointer-events:none !important;background:#080808 !important;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1) !important;overflow-y:auto !important;z-index:1 !important;-webkit-overflow-scrolling:touch}
 section.active{opacity:1 !important;pointer-events:all !important;background:#080808 !important;z-index:10 !important}
+/* Neutraliser les backgrounds des classes internes qui viendraient se superposer */
+section.manifeste,section.how,section.product-reveal,section.bento,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080808 !important}
 section.hero{overflow:hidden !important}
 .gsap-override *{opacity:1 !important;transform:none !important;visibility:visible !important}
 :root{--orange:#f97316;--orange-bright:#fb923c;--teal:#02d1ba;--teal-bright:#5ee8d4;--violet:#a78bfa;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
