@@ -646,17 +646,16 @@ section.client-view::-webkit-scrollbar{display:none}
   font-weight:400;
 }
 
-/* ========== FOOTER ========== */
-footer{padding:60px 24px 40px;background:var(--dark);border-top:1px solid var(--border)}
-.footer-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
-.footer-logo{display:inline-flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2.5px;line-height:1}
-.footer-logo svg{flex-shrink:0}
-.footer-logo b{color:var(--teal);font-weight:400;letter-spacing:3px}
-.footer-tagline{font-size:12px;color:var(--text-dimmer);margin-top:6px;letter-spacing:0.3px}
-.footer-links{display:flex;gap:24px;flex-wrap:wrap}
-.footer-links a{font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:0.5px;transition:color 0.2s;padding:6px 0;display:inline-block}
-.footer-links a:hover{color:#fff}
-.footer-copy{width:100%;padding-top:24px;margin-top:24px;border-top:1px solid var(--border);font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:1.5px;text-transform:uppercase;text-align:center;font-weight:600}
+/* ========== FOOTER (refonte 4 colonnes) ========== */
+footer{background:#000;border-top:.5px solid rgba(255,255,255,.06);padding:52px 64px 44px;position:relative;z-index:20}
+.footer-inner{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:48px;max-width:1100px;margin:0 auto;align-items:start}
+.footer-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:900;letter-spacing:.1em;color:#fff;margin-bottom:12px;display:inline-block}
+.footer-logo span{color:#02d1ba}
+.footer-tagline{font-size:13px;color:rgba(255,255,255,.3);line-height:1.65;margin-bottom:16px;font-weight:300}
+.footer-legal-note{font-size:10px;color:rgba(255,255,255,.15);line-height:1.8;letter-spacing:.03em}
+.footer-col-label{font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.18);margin-bottom:14px}
+.footer-link{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.35);text-decoration:none;margin-bottom:10px;letter-spacing:.03em;transition:color .2s;font-weight:300}
+.footer-link:hover{color:#02d1ba}
 
 /* ========== LIGHT MODE (toggle) ========== */
 html.light{--dark:#fafaf9;--dark2:#f5f5f4;--dark3:#fff;--text:#0a0a0a;--text-dim:rgba(0,0,0,0.65);--text-dimmer:rgba(0,0,0,0.4);--border:rgba(0,0,0,0.08);--border-strong:rgba(0,0,0,0.14)}
@@ -1161,9 +1160,8 @@ html.light .founder-message strong{color:#0a0a0a}
   .pricing{padding:80px 20px}
   .plans{grid-template-columns:1fr;gap:16px}
   .cta-final .cta-inner{padding:80px 20px;gap:22px}
-  footer{padding:50px 20px 32px}
-  .footer-inner{justify-content:center;text-align:center}
-  .footer-links{justify-content:center}
+  footer{padding:44px 22px 32px}
+  .footer-inner{grid-template-columns:1fr;gap:32px}
 }
 @media(max-width:420px){
   .iphone{width:300px;height:610px}
@@ -1993,22 +1991,42 @@ html.light .founder-message strong{color:#0a0a0a}
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
-    <div>
-      <div class="footer-logo" aria-label="RB Perform">
-        <svg viewBox="170 50 180 410" width="12" height="28" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba"/>
-        </svg>
-        <span>RB <b>PERFORM</b></span>
+    <div class="footer-brand">
+      <div class="footer-logo" aria-label="RB Perform">RB<span>PERFORM</span></div>
+      <div class="footer-tagline">
+        Le système qui transforme<br>chaque coach en CEO.
       </div>
-      <div class="footer-tagline">La performance sans compromis.</div>
+      <div class="footer-legal-note">
+        © 2026 Rayan Bonte — Micro-entrepreneur<br>
+        SIRET 990 637 803 00018<br>
+        Avignon, France
+      </div>
     </div>
-    <div class="footer-links">
-      <a href="https://rb-perfor.vercel.app" target="_blank" rel="noopener">Accéder à l'app</a>
-      <a href="#features">Features</a>
-      <a href="#pricing">Tarifs</a>
-      <a href="mailto:rb.performancee@gmail.com">Contact</a>
+
+    <div class="footer-col">
+      <div class="footer-col-label">Suivre</div>
+      <a href="https://www.instagram.com/rb_perform/" target="_blank" rel="noopener" class="footer-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <rect x="2" y="2" width="20" height="20" rx="5"/>
+          <circle cx="12" cy="12" r="5"/>
+          <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+        @rb_perform
+      </a>
     </div>
-    <div class="footer-copy">© 2026 RB Perform · SIRET 99063780300018</div>
+
+    <div class="footer-col">
+      <div class="footer-col-label">Légal</div>
+      <a href="/legal.html" class="footer-link">Mentions légales</a>
+      <a href="/legal.html#rgpd" class="footer-link">Confidentialité &amp; RGPD</a>
+      <a href="/legal.html#cgu" class="footer-link">CGU / CGV</a>
+    </div>
+
+    <div class="footer-col">
+      <div class="footer-col-label">Contact</div>
+      <a href="mailto:rb.performancee@gmail.com" class="footer-link">rb.performancee@gmail.com</a>
+      <a href="https://rb-perfor.vercel.app" class="footer-link">Accéder à l'app →</a>
+    </div>
   </div>
 </footer>
 
