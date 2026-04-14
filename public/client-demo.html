@@ -3,51 +3,62 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RB Perform — Client Demo</title>
+<title>RB Perform — Vue client · Démo interactive</title>
+<meta name="description" content="Vue client RB Perform — demo interactive pixel-perfect de l'app client (suivi, programme, nutrition, profil)." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@100;200;300;400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@100;200;300;400;500;700&display=swap" rel="stylesheet" />
 <style>
+  /* ===== VARIABLES (src/App.css) ===== */
   :root{
-    --G:#02d1ba;
-    --G2:rgba(2,209,186,.1);
-    --G3:rgba(2,209,186,.2);
+    --accent:#02d1ba;
+    --accent-dim:rgba(2,209,186,0.12);
+    --accent-glow:rgba(2,209,186,0.25);
+    --bg:#050505;
+    --bg-2:rgba(255,255,255,0.025);
+    --bg-3:rgba(255,255,255,0.04);
+    --border:rgba(255,255,255,0.06);
+    --border-2:rgba(255,255,255,0.1);
+    --text:#f5f5f5;
+    --text-2:#9ca3af;
+    --text-3:#4b5563;
+    --radius:16px;
+    --shadow:0 4px 24px rgba(0,0,0,0.4);
+    /* Complements */
     --red:#ef4444;
     --orange:#f97316;
     --violet:#a78bfa;
-    --yellow:#eab308;
+    --yellow:#fbbf24;
     --blue:#60a5fa;
-    --bg:#000;
-    --bg2:#0a0a0a;
-    --border:rgba(255,255,255,.07);
-    --text:rgba(255,255,255,.85);
-    --text2:rgba(255,255,255,.4);
-    --text3:rgba(255,255,255,.2);
+    --green-up:#34d399;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
     background:#111;
+    color:var(--text);
     font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
-    color:#fff;
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
     min-height:100vh;
     display:flex;
     align-items:center;
     justify-content:center;
-    padding:40px 20px;
+    padding:40px 20px 60px;
+    overflow:hidden;
   }
 
-  /* ================ IPHONE FRAME ================ */
+  /* ===== IPHONE FRAME ===== */
   .phone-frame{
     position:relative;
     width:390px;
     height:844px;
-    background:#000;
+    background:var(--bg);
     border-radius:54px;
     border:1px solid rgba(255,255,255,.12);
-    box-shadow:0 80px 160px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.05);
+    box-shadow:
+      0 80px 160px rgba(0,0,0,.8),
+      inset 0 0 0 1px rgba(255,255,255,.05);
     overflow:hidden;
     flex-shrink:0;
   }
@@ -71,21 +82,25 @@
     align-items:center;
     justify-content:space-between;
     padding:0 34px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:13px;
-    font-weight:400;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    font-weight:600;
     color:#fff;
-    letter-spacing:.02em;
     z-index:20;
     pointer-events:none;
   }
-  .statusbar .right{display:flex;gap:6px;align-items:center;opacity:.85;font-size:11px}
+  .statusbar .right{
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:.02em;
+    opacity:.9;
+  }
 
-  /* ================ PAGES ================ */
+  /* ===== PAGES ===== */
   .page{
     position:absolute;
     inset:0;
-    padding:54px 22px 100px;
+    padding:56px 0 104px;
     overflow-y:auto;
     overflow-x:hidden;
     scrollbar-width:none;
@@ -95,526 +110,1110 @@
     -webkit-overflow-scrolling:touch;
   }
   .page::-webkit-scrollbar{display:none}
-  .page.active{opacity:1;pointer-events:all}
+  .page.active{opacity:1;pointer-events:all;animation:pageSlideIn .3s cubic-bezier(0.22,1,0.36,1) both}
+  @keyframes pageSlideIn{
+    from{opacity:0;transform:translateY(12px)}
+    to{opacity:1;transform:translateY(0)}
+  }
 
-  /* Common bits */
+  /* Common primitives */
   .eyebrow{
     font-size:10px;
-    font-weight:700;
-    letter-spacing:.22em;
+    font-weight:600;
+    letter-spacing:3px;
     text-transform:uppercase;
     color:rgba(2,209,186,.55);
-    margin-bottom:8px;
+    margin-bottom:10px;
   }
   .big-title{
     font-family:'Syne',sans-serif;
     font-size:52px;
-    font-weight:900;
+    font-weight:800;
     color:#fff;
     letter-spacing:-3px;
-    line-height:.9;
+    line-height:.92;
   }
-  .big-title .dot{color:var(--G)}
-  .italic-date{
-    font-size:13px;
-    color:rgba(255,255,255,.3);
-    font-style:italic;
-    margin-top:4px;
-    letter-spacing:.02em;
-  }
+  .big-title .dot{color:var(--accent)}
 
-  /* ========= PAGE HOME ========= */
+  /* =========================================================
+     PAGE 1 — HOME (extrait de src/App.jsx showHome, l. 830-928)
+     ========================================================= */
   #page-home{
-    background:radial-gradient(ellipse 80% 50% at 50% -20%, rgba(2,209,186,.12), transparent 60%), #000;
+    background:var(--bg);
   }
+  #page-home::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:60%;
+    background:radial-gradient(ellipse at 50% -10%, rgba(2,209,186,.15) 0%, transparent 60%);
+    pointer-events:none;
+    z-index:0;
+  }
+  #page-home::after{
+    content:'';
+    position:absolute;
+    bottom:0;left:0;right:0;
+    height:40%;
+    background:radial-gradient(ellipse at 50% 120%, rgba(2,209,186,.06) 0%, transparent 60%);
+    pointer-events:none;
+    z-index:0;
+  }
+  #page-home > *{position:relative;z-index:1}
+
   .home-top{
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
-    margin-bottom:18px;
+    padding:12px 28px 0;
+    gap:12px;
   }
-  .home-eyebrow-date{
+  .home-date{
     font-size:10px;
-    font-weight:700;
-    letter-spacing:.22em;
+    font-weight:600;
+    letter-spacing:3px;
     text-transform:uppercase;
-    color:rgba(255,255,255,.25);
+    color:rgba(255,255,255,.2);
+    margin-bottom:12px;
   }
-  .home-greeting{
-    font-size:14px;
-    color:rgba(255,255,255,.35);
-    margin-top:8px;
+  .home-greet{
+    font-size:11px;
     font-weight:400;
+    color:rgba(255,255,255,.25);
+    letter-spacing:1px;
+    margin-bottom:6px;
   }
   .home-name{
     font-family:'Syne',sans-serif;
-    font-size:72px;
-    font-weight:900;
-    color:#fff;
-    letter-spacing:-4px;
-    line-height:.85;
-    margin-top:4px;
-  }
-  .home-time{
-    font-family:'JetBrains Mono',monospace;
-    font-size:28px;
-    font-weight:200;
-    color:rgba(255,255,255,.3);
-    letter-spacing:-1px;
-  }
-  .obj-ring{position:relative;width:96px;height:96px;margin:20px 0 36px auto}
-  .obj-ring-n{
-    position:absolute;inset:0;
-    display:flex;flex-direction:column;
-    align-items:center;justify-content:center;
-  }
-  .obj-ring-n .n{
-    font-family:'JetBrains Mono',monospace;
-    font-size:24px;font-weight:200;color:var(--G);
-    letter-spacing:-1px;line-height:1;
-  }
-  .obj-ring-n .l{
-    font-size:7px;font-weight:700;letter-spacing:.2em;
-    text-transform:uppercase;color:rgba(255,255,255,.3);
-    margin-top:2px;
-  }
-
-  .quote-label{
-    font-size:10px;
-    font-weight:700;
-    letter-spacing:.2em;
-    text-transform:uppercase;
-    color:var(--G);
-    margin-bottom:12px;
-  }
-  .quote-body{
-    font-family:'Syne',sans-serif;
-    font-size:clamp(22px, 5vw, 28px);
-    font-weight:900;
-    color:#fff;
-    letter-spacing:-1px;
-    line-height:1.15;
-    margin-bottom:28px;
-    word-break:break-word;
-  }
-  .quote-body .accent{color:var(--G)}
-  .tc-sep{
-    height:1px;
-    background:linear-gradient(90deg, transparent, rgba(2,209,186,.3), transparent);
-    margin:24px 0;
-  }
-  .home-stats{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:12px;
-    margin-top:20px;
-  }
-  .home-stat{text-align:center}
-  .home-stat-n{
-    font-family:'JetBrains Mono',monospace;
-    font-size:42px;
-    font-weight:200;
+    font-size:44px;
+    font-weight:800;
     color:#fff;
     letter-spacing:-2px;
     line-height:1;
+    word-break:break-word;
+    max-width:54vw;
   }
-  .home-stat-l{
-    font-size:8px;
+  .home-right{text-align:right}
+  .home-time{
+    font-family:'JetBrains Mono',monospace;
+    font-size:38px;
+    font-weight:100;
+    color:rgba(255,255,255,.8);
+    letter-spacing:-2px;
+    font-variant-numeric:tabular-nums;
+    line-height:1;
+  }
+  .home-ring{
+    position:relative;
+    width:52px;
+    height:52px;
+    margin-top:12px;
+    margin-left:auto;
+  }
+  .home-ring-n{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;
     font-weight:700;
-    letter-spacing:.2em;
+    color:var(--accent);
+  }
+
+  .home-quote-section{padding:36px 28px 0}
+  .home-quote-label{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:rgba(2,209,186,.5);
+    margin-bottom:16px;
+  }
+  .home-quote-body{
+    font-size:22px;
+    font-weight:900;
+    color:rgba(255,255,255,.92);
+    line-height:1.35;
+    letter-spacing:-.3px;
+  }
+  .home-quote-body .first{color:var(--accent);margin-right:6px;display:inline-block}
+  .home-quote-body .word{color:rgba(255,255,255,.9);margin-right:6px;display:inline-block}
+
+  .home-divider{
+    margin:28px 28px 0;
+    height:1px;
+    background:linear-gradient(90deg,rgba(2,209,186,.3) 0%,rgba(255,255,255,.05) 100%);
+  }
+
+  .home-prog{padding:24px 28px 0}
+  .home-prog-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .home-prog-label{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.2);
+  }
+  .home-prog-chips{display:flex;gap:6px}
+  .home-prog-chip{
+    font-size:10px;
+    font-weight:600;
+    border-radius:20px;
+    padding:3px 10px;
+  }
+  .home-prog-chip.teal{
+    color:rgba(2,209,186,.7);
+    background:rgba(2,209,186,.1);
+    border:1px solid rgba(2,209,186,.2);
+  }
+  .home-prog-chip.grey{
+    color:rgba(255,255,255,.3);
+    background:rgba(255,255,255,.05);
+  }
+  .home-prog-name{
+    font-family:'Syne',sans-serif;
+    font-size:30px;
+    font-weight:800;
+    color:#fff;
+    letter-spacing:-1px;
+  }
+  .home-prog-bar{
+    margin-top:14px;
+    height:2px;
+    background:rgba(255,255,255,.06);
+    border-radius:1px;
+  }
+  .home-prog-fill{
+    height:100%;
+    background:var(--accent);
+    border-radius:1px;
+    box-shadow:0 0 12px rgba(2,209,186,.6);
+    transition:width 1s ease;
+  }
+
+  .home-stats{
+    padding:24px 28px 0;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:12px;
+  }
+  .home-stat{
+    border-top:1px solid rgba(255,255,255,.06);
+    padding-top:14px;
+  }
+  .home-stat-val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:32px;
+    font-weight:200;
+    letter-spacing:-1.5px;
+    line-height:1;
+  }
+  .home-stat-lbl{
+    font-size:9px;
+    font-weight:600;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.2);
+    margin-top:6px;
+  }
+
+  /* =========================================================
+     PAGE 2 — BODY (src/components/WeightChart.jsx l. 113-399)
+     ========================================================= */
+  #page-body{padding-left:0;padding-right:0;padding:56px 0 104px}
+  .body-hero{padding:8px 24px 0}
+  .body-weight-row{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    margin-top:18px;
+    gap:16px;
+  }
+  .body-weight-num{
+    display:flex;
+    align-items:flex-end;
+    gap:2px;
+  }
+  .body-weight-main{
+    font-family:'JetBrains Mono',monospace;
+    font-size:88px;
+    font-weight:100;
+    letter-spacing:-6px;
+    color:#fff;
+    line-height:1;
+  }
+  .body-weight-dec{
+    font-family:'JetBrains Mono',monospace;
+    font-size:36px;
+    font-weight:200;
+    color:rgba(255,255,255,.35);
+    letter-spacing:-2px;
+    padding-bottom:12px;
+  }
+  .body-unit{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:3px;
     text-transform:uppercase;
     color:rgba(255,255,255,.3);
     margin-top:8px;
   }
-
-  /* ========= PAGE BODY ========= */
-  #page-body{background:#000}
-  .body-header{margin-bottom:8px}
-  .body-weight-row{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    margin-top:14px;
-  }
-  .body-weight{
-    font-family:'JetBrains Mono',monospace;
-    font-size:88px;
-    font-weight:100;
-    color:#fff;
-    letter-spacing:-5px;
-    line-height:1;
-  }
-  .body-weight .dec{font-size:44px;color:rgba(255,255,255,.35);font-weight:100}
-  .body-unit{
-    font-size:9px;
-    font-weight:700;
-    letter-spacing:.22em;
-    text-transform:uppercase;
-    color:rgba(255,255,255,.3);
-    margin-top:4px;
-  }
   .body-goal-ring{
-    position:relative;width:64px;height:64px;flex-shrink:0;margin-top:8px;
+    position:relative;
+    width:64px;
+    height:64px;
+    flex-shrink:0;
   }
-  .body-goal-ring-inner{
-    position:absolute;inset:0;
-    display:flex;flex-direction:column;
-    align-items:center;justify-content:center;
-  }
-  .body-goal-ring-inner .n{
-    font-family:'JetBrains Mono',monospace;
-    font-size:14px;font-weight:300;color:var(--G);
-  }
-  .body-goal-ring-inner .l{
-    font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);
-  }
-
-  .body-badge-red{
+  .body-badge{
     display:inline-flex;
     align-items:center;
     gap:7px;
-    padding:6px 12px;
-    background:rgba(239,68,68,.08);
-    border:.5px solid rgba(239,68,68,.25);
+    padding:5px 12px;
     border-radius:100px;
-    font-size:11px;font-weight:600;color:var(--red);
+    font-size:11px;
+    font-weight:600;
     margin-top:16px;
     letter-spacing:.02em;
   }
-  .body-badge-red .d{width:5px;height:5px;border-radius:50%;background:var(--red)}
+  .body-badge.up{
+    background:rgba(239,68,68,.08);
+    border:1px solid rgba(239,68,68,.2);
+    color:rgba(239,68,68,.9);
+  }
+  .body-badge.up .d{width:6px;height:6px;border-radius:50%;background:var(--red)}
+
   .body-quote{
     margin-top:18px;
     font-size:12px;
-    font-style:italic;
     color:rgba(255,255,255,.25);
+    font-style:italic;
     line-height:1.6;
+    padding:0 24px;
   }
   .body-quote .sig{
     display:block;
     font-style:normal;
     font-size:9px;
     font-weight:700;
-    letter-spacing:.25em;
-    color:var(--G);
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--accent);
     margin-top:6px;
   }
 
-  .body-graph{
-    margin-top:24px;
+  .body-graph-wrap{
+    margin:22px 24px 0;
     background:rgba(255,255,255,.02);
-    border:.5px solid rgba(255,255,255,.05);
-    border-radius:16px;
-    padding:16px 14px 10px;
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:18px;
+    padding:16px 16px 12px;
+    position:relative;
   }
-  .body-graph svg{display:block;width:100%;height:120px}
+  .body-graph-wrap svg{display:block;width:100%;height:120px}
 
   .body-stats-row{
     display:grid;
-    grid-template-columns:repeat(3,1fr);
-    margin-top:18px;
-    padding-top:14px;
-    border-top:.5px solid rgba(255,255,255,.05);
+    grid-template-columns:1fr 1fr 1fr;
+    margin:18px 24px 0;
   }
-  .body-stat{padding:0 8px;text-align:center;position:relative}
-  .body-stat-mid{border-top:2px solid var(--G);padding-top:12px;margin-top:-14px}
-  .body-stat-n{
+  .body-stat{padding:14px 8px 0;text-align:center;border-top:1px solid rgba(255,255,255,.06)}
+  .body-stat.mid{border-top:2px solid var(--accent)}
+  .body-stat-val{
     font-family:'JetBrains Mono',monospace;
-    font-size:26px;font-weight:200;color:#fff;letter-spacing:-1px;
+    font-size:26px;
+    font-weight:200;
+    color:#fff;
+    letter-spacing:-1.5px;
+    line-height:1;
   }
-  .body-stat-mid .body-stat-n{color:var(--G)}
-  .body-stat-l{
-    font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
-    color:rgba(255,255,255,.25);margin-top:6px;
+  .body-stat.mid .body-stat-val{color:var(--accent)}
+  .body-stat-lbl{
+    font-size:9px;
+    font-weight:600;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.18);
+    margin-top:8px;
   }
 
   .body-obj{
-    margin-top:24px;
-    padding:16px;
+    margin:22px 24px 0;
+    padding:16px 18px;
     background:rgba(2,209,186,.04);
-    border:.5px solid rgba(2,209,186,.15);
-    border-radius:14px;
+    border:1px solid rgba(2,209,186,.15);
+    border-radius:16px;
   }
-  .body-obj-top{
-    display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+  .body-obj-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
   }
-  .body-obj-title{font-size:13px;font-weight:500;color:#fff}
-  .body-obj-title span{color:var(--text2);font-weight:400}
+  .body-obj-lbl{
+    font-size:13px;
+    font-weight:500;
+    color:#fff;
+  }
+  .body-obj-lbl span{color:rgba(255,255,255,.35);font-weight:400;margin-left:6px}
   .body-obj-btn{
-    font-size:10px;padding:5px 12px;border:1px solid rgba(255,255,255,.15);
-    border-radius:100px;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;
+    font-size:10px;
+    padding:5px 12px;
+    background:transparent;
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:100px;
+    color:rgba(255,255,255,.55);
+    cursor:pointer;
     letter-spacing:.05em;
   }
-  .body-obj-bar{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
-  .body-obj-fill{height:100%;background:var(--G);border-radius:100px;box-shadow:0 0 8px rgba(2,209,186,.4)}
-  .body-obj-pct{font-size:11px;color:var(--G);margin-top:8px;font-weight:600}
+  .body-obj-bar{
+    height:2px;
+    background:rgba(255,255,255,.06);
+    border-radius:100px;
+    overflow:hidden;
+  }
+  .body-obj-fill{
+    height:100%;
+    background:var(--accent);
+    border-radius:100px;
+    box-shadow:0 0 8px rgba(2,209,186,.4);
+  }
+  .body-obj-pct{
+    font-size:11px;
+    color:var(--accent);
+    font-weight:600;
+    margin-top:8px;
+  }
 
-  .body-projection{margin-top:24px;display:flex;flex-direction:column;gap:10px}
-  .body-proj-eyebrow{
-    font-size:8px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
-    color:rgba(255,255,255,.3);margin-bottom:4px;
+  .body-proj{margin:22px 24px 0}
+  .body-proj-lbl{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.2);
+    margin-bottom:10px;
   }
   .body-proj-row{
-    display:flex;align-items:center;gap:12px;
-    padding:10px 14px;background:rgba(255,255,255,.02);
-    border:.5px solid rgba(255,255,255,.05);border-radius:12px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 14px;
+    background:rgba(255,255,255,.02);
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:12px;
+    margin-bottom:8px;
   }
   .body-proj-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-  .body-proj-lbl{flex:1;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.02em}
-  .body-proj-val{font-family:'JetBrains Mono',monospace;font-size:13px;color:#fff;font-weight:400}
-
-  /* ========= PAGE PROGRAMME ========= */
-  #page-prog{background:#000}
-  .prog-eyebrow{color:rgba(2,209,186,.55)}
-  .prog-title{
-    font-family:'Syne',sans-serif;font-size:42px;font-weight:900;color:#fff;
-    letter-spacing:-2px;line-height:.92;margin-bottom:6px;
+  .body-proj-name{flex:1;font-size:13px;color:rgba(255,255,255,.55);letter-spacing:.02em}
+  .body-proj-val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:#fff;
+    font-weight:400;
   }
-  .prog-title .dot{color:var(--G)}
-  .prog-sub{font-size:12px;color:rgba(255,255,255,.35);margin-bottom:24px;font-style:italic}
 
-  .prog-week-tabs{
-    display:flex;gap:6px;overflow-x:auto;margin-bottom:18px;
-    scrollbar-width:none;padding-bottom:4px;
+  /* =========================================================
+     PAGE 3 — PROGRAMME (TrainingPage.jsx + ExerciseCard.jsx)
+     ========================================================= */
+  #page-prog{padding:56px 0 104px}
+  .prog-hero{padding:8px 24px 0}
+  .prog-sub{
+    margin-top:6px;
+    font-size:12px;
+    color:rgba(255,255,255,.35);
+    font-style:italic;
   }
-  .prog-week-tabs::-webkit-scrollbar{display:none}
+
+  .prog-weeks{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:22px 24px 4px;
+    scrollbar-width:none;
+  }
+  .prog-weeks::-webkit-scrollbar{display:none}
   .prog-week{
-    padding:7px 14px;background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.06);
-    border-radius:100px;font-size:10px;font-weight:600;color:rgba(255,255,255,.45);
-    letter-spacing:.04em;white-space:nowrap;cursor:pointer;
+    position:relative;
+    padding:14px 14px;
+    background:rgba(255,255,255,.02);
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:18px;
+    min-width:60px;
+    text-align:center;
+    cursor:pointer;
+    flex-shrink:0;
   }
   .prog-week.on{
-    background:var(--G2);border-color:rgba(2,209,186,.4);color:var(--G);
+    background:rgba(2,209,186,.1);
+    border:1.5px solid var(--accent);
+  }
+  .prog-week-label{
+    font-size:9px;
+    font-weight:600;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.3);
+    margin-bottom:4px;
+  }
+  .prog-week.on .prog-week-label{color:var(--accent);opacity:.8}
+  .prog-week-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:22px;
+    font-weight:200;
+    color:rgba(255,255,255,.15);
+    line-height:1;
+  }
+  .prog-week.on .prog-week-num{font-weight:800;color:var(--accent)}
+  .prog-week-dot{
+    position:absolute;
+    top:7px;right:7px;
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--accent);
   }
 
-  .prog-session-label{
-    font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
-    color:var(--G);margin-bottom:14px;
+  .prog-session-eyebrow{
+    padding:22px 24px 12px;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:rgba(2,209,186,.55);
   }
 
   .ex-card{
-    background:rgba(255,255,255,.02);
-    border:.5px solid rgba(255,255,255,.07);
+    display:flex;
+    gap:14px;
+    margin:0 24px 10px;
+    background:rgba(255,255,255,.015);
+    border:1px solid rgba(255,255,255,.05);
     border-radius:16px;
-    padding:16px;
-    margin-bottom:12px;
+    padding:16px 16px 16px 0;
+    overflow:hidden;
+    position:relative;
   }
-  .ex-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
-  .ex-card-name{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.2px;line-height:1.25}
-  .ex-card-idx{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.3);flex-shrink:0}
-  .ex-tags{display:flex;gap:6px;flex-wrap:wrap}
-  .ex-tag{
-    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;
-    padding:4px 10px;border-radius:100px;
-    color:rgba(255,255,255,.55);background:rgba(255,255,255,.04);
-    border:.5px solid rgba(255,255,255,.07);
+  .ex-card.active{
+    background:rgba(255,255,255,.03);
+    border:2px solid var(--accent);
+    border-radius:20px;
   }
-  .ex-tag.teal{color:var(--G);background:var(--G2);border-color:rgba(2,209,186,.2)}
-  .ex-tag.orange{color:var(--orange);background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.2)}
-  .ex-video{
-    margin-top:10px;display:flex;align-items:center;gap:8px;
-    padding:7px 12px;background:rgba(2,209,186,.05);
-    border:.5px solid rgba(2,209,186,.15);border-radius:10px;
-    font-size:10px;color:var(--G);font-weight:600;letter-spacing:.04em;cursor:pointer;
-    width:fit-content;
+  .ex-card.done{
+    background:rgba(2,209,186,.04);
+    border:1px solid rgba(2,209,186,.12);
+    border-radius:18px;
   }
-  .prog-start{
-    position:sticky;bottom:10px;
-    display:block;margin-top:20px;
-    background:var(--G);color:#000;
-    text-decoration:none;text-align:center;
-    padding:15px 20px;border-radius:14px;
-    font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-    font-family:'DM Sans',sans-serif;
-    box-shadow:0 16px 40px rgba(2,209,186,.35);
-  }
-
-  /* ========= PAGE NUTRITION ========= */
-  #page-nutri{background:#000}
-  .nutri-title{
-    font-family:'Syne',sans-serif;font-size:42px;font-weight:900;color:#fff;
-    letter-spacing:-2px;line-height:.92;margin-bottom:6px;
-  }
-  .nutri-title .dot{color:var(--orange)}
-  .nutri-eyebrow{color:rgba(249,115,22,.6)}
-  .nutri-kcal-big{
-    font-family:'JetBrains Mono',monospace;
-    font-size:48px;font-weight:100;color:#fff;letter-spacing:-2.5px;
-    margin-top:18px;line-height:1;
-  }
-  .nutri-kcal-big .sub{font-size:16px;color:rgba(255,255,255,.3);font-weight:200}
-  .nutri-kcal-lbl{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:6px}
-
-  .macro-bars{margin-top:22px;display:flex;flex-direction:column;gap:12px}
-  .macro{}
-  .macro-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-  .macro-name{font-size:11px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.02em}
-  .macro-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.55);font-weight:300}
-  .macro-val b{color:#fff;font-weight:400}
-  .macro-track{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
-  .macro-fill{height:100%;border-radius:100px}
-
-  .meals{margin-top:24px;display:flex;flex-direction:column;gap:10px}
-  .meals-label{
-    font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
-    color:rgba(255,255,255,.3);margin-bottom:6px;
-  }
-  .meal{
-    display:flex;align-items:center;gap:14px;
-    padding:12px 14px;background:rgba(255,255,255,.02);
-    border:.5px solid rgba(255,255,255,.06);border-radius:14px;
-    border-left:3px solid;
-  }
-  .meal-hour{
-    font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;
-    width:30px;flex-shrink:0;
-  }
-  .meal-name{flex:1;font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
-  .meal-kcal{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.4);font-weight:300}
-
-  .hydro-card{
-    margin-top:22px;
-    padding:14px 16px;
-    background:rgba(96,165,250,.05);
-    border:.5px solid rgba(96,165,250,.2);
-    border-radius:14px;
-  }
-  .hydro-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
-  .hydro-lbl{font-size:11px;font-weight:600;color:var(--blue)}
-  .hydro-val{font-family:'JetBrains Mono',monospace;font-size:14px;color:#fff;font-weight:300}
-  .hydro-track{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
-  .hydro-fill{height:100%;background:var(--blue);border-radius:100px;width:62%}
-
-  .nutri-add{
-    margin-top:20px;display:flex;align-items:center;justify-content:center;gap:10px;
-    padding:14px 20px;background:var(--orange);color:#000;
-    border-radius:100px;font-size:12px;font-weight:700;letter-spacing:.1em;
-    text-transform:uppercase;font-family:'DM Sans',sans-serif;cursor:pointer;
-    box-shadow:0 12px 30px rgba(249,115,22,.3);
-    border:none;width:100%;
-  }
-
-  /* ========= PAGE PROFIL ========= */
-  #page-profil{background:#000}
-  .profil-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
-  .profil-title{font-family:'Syne',sans-serif;font-size:52px;font-weight:900;color:#fff;letter-spacing:-3px;line-height:.9}
-  .profil-title .dot{color:var(--G)}
-  .profil-avatar{
-    width:68px;height:68px;border-radius:50%;
-    background:linear-gradient(135deg,rgba(2,209,186,.25),rgba(2,209,186,.05));
-    border:.5px solid rgba(2,209,186,.3);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:var(--G);
+  .ex-band{
+    width:5px;
+    align-self:stretch;
+    background:rgba(255,255,255,.08);
     flex-shrink:0;
   }
+  .ex-card.active .ex-band{background:var(--accent);box-shadow:0 0 14px rgba(2,209,186,.5)}
+  .ex-card.done .ex-band{background:rgba(2,209,186,.35)}
+
+  .ex-body{flex:1;padding:2px 0;min-width:0}
+  .ex-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .ex-idx{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    font-weight:700;
+    color:rgba(255,255,255,.2);
+    width:22px;
+    flex-shrink:0;
+    padding-top:4px;
+  }
+  .ex-card.active .ex-idx{color:var(--accent);opacity:.7}
+  .ex-name{
+    flex:1;
+    font-size:15px;
+    font-weight:700;
+    color:rgba(255,255,255,.45);
+    letter-spacing:-.2px;
+    line-height:1.25;
+  }
+  .ex-card.active .ex-name{
+    font-size:22px;
+    font-weight:800;
+    color:#fff;
+    letter-spacing:-1px;
+  }
+  .ex-ring{
+    width:56px;height:56px;flex-shrink:0;position:relative;
+  }
+  .ex-ring-n{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    font-weight:600;
+    color:var(--accent);
+  }
+  .ex-tags{display:flex;gap:6px;flex-wrap:wrap;padding-right:12px}
+  .ex-tag{
+    font-size:11px;
+    font-weight:600;
+    padding:5px 12px;
+    border-radius:100px;
+  }
+  .ex-tag.teal{background:rgba(2,209,186,.08);color:rgba(2,209,186,.8)}
+  .ex-tag.orange{background:rgba(255,165,0,.07);color:rgba(255,165,0,.7)}
+  .ex-tag.grey{background:rgba(255,255,255,.04);color:rgba(255,255,255,.3)}
+  .ex-video{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:10px;
+    padding:5px 12px;
+    background:rgba(2,209,186,.07);
+    border:1px solid rgba(2,209,186,.2);
+    color:var(--accent);
+    border-radius:100px;
+    font-size:11px;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  .prog-start{
+    display:block;
+    margin:24px 24px 0;
+    padding:16px 20px;
+    background:var(--accent);
+    color:#000;
+    text-align:center;
+    border-radius:16px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    text-decoration:none;
+    box-shadow:0 18px 40px rgba(2,209,186,.35);
+  }
+
+  /* =========================================================
+     PAGE 4 — NUTRITION (FuelPage.jsx)
+     ========================================================= */
+  #page-nutri{padding:56px 0 104px}
+  .nutri-hero{padding:8px 24px 0}
+  .nutri-eyebrow{color:rgba(249,115,22,.6)}
+  .nutri-title .dot{color:var(--orange)}
+  .nutri-date{
+    margin-top:4px;
+    font-size:12px;
+    color:rgba(255,255,255,.25);
+    font-style:italic;
+  }
+
+  .nutri-score-row{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-top:22px;
+  }
+  .nutri-kcal{
+    flex:1;
+    display:flex;
+    align-items:baseline;
+    gap:4px;
+  }
+  .nutri-kcal-big{
+    font-family:'JetBrains Mono',monospace;
+    font-size:44px;
+    font-weight:100;
+    letter-spacing:-2.5px;
+    line-height:1;
+    color:#fff;
+  }
+  .nutri-kcal-sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:16px;
+    color:rgba(255,255,255,.3);
+    font-weight:200;
+  }
+  .nutri-kcal-lbl{
+    display:block;
+    font-size:9px;
+    font-weight:600;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.3);
+    margin-top:8px;
+  }
+  .nutri-score-ring{position:relative;width:88px;height:88px;flex-shrink:0}
+
+  .nutri-macros{padding:24px 24px 0;display:flex;flex-direction:column;gap:16px}
+  .nutri-macro-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:6px;
+  }
+  .nutri-macro-name{
+    font-size:12px;
+    font-weight:600;
+    color:rgba(255,255,255,.55);
+    letter-spacing:.02em;
+  }
+  .nutri-macro-val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:rgba(255,255,255,.45);
+    font-weight:300;
+  }
+  .nutri-macro-val b{color:#fff;font-weight:400}
+  .nutri-macro-bar{
+    height:3px;
+    background:rgba(255,255,255,.06);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .nutri-macro-fill{
+    height:100%;
+    border-radius:2px;
+    transition:width .6s ease;
+  }
+
+  .nutri-meals{padding:24px 24px 0}
+  .nutri-meals-label{
+    font-size:9px;
+    font-weight:600;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.2);
+    margin-bottom:10px;
+  }
+  .nutri-meal{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 14px;
+    background:rgba(255,255,255,.02);
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:14px;
+    border-left:3px solid;
+    margin-bottom:8px;
+  }
+  .nutri-meal-hour{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    font-weight:600;
+    width:30px;
+    flex-shrink:0;
+  }
+  .nutri-meal-name{
+    flex:1;
+    font-size:13px;
+    color:rgba(255,255,255,.7);
+    font-weight:500;
+  }
+  .nutri-meal-kcal{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:rgba(255,255,255,.4);
+    font-weight:300;
+  }
+
+  .nutri-hydro{
+    margin:20px 24px 0;
+    padding:14px 16px;
+    background:rgba(96,165,250,.05);
+    border:1px solid rgba(96,165,250,.2);
+    border-radius:14px;
+  }
+  .nutri-hydro-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:8px;
+  }
+  .nutri-hydro-lbl{font-size:11px;font-weight:600;color:var(--blue)}
+  .nutri-hydro-val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    color:#fff;
+    font-weight:300;
+  }
+  .nutri-hydro-bar{
+    height:3px;
+    background:rgba(255,255,255,.06);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .nutri-hydro-fill{
+    height:100%;
+    background:var(--blue);
+    border-radius:2px;
+    box-shadow:0 0 8px rgba(96,165,250,.35);
+  }
+
+  .nutri-actions{
+    display:flex;
+    gap:10px;
+    margin:20px 24px 0;
+  }
+  .nutri-btn{
+    flex:1;
+    padding:14px;
+    border-radius:14px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-family:'DM Sans',sans-serif;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  .nutri-btn.primary{
+    background:var(--orange);
+    color:#000;
+    box-shadow:0 14px 30px rgba(249,115,22,.3);
+  }
+  .nutri-btn.ghost{
+    background:rgba(2,209,186,.05);
+    border:1px solid rgba(2,209,186,.2);
+    color:var(--accent);
+  }
+
+  /* =========================================================
+     PAGE 5 — PROFIL (ProfilePage.jsx + BadgeSystem.jsx)
+     ========================================================= */
+  #page-profil{padding:56px 0 104px}
+  .profil-hero{padding:8px 24px 0;display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+  .profil-name{
+    font-family:'Syne',sans-serif;
+    font-size:52px;
+    font-weight:800;
+    color:#fff;
+    letter-spacing:-3px;
+    line-height:.92;
+    margin-bottom:10px;
+  }
+  .profil-name .dot{color:var(--accent)}
   .profil-quote{
-    font-size:11px;font-style:italic;color:rgba(255,255,255,.22);
-    line-height:1.6;max-width:260px;
+    font-size:12px;
+    color:rgba(255,255,255,.18);
+    font-style:italic;
+    max-width:240px;
+  }
+  .profil-avatar{
+    width:68px;
+    height:68px;
+    border-radius:50%;
+    background:linear-gradient(135deg,rgba(2,209,186,.3),rgba(2,209,186,.08));
+    border:1px solid rgba(2,209,186,.3);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Syne',sans-serif;
+    font-size:22px;
+    font-weight:900;
+    color:var(--accent);
+    flex-shrink:0;
+    box-shadow:0 14px 40px rgba(2,209,186,.2);
   }
 
   .profil-card{
-    margin-top:20px;padding:16px;background:rgba(255,255,255,.025);
-    border:.5px solid rgba(2,209,186,.15);border-radius:14px;
-    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    margin:0 24px 20px;
+    background:rgba(255,255,255,.025);
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:22px;
+    padding:18px 20px;
+    position:relative;
+    overflow:hidden;
   }
-  .profil-card-name{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}
-  .profil-card-mail{font-size:11px;color:rgba(255,255,255,.3)}
+  .profil-card::before{
+    content:'';
+    position:absolute;
+    top:-40px;right:-40px;
+    width:120px;height:120px;
+    background:radial-gradient(circle,rgba(2,209,186,.06) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .profil-card-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:relative;
+  }
+  .profil-card-name{
+    font-size:16px;
+    font-weight:700;
+    color:#fff;
+    letter-spacing:-.3px;
+  }
+  .profil-card-mail{
+    font-size:11px;
+    color:rgba(255,255,255,.25);
+    margin-top:3px;
+  }
   .profil-card-badge{
-    padding:5px 12px;background:var(--G2);border:.5px solid rgba(2,209,186,.3);
-    border-radius:100px;color:var(--G);font-size:10px;font-weight:700;letter-spacing:.1em;
+    background:rgba(2,209,186,.1);
+    border:1px solid rgba(2,209,186,.2);
+    border-radius:100px;
+    padding:5px 14px;
+    font-size:11px;
+    color:var(--accent);
+    font-weight:600;
+    white-space:nowrap;
+  }
+
+  .profil-level{padding:0 24px;margin-bottom:20px}
+  .profil-level-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:10px;
+  }
+  .profil-level-lbl{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:2px;
     text-transform:uppercase;
+    color:rgba(255,255,255,.2);
+    margin-bottom:4px;
+  }
+  .profil-level-nrow{display:flex;align-items:baseline;gap:8px}
+  .profil-level-n{
+    font-family:'JetBrains Mono',monospace;
+    font-size:38px;
+    font-weight:100;
+    color:var(--violet);
+    letter-spacing:-2px;
+    line-height:1;
+  }
+  .profil-level-name{
+    font-size:14px;
+    color:rgba(255,255,255,.4);
+  }
+  .profil-next{text-align:right}
+  .profil-next-lbl{font-size:10px;color:rgba(255,255,255,.18);margin-bottom:2px}
+  .profil-next-name{font-size:13px;font-weight:600;color:var(--orange)}
+  .profil-next-xp{font-size:10px;color:rgba(255,255,255,.2);margin-top:2px}
+
+  .profil-xp-bar{
+    height:3px;
+    background:rgba(255,255,255,.06);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:5px;
+  }
+  .profil-xp-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--violet),#7c3aed);
+    border-radius:2px;
+    box-shadow:0 0 10px rgba(167,139,250,.5);
+    transition:width 1s ease;
+  }
+  .profil-xp-txt{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:rgba(255,255,255,.18);
+    font-family:'JetBrains Mono',monospace;
   }
 
-  .profil-section{
-    margin-top:24px;padding:20px 18px;background:rgba(255,255,255,.015);
-    border:.5px solid rgba(255,255,255,.05);border-radius:16px;
+  .profil-stats{
+    padding:0 24px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    margin-bottom:4px;
   }
-  .profil-section-label{
-    font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
-    color:rgba(255,255,255,.3);margin-bottom:14px;
+  .profil-stat{padding-top:14px}
+  .profil-stat.hot{border-top:2px solid var(--orange)}
+  .profil-stat.cold{border-top:1px solid rgba(255,255,255,.06)}
+  .profil-stat-val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:30px;
+    font-weight:200;
+    letter-spacing:-1.5px;
+    line-height:1;
   }
-  .level-row{display:flex;align-items:baseline;gap:14px;margin-bottom:14px}
-  .level-n{
-    font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:200;
-    color:var(--violet);letter-spacing:-3px;line-height:1;
+  .profil-stat-unit{font-size:12px;color:rgba(255,255,255,.2);margin-left:1px}
+  .profil-stat-lbl{
+    font-size:9px;
+    font-weight:600;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.18);
+    margin-top:5px;
   }
-  .level-tag{font-size:15px;font-weight:600;color:rgba(255,255,255,.65)}
-  .level-next{font-size:11px;color:var(--orange);margin-bottom:10px;letter-spacing:.02em}
-  .xp-bar{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;margin-bottom:6px}
-  .xp-fill{height:100%;background:linear-gradient(90deg,var(--violet),#7c3aed);border-radius:100px;box-shadow:0 0 8px rgba(167,139,250,.4)}
-  .xp-txt{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.35);font-family:'JetBrains Mono',monospace}
 
-  .stats-grid{
-    display:grid;grid-template-columns:repeat(3,1fr);
-    margin-top:20px;
-    border-top:.5px solid rgba(255,255,255,.05);
-    padding-top:14px;
+  .profil-streak{padding:0 24px;margin-top:8px}
+  .profil-streak-head{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:6px;
   }
-  .stat-col{text-align:center;padding:0 8px;position:relative}
-  .stat-orange{border-top:2px solid var(--orange);padding-top:12px;margin-top:-14px}
-  .stat-n{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:200;color:#fff;letter-spacing:-1.5px;line-height:1}
-  .stat-orange .stat-n{color:var(--orange)}
-  .stat-l{font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:8px}
-  .streak-bar{height:3px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;margin-top:18px}
-  .streak-fill{height:100%;background:var(--orange);border-radius:100px;width:100%;box-shadow:0 0 8px rgba(249,115,22,.4)}
-  .streak-pct{font-size:9px;color:var(--orange);margin-top:4px;text-align:right}
-
-  .trophies-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
-  .trophies-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--G);font-weight:400}
-  .trophies-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .trophy{
-    aspect-ratio:1;border-radius:14px;border:.5px solid;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:6px;text-align:center;background:rgba(255,255,255,.02);
+  .profil-streak-lbl{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.2);
   }
-  .trophy svg{width:22px;height:22px;margin-bottom:6px}
-  .trophy-xp{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400}
-  .trophy-name{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:2px}
-
-  .next-badge{
-    margin-top:12px;padding:10px 14px;background:rgba(255,255,255,.02);
-    border:.5px solid rgba(255,255,255,.05);border-radius:100px;
-    font-size:11px;color:rgba(255,255,255,.4);text-align:center;
+  .profil-streak-pct{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    color:var(--orange);
   }
-  .next-badge b{color:var(--G)}
-
-  .activity-row{
-    display:flex;align-items:center;gap:12px;padding:12px 0;
-    border-bottom:.5px solid rgba(255,255,255,.04);
+  .profil-streak-bar{
+    height:2px;
+    background:rgba(255,255,255,.06);
+    border-radius:1px;
+    overflow:hidden;
   }
-  .activity-row:last-child{border-bottom:none}
-  .activity-dot{width:7px;height:7px;border-radius:50%;background:var(--G);flex-shrink:0}
-  .activity-name{flex:1;font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
-  .activity-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--G);font-weight:400}
+  .profil-streak-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--orange),var(--yellow));
+    border-radius:1px;
+    box-shadow:0 0 10px rgba(249,115,22,.4);
+  }
 
-  /* ================ BOTTOM NAV PILL ================ */
+  .profil-section{padding:28px 24px 0}
+  .profil-section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:14px;
+  }
+  .profil-section-title{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.2);
+  }
+  .profil-section-sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--accent);
+  }
+  .profil-badges{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    padding-bottom:4px;
+  }
+  .profil-badges::-webkit-scrollbar{display:none}
+  .profil-badge{
+    width:88px;
+    flex-shrink:0;
+    border-radius:20px;
+    padding:16px 10px;
+    background:rgba(255,255,255,.025);
+    border:1px solid rgba(255,255,255,.06);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    position:relative;
+  }
+  .profil-badge.locked{opacity:.35;background:rgba(255,255,255,.01)}
+  .profil-badge-ring{position:relative;width:52px;height:52px;margin-bottom:10px}
+  .profil-badge-ring svg{transform:rotate(-90deg)}
+  .profil-badge-icon{
+    position:absolute;
+    inset:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .profil-badge-xp{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    font-weight:600;
+  }
+  .profil-badge-name{
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.45);
+    margin-top:4px;
+    line-height:1.2;
+  }
+
+  .profil-next-badge{
+    margin:14px 24px 0;
+    padding:10px 16px;
+    background:rgba(255,255,255,.02);
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:100px;
+    font-size:11px;
+    color:rgba(255,255,255,.35);
+    text-align:center;
+  }
+  .profil-next-badge b{color:var(--accent);font-weight:600}
+
+  .profil-activity{padding:0 24px;margin-top:8px}
+  .profil-act-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 0;
+    border-bottom:1px solid rgba(255,255,255,.04);
+  }
+  .profil-act-row:last-child{border-bottom:none}
+  .profil-act-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .profil-act-name{
+    flex:1;
+    font-size:13px;
+    color:rgba(255,255,255,.65);
+    font-weight:500;
+  }
+  .profil-act-val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--accent);
+    font-weight:500;
+  }
+
+  /* =========================================================
+     BOTTOM NAV PILL (src/App.jsx l. 915-925)
+     ========================================================= */
   .bottom-nav{
     position:absolute;
-    bottom:24px;
+    bottom:28px;
     left:50%;
     transform:translateX(-50%);
     display:flex;
-    gap:4px;
-    padding:6px 10px;
-    background:rgba(10,10,10,.97);
-    border:.5px solid rgba(255,255,255,.1);
+    gap:0;
+    padding:5px;
+    background:rgba(15,15,15,.75);
+    border:1px solid rgba(255,255,255,.09);
     border-radius:100px;
     backdrop-filter:blur(20px);
     -webkit-backdrop-filter:blur(20px);
-    box-shadow:0 12px 40px rgba(0,0,0,.6);
     z-index:50;
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
   }
   .nav-btn{
-    width:48px;height:40px;
+    width:50px;
+    height:50px;
     border-radius:100px;
-    border:none;background:transparent;
-    display:flex;align-items:center;justify-content:center;
+    border:none;
+    background:transparent;
+    color:rgba(255,255,255,.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
     cursor:pointer;
-    transition:background .25s cubic-bezier(.22,1,.36,1);
-    color:rgba(255,255,255,.3);
+    transition:all .25s cubic-bezier(.22,1,.36,1);
   }
-  .nav-btn.on{background:var(--G);color:#000}
+  .nav-btn.on{background:var(--accent);color:#000}
 
-  /* Device label under phone */
+  /* Label sous iPhone */
   .label{
     position:fixed;
     bottom:16px;
@@ -623,15 +1222,15 @@
     font-size:10px;
     letter-spacing:.3em;
     text-transform:uppercase;
-    color:rgba(255,255,255,.2);
+    color:rgba(255,255,255,.18);
     font-weight:600;
     font-family:'DM Sans',sans-serif;
     pointer-events:none;
   }
 
   @media(max-width:440px){
-    body{padding:10px 4px}
-    .phone-frame{width:100%;max-width:390px;height:calc(100vh - 80px);max-height:844px;border-radius:36px}
+    body{padding:10px 4px 60px}
+    .phone-frame{width:100%;max-width:390px;height:calc(100vh - 100px);max-height:844px;border-radius:36px}
   }
 </style>
 </head>
@@ -641,448 +1240,627 @@
   <div class="island"></div>
   <div class="statusbar">
     <span>22:49</span>
-    <span class="right">5G ⚡ 87%</span>
+    <span class="right">5G · 87%</span>
   </div>
 
-  <!-- ================ PAGE HOME ================ -->
+  <!-- ========================================================= -->
+  <!-- PAGE 1 — HOME                                               -->
+  <!-- ========================================================= -->
   <div id="page-home" class="page active">
     <div class="home-top">
       <div>
-        <div class="home-eyebrow-date">LUN · 14 AVR</div>
-        <div class="home-greeting">Bonsoir</div>
-        <div class="home-name">Rayan<span style="color:#02d1ba">.</span></div>
+        <div class="home-date">LUN · 15 AVR</div>
+        <div class="home-greet">Bonsoir</div>
+        <div class="home-name">Marie<span style="color:#02d1ba">.</span></div>
       </div>
-      <div class="home-time">22:49</div>
-    </div>
-
-    <div class="obj-ring">
-      <svg width="96" height="96" viewBox="0 0 96 96" style="transform:rotate(-90deg)">
-        <circle cx="48" cy="48" r="38" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
-        <circle cx="48" cy="48" r="38" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="238.8" stroke-dashoffset="238.8"/>
-      </svg>
-      <div class="obj-ring-n">
-        <div class="n">0%</div>
-        <div class="l">progression</div>
+      <div class="home-right">
+        <div class="home-time">22:49</div>
+        <div class="home-ring">
+          <svg width="52" height="52" viewBox="0 0 100 100" style="transform:rotate(-90deg)">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#02d1ba" stroke-width="8" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="57.8" style="filter:drop-shadow(0 0 6px rgba(2,209,186,.8))"/>
+          </svg>
+          <div class="home-ring-n">77%</div>
+        </div>
       </div>
     </div>
 
-    <div class="quote-label">Citation du jour</div>
-    <div class="quote-body">
-      <span class="accent">LES</span> CHAMPIONS NE<br>NAISSENT PAS.<br>ILS SE<br>CONSTRUISENT.
+    <div class="home-quote-section">
+      <div class="home-quote-label">Citation du jour</div>
+      <div class="home-quote-body">
+        <span class="first">LES</span><span class="word">CHAMPIONS</span><span class="word">NE</span><span class="word">NAISSENT</span><span class="word">PAS.</span><span class="word">ILS</span><span class="word">SE</span><span class="word">CONSTRUISENT.</span>
+      </div>
     </div>
 
-    <div class="tc-sep"></div>
+    <div class="home-divider"></div>
+
+    <div class="home-prog">
+      <div class="home-prog-head">
+        <div class="home-prog-label">Programme actif</div>
+        <div class="home-prog-chips">
+          <span class="home-prog-chip teal">8 SEM.</span>
+          <span class="home-prog-chip grey">24 SÉANCES</span>
+        </div>
+      </div>
+      <div class="home-prog-name">PPL Hypertrophie</div>
+      <div class="home-prog-bar">
+        <div class="home-prog-fill" style="width:8%"></div>
+      </div>
+    </div>
 
     <div class="home-stats">
       <div class="home-stat">
-        <div class="home-stat-n" style="color:#02d1ba">0</div>
-        <div class="home-stat-l">Séances</div>
+        <div class="home-stat-val" style="color:#02d1ba">2</div>
+        <div class="home-stat-lbl">Séances</div>
       </div>
       <div class="home-stat">
-        <div class="home-stat-n">0</div>
-        <div class="home-stat-l">Semaines</div>
+        <div class="home-stat-val" style="color:rgba(255,255,255,.5)">3</div>
+        <div class="home-stat-lbl">Semaines</div>
       </div>
       <div class="home-stat">
-        <div class="home-stat-n">0</div>
-        <div class="home-stat-l">Exercices</div>
+        <div class="home-stat-val" style="color:rgba(255,255,255,.5)">45</div>
+        <div class="home-stat-lbl">Exercices</div>
       </div>
     </div>
   </div>
 
-  <!-- ================ PAGE BODY ================ -->
+  <!-- ========================================================= -->
+  <!-- PAGE 2 — BODY                                               -->
+  <!-- ========================================================= -->
   <div id="page-body" class="page">
-    <div class="body-header">
-      <div class="eyebrow">SUIVI</div>
+    <div class="body-hero">
+      <div class="eyebrow">Suivi</div>
       <div class="big-title">Body<span class="dot">.</span></div>
-      <div class="italic-date">lundi 14 avril</div>
-    </div>
-
-    <div class="body-weight-row">
-      <div>
-        <div class="body-weight">80<span class="dec">.0</span></div>
-        <div class="body-unit">Kilogrammes</div>
-        <div class="body-badge-red">
-          <span class="d"></span>
-          +23 kg depuis le début
+      <div class="body-weight-row">
+        <div>
+          <div class="body-weight-num">
+            <span class="body-weight-main">64</span>
+            <span class="body-weight-dec">.8</span>
+          </div>
+          <div class="body-unit">Kilogrammes</div>
+          <div class="body-badge up">
+            <span class="d"></span>+2.8 kg depuis le début
+          </div>
         </div>
-      </div>
-      <div class="body-goal-ring">
-        <svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
-          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
-          <circle cx="32" cy="32" r="26" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="37.6"/>
-        </svg>
-        <div class="body-goal-ring-inner">
-          <div class="n">77%</div>
-          <div class="l">objectif</div>
+        <div class="body-goal-ring">
+          <svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="4"/>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#02d1ba" stroke-width="4" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="37.6"/>
+            <text x="32" y="29" text-anchor="middle" fill="rgba(255,255,255,.3)" font-size="8" transform="rotate(90 32 32)">objectif</text>
+            <text x="32" y="41" text-anchor="middle" fill="#02d1ba" font-size="11" font-weight="600" transform="rotate(90 32 32)">77%</text>
+          </svg>
         </div>
       </div>
     </div>
 
     <div class="body-quote">
-      " Le corps réalise ce que l'esprit croit. "
+      " Le corps réalise ce que l'esprit croit possible. "
       <span class="sig">RB PERFORM</span>
     </div>
 
-    <div class="body-graph">
+    <div class="body-graph-wrap">
       <svg viewBox="0 0 420 120" preserveAspectRatio="none">
         <defs>
-          <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="wg2" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#02d1ba" stop-opacity=".25"/>
             <stop offset="100%" stop-color="#02d1ba" stop-opacity="0"/>
           </linearGradient>
         </defs>
         <!-- Goal line dashed -->
-        <line x1="0" y1="18" x2="420" y2="18" stroke="rgba(2,209,186,.2)" stroke-width="1" stroke-dasharray="4 4"/>
+        <line x1="0" y1="30" x2="420" y2="30" stroke="rgba(2,209,186,.2)" stroke-width="1" stroke-dasharray="4 4"/>
         <!-- Area -->
-        <path d="M 0,95 L 35,90 L 70,82 L 105,76 L 140,70 L 175,68 L 210,62 L 245,54 L 280,48 L 315,42 L 350,38 L 385,34 L 420,30 L 420,120 L 0,120 Z" fill="url(#grad1)"/>
+        <path d="M 0,92 L 35,88 L 70,82 L 105,76 L 140,70 L 175,65 L 210,58 L 245,50 L 280,48 L 315,44 L 350,42 L 385,38 L 420,36 L 420,120 L 0,120 Z" fill="url(#wg2)"/>
         <!-- Line -->
-        <path d="M 0,95 L 35,90 L 70,82 L 105,76 L 140,70 L 175,68 L 210,62 L 245,54 L 280,48 L 315,42 L 350,38 L 385,34 L 420,30" fill="none" stroke="#02d1ba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 0,92 L 35,88 L 70,82 L 105,76 L 140,70 L 175,65 L 210,58 L 245,50 L 280,48 L 315,44 L 350,42 L 385,38 L 420,36" fill="none" stroke="#02d1ba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <!-- Final dot -->
-        <circle cx="420" cy="30" r="5" fill="#02d1ba"/>
-        <circle cx="420" cy="30" r="10" fill="#02d1ba" opacity=".2"/>
+        <circle cx="420" cy="36" r="5" fill="#02d1ba"/>
+        <circle cx="420" cy="36" r="10" fill="#02d1ba" opacity=".25"/>
       </svg>
     </div>
 
     <div class="body-stats-row">
       <div class="body-stat">
-        <div class="body-stat-n">57.0</div>
-        <div class="body-stat-l">Minimum</div>
+        <div class="body-stat-val">62.0</div>
+        <div class="body-stat-lbl">Minimum</div>
       </div>
-      <div class="body-stat body-stat-mid">
-        <div class="body-stat-n">68.5</div>
-        <div class="body-stat-l">Moyenne</div>
+      <div class="body-stat mid">
+        <div class="body-stat-val">63.5</div>
+        <div class="body-stat-lbl">Moyenne</div>
       </div>
       <div class="body-stat">
-        <div class="body-stat-n">80.0</div>
-        <div class="body-stat-l">Maximum</div>
+        <div class="body-stat-val">64.8</div>
+        <div class="body-stat-lbl">Maximum</div>
       </div>
     </div>
 
     <div class="body-obj">
-      <div class="body-obj-top">
-        <div class="body-obj-title">Objectif <span>· 87 kg</span></div>
+      <div class="body-obj-head">
+        <div class="body-obj-lbl">Objectif <span>· 62 kg</span></div>
         <button class="body-obj-btn">Modifier</button>
       </div>
       <div class="body-obj-bar"><div class="body-obj-fill" style="width:77%"></div></div>
-      <div class="body-obj-pct">77% atteint</div>
+      <div class="body-obj-pct">77 % atteint</div>
     </div>
 
-    <div class="body-projection">
-      <div class="body-proj-eyebrow">Projection</div>
+    <div class="body-proj">
+      <div class="body-proj-lbl">Projection</div>
       <div class="body-proj-row">
         <div class="body-proj-dot" style="background:#02d1ba;box-shadow:0 0 8px #02d1ba"></div>
-        <div class="body-proj-lbl">Aujourd'hui</div>
-        <div class="body-proj-val">80.0 kg</div>
+        <div class="body-proj-name">Aujourd'hui</div>
+        <div class="body-proj-val">64.8 kg</div>
       </div>
       <div class="body-proj-row">
-        <div class="body-proj-dot" style="background:rgba(255,255,255,.3)"></div>
-        <div class="body-proj-lbl">Objectif atteint le</div>
+        <div class="body-proj-dot" style="background:rgba(255,255,255,.2)"></div>
+        <div class="body-proj-name">Objectif atteint</div>
         <div class="body-proj-val">20 avr.</div>
       </div>
       <div class="body-proj-row">
-        <div class="body-proj-dot" style="background:#a78bfa"></div>
-        <div class="body-proj-lbl">Reste à prendre</div>
-        <div class="body-proj-val" style="color:#a78bfa">7.0 kg</div>
+        <div class="body-proj-dot" style="background:rgba(129,140,248,.7)"></div>
+        <div class="body-proj-name">Reste à perdre</div>
+        <div class="body-proj-val" style="color:#a78bfa">2.8 kg</div>
       </div>
     </div>
   </div>
 
-  <!-- ================ PAGE PROGRAMME ================ -->
+  <!-- ========================================================= -->
+  <!-- PAGE 3 — PROGRAMME                                          -->
+  <!-- ========================================================= -->
   <div id="page-prog" class="page">
-    <div class="eyebrow prog-eyebrow">PROGRAMME</div>
-    <div class="prog-title">Train<span class="dot">.</span></div>
-    <div class="prog-sub">Push Pull Legs — Hypertrophie · 8 semaines</div>
-
-    <div class="prog-week-tabs">
-      <div class="prog-week on">S1</div>
-      <div class="prog-week">S2</div>
-      <div class="prog-week">S3</div>
-      <div class="prog-week">S4</div>
-      <div class="prog-week">S5</div>
-      <div class="prog-week">S6</div>
-      <div class="prog-week">S7</div>
-      <div class="prog-week">S8</div>
+    <div class="prog-hero">
+      <div class="eyebrow">Programme</div>
+      <div class="big-title">Train<span class="dot">.</span></div>
+      <div class="prog-sub">PPL Hypertrophie · Semaine 1</div>
     </div>
 
-    <div class="prog-session-label">Semaine 1 · Push</div>
-
-    <div class="ex-card">
-      <div class="ex-card-top">
-        <div class="ex-card-name">Développé couché haltères</div>
-        <div class="ex-card-idx">01</div>
+    <div class="prog-weeks">
+      <div class="prog-week on">
+        <div class="prog-week-label">Sem</div>
+        <div class="prog-week-num">01</div>
+        <div class="prog-week-dot"></div>
       </div>
-      <div class="ex-tags">
-        <span class="ex-tag teal">4×8</span>
-        <span class="ex-tag">Tempo 30X0</span>
-        <span class="ex-tag orange">RIR 2</span>
-        <span class="ex-tag">32 kg</span>
+      <div class="prog-week">
+        <div class="prog-week-label">Sem</div>
+        <div class="prog-week-num">02</div>
       </div>
-      <div class="ex-video">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="#02d1ba"><polygon points="5,3 19,12 5,21"/></svg>
-        Voir la démo vidéo
+      <div class="prog-week">
+        <div class="prog-week-label">Sem</div>
+        <div class="prog-week-num">03</div>
       </div>
-    </div>
-
-    <div class="ex-card">
-      <div class="ex-card-top">
-        <div class="ex-card-name">Dips lestés</div>
-        <div class="ex-card-idx">02</div>
+      <div class="prog-week">
+        <div class="prog-week-label">Sem</div>
+        <div class="prog-week-num">04</div>
       </div>
-      <div class="ex-tags">
-        <span class="ex-tag teal">3×10</span>
-        <span class="ex-tag">Tempo 20X1</span>
-        <span class="ex-tag orange">RIR 1</span>
-        <span class="ex-tag">15 kg</span>
+      <div class="prog-week">
+        <div class="prog-week-label">Sem</div>
+        <div class="prog-week-num">05</div>
+      </div>
+      <div class="prog-week">
+        <div class="prog-week-label">Sem</div>
+        <div class="prog-week-num">06</div>
+      </div>
+      <div class="prog-week">
+        <div class="prog-week-label">Sem</div>
+        <div class="prog-week-num">07</div>
+      </div>
+      <div class="prog-week">
+        <div class="prog-week-label">Sem</div>
+        <div class="prog-week-num">08</div>
       </div>
     </div>
 
-    <div class="ex-card">
-      <div class="ex-card-top">
-        <div class="ex-card-name">Écarté haltères incliné</div>
-        <div class="ex-card-idx">03</div>
-      </div>
-      <div class="ex-tags">
-        <span class="ex-tag teal">4×12</span>
-        <span class="ex-tag">Tempo 2010</span>
-        <span class="ex-tag orange">RIR 2</span>
-        <span class="ex-tag">18 kg</span>
+    <div class="prog-session-eyebrow">● Semaine 1 · Push</div>
+
+    <!-- Exercise 1 — active -->
+    <div class="ex-card active">
+      <div class="ex-band"></div>
+      <div class="ex-body">
+        <div class="ex-top">
+          <div class="ex-idx">01</div>
+          <div class="ex-name">Développé couché haltères</div>
+          <div class="ex-ring">
+            <svg width="56" height="56" viewBox="0 0 56 56" style="transform:rotate(-90deg)">
+              <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="4"/>
+              <circle cx="28" cy="28" r="22" fill="none" stroke="#02d1ba" stroke-width="4" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="103.5"/>
+            </svg>
+            <div class="ex-ring-n">1/4</div>
+          </div>
+        </div>
+        <div class="ex-tags">
+          <span class="ex-tag teal">4 × 8</span>
+          <span class="ex-tag orange">⏱ 90 s</span>
+          <span class="ex-tag grey">Tempo 30X0</span>
+          <span class="ex-tag grey">RIR 2</span>
+        </div>
+        <div class="ex-video">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Démo vidéo
+        </div>
       </div>
     </div>
 
-    <div class="ex-card">
-      <div class="ex-card-top">
-        <div class="ex-card-name">Élévations latérales</div>
-        <div class="ex-card-idx">04</div>
-      </div>
-      <div class="ex-tags">
-        <span class="ex-tag teal">4×15</span>
-        <span class="ex-tag">Tempo 2010</span>
-        <span class="ex-tag orange">RIR 0</span>
-        <span class="ex-tag">10 kg</span>
+    <!-- Exercise 2 — done -->
+    <div class="ex-card done">
+      <div class="ex-band"></div>
+      <div class="ex-body">
+        <div class="ex-top">
+          <div class="ex-idx">02</div>
+          <div class="ex-name">Dips lestés</div>
+        </div>
+        <div class="ex-tags">
+          <span class="ex-tag teal">3 × 10</span>
+          <span class="ex-tag orange">⏱ 90 s</span>
+          <span class="ex-tag grey">RIR 1</span>
+          <span class="ex-tag grey">15 kg</span>
+        </div>
       </div>
     </div>
 
+    <!-- Exercise 3 — inactive -->
     <div class="ex-card">
-      <div class="ex-card-top">
-        <div class="ex-card-name">Extensions triceps corde</div>
-        <div class="ex-card-idx">05</div>
+      <div class="ex-band"></div>
+      <div class="ex-body">
+        <div class="ex-top">
+          <div class="ex-idx">03</div>
+          <div class="ex-name">Écarté haltères incliné</div>
+        </div>
+        <div class="ex-tags">
+          <span class="ex-tag teal">4 × 12</span>
+          <span class="ex-tag orange">⏱ 60 s</span>
+          <span class="ex-tag grey">Tempo 2010</span>
+          <span class="ex-tag grey">18 kg</span>
+        </div>
       </div>
-      <div class="ex-tags">
-        <span class="ex-tag teal">3×12</span>
-        <span class="ex-tag">Tempo 2011</span>
-        <span class="ex-tag orange">RIR 1</span>
-        <span class="ex-tag">22 kg</span>
+    </div>
+
+    <!-- Exercise 4 — inactive -->
+    <div class="ex-card">
+      <div class="ex-band"></div>
+      <div class="ex-body">
+        <div class="ex-top">
+          <div class="ex-idx">04</div>
+          <div class="ex-name">Élévations latérales</div>
+        </div>
+        <div class="ex-tags">
+          <span class="ex-tag teal">4 × 15</span>
+          <span class="ex-tag orange">⏱ 45 s</span>
+          <span class="ex-tag grey">RIR 0</span>
+          <span class="ex-tag grey">10 kg</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exercise 5 — inactive -->
+    <div class="ex-card">
+      <div class="ex-band"></div>
+      <div class="ex-body">
+        <div class="ex-top">
+          <div class="ex-idx">05</div>
+          <div class="ex-name">Extensions triceps corde</div>
+        </div>
+        <div class="ex-tags">
+          <span class="ex-tag teal">3 × 12</span>
+          <span class="ex-tag orange">⏱ 60 s</span>
+          <span class="ex-tag grey">RIR 1</span>
+          <span class="ex-tag grey">22 kg</span>
+        </div>
       </div>
     </div>
 
     <a href="#" class="prog-start" onclick="event.preventDefault()">Démarrer la séance →</a>
   </div>
 
-  <!-- ================ PAGE NUTRITION ================ -->
+  <!-- ========================================================= -->
+  <!-- PAGE 4 — NUTRITION (FUEL.)                                  -->
+  <!-- ========================================================= -->
   <div id="page-nutri" class="page">
-    <div class="eyebrow nutri-eyebrow">NUTRITION</div>
-    <div class="nutri-title">Fuel<span class="dot">.</span></div>
-    <div class="italic-date">Mardi 15 avril</div>
+    <div class="nutri-hero">
+      <div class="eyebrow nutri-eyebrow">Nutrition</div>
+      <div class="big-title nutri-title">Fuel<span class="dot">.</span></div>
+      <div class="nutri-date">Mardi 15 avril</div>
 
-    <div class="nutri-kcal-big">1 847<span class="sub"> / 2 200</span></div>
-    <div class="nutri-kcal-lbl">Kilocalories · Objectif 2 200</div>
-
-    <div class="macro-bars">
-      <div class="macro">
-        <div class="macro-top">
-          <span class="macro-name">Protéines</span>
-          <span class="macro-val"><b>142g</b> / 150g</span>
+      <div class="nutri-score-row">
+        <div class="nutri-kcal">
+          <div>
+            <div style="display:flex;align-items:baseline;gap:4px">
+              <span class="nutri-kcal-big">1 847</span>
+              <span class="nutri-kcal-sub">/ 2 200</span>
+            </div>
+            <span class="nutri-kcal-lbl">Kilocalories</span>
+          </div>
         </div>
-        <div class="macro-track"><div class="macro-fill" style="width:94%;background:#02d1ba"></div></div>
-      </div>
-      <div class="macro">
-        <div class="macro-top">
-          <span class="macro-name">Glucides</span>
-          <span class="macro-val"><b>184g</b> / 250g</span>
+        <div class="nutri-score-ring">
+          <svg width="88" height="88" viewBox="0 0 88 88" style="transform:rotate(-90deg)">
+            <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
+            <circle cx="44" cy="44" r="36" fill="none" stroke="#02d1ba" stroke-width="5" stroke-linecap="round" stroke-dasharray="226.2" stroke-dashoffset="45.2"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:200;color:#02d1ba;letter-spacing:-1.5px;line-height:1">84</div>
+            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:3px">Score</div>
+          </div>
         </div>
-        <div class="macro-track"><div class="macro-fill" style="width:73%;background:#f97316"></div></div>
-      </div>
-      <div class="macro">
-        <div class="macro-top">
-          <span class="macro-name">Lipides</span>
-          <span class="macro-val"><b>62g</b> / 70g</span>
-        </div>
-        <div class="macro-track"><div class="macro-fill" style="width:88%;background:#a78bfa"></div></div>
       </div>
     </div>
 
-    <div class="meals">
-      <div class="meals-label">Repas du jour</div>
-      <div class="meal" style="border-left-color:#02d1ba">
-        <div class="meal-hour" style="color:#02d1ba">8h</div>
-        <div class="meal-name">Avoine + œufs + banane</div>
-        <div class="meal-kcal">540 kcal</div>
+    <div class="nutri-macros">
+      <div>
+        <div class="nutri-macro-head">
+          <span class="nutri-macro-name">Protéines</span>
+          <span class="nutri-macro-val"><b>142 g</b> / 150 g</span>
+        </div>
+        <div class="nutri-macro-bar"><div class="nutri-macro-fill" style="width:94%;background:#02d1ba"></div></div>
       </div>
-      <div class="meal" style="border-left-color:#f97316">
-        <div class="meal-hour" style="color:#f97316">12h</div>
-        <div class="meal-name">Poulet, riz, brocolis</div>
-        <div class="meal-kcal">680 kcal</div>
+      <div>
+        <div class="nutri-macro-head">
+          <span class="nutri-macro-name">Glucides</span>
+          <span class="nutri-macro-val"><b>184 g</b> / 250 g</span>
+        </div>
+        <div class="nutri-macro-bar"><div class="nutri-macro-fill" style="width:73%;background:#f97316"></div></div>
       </div>
-      <div class="meal" style="border-left-color:#a78bfa">
-        <div class="meal-hour" style="color:#a78bfa">16h</div>
-        <div class="meal-name">Shake protéiné + amandes</div>
-        <div class="meal-kcal">320 kcal</div>
-      </div>
-      <div class="meal" style="border-left-color:#60a5fa">
-        <div class="meal-hour" style="color:#60a5fa">20h</div>
-        <div class="meal-name">Saumon, patate douce, salade</div>
-        <div class="meal-kcal">307 kcal</div>
+      <div>
+        <div class="nutri-macro-head">
+          <span class="nutri-macro-name">Lipides</span>
+          <span class="nutri-macro-val"><b>62 g</b> / 70 g</span>
+        </div>
+        <div class="nutri-macro-bar"><div class="nutri-macro-fill" style="width:88%;background:#a78bfa"></div></div>
       </div>
     </div>
 
-    <div class="hydro-card">
-      <div class="hydro-top">
-        <span class="hydro-lbl">Hydratation</span>
-        <span class="hydro-val">1.85 L / 3.0 L</span>
+    <div class="nutri-meals">
+      <div class="nutri-meals-label">Repas du jour</div>
+      <div class="nutri-meal" style="border-left-color:#02d1ba">
+        <div class="nutri-meal-hour" style="color:#02d1ba">8h</div>
+        <div class="nutri-meal-name">Avoine + œufs + banane</div>
+        <div class="nutri-meal-kcal">540 kcal</div>
       </div>
-      <div class="hydro-track"><div class="hydro-fill"></div></div>
+      <div class="nutri-meal" style="border-left-color:#f97316">
+        <div class="nutri-meal-hour" style="color:#f97316">12h</div>
+        <div class="nutri-meal-name">Poulet, riz, brocolis</div>
+        <div class="nutri-meal-kcal">680 kcal</div>
+      </div>
+      <div class="nutri-meal" style="border-left-color:#a78bfa">
+        <div class="nutri-meal-hour" style="color:#a78bfa">16h</div>
+        <div class="nutri-meal-name">Shake protéiné + amandes</div>
+        <div class="nutri-meal-kcal">320 kcal</div>
+      </div>
+      <div class="nutri-meal" style="border-left-color:#60a5fa">
+        <div class="nutri-meal-hour" style="color:#60a5fa">20h</div>
+        <div class="nutri-meal-name">Saumon, patate douce</div>
+        <div class="nutri-meal-kcal">307 kcal</div>
+      </div>
     </div>
 
-    <button class="nutri-add">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
-      Logger un repas
-    </button>
+    <div class="nutri-hydro">
+      <div class="nutri-hydro-top">
+        <span class="nutri-hydro-lbl">Hydratation</span>
+        <span class="nutri-hydro-val">1.85 / 3.0 L</span>
+      </div>
+      <div class="nutri-hydro-bar"><div class="nutri-hydro-fill" style="width:62%"></div></div>
+    </div>
+
+    <div class="nutri-actions">
+      <button class="nutri-btn ghost">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+        Vocal
+      </button>
+      <button class="nutri-btn primary">
+        + Logger un repas
+      </button>
+    </div>
   </div>
 
-  <!-- ================ PAGE PROFIL ================ -->
+  <!-- ========================================================= -->
+  <!-- PAGE 5 — PROFIL                                             -->
+  <!-- ========================================================= -->
   <div id="page-profil" class="page">
-    <div class="eyebrow">MON PROFIL</div>
-    <div class="profil-top">
+    <div class="profil-hero">
       <div>
-        <div class="profil-title">Rayan<span class="dot">.</span></div>
+        <div class="eyebrow">Mon profil</div>
+        <div class="profil-name">Marie<span class="dot">.</span></div>
         <div class="profil-quote">" Tu n'es pas là pour survivre. Tu es là pour dominer. "</div>
       </div>
-      <div class="profil-avatar">RB</div>
+      <div class="profil-avatar">ML</div>
     </div>
 
     <div class="profil-card">
-      <div>
-        <div class="profil-card-name">Rayan Bonte</div>
-        <div class="profil-card-mail">rayan.b2701@gmail.com</div>
-      </div>
-      <div class="profil-card-badge">Warrior</div>
-    </div>
-
-    <div class="profil-section">
-      <div class="profil-section-label">Niveau Athlete</div>
-      <div class="level-row">
-        <div class="level-n">04</div>
+      <div class="profil-card-row">
         <div>
-          <div class="level-tag">Warrior</div>
-          <div class="level-next">Prochain : Elite — 295 XP restants</div>
+          <div class="profil-card-name">Marie Laurent</div>
+          <div class="profil-card-mail">marie.laurent@demo.rb</div>
         </div>
+        <div class="profil-card-badge">Warrior</div>
       </div>
-      <div class="xp-bar"><div class="xp-fill" style="width:67%"></div></div>
-      <div class="xp-txt"><span>605 XP</span><span>900 XP</span></div>
+    </div>
 
-      <div class="stats-grid">
-        <div class="stat-col stat-orange">
-          <div class="stat-n">2</div>
-          <div class="stat-l">Streak</div>
+    <div class="profil-level">
+      <div class="profil-level-row">
+        <div>
+          <div class="profil-level-lbl">Niveau Athlete</div>
+          <div class="profil-level-nrow">
+            <span class="profil-level-n">04</span>
+            <span class="profil-level-name">Warrior</span>
+          </div>
         </div>
-        <div class="stat-col">
-          <div class="stat-n">2</div>
-          <div class="stat-l">Record</div>
-        </div>
-        <div class="stat-col">
-          <div class="stat-n" style="font-size:22px">—</div>
-          <div class="stat-l">Poids</div>
+        <div class="profil-next">
+          <div class="profil-next-lbl">Prochain</div>
+          <div class="profil-next-name">Elite</div>
+          <div class="profil-next-xp">295 XP restants</div>
         </div>
       </div>
-      <div class="streak-bar"><div class="streak-fill"></div></div>
-      <div class="streak-pct">2/2j · objectif atteint</div>
+      <div class="profil-xp-bar"><div class="profil-xp-fill" style="width:67%"></div></div>
+      <div class="profil-xp-txt"><span>605 XP</span><span>900 XP</span></div>
+    </div>
+
+    <div class="profil-stats">
+      <div class="profil-stat hot" style="padding-right:8px">
+        <div class="profil-stat-val" style="color:#f97316">2<span class="profil-stat-unit">j</span></div>
+        <div class="profil-stat-lbl">Streak</div>
+      </div>
+      <div class="profil-stat cold" style="padding-right:8px">
+        <div class="profil-stat-val" style="color:#fbbf24">5<span class="profil-stat-unit">j</span></div>
+        <div class="profil-stat-lbl">Record</div>
+      </div>
+      <div class="profil-stat cold">
+        <div class="profil-stat-val" style="color:#02d1ba">64.8<span class="profil-stat-unit">kg</span></div>
+        <div class="profil-stat-lbl">Poids</div>
+      </div>
+    </div>
+
+    <div class="profil-streak">
+      <div class="profil-streak-head">
+        <div class="profil-streak-lbl">Progression streak</div>
+        <div class="profil-streak-pct">2 / 5 j</div>
+      </div>
+      <div class="profil-streak-bar"><div class="profil-streak-fill" style="width:40%"></div></div>
     </div>
 
     <div class="profil-section">
-      <div class="trophies-header">
-        <div class="profil-section-label" style="margin-bottom:0">Trophées</div>
-        <div class="trophies-count">6 / 11</div>
+      <div class="profil-section-head">
+        <div class="profil-section-title">Trophées</div>
+        <div class="profil-section-sub">4 / 11</div>
       </div>
-      <div class="trophies-grid">
-        <div class="trophy" style="border-color:rgba(2,209,186,.3);background:rgba(2,209,186,.04)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#02d1ba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <div class="trophy-xp" style="color:#02d1ba">+50 XP</div>
-          <div class="trophy-name">Premier pas</div>
+      <div class="profil-badges">
+        <!-- Premier pas — teal (earned) -->
+        <div class="profil-badge">
+          <div class="profil-badge-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
+              <circle cx="26" cy="26" r="22" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/>
+            </svg>
+            <div class="profil-badge-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#02d1ba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+          </div>
+          <div class="profil-badge-xp" style="color:#02d1ba">+50 XP</div>
+          <div class="profil-badge-name">Premier pas</div>
         </div>
-        <div class="trophy" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.04)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-          <div class="trophy-xp" style="color:#f97316">+80 XP</div>
-          <div class="trophy-name">En feu</div>
+        <!-- En feu — orange (earned) -->
+        <div class="profil-badge">
+          <div class="profil-badge-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
+              <circle cx="26" cy="26" r="22" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/>
+            </svg>
+            <div class="profil-badge-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            </div>
+          </div>
+          <div class="profil-badge-xp" style="color:#f97316">+80 XP</div>
+          <div class="profil-badge-name">En feu</div>
         </div>
-        <div class="trophy" style="border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.04)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          <div class="trophy-xp" style="color:#a78bfa">+120 XP</div>
-          <div class="trophy-name">Warrior</div>
+        <!-- Warrior — violet (earned) -->
+        <div class="profil-badge">
+          <div class="profil-badge-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
+              <circle cx="26" cy="26" r="22" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/>
+            </svg>
+            <div class="profil-badge-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12"/></svg>
+            </div>
+          </div>
+          <div class="profil-badge-xp" style="color:#a78bfa">+120 XP</div>
+          <div class="profil-badge-name">Warrior</div>
         </div>
-        <div class="trophy" style="border-color:rgba(234,179,8,.3);background:rgba(234,179,8,.04)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-          <div class="trophy-xp" style="color:#eab308">+200 XP</div>
-          <div class="trophy-name">Champion</div>
+        <!-- Champion — yellow (earned) -->
+        <div class="profil-badge">
+          <div class="profil-badge-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
+              <circle cx="26" cy="26" r="22" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/>
+            </svg>
+            <div class="profil-badge-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            </div>
+          </div>
+          <div class="profil-badge-xp" style="color:#fbbf24">+200 XP</div>
+          <div class="profil-badge-name">Champion</div>
+        </div>
+        <!-- Titan — red (locked) -->
+        <div class="profil-badge locked">
+          <div class="profil-badge-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
+              <circle cx="26" cy="26" r="22" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="97"/>
+            </svg>
+            <div class="profil-badge-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            </div>
+          </div>
+          <div class="profil-badge-xp" style="color:#ef4444">+400 XP</div>
+          <div class="profil-badge-name">Titan</div>
         </div>
       </div>
-      <div class="next-badge">24/50 · Prochain : <b>Titan</b></div>
+      <div class="profil-next-badge">24 / 50 séances · Prochain : <b>Titan</b></div>
     </div>
 
     <div class="profil-section">
-      <div class="profil-section-label">Activité récente</div>
-      <div class="activity-row">
-        <div class="activity-dot"></div>
-        <div class="activity-name">Pesée</div>
-        <div class="activity-val">80 kg</div>
+      <div class="profil-section-head">
+        <div class="profil-section-title">Activité récente</div>
       </div>
-      <div class="activity-row">
-        <div class="activity-dot" style="background:#a78bfa"></div>
-        <div class="activity-name">Badge Warrior débloqué</div>
-        <div class="activity-val" style="color:#a78bfa">+120 XP</div>
-      </div>
-      <div class="activity-row">
-        <div class="activity-dot" style="background:#f97316"></div>
-        <div class="activity-name">Streak 2 jours</div>
-        <div class="activity-val" style="color:#f97316">+40 XP</div>
+      <div class="profil-activity">
+        <div class="profil-act-row">
+          <div class="profil-act-dot" style="background:#02d1ba"></div>
+          <div class="profil-act-name">Pesée</div>
+          <div class="profil-act-val">64.8 kg</div>
+        </div>
+        <div class="profil-act-row">
+          <div class="profil-act-dot" style="background:#a78bfa"></div>
+          <div class="profil-act-name">Badge Warrior débloqué</div>
+          <div class="profil-act-val" style="color:#a78bfa">+120 XP</div>
+        </div>
+        <div class="profil-act-row">
+          <div class="profil-act-dot" style="background:#f97316"></div>
+          <div class="profil-act-name">Streak 2 jours</div>
+          <div class="profil-act-val" style="color:#f97316">+40 XP</div>
+        </div>
+        <div class="profil-act-row">
+          <div class="profil-act-dot" style="background:#02d1ba"></div>
+          <div class="profil-act-name">Séance terminée · Push S1</div>
+          <div class="profil-act-val">+80 XP</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ================ BOTTOM NAV PILL ================ -->
+  <!-- ========================================================= -->
+  <!-- BOTTOM NAV PILL (5 icones source-accurate)                  -->
+  <!-- ========================================================= -->
   <div class="bottom-nav">
+    <!-- 1. Training (dumbbell) → Home -->
     <button class="nav-btn on" data-target="page-home" aria-label="Home">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12"/></svg>
     </button>
+    <!-- 2. Weight (barbell/scale) → Body -->
     <button class="nav-btn" data-target="page-body" aria-label="Body">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v3H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V9a2 2 0 0 0-2-2Z"/><path d="M7 11h10"/><path d="M7 15h10"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l2 7H4L6 3z"/><path d="M4 10v10a1 1 0 001 1h14a1 1 0 001-1V10"/><line x1="12" y1="10" x2="12" y2="20"/></svg>
     </button>
+    <!-- 3. Move (lightning) → Programme -->
     <button class="nav-btn" data-target="page-prog" aria-label="Programme">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
     </button>
+    <!-- 4. Fuel (fire) → Nutrition -->
     <button class="nav-btn" data-target="page-nutri" aria-label="Nutrition">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14z"/><path d="M12 12c0 3-2 4-2 6a2 2 0 004 0c0-2-2-3-2-6z"/></svg>
     </button>
+    <!-- 5. Profile (person) → Profil -->
     <button class="nav-btn" data-target="page-profil" aria-label="Profil">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>
     </button>
   </div>
 </div>
 
-<div class="label">RB Perform — Vue client · Demo interactive</div>
+<div class="label">RB Perform — Vue client · Démo interactive</div>
 
 <script>
 (function(){
   const buttons = document.querySelectorAll('.nav-btn');
   const pages = document.querySelectorAll('.page');
-
   function go(targetId){
     pages.forEach(p => p.classList.toggle('active', p.id === targetId));
     buttons.forEach(b => b.classList.toggle('on', b.dataset.target === targetId));
-    // Reset scroll on new page
     const target = document.getElementById(targetId);
     if (target) target.scrollTop = 0;
   }
-
   buttons.forEach(b => {
     b.addEventListener('click', () => {
       const target = b.dataset.target;
