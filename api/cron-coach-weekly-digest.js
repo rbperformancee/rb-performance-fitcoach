@@ -31,7 +31,13 @@ async function sendEmail(to, subject, html) {
 
 function buildDigestHtml({ coach, clients, weekStats }) {
   const coachName = coach.full_name?.split(" ")[0] || "Coach";
-  const { totalSessions, newWeights, activeCount, inactiveCount, expiringSoon } = weekStats;
+  const { totalSessions, newWeights, activeCount, inactiveCount, expiringSoon, mrr, retentionPct, businessScore, scoreDelta, topClient, churnRiskClients } = weekStats;
+  const deltaSign = scoreDelta > 0 ? "↑" : scoreDelta < 0 ? "↓" : "·";
+  const deltaColor = scoreDelta > 0 ? "#02d1ba" : scoreDelta < 0 ? "#ef4444" : "rgba(255,255,255,0.4)";
+  const churnRows = (churnRiskClients || []).slice(0, 3).map((c) => `<tr>
+    <td style="padding:8px 10px;color:#e5e5e5;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05)">${c.full_name || c.email}</td>
+    <td style="padding:8px 10px;color:#ef4444;font-size:12px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.05);text-align:right">Inactif ${c._days}j</td>
+  </tr>`).join("");
 
   const expiringRows = expiringSoon.slice(0, 5).map((c) => {
     const days = Math.ceil((new Date(c.subscription_end_date).getTime() - Date.now()) / 86400000);
@@ -57,6 +63,50 @@ function buildDigestHtml({ coach, clients, weekStats }) {
   <tr><td style="background:#111;border-radius:20px;border:1px solid rgba(255,255,255,0.06);padding:32px;">
     <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:18px;">${coachName},</div>
     <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:20px;line-height:1.35;">Voici ta semaine<br><span style="color:#02d1ba">en chiffres.</span></div>
+
+    <!-- Score business vs semaine precedente -->
+    <div style="background:rgba(2,209,186,0.05);border:1px solid rgba(2,209,186,0.18);border-radius:14px;padding:18px 20px;margin-bottom:16px;">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(2,209,186,0.7);font-weight:700;margin-bottom:6px">Score business</div>
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <span style="font-family:'Courier',monospace;font-size:40px;font-weight:200;color:#02d1ba;letter-spacing:-2px">${businessScore}</span>
+        <span style="font-size:12px;font-weight:600;color:${deltaColor};letter-spacing:.5px">${deltaSign} ${Math.abs(scoreDelta)} pts</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;margin-top:10px">
+        <div style="height:100%;width:${businessScore}%;background:#02d1ba;box-shadow:0 0 8px rgba(2,209,186,.5);border-radius:100px"></div>
+      </div>
+    </div>
+
+    <!-- MRR / Retention / Actifs -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+      <tr>
+        <td style="padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;width:33%">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);font-weight:700">MRR</div>
+          <div style="font-family:'Courier',monospace;font-size:20px;font-weight:200;color:#02d1ba;margin-top:4px;letter-spacing:-1px">${(mrr || 0).toLocaleString("fr-FR")} €</div>
+        </td>
+        <td style="padding:0 4px"></td>
+        <td style="padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;width:33%">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);font-weight:700">Retention</div>
+          <div style="font-family:'Courier',monospace;font-size:20px;font-weight:200;color:#fff;margin-top:4px;letter-spacing:-1px">${retentionPct}%</div>
+        </td>
+        <td style="padding:0 4px"></td>
+        <td style="padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;width:33%">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);font-weight:700">Actifs</div>
+          <div style="font-family:'Courier',monospace;font-size:20px;font-weight:200;color:#fff;margin-top:4px;letter-spacing:-1px">${activeCount}/${clients.length}</div>
+        </td>
+      </tr>
+    </table>
+
+    ${churnRows ? `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#ef4444;font-weight:700;margin-bottom:10px">● A contacter maintenant</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.18);border-radius:12px;overflow:hidden;">${churnRows}</table>
+    </div>` : ""}
+
+    ${topClient ? `
+    <div style="margin-bottom:16px;padding:14px 16px;background:rgba(2,209,186,0.05);border:1px solid rgba(2,209,186,0.15);border-radius:12px">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(2,209,186,0.7);font-weight:700;margin-bottom:4px">⭐ Meilleur client</div>
+      <div style="font-size:13px;font-weight:600;color:#fff">${topClient.full_name || topClient.email} <span style="color:rgba(255,255,255,0.4);font-weight:400">— ${topClient._sessions} seance${topClient._sessions > 1 ? "s" : ""} cette semaine</span></div>
+    </div>` : ""}
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px;">
       <tr>
@@ -121,7 +171,8 @@ export default async function handler(req, res) {
   if (!RESEND_KEY) return res.status(500).json({ error: "Missing RESEND_API_KEY" });
 
   try {
-    const coaches = await sbFetch("/rest/v1/coaches?select=id,email,full_name&is_active=eq.true");
+    // On selectionne aussi weekly_report_enabled pour respecter le toggle coach
+    const coaches = await sbFetch("/rest/v1/coaches?select=id,email,full_name,weekly_report_enabled,last_business_score&is_active=eq.true");
     if (!Array.isArray(coaches)) return res.status(500).json({ error: "Failed to load coaches" });
 
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
@@ -129,7 +180,10 @@ export default async function handler(req, res) {
     let sent = 0;
 
     for (const coach of coaches) {
-      const clients = await sbFetch(`/rest/v1/clients?coach_id=eq.${coach.id}&select=id,email,full_name,subscription_end_date,subscription_status`);
+      // Opt-out (si la colonne n'existe pas, Supabase renvoie null → on envoie par defaut)
+      if (coach.weekly_report_enabled === false) continue;
+
+      const clients = await sbFetch(`/rest/v1/clients?coach_id=eq.${coach.id}&select=id,email,full_name,subscription_end_date,subscription_status,subscription_price,last_active_at`);
       if (!Array.isArray(clients) || clients.length === 0) continue;
 
       const ids = clients.map((c) => `"${c.id}"`).join(",");
@@ -143,12 +197,45 @@ export default async function handler(req, res) {
       const inactiveCount = clients.filter((c) => !activeIds.has(c.id)).length;
       const activeCount = clients.length - inactiveCount;
 
-      // Expirants
+      // Expirants (14j)
       const expiringSoon = clients.filter((c) => {
         if (!c.subscription_end_date) return false;
         const d = new Date(c.subscription_end_date);
         return d > new Date() && d < new Date(in14);
       });
+
+      // MRR : somme des subscription_price sur abos actifs
+      const mrr = clients
+        .filter((c) => c.subscription_status === "active" && typeof c.subscription_price === "number")
+        .reduce((sum, c) => sum + (c.subscription_price || 0), 0);
+
+      // Retention % = actifs / total
+      const retentionPct = clients.length > 0 ? Math.round((activeCount / clients.length) * 100) : 0;
+
+      // Top client : celui avec le plus de sessions cette semaine
+      const sessionsByClient = {};
+      (sessionsData || []).forEach((s) => { sessionsByClient[s.client_id] = (sessionsByClient[s.client_id] || 0) + 1; });
+      const topClientId = Object.entries(sessionsByClient).sort((a, b) => b[1] - a[1])[0]?.[0];
+      const topClient = topClientId ? { ...clients.find((c) => c.id === topClientId), _sessions: sessionsByClient[topClientId] } : null;
+
+      // Clients churn risque (inactifs 7j+ avec abo actif)
+      const churnRiskClients = clients
+        .filter((c) => !activeIds.has(c.id) && c.subscription_status === "active")
+        .slice(0, 3)
+        .map((c) => {
+          const last = c.last_active_at ? new Date(c.last_active_at) : null;
+          const _days = last ? Math.floor((Date.now() - last.getTime()) / 86400000) : 8;
+          return { ...c, _days };
+        });
+
+      // Score business (simplifie, aligne avec dashboard)
+      const coverage = activeCount / Math.max(clients.length, 1);
+      const businessScore = Math.round(coverage * 60 + retentionPct * 0.4);
+      const scoreDelta = businessScore - (coach.last_business_score || businessScore);
+
+      // Subject dynamique
+      const deltaTxt = scoreDelta > 0 ? `↑ +${scoreDelta} pts` : scoreDelta < 0 ? `↓ ${scoreDelta} pts` : "· stable";
+      const subject = `Ta semaine RB Perform · Score ${businessScore} · ${deltaTxt}`;
 
       const html = buildDigestHtml({
         coach,
@@ -159,10 +246,24 @@ export default async function handler(req, res) {
           activeCount,
           inactiveCount,
           expiringSoon,
+          mrr,
+          retentionPct,
+          businessScore,
+          scoreDelta,
+          topClient,
+          churnRiskClients,
         },
       });
 
-      await sendEmail(coach.email, "Ta semaine RB Perform — digest", html);
+      await sendEmail(coach.email, subject, html);
+      // Persister le score pour comparer la semaine prochaine (best-effort)
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/coaches?id=eq.${coach.id}`, {
+          method: "PATCH",
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ last_business_score: businessScore }),
+        });
+      } catch (_) {}
       sent++;
     }
 

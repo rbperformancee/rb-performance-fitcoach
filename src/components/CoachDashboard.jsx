@@ -2366,7 +2366,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         {/* Score inline */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 12, marginBottom: 8 }}>
           <span style={{ fontSize: 8, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", fontWeight: 700 }}>Score</span>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 200, fontSize: 15, color: scoreColor, letterSpacing: "-0.5px" }}>{businessScore}</span>
+          <span className="dash-score-num" style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 200, fontSize: 15, color: scoreColor, letterSpacing: "-0.5px" }}>{businessScore}</span>
         </div>
 
         {/* Sparkline MRR 30j */}
@@ -2505,6 +2505,28 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         @keyframes glowFlame{0%,100%{filter:drop-shadow(0 0 8px rgba(2,209,186,0.4))}50%{filter:drop-shadow(0 0 16px rgba(2,209,186,0.7))}}
         @keyframes rbDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
         @keyframes rbPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+        /* Micro-animations premium */
+        @keyframes rowStagger{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+        @keyframes ringDraw{from{stroke-dashoffset:251.3}}
+        /* Stagger sur enfants d'un container .dash-stagger */
+        .dash-stagger > *{animation:rowStagger .35s cubic-bezier(.22,1,.36,1) both}
+        .dash-stagger > *:nth-child(1){animation-delay:0s}
+        .dash-stagger > *:nth-child(2){animation-delay:.05s}
+        .dash-stagger > *:nth-child(3){animation-delay:.1s}
+        .dash-stagger > *:nth-child(4){animation-delay:.15s}
+        .dash-stagger > *:nth-child(5){animation-delay:.2s}
+        .dash-stagger > *:nth-child(6){animation-delay:.25s}
+        .dash-stagger > *:nth-child(7){animation-delay:.3s}
+        .dash-stagger > *:nth-child(8){animation-delay:.35s}
+        .dash-stagger > *:nth-child(n+9){animation-delay:.4s}
+        /* Skeleton shimmer (loading states) */
+        .skel{background:linear-gradient(90deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.06) 50%,rgba(255,255,255,.03) 100%);background-size:800px 100%;animation:shimmer 1.4s linear infinite;border-radius:8px}
+        /* Score color transition */
+        .dash-score-num{transition:color .5s cubic-bezier(.22,1,.36,1)}
+        /* Nav item hover icon translate */
+        .coach-nav-item svg{transition:transform .18s cubic-bezier(.22,1,.36,1)}
+        .coach-nav-item:hover svg{transform:translateX(2px)}
         .mini-nav-btn:hover{border-color:rgba(2,209,186,0.4) !important;color:rgba(255,255,255,0.85) !important}
         @media(max-width:760px){.dash-secondary-nav{display:none !important}}
         /* Sidebar / mobile responsive */
@@ -2590,6 +2612,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           { id: "tab_achievements", label: "Achievements", desc: "Badges & streak", group: "Navigation", icon: "trophy", run: () => setActiveTab("achievements") },
           { id: "open_pipeline", label: "Pipeline CRM", desc: "Kanban des clients", group: "Actions", icon: "view", run: () => setShowPipeline(true) },
           { id: "action_add_client", label: "Ajouter un client", group: "Actions", icon: "plus", run: () => { setShowClientList(true); setShowAdd(true); } },
+          { id: "action_copy_invite", label: "Copier le lien d'invitation", desc: coachData?.coach_slug ? `rbperform.com/rejoindre/${coachData.coach_slug}` : "Lien en cours de generation", group: "Actions", icon: "link", keywords: ["invitation", "lien", "invite", "copier", "partager"], run: async () => {
+            const slug = coachData?.coach_slug;
+            if (!slug) { showToast("Lien pas encore pret"); return; }
+            try {
+              await navigator.clipboard.writeText(`https://rbperform.com/rejoindre/${slug}`);
+              showToast("Lien copie");
+            } catch { showToast("Impossible de copier"); }
+          }},
           { id: "action_refresh", label: "Rafraichir les donnees", group: "Actions", icon: "refresh", run: () => loadClients() },
           ...(onSwitchToSuperAdmin ? [{ id: "nav_superadmin", label: "Super Admin (CEO)", group: "Navigation", icon: "chart", run: () => onSwitchToSuperAdmin() }] : []),
           { id: "action_exit", label: "Quitter le dashboard coach", group: "Actions", icon: "arrow-left", run: () => onExit?.() },
@@ -2691,7 +2721,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 display:"flex", flexDirection:"column",
                 alignItems:"center", justifyContent:"center", gap:1
               }}>
-                <div style={{
+                <div className="dash-score-num" style={{
                   fontFamily:"'JetBrains Mono',monospace",
                   fontSize:28, fontWeight:200,
                   color:scoreColor, letterSpacing:"-2px", lineHeight:1
@@ -2759,7 +2789,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   {urgentCount} client{urgentCount > 1 ? "s" : ""}
                 </span>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              <div className="dash-stagger" style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                 {clientsToAct.map((c) => {
                   const hasProg = c.programmes?.some((p) => p.is_active);
                   const isCritical = c._inactiveDays >= 7;
