@@ -2,6 +2,7 @@ import ClientAnalytics from "./ClientAnalytics";
 import ProgramPDFButton from "./ProgramPDF";
 import CoachStats from "./CoachStats";
 import ChatCoach from "./ChatCoach";
+import DemoBanner from "./DemoBanner";
 import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
@@ -1827,7 +1828,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   );
 }
 
-export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmin }) {
+export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmin, isDemo = false }) {
   const [clients,   setClients]   = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -1945,6 +1946,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const { sent: relanceSent, sendManualPush } = useClientRelance(clients, true);
 
   const addClient = async () => {
+    if (isDemo) { toast.error("Désactivé en mode démo"); return; }
     if (!newEmail) return;
     const email = newEmail.trim().toLowerCase();
     const fullName = newName.trim() || null;
@@ -1967,6 +1969,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   const deleteClient = async (id, email) => {
+    if (isDemo) { toast.error("Désactivé en mode démo"); return; }
     // confirmation supprimee
     // Multi-tenant : verifie que le coach possede ce client
     let del = supabase.from("clients").delete().eq("id", id);
@@ -1983,6 +1986,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   const uploadProg = async (client, file, planId, progWeeks) => {
+    if (isDemo) { toast.error("Désactivé en mode démo"); return; }
     // ===== VALIDATION FICHIER =====
     // 1. Taille max 5MB
     const MAX_SIZE = 5 * 1024 * 1024;
@@ -2152,7 +2156,22 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "'DM Sans', -apple-system, sans-serif", color: "#fff" }}>
+    <div style={{
+      minHeight: "100vh",
+      background: "#050505",
+      fontFamily: "'DM Sans', -apple-system, sans-serif",
+      color: "#fff",
+      paddingTop: isDemo
+        ? "calc(env(safe-area-inset-top, 0px) + 44px)"
+        : "env(safe-area-inset-top, 0px)",
+    }}>
+      {isDemo && (
+        <DemoBanner onSignup={() => {
+          supabase.auth.signOut().then(() => {
+            window.location.href = "/";
+          });
+        }} />
+      )}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@200;400;500;700&display=swap');
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}

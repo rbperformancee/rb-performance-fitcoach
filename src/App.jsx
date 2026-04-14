@@ -389,6 +389,38 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook, coa
 }
 
 function AppInner() {
+  // ===== MODE DEMO (route /demo ou ?demo=true) =====
+  // Detection au mount + auto-login compte sandbox
+  const [isDemo] = React.useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.location.pathname === "/demo"
+      || new URLSearchParams(window.location.search).get("demo") === "true";
+  });
+
+  React.useEffect(() => {
+    if (!isDemo) return;
+    const email = process.env.REACT_APP_DEMO_EMAIL;
+    const password = process.env.REACT_APP_DEMO_PASSWORD;
+    if (!email || !password) {
+      console.warn("[demo] REACT_APP_DEMO_EMAIL/PASSWORD manquantes");
+      return;
+    }
+    // Tente le sign-in. Si deja loge avec un autre compte, on signOut d'abord.
+    supabase.auth.getSession().then(({ data }) => {
+      const sessionEmail = data?.session?.user?.email;
+      if (sessionEmail === email) return; // deja connecte demo
+      const tryLogin = () => supabase.auth.signInWithPassword({ email, password })
+        .then(({ error }) => {
+          if (error) console.error("[demo] login error:", error.message);
+        });
+      if (sessionEmail) {
+        supabase.auth.signOut().then(tryLogin);
+      } else {
+        tryLogin();
+      }
+    });
+  }, [isDemo]);
+
   // Auth
   const {
     user, client, programme: cloudProgramme, programmeMeta, coachInfo, loading: authLoading,
@@ -922,6 +954,7 @@ function AppInner() {
         coachData={coachData}
         onExit={() => setShowCoachDash(false)}
         onSwitchToSuperAdmin={isSuperAdmin ? () => setShowSuperAdmin(true) : null}
+        isDemo={isDemo}
       />
     );
   }
