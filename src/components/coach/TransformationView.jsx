@@ -30,12 +30,30 @@ export default function TransformationView({ client, coach, onClose }) {
   }, [onClose]);
 
   useEffect(() => {
-    if (!client?.id) return;
+    if (!client?.id) { setLoading(false); return; }
     let mounted = true;
+    setLoading(true);
+
+    // Safety timeout — si Supabase traine/hang, on sort de loading apres 15s
+    // pour afficher au moins un etat vide plutot qu'un spinner infini.
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.warn("[TransformationView] timeout: aucune donnee recue apres 15s");
+        setLoading(false);
+      }
+    }, 15000);
+
     fetchTransformation(client.id, client.subscription_start_date)
-      .then((d) => { if (mounted) { setData(d); setLoading(false); } })
-      .catch((e) => { console.error(e); if (mounted) { toast.error("Donnees non chargees"); setLoading(false); } });
-    return () => { mounted = false; };
+      .then((d) => {
+        clearTimeout(timeoutId);
+        if (mounted) { setData(d); setLoading(false); }
+      })
+      .catch((e) => {
+        clearTimeout(timeoutId);
+        console.error("[TransformationView] fetch error", e);
+        if (mounted) { toast.error("Donnees non chargees"); setLoading(false); }
+      });
+    return () => { mounted = false; clearTimeout(timeoutId); };
   }, [client?.id, client?.subscription_start_date]);
 
   const downloadPdf = async () => {

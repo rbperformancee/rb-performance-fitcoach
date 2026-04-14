@@ -11,12 +11,17 @@ export async function fetchTransformation(clientId, subscriptionStart) {
   if (!clientId) return null;
   const startDate = subscriptionStart ? new Date(subscriptionStart) : null;
 
+  // Chaque query est wrappe individuellement : si une table n'existe pas
+  // ou si la RLS denie, on ne fait pas hang toute la Promise.all — on
+  // renvoie juste des donnees vides pour cette categorie.
+  const safe = (p) => p.then((r) => r).catch((e) => { console.warn("[transformation query]", e); return { data: [] }; });
+
   const [weightsRes, sessionsRes, rpeRes, nutriRes, exLogsRes] = await Promise.all([
-    supabase.from("weight_logs").select("date, weight, note").eq("client_id", clientId).order("date", { ascending: true }),
-    supabase.from("session_logs").select("logged_at, session_name").eq("client_id", clientId).order("logged_at", { ascending: true }),
-    supabase.from("session_rpe").select("date, rpe").eq("client_id", clientId).order("date", { ascending: true }),
-    supabase.from("nutrition_logs").select("date, calories, proteines").eq("client_id", clientId).order("date", { ascending: true }),
-    supabase.from("exercise_logs").select("logged_at, ex_key, weight, reps").eq("client_id", clientId).order("logged_at", { ascending: true }).limit(1000),
+    safe(supabase.from("weight_logs").select("date, weight, note").eq("client_id", clientId).order("date", { ascending: true })),
+    safe(supabase.from("session_logs").select("logged_at, session_name").eq("client_id", clientId).order("logged_at", { ascending: true })),
+    safe(supabase.from("session_rpe").select("date, rpe").eq("client_id", clientId).order("date", { ascending: true })),
+    safe(supabase.from("nutrition_logs").select("date, calories, proteines").eq("client_id", clientId).order("date", { ascending: true })),
+    safe(supabase.from("exercise_logs").select("logged_at, ex_key, weight, reps").eq("client_id", clientId).order("logged_at", { ascending: true }).limit(1000)),
   ]);
 
   const weights = weightsRes.data || [];
