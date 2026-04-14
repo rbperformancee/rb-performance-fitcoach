@@ -237,13 +237,13 @@ function LineGraph({ data, color = G, height = 200, unit = "kg", valueKey = "wei
 
         {/* X-axis labels */}
         {xLabels.map((l, i) => (
-          <text key={i} x={l.x} y={vbH - 6} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="-apple-system,Inter,sans-serif" fontWeight="600">
+          <text key={i} x={l.x} y={vbH - 6} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="'DM Sans',-apple-system,sans-serif" fontWeight="600">
             {l.label}
           </text>
         ))}
 
         {/* Unit label */}
-        <text x={4} y={PAD.top + 4} fill="rgba(255,255,255,0.2)" fontSize="9" fontFamily="-apple-system,Inter,sans-serif">{unit}</text>
+        <text x={4} y={PAD.top + 4} fill="rgba(255,255,255,0.2)" fontSize="9" fontFamily="'DM Sans',-apple-system,sans-serif">{unit}</text>
       </svg>
     </div>
   );
@@ -324,9 +324,9 @@ function CreneauxManager() {
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
             min={new Date().toISOString().split("T")[0]}
-            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 13, outline: "none", fontFamily: "-apple-system,sans-serif" }} />
+            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 13, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }} />
           <select value={heure} onChange={e => setHeure(e.target.value)}
-            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 13, outline: "none", fontFamily: "-apple-system,sans-serif" }}>
+            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 13, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
             {HEURES.map(h => <option key={h} value={h} style={{ background: "#1a1a1a" }}>{h}</option>)}
           </select>
           <button onClick={addSlot} disabled={saving || !date}
@@ -523,7 +523,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
       </div>
     )}
 
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
       <style>{`@keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* Ambient teal */}
@@ -550,7 +550,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
             <Avatar name={client.full_name || client.email} size={60} active={!!prog} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 36, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
                 {client.full_name || <span style={{ color: "rgba(255,255,255,0.35)" }}>Sans nom</span>}
               </h1>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{client.email}</div>
@@ -1811,7 +1811,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Message flash — apparait en plein ecran pendant sa seance</div>
 
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Ex: Dernier set. Donne tout." maxLength={80}
-        style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
+        style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
 
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
         <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
@@ -2166,7 +2166,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const inp = {
     padding: "10px 13px", background: "#141414",
     border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 9,
-    color: "#f5f5f5", fontFamily: "'Inter',sans-serif", fontSize: 13,
+    color: "#f5f5f5", fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 13,
     outline: "none", width: "100%", boxSizing: "border-box",
     transition: "border-color 0.15s",
   };
@@ -2502,7 +2502,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         }} />
       )}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@200;400;500;700&display=swap');
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
@@ -2876,7 +2875,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {/* ========== FENETRE PLEIN ECRAN LISTE CLIENTS ========== */}
       {showClientList && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 

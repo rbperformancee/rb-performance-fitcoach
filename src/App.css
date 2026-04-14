@@ -248,16 +248,19 @@ input:focus {
   --red:       #ef4444;
   --radius:    12px;
   --radius-sm: 8px;
-  --font:      'Inter', sans-serif;
+  --font:      'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --mono:      'JetBrains Mono', monospace;
+  --display:   'Syne', sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 14px; -webkit-tap-highlight-color: transparent; }
-body {
+body, #root {
   background: var(--bg); color: var(--text);
   font-family: var(--font); min-height: 100vh;
-  overscroll-behavior: none; -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }

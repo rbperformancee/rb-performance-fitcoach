@@ -42,10 +42,10 @@
     <link rel="preconnect" href="https://pwkajyrpldhlybavmopd.supabase.co" crossorigin />
     <!-- DNS prefetch pour les services secondaires -->
     <link rel="dns-prefetch" href="https://api.mistral.ai" />
-    <!-- Fonts en async (display=swap permet le rendu avec font fallback pendant le chargement) -->
-    <!-- Fonts : 3 weights essentiels seulement (etait 5) pour reduire la taille -->
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" /></noscript>
+    <!-- Fonts — Syne (display) + DM Sans (body) + JetBrains Mono (numbers) + Bebas Neue (legacy landing) -->
+    <!-- Render-blocking pour que les polices soient disponibles au first paint
+         (evite le FOUT ou le fallback ecrase lors du rendu initial du dashboard) -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@200;300;400;700&family=Bebas+Neue&display=swap" rel="stylesheet" />
     <style>
       * { -webkit-tap-highlight-color: transparent; }
       /* Fix iOS Safari 100vh bug : 100vh inclut la barre URL sur iOS.
