@@ -92,6 +92,7 @@ html,body{overflow:hidden;height:100%}
 /* Chaque section = ecran fullscreen, switching via .active */
 section{position:fixed !important;inset:0 !important;width:100% !important;height:100% !important;opacity:0 !important;pointer-events:none !important;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1) !important;overflow-y:auto !important;z-index:1 !important;-webkit-overflow-scrolling:touch}
 section.active{opacity:1 !important;pointer-events:all !important;z-index:10 !important}
+section.hero{overflow:hidden !important}
 .gsap-override *{opacity:1 !important;transform:none !important;visibility:visible !important}
 :root{--orange:#f97316;--orange-bright:#fb923c;--teal:#02d1ba;--teal-bright:#5ee8d4;--violet:#a78bfa;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -819,7 +820,7 @@ html.light .founder-message strong{color:#0a0a0a}
     <p class="hero-sub">Le système qui transforme<br/>chaque coach en CEO.</p>
   </div>
   <button class="hero-arrow" id="heroEnter" onclick="document.querySelector('section.manifeste').classList.add('active');document.querySelector('section.hero').classList.remove('active')"
-    style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:8px 24px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s">
+    style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%);background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:8px 24px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;white-space:nowrap;z-index:5">
     Entrer
   </button>
 </section>
