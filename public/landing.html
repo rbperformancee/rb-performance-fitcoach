@@ -122,13 +122,8 @@ html.light *:focus-visible{outline-color:var(--orange)}
 .gradient-text-orange{background:linear-gradient(135deg,#fff 30%,var(--orange) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .gradient-text-teal{background:linear-gradient(135deg,#fff 30%,var(--teal) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 
-/* ========== CURSOR (custom + spotlight) ========== */
-.cursor{position:fixed;width:20px;height:20px;border:1.5px solid rgba(255,255,255,0.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width 0.25s var(--ease-out),height 0.25s var(--ease-out),background 0.25s,border-color 0.25s;top:-50px;left:-50px;mix-blend-mode:difference;will-change:transform}
-.cursor.grow{width:48px;height:48px;background:rgba(255,255,255,0.9);border-color:rgba(255,255,255,0.9)}
-.cursor.cta-grow{width:80px;height:80px;background:rgba(249,115,22,0.95);border-color:rgba(249,115,22,0.95)}
-@media(hover:none){.cursor{display:none}}
-html.has-cursor{cursor:none}
-html.has-cursor a,html.has-cursor button{cursor:none}
+/* Curseur custom retire — utilise le curseur natif du navigateur */
+.cursor{display:none !important}
 
 /* Spotlight cursor effect (gradient at cursor pos) */
 .spotlight{position:relative;overflow:hidden}
@@ -161,12 +156,12 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .burger-btn.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg);background:#fff}
 
 /* ========== MENU OVERLAY (LVMH style) ========== */
-.menu-overlay{position:fixed;inset:0;background:#050505;z-index:98;opacity:0;pointer-events:none;transition:opacity 0.5s cubic-bezier(0.16,1,0.3,1);display:flex;align-items:center}
+.menu-overlay{position:fixed;inset:0;background:#050505;z-index:98;opacity:0;pointer-events:none;transition:opacity 0.5s cubic-bezier(0.16,1,0.3,1);display:flex;align-items:center;justify-content:center}
 .menu-overlay.open{opacity:1;pointer-events:all}
-.menu-overlay-inner{padding:0 10vw;width:100%;position:relative}
+.menu-overlay-inner{width:100%;max-width:560px;padding:80px 40px 60px;display:flex;flex-direction:column;gap:0;position:relative}
 
 .menu-chapters{display:flex;flex-direction:column}
-.menu-chapter{display:flex;align-items:baseline;gap:28px;text-decoration:none;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer;opacity:0;transform:translateY(16px);transition:opacity 0.4s ease,transform 0.4s ease}
+.menu-chapter{display:flex;align-items:baseline;gap:20px;text-decoration:none;padding:18px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;opacity:0;transform:translateY(12px);transition:opacity 0.4s ease,transform 0.4s ease}
 .menu-overlay.open .menu-chapter{opacity:1;transform:translateY(0)}
 .menu-overlay.open .menu-chapter:nth-child(1){transition-delay:0.05s}
 .menu-overlay.open .menu-chapter:nth-child(2){transition-delay:0.10s}
@@ -176,13 +171,13 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .menu-chapter:hover .ch-name{opacity:0.5}
 
 .ch-num{font-size:11px;letter-spacing:0.2em;color:var(--accent,#C8FF00);font-family:'Courier New',monospace;min-width:32px;padding-top:6px}
-.ch-name{font-size:clamp(40px,7vw,88px);font-weight:800;letter-spacing:-0.02em;color:#F5F2EC;text-transform:uppercase;line-height:1;transition:opacity 0.2s ease}
+.ch-name{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-0.02em;color:#F5F2EC;text-transform:uppercase;line-height:1;transition:opacity 0.2s ease}
 
 .menu-cta{margin-top:48px;opacity:0;transition:opacity 0.4s ease 0.35s}
 .menu-overlay.open .menu-cta{opacity:1}
-.menu-cta-btn{font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#050505;background:var(--accent,#C8FF00);padding:14px 32px;text-decoration:none;font-weight:600;display:inline-block}
+.menu-cta-btn{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#000;background:#02d1ba;padding:12px 28px;text-decoration:none;font-weight:600;display:inline-block;border-radius:100px;margin-top:40px}
 
-.menu-sig{position:absolute;bottom:40px;right:10vw;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.15);opacity:0;transition:opacity 0.4s ease 0.4s}
+.menu-sig{margin-top:24px;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.15);text-align:right;opacity:0;transition:opacity 0.4s ease 0.4s}
 .menu-overlay.open .menu-sig{opacity:1}
 
 /* ========== HERO (centered Ferrari-style, epure) ========== */
@@ -493,7 +488,7 @@ html.light .footer-copy,html.light .footer-tagline,html.light .footer-links a{co
 html.light .footer-links a:hover{color:#0a0a0a}
 html.light .sticky-cta{background:rgba(255,255,255,0.95);border-color:rgba(249,115,22,0.3)}
 html.light .sticky-cta .label{color:#0a0a0a}
-html.light .cursor{mix-blend-mode:multiply;border-color:rgba(0,0,0,0.5)}
+/* Cursor light mode rule retire (cursor custom desactive) */
 
 /* ========== THEME TOGGLE ========== */
 .theme-toggle{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);transition:all 0.25s var(--ease-out);flex-shrink:0}
@@ -777,20 +772,16 @@ html.light .founder-message strong{color:#0a0a0a}
         <span class="ch-num">01</span>
         <span class="ch-name">Le Système</span>
       </a>
-      <a class="menu-chapter" data-target="how">
-        <span class="ch-num">02</span>
-        <span class="ch-name">3 Étapes</span>
-      </a>
       <a class="menu-chapter" data-target="product-reveal">
-        <span class="ch-num">03</span>
+        <span class="ch-num">02</span>
         <span class="ch-name">Dashboard</span>
       </a>
       <a class="menu-chapter" data-target="features">
-        <span class="ch-num">04</span>
+        <span class="ch-num">03</span>
         <span class="ch-name">Features</span>
       </a>
       <a class="menu-chapter" data-target="pricing">
-        <span class="ch-num">05</span>
+        <span class="ch-num">04</span>
         <span class="ch-name">Accès</span>
       </a>
     </nav>
@@ -1362,26 +1353,8 @@ html.light .founder-message strong{color:#0a0a0a}
 
   // ===== Cursor custom =====
   function initStaticCursor() {
-    if (noHover) return;
-    document.documentElement.classList.add('has-cursor');
-    var cursor = document.getElementById('cursor');
-    if (!cursor) return;
-    var tx = 0, ty = 0, cx = 0, cy = 0;
-    document.addEventListener('mousemove', function(e) { tx = e.clientX; ty = e.clientY; }, { passive: true });
-    (function animate() {
-      cx += (tx - cx) * 0.22;
-      cy += (ty - cy) * 0.22;
-      cursor.style.transform = 'translate(' + cx + 'px, ' + cy + 'px) translate(-50%, -50%)';
-      requestAnimationFrame(animate);
-    })();
-    document.querySelectorAll('a, button').forEach(function(el) {
-      el.addEventListener('mouseenter', function() {
-        cursor.classList.add(el.classList.contains('btn-orange') || el.classList.contains('cta-plan') ? 'cta-grow' : 'grow');
-      });
-      el.addEventListener('mouseleave', function() {
-        cursor.classList.remove('grow', 'cta-grow');
-      });
-    });
+    // Curseur custom desactive : utilise le curseur natif du navigateur
+    return;
   }
 
   // ===== Nav scroll =====
