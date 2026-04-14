@@ -651,18 +651,31 @@ html.light .stack-card{box-shadow:0 30px 80px rgba(0,0,0,0.06)}
 }
 
 /* ========== STACK SCENE (refonte section.how) ========== */
-section.how{padding:0 !important}
+section.how{padding:0 !important;overflow-y:auto;scrollbar-width:none}
+section.how::-webkit-scrollbar{display:none}
+
 .stack-scene{
-  height:100%;
+  height:auto;
+  min-height:100%;
   display:flex;
   flex-direction:column;
-  padding:60px 64px 80px;
-  max-width:900px;
+  padding:48px 64px 0;
+  max-width:860px;
   margin:0 auto;
   width:100%;
+  overflow:visible;
   box-sizing:border-box;
 }
-.stack-header{margin-bottom:48px;flex-shrink:0}
+
+.stack-header{
+  margin-bottom:40px;
+  flex-shrink:0;
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:#080808;
+  padding-bottom:16px;
+}
 .stack-eyebrow{
   font-size:10px;font-weight:700;
   letter-spacing:.2em;text-transform:uppercase;
@@ -674,33 +687,43 @@ section.how{padding:0 !important}
   font-weight:900;color:#fff;
   letter-spacing:-2px;line-height:.95;
 }
-.stack-cards{display:flex;flex-direction:column;gap:0;flex:1}
-.how .stack-card{
-  position:sticky;
-  top:calc(var(--i) * 18px);
-  border-radius:24px;
-  padding:40px 44px;
-  margin-bottom:16px;
-  min-height:260px;
+
+.stack-cards{
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:0;
+  padding-bottom:80vh;
+}
+
+/* LES VRAIES STACKING CARDS — effet pile */
+.how .stack-card{
+  position:sticky;
+  border-radius:24px;
+  padding:40px 44px;
+  margin-bottom:0;
+  min-height:72vh;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
   border:1px solid rgba(255,255,255,.07);
   grid-template-columns:none;
   box-shadow:none;
   transform:none;
+  transition:transform .3s ease, box-shadow .3s ease;
 }
-.how .stack-card:nth-child(1){background:#0f0f0f;border-color:rgba(255,255,255,.07);z-index:1}
-.how .stack-card:nth-child(2){background:#131313;border-color:rgba(255,255,255,.07);z-index:2}
-.how .stack-card:nth-child(3){background:#171717;border-color:rgba(2,209,186,.15);z-index:3}
+.how .stack-card:nth-child(1){top:20px;background:#0f0f0f;border-color:rgba(255,255,255,.07);z-index:1}
+.how .stack-card:nth-child(2){top:52px;background:#131313;border-color:rgba(255,255,255,.07);z-index:2}
+.how .stack-card:nth-child(3){top:84px;background:#171717;border-color:rgba(2,209,186,.15);z-index:3}
 .how .stack-card.faded{opacity:1;transform:none;pointer-events:auto}
+
 .sc-num{
-  position:absolute;top:20px;right:28px;
+  position:absolute;top:24px;right:32px;
   font-family:'JetBrains Mono',monospace;
-  font-size:88px;font-weight:200;
+  font-size:96px;font-weight:200;
   color:rgba(255,255,255,.035);
   letter-spacing:-4px;line-height:1;
   pointer-events:none;
+  user-select:none;
 }
 .sc-tag{
   font-size:9px;font-weight:700;
@@ -709,31 +732,161 @@ section.how{padding:0 !important}
 }
 .sc-title{
   font-family:'Syne',sans-serif;
-  font-size:clamp(20px,2.8vw,28px);
+  font-size:clamp(24px,3.5vw,36px);
   font-weight:900;color:#fff;
-  letter-spacing:-1px;line-height:1.05;
+  letter-spacing:-1.5px;line-height:1.0;
 }
 .sc-desc{
-  font-size:14px;color:rgba(255,255,255,.4);
+  font-size:15px;color:rgba(255,255,255,.42);
   line-height:1.65;font-weight:300;
-  max-width:520px;
+  max-width:540px;
+  flex:1;
 }
 .sc-feat{
   display:flex;gap:8px;
-  flex-wrap:wrap;margin-top:auto;
-  padding-top:12px;
-  border-top:1px solid rgba(255,255,255,.05);
+  flex-wrap:wrap;
+  padding-top:16px;
+  border-top:1px solid rgba(255,255,255,.06);
+  margin-top:auto;
 }
 .sc-feat span{
-  font-size:11px;color:rgba(255,255,255,.3);
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:100px;padding:4px 12px;
+  font-size:11px;color:rgba(255,255,255,.35);
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:100px;padding:5px 14px;
+  font-family:'DM Sans',sans-serif;
 }
 @media(max-width:768px){
-  .stack-scene{padding:40px 20px 60px}
-  .how .stack-card{padding:28px 22px;min-height:0;top:0}
-  .sc-num{font-size:56px;top:14px;right:18px}
+  .stack-scene{padding:32px 20px 0;max-width:none}
+  .how .stack-card{padding:28px 22px;min-height:60vh}
+  .how .stack-card:nth-child(1){top:12px}
+  .how .stack-card:nth-child(2){top:28px}
+  .how .stack-card:nth-child(3){top:44px}
+  .sc-num{font-size:60px;top:14px;right:18px}
+  .sc-title{font-size:clamp(22px,6vw,30px)}
+}
+
+/* ========== FEAT REVEAL — 4 ecrans qui changent au scroll ========== */
+section.product-reveal{overflow-y:auto;scrollbar-width:none}
+section.product-reveal::-webkit-scrollbar{display:none}
+
+.feat-reveal-wrap{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:48px;
+  padding:60px 64px;
+  max-width:1100px;
+  margin:0 auto;
+  align-items:start;
+}
+
+.feat-screen-sticky{position:sticky;top:40px}
+.feat-screen-frame{
+  background:#0d0d0d;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;
+  overflow:hidden;
+  min-height:360px;
+  position:relative;
+}
+
+.feat-screen{
+  position:absolute;inset:0;
+  padding:24px;
+  opacity:0;
+  transform:translateY(12px);
+  transition:opacity .4s ease, transform .4s ease;
+  pointer-events:none;
+}
+.feat-screen.active{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:all;
+  position:relative;
+}
+
+.fs-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.fs-logo{font-family:'Syne',sans-serif;font-size:13px;font-weight:900;letter-spacing:.1em;color:#fff}
+.fs-logo span{color:#02d1ba}
+.fs-badge{
+  font-size:9px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  background:rgba(2,209,186,.08);
+  border:1px solid rgba(2,209,186,.2);
+  color:#02d1ba;
+  padding:4px 10px;border-radius:100px;
+}
+
+.fs-hero{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.fs-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:.95}
+.fs-dot{color:#02d1ba}
+.fs-ring{position:relative;width:64px;height:64px;flex-shrink:0}
+.fs-ring svg{position:absolute;top:0;left:0}
+.fs-ring-n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#02d1ba}
+.fs-metrics{display:flex;gap:12px;margin-bottom:14px}
+.fs-metric{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
+.fs-ml{font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:5px}
+.fs-mv{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:300;color:#fff}
+.fs-alert{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.18);border-radius:10px;font-size:10px;color:#ef4444;font-weight:600}
+.fs-adot{width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0}
+
+.fs-cl-header{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:10px}
+.fs-client{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:12px;margin-bottom:7px}
+.fs-client.crit{border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.03)}
+.fs-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.fs-cinfo{flex:1;min-width:0}
+.fs-cname{font-size:12px;font-weight:600;color:#fff}
+.fs-csub{font-size:10px;color:rgba(255,255,255,.28);margin-top:1px}
+.fs-cpill{font-size:8px;font-weight:700;letter-spacing:.05em;padding:3px 9px;border-radius:100px;border:1px solid}
+.fs-cpill.crit{color:#ef4444;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.fs-cpill.warn{color:#f97316;border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)}
+.fs-cpill.ok{color:#02d1ba;border-color:rgba(2,209,186,.3);background:rgba(2,209,186,.08)}
+.fs-ia-badge{margin-top:12px;text-align:center;font-size:10px;color:rgba(255,255,255,.28);letter-spacing:.08em}
+
+.fs-macro-header{margin-bottom:16px}
+.fs-macro-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.fs-macro-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px}
+.fs-macros{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.fs-macro-bar{display:flex;align-items:center;gap:10px}
+.fs-macro-lbl{font-size:10px;color:rgba(255,255,255,.35);width:72px}
+.fs-bar-track{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+.fs-bar-fill{height:100%;border-radius:100px}
+.fs-macro-val{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;color:rgba(255,255,255,.5);width:32px;text-align:right}
+.fs-meals{display:flex;flex-direction:column;gap:7px}
+.fs-meal{display:flex;align-items:center;gap:10px;font-size:11px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.fs-mhour{color:#02d1ba;font-weight:600;width:28px}
+.fs-mname{flex:1;color:rgba(255,255,255,.55)}
+.fs-mkcal{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.3)}
+
+.fs-prog-header{margin-bottom:14px}
+.fs-prog-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:900;color:#fff;letter-spacing:.04em}
+.fs-prog-sub{font-size:10px;color:rgba(255,255,255,.3);margin-top:3px}
+.fs-week-label{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#02d1ba;margin-bottom:10px}
+.fs-exercise{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.fs-ex-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:7px}
+.fs-ex-tags{display:flex;gap:6px;flex-wrap:wrap}
+.fs-ex-tags span{font-size:9px;font-weight:600;color:rgba(255,255,255,.4);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:100px;padding:3px 9px;font-family:'JetBrains Mono',monospace}
+.fs-prog-cta{margin-top:12px;font-size:10px;color:rgba(255,255,255,.25);letter-spacing:.08em;text-align:center}
+
+.feat-texts{display:flex;flex-direction:column;gap:0}
+.feat-text-block{
+  min-height:80vh;
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:40px 0;
+  opacity:.3;
+  transition:opacity .4s ease;
+}
+.feat-text-block.active{opacity:1}
+.ft-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:.2em;color:#02d1ba;margin-bottom:10px}
+.ft-tag{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px}
+.ft-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:.97;margin-bottom:18px}
+.ft-desc{font-size:14px;color:rgba(255,255,255,.42);line-height:1.65;font-weight:300;max-width:400px}
+
+@media(max-width:900px){
+  .feat-reveal-wrap{grid-template-columns:1fr;gap:24px;padding:40px 24px}
+  .feat-screen-sticky{position:relative;top:auto}
+  .feat-text-block{min-height:auto;padding:24px 0;opacity:1}
 }
 
 /* ========== FOUNDER NOTE ========== */
@@ -958,8 +1111,8 @@ html.light .founder-message strong{color:#0a0a0a}
         <span class="ch-num">03</span>
         <span class="ch-name">Features</span>
       </a>
-      <a class="menu-chapter" data-target="pricing">
-        <span class="ch-num">04</span>
+      <a class="menu-chapter" data-target="cta-final">
+        <span class="ch-num">05</span>
         <span class="ch-name">Accès</span>
       </a>
     </nav>
@@ -1173,6 +1326,211 @@ html.light .founder-message strong{color:#0a0a0a}
       </div>
     </div>
   </div>
+
+  <!-- ========== FEATURE REVEAL — 4 ECRANS CHANGEANT AU SCROLL ========== -->
+  <div class="feat-reveal-wrap">
+
+    <!-- Ecran sticky a droite -->
+    <div class="feat-screen-sticky">
+      <div class="feat-screen-frame">
+
+        <!-- Ecran 1 — Dashboard CEO -->
+        <div class="feat-screen active" data-screen="0">
+          <div class="fs-topbar">
+            <div class="fs-logo">RB<span>PERFORM</span></div>
+            <div class="fs-badge">Dashboard</div>
+          </div>
+          <div class="fs-hero">
+            <div class="fs-title">15 clients<span class="fs-dot">.</span><br>
+              <span style="color:#02d1ba">Tout roule.</span>
+            </div>
+            <div class="fs-ring">
+              <svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
+                <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
+                <circle cx="32" cy="32" r="26" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="21.2"/>
+              </svg>
+              <div class="fs-ring-n">87</div>
+            </div>
+          </div>
+          <div class="fs-metrics">
+            <div class="fs-metric">
+              <div class="fs-ml">MRR</div>
+              <div class="fs-mv" style="color:#02d1ba">1 800 €</div>
+            </div>
+            <div class="fs-metric">
+              <div class="fs-ml">Rétention</div>
+              <div class="fs-mv" style="color:#02d1ba">87%</div>
+            </div>
+            <div class="fs-metric">
+              <div class="fs-ml">Actifs 7j</div>
+              <div class="fs-mv">11</div>
+            </div>
+          </div>
+          <div class="fs-alert">
+            <div class="fs-adot"></div>
+            <span>À agir maintenant · 2 clients</span>
+          </div>
+        </div>
+
+        <!-- Ecran 2 — Intelligence client -->
+        <div class="feat-screen" data-screen="1">
+          <div class="fs-topbar">
+            <div class="fs-logo">RB<span>PERFORM</span></div>
+            <div class="fs-badge" style="background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3);color:#f97316">Anti-Churn IA</div>
+          </div>
+          <div class="fs-client-list">
+            <div class="fs-cl-header">Clients à risque</div>
+            <div class="fs-client crit">
+              <div class="fs-av" style="background:rgba(239,68,68,.1);color:#ef4444">MD</div>
+              <div class="fs-cinfo">
+                <div class="fs-cname">Marc Dubois</div>
+                <div class="fs-csub">Inactif 8j · score churn 72/100</div>
+              </div>
+              <div class="fs-cpill crit">Critique</div>
+            </div>
+            <div class="fs-client warn">
+              <div class="fs-av" style="background:rgba(249,115,22,.1);color:#f97316">KM</div>
+              <div class="fs-cinfo">
+                <div class="fs-cname">Kevin Martin</div>
+                <div class="fs-csub">Inactif 4j · score churn 61/100</div>
+              </div>
+              <div class="fs-cpill warn">Élevé</div>
+            </div>
+            <div class="fs-client ok">
+              <div class="fs-av" style="background:rgba(2,209,186,.1);color:#02d1ba">ML</div>
+              <div class="fs-cinfo">
+                <div class="fs-cname">Marie Laurent</div>
+                <div class="fs-csub">En séance · score 12/100</div>
+              </div>
+              <div class="fs-cpill ok">Safe</div>
+            </div>
+          </div>
+          <div class="fs-ia-badge"><span>7 signaux analysés par client</span></div>
+        </div>
+
+        <!-- Ecran 3 — Nutrition macros -->
+        <div class="feat-screen" data-screen="2">
+          <div class="fs-topbar">
+            <div class="fs-logo">RB<span>PERFORM</span></div>
+            <div class="fs-badge" style="background:rgba(163,230,53,.08);border-color:rgba(163,230,53,.25);color:#a3e635">Nutrition</div>
+          </div>
+          <div class="fs-macro-header">
+            <div class="fs-macro-title">Mardi · 1847 kcal</div>
+            <div class="fs-macro-sub">Objectif : 2200 kcal</div>
+          </div>
+          <div class="fs-macros">
+            <div class="fs-macro-bar">
+              <div class="fs-macro-lbl">Protéines</div>
+              <div class="fs-bar-track"><div class="fs-bar-fill" style="width:75%;background:#02d1ba"></div></div>
+              <div class="fs-macro-val">142g</div>
+            </div>
+            <div class="fs-macro-bar">
+              <div class="fs-macro-lbl">Glucides</div>
+              <div class="fs-bar-track"><div class="fs-bar-fill" style="width:60%;background:#f97316"></div></div>
+              <div class="fs-macro-val">184g</div>
+            </div>
+            <div class="fs-macro-bar">
+              <div class="fs-macro-lbl">Lipides</div>
+              <div class="fs-bar-track"><div class="fs-bar-fill" style="width:45%;background:#a78bfa"></div></div>
+              <div class="fs-macro-val">62g</div>
+            </div>
+          </div>
+          <div class="fs-meals">
+            <div class="fs-meal">
+              <span class="fs-mhour">8h</span>
+              <span class="fs-mname">Avoine + œufs + banane</span>
+              <span class="fs-mkcal">540 kcal</span>
+            </div>
+            <div class="fs-meal">
+              <span class="fs-mhour">12h</span>
+              <span class="fs-mname">Poulet, riz, brocolis</span>
+              <span class="fs-mkcal">680 kcal</span>
+            </div>
+            <div class="fs-meal">
+              <span class="fs-mhour">16h</span>
+              <span class="fs-mname">Shake protéiné + amandes</span>
+              <span class="fs-mkcal">320 kcal</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ecran 4 — Programme Builder -->
+        <div class="feat-screen" data-screen="3">
+          <div class="fs-topbar">
+            <div class="fs-logo">RB<span>BUILDER</span></div>
+            <div class="fs-badge" style="background:rgba(2,209,186,.08);border-color:rgba(2,209,186,.25);color:#02d1ba">Drag &amp; Drop</div>
+          </div>
+          <div class="fs-prog-header">
+            <div class="fs-prog-title">PUSH PULL LEGS — HYPERTROPHIE</div>
+            <div class="fs-prog-sub">8 semaines · Prise de masse</div>
+          </div>
+          <div class="fs-prog-week">
+            <div class="fs-week-label">S1 — Semaine 1 · Push</div>
+            <div class="fs-exercise">
+              <div class="fs-ex-name">Développé couché haltères</div>
+              <div class="fs-ex-tags">
+                <span>4×8</span><span>Tempo 30X0</span><span>RIR 2</span><span>32 kg</span>
+              </div>
+            </div>
+            <div class="fs-exercise">
+              <div class="fs-ex-name">Dips lestés</div>
+              <div class="fs-ex-tags">
+                <span>3×10</span><span>Tempo 20X1</span><span>RIR 1</span><span>15 kg</span>
+              </div>
+            </div>
+          </div>
+          <div class="fs-prog-cta"><span>Export PDF signé · Preview live</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Textes a gauche qui scrollent -->
+    <div class="feat-texts">
+
+      <div class="feat-text-block" data-feat="0">
+        <div class="ft-num">01</div>
+        <div class="ft-tag">Dashboard CEO</div>
+        <h3 class="ft-title">Ton business en<br>une seule vue.</h3>
+        <p class="ft-desc">Score business calculé en temps réel. MRR,
+        rétention, activité client, alertes d'expiration, churn IA.
+        Le cockpit que les plateformes concurrentes cachent derrière
+        3 onglets — tu l'as en hero.</p>
+      </div>
+
+      <div class="feat-text-block" data-feat="1">
+        <div class="ft-num">02</div>
+        <div class="ft-tag">Intelligence Client</div>
+        <h3 class="ft-title">Chaque client.<br>Chaque signal.</h3>
+        <p class="ft-desc">Profils comportementaux automatiques, score de
+        risque de churn, dernière activité, tags CRM, pipeline de
+        renouvellement. Tu sais qui appeler avant même qu'il pense
+        à partir.</p>
+      </div>
+
+      <div class="feat-text-block" data-feat="2">
+        <div class="ft-num">03</div>
+        <div class="ft-tag">Nutrition</div>
+        <h3 class="ft-title">Suivi macro<br>au gramme près.</h3>
+        <p class="ft-desc">IA vocale pour logger un repas en 2 secondes,
+        scanner de codes-barres, base de 450K aliments. Protéines,
+        glucides, lipides, hydratation, sommeil. Tout relié au programme.</p>
+      </div>
+
+      <div class="feat-text-block" data-feat="3">
+        <div class="ft-num">04</div>
+        <div class="ft-tag">Programme Builder</div>
+        <h3 class="ft-title">Des programmes<br>qui claquent.</h3>
+        <p class="ft-desc">Interface drag-and-drop pour construire des
+        programmes multi-semaines. Tempo, RIR, charges, vidéos YouTube,
+        notes motivation, finisher. Preview live. Export PDF signé.
+        Zéro Excel.</p>
+      </div>
+
+    </div>
+
+  </div>
+
 </section>
 
 <!-- ========== BENTO GRID (showcase Apple-style) ========== -->
@@ -2293,6 +2651,39 @@ html.light .founder-message strong{color:#0a0a0a}
   // Init dots
   showSectionWithDots('hero');
 
+})();
+</script>
+
+<!-- ========== FEAT REVEAL — IntersectionObserver scroll-driven ========== -->
+<script>
+(function() {
+  const blocks  = document.querySelectorAll('.feat-text-block');
+  const screens = document.querySelectorAll('.feat-screen');
+  if (!blocks.length || !screens.length) return;
+
+  function activateFeat(index) {
+    blocks.forEach((b, i)  => b.classList.toggle('active', i === index));
+    screens.forEach((s, i) => s.classList.toggle('active', i === index));
+  }
+
+  // Activer le premier par défaut
+  activateFeat(0);
+
+  if (!('IntersectionObserver' in window)) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = parseInt(entry.target.dataset.feat);
+        if (!Number.isNaN(idx)) activateFeat(idx);
+      }
+    });
+  }, {
+    root: document.querySelector('section.product-reveal'),
+    threshold: 0.5,
+  });
+
+  blocks.forEach(b => observer.observe(b));
 })();
 </script>
 </body>
