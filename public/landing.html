@@ -12,14 +12,14 @@
 <link rel="sitemap" type="application/xml" href="/sitemap.xml">
 <meta property="og:type" content="website">
 <meta property="og:title" content="RB Perform — La performance sans compromis">
-<meta property="og:description" content="La plateforme qui transforme chaque coach en CEO.">
+<meta property="og:description" content="Le système qui transforme chaque coach en CEO.">
 <meta property="og:url" content="https://rbperform.app">
 <meta property="og:image" content="https://rbperform.app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="RB Perform — La performance sans compromis">
-<meta name="twitter:description" content="La plateforme qui transforme chaque coach en CEO.">
+<meta name="twitter:description" content="Le système qui transforme chaque coach en CEO.">
 <meta name="twitter:image" content="https://rbperform.app/og-image.png">
 <link rel="canonical" href="https://rbperform.app/">
 <link rel="alternate" hreflang="fr" href="https://rbperform.app/">
@@ -144,6 +144,39 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .nav-logo-accent{color:var(--teal);margin-left:2px}
 .nav-link{font-size:13px;color:rgba(255,255,255,0.7);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s;padding:8px 4px;display:inline-block}
 .nav-link:hover{color:#fff}
+
+/* ========== BURGER BUTTON ========== */
+.burger-btn{background:none;border:none;cursor:pointer;padding:8px 12px;display:flex;flex-direction:column;justify-content:center;gap:5px;position:absolute;left:50%;transform:translateX(-50%);z-index:501}
+.burger-btn span{display:block;width:24px;height:1px;background:rgba(255,255,255,0.6);transition:transform 0.35s ease,opacity 0.35s ease,background 0.35s ease;transform-origin:center}
+.burger-btn:hover span{background:rgba(255,255,255,0.9)}
+.burger-btn.open span:nth-child(1){transform:translateY(6px) rotate(45deg);background:#fff}
+.burger-btn.open span:nth-child(2){opacity:0}
+.burger-btn.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg);background:#fff}
+
+/* ========== MENU OVERLAY (LVMH style) ========== */
+.menu-overlay{position:fixed;inset:0;background:#050505;z-index:98;opacity:0;pointer-events:none;transition:opacity 0.5s cubic-bezier(0.16,1,0.3,1);display:flex;align-items:center}
+.menu-overlay.open{opacity:1;pointer-events:all}
+.menu-overlay-inner{padding:0 10vw;width:100%;position:relative}
+
+.menu-chapters{display:flex;flex-direction:column}
+.menu-chapter{display:flex;align-items:baseline;gap:28px;text-decoration:none;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer;opacity:0;transform:translateY(16px);transition:opacity 0.4s ease,transform 0.4s ease}
+.menu-overlay.open .menu-chapter{opacity:1;transform:translateY(0)}
+.menu-overlay.open .menu-chapter:nth-child(1){transition-delay:0.05s}
+.menu-overlay.open .menu-chapter:nth-child(2){transition-delay:0.10s}
+.menu-overlay.open .menu-chapter:nth-child(3){transition-delay:0.15s}
+.menu-overlay.open .menu-chapter:nth-child(4){transition-delay:0.20s}
+.menu-overlay.open .menu-chapter:nth-child(5){transition-delay:0.25s}
+.menu-chapter:hover .ch-name{opacity:0.5}
+
+.ch-num{font-size:11px;letter-spacing:0.2em;color:var(--accent,#C8FF00);font-family:'Courier New',monospace;min-width:32px;padding-top:6px}
+.ch-name{font-size:clamp(40px,7vw,88px);font-weight:800;letter-spacing:-0.02em;color:#F5F2EC;text-transform:uppercase;line-height:1;transition:opacity 0.2s ease}
+
+.menu-cta{margin-top:48px;opacity:0;transition:opacity 0.4s ease 0.35s}
+.menu-overlay.open .menu-cta{opacity:1}
+.menu-cta-btn{font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#050505;background:var(--accent,#C8FF00);padding:14px 32px;text-decoration:none;font-weight:600;display:inline-block}
+
+.menu-sig{position:absolute;bottom:40px;right:10vw;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.15);opacity:0;transition:opacity 0.4s ease 0.4s}
+.menu-overlay.open .menu-sig{opacity:1}
 
 /* ========== HERO (centered Ferrari-style, epure) ========== */
 .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:80px 24px}
@@ -708,11 +741,63 @@ html.light .founder-message strong{color:#0a0a0a}
 <div class="cursor" id="cursor" aria-hidden="true"></div>
 
 <nav class="topnav" id="nav">
-  <a href="#" class="nav-logo" aria-label="RB Perform — accueil">
-    <span class="nav-logo-text">RB<span class="nav-logo-accent">PERFORM</span></span>
+  <a href="#" class="nav-logo" aria-label="RB Perform">
+    <span class="nav-logo-text">
+      RB<span class="nav-logo-accent">PERFORM</span>
+    </span>
   </a>
-  <a href="https://rb-perfor.vercel.app" class="nav-link" target="_blank" rel="noopener">Connexion</a>
+
+  <button class="burger-btn" id="burgerBtn"
+          aria-label="Ouvrir le menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <a href="https://rb-perfor.vercel.app"
+     class="nav-link" target="_blank" rel="noopener">
+    Connexion
+  </a>
 </nav>
+
+<!-- ========== MENU OVERLAY PLEIN ECRAN (LVMH style) ========== -->
+<div class="menu-overlay" id="menuOverlay"
+     aria-hidden="true" role="dialog">
+  <div class="menu-overlay-inner">
+
+    <nav class="menu-chapters">
+      <a class="menu-chapter" data-target="manifeste">
+        <span class="ch-num">01</span>
+        <span class="ch-name">Le Système</span>
+      </a>
+      <a class="menu-chapter" data-target="how">
+        <span class="ch-num">02</span>
+        <span class="ch-name">3 Étapes</span>
+      </a>
+      <a class="menu-chapter" data-target="product-reveal">
+        <span class="ch-num">03</span>
+        <span class="ch-name">Dashboard</span>
+      </a>
+      <a class="menu-chapter" data-target="features">
+        <span class="ch-num">04</span>
+        <span class="ch-name">Features</span>
+      </a>
+      <a class="menu-chapter" data-target="pricing">
+        <span class="ch-num">05</span>
+        <span class="ch-name">Accès</span>
+      </a>
+    </nav>
+
+    <div class="menu-cta">
+      <a href="https://rb-perfor.vercel.app"
+         class="menu-cta-btn">
+        Rejoindre RB Perform →
+      </a>
+    </div>
+
+    <div class="menu-sig">rbperform.app</div>
+  </div>
+</div>
 
 <!-- ========== HERO ========== -->
 <main id="main">
@@ -725,7 +810,7 @@ html.light .founder-message strong{color:#0a0a0a}
   <div class="hero-overlay"></div>
   <div class="hero-content">
     <h1 class="hero-title" id="heroTitle">RB PERFORM</h1>
-    <p class="hero-sub">La plateforme qui transforme<br/>chaque coach en CEO.</p>
+    <p class="hero-sub">Le système qui transforme<br/>chaque coach en CEO.</p>
   </div>
   <a href="#how" class="hero-arrow" aria-label="Faire défiler vers le bas">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -950,120 +1035,6 @@ html.light .founder-message strong{color:#0a0a0a}
   </div>
 </section>
 
-<!-- ========== STACKING CARDS ========== -->
-<section class="stacking">
-  <div class="stacking-inner">
-    <div class="intro">
-      <div class="section-tag" data-i18n="stack.tag">Pensé pour les coachs sérieux</div>
-      <h2 class="section-title gradient-text" data-i18n="stack.title">Plus qu'une app.<br/>Un système.</h2>
-    </div>
-    <div class="stack-list" id="stackList">
-      <div class="stack-card">
-        <div class="s-content">
-          <div class="s-tag" data-i18n="stack.c1_tag">Performance</div>
-          <h3 data-i18n="stack.c1_title">Score business<br/>en temps réel.</h3>
-          <p data-i18n="stack.c1_desc">Un seul chiffre qui résume la santé de ton activité. Calculé live à partir de la rétention, du MRR, de l'activité client et du momentum. Tu sais en 2 secondes si ton mois est solide.</p>
-        </div>
-        <div class="stack-visual viz-1">
-          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </div>
-      </div>
-      <div class="stack-card">
-        <div class="s-content">
-          <div class="s-tag" data-i18n="stack.c2_tag">Anticipation</div>
-          <h3 data-i18n="stack.c2_title">L'IA voit avant toi.</h3>
-          <p data-i18n="stack.c2_desc">7 signaux par client analysés en continu. Quand un score de churn dépasse 60, tu reçois une alerte avec l'action recommandée. Tu sauves les clients que d'autres laissent partir.</p>
-        </div>
-        <div class="stack-visual viz-2">
-          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-        </div>
-      </div>
-      <div class="stack-card">
-        <div class="s-content">
-          <div class="s-tag" data-i18n="stack.c3_tag">Marque</div>
-          <h3 data-i18n="stack.c3_title">Ton empire,<br/>ta marque.</h3>
-          <p data-i18n="stack.c3_desc">White label complet inclus dès le plan Pro. Logo, couleurs, domaine custom. Tes clients voient ta marque, jamais "RB Perform". Tu construis ton actif, pas le nôtre.</p>
-        </div>
-        <div class="stack-visual viz-3">
-          <svg class="big-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== FEATURES ========== -->
-<section class="features" id="features">
-  <div class="features-inner">
-    <div class="intro">
-      <div class="section-tag">Ce qui rend RB différent</div>
-      <h2 class="section-title gradient-text">Tout ce dont tu as besoin.<br/>Rien de superflu.</h2>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card tilt reveal">
-        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-        <div class="feature-title">Dashboard CEO</div>
-        <div class="feature-desc">MRR, ARR, rétention, score business calculé live. Tous les KPIs d'un SaaS à la performance de ton coaching.</div>
-      </div>
-      <div class="feature-card tilt reveal stagger-1">
-        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
-        <div class="feature-title">Anti-churn IA</div>
-        <div class="feature-desc">Score de risque calculé par ML sur 7 signaux. Alertes proactives. Tu sauves tes clients avant qu'ils partent.</div>
-      </div>
-      <div class="feature-card tilt reveal stagger-2">
-        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div class="feature-title">Programme Builder</div>
-        <div class="feature-desc">Multi-semaines, drag-and-drop, vidéos YouTube, notes motivation, preview live. Addictif.</div>
-      </div>
-      <div class="feature-card tilt reveal">
-        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg></div>
-        <div class="feature-title">White Label</div>
-        <div class="feature-desc">Ton logo, tes couleurs, ton domaine. Tes clients voient ta marque, jamais RB. Tu bâtis ton empire.</div>
-      </div>
-      <div class="feature-card tilt reveal stagger-1">
-        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-        <div class="feature-title">Analytics Pro</div>
-        <div class="feature-desc">Heatmap d'activité, corrélations de Pearson, courbes de progression, rapports hebdo auto-envoyés.</div>
-      </div>
-      <div class="feature-card tilt reveal stagger-2">
-        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <div class="feature-title">CRM Intelligent</div>
-        <div class="feature-desc">Pipeline Kanban, tags automatiques, historique d'activité, rappels programmés. Ton business sous contrôle.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== COMPARISON ========== -->
-<section class="comparison">
-  <div class="comparison-inner">
-    <div class="intro">
-      <div class="section-tag">Pourquoi RB Perform</div>
-      <h2 class="section-title gradient-text">Compare. Décide.</h2>
-    </div>
-    <table class="comp-table reveal">
-      <thead>
-        <tr>
-          <th></th>
-          <th class="us">RB Perform</th>
-          <th>Trainerize</th>
-          <th>MyPTHub</th>
-          <th>TrueCoach</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td class="row-label">0% commission sur tes revenus</td><td class="us"><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
-        <tr><td class="row-label">Anti-churn IA prédictif</td><td class="us"><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
-        <tr><td class="row-label">Dashboard business CEO</td><td class="us"><span class="yes">✓</span></td><td><span class="partial">Partiel</span></td><td><span class="no">✗</span></td><td><span class="partial">Partiel</span></td></tr>
-        <tr><td class="row-label">White label complet</td><td class="us"><span class="yes">✓</span></td><td><span class="partial">$+</span></td><td><span class="partial">$+</span></td><td><span class="partial">$+</span></td></tr>
-        <tr><td class="row-label">IA vocale nutrition</td><td class="us"><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
-        <tr><td class="row-label">Hébergement EU & RGPD</td><td class="us"><span class="yes">✓</span></td><td><span class="no">USA</span></td><td><span class="yes">✓</span></td><td><span class="no">USA</span></td></tr>
-        <tr><td class="row-label">Tarif mensuel à partir de</td><td class="us">149 €</td><td>$70</td><td>£40</td><td>$60</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
 <!-- ========== BENTO GRID (showcase Apple-style) ========== -->
 <section class="bento">
   <div class="bento-inner">
@@ -1158,85 +1129,45 @@ html.light .founder-message strong{color:#0a0a0a}
 </section>
 
 
-<!-- ========== FOUNDER NOTE ========== -->
-<section class="founder">
-  <div class="founder-inner">
-    <div class="founder-photo">RB</div>
-    <div class="role" data-i18n="founder.role">Mot du fondateur</div>
-    <div class="name">Rayan Bonte</div>
-    <p class="founder-message" data-i18n="founder.message">J'ai construit RB Perform parce que les outils existants <strong>volaient les coachs</strong> — 30% de commission, interfaces décennales, support inexistant. J'ai voulu un système qui te donne <strong>les armes des CEO</strong>, sans te prendre un centime sur tes revenus. Tu paies pour la techno, point. Le reste, c'est à toi.</p>
-    <div class="founder-signature" id="founderSig">
-      <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
-        <path d="M 10 40 Q 20 10, 35 30 T 60 30 Q 70 15, 80 35 L 95 25 Q 105 40, 120 28 T 145 30 Q 160 20, 175 35 L 190 30"/>
-      </svg>
-    </div>
-  </div>
-</section>
-
-<!-- ========== FAQ ========== -->
-<section class="faq">
-  <div class="faq-inner">
+<!-- ========== FEATURES ========== -->
+<section class="features" id="features">
+  <div class="features-inner">
     <div class="intro">
-      <div class="section-tag">Questions fréquentes</div>
-      <h2 class="section-title gradient-text">Tu te demandes...</h2>
+      <div class="section-tag">Ce qui rend RB différent</div>
+      <h2 class="section-title gradient-text">Tout ce dont tu as besoin.<br/>Rien de superflu.</h2>
     </div>
-    <div class="faq-list">
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">Combien de temps pour démarrer&nbsp;?<span class="plus">+</span></button>
-        <div class="faq-a">Moins de 5 minutes. Tu crées ton compte, tu personnalises ton branding (logo + couleurs) et tu génères ton premier code d'invitation client. Aucune installation, aucun setup serveur, c'est cloud.</div>
+    <div class="features-grid">
+      <div class="feature-card tilt reveal">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div class="feature-title">Dashboard CEO</div>
+        <div class="feature-desc">MRR, ARR, rétention, score business calculé live. Tous les KPIs d'un SaaS à la performance de ton coaching.</div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">Quelle commission RB Perform prend sur mes revenus&nbsp;?<span class="plus">+</span></button>
-        <div class="faq-a">Zéro. RB Perform est un SaaS à abonnement mensuel fixe — tu paies pour la plateforme, pas pour ton chiffre d'affaires. Tes 100% de tes revenus restent chez toi. C'est la différence majeure avec Trainerize ou MyPTHub.</div>
+      <div class="feature-card tilt reveal stagger-1">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="feature-title">Anti-churn IA</div>
+        <div class="feature-desc">Score de risque calculé par ML sur 7 signaux. Alertes proactives. Tu sauves tes clients avant qu'ils partent.</div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">Mes clients voient-ils que j'utilise RB Perform&nbsp;?<span class="plus">+</span></button>
-        <div class="faq-a">Non. Le mode white label est inclus dès le plan Pro. Ton logo, tes couleurs, ton nom, ton domaine personnel. Tes clients voient ta marque, jamais "RB Perform". Tu bâtis ton image, pas la nôtre.</div>
+      <div class="feature-card tilt reveal stagger-2">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="feature-title">Programme Builder</div>
+        <div class="feature-desc">Multi-semaines, drag-and-drop, vidéos YouTube, notes motivation, preview live. Addictif.</div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">Comment fonctionne l'anti-churn IA&nbsp;?<span class="plus">+</span></button>
-        <div class="faq-a">Notre algorithme analyse 7 signaux par client en continu : fréquence de connexion, complétion des séances, régression de poids, RPE moyen, dernière interaction, ancienneté de l'abonnement, momentum sur 30 jours. Un score 0-100 est calculé. Au-dessus de 60, tu reçois une alerte avec une action recommandée.</div>
+      <div class="feature-card tilt reveal">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg></div>
+        <div class="feature-title">White Label</div>
+        <div class="feature-desc">Ton logo, tes couleurs, ton domaine. Tes clients voient ta marque, jamais RB. Tu bâtis ton empire.</div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">Mes données sont-elles en sécurité&nbsp;?<span class="plus">+</span></button>
-        <div class="faq-a">Oui. Hébergement Supabase à Francfort (Allemagne, EU). Backups automatiques quotidiens. RLS PostgreSQL sur toutes les tables (chaque coach voit uniquement ses propres clients). Conformité RGPD complète, export et suppression des données sur demande en 1 clic.</div>
+      <div class="feature-card tilt reveal stagger-1">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="feature-title">Analytics Pro</div>
+        <div class="feature-desc">Heatmap d'activité, corrélations de Pearson, courbes de progression, rapports hebdo auto-envoyés.</div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">Puis-je résilier à tout moment&nbsp;?<span class="plus">+</span></button>
-        <div class="faq-a">Oui. Aucun engagement. Résiliation en 1 clic depuis ton dashboard. Tes données restent accessibles 30 jours après résiliation pour export. Garantie satisfait ou remboursé pendant les 14 premiers jours.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">Y a-t-il une app mobile pour mes clients&nbsp;?<span class="plus">+</span></button>
-        <div class="faq-a">RB Perform est une PWA (Progressive Web App). Tes clients l'installent en 2 tap sur iOS et Android depuis Safari/Chrome — pas besoin d'App Store. Notifications push natives, mode hors-ligne, fonctionne comme une vraie app native.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">Quel support est inclus&nbsp;?<span class="plus">+</span></button>
-        <div class="faq-a">Tous les plans incluent le chat support 7j/7 avec réponse en moins de 2h. Le plan Elite ajoute un onboarding personnalisé 1:1 + un Slack privé avec l'équipe + accès anticipé aux nouvelles features.</div>
+      <div class="feature-card tilt reveal stagger-2">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="feature-title">CRM Intelligent</div>
+        <div class="feature-desc">Pipeline Kanban, tags automatiques, historique d'activité, rappels programmés. Ton business sous contrôle.</div>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ========== QUIZ ========== -->
-<section class="quiz">
-  <div class="quiz-inner">
-    <div class="section-tag" data-i18n="quiz.tag">Trouve ton plan en 5 secondes</div>
-    <div class="quiz-q" data-i18n="quiz.q">Tu coaches combien de clients&nbsp;?</div>
-    <div class="quiz-options">
-      <button class="quiz-opt" data-result="starter">
-        <span class="q-num">1-10</span>
-        <span class="q-lbl" data-i18n="quiz.opt1">Je démarre</span>
-      </button>
-      <button class="quiz-opt" data-result="pro">
-        <span class="q-num">11-30</span>
-        <span class="q-lbl" data-i18n="quiz.opt2">J'établis</span>
-      </button>
-      <button class="quiz-opt" data-result="elite">
-        <span class="q-num">30+</span>
-        <span class="q-lbl" data-i18n="quiz.opt3">Je scale</span>
-      </button>
-    </div>
-    <div class="quiz-result" id="quizResult" aria-live="polite"></div>
   </div>
 </section>
 
@@ -1945,6 +1876,55 @@ html.light .founder-message strong{color:#0a0a0a}
       });
     });
   }
+})();
+</script>
+
+<script>
+(function() {
+  const burger  = document.getElementById('burgerBtn');
+  const overlay = document.getElementById('menuOverlay');
+  if (!burger || !overlay) return;
+
+  function openMenu() {
+    burger.classList.add('open');
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    burger.classList.remove('open');
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  burger.addEventListener('click', () => {
+    overlay.classList.contains('open')
+      ? closeMenu() : openMenu();
+  });
+
+  // Fermer avec Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeMenu();
+  });
+
+  // Navigation vers chapitre
+  document.querySelectorAll('.menu-chapter').forEach(link => {
+    link.addEventListener('click', () => {
+      const target = document.querySelector(
+        'section.' + link.dataset.target
+      );
+      closeMenu();
+      if (target) {
+        setTimeout(() => {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }, 420);
+      }
+    });
+  });
 })();
 </script>
 </body>
