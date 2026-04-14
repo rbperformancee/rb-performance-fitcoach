@@ -28,7 +28,8 @@
       "has": [{ "type": "host", "value": "www.rbperform.app" }],
       "destination": "/landing.html"
     },
-    { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" }
+    { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" },
+    { "source": "/demo", "destination": "/?demo=true" }
   ],
   "headers": [
     {
