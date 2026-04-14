@@ -307,6 +307,14 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
   const [level, setLevel] = useState("Intermediaire");
   const [weeks, setWeeks] = useState([emptyWeek()]);
   const [saving, setSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [savedTick, setSavedTick] = useState(0); // force re-render du timer
+  // Tick toutes les 15s pour rafraichir le label "il y a Xs" sans sur-rendre
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const id = setInterval(() => setSavedTick((t) => t + 1), 15000);
+    return () => clearInterval(id);
+  }, [lastSavedAt]);
   const [accessMode, setAccessMode] = useState("immediate");
   const [scheduledDate, setScheduledDate] = useState("");
 
@@ -453,6 +461,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
       } catch {}
 
       toast.success("Programme enregistre pour " + (client.full_name || client.email));
+      setLastSavedAt(Date.now());
       if (onSaved) onSaved();
       if (onClose) onClose();
     } catch (e) {
@@ -614,6 +623,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
           box-shadow: 0 0 0 3px rgba(2,209,186,0.08) !important;
         }
         button:hover { opacity: 0.85; }
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
       `}</style>
       {/* Topbar */}
       <div style={S.topbar}>
@@ -634,6 +644,37 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
           {isDesktop && (
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>
               {weeks.length} sem · {totalSeances} seances
+            </span>
+          )}
+          {/* Indicateur de sauvegarde */}
+          {(saving || lastSavedAt) && (
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontSize: 10, fontWeight: 600,
+              letterSpacing: ".04em",
+              color: saving ? "rgba(255,255,255,.5)" : "rgba(2,209,186,.75)",
+              whiteSpace: "nowrap",
+              padding: "4px 10px",
+              background: saving ? "rgba(255,255,255,.04)" : "rgba(2,209,186,.06)",
+              border: `1px solid ${saving ? "rgba(255,255,255,.08)" : "rgba(2,209,186,.18)"}`,
+              borderRadius: 100,
+            }} aria-live="polite">
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: saving ? "#f97316" : "#02d1ba",
+                boxShadow: saving ? "0 0 6px #f97316" : "0 0 6px rgba(2,209,186,.6)",
+                animation: saving ? "pulse 1.2s ease-in-out infinite" : "none",
+              }} />
+              {savedTick >= 0 && (saving
+                ? "En cours..."
+                : (() => {
+                    const s = Math.floor((Date.now() - (lastSavedAt || 0)) / 1000);
+                    if (s < 10) return "Sauvegarde";
+                    if (s < 60) return `Sauvegarde il y a ${s}s`;
+                    const m = Math.floor(s / 60);
+                    return `Sauvegarde il y a ${m} min`;
+                  })()
+              )}
             </span>
           )}
           <button onClick={handleSave} disabled={saving} style={{ ...S.btnRed, opacity: saving ? 0.6 : 1 }}>

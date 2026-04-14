@@ -17,6 +17,7 @@ import { SkeletonList } from "./Skeleton";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
 import BusinessSection from "./coach/BusinessSection";
+import ProgrammeList from "./coach/ProgrammeList";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
 import { BehavioralBadge } from "./coach/BehavioralBadge";
 import { enrichClientsForIntelligence } from "../lib/enrichClients";
@@ -2189,10 +2190,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   })();
 
   const navItems = [
-    { id: "overview",  label: "Dashboard",  icon: "chart",       group: "principal" },
-    { id: "clients",   label: "Clients",    icon: "users",       group: "principal", badge: urgentCount },
-    { id: "business",  label: "Business",   icon: "trending-up", group: "principal" },
-    { id: "analytics", label: "Analytics",  icon: "activity",    group: "outils" },
+    { id: "overview",    label: "Dashboard",  icon: "chart",       group: "principal" },
+    { id: "clients",     label: "Clients",    icon: "users",       group: "principal", badge: urgentCount },
+    { id: "programmes",  label: "Programmes", icon: "document",    group: "principal" },
+    { id: "business",    label: "Business",   icon: "trending-up", group: "principal" },
+    { id: "analytics",   label: "Analytics",  icon: "activity",    group: "outils" },
   ];
   const sidebarOnNav = (id) => {
     if (id === "analytics") { haptic.light(); setShowAnalytics(true); return; }
@@ -2888,6 +2890,21 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
           {!showClientList && activeTab === "business" && coachData && clients.length > 0 && (
             <BusinessSection coachData={coachData} clients={clients} />
+          )}
+
+          {/* ========== PROGRAMMES — liste des programmes coach ========== */}
+          {!showClientList && activeTab === "programmes" && (
+            <ProgrammeList
+              coachId={coachId}
+              clients={clients}
+              onEdit={(client) => setSelected(client)}
+              onAssign={(prog) => {
+                // Dupliquer = ouvrir la fiche client puis le builder pre-rempli.
+                // Pour l'instant on ouvre la fiche du client source.
+                const src = clients.find((c) => c.id === prog.client_id);
+                if (src) setSelected(src);
+              }}
+            />
           )}
 
           {/* ========== ACHIEVEMENTS (badges + streak + rank) ========== */}
