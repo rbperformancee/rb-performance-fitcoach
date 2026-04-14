@@ -87,6 +87,11 @@
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* Navigation par chapitres : pas de scroll global */
+html,body{overflow:hidden;height:100%}
+/* Chaque section = ecran fullscreen, switching via .active */
+section{position:fixed;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;-webkit-overflow-scrolling:touch}
+section.active{opacity:1;pointer-events:all;z-index:10}
 :root{--orange:#f97316;--orange-bright:#fb923c;--teal:#02d1ba;--teal-bright:#5ee8d4;--violet:#a78bfa;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{background:var(--dark);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
@@ -801,7 +806,7 @@ html.light .founder-message strong{color:#0a0a0a}
 
 <!-- ========== HERO ========== -->
 <main id="main">
-<section class="hero" aria-labelledby="heroTitle">
+<section class="hero active" aria-labelledby="heroTitle">
   <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="/og-image.png" aria-hidden="true">
     <source src="/videos/hero.mp4" type="video/mp4">
   </video>
@@ -812,12 +817,10 @@ html.light .founder-message strong{color:#0a0a0a}
     <h1 class="hero-title" id="heroTitle">RB PERFORM</h1>
     <p class="hero-sub">Le système qui transforme<br/>chaque coach en CEO.</p>
   </div>
-  <a href="#how" class="hero-arrow" aria-label="Faire défiler vers le bas">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <line x1="12" y1="5" x2="12" y2="19"/>
-      <polyline points="6 13 12 19 18 13"/>
-    </svg>
-  </a>
+  <button class="hero-arrow" id="heroEnter" onclick="document.querySelector('section.manifeste').classList.add('active');document.querySelector('section.hero').classList.remove('active')"
+    style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:8px 24px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s">
+    Entrer
+  </button>
 </section>
 
 <!-- ========== MANIFESTE ========== -->
@@ -1925,6 +1928,191 @@ html.light .founder-message strong{color:#0a0a0a}
       }
     });
   });
+})();
+</script>
+
+<!-- ========== NAVIGATION PAR CHAPITRES FULLSCREEN ========== -->
+<script>
+(function() {
+
+  const sections = document.querySelectorAll('section');
+  const burger   = document.getElementById('burgerBtn');
+  const overlay  = document.getElementById('menuOverlay');
+
+  // Active une section, desactive les autres
+  function showSection(className) {
+    sections.forEach(s => {
+      s.classList.remove('active');
+    });
+    const target = document.querySelector('section.' + className);
+    if (target) {
+      target.classList.add('active');
+      target.scrollTop = 0;
+    }
+  }
+
+  // Au demarrage : hero visible
+  showSection('hero');
+
+  // La fleche (maintenant "Entrer") du hero -> manifeste
+  const heroArrow = document.querySelector('.hero-scroll, .hero .scroll-hint, [data-next], .hero a[href="#manifeste"], .hero-arrow');
+  if (heroArrow) {
+    heroArrow.addEventListener('click', (e) => {
+      e.preventDefault();
+      showSection('manifeste');
+    });
+  }
+
+  // Fallback : click sur la fleche en bas du hero
+  document.querySelector('section.hero')?.addEventListener('click', (e) => {
+    const arrow = e.target.closest('a, button, [data-next]');
+    if (arrow && arrow.classList.contains('hero-arrow')) {
+      e.preventDefault();
+      showSection('manifeste');
+    }
+  });
+
+  // Navigation depuis le menu overlay
+  document.querySelectorAll('.menu-chapter').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const targetClass = link.dataset.target;
+
+      // Fermer le menu
+      burger.classList.remove('open');
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+
+      // Switcher vers la section cible
+      setTimeout(() => showSection(targetClass), 350);
+    });
+  });
+
+  // Navigation clavier (fleches gauche/droite/haut/bas)
+  const ORDER = [
+    'hero', 'manifeste', 'how', 'product-reveal',
+    'bento', 'features', 'pricing', 'cta-final'
+  ];
+
+  function currentIndex() {
+    for (let i = 0; i < ORDER.length; i++) {
+      const s = document.querySelector('section.' + ORDER[i]);
+      if (s && s.classList.contains('active')) return i;
+    }
+    return 0;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.classList.contains('open')) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      const next = ORDER[currentIndex() + 1];
+      if (next) showSection(next);
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      const prev = ORDER[currentIndex() - 1];
+      if (prev) showSection(prev);
+    }
+  });
+
+  // Swipe mobile (touch)
+  let touchStartX = 0;
+  let touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (overlay.classList.contains('open')) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 50) {
+      if (dy < 0) {
+        const next = ORDER[currentIndex() + 1];
+        if (next) showSection(next);
+      } else {
+        const prev = ORDER[currentIndex() - 1];
+        if (prev) showSection(prev);
+      }
+    }
+  }, { passive: true });
+
+  // Indicateur de section actuelle (dots lateraux droite)
+  const dots = document.createElement('div');
+  dots.id = 'section-dots';
+  dots.style.cssText = `
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  `;
+
+  ORDER.forEach((cls, i) => {
+    const dot = document.createElement('div');
+    dot.dataset.index = i;
+    dot.style.cssText = `
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    dot.addEventListener('click', () => showSectionWithDots(ORDER[i]));
+    dots.appendChild(dot);
+  });
+  document.body.appendChild(dots);
+
+  // Mettre a jour les dots quand la section change
+  function showSectionWithDots(className) {
+    showSection(className);
+    const idx = ORDER.indexOf(className);
+    dots.querySelectorAll('div').forEach((d, i) => {
+      d.style.background = i === idx
+        ? '#02d1ba'
+        : 'rgba(255,255,255,0.2)';
+      d.style.transform = i === idx ? 'scale(1.4)' : 'scale(1)';
+    });
+  }
+
+  // Remplacer showSection par la version avec dots sur tous les listeners
+  document.querySelectorAll('.menu-chapter').forEach(link => {
+    link.addEventListener('click', () => {
+      setTimeout(() => showSectionWithDots(link.dataset.target), 350);
+    });
+  });
+
+  // Le bouton Entrer doit aussi update les dots
+  const heroEnter = document.getElementById('heroEnter');
+  if (heroEnter) {
+    heroEnter.addEventListener('click', () => {
+      setTimeout(() => showSectionWithDots('manifeste'), 50);
+    });
+  }
+
+  // Hook keyboard pour update dots
+  document.addEventListener('keydown', (e) => {
+    if (overlay.classList.contains('open')) return;
+    if (['ArrowRight','ArrowDown','ArrowLeft','ArrowUp'].includes(e.key)) {
+      // Leger delai pour laisser le premier handler agir
+      setTimeout(() => {
+        const idx = currentIndex();
+        dots.querySelectorAll('div').forEach((d, i) => {
+          d.style.background = i === idx ? '#02d1ba' : 'rgba(255,255,255,0.2)';
+          d.style.transform = i === idx ? 'scale(1.4)' : 'scale(1)';
+        });
+      }, 20);
+    }
+  });
+
+  // Init dots
+  showSectionWithDots('hero');
+
 })();
 </script>
 </body>
