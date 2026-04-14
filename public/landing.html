@@ -647,7 +647,8 @@ section.client-view::-webkit-scrollbar{display:none}
 }
 
 /* ========== FOOTER (refonte 4 colonnes) ========== */
-footer{background:#000;border-top:.5px solid rgba(255,255,255,.06);padding:52px 64px 44px;position:relative;z-index:20}
+footer{background:#000;border-top:.5px solid rgba(255,255,255,.06);padding:52px 64px 44px;position:relative;z-index:0;display:none}
+footer.show{display:block}
 .footer-inner{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:48px;max-width:1100px;margin:0 auto;align-items:start}
 .footer-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:900;letter-spacing:.1em;color:#fff;margin-bottom:12px;display:inline-block}
 .footer-logo span{color:#02d1ba}
@@ -1171,6 +1172,200 @@ html.light .founder-message strong{color:#0a0a0a}
   *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
   .reveal,.hero-title .char,.hero-sub,.manifeste-line{opacity:1!important;transform:none!important;width:120px}
   .step{opacity:1!important}
+}
+
+/* ========== MOBILE (<=768px) — scroll natif, sections en pile ========== */
+@media (max-width: 768px) {
+  /* Sections en scroll normal — ne PAS garder position:fixed */
+  section {
+    position: relative !important;
+    inset: auto !important;
+    height: auto !important;
+    min-height: 100svh;
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: all !important;
+    z-index: auto !important;
+    transition: none !important;
+  }
+  section:not(.active) {
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: auto !important;
+  }
+  html, body {
+    overflow: auto !important;
+    height: auto !important;
+  }
+
+  /* Masquer les dots lateraux + sticky CTA + burger-fleche inutiles */
+  #section-dots, .nav-dots, [class*="section-dots"] {
+    display: none !important;
+  }
+
+  /* Nav fixe en haut */
+  nav.topnav {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+    background: rgba(8,8,8,.97) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+
+  /* Footer toujours visible en scroll natif (pas de JS toggle) */
+  footer { display: block !important; z-index: auto !important; }
+
+  /* Hero mobile */
+  section.hero {
+    padding: 80px 24px 60px !important;
+  }
+  .hero-title {
+    font-size: clamp(56px, 15vw, 80px) !important;
+    letter-spacing: -3px !important;
+  }
+  section.hero button#heroEnter {
+    bottom: 40px !important;
+  }
+
+  /* Manifeste mobile — stacks empiles en scroll normal */
+  section.manifeste {
+    padding: 80px 24px 40px !important;
+  }
+  .mstack-card {
+    min-height: auto !important;
+    padding: 28px 24px !important;
+    position: relative !important;
+    top: 0 !important;
+    margin-bottom: 12px !important;
+    animation: none !important;
+  }
+  .manifeste-stacks {
+    padding-bottom: 0 !important;
+  }
+
+  /* How mobile */
+  section.how {
+    padding: 60px 24px 40px !important;
+  }
+  .stack-scene {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .stack-header {
+    position: relative !important;
+    top: 0 !important;
+    padding-bottom: 24px !important;
+  }
+  .how .stack-card {
+    position: relative !important;
+    top: 0 !important;
+    min-height: auto !important;
+    padding: 28px 22px !important;
+    margin-bottom: 12px !important;
+  }
+  .stack-cards {
+    padding-bottom: 0 !important;
+  }
+
+  /* Product reveal mobile */
+  section.product-reveal {
+    padding: 60px 24px 40px !important;
+  }
+  .pr-scene {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+    padding: 0 !important;
+  }
+  .pr-phone-wrap {
+    position: relative !important;
+    top: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+  .pr-phone {
+    width: 280px !important;
+    min-height: 520px !important;
+  }
+  .pr-text {
+    min-height: auto !important;
+    opacity: 1 !important;
+    padding: 20px 0 !important;
+  }
+  .pr-demo-cta {
+    padding: 0 0 40px !important;
+  }
+  .pr-demo-inner {
+    flex-direction: column !important;
+    gap: 20px !important;
+    padding: 24px !important;
+    align-items: flex-start !important;
+  }
+
+  /* Bento mobile */
+  section.bento {
+    padding: 60px 24px 40px !important;
+  }
+  .bento-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .bento-card.span2 {
+    grid-column: span 1 !important;
+  }
+
+  /* Features mobile */
+  section.features {
+    padding: 60px 24px 40px !important;
+  }
+  .features-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Client view mobile */
+  section.client-view {
+    padding: 60px 24px 40px !important;
+  }
+  .cv-scene {
+    padding: 32px 0 !important;
+    gap: 32px !important;
+  }
+  .cv-phones {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 24px !important;
+  }
+  .cv-phone {
+    opacity: 1 !important;
+    transform: none !important;
+    width: 240px !important;
+    height: 460px !important;
+  }
+
+  /* Pricing mobile */
+  section.pricing {
+    padding: 60px 24px 40px !important;
+    overflow-y: auto !important;
+  }
+  .plans {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .pricing-cta-bottom {
+    padding: 40px 0 20px !important;
+  }
+
+  /* Menu overlay mobile */
+  .ch-name {
+    font-size: clamp(28px, 10vw, 48px) !important;
+  }
+  .menu-overlay-inner {
+    padding: 0 6vw !important;
+  }
 }
 </style>
 </head>
@@ -1974,7 +2169,7 @@ html.light .founder-message strong{color:#0a0a0a}
           <span class="cta-lbl">places prises ce mois</span>
         </div>
       </div>
-      <a href="https://rb-perfor.vercel.app"
+      <a href="/demo"
          class="cta-btn-inline">
         Demander l'accès →
       </a>
@@ -2658,6 +2853,10 @@ html.light .founder-message strong{color:#0a0a0a}
 <script>
 (function() {
 
+  // Desactivation totale de la nav par chapitres sur mobile (< 768px)
+  // → scroll vertical natif, toutes les sections visibles en pile
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
   const sections = document.querySelectorAll('section');
   const burger   = document.getElementById('burgerBtn');
   const overlay  = document.getElementById('menuOverlay');
@@ -2677,6 +2876,8 @@ html.light .founder-message strong{color:#0a0a0a}
 
   // Active une section, desactive les autres + force visibilite des enfants
   function showSection(className) {
+    // Sur mobile : navigation par chapitres desactivee (scroll natif)
+    if (isMobile) return;
     document.querySelectorAll('section').forEach(s => {
       s.classList.remove('active');
       s.classList.remove('gsap-override');
@@ -2692,6 +2893,11 @@ html.light .founder-message strong{color:#0a0a0a}
           gsap.set(el, { clearProps: "all" });
         });
       }
+    }
+    // Footer visible uniquement sur la section pricing
+    const footer = document.querySelector('footer');
+    if (footer) {
+      footer.classList.toggle('show', className === 'pricing');
     }
   }
 
@@ -2729,8 +2935,16 @@ html.light .founder-message strong{color:#0a0a0a}
       overlay.classList.remove('open');
       document.body.style.overflow = '';
 
-      // Switcher vers la section cible
-      setTimeout(() => showSection(targetClass), 350);
+      if (isMobile) {
+        // Mobile : scroll natif vers la section
+        setTimeout(() => {
+          const target = document.querySelector('section.' + targetClass);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 350);
+      } else {
+        // Desktop : switcher vers la section cible
+        setTimeout(() => showSection(targetClass), 350);
+      }
     });
   });
 
