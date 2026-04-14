@@ -365,8 +365,9 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .feature-card:hover{border-color:rgba(249,115,22,0.3);box-shadow:0 30px 80px rgba(249,115,22,0.1)}
 .feature-icon{width:46px;height:46px;border-radius:12px;background:rgba(2,209,186,0.08);display:flex;align-items:center;justify-content:center;color:var(--teal);margin-bottom:22px;transition:transform 0.4s var(--ease-out)}
 .feature-card:hover .feature-icon{transform:scale(1.1) rotate(-3deg)}
-.feature-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:-0.5px;margin-bottom:10px;font-weight:400}
-.feature-desc{font-size:14px;color:var(--text-dim);line-height:1.65;font-weight:400}
+.feature-eyebrow{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(2,209,186,0.6);margin-bottom:10px}
+.feature-title{font-family:'Syne',sans-serif;font-size:clamp(16px,1.4vw,18px);font-weight:800;letter-spacing:-0.3px;line-height:1.2;color:#fff;margin-bottom:12px}
+.feature-desc{font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;font-weight:300}
 
 /* ========== COMPARISON ========== */
 .comparison{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
@@ -437,14 +438,113 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .pricing-meta .guarantee{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:10px 18px;border:1px solid var(--border-strong);border-radius:100px;color:var(--teal);font-weight:600}
 
 /* ========== CTA FINAL ========== */
-.cta-final{position:relative;padding:200px 24px;background:var(--dark);overflow:hidden;text-align:center;border-top:1px solid var(--border)}
+.cta-final{position:relative;padding:0;background:var(--dark);overflow:hidden;text-align:center;border-top:1px solid var(--border)}
 .cta-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0.4}
-.cta-mesh{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(249,115,22,0.18),transparent 60%),var(--dark)}
-.cta-overlay{position:absolute;inset:0;background:rgba(3,3,3,0.5);z-index:2}
-.cta-content{position:relative;z-index:3;max-width:1100px;margin:0 auto}
-.cta-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(96px,18vw,280px);letter-spacing:-5px;line-height:0.85;margin-bottom:30px;font-weight:400}
-.cta-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);max-width:600px;margin:0 auto 42px}
-.cta-note{margin-top:20px;font-size:12px;color:var(--text-dimmer);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.cta-mesh{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(2,209,186,0.14),transparent 60%),var(--dark)}
+.cta-overlay{position:absolute;inset:0;background:rgba(3,3,3,0.55);z-index:2}
+.cta-content{position:relative;z-index:3;max-width:1100px;margin:0 auto;height:100%;width:100%}
+.cta-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  height:100%;
+  padding:60px 48px;
+  gap:28px;
+  box-sizing:border-box;
+}
+.cta-badge{
+  font-size:9px;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:#02d1ba;
+  background:rgba(2,209,186,.08);
+  border:1px solid rgba(2,209,186,.2);
+  border-radius:100px;
+  padding:6px 16px;
+}
+.cta-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(52px,8vw,96px);
+  font-weight:900;color:#fff;
+  letter-spacing:-3px;line-height:.92;
+  margin:0;
+}
+.cta-sub{
+  font-size:15px;color:rgba(255,255,255,.35);
+  letter-spacing:.02em;
+  max-width:none;margin:0;
+}
+.cta-counter{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  max-width:320px;
+}
+.cta-counter-bar{
+  width:100%;height:3px;
+  background:rgba(255,255,255,.07);
+  border-radius:100px;
+  overflow:hidden;
+}
+.cta-counter-fill{
+  height:100%;
+  background:#02d1ba;
+  border-radius:100px;
+  transition:width 1.2s cubic-bezier(.16,1,.3,1);
+}
+.cta-counter-text{
+  display:flex;
+  align-items:baseline;
+  gap:4px;
+  font-size:13px;
+  color:rgba(255,255,255,.4);
+}
+.cta-counter-num{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:400;font-size:16px;
+  color:#02d1ba;
+}
+.cta-counter-sep{color:rgba(255,255,255,.2)}
+.cta-counter-total{
+  font-family:'JetBrains Mono',monospace;
+  font-size:16px;
+  color:rgba(255,255,255,.3);
+}
+.cta-counter-label{
+  font-size:11px;
+  color:rgba(255,255,255,.3);
+  margin-left:6px;
+  letter-spacing:.04em;
+}
+.cta-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+.cta-btn-primary{
+  display:inline-block;
+  background:#02d1ba;color:#000;
+  text-decoration:none;
+  border-radius:100px;
+  padding:16px 48px;
+  font-size:12px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  font-family:'DM Sans',sans-serif;
+  transition:opacity .2s,transform .2s;
+}
+.cta-btn-primary:hover{opacity:.85;transform:translateY(-1px)}
+.cta-note{
+  margin-top:0;
+  font-size:11px;
+  color:rgba(255,255,255,.22);
+  letter-spacing:.06em;
+  text-transform:none;
+  font-weight:400;
+}
 
 /* ========== FOOTER ========== */
 footer{padding:60px 24px 40px;background:var(--dark);border-top:1px solid var(--border)}
@@ -548,6 +648,92 @@ html.light .stack-card{box-shadow:0 30px 80px rgba(0,0,0,0.06)}
 @media(max-width:768px){
   .how-steps{grid-template-columns:1fr;gap:40px}
   .how-steps::before{display:none}
+}
+
+/* ========== STACK SCENE (refonte section.how) ========== */
+section.how{padding:0 !important}
+.stack-scene{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  padding:60px 64px 80px;
+  max-width:900px;
+  margin:0 auto;
+  width:100%;
+  box-sizing:border-box;
+}
+.stack-header{margin-bottom:48px;flex-shrink:0}
+.stack-eyebrow{
+  font-size:10px;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:#02d1ba;margin-bottom:12px;
+}
+.stack-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(32px,5vw,56px);
+  font-weight:900;color:#fff;
+  letter-spacing:-2px;line-height:.95;
+}
+.stack-cards{display:flex;flex-direction:column;gap:0;flex:1}
+.how .stack-card{
+  position:sticky;
+  top:calc(var(--i) * 18px);
+  border-radius:24px;
+  padding:40px 44px;
+  margin-bottom:16px;
+  min-height:260px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  border:1px solid rgba(255,255,255,.07);
+  grid-template-columns:none;
+  box-shadow:none;
+  transform:none;
+}
+.how .stack-card:nth-child(1){background:#0f0f0f;border-color:rgba(255,255,255,.07);z-index:1}
+.how .stack-card:nth-child(2){background:#131313;border-color:rgba(255,255,255,.07);z-index:2}
+.how .stack-card:nth-child(3){background:#171717;border-color:rgba(2,209,186,.15);z-index:3}
+.how .stack-card.faded{opacity:1;transform:none;pointer-events:auto}
+.sc-num{
+  position:absolute;top:20px;right:28px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:88px;font-weight:200;
+  color:rgba(255,255,255,.035);
+  letter-spacing:-4px;line-height:1;
+  pointer-events:none;
+}
+.sc-tag{
+  font-size:9px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;
+  color:#02d1ba;
+}
+.sc-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(20px,2.8vw,28px);
+  font-weight:900;color:#fff;
+  letter-spacing:-1px;line-height:1.05;
+}
+.sc-desc{
+  font-size:14px;color:rgba(255,255,255,.4);
+  line-height:1.65;font-weight:300;
+  max-width:520px;
+}
+.sc-feat{
+  display:flex;gap:8px;
+  flex-wrap:wrap;margin-top:auto;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+.sc-feat span{
+  font-size:11px;color:rgba(255,255,255,.3);
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:100px;padding:4px 12px;
+}
+@media(max-width:768px){
+  .stack-scene{padding:40px 20px 60px}
+  .how .stack-card{padding:28px 22px;min-height:0;top:0}
+  .sc-num{font-size:56px;top:14px;right:18px}
 }
 
 /* ========== FOUNDER NOTE ========== */
@@ -700,7 +886,7 @@ html.light .founder-message strong{color:#0a0a0a}
   .faq{padding:80px 20px}
   .pricing{padding:80px 20px}
   .plans{grid-template-columns:1fr;gap:16px}
-  .cta-final{padding:120px 20px}
+  .cta-final .cta-inner{padding:80px 20px;gap:22px}
   footer{padding:50px 20px 32px}
   .footer-inner{justify-content:center;text-align:center}
   .footer-links{justify-content:center}
@@ -832,27 +1018,55 @@ html.light .founder-message strong{color:#0a0a0a}
 
 <!-- ========== HOW IT WORKS ========== -->
 <section class="how">
-  <div class="how-inner">
-    <div class="intro">
-      <div class="section-tag" data-i18n="how.tag">Comment ça marche</div>
-      <h2 class="section-title gradient-text" data-i18n="how.title">3 étapes.<br/>Pas une de plus.</h2>
+  <div class="stack-scene">
+    <div class="stack-header">
+      <div class="stack-eyebrow">Le Système</div>
+      <h2 class="stack-title">Plus qu'une app.<br>Un système.</h2>
     </div>
-    <div class="how-steps" id="howSteps">
-      <div class="how-step reveal">
-        <div class="num-circle">01</div>
-        <h3 data-i18n="how.s1_title">Crée ton compte</h3>
-        <p data-i18n="how.s1_desc">Configure ton branding (logo, couleurs), ton lien de paiement et ton premier code d'invitation. 2 minutes chrono.</p>
+    <div class="stack-cards">
+
+      <div class="stack-card" style="--i:0">
+        <div class="sc-num">01</div>
+        <div class="sc-tag">Dashboard CEO</div>
+        <h3 class="sc-title">Tu sais exactement<br>où en est ton business.</h3>
+        <p class="sc-desc">MRR, ARR, score business calculé en temps réel,
+        alertes d'expiration. Tout ce qu'un CEO regarde chaque matin
+        — adapté au coaching sportif. Tu ouvres l'app, tu sais.</p>
+        <div class="sc-feat">
+          <span>Score 0–100 en temps réel</span>
+          <span>MRR · ARR · Rétention</span>
+          <span>Alertes expiration auto</span>
+        </div>
       </div>
-      <div class="how-step reveal stagger-1">
-        <div class="num-circle">02</div>
-        <h3 data-i18n="how.s2_title">Invite tes clients</h3>
-        <p data-i18n="how.s2_desc">Partage ton code 6 chiffres ou ton lien d'invitation personnalisé. Tes clients s'inscrivent en 30 secondes.</p>
+
+      <div class="stack-card" style="--i:1">
+        <div class="sc-num">02</div>
+        <div class="sc-tag">Anti-Churn IA</div>
+        <h3 class="sc-title">Tu sauves les clients<br>avant qu'ils partent.</h3>
+        <p class="sc-desc">7 signaux analysés par client en continu.
+        Score de churn 0–100. Alerte avec action recommandée.
+        Tu interviens 7 jours avant que le client décide de partir.</p>
+        <div class="sc-feat">
+          <span>7 signaux comportementaux</span>
+          <span>Score prédictif par client</span>
+          <span>Action recommandée auto</span>
+        </div>
       </div>
-      <div class="how-step reveal stagger-2">
-        <div class="num-circle">03</div>
-        <h3 data-i18n="how.s3_title">Pilote et performe</h3>
-        <p data-i18n="how.s3_desc">Crée des programmes, suis l'activité, anticipe le churn, fais grandir ton business. RB s'occupe du reste.</p>
+
+      <div class="stack-card" style="--i:2">
+        <div class="sc-num">03</div>
+        <div class="sc-tag">Expérience client</div>
+        <h3 class="sc-title">Tes clients vivent<br>quelque chose de différent.</h3>
+        <p class="sc-desc">App branded à ton image. Programmes interactifs,
+        suivi nutritionnel, tracking d'activité, push notifications.
+        Ton client se sent suivi — pas géré.</p>
+        <div class="sc-feat">
+          <span>App white-label à ton image</span>
+          <span>Programmes multi-semaines</span>
+          <span>Push notifications</span>
+        </div>
       </div>
+
     </div>
   </div>
 </section>
@@ -1065,33 +1279,51 @@ html.light .founder-message strong{color:#0a0a0a}
     <div class="features-grid">
       <div class="feature-card tilt reveal">
         <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-        <div class="feature-title">Dashboard CEO</div>
-        <div class="feature-desc">MRR, ARR, rétention, score business calculé live. Tous les KPIs d'un SaaS à la performance de ton coaching.</div>
+        <div class="feature-eyebrow">Dashboard CEO</div>
+        <div class="feature-title">Tu sais exactement où en est ton business.</div>
+        <div class="feature-desc">MRR, ARR, rétention, score business calculé live — tous les KPIs d'un SaaS, adaptés au coaching.</div>
       </div>
       <div class="feature-card tilt reveal stagger-1">
         <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
-        <div class="feature-title">Anti-churn IA</div>
-        <div class="feature-desc">Score de risque calculé par ML sur 7 signaux. Alertes proactives. Tu sauves tes clients avant qu'ils partent.</div>
+        <div class="feature-eyebrow">Anti-churn IA</div>
+        <div class="feature-title">Tu sais quel client va partir — 7 jours à l'avance.</div>
+        <div class="feature-desc">Score de risque calculé par ML sur 7 signaux comportementaux. Alerte + action recommandée auto.</div>
       </div>
       <div class="feature-card tilt reveal stagger-2">
         <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div class="feature-title">Programme Builder</div>
+        <div class="feature-eyebrow">Programme Builder</div>
+        <div class="feature-title">Tes programmes se créent en minutes, pas en heures.</div>
         <div class="feature-desc">Multi-semaines, drag-and-drop, vidéos YouTube, notes motivation, preview live. Addictif.</div>
       </div>
       <div class="feature-card tilt reveal">
-        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg></div>
-        <div class="feature-title">White Label</div>
-        <div class="feature-desc">Ton logo, tes couleurs, ton domaine. Tes clients voient ta marque, jamais RB. Tu bâtis ton empire.</div>
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="feature-eyebrow">Messagerie & Push</div>
+        <div class="feature-title">Tes clients se sentent suivis — pas abandonnés.</div>
+        <div class="feature-desc">Chat direct, push notifications, rappels programmés, rapports automatiques. La présence sans la charge.</div>
       </div>
       <div class="feature-card tilt reveal stagger-1">
-        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-        <div class="feature-title">Analytics Pro</div>
-        <div class="feature-desc">Heatmap d'activité, corrélations de Pearson, courbes de progression, rapports hebdo auto-envoyés.</div>
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg></div>
+        <div class="feature-eyebrow">White Label</div>
+        <div class="feature-title">Tes clients voient ta marque. Jamais la nôtre.</div>
+        <div class="feature-desc">Ton logo, tes couleurs, ton domaine custom. Tu construis ton empire — pas le nôtre.</div>
       </div>
       <div class="feature-card tilt reveal stagger-2">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div class="feature-eyebrow">Suivi nutritionnel</div>
+        <div class="feature-title">Tu vois ce que mange ton client, sans lui demander.</div>
+        <div class="feature-desc">Journal alimentaire photo + barcode. Macros calculées, objectifs visibles, alertes sur les écarts.</div>
+      </div>
+      <div class="feature-card tilt reveal">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="feature-eyebrow">Analytics avancés</div>
+        <div class="feature-title">Tu comprends pourquoi un client stagne — avant lui.</div>
+        <div class="feature-desc">Heatmap d'activité, corrélations Pearson, courbes de progression, rapports hebdo auto-envoyés.</div>
+      </div>
+      <div class="feature-card tilt reveal stagger-1">
         <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <div class="feature-title">CRM Intelligent</div>
-        <div class="feature-desc">Pipeline Kanban, tags automatiques, historique d'activité, rappels programmés. Ton business sous contrôle.</div>
+        <div class="feature-eyebrow">Pipeline Kanban</div>
+        <div class="feature-title">Tu ne perds plus jamais un prospect dans ta tête.</div>
+        <div class="feature-desc">CRM intégré : tags automatiques, historique d'activité, rappels programmés. Rien ne passe à travers.</div>
       </div>
     </div>
   </div>
@@ -1170,15 +1402,43 @@ html.light .founder-message strong{color:#0a0a0a}
   <div class="cta-mesh"></div>
   <div class="cta-overlay"></div>
   <div class="cta-content">
-    <h2 class="cta-title gradient-text reveal">Prêt&nbsp;?</h2>
-    <p class="cta-sub reveal stagger-1">Rejoins les coachs qui ont choisi de performer.</p>
-    <div class="reveal stagger-2">
-      <a href="https://rb-perfor.vercel.app/?coach=true" class="btn btn-orange btn-large magnetic" target="_blank" rel="noopener">
-        Démarrer maintenant
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </a>
+    <div class="cta-inner">
+
+      <div class="cta-badge">Accès limité au lancement</div>
+
+      <h2 class="cta-title">
+        Prêt à devenir<br>CEO ?
+      </h2>
+
+      <p class="cta-sub">
+        Rejoins les coachs qui ont choisi de performer.
+      </p>
+
+      <!-- COMPTEUR DE PLACES -->
+      <div class="cta-counter">
+        <div class="cta-counter-bar">
+          <div class="cta-counter-fill" style="width: 74%"></div>
+        </div>
+        <div class="cta-counter-text">
+          <span class="cta-counter-num">37</span>
+          <span class="cta-counter-sep">/</span>
+          <span class="cta-counter-total">50</span>
+          <span class="cta-counter-label">places prises ce mois</span>
+        </div>
+      </div>
+
+      <!-- CTA BUTTONS -->
+      <div class="cta-actions">
+        <a href="https://rb-perfor.vercel.app"
+           class="cta-btn-primary">
+          Demander l'accès →
+        </a>
+        <div class="cta-note">
+          14 jours gratuit · Aucune carte requise
+        </div>
+      </div>
+
     </div>
-    <p class="cta-note reveal stagger-3">Essai 14 jours gratuit &nbsp;·&nbsp; Aucune carte requise</p>
   </div>
 </section>
 
