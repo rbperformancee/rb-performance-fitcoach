@@ -1174,199 +1174,214 @@ html.light .founder-message strong{color:#0a0a0a}
   .step{opacity:1!important}
 }
 
-/* ========== MOBILE (<=768px) — scroll natif, sections en pile ========== */
+/* ========== MOBILE (<=768px) — RESIZE ONLY, garde nav chapitres ========== */
 @media (max-width: 768px) {
-  /* Sections en scroll normal — ne PAS garder position:fixed */
-  section {
-    position: relative !important;
-    inset: auto !important;
-    height: auto !important;
-    min-height: 100svh;
-    overflow: visible !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: all !important;
-    z-index: auto !important;
-    transition: none !important;
-  }
-  section:not(.active) {
-    visibility: visible !important;
-    opacity: 1 !important;
-    z-index: auto !important;
-  }
-  html, body {
-    overflow: auto !important;
-    height: auto !important;
-  }
+  /* ── NAV ── */
+  nav.topnav { padding: 0 20px; height: 52px; }
+  .nav-logo { font-size: 13px; letter-spacing: .08em; }
+  .burger-btn { left: 50%; transform: translateX(-50%); }
 
-  /* Masquer les dots lateraux + sticky CTA + burger-fleche inutiles */
-  #section-dots, .nav-dots, [class*="section-dots"] {
-    display: none !important;
+  /* ── HERO ── */
+  section.hero { padding: 0 24px; }
+  .hero-title,
+  section.hero h1 {
+    font-size: clamp(52px, 18vw, 72px) !important;
+    letter-spacing: -2px !important;
+    line-height: .88 !important;
   }
-
-  /* Nav fixe en haut */
-  nav.topnav {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 1000 !important;
-    background: rgba(8,8,8,.97) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
+  section.hero p,
+  section.hero .hero-sub {
+    font-size: 14px !important;
+    padding: 0 16px !important;
+    text-align: center !important;
   }
-
-  /* Footer toujours visible en scroll natif (pas de JS toggle) */
-  footer { display: block !important; z-index: auto !important; }
-
-  /* Hero mobile */
-  section.hero {
-    padding: 80px 24px 60px !important;
-  }
-  .hero-title {
-    font-size: clamp(56px, 15vw, 80px) !important;
-    letter-spacing: -3px !important;
-  }
-  section.hero button#heroEnter {
+  section.hero button,
+  #heroEnter {
     bottom: 40px !important;
+    font-size: 10px !important;
+    padding: 8px 20px !important;
+    transform: translateX(-50%) !important;
   }
 
-  /* Manifeste mobile — stacks empiles en scroll normal */
+  /* ── MANIFESTE ── */
   section.manifeste {
-    padding: 80px 24px 40px !important;
+    overflow-y: auto !important;
+    padding: 60px 24px 40px !important;
   }
-  .mstack-card {
-    min-height: auto !important;
-    padding: 28px 24px !important;
-    position: relative !important;
-    top: 0 !important;
-    margin-bottom: 12px !important;
-    animation: none !important;
+  section.manifeste .manifeste-text,
+  section.manifeste h2 {
+    font-size: clamp(24px, 7vw, 36px) !important;
+    letter-spacing: -1px !important;
+  }
+  .manifeste-stats { gap: 20px !important; flex-wrap: wrap !important; }
+  .manifeste-stat .num {
+    font-size: clamp(40px, 12vw, 56px) !important;
   }
   .manifeste-stacks {
-    padding-bottom: 0 !important;
-  }
-
-  /* How mobile */
-  section.how {
-    padding: 60px 24px 40px !important;
-  }
-  .stack-scene {
-    padding: 0 !important;
+    margin-top: 32px !important;
+    padding-bottom: 40vh !important;
     max-width: none !important;
   }
-  .stack-header {
-    position: relative !important;
-    top: 0 !important;
-    padding-bottom: 24px !important;
+  .mstack-card {
+    padding: 28px 20px !important;
+    min-height: 60vh !important;
   }
-  .how .stack-card {
-    position: relative !important;
-    top: 0 !important;
-    min-height: auto !important;
-    padding: 28px 22px !important;
-    margin-bottom: 12px !important;
+  .mstack-card:nth-child(1) { top: 12px !important; }
+  .mstack-card:nth-child(2) { top: 26px !important; }
+  .mstack-card:nth-child(3) { top: 40px !important; }
+  .mstack-title {
+    font-size: clamp(22px, 6vw, 28px) !important;
+    letter-spacing: -1px !important;
   }
-  .stack-cards {
-    padding-bottom: 0 !important;
-  }
+  .mstack-desc { font-size: 13px !important; }
+  .mstack-num { font-size: 72px !important; }
 
-  /* Product reveal mobile */
+  /* ── HOW ── */
+  section.how {
+    overflow-y: auto !important;
+    padding: 0 !important;
+  }
+  .stack-scene { padding: 32px 20px 0 !important; max-width: none !important; }
+  .stack-title {
+    font-size: clamp(28px, 8vw, 40px) !important;
+    letter-spacing: -1.5px !important;
+  }
+  .how .stack-card { padding: 28px 22px !important; min-height: 60vh !important; }
+  .how .stack-card:nth-child(1) { top: 12px !important; }
+  .how .stack-card:nth-child(2) { top: 26px !important; }
+  .how .stack-card:nth-child(3) { top: 40px !important; }
+  .sc-num { font-size: 56px !important; top: 14px !important; right: 18px !important; }
+  .sc-title { font-size: clamp(22px, 6vw, 30px) !important; }
+
+  /* ── PRODUCT REVEAL ── */
   section.product-reveal {
-    padding: 60px 24px 40px !important;
+    overflow-y: auto !important;
+    padding: 0 !important;
   }
   .pr-scene {
     grid-template-columns: 1fr !important;
+    padding: 48px 24px 40px !important;
     gap: 40px !important;
-    padding: 0 !important;
-  }
-  .pr-phone-wrap {
-    position: relative !important;
-    top: 0 !important;
-    display: flex !important;
-    justify-content: center !important;
-  }
-  .pr-phone {
-    width: 280px !important;
-    min-height: 520px !important;
   }
   .pr-text {
-    min-height: auto !important;
-    opacity: 1 !important;
+    min-height: 60vh !important;
     padding: 20px 0 !important;
   }
-  .pr-demo-cta {
-    padding: 0 0 40px !important;
+  .pr-title {
+    font-size: clamp(26px, 7vw, 34px) !important;
+    letter-spacing: -1px !important;
   }
+  .pr-phone-wrap {
+    position: sticky !important;
+    top: 20px !important;
+    display: flex !important;
+    justify-content: center !important;
+    order: -1 !important;
+  }
+  .pr-phone {
+    width: 240px !important;
+    min-height: 460px !important;
+  }
+  .pr-demo-cta { padding: 0 24px 48px !important; }
   .pr-demo-inner {
     flex-direction: column !important;
     gap: 20px !important;
-    padding: 24px !important;
-    align-items: flex-start !important;
+    padding: 22px !important;
+    text-align: center !important;
+    align-items: center !important;
   }
+  .pr-demo-title { font-size: 18px !important; }
 
-  /* Bento mobile */
+  /* ── BENTO ── */
   section.bento {
-    padding: 60px 24px 40px !important;
+    overflow-y: auto !important;
+    padding: 48px 24px 40px !important;
+  }
+  section.bento .section-title,
+  section.bento h2 {
+    font-size: clamp(26px, 7vw, 36px) !important;
   }
   .bento-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
-  .bento-card.span2 {
+  .bento-card.span2,
+  .bento-card.row2 {
     grid-column: span 1 !important;
+    grid-row: span 1 !important;
   }
 
-  /* Features mobile */
+  /* ── FEATURES ── */
   section.features {
-    padding: 60px 24px 40px !important;
+    overflow-y: auto !important;
+    padding: 48px 24px 40px !important;
+  }
+  section.features .section-title,
+  section.features h2 {
+    font-size: clamp(26px, 7vw, 36px) !important;
   }
   .features-grid {
     grid-template-columns: 1fr !important;
-    gap: 12px !important;
+    gap: 10px !important;
   }
 
-  /* Client view mobile */
+  /* ── CLIENT VIEW ── */
   section.client-view {
-    padding: 60px 24px 40px !important;
+    overflow-y: auto !important;
+    padding: 0 !important;
   }
-  .cv-scene {
-    padding: 32px 0 !important;
-    gap: 32px !important;
-  }
+  .cv-scene { padding: 48px 24px 40px !important; gap: 28px !important; }
+  .cv-title { font-size: clamp(32px, 9vw, 44px) !important; letter-spacing: -2px !important; }
   .cv-phones {
     flex-direction: column !important;
     align-items: center !important;
-    gap: 24px !important;
+    gap: 20px !important;
   }
   .cv-phone {
     opacity: 1 !important;
     transform: none !important;
-    width: 240px !important;
-    height: 460px !important;
+    width: 220px !important;
+    height: 420px !important;
   }
 
-  /* Pricing mobile */
+  /* ── PRICING ── */
   section.pricing {
-    padding: 60px 24px 40px !important;
     overflow-y: auto !important;
+    padding: 48px 24px 40px !important;
+  }
+  section.pricing .section-title,
+  section.pricing h2 {
+    font-size: clamp(36px, 10vw, 52px) !important;
+    letter-spacing: -2px !important;
   }
   .plans {
     grid-template-columns: 1fr !important;
-    gap: 16px !important;
+    gap: 14px !important;
   }
-  .pricing-cta-bottom {
-    padding: 40px 0 20px !important;
+  .pricing-cta-bottom { padding: 40px 0 24px !important; }
+  .cta-title-inline { font-size: clamp(32px, 9vw, 48px) !important; }
+
+  /* ── MENU OVERLAY ── */
+  .menu-overlay-inner { padding: 0 8vw !important; }
+  .ch-name {
+    font-size: clamp(32px, 10vw, 52px) !important;
+    letter-spacing: -.5px !important;
   }
 
-  /* Menu overlay mobile */
-  .ch-name {
-    font-size: clamp(28px, 10vw, 48px) !important;
+  /* ── DOTS LATERAUX ── */
+  #section-dots { right: 8px !important; }
+
+  /* ── FOOTER ── */
+  .footer-inner {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 28px !important;
   }
-  .menu-overlay-inner {
-    padding: 0 6vw !important;
-  }
+  footer { padding: 40px 24px 48px !important; }
+
+  /* ── LEGAL PAGE ── */
+  .legal-main { padding: 60px 24px 80px !important; }
 }
+
 </style>
 </head>
 <body>
@@ -2853,9 +2868,11 @@ html.light .founder-message strong{color:#0a0a0a}
 <script>
 (function() {
 
-  // Desactivation totale de la nav par chapitres sur mobile (< 768px)
-  // → scroll vertical natif, toutes les sections visibles en pile
-  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  // Liste des sections exposee pour le swipe tactile
+  window.__SECTIONS__ = [
+    'hero','manifeste','how','product-reveal',
+    'bento','features','client-view','pricing'
+  ];
 
   const sections = document.querySelectorAll('section');
   const burger   = document.getElementById('burgerBtn');
@@ -2876,8 +2893,6 @@ html.light .founder-message strong{color:#0a0a0a}
 
   // Active une section, desactive les autres + force visibilite des enfants
   function showSection(className) {
-    // Sur mobile : navigation par chapitres desactivee (scroll natif)
-    if (isMobile) return;
     document.querySelectorAll('section').forEach(s => {
       s.classList.remove('active');
       s.classList.remove('gsap-override');
@@ -2894,6 +2909,8 @@ html.light .founder-message strong{color:#0a0a0a}
         });
       }
     }
+    // Expose current section pour le swipe tactile
+    window.__currentSection__ = className;
     // Footer visible uniquement sur la section pricing
     const footer = document.querySelector('footer');
     if (footer) {
@@ -2935,16 +2952,8 @@ html.light .founder-message strong{color:#0a0a0a}
       overlay.classList.remove('open');
       document.body.style.overflow = '';
 
-      if (isMobile) {
-        // Mobile : scroll natif vers la section
-        setTimeout(() => {
-          const target = document.querySelector('section.' + targetClass);
-          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 350);
-      } else {
-        // Desktop : switcher vers la section cible
-        setTimeout(() => showSection(targetClass), 350);
-      }
+      // Switcher vers la section cible
+      setTimeout(() => showSection(targetClass), 350);
     });
   });
 
@@ -2985,8 +2994,21 @@ html.light .founder-message strong{color:#0a0a0a}
     if (overlay.classList.contains('open')) return;
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = e.changedTouches[0].clientY - touchStartY;
-    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 50) {
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+    // Swipe vertical dominant (haut/bas)
+    if (absY > absX && absY > 50) {
       if (dy < 0) {
+        const next = ORDER[currentIndex() + 1];
+        if (next) showSection(next);
+      } else {
+        const prev = ORDER[currentIndex() - 1];
+        if (prev) showSection(prev);
+      }
+      return;
+    }
+    // Swipe horizontal dominant (gauche/droite) — alternative mobile
+    if (absX > absY && absX > 50) {
+      if (dx < 0) {
         const next = ORDER[currentIndex() + 1];
         if (next) showSection(next);
       } else {
