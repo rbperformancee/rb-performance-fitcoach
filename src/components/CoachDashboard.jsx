@@ -2448,7 +2448,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       opacity: pillVisible ? 1 : 0,
       pointerEvents: pillVisible ? "all" : "none",
       zIndex: 50,
-      background: "rgba(12,12,12,.96)",
+      background: "rgba(10,10,10,.97)",
       border: "1px solid rgba(255,255,255,.1)",
       borderRadius: 100,
       padding: "7px 10px",
@@ -2620,12 +2620,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
             {/* Phrase d'action a gauche */}
             <div style={{ flex: 1, minWidth: 280 }}>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(36px, 6vw, 64px)", fontWeight: 900, letterSpacing: "-2.5px", color: "#fff", margin: 0, lineHeight: 0.92 }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", margin: 0, lineHeight: 1 }}>
                 {total} client{total > 1 ? "s" : ""}.
                 <br />
                 {urgentCount > 0 ? (
-                  <span style={{ color: urgentCount > 3 ? RED : G }}>
-                    {urgentCount} a agir maintenant.
+                  <span style={{ color: RED }}>
+                    {urgentCount} à contacter.
                   </span>
                 ) : (
                   <span style={{ color: G }}>Tout roule.</span>
