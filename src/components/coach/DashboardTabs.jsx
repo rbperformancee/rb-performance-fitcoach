@@ -44,22 +44,22 @@ export default function DashboardTabs({ active, onChange, alerts = 0 }) {
               alignItems: "center",
               gap: 7,
               padding: "9px 14px",
-              background: isActive ? "rgba(2,209,186,0.1)" : "transparent",
-              border: `1px solid ${isActive ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.06)"}`,
+              background: isActive ? "#02d1ba" : "transparent",
+              border: isActive ? "none" : "1px solid rgba(255,255,255,0.06)",
               borderRadius: 100,
-              color: isActive ? "#02d1ba" : "rgba(255,255,255,0.5)",
+              color: isActive ? "#000" : "rgba(255,255,255,0.4)",
               fontSize: 12,
-              fontWeight: 700,
+              fontWeight: isActive ? 600 : 500,
               letterSpacing: "0.3px",
               cursor: "pointer",
-              fontFamily: "-apple-system,Inter,sans-serif",
+              fontFamily: "'DM Sans', sans-serif",
               transition: "all 0.2s",
               flexShrink: 0,
               minHeight: 36,
               position: "relative",
             }}
           >
-            <AppIcon name={t.icon} size={13} color={isActive ? "#02d1ba" : "rgba(255,255,255,0.5)"} />
+            <AppIcon name={t.icon} size={13} color={isActive ? "#000" : "rgba(255,255,255,0.4)"} />
             {t.label}
             {showAlert && (
               <span style={{

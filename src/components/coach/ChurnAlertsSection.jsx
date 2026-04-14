@@ -92,16 +92,17 @@ export default function ChurnAlertsSection({ clients = [], onOpenClient }) {
 
 function SectionHeader({ count }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-      <AppIcon name="alert" size={16} color={RED} />
-      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(239,68,68,0.8)" }}>
-        Clients a risque
-      </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+      <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg,#f97316,transparent)" }} />
+      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", color: "#f97316", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap" }}>
+        Clients à risque
+      </span>
       {count > 0 && (
-        <div style={{ marginLeft: "auto", fontSize: 10, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100, fontWeight: 700 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100, fontWeight: 700 }}>
           {count} a agir
         </div>
       )}
+      <div style={{ flex: 1, height: "1px", background: "linear-gradient(270deg,#f97316,transparent)" }} />
     </div>
   );
 }

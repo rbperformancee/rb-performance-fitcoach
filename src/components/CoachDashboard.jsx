@@ -2160,6 +2160,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
         @keyframes glowFlame{0%,100%{filter:drop-shadow(0 0 8px rgba(2,209,186,0.4))}50%{filter:drop-shadow(0 0 16px rgba(2,209,186,0.7))}}
+        .mini-nav-btn:hover{border-color:rgba(2,209,186,0.4) !important;color:rgba(255,255,255,0.85) !important}
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
         .cd-row:hover .cd-avatar-glow{opacity:1!important}
@@ -2250,17 +2251,17 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {onSwitchToSuperAdmin && (
-                  <button onClick={onSwitchToSuperAdmin} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(129,140,248,0.06)", border: "1px solid rgba(129,140,248,0.2)", borderRadius: 10, padding: "7px 12px", color: "#818cf8", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  <button onClick={onSwitchToSuperAdmin} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, padding: "7px 14px", color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em", transition: "border-color 0.2s,color 0.2s" }}>
                     <Icon name="chart" size={11} /> CEO
                   </button>
                 )}
                 {clients.length > 0 && (
-                  <button onClick={() => { haptic.light(); setShowPipeline(true); }} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 10, padding: "7px 12px", color: "#f97316", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  <button onClick={() => { haptic.light(); setShowPipeline(true); }} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, padding: "7px 14px", color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em", transition: "border-color 0.2s,color 0.2s" }}>
                     <Icon name="view" size={11} /> Pipeline
                   </button>
                 )}
                 {clients.length > 0 && (
-                  <button onClick={() => { haptic.light(); setShowAnalytics(true); }} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 10, padding: "7px 12px", color: "#a78bfa", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  <button onClick={() => { haptic.light(); setShowAnalytics(true); }} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, padding: "7px 14px", color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em", transition: "border-color 0.2s,color 0.2s" }}>
                     <Icon name="chart" size={11} /> Analytics
                   </button>
                 )}
@@ -2281,11 +2282,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
             {/* Phrase d'action a gauche */}
             <div style={{ flex: 1, minWidth: 280 }}>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(38px, 7vw, 60px)", fontWeight: 900, letterSpacing: "-2.5px", color: "#fff", margin: 0, lineHeight: 0.92 }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(36px, 6vw, 64px)", fontWeight: 900, letterSpacing: "-2.5px", color: "#fff", margin: 0, lineHeight: 0.92 }}>
                 {total} client{total > 1 ? "s" : ""}.
                 <br />
                 {urgentCount > 0 ? (
-                  <span style={{ color: urgentCount > 3 ? RED : ORANGE }}>
+                  <span style={{ color: urgentCount > 3 ? RED : G }}>
                     {urgentCount} a agir maintenant.
                   </span>
                 ) : (
@@ -2293,16 +2294,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 )}
               </h1>
               {/* Stats one-liner : lisible en 2 secondes */}
-              <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 20, marginTop: 18, flexWrap: "wrap" }}>
                 {[
                   { v: withProg, l: "programmes", c: G },
                   { v: activeToday, l: "en seance", c: activeToday > 0 ? G : "rgba(255,255,255,0.4)" },
                   { v: activeWeek, l: "actifs 7j", c: "rgba(255,255,255,0.5)" },
                   { v: inactiveAlerts, l: "inactifs", c: inactiveAlerts > 0 ? RED : "rgba(255,255,255,0.3)" },
                 ].map((s, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: s.c, letterSpacing: "-1px" }}>{s.v}</span>
-                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>{s.l}</span>
+                  <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 200, color: s.c, letterSpacing: "-1px" }}>{s.v}</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{s.l}</span>
                   </div>
                 ))}
               </div>
@@ -2333,52 +2334,36 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               )}
             </div>
 
-            {/* Score Business a droite — anneau SVG progress */}
-            <div style={{
-              position: "relative",
-              width: 120, height: 120,
-              flexShrink: 0,
-            }}>
-              <svg
-                width="120" height="120"
-                viewBox="0 0 120 120"
-                style={{ position:"absolute", top:0, left:0, transform:"rotate(-90deg)" }}
-              >
-                <circle cx="60" cy="60" r="50"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.04)"
-                  strokeWidth="3.5"
-                />
-                <circle cx="60" cy="60" r="50"
-                  fill="none"
-                  stroke={scoreColor}
-                  strokeWidth="3.5"
+            {/* Score Business a droite — anneau SVG progress 130x130 */}
+            <div style={{ position:"relative", width:130, height:130, flexShrink:0 }}>
+              <svg width="130" height="130" viewBox="0 0 130 130"
+                style={{ position:"absolute", top:0, left:0, transform:"rotate(-90deg)" }}>
+                <circle cx="65" cy="65" r="54"
+                  fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="4"/>
+                <circle cx="65" cy="65" r="54"
+                  fill="none" stroke={scoreColor} strokeWidth="4"
                   strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 50}`}
-                  strokeDashoffset={`${2 * Math.PI * 50 * (1 - businessScore / 100)}`}
-                  style={{ transition: "stroke-dashoffset 1s ease" }}
+                  strokeDasharray={`${2 * Math.PI * 54}`}
+                  strokeDashoffset={`${2 * Math.PI * 54 * (1 - businessScore/100)}`}
+                  style={{ transition:"stroke-dashoffset 1.2s ease" }}
                 />
               </svg>
               <div style={{
-                position: "absolute", inset: 0,
-                display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                gap: 2,
+                position:"absolute", inset:0,
+                display:"flex", flexDirection:"column",
+                alignItems:"center", justifyContent:"center", gap:2
               }}>
                 <div style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 34, fontWeight: 200,
-                  color: scoreColor, letterSpacing: "-2px",
-                  lineHeight: 1,
+                  fontFamily:"'JetBrains Mono',monospace",
+                  fontSize:38, fontWeight:200,
+                  color:scoreColor, letterSpacing:"-3px", lineHeight:1
                 }}>{businessScore}</div>
                 <div style={{
-                  fontSize: 8, fontWeight: 700,
-                  letterSpacing: "2.5px", textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.25)",
+                  fontSize:8, fontWeight:700, letterSpacing:"2.5px",
+                  textTransform:"uppercase", color:"rgba(255,255,255,0.25)"
                 }}>Score</div>
                 <div style={{
-                  fontSize: 9, fontWeight: 600,
-                  color: scoreColor, opacity: 0.8,
+                  fontSize:10, fontWeight:600, color:scoreColor, opacity:0.8
                 }}>{scoreLabel}</div>
               </div>
             </div>
@@ -2393,13 +2378,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 { label: "Retention", value: retentionRate + "%", color: retentionRate >= 80 ? G : retentionRate >= 60 ? ORANGE : RED, sub: retainedClients.length + "/" + onboardedClients.length + " actifs" },
               ].map((m, i) => (
                 <div key={i} style={{
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: 16, padding: "16px 14px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 20, padding: "18px 20px",
                 }}>
-                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: m.color, letterSpacing: "-1px" }}>{m.value}</div>
-                  {m.sub && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{m.sub}</div>}
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: 8 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 26, fontWeight: 200, color: m.color, letterSpacing: "-1.5px" }}>{m.value}</div>
+                  {m.sub && <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>{m.sub}</div>}
                 </div>
               ))}
             </div>
@@ -2408,11 +2393,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== ALERTES CRITIQUES (clients a agir) ========== */}
           {urgentCount > 0 && (
             <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.1s both" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: RED, animation: "pulseDot 2s infinite", flexShrink: 0 }} />
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: RED }}>
-                  A agir maintenant
-                </div>
+              <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+                <div style={{ flex:1, height:"1px", background:"linear-gradient(90deg,#ef4444,transparent)" }} />
+                <span style={{ fontSize:9, fontWeight:700, letterSpacing:"3px", textTransform:"uppercase", color:"#ef4444", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>À agir maintenant</span>
+                <div style={{ flex:1, height:"1px", background:"linear-gradient(270deg,#ef4444,transparent)" }} />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {clientsToAct.map((c) => {
@@ -2574,11 +2558,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 8 }}>Clients</div>
-                  <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
-                    Tes athletes<span style={{ color: G }}>.</span>
+                  <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 6vw, 52px)", fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+                    Tes athletes<span style={{ color: "#02d1ba" }}>.</span>
                   </h1>
                 </div>
-                <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", background: showAdd ? "rgba(255,255,255,0.04)" : `linear-gradient(135deg, ${G}, #0891b2)`, border: `1px solid ${showAdd ? "rgba(255,255,255,0.1)" : G}`, borderRadius: 12, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", fontSize: 11, fontWeight: 800, cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px", flexShrink: 0 }}>
+                <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", background: showAdd ? "rgba(255,255,255,0.04)" : "#02d1ba", border: showAdd ? "1px solid rgba(255,255,255,0.1)" : "none", borderRadius: 100, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px", flexShrink: 0 }}>
                   <Icon name={showAdd ? "x" : "plus"} size={12} />
                   {showAdd ? "Annuler" : "Ajouter"}
                 </button>

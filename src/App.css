@@ -77,21 +77,17 @@ a:focus:not(:focus-visible) {
 }
 
 .nav-tab.active {
-  color: var(--accent) !important;
+  background: #02d1ba !important;
+  color: #000 !important;
+  border-radius: 100px !important;
 }
-
-.nav-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
+.nav-tab.active svg path,
+.nav-tab.active svg circle,
+.nav-tab.active svg line,
+.nav-tab.active svg polyline {
+  stroke: #000 !important;
 }
+.nav-tab.active::after { display: none !important; }
 
 /* Cards premium */
 .ex-card {
