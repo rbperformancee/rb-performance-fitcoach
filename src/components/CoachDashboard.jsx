@@ -27,7 +27,6 @@ import ActivityTimeline from "./coach/ActivityTimeline";
 import AnalyticsSection from "./coach/AnalyticsSection";
 import AchievementsSection from "./coach/AchievementsSection";
 import TransformationView from "./coach/TransformationView";
-import DashboardTabs from "./coach/DashboardTabs";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
 import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
@@ -1839,6 +1838,23 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showCmdK, setShowCmdK] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [pillVisible, setPillVisible] = useState(true);
+
+  // Scroll listener sur <main> pour hide/show floating pill mobile
+  const mainScrollRef = useRef(null);
+  useEffect(() => {
+    const el = mainScrollRef.current;
+    if (!el) return;
+    let lastY = 0;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const going = y > lastY ? "down" : "up";
+      lastY = y;
+      setPillVisible(going === "up" || y < 50);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Effet : si le coach passe sur l'onglet "clients", ouvre la liste full-screen
   React.useEffect(() => {
@@ -2155,12 +2171,325 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     transition: "border-color 0.15s",
   };
 
+  // ===== COACH SIDEBAR INLINE (desktop) =====
+  const coachName = coachData?.full_name || "Coach";
+  const coachInitials = (coachName.split(" ").map(w => w[0]).join("").slice(0, 2) || "RB").toUpperCase();
+  const coachPlan = coachData?.subscription_plan || "Beta";
+
+  // Sparkline MRR 30 jours (reconstruit depuis snapshots ou fallback)
+  const sparkPoints = (() => {
+    const n = 30;
+    const base = mrr || 1500;
+    return Array.from({ length: n }, (_, i) => {
+      const x = (i / (n - 1)) * 180;
+      const variation = Math.sin(i * 0.5) * 0.1 + Math.cos(i * 0.3) * 0.08;
+      const y = 28 - ((i / (n - 1)) * 18 + variation * 8);
+      return `${x.toFixed(1)},${Math.max(4, Math.min(28, y)).toFixed(1)}`;
+    }).join(" ");
+  })();
+
+  const navItems = [
+    { id: "overview",  label: "Dashboard",  icon: "chart",       group: "principal" },
+    { id: "clients",   label: "Clients",    icon: "users",       group: "principal", badge: urgentCount },
+    { id: "business",  label: "Business",   icon: "trending-up", group: "principal" },
+    { id: "analytics", label: "Analytics",  icon: "activity",    group: "outils" },
+  ];
+  const sidebarOnNav = (id) => {
+    if (id === "analytics") { haptic.light(); setShowAnalytics(true); return; }
+    if (id === "pipeline") { haptic.light(); setShowPipeline(true); return; }
+    setActiveTab(id);
+  };
+
+  const CoachSidebar = (
+    <aside className="coach-sidebar" style={{
+      width: 220,
+      background: "#090909",
+      borderRight: "1px solid rgba(255,255,255,.045)",
+      flexDirection: "column",
+      height: "100vh",
+      position: "sticky",
+      top: 0,
+      overflow: "hidden",
+      flexShrink: 0,
+    }}>
+      {/* Degrade teal subtle en haut */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0,
+        height: 180,
+        background: "linear-gradient(180deg,rgba(2,209,186,.025) 0%,transparent 100%)",
+        pointerEvents: "none", zIndex: 0,
+      }} />
+
+      {/* LOGO avec dot pulsant */}
+      <div style={{ padding: "28px 22px 20px", position: "relative", zIndex: 1 }}>
+        <div style={{
+          fontFamily: "'Syne',sans-serif",
+          fontSize: 16, fontWeight: 900,
+          letterSpacing: ".08em", color: "#fff",
+          display: "flex", alignItems: "center", gap: 0,
+        }}>
+          RB
+          <span style={{ color: "#02d1ba" }}>PERFORM</span>
+          <div style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: "#02d1ba",
+            marginLeft: 3, marginBottom: 1,
+            animation: "rbDotPulse 2.4s ease-in-out infinite",
+          }} />
+        </div>
+      </div>
+
+      {/* NAV ITEMS */}
+      <div style={{ padding: "0 10px", display: "flex", flexDirection: "column", gap: 2, flex: 1, position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", padding: "2px 12px 6px" }}>Principal</div>
+        {navItems.filter(n => n.group === "principal").map(n => {
+          const isActive = activeTab === n.id;
+          return (
+            <button
+              key={n.id}
+              onClick={() => sidebarOnNav(n.id)}
+              className="coach-nav-item"
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "9px 12px", borderRadius: 10,
+                fontSize: 13, fontWeight: isActive ? 500 : 400,
+                color: isActive ? "#fff" : "rgba(255,255,255,.32)",
+                background: isActive ? "rgba(255,255,255,.06)" : "transparent",
+                border: "none", cursor: "pointer",
+                transition: "all .18s ease",
+                position: "relative",
+                letterSpacing: ".01em",
+                fontFamily: "inherit",
+                textAlign: "left",
+                width: "100%",
+              }}
+            >
+              {isActive && <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 18, background: "#02d1ba", borderRadius: "0 3px 3px 0" }} />}
+              <Icon name={n.icon} size={14} color={isActive ? "#fff" : "rgba(255,255,255,.4)"} />
+              <span style={{ flex: 1 }}>{n.label}</span>
+              {n.badge > 0 && (
+                <span style={{ background: "#ef4444", color: "#fff", fontSize: 9, fontWeight: 800, borderRadius: 100, padding: "2px 7px", fontFamily: "'JetBrains Mono',monospace" }}>{n.badge > 9 ? "9+" : n.badge}</span>
+              )}
+            </button>
+          );
+        })}
+
+        <div style={{ height: 1, background: "rgba(255,255,255,.04)", margin: "8px 12px" }} />
+
+        <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", padding: "2px 12px 6px" }}>Outils</div>
+        {navItems.filter(n => n.group === "outils").map(n => (
+          <button
+            key={n.id}
+            onClick={() => sidebarOnNav(n.id)}
+            className="coach-nav-item"
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "9px 12px", borderRadius: 10,
+              fontSize: 13, fontWeight: 400,
+              color: "rgba(255,255,255,.32)",
+              background: "transparent",
+              border: "none", cursor: "pointer",
+              transition: "all .18s ease",
+              fontFamily: "inherit",
+              textAlign: "left",
+              width: "100%",
+            }}
+          >
+            <Icon name={n.icon} size={14} color="rgba(255,255,255,.4)" />
+            <span style={{ flex: 1 }}>{n.label}</span>
+          </button>
+        ))}
+        {clients.length > 0 && (
+          <button
+            onClick={() => { haptic.light(); setShowPipeline(true); }}
+            className="coach-nav-item"
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "9px 12px", borderRadius: 10,
+              fontSize: 13, fontWeight: 400,
+              color: "rgba(255,255,255,.32)",
+              background: "transparent",
+              border: "none", cursor: "pointer",
+              transition: "all .18s ease",
+              fontFamily: "inherit",
+              textAlign: "left",
+              width: "100%",
+            }}
+          >
+            <Icon name="view" size={14} color="rgba(255,255,255,.4)" />
+            <span style={{ flex: 1 }}>Pipeline</span>
+          </button>
+        )}
+      </div>
+
+      {/* COACH CARD PREMIUM */}
+      <div style={{
+        margin: "0 10px 16px",
+        background: "rgba(255,255,255,.03)",
+        border: "1px solid rgba(255,255,255,.06)",
+        borderRadius: 16,
+        padding: 16,
+        position: "relative",
+        overflow: "hidden",
+        zIndex: 1,
+      }}>
+        {/* Ligne teal en haut */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0,
+          height: 1,
+          background: "linear-gradient(90deg,transparent,rgba(2,209,186,.3),transparent)",
+        }} />
+
+        {/* Avatar + infos */}
+        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 12 }}>
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: "50%",
+              background: "linear-gradient(135deg,rgba(2,209,186,.25),rgba(2,209,186,.05))",
+              border: "1px solid rgba(2,209,186,.2)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "'Syne',sans-serif",
+              fontSize: 14, fontWeight: 900, color: "#02d1ba",
+            }}>{coachInitials}</div>
+            <div style={{
+              position: "absolute", bottom: 1, right: 1,
+              width: 9, height: 9, borderRadius: "50%",
+              background: "#02d1ba",
+              border: "1.5px solid #090909",
+            }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 13, fontWeight: 900, color: "#fff", letterSpacing: ".02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coachName}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,.3)", fontWeight: 400 }}>{coachPlan}</div>
+          </div>
+        </div>
+
+        {/* Score inline */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+          <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.2)", fontWeight: 700 }}>Score</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 200, fontSize: 15, color: "#02d1ba", letterSpacing: "-0.5px" }}>{businessScore}</span>
+            <span style={{ fontSize: 9, color: "#02d1ba", opacity: .65 }}>{scoreLabel}</span>
+          </div>
+        </div>
+
+        {/* Sparkline MRR 30j */}
+        <div style={{ marginBottom: 4 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+            <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.2)", fontWeight: 700 }}>MRR 30j</span>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 200, fontSize: 11, color: "rgba(255,255,255,.6)" }}>{mrr.toLocaleString()} €</span>
+          </div>
+          <svg width="100%" height="32" viewBox="0 0 180 32" preserveAspectRatio="none" style={{ display: "block" }}>
+            <polyline points={`0,32 ${sparkPoints} 180,32`} fill="rgba(2,209,186,.05)" stroke="none" />
+            <polyline points={sparkPoints} fill="none" stroke="rgba(2,209,186,.55)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="180" cy={sparkPoints.split(" ").pop().split(",")[1]} r="2.5" fill="#02d1ba" />
+          </svg>
+        </div>
+
+        {/* Decon */}
+        <div
+          onClick={() => { supabase.auth.signOut().then(() => onExit?.()); }}
+          style={{
+            fontSize: 10, color: "rgba(255,255,255,.18)",
+            textAlign: "center", paddingTop: 10, marginTop: 10,
+            borderTop: "1px solid rgba(255,255,255,.04)",
+            cursor: "pointer",
+            transition: "color .15s",
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = "rgba(255,255,255,.5)"}
+          onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,.18)"}
+        >
+          Déconnexion
+        </div>
+      </div>
+    </aside>
+  );
+
+  // ===== MOBILE TOPBAR =====
+  const MobileTopBar = (
+    <div className="coach-mobile-topbar" style={{
+      height: 46,
+      position: "sticky",
+      top: isDemo ? 44 : 0,
+      zIndex: 50,
+      background: "rgba(8,8,8,.98)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      borderBottom: "1px solid rgba(255,255,255,.05)",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "0 18px",
+    }}>
+      <div style={{
+        fontFamily: "'Syne',sans-serif",
+        fontSize: 15, fontWeight: 900,
+        letterSpacing: ".08em", color: "#fff",
+      }}>
+        RB<span style={{ color: "#02d1ba" }}>PERFORM</span>
+      </div>
+      <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
+    </div>
+  );
+
+  // ===== FLOATING PILL MOBILE =====
+  const pillItems = [
+    { id: "overview",  icon: "chart",       onClick: () => setActiveTab("overview") },
+    { id: "clients",   icon: "users",       onClick: () => setActiveTab("clients") },
+    { id: "business",  icon: "trending-up", onClick: () => setActiveTab("business") },
+    { id: "analytics", icon: "activity",    onClick: () => setShowAnalytics(true) },
+    { id: "profile",   icon: "users",       onClick: () => onExit?.() },
+  ];
+  const FloatingPill = (
+    <div className="coach-floating-pill" style={{
+      position: "fixed",
+      bottom: 20,
+      left: "50%",
+      transform: pillVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(20px)",
+      opacity: pillVisible ? 1 : 0,
+      pointerEvents: pillVisible ? "all" : "none",
+      zIndex: 50,
+      background: "rgba(12,12,12,.96)",
+      border: "1px solid rgba(255,255,255,.1)",
+      borderRadius: 100,
+      padding: "7px 10px",
+      alignItems: "center",
+      gap: 2,
+      boxShadow: "0 20px 50px rgba(0,0,0,.5)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1)",
+    }}>
+      {pillItems.map((p) => {
+        const isActive = activeTab === p.id;
+        return (
+          <button
+            key={p.id}
+            onClick={() => { haptic.selection(); p.onClick(); }}
+            style={{
+              width: 38, height: 34,
+              borderRadius: 100,
+              background: isActive ? "#02d1ba" : "transparent",
+              border: "none",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+              transition: "all .2s",
+            }}
+          >
+            <Icon name={p.icon} size={14} color={isActive ? "#000" : "rgba(255,255,255,.32)"} />
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div style={{
-      minHeight: "100vh",
-      background: "#050505",
+      height: "100vh",
+      background: "#080808",
       fontFamily: "'DM Sans', -apple-system, sans-serif",
       color: "#fff",
+      display: "flex",
+      overflow: "hidden",
       paddingTop: isDemo
         ? "calc(env(safe-area-inset-top, 0px) + 44px)"
         : "env(safe-area-inset-top, 0px)",
@@ -2179,8 +2508,18 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
         @keyframes glowFlame{0%,100%{filter:drop-shadow(0 0 8px rgba(2,209,186,0.4))}50%{filter:drop-shadow(0 0 16px rgba(2,209,186,0.7))}}
+        @keyframes rbDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
         .mini-nav-btn:hover{border-color:rgba(2,209,186,0.4) !important;color:rgba(255,255,255,0.85) !important}
         @media(max-width:760px){.dash-secondary-nav{display:none !important}}
+        /* Sidebar / mobile responsive */
+        .coach-sidebar{display:flex}
+        .coach-mobile-topbar,.coach-floating-pill{display:none}
+        .coach-nav-item:hover{color:rgba(255,255,255,.65)!important;background:rgba(255,255,255,.035)!important}
+        @media(max-width:1023px){
+          .coach-sidebar{display:none}
+          .coach-mobile-topbar{display:flex}
+          .coach-floating-pill{display:flex}
+        }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
         .cd-row:hover .cd-avatar-glow{opacity:1!important}
@@ -2260,64 +2599,24 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         ]}
       />
 
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 28px 80px", position: "relative" }}>
+      {CoachSidebar}
+
+      <main ref={mainScrollRef} style={{
+        flex: 1, minWidth: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
+        position: "relative",
+      }}>
+      {MobileTopBar}
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "36px 40px 90px", position: "relative" }}>
         {/* Ambient */}
         <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 800, height: 400, background: "radial-gradient(ellipse at center, rgba(2,209,186,0.06), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
-          {/* ===== TOPNAV PREMIUM (style landing) ===== */}
-          {!showClientList && (
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingTop: "calc(env(safe-area-inset-top, 8px) + 14px)",
-              paddingBottom: 14,
-              marginBottom: 8,
-              borderBottom: "1px solid rgba(255,255,255,0.04)",
-              gap: 12,
-            }}>
-              {/* WORDMARK RB PERFORM (left) */}
-              <div style={{
-                fontFamily: "'Syne', sans-serif",
-                fontSize: 18,
-                fontWeight: 900,
-                letterSpacing: "0.12em",
-                color: "#fff",
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
-              }}>
-                RB<span style={{ color: G, marginLeft: 2 }}>PERFORM</span>
-              </div>
-
-              {/* Actions secondaires CEO/Pipeline/Analytics — masquees mobile */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }} className="dash-secondary-nav">
-                {onSwitchToSuperAdmin && (
-                  <button onClick={onSwitchToSuperAdmin} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, padding: "6px 12px", color: "rgba(255,255,255,0.45)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.05em", textTransform: "uppercase", transition: "border-color 0.2s,color 0.2s" }}>
-                    <Icon name="chart" size={10} /> CEO
-                  </button>
-                )}
-                {clients.length > 0 && (
-                  <button onClick={() => { haptic.light(); setShowPipeline(true); }} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, padding: "6px 12px", color: "rgba(255,255,255,0.45)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.05em", textTransform: "uppercase", transition: "border-color 0.2s,color 0.2s" }}>
-                    <Icon name="view" size={10} /> Pipeline
-                  </button>
-                )}
-              </div>
-
-              {/* Actions a droite */}
-              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
-                <ThemeSwitcher />
-                <button onClick={loadClients} title="Rafraichir" style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 6 }}>
-                  <Icon name="refresh" size={14} />
-                </button>
-                <button onClick={onExit} title="Quitter" style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", padding: 6, display: "flex", alignItems: "center" }}>
-                  <Icon name="arrow-left" size={14} />
-                </button>
-              </div>
-            </div>
-          )}
+          {/* ancien TOPNAV supprime — remplace par sidebar desktop + mobile topbar */}
           {/* ========== HERO : phrase d'action + score business ========== */}
           <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
             {/* Phrase d'action a gauche */}
@@ -2505,14 +2804,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             </>
           )}
 
-          {/* ========== TABS NAVIGATION ========== */}
-          {!showClientList && coachData && clients.length > 0 && (
-            <DashboardTabs
-              active={activeTab}
-              onChange={setActiveTab}
-              alerts={clients.filter((c) => calculateChurnRisk(c) >= 40 || (c.subscription_end_date && new Date(c.subscription_end_date) < new Date(Date.now() + 14 * 86400000))).length}
-            />
-          )}
+          {/* Tabs retirees — navigation via sidebar desktop + floating pill mobile */}
 
           {/* ========== VUE D'ENSEMBLE (overview = churn + invitation) ========== */}
           {!showClientList && (activeTab === "overview" || clients.length === 0) && (
@@ -2751,6 +3043,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       )}
         </div>
       </div>
+      </main>
+      {FloatingPill}
     </div>
   );
 }
