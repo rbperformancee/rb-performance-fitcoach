@@ -2161,6 +2161,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
         @keyframes glowFlame{0%,100%{filter:drop-shadow(0 0 8px rgba(2,209,186,0.4))}50%{filter:drop-shadow(0 0 16px rgba(2,209,186,0.7))}}
         .mini-nav-btn:hover{border-color:rgba(2,209,186,0.4) !important;color:rgba(255,255,255,0.85) !important}
+        @media(max-width:760px){.dash-secondary-nav{display:none !important}}
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
         .cd-row:hover .cd-avatar-glow{opacity:1!important}
@@ -2246,34 +2247,54 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
-          {/* ===== MINI NAV (remplace la topbar, discret) ===== */}
+          {/* ===== TOPNAV PREMIUM (style landing) ===== */}
           {!showClientList && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingTop: "calc(env(safe-area-inset-top, 8px) + 14px)",
+              paddingBottom: 14,
+              marginBottom: 8,
+              borderBottom: "1px solid rgba(255,255,255,0.04)",
+              gap: 12,
+            }}>
+              {/* WORDMARK RB PERFORM (left) */}
+              <div style={{
+                fontFamily: "'Syne', sans-serif",
+                fontSize: 18,
+                fontWeight: 900,
+                letterSpacing: "0.12em",
+                color: "#fff",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+              }}>
+                RB<span style={{ color: G, marginLeft: 2 }}>PERFORM</span>
+              </div>
+
+              {/* Actions secondaires CEO/Pipeline/Analytics — masquees mobile */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }} className="dash-secondary-nav">
                 {onSwitchToSuperAdmin && (
-                  <button onClick={onSwitchToSuperAdmin} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, padding: "7px 14px", color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em", transition: "border-color 0.2s,color 0.2s" }}>
-                    <Icon name="chart" size={11} /> CEO
+                  <button onClick={onSwitchToSuperAdmin} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, padding: "6px 12px", color: "rgba(255,255,255,0.45)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.05em", textTransform: "uppercase", transition: "border-color 0.2s,color 0.2s" }}>
+                    <Icon name="chart" size={10} /> CEO
                   </button>
                 )}
                 {clients.length > 0 && (
-                  <button onClick={() => { haptic.light(); setShowPipeline(true); }} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, padding: "7px 14px", color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em", transition: "border-color 0.2s,color 0.2s" }}>
-                    <Icon name="view" size={11} /> Pipeline
-                  </button>
-                )}
-                {clients.length > 0 && (
-                  <button onClick={() => { haptic.light(); setShowAnalytics(true); }} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, padding: "7px 14px", color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em", transition: "border-color 0.2s,color 0.2s" }}>
-                    <Icon name="chart" size={11} /> Analytics
+                  <button onClick={() => { haptic.light(); setShowPipeline(true); }} className="mini-nav-btn" style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, padding: "6px 12px", color: "rgba(255,255,255,0.45)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.05em", textTransform: "uppercase", transition: "border-color 0.2s,color 0.2s" }}>
+                    <Icon name="view" size={10} /> Pipeline
                   </button>
                 )}
               </div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+
+              {/* Actions a droite */}
+              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
                 <ThemeSwitcher />
-                <button onClick={loadClients} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 4 }}>
+                <button onClick={loadClients} title="Rafraichir" style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 6 }}>
                   <Icon name="refresh" size={14} />
                 </button>
-                <button onClick={onExit} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", padding: 4, fontSize: 10, fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
-                  <Icon name="arrow-left" size={12} /> App
+                <button onClick={onExit} title="Quitter" style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", padding: 6, display: "flex", alignItems: "center" }}>
+                  <Icon name="arrow-left" size={14} />
                 </button>
               </div>
             </div>
