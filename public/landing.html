@@ -137,9 +137,10 @@ html.has-cursor a,html.has-cursor button{cursor:none}
 nav.topnav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 40px;display:flex;justify-content:space-between;align-items:center;transition:transform 0.4s var(--ease-out),background 0.3s,backdrop-filter 0.3s,border-color 0.3s;border-bottom:1px solid transparent}
 nav.topnav.scrolled{background:rgba(3,3,3,0.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom-color:var(--border)}
 nav.topnav.hidden{transform:translateY(-100%)}
-.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#fff;line-height:1}
-.nav-logo .dot{color:var(--orange)}
-.nav-link{font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s;padding:8px 4px;display:inline-block}
+.nav-logo{display:inline-flex;align-items:center;line-height:1;transition:transform 0.2s ease}
+.nav-logo:hover{transform:scale(1.05)}
+.nav-logo img{display:block;width:40px;height:40px;border-radius:10px}
+.nav-link{font-size:13px;color:rgba(255,255,255,0.7);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s;padding:8px 4px;display:inline-block}
 .nav-link:hover{color:#fff}
 
 /* ========== HERO (centered Ferrari-style, epure) ========== */
@@ -153,9 +154,12 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:10px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:24px;padding:8px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:100px;background:rgba(255,255,255,0.02);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 10px var(--orange);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.8)}}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(88px,15vw,200px);letter-spacing:-3px;line-height:0.88;font-weight:400;margin-bottom:36px}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(88px,15vw,200px);letter-spacing:-3px;line-height:0.88;font-weight:400;margin-bottom:36px;color:#fff}
 .hero-title .char{display:inline-block}
 .hero-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);margin:0 auto;font-weight:400;letter-spacing:0.2px;max-width:620px;line-height:1.5}
+.hero-arrow{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:4;color:rgba(255,255,255,0.5);transition:color 0.2s,transform 0.3s var(--ease-out);animation:arrowBounce 2.4s ease-in-out infinite}
+.hero-arrow:hover{color:#fff;transform:translateX(-50%) translateY(4px)}
+@keyframes arrowBounce{0%,100%{transform:translateX(-50%) translateY(0);opacity:0.5}50%{transform:translateX(-50%) translateY(8px);opacity:1}}
 @media(max-width:640px){
   .hero{padding:100px 20px 60px}
 }
@@ -216,7 +220,8 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .screen{position:absolute;inset:0;opacity:0;transition:opacity 0.5s var(--ease-out);padding:52px 14px 20px;overflow:hidden;color:#fff;font-size:11px}
 .screen.active{opacity:1}
 .screen:first-of-type{opacity:1}
-html.js-reveal .screen:first-of-type:not(.active){opacity:0}
+/* iPhone screens : le premier est toujours visible (fallback sans JS).
+   Quand JS active .active sur un autre, les CSS transition font le cross-fade. */
 
 /* Screen 1 */
 .screen-dashboard{background:var(--dark)}
@@ -297,8 +302,8 @@ html.js-reveal .screen:first-of-type:not(.active){opacity:0}
 /* Steps right column */
 .product-steps{padding:40px 0}
 .step{min-height:550px;display:flex;flex-direction:column;justify-content:center;padding:40px 0;transition:opacity 0.5s ease}
-.step:not(.active){opacity:0.25}
-html:not(.js-reveal) .step{opacity:1}
+.step:not(.active){opacity:0.5}
+/* .step : toujours lisible (JS peut juste ajouter .active pour highlight) */
 .step .num{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--orange);margin-bottom:14px;font-weight:400}
 .step h3{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,4.5vw,64px);font-weight:400;letter-spacing:-1.5px;line-height:1;margin-bottom:22px}
 .step p{font-size:16px;color:var(--text-dim);max-width:460px;line-height:1.7;font-weight:400}
@@ -488,8 +493,7 @@ html.light .stack-card{box-shadow:0 30px 80px rgba(0,0,0,0.06)}
 .how .intro{text-align:center;margin-bottom:80px}
 .how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;position:relative}
 .how-steps::before{content:'';position:absolute;top:42px;left:14%;right:14%;height:1px;background:linear-gradient(90deg,transparent,var(--border-strong) 20%,var(--border-strong) 80%,transparent);z-index:1}
-html.js-reveal .how-steps::before{transform:scaleX(0);transform-origin:left;transition:transform 1.4s var(--ease-out)}
-html.js-reveal .how-steps.in::before{transform:scaleX(1)}
+.how-steps.in::before{transform:scaleX(1)}
 .how-step{text-align:center;padding:0 20px;position:relative;z-index:2;background:var(--dark)}
 .how-step .num-circle{width:84px;height:84px;border-radius:50%;background:var(--dark3);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--orange);letter-spacing:0;position:relative;transition:transform 0.4s var(--ease-out),box-shadow 0.4s var(--ease-out)}
 .how-step:hover .num-circle{transform:scale(1.05);box-shadow:0 0 0 8px rgba(249,115,22,0.05),0 12px 30px rgba(249,115,22,0.15)}
@@ -614,18 +618,13 @@ html.light .founder-message strong{color:#0a0a0a}
   .sticky-cta .close{position:absolute;top:8px;right:8px}
 }
 
-/* ========== PROGRESSIVE ENHANCEMENT ========== */
-.reveal{opacity:1;transform:none;transition:opacity 0.9s var(--ease-out),transform 0.9s var(--ease-out)}
-html.js-reveal .reveal{opacity:0;transform:translateY(40px)}
-html.js-reveal .reveal.visible{opacity:1;transform:translateY(0)}
-.stagger-1{transition-delay:0.1s}
-.stagger-2{transition-delay:0.2s}
-.stagger-3{transition-delay:0.3s}
-
-html.js-reveal .hero-sub{opacity:0;transform:translateY(20px);transition:opacity 0.9s ease,transform 0.9s ease}
-html.js-reveal .hero-title .char{opacity:0;transform:translateY(80px);transition:opacity 0.9s var(--ease-out),transform 0.9s var(--ease-out)}
-html.js-reveal .manifeste-line{width:0;transition:width 0.9s var(--ease-out)}
-html.js-reveal .manifeste-line.visible{width:120px}
+/* ========== PROGRESSIVE ENHANCEMENT — NUCLEAIRE ========== */
+/* REGLE ABSOLUE : tout est visible TOUJOURS. AUCUN element n'est cache
+   par defaut. Les animations sont purement additives (scale, couleur,
+   transform en bonus). La page fonctionne 100% sans JavaScript. */
+.reveal{opacity:1;transform:none}
+.reveal.visible{opacity:1;transform:none}
+.stagger-1,.stagger-2,.stagger-3{transition-delay:0s}
 
 /* ========== RESPONSIVE ========== */
 @media(max-width:1024px){
@@ -640,7 +639,7 @@ html.js-reveal .manifeste-line.visible{width:120px}
 }
 @media(max-width:768px){
   nav.topnav{padding:16px 20px}
-  .nav-logo{font-size:20px;letter-spacing:2.5px}
+  .nav-logo img{width:34px;height:34px}
   .nav-link{font-size:11px;letter-spacing:1px}
   .hero{padding:100px 16px 80px}
   .trust-strip{padding:24px 20px}
@@ -669,8 +668,8 @@ html.js-reveal .manifeste-line.visible{width:120px}
 
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
-  html.js-reveal .reveal,html.js-reveal .hero-title .char,html.js-reveal .hero-sub,html.js-reveal .manifeste-line{opacity:1!important;transform:none!important;width:120px}
-  html.js-reveal .step{opacity:1!important}
+  .reveal,.hero-title .char,.hero-sub,.manifeste-line{opacity:1!important;transform:none!important;width:120px}
+  .step{opacity:1!important}
 }
 </style>
 </head>
@@ -695,7 +694,9 @@ html.js-reveal .manifeste-line.visible{width:120px}
 <div class="cursor" id="cursor" aria-hidden="true"></div>
 
 <nav class="topnav" id="nav">
-  <a href="#" class="nav-logo" aria-label="RB Perform — accueil">RB<span class="dot">.</span></a>
+  <a href="#" class="nav-logo" aria-label="RB Perform — accueil">
+    <img src="/icon-192.png" alt="RB Perform" width="40" height="40" loading="eager">
+  </a>
   <a href="https://rb-perfor.vercel.app" class="nav-link" target="_blank" rel="noopener">Connexion</a>
 </nav>
 
@@ -709,9 +710,15 @@ html.js-reveal .manifeste-line.visible{width:120px}
   <div class="hero-grid-overlay"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <h1 class="hero-title gradient-text" id="heroTitle">RB PERFORM</h1>
+    <h1 class="hero-title" id="heroTitle">RB PERFORM</h1>
     <p class="hero-sub">La plateforme qui transforme<br/>chaque coach en CEO.</p>
   </div>
+  <a href="#how" class="hero-arrow" aria-label="Faire défiler vers le bas">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <polyline points="6 13 12 19 18 13"/>
+    </svg>
+  </a>
 </section>
 
 <!-- ========== TRUST STRIP ========== -->
@@ -769,15 +776,15 @@ html.js-reveal .manifeste-line.visible{width:120px}
   <div class="chiffres-grid">
     <div class="chiffre-item reveal">
       <div class="chiffre-num" data-count="0" data-suffix="%">0%</div>
-      <div class="chiffre-label">Commission prélevée</div>
+      <div class="chiffre-label">Commission</div>
     </div>
     <div class="chiffre-item reveal stagger-1">
       <div class="chiffre-num" data-count="14" data-suffix="j">14j</div>
-      <div class="chiffre-label">Garantie satisfait ou remboursé</div>
+      <div class="chiffre-label">Gratuits</div>
     </div>
     <div class="chiffre-item reveal stagger-2">
-      <div class="chiffre-num" data-count="5" data-prefix="&lt;" data-suffix="min">&lt;5min</div>
-      <div class="chiffre-label">Pour onboarder ton 1er client</div>
+      <div class="chiffre-num" data-count="5" data-suffix="min">5min</div>
+      <div class="chiffre-label">Pour démarrer</div>
     </div>
   </div>
 </section>
@@ -1375,7 +1382,8 @@ html.js-reveal .manifeste-line.visible{width:120px}
     return;
   }
 
-  document.documentElement.classList.add('js-reveal');
+  // NOTE : plus de classe js-reveal ajoutee. La page est 100% visible
+  // par defaut en CSS. Les animations JS ne sont que des bonus additifs.
 
   initStaticCursor();
   initNavScroll();
