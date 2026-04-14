@@ -2508,6 +2508,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
         @keyframes glowFlame{0%,100%{filter:drop-shadow(0 0 8px rgba(2,209,186,0.4))}50%{filter:drop-shadow(0 0 16px rgba(2,209,186,0.7))}}
         @keyframes rbDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
+        @keyframes rbPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
         .mini-nav-btn:hover{border-color:rgba(2,209,186,0.4) !important;color:rgba(255,255,255,0.85) !important}
         @media(max-width:760px){.dash-secondary-nav{display:none !important}}
         /* Sidebar / mobile responsive */
@@ -2620,8 +2621,19 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
             {/* Phrase d'action a gauche */}
             <div style={{ flex: 1, minWidth: 280 }}>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", margin: 0, lineHeight: 1 }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(22px, 3vw, 34px)", fontWeight: 900, letterSpacing: "-1px", color: "#fff", margin: 0, lineHeight: 1 }}>
                 {total} client{total > 1 ? "s" : ""}.
+                <span style={{
+                  display: "inline-block",
+                  width: 7, height: 7,
+                  borderRadius: "50%",
+                  background: "#02d1ba",
+                  marginLeft: 6,
+                  marginBottom: 4,
+                  flexShrink: 0,
+                  verticalAlign: "middle",
+                  animation: "rbPulse 2.4s ease-in-out infinite",
+                }} />
                 <br />
                 {urgentCount > 0 ? (
                   <span style={{ color: RED }}>
@@ -2701,7 +2713,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   textTransform:"uppercase", color:"rgba(255,255,255,0.25)"
                 }}>Score</div>
                 <div style={{
-                  fontSize:10, fontWeight:600, color:scoreColor, opacity:0.8
+                  fontSize: scoreLabel === "Critique" ? 8 : 10,
+                  fontWeight:600,
+                  color: scoreLabel === "Critique" ? "rgba(239,68,68,.6)" : scoreColor,
+                  opacity: scoreLabel === "Critique" ? 1 : 0.8,
                 }}>{scoreLabel}</div>
               </div>
             </div>
@@ -2732,9 +2747,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {urgentCount > 0 && (
             <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.1s both" }}>
               <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
-                <div style={{ flex:1, height:"1px", background:"linear-gradient(90deg,#ef4444,transparent)" }} />
+                <div style={{ flex:1, height:"0.5px", background:"linear-gradient(90deg,rgba(239,68,68,.4),transparent)" }} />
                 <span style={{ fontSize:9, fontWeight:700, letterSpacing:"3px", textTransform:"uppercase", color:"#ef4444", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>À agir maintenant</span>
-                <div style={{ flex:1, height:"1px", background:"linear-gradient(270deg,#ef4444,transparent)" }} />
+                <div style={{ flex:1, height:"0.5px", background:"linear-gradient(270deg,rgba(239,68,68,.4),transparent)" }} />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {clientsToAct.map((c) => {
