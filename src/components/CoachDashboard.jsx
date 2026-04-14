@@ -523,7 +523,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
       </div>
     )}
 
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#000", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
       <style>{`@keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* Ambient teal */}
@@ -2203,8 +2203,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const CoachSidebar = (
     <aside className="coach-sidebar" style={{
       width: 220,
-      background: "#090909",
-      borderRight: "1px solid rgba(255,255,255,.045)",
+      background: "#000",
+      borderRight: ".5px solid rgba(255,255,255,.04)",
       flexDirection: "column",
       height: "100vh",
       position: "sticky",
@@ -2212,26 +2212,17 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       overflow: "hidden",
       flexShrink: 0,
     }}>
-      {/* Degrade teal subtle en haut */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0,
-        height: 180,
-        background: "linear-gradient(180deg,rgba(2,209,186,.025) 0%,transparent 100%)",
-        pointerEvents: "none", zIndex: 0,
-      }} />
-
-      {/* LOGO avec dot pulsant */}
-      <div style={{ padding: "28px 22px 20px", position: "relative", zIndex: 1 }}>
+      {/* LOGO RBPERFORM */}
+      <div style={{ padding: "28px 22px 32px", position: "relative", zIndex: 1 }}>
         <div style={{
-          fontFamily: "'Syne',sans-serif",
-          fontSize: 16, fontWeight: 900,
-          letterSpacing: ".08em", color: "#fff",
+          fontFamily: "'Syne', sans-serif",
+          fontSize: 14, fontWeight: 900,
+          letterSpacing: ".1em", color: "#fff",
           display: "flex", alignItems: "center", gap: 0,
         }}>
-          RB
-          <span style={{ color: "#02d1ba" }}>PERFORM</span>
+          RB<span style={{ color: "#02d1ba" }}>PERFORM</span>
           <div style={{
-            width: 6, height: 6, borderRadius: "50%",
+            width: 5, height: 5, borderRadius: "50%",
             background: "#02d1ba",
             marginLeft: 3, marginBottom: 1,
             animation: "rbDotPulse 2.4s ease-in-out infinite",
@@ -2240,8 +2231,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       </div>
 
       {/* NAV ITEMS */}
-      <div style={{ padding: "0 10px", display: "flex", flexDirection: "column", gap: 2, flex: 1, position: "relative", zIndex: 1 }}>
-        <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", padding: "2px 12px 6px" }}>Principal</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, position: "relative", zIndex: 1 }}>
+        <div style={{
+          fontSize: 9, fontWeight: 700,
+          letterSpacing: ".2em", textTransform: "uppercase",
+          color: "rgba(255,255,255,.12)",
+          padding: "0 12px", marginBottom: 6, marginLeft: 10,
+        }}>Principal</div>
         {navItems.filter(n => n.group === "principal").map(n => {
           const isActive = activeTab === n.id;
           return (
@@ -2251,21 +2247,21 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               className="coach-nav-item"
               style={{
                 display: "flex", alignItems: "center", gap: 10,
-                padding: "9px 12px", borderRadius: 10,
-                fontSize: 13, fontWeight: isActive ? 500 : 400,
-                color: isActive ? "#fff" : "rgba(255,255,255,.32)",
-                background: isActive ? "rgba(255,255,255,.06)" : "transparent",
+                padding: "9px 12px", margin: "0 10px",
+                borderRadius: 8,
+                fontSize: 12, fontWeight: isActive ? 500 : 400,
+                color: isActive ? "rgba(255,255,255,.88)" : "rgba(255,255,255,.22)",
+                background: isActive ? "rgba(255,255,255,.05)" : "transparent",
                 border: "none", cursor: "pointer",
                 transition: "all .18s ease",
                 position: "relative",
-                letterSpacing: ".01em",
+                letterSpacing: ".02em",
                 fontFamily: "inherit",
                 textAlign: "left",
-                width: "100%",
               }}
             >
               {isActive && <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 18, background: "#02d1ba", borderRadius: "0 3px 3px 0" }} />}
-              <Icon name={n.icon} size={14} color={isActive ? "#fff" : "rgba(255,255,255,.4)"} />
+              <Icon name={n.icon} size={14} color={isActive ? "rgba(255,255,255,.88)" : "rgba(255,255,255,.3)"} />
               <span style={{ flex: 1 }}>{n.label}</span>
               {n.badge > 0 && (
                 <span style={{ background: "#ef4444", color: "#fff", fontSize: 9, fontWeight: 800, borderRadius: 100, padding: "2px 7px", fontFamily: "'JetBrains Mono',monospace" }}>{n.badge > 9 ? "9+" : n.badge}</span>
@@ -2274,9 +2270,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           );
         })}
 
-        <div style={{ height: 1, background: "rgba(255,255,255,.04)", margin: "8px 12px" }} />
+        <div style={{ height: ".5px", background: "rgba(255,255,255,.04)", margin: "12px 20px" }} />
 
-        <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", padding: "2px 12px 6px" }}>Outils</div>
+        <div style={{
+          fontSize: 9, fontWeight: 700,
+          letterSpacing: ".2em", textTransform: "uppercase",
+          color: "rgba(255,255,255,.12)",
+          padding: "0 12px", marginBottom: 6, marginLeft: 10,
+        }}>Outils</div>
         {navItems.filter(n => n.group === "outils").map(n => (
           <button
             key={n.id}
@@ -2284,18 +2285,19 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             className="coach-nav-item"
             style={{
               display: "flex", alignItems: "center", gap: 10,
-              padding: "9px 12px", borderRadius: 10,
-              fontSize: 13, fontWeight: 400,
-              color: "rgba(255,255,255,.32)",
+              padding: "9px 12px", margin: "0 10px",
+              borderRadius: 8,
+              fontSize: 12, fontWeight: 400,
+              color: "rgba(255,255,255,.22)",
               background: "transparent",
               border: "none", cursor: "pointer",
               transition: "all .18s ease",
+              letterSpacing: ".02em",
               fontFamily: "inherit",
               textAlign: "left",
-              width: "100%",
             }}
           >
-            <Icon name={n.icon} size={14} color="rgba(255,255,255,.4)" />
+            <Icon name={n.icon} size={14} color="rgba(255,255,255,.3)" />
             <span style={{ flex: 1 }}>{n.label}</span>
           </button>
         ))}
@@ -2305,18 +2307,19 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             className="coach-nav-item"
             style={{
               display: "flex", alignItems: "center", gap: 10,
-              padding: "9px 12px", borderRadius: 10,
-              fontSize: 13, fontWeight: 400,
-              color: "rgba(255,255,255,.32)",
+              padding: "9px 12px", margin: "0 10px",
+              borderRadius: 8,
+              fontSize: 12, fontWeight: 400,
+              color: "rgba(255,255,255,.22)",
               background: "transparent",
               border: "none", cursor: "pointer",
               transition: "all .18s ease",
+              letterSpacing: ".02em",
               fontFamily: "inherit",
               textAlign: "left",
-              width: "100%",
             }}
           >
-            <Icon name="view" size={14} color="rgba(255,255,255,.4)" />
+            <Icon name="view" size={14} color="rgba(255,255,255,.3)" />
             <span style={{ flex: 1 }}>Pipeline</span>
           </button>
         )}
@@ -2324,11 +2327,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {/* COACH CARD PREMIUM */}
       <div style={{
-        margin: "0 10px 16px",
-        background: "rgba(255,255,255,.03)",
-        border: "1px solid rgba(255,255,255,.06)",
+        margin: "auto 10px 16px",
+        background: "rgba(255,255,255,.025)",
+        border: ".5px solid rgba(255,255,255,.06)",
         borderRadius: 16,
-        padding: 16,
+        padding: "16px 14px",
         position: "relative",
         overflow: "hidden",
         zIndex: 1,
@@ -2341,48 +2344,41 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         }} />
 
         {/* Avatar + infos */}
-        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
             <div style={{
-              width: 42, height: 42, borderRadius: "50%",
-              background: "linear-gradient(135deg,rgba(2,209,186,.25),rgba(2,209,186,.05))",
-              border: "1px solid rgba(2,209,186,.2)",
+              width: 36, height: 36, borderRadius: "50%",
+              background: "rgba(2,209,186,.08)",
+              border: ".5px solid rgba(2,209,186,.15)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "'Syne',sans-serif",
-              fontSize: 14, fontWeight: 900, color: "#02d1ba",
+              fontFamily: "'Syne', sans-serif",
+              fontSize: 11, fontWeight: 900, color: "#02d1ba",
             }}>{coachInitials}</div>
-            <div style={{
-              position: "absolute", bottom: 1, right: 1,
-              width: 9, height: 9, borderRadius: "50%",
-              background: "#02d1ba",
-              border: "1.5px solid #090909",
-            }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 13, fontWeight: 900, color: "#fff", letterSpacing: ".02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coachName}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,.3)", fontWeight: 400 }}>{coachPlan}</div>
+            <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 13, fontWeight: 900, color: "#fff", letterSpacing: ".02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {coachName}<span style={{ color: "#02d1ba" }}>.</span>
+            </div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", fontWeight: 400, marginTop: 1 }}>{coachPlan}</div>
           </div>
         </div>
 
         {/* Score inline */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-          <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.2)", fontWeight: 700 }}>Score</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 200, fontSize: 15, color: "#02d1ba", letterSpacing: "-0.5px" }}>{businessScore}</span>
-            <span style={{ fontSize: 9, color: "#02d1ba", opacity: .65 }}>{scoreLabel}</span>
-          </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 12, marginBottom: 8 }}>
+          <span style={{ fontSize: 8, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", fontWeight: 700 }}>Score</span>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 200, fontSize: 15, color: scoreColor, letterSpacing: "-0.5px" }}>{businessScore}</span>
         </div>
 
         {/* Sparkline MRR 30j */}
         <div style={{ marginBottom: 4 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-            <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.2)", fontWeight: 700 }}>MRR 30j</span>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 200, fontSize: 11, color: "rgba(255,255,255,.6)" }}>{mrr.toLocaleString()} €</span>
+            <span style={{ fontSize: 8, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", fontWeight: 700 }}>MRR 30j</span>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 400, fontSize: 10, color: "#02d1ba" }}>{mrr.toLocaleString()} €</span>
           </div>
-          <svg width="100%" height="32" viewBox="0 0 180 32" preserveAspectRatio="none" style={{ display: "block" }}>
-            <polyline points={`0,32 ${sparkPoints} 180,32`} fill="rgba(2,209,186,.05)" stroke="none" />
-            <polyline points={sparkPoints} fill="none" stroke="rgba(2,209,186,.55)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="180" cy={sparkPoints.split(" ").pop().split(",")[1]} r="2.5" fill="#02d1ba" />
+          <svg width="100%" height="28" viewBox="0 0 180 28" preserveAspectRatio="none" style={{ display: "block" }}>
+            <polyline points={`0,28 ${sparkPoints.split(" ").map(p => { const [x, y] = p.split(","); return `${x},${(parseFloat(y) * 28 / 32).toFixed(1)}`; }).join(" ")} 180,28`} fill="rgba(2,209,186,.04)" stroke="none" />
+            <polyline points={sparkPoints.split(" ").map(p => { const [x, y] = p.split(","); return `${x},${(parseFloat(y) * 28 / 32).toFixed(1)}`; }).join(" ")} fill="none" stroke="rgba(2,209,186,.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="180" cy={(parseFloat(sparkPoints.split(" ").pop().split(",")[1]) * 28 / 32).toFixed(1)} r="2" fill="#02d1ba" />
           </svg>
         </div>
 
@@ -2390,14 +2386,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         <div
           onClick={() => { supabase.auth.signOut().then(() => onExit?.()); }}
           style={{
-            fontSize: 10, color: "rgba(255,255,255,.18)",
+            fontSize: 10, color: "rgba(255,255,255,.15)",
             textAlign: "center", paddingTop: 10, marginTop: 10,
-            borderTop: "1px solid rgba(255,255,255,.04)",
+            borderTop: ".5px solid rgba(255,255,255,.04)",
             cursor: "pointer",
             transition: "color .15s",
           }}
           onMouseEnter={(e) => e.currentTarget.style.color = "rgba(255,255,255,.5)"}
-          onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,.18)"}
+          onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,.15)"}
         >
           Déconnexion
         </div>
@@ -2448,12 +2444,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       opacity: pillVisible ? 1 : 0,
       pointerEvents: pillVisible ? "all" : "none",
       zIndex: 50,
-      background: "rgba(10,10,10,.97)",
-      border: "1px solid rgba(255,255,255,.1)",
+      background: "rgba(8,8,8,.97)",
+      border: ".5px solid rgba(255,255,255,.08)",
       borderRadius: 100,
       padding: "7px 10px",
       alignItems: "center",
-      gap: 2,
+      gap: 4,
       boxShadow: "0 20px 50px rgba(0,0,0,.5)",
       backdropFilter: "blur(20px)",
       WebkitBackdropFilter: "blur(20px)",
@@ -2466,7 +2462,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             key={p.id}
             onClick={() => { haptic.selection(); p.onClick(); }}
             style={{
-              width: 38, height: 34,
+              width: 44, height: 34,
               borderRadius: 100,
               background: isActive ? "#02d1ba" : "transparent",
               border: "none",
@@ -2475,7 +2471,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               transition: "all .2s",
             }}
           >
-            <Icon name={p.icon} size={14} color={isActive ? "#000" : "rgba(255,255,255,.32)"} />
+            <Icon name={p.icon} size={14} color={isActive ? "#000" : "rgba(255,255,255,.3)"} />
           </button>
         );
       })}
@@ -2485,7 +2481,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   return (
     <div style={{
       height: "100vh",
-      background: "#080808",
+      background: "#000",
       fontFamily: "'DM Sans', -apple-system, sans-serif",
       color: "#fff",
       display: "flex",
@@ -2519,6 +2515,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-sidebar{display:none}
           .coach-mobile-topbar{display:flex}
           .coach-floating-pill{display:flex}
+          .coach-main-inner{padding:24px 18px 90px !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
@@ -2610,7 +2607,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       }}>
       {MobileTopBar}
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "36px 40px 90px", position: "relative" }}>
+      <div className="coach-main-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "36px 44px 40px", position: "relative" }}>
         {/* Ambient */}
         <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 800, height: 400, background: "radial-gradient(ellipse at center, rgba(2,209,186,0.06), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
@@ -2621,22 +2618,38 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
             {/* Phrase d'action a gauche */}
             <div style={{ flex: 1, minWidth: 280 }}>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(22px, 3vw, 34px)", fontWeight: 900, letterSpacing: "-1px", color: "#fff", margin: 0, lineHeight: 1 }}>
-                {total} client{total > 1 ? "s" : ""}.
-                <span style={{
-                  display: "inline-block",
-                  width: 7, height: 7,
-                  borderRadius: "50%",
-                  background: "#02d1ba",
-                  marginLeft: 6,
-                  marginBottom: 4,
-                  flexShrink: 0,
-                  verticalAlign: "middle",
-                  animation: "rbPulse 2.4s ease-in-out infinite",
-                }} />
+              {/* Eyebrow date */}
+              <div style={{
+                fontSize: 9, fontWeight: 600,
+                letterSpacing: ".22em", textTransform: "uppercase",
+                color: "rgba(255,255,255,.18)",
+                marginBottom: 10,
+                fontFamily: "'DM Sans', sans-serif",
+              }}>
+                {(() => {
+                  const d = new Date();
+                  const days = ["DIM","LUN","MAR","MER","JEU","VEN","SAM"];
+                  const months = ["JAN","FEV","MAR","AVR","MAI","JUIN","JUIL","AOUT","SEP","OCT","NOV","DEC"];
+                  return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`;
+                })()}
+              </div>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(36px, 5vw, 52px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: .9, color: "#fff", margin: 0 }}>
+                <span style={{ color: "#fff" }}>
+                  {total} client{total > 1 ? "s" : ""}.
+                  <span style={{
+                    display: "inline-block",
+                    width: 7, height: 7,
+                    borderRadius: "50%",
+                    background: "#02d1ba",
+                    marginLeft: 6,
+                    marginBottom: 6,
+                    verticalAlign: "middle",
+                    animation: "rbPulse 2.4s ease-in-out infinite",
+                  }} />
+                </span>
                 <br />
                 {urgentCount > 0 ? (
-                  <span style={{ color: RED }}>
+                  <span style={{ color: "#ef4444", opacity: .85 }}>
                     {urgentCount} à contacter.
                   </span>
                 ) : (
@@ -2644,79 +2657,54 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 )}
               </h1>
               {/* Stats one-liner : lisible en 2 secondes */}
-              <div style={{ display: "flex", gap: 20, marginTop: 18, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 20, marginTop: 16, alignItems: "baseline", flexWrap: "wrap" }}>
                 {[
-                  { v: withProg, l: "programmes", c: G },
-                  { v: activeToday, l: "en seance", c: activeToday > 0 ? G : "rgba(255,255,255,0.4)" },
-                  { v: activeWeek, l: "actifs 7j", c: "rgba(255,255,255,0.5)" },
-                  { v: inactiveAlerts, l: "inactifs", c: inactiveAlerts > 0 ? RED : "rgba(255,255,255,0.3)" },
+                  { v: withProg, l: "programmes" },
+                  { v: activeToday, l: "en seance" },
+                  { v: activeWeek, l: "actifs 7j" },
+                  { v: inactiveAlerts, l: "inactifs" },
                 ].map((s, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 200, color: s.c, letterSpacing: "-1px" }}>{s.v}</span>
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{s.l}</span>
+                  <div key={i} style={{ display: "flex", alignItems: "baseline" }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>{s.v}</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,.25)", letterSpacing: ".06em", marginLeft: 4 }}>{s.l}</span>
                   </div>
                 ))}
               </div>
-
-              {/* Citation motivationnelle (uniquement si tout roule) */}
-              {urgentCount === 0 && total > 0 && (
-                <div style={{
-                  marginTop: 16,
-                  fontSize: 11,
-                  fontStyle: "italic",
-                  color: "rgba(255,255,255,0.18)",
-                  letterSpacing: "0.03em",
-                  lineHeight: 1.6,
-                  fontFamily: "'DM Sans', sans-serif",
-                }}>
-                  " Tes clients progressent. Continue sur cette lancée. "
-                  <span style={{
-                    display: "block",
-                    fontStyle: "normal",
-                    fontSize: 9,
-                    fontWeight: 700,
-                    letterSpacing: "2.5px",
-                    textTransform: "uppercase",
-                    color: G,
-                    marginTop: 4,
-                  }}>RB PERFORM</span>
-                </div>
-              )}
             </div>
 
-            {/* Score Business a droite — anneau SVG progress 130x130 */}
-            <div style={{ position:"relative", width:130, height:130, flexShrink:0 }}>
-              <svg width="130" height="130" viewBox="0 0 130 130"
+            {/* Score Business a droite — anneau SVG progress 100x100 */}
+            <div style={{ position:"relative", width:100, height:100, flexShrink:0 }}>
+              <svg width="100" height="100" viewBox="0 0 100 100"
                 style={{ position:"absolute", top:0, left:0, transform:"rotate(-90deg)" }}>
-                <circle cx="65" cy="65" r="54"
-                  fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="4"/>
-                <circle cx="65" cy="65" r="54"
-                  fill="none" stroke={scoreColor} strokeWidth="4"
+                <circle cx="50" cy="50" r="40"
+                  fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="3"/>
+                <circle cx="50" cy="50" r="40"
+                  fill="none" stroke={scoreColor} strokeWidth="3"
                   strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 54}`}
-                  strokeDashoffset={`${2 * Math.PI * 54 * (1 - businessScore/100)}`}
-                  style={{ transition:"stroke-dashoffset 1.2s ease" }}
+                  strokeDasharray="251.3"
+                  strokeDashoffset={`${251.3 * (1 - businessScore/100)}`}
+                  style={{ transition:"stroke-dashoffset 1s ease" }}
                 />
               </svg>
               <div style={{
                 position:"absolute", inset:0,
                 display:"flex", flexDirection:"column",
-                alignItems:"center", justifyContent:"center", gap:2
+                alignItems:"center", justifyContent:"center", gap:1
               }}>
                 <div style={{
                   fontFamily:"'JetBrains Mono',monospace",
-                  fontSize:38, fontWeight:200,
-                  color:scoreColor, letterSpacing:"-3px", lineHeight:1
+                  fontSize:28, fontWeight:200,
+                  color:scoreColor, letterSpacing:"-2px", lineHeight:1
                 }}>{businessScore}</div>
                 <div style={{
-                  fontSize:8, fontWeight:700, letterSpacing:"2.5px",
-                  textTransform:"uppercase", color:"rgba(255,255,255,0.25)"
+                  fontSize:7, fontWeight:700, letterSpacing:"2px",
+                  textTransform:"uppercase", color:"rgba(255,255,255,.2)"
                 }}>Score</div>
                 <div style={{
-                  fontSize: scoreLabel === "Critique" ? 8 : 10,
+                  fontSize: 9,
                   fontWeight:600,
-                  color: scoreLabel === "Critique" ? "rgba(239,68,68,.6)" : scoreColor,
-                  opacity: scoreLabel === "Critique" ? 1 : 0.8,
+                  color: scoreColor,
+                  opacity: .7,
                 }}>{scoreLabel}</div>
               </div>
             </div>
@@ -2724,20 +2712,20 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           {/* ========== METRIQUES BUSINESS ========== */}
           {mrr > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginTop: 24, marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
               {[
                 { label: "MRR", value: mrr.toLocaleString() + " €", color: G, sub: mrr > 0 ? activeSubscriptions.length + " abos actifs" : null },
                 { label: "Prevision 90j", value: ((mrr * 3) - churnRisk90).toLocaleString() + " €", color: "#fff", sub: expiringIn90.length > 0 ? expiringIn90.length + " expirent" : "Stable" },
                 { label: "Retention", value: retentionRate + "%", color: retentionRate >= 80 ? G : retentionRate >= 60 ? ORANGE : RED, sub: retainedClients.length + "/" + onboardedClients.length + " actifs" },
               ].map((m, i) => (
                 <div key={i} style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: 20, padding: "18px 20px",
+                  background: "rgba(255,255,255,.02)",
+                  border: ".5px solid rgba(255,255,255,.05)",
+                  borderRadius: 14, padding: "18px 20px",
                 }}>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: 8 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 26, fontWeight: 200, color: m.color, letterSpacing: "-1.5px" }}>{m.value}</div>
-                  {m.sub && <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>{m.sub}</div>}
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(255,255,255,.2)", marginBottom: 10 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 28, fontWeight: 200, color: m.color, letterSpacing: "-2px", lineHeight: 1 }}>{m.value}</div>
+                  {m.sub && <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,.2)", marginTop: 5, letterSpacing: ".03em" }}>{m.sub}</div>}
                 </div>
               ))}
             </div>
@@ -2746,53 +2734,88 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== ALERTES CRITIQUES (clients a agir) ========== */}
           {urgentCount > 0 && (
             <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.1s both" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
-                <div style={{ flex:1, height:"0.5px", background:"linear-gradient(90deg,rgba(239,68,68,.4),transparent)" }} />
-                <span style={{ fontSize:9, fontWeight:700, letterSpacing:"3px", textTransform:"uppercase", color:"#ef4444", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>À agir maintenant</span>
-                <div style={{ flex:1, height:"0.5px", background:"linear-gradient(270deg,rgba(239,68,68,.4),transparent)" }} />
+              {/* Header row : label + lien */}
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                <span style={{ fontSize:8, fontWeight:700, letterSpacing:".22em", textTransform:"uppercase", color:"rgba(255,255,255,.18)", fontFamily:"'DM Sans',sans-serif" }}>À contacter maintenant</span>
+                <span
+                  onClick={() => setShowClientList(true)}
+                  style={{ fontSize:11, color:"rgba(2,209,186,.5)", cursor:"pointer", letterSpacing:".04em" }}
+                >
+                  Voir tous les clients →
+                </span>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {/* Barre alerte rouge */}
+              <div style={{
+                display:"flex", alignItems:"center", gap:10,
+                padding:"9px 16px",
+                background:"rgba(239,68,68,.04)",
+                border:".5px solid rgba(239,68,68,.15)",
+                borderRadius:10, marginBottom:10,
+              }}>
+                <div style={{ width:5, height:5, borderRadius:"50%", background:"#ef4444", flexShrink:0 }} />
+                <span style={{ fontSize:8, fontWeight:700, letterSpacing:".22em", textTransform:"uppercase", color:"#ef4444" }}>À agir maintenant</span>
+                <div style={{ flex:1, height:".5px", background:"linear-gradient(90deg,rgba(239,68,68,.25),transparent)" }} />
+                <span style={{ fontSize:10, color:"rgba(255,255,255,.2)" }}>
+                  {urgentCount} client{urgentCount > 1 ? "s" : ""}
+                </span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                 {clientsToAct.map((c) => {
                   const hasProg = c.programmes?.some((p) => p.is_active);
                   const isCritical = c._inactiveDays >= 7;
-                  const borderColor = isCritical ? "rgba(239,68,68,0.3)" : "rgba(249,115,22,0.25)";
-                  const bgColor = isCritical ? "rgba(239,68,68,0.04)" : "rgba(249,115,22,0.03)";
-                  return (
-                    <div
-                      key={c.id}
-                      onClick={() => setSelected(c)}
-                      style={{
+                  const rowStyle = isCritical
+                    ? {
                         display: "flex", alignItems: "center", gap: 14,
-                        padding: "14px 18px",
-                        background: bgColor,
-                        border: `1px solid ${borderColor}`,
-                        borderRadius: 14,
+                        padding: "13px 14px",
+                        background: "rgba(239,68,68,.03)",
+                        border: ".5px solid rgba(239,68,68,.1)",
+                        borderRadius: 10,
+                        marginBottom: 4,
                         cursor: "pointer",
-                        transition: "all 0.15s",
-                      }}
-                    >
-                      <Avatar name={c.full_name || c.email} size={34} active={hasProg} />
+                        transition: "all .15s",
+                      }
+                    : {
+                        display: "flex", alignItems: "center", gap: 14,
+                        padding: "13px 0",
+                        background: "transparent",
+                        border: "none",
+                        borderBottom: ".5px solid rgba(255,255,255,.05)",
+                        borderRadius: 0,
+                        cursor: "pointer",
+                        transition: "all .15s",
+                      };
+                  return (
+                    <div key={c.id} onClick={() => setSelected(c)} style={rowStyle}>
+                      <Avatar name={c.full_name || c.email} size={30} active={hasProg} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,.75)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {c.full_name || c.email}
                         </div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,.2)", marginTop: 2, letterSpacing: ".03em" }}>
                           {!hasProg ? "Sans programme" : c.subscription_end_date && Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000) <= 14 ? `Abo expire dans ${Math.max(0, Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000))}j` : `Inactif ${c._inactiveDays}j`}
                           {hasProg && c.programmes?.find((p) => p.is_active)?.programme_name && (
-                            <span style={{ color: "rgba(255,255,255,0.25)" }}> · {c.programmes.find((p) => p.is_active).programme_name}</span>
+                            <span style={{ color: "rgba(255,255,255,0.15)" }}> · {c.programmes.find((p) => p.is_active).programme_name}</span>
                           )}
                         </div>
                       </div>
-                      {isCritical && (
+                      {isCritical ? (
                         <div style={{
-                          fontSize: 9, fontWeight: 800, letterSpacing: "1px", textTransform: "uppercase",
-                          color: RED, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)",
-                          borderRadius: 100, padding: "3px 8px", flexShrink: 0,
+                          fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase",
+                          color: "#ef4444", background: "rgba(239,68,68,.08)", border: ".5px solid rgba(239,68,68,.25)",
+                          borderRadius: 100, padding: "3px 10px", flexShrink: 0, marginLeft: "auto",
                         }}>
                           Critique
                         </div>
+                      ) : (
+                        <div style={{
+                          fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase",
+                          color: "#f97316", background: "rgba(249,115,22,.06)", border: ".5px solid rgba(249,115,22,.2)",
+                          borderRadius: 100, padding: "3px 10px", flexShrink: 0, marginLeft: "auto",
+                        }}>
+                          Alerte
+                        </div>
                       )}
-                      <div style={{ color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>
+                      <div style={{ color: "rgba(255,255,255,.2)", flexShrink: 0 }}>
                         <Icon name="arrow-right" size={14} />
                       </div>
                     </div>
@@ -2890,7 +2913,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {/* ========== FENETRE PLEIN ECRAN LISTE CLIENTS ========== */}
       {showClientList && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: "#000", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
