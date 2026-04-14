@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RB Perform — Client Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@100;200;300;400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --G:#02d1ba;
+    --G2:rgba(2,209,186,.1);
+    --G3:rgba(2,209,186,.2);
+    --red:#ef4444;
+    --orange:#f97316;
+    --violet:#a78bfa;
+    --yellow:#eab308;
+    --blue:#60a5fa;
+    --bg:#000;
+    --bg2:#0a0a0a;
+    --border:rgba(255,255,255,.07);
+    --text:rgba(255,255,255,.85);
+    --text2:rgba(255,255,255,.4);
+    --text3:rgba(255,255,255,.2);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#111;
+    font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:#fff;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px;
+  }
+
+  /* ================ IPHONE FRAME ================ */
+  .phone-frame{
+    position:relative;
+    width:390px;
+    height:844px;
+    background:#000;
+    border-radius:54px;
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 80px 160px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.05);
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .island{
+    position:absolute;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    width:120px;
+    height:34px;
+    background:#000;
+    border-radius:100px;
+    border:.5px solid rgba(255,255,255,.08);
+    z-index:30;
+  }
+  .statusbar{
+    position:absolute;
+    top:18px;
+    left:0;right:0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 34px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    font-weight:400;
+    color:#fff;
+    letter-spacing:.02em;
+    z-index:20;
+    pointer-events:none;
+  }
+  .statusbar .right{display:flex;gap:6px;align-items:center;opacity:.85;font-size:11px}
+
+  /* ================ PAGES ================ */
+  .page{
+    position:absolute;
+    inset:0;
+    padding:54px 22px 100px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:none;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+    -webkit-overflow-scrolling:touch;
+  }
+  .page::-webkit-scrollbar{display:none}
+  .page.active{opacity:1;pointer-events:all}
+
+  /* Common bits */
+  .eyebrow{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:rgba(2,209,186,.55);
+    margin-bottom:8px;
+  }
+  .big-title{
+    font-family:'Syne',sans-serif;
+    font-size:52px;
+    font-weight:900;
+    color:#fff;
+    letter-spacing:-3px;
+    line-height:.9;
+  }
+  .big-title .dot{color:var(--G)}
+  .italic-date{
+    font-size:13px;
+    color:rgba(255,255,255,.3);
+    font-style:italic;
+    margin-top:4px;
+    letter-spacing:.02em;
+  }
+
+  /* ========= PAGE HOME ========= */
+  #page-home{
+    background:radial-gradient(ellipse 80% 50% at 50% -20%, rgba(2,209,186,.12), transparent 60%), #000;
+  }
+  .home-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:18px;
+  }
+  .home-eyebrow-date{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.25);
+  }
+  .home-greeting{
+    font-size:14px;
+    color:rgba(255,255,255,.35);
+    margin-top:8px;
+    font-weight:400;
+  }
+  .home-name{
+    font-family:'Syne',sans-serif;
+    font-size:72px;
+    font-weight:900;
+    color:#fff;
+    letter-spacing:-4px;
+    line-height:.85;
+    margin-top:4px;
+  }
+  .home-time{
+    font-family:'JetBrains Mono',monospace;
+    font-size:28px;
+    font-weight:200;
+    color:rgba(255,255,255,.3);
+    letter-spacing:-1px;
+  }
+  .obj-ring{position:relative;width:96px;height:96px;margin:20px 0 36px auto}
+  .obj-ring-n{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+  }
+  .obj-ring-n .n{
+    font-family:'JetBrains Mono',monospace;
+    font-size:24px;font-weight:200;color:var(--G);
+    letter-spacing:-1px;line-height:1;
+  }
+  .obj-ring-n .l{
+    font-size:7px;font-weight:700;letter-spacing:.2em;
+    text-transform:uppercase;color:rgba(255,255,255,.3);
+    margin-top:2px;
+  }
+
+  .quote-label{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--G);
+    margin-bottom:12px;
+  }
+  .quote-body{
+    font-family:'Syne',sans-serif;
+    font-size:32px;
+    font-weight:900;
+    color:#fff;
+    letter-spacing:-1.5px;
+    line-height:1.1;
+    margin-bottom:28px;
+  }
+  .quote-body .accent{color:var(--G)}
+  .tc-sep{
+    height:1px;
+    background:linear-gradient(90deg, transparent, rgba(2,209,186,.3), transparent);
+    margin:24px 0;
+  }
+  .home-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:20px;
+  }
+  .home-stat{text-align:center}
+  .home-stat-n{
+    font-family:'JetBrains Mono',monospace;
+    font-size:42px;
+    font-weight:200;
+    color:#fff;
+    letter-spacing:-2px;
+    line-height:1;
+  }
+  .home-stat-l{
+    font-size:8px;
+    font-weight:700;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.3);
+    margin-top:8px;
+  }
+
+  /* ========= PAGE BODY ========= */
+  #page-body{background:#000}
+  .body-header{margin-bottom:8px}
+  .body-weight-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    margin-top:14px;
+  }
+  .body-weight{
+    font-family:'JetBrains Mono',monospace;
+    font-size:88px;
+    font-weight:100;
+    color:#fff;
+    letter-spacing:-5px;
+    line-height:1;
+  }
+  .body-weight .dec{font-size:44px;color:rgba(255,255,255,.35);font-weight:100}
+  .body-unit{
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.3);
+    margin-top:4px;
+  }
+  .body-goal-ring{
+    position:relative;width:64px;height:64px;flex-shrink:0;margin-top:8px;
+  }
+  .body-goal-ring-inner{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+  }
+  .body-goal-ring-inner .n{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;font-weight:300;color:var(--G);
+  }
+  .body-goal-ring-inner .l{
+    font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);
+  }
+
+  .body-badge-red{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:6px 12px;
+    background:rgba(239,68,68,.08);
+    border:.5px solid rgba(239,68,68,.25);
+    border-radius:100px;
+    font-size:11px;font-weight:600;color:var(--red);
+    margin-top:16px;
+    letter-spacing:.02em;
+  }
+  .body-badge-red .d{width:5px;height:5px;border-radius:50%;background:var(--red)}
+  .body-quote{
+    margin-top:18px;
+    font-size:12px;
+    font-style:italic;
+    color:rgba(255,255,255,.25);
+    line-height:1.6;
+  }
+  .body-quote .sig{
+    display:block;
+    font-style:normal;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.25em;
+    color:var(--G);
+    margin-top:6px;
+  }
+
+  .body-graph{
+    margin-top:24px;
+    background:rgba(255,255,255,.02);
+    border:.5px solid rgba(255,255,255,.05);
+    border-radius:16px;
+    padding:16px 14px 10px;
+  }
+  .body-graph svg{display:block;width:100%;height:120px}
+
+  .body-stats-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    margin-top:18px;
+    padding-top:14px;
+    border-top:.5px solid rgba(255,255,255,.05);
+  }
+  .body-stat{padding:0 8px;text-align:center;position:relative}
+  .body-stat-mid{border-top:2px solid var(--G);padding-top:12px;margin-top:-14px}
+  .body-stat-n{
+    font-family:'JetBrains Mono',monospace;
+    font-size:26px;font-weight:200;color:#fff;letter-spacing:-1px;
+  }
+  .body-stat-mid .body-stat-n{color:var(--G)}
+  .body-stat-l{
+    font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+    color:rgba(255,255,255,.25);margin-top:6px;
+  }
+
+  .body-obj{
+    margin-top:24px;
+    padding:16px;
+    background:rgba(2,209,186,.04);
+    border:.5px solid rgba(2,209,186,.15);
+    border-radius:14px;
+  }
+  .body-obj-top{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+  }
+  .body-obj-title{font-size:13px;font-weight:500;color:#fff}
+  .body-obj-title span{color:var(--text2);font-weight:400}
+  .body-obj-btn{
+    font-size:10px;padding:5px 12px;border:1px solid rgba(255,255,255,.15);
+    border-radius:100px;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;
+    letter-spacing:.05em;
+  }
+  .body-obj-bar{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+  .body-obj-fill{height:100%;background:var(--G);border-radius:100px;box-shadow:0 0 8px rgba(2,209,186,.4)}
+  .body-obj-pct{font-size:11px;color:var(--G);margin-top:8px;font-weight:600}
+
+  .body-projection{margin-top:24px;display:flex;flex-direction:column;gap:10px}
+  .body-proj-eyebrow{
+    font-size:8px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(255,255,255,.3);margin-bottom:4px;
+  }
+  .body-proj-row{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 14px;background:rgba(255,255,255,.02);
+    border:.5px solid rgba(255,255,255,.05);border-radius:12px;
+  }
+  .body-proj-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .body-proj-lbl{flex:1;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.02em}
+  .body-proj-val{font-family:'JetBrains Mono',monospace;font-size:13px;color:#fff;font-weight:400}
+
+  /* ========= PAGE PROGRAMME ========= */
+  #page-prog{background:#000}
+  .prog-eyebrow{color:rgba(2,209,186,.55)}
+  .prog-title{
+    font-family:'Syne',sans-serif;font-size:42px;font-weight:900;color:#fff;
+    letter-spacing:-2px;line-height:.92;margin-bottom:6px;
+  }
+  .prog-title .dot{color:var(--G)}
+  .prog-sub{font-size:12px;color:rgba(255,255,255,.35);margin-bottom:24px;font-style:italic}
+
+  .prog-week-tabs{
+    display:flex;gap:6px;overflow-x:auto;margin-bottom:18px;
+    scrollbar-width:none;padding-bottom:4px;
+  }
+  .prog-week-tabs::-webkit-scrollbar{display:none}
+  .prog-week{
+    padding:7px 14px;background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.06);
+    border-radius:100px;font-size:10px;font-weight:600;color:rgba(255,255,255,.45);
+    letter-spacing:.04em;white-space:nowrap;cursor:pointer;
+  }
+  .prog-week.on{
+    background:var(--G2);border-color:rgba(2,209,186,.4);color:var(--G);
+  }
+
+  .prog-session-label{
+    font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--G);margin-bottom:14px;
+  }
+
+  .ex-card{
+    background:rgba(255,255,255,.02);
+    border:.5px solid rgba(255,255,255,.07);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:12px;
+  }
+  .ex-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .ex-card-name{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.2px;line-height:1.25}
+  .ex-card-idx{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.3);flex-shrink:0}
+  .ex-tags{display:flex;gap:6px;flex-wrap:wrap}
+  .ex-tag{
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;
+    padding:4px 10px;border-radius:100px;
+    color:rgba(255,255,255,.55);background:rgba(255,255,255,.04);
+    border:.5px solid rgba(255,255,255,.07);
+  }
+  .ex-tag.teal{color:var(--G);background:var(--G2);border-color:rgba(2,209,186,.2)}
+  .ex-tag.orange{color:var(--orange);background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.2)}
+  .ex-video{
+    margin-top:10px;display:flex;align-items:center;gap:8px;
+    padding:7px 12px;background:rgba(2,209,186,.05);
+    border:.5px solid rgba(2,209,186,.15);border-radius:10px;
+    font-size:10px;color:var(--G);font-weight:600;letter-spacing:.04em;cursor:pointer;
+    width:fit-content;
+  }
+  .prog-start{
+    position:sticky;bottom:10px;
+    display:block;margin-top:20px;
+    background:var(--G);color:#000;
+    text-decoration:none;text-align:center;
+    padding:15px 20px;border-radius:14px;
+    font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    font-family:'DM Sans',sans-serif;
+    box-shadow:0 16px 40px rgba(2,209,186,.35);
+  }
+
+  /* ========= PAGE NUTRITION ========= */
+  #page-nutri{background:#000}
+  .nutri-title{
+    font-family:'Syne',sans-serif;font-size:42px;font-weight:900;color:#fff;
+    letter-spacing:-2px;line-height:.92;margin-bottom:6px;
+  }
+  .nutri-title .dot{color:var(--orange)}
+  .nutri-eyebrow{color:rgba(249,115,22,.6)}
+  .nutri-kcal-big{
+    font-family:'JetBrains Mono',monospace;
+    font-size:48px;font-weight:100;color:#fff;letter-spacing:-2.5px;
+    margin-top:18px;line-height:1;
+  }
+  .nutri-kcal-big .sub{font-size:16px;color:rgba(255,255,255,.3);font-weight:200}
+  .nutri-kcal-lbl{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:6px}
+
+  .macro-bars{margin-top:22px;display:flex;flex-direction:column;gap:12px}
+  .macro{}
+  .macro-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .macro-name{font-size:11px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.02em}
+  .macro-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.55);font-weight:300}
+  .macro-val b{color:#fff;font-weight:400}
+  .macro-track{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+  .macro-fill{height:100%;border-radius:100px}
+
+  .meals{margin-top:24px;display:flex;flex-direction:column;gap:10px}
+  .meals-label{
+    font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(255,255,255,.3);margin-bottom:6px;
+  }
+  .meal{
+    display:flex;align-items:center;gap:14px;
+    padding:12px 14px;background:rgba(255,255,255,.02);
+    border:.5px solid rgba(255,255,255,.06);border-radius:14px;
+    border-left:3px solid;
+  }
+  .meal-hour{
+    font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;
+    width:30px;flex-shrink:0;
+  }
+  .meal-name{flex:1;font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
+  .meal-kcal{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.4);font-weight:300}
+
+  .hydro-card{
+    margin-top:22px;
+    padding:14px 16px;
+    background:rgba(96,165,250,.05);
+    border:.5px solid rgba(96,165,250,.2);
+    border-radius:14px;
+  }
+  .hydro-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .hydro-lbl{font-size:11px;font-weight:600;color:var(--blue)}
+  .hydro-val{font-family:'JetBrains Mono',monospace;font-size:14px;color:#fff;font-weight:300}
+  .hydro-track{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+  .hydro-fill{height:100%;background:var(--blue);border-radius:100px;width:62%}
+
+  .nutri-add{
+    margin-top:20px;display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:14px 20px;background:var(--orange);color:#000;
+    border-radius:100px;font-size:12px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;font-family:'DM Sans',sans-serif;cursor:pointer;
+    box-shadow:0 12px 30px rgba(249,115,22,.3);
+    border:none;width:100%;
+  }
+
+  /* ========= PAGE PROFIL ========= */
+  #page-profil{background:#000}
+  .profil-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .profil-title{font-family:'Syne',sans-serif;font-size:52px;font-weight:900;color:#fff;letter-spacing:-3px;line-height:.9}
+  .profil-title .dot{color:var(--G)}
+  .profil-avatar{
+    width:68px;height:68px;border-radius:50%;
+    background:linear-gradient(135deg,rgba(2,209,186,.25),rgba(2,209,186,.05));
+    border:.5px solid rgba(2,209,186,.3);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:var(--G);
+    flex-shrink:0;
+  }
+  .profil-quote{
+    font-size:11px;font-style:italic;color:rgba(255,255,255,.22);
+    line-height:1.6;max-width:260px;
+  }
+
+  .profil-card{
+    margin-top:20px;padding:16px;background:rgba(255,255,255,.025);
+    border:.5px solid rgba(2,209,186,.15);border-radius:14px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  .profil-card-name{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}
+  .profil-card-mail{font-size:11px;color:rgba(255,255,255,.3)}
+  .profil-card-badge{
+    padding:5px 12px;background:var(--G2);border:.5px solid rgba(2,209,186,.3);
+    border-radius:100px;color:var(--G);font-size:10px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+
+  .profil-section{
+    margin-top:24px;padding:20px 18px;background:rgba(255,255,255,.015);
+    border:.5px solid rgba(255,255,255,.05);border-radius:16px;
+  }
+  .profil-section-label{
+    font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(255,255,255,.3);margin-bottom:14px;
+  }
+  .level-row{display:flex;align-items:baseline;gap:14px;margin-bottom:14px}
+  .level-n{
+    font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:200;
+    color:var(--violet);letter-spacing:-3px;line-height:1;
+  }
+  .level-tag{font-size:15px;font-weight:600;color:rgba(255,255,255,.65)}
+  .level-next{font-size:11px;color:var(--orange);margin-bottom:10px;letter-spacing:.02em}
+  .xp-bar{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;margin-bottom:6px}
+  .xp-fill{height:100%;background:linear-gradient(90deg,var(--violet),#7c3aed);border-radius:100px;box-shadow:0 0 8px rgba(167,139,250,.4)}
+  .xp-txt{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.35);font-family:'JetBrains Mono',monospace}
+
+  .stats-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    margin-top:20px;
+    border-top:.5px solid rgba(255,255,255,.05);
+    padding-top:14px;
+  }
+  .stat-col{text-align:center;padding:0 8px;position:relative}
+  .stat-orange{border-top:2px solid var(--orange);padding-top:12px;margin-top:-14px}
+  .stat-n{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:200;color:#fff;letter-spacing:-1.5px;line-height:1}
+  .stat-orange .stat-n{color:var(--orange)}
+  .stat-l{font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:8px}
+  .streak-bar{height:3px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;margin-top:18px}
+  .streak-fill{height:100%;background:var(--orange);border-radius:100px;width:100%;box-shadow:0 0 8px rgba(249,115,22,.4)}
+  .streak-pct{font-size:9px;color:var(--orange);margin-top:4px;text-align:right}
+
+  .trophies-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+  .trophies-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--G);font-weight:400}
+  .trophies-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .trophy{
+    aspect-ratio:1;border-radius:14px;border:.5px solid;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:6px;text-align:center;background:rgba(255,255,255,.02);
+  }
+  .trophy svg{width:22px;height:22px;margin-bottom:6px}
+  .trophy-xp{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400}
+  .trophy-name{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:2px}
+
+  .next-badge{
+    margin-top:12px;padding:10px 14px;background:rgba(255,255,255,.02);
+    border:.5px solid rgba(255,255,255,.05);border-radius:100px;
+    font-size:11px;color:rgba(255,255,255,.4);text-align:center;
+  }
+  .next-badge b{color:var(--G)}
+
+  .activity-row{
+    display:flex;align-items:center;gap:12px;padding:12px 0;
+    border-bottom:.5px solid rgba(255,255,255,.04);
+  }
+  .activity-row:last-child{border-bottom:none}
+  .activity-dot{width:7px;height:7px;border-radius:50%;background:var(--G);flex-shrink:0}
+  .activity-name{flex:1;font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
+  .activity-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--G);font-weight:400}
+
+  /* ================ BOTTOM NAV PILL ================ */
+  .bottom-nav{
+    position:absolute;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:4px;
+    padding:6px 10px;
+    background:rgba(10,10,10,.97);
+    border:.5px solid rgba(255,255,255,.1);
+    border-radius:100px;
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
+    z-index:50;
+  }
+  .nav-btn{
+    width:48px;height:40px;
+    border-radius:100px;
+    border:none;background:transparent;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    transition:background .25s cubic-bezier(.22,1,.36,1);
+    color:rgba(255,255,255,.3);
+  }
+  .nav-btn.on{background:var(--G);color:#000}
+
+  /* Device label under phone */
+  .label{
+    position:fixed;
+    bottom:16px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:10px;
+    letter-spacing:.3em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.2);
+    font-weight:600;
+    font-family:'DM Sans',sans-serif;
+    pointer-events:none;
+  }
+
+  @media(max-width:440px){
+    body{padding:10px 4px}
+    .phone-frame{width:100%;max-width:390px;height:calc(100vh - 80px);max-height:844px;border-radius:36px}
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="island"></div>
+  <div class="statusbar">
+    <span>22:49</span>
+    <span class="right">5G ⚡ 87%</span>
+  </div>
+
+  <!-- ================ PAGE HOME ================ -->
+  <div id="page-home" class="page active">
+    <div class="home-top">
+      <div>
+        <div class="home-eyebrow-date">LUN · 14 AVR</div>
+        <div class="home-greeting">Bonsoir</div>
+        <div class="home-name">Rayan<span style="color:#02d1ba">.</span></div>
+      </div>
+      <div class="home-time">22:49</div>
+    </div>
+
+    <div class="obj-ring">
+      <svg width="96" height="96" viewBox="0 0 96 96" style="transform:rotate(-90deg)">
+        <circle cx="48" cy="48" r="38" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
+        <circle cx="48" cy="48" r="38" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="238.8" stroke-dashoffset="238.8"/>
+      </svg>
+      <div class="obj-ring-n">
+        <div class="n">0%</div>
+        <div class="l">progression</div>
+      </div>
+    </div>
+
+    <div class="quote-label">Citation du jour</div>
+    <div class="quote-body">
+      <span class="accent">LES</span> CHAMPIONS NE<br>NAISSENT PAS.<br>ILS SE<br>CONSTRUISENT.
+    </div>
+
+    <div class="tc-sep"></div>
+
+    <div class="home-stats">
+      <div class="home-stat">
+        <div class="home-stat-n" style="color:#02d1ba">0</div>
+        <div class="home-stat-l">Séances</div>
+      </div>
+      <div class="home-stat">
+        <div class="home-stat-n">0</div>
+        <div class="home-stat-l">Semaines</div>
+      </div>
+      <div class="home-stat">
+        <div class="home-stat-n">0</div>
+        <div class="home-stat-l">Exercices</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================ PAGE BODY ================ -->
+  <div id="page-body" class="page">
+    <div class="body-header">
+      <div class="eyebrow">SUIVI</div>
+      <div class="big-title">Body<span class="dot">.</span></div>
+      <div class="italic-date">lundi 14 avril</div>
+    </div>
+
+    <div class="body-weight-row">
+      <div>
+        <div class="body-weight">80<span class="dec">.0</span></div>
+        <div class="body-unit">Kilogrammes</div>
+        <div class="body-badge-red">
+          <span class="d"></span>
+          +23 kg depuis le début
+        </div>
+      </div>
+      <div class="body-goal-ring">
+        <svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
+          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
+          <circle cx="32" cy="32" r="26" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="37.6"/>
+        </svg>
+        <div class="body-goal-ring-inner">
+          <div class="n">77%</div>
+          <div class="l">objectif</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="body-quote">
+      " Le corps réalise ce que l'esprit croit. "
+      <span class="sig">RB PERFORM</span>
+    </div>
+
+    <div class="body-graph">
+      <svg viewBox="0 0 420 120" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#02d1ba" stop-opacity=".25"/>
+            <stop offset="100%" stop-color="#02d1ba" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- Goal line dashed -->
+        <line x1="0" y1="18" x2="420" y2="18" stroke="rgba(2,209,186,.2)" stroke-width="1" stroke-dasharray="4 4"/>
+        <!-- Area -->
+        <path d="M 0,95 L 35,90 L 70,82 L 105,76 L 140,70 L 175,68 L 210,62 L 245,54 L 280,48 L 315,42 L 350,38 L 385,34 L 420,30 L 420,120 L 0,120 Z" fill="url(#grad1)"/>
+        <!-- Line -->
+        <path d="M 0,95 L 35,90 L 70,82 L 105,76 L 140,70 L 175,68 L 210,62 L 245,54 L 280,48 L 315,42 L 350,38 L 385,34 L 420,30" fill="none" stroke="#02d1ba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Final dot -->
+        <circle cx="420" cy="30" r="5" fill="#02d1ba"/>
+        <circle cx="420" cy="30" r="10" fill="#02d1ba" opacity=".2"/>
+      </svg>
+    </div>
+
+    <div class="body-stats-row">
+      <div class="body-stat">
+        <div class="body-stat-n">57.0</div>
+        <div class="body-stat-l">Minimum</div>
+      </div>
+      <div class="body-stat body-stat-mid">
+        <div class="body-stat-n">68.5</div>
+        <div class="body-stat-l">Moyenne</div>
+      </div>
+      <div class="body-stat">
+        <div class="body-stat-n">80.0</div>
+        <div class="body-stat-l">Maximum</div>
+      </div>
+    </div>
+
+    <div class="body-obj">
+      <div class="body-obj-top">
+        <div class="body-obj-title">Objectif <span>· 87 kg</span></div>
+        <button class="body-obj-btn">Modifier</button>
+      </div>
+      <div class="body-obj-bar"><div class="body-obj-fill" style="width:77%"></div></div>
+      <div class="body-obj-pct">77% atteint</div>
+    </div>
+
+    <div class="body-projection">
+      <div class="body-proj-eyebrow">Projection</div>
+      <div class="body-proj-row">
+        <div class="body-proj-dot" style="background:#02d1ba;box-shadow:0 0 8px #02d1ba"></div>
+        <div class="body-proj-lbl">Aujourd'hui</div>
+        <div class="body-proj-val">80.0 kg</div>
+      </div>
+      <div class="body-proj-row">
+        <div class="body-proj-dot" style="background:rgba(255,255,255,.3)"></div>
+        <div class="body-proj-lbl">Objectif atteint le</div>
+        <div class="body-proj-val">20 avr.</div>
+      </div>
+      <div class="body-proj-row">
+        <div class="body-proj-dot" style="background:#a78bfa"></div>
+        <div class="body-proj-lbl">Reste à prendre</div>
+        <div class="body-proj-val" style="color:#a78bfa">7.0 kg</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================ PAGE PROGRAMME ================ -->
+  <div id="page-prog" class="page">
+    <div class="eyebrow prog-eyebrow">PROGRAMME</div>
+    <div class="prog-title">Train<span class="dot">.</span></div>
+    <div class="prog-sub">Push Pull Legs — Hypertrophie · 8 semaines</div>
+
+    <div class="prog-week-tabs">
+      <div class="prog-week on">S1</div>
+      <div class="prog-week">S2</div>
+      <div class="prog-week">S3</div>
+      <div class="prog-week">S4</div>
+      <div class="prog-week">S5</div>
+      <div class="prog-week">S6</div>
+      <div class="prog-week">S7</div>
+      <div class="prog-week">S8</div>
+    </div>
+
+    <div class="prog-session-label">Semaine 1 · Push</div>
+
+    <div class="ex-card">
+      <div class="ex-card-top">
+        <div class="ex-card-name">Développé couché haltères</div>
+        <div class="ex-card-idx">01</div>
+      </div>
+      <div class="ex-tags">
+        <span class="ex-tag teal">4×8</span>
+        <span class="ex-tag">Tempo 30X0</span>
+        <span class="ex-tag orange">RIR 2</span>
+        <span class="ex-tag">32 kg</span>
+      </div>
+      <div class="ex-video">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="#02d1ba"><polygon points="5,3 19,12 5,21"/></svg>
+        Voir la démo vidéo
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-top">
+        <div class="ex-card-name">Dips lestés</div>
+        <div class="ex-card-idx">02</div>
+      </div>
+      <div class="ex-tags">
+        <span class="ex-tag teal">3×10</span>
+        <span class="ex-tag">Tempo 20X1</span>
+        <span class="ex-tag orange">RIR 1</span>
+        <span class="ex-tag">15 kg</span>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-top">
+        <div class="ex-card-name">Écarté haltères incliné</div>
+        <div class="ex-card-idx">03</div>
+      </div>
+      <div class="ex-tags">
+        <span class="ex-tag teal">4×12</span>
+        <span class="ex-tag">Tempo 2010</span>
+        <span class="ex-tag orange">RIR 2</span>
+        <span class="ex-tag">18 kg</span>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-top">
+        <div class="ex-card-name">Élévations latérales</div>
+        <div class="ex-card-idx">04</div>
+      </div>
+      <div class="ex-tags">
+        <span class="ex-tag teal">4×15</span>
+        <span class="ex-tag">Tempo 2010</span>
+        <span class="ex-tag orange">RIR 0</span>
+        <span class="ex-tag">10 kg</span>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-top">
+        <div class="ex-card-name">Extensions triceps corde</div>
+        <div class="ex-card-idx">05</div>
+      </div>
+      <div class="ex-tags">
+        <span class="ex-tag teal">3×12</span>
+        <span class="ex-tag">Tempo 2011</span>
+        <span class="ex-tag orange">RIR 1</span>
+        <span class="ex-tag">22 kg</span>
+      </div>
+    </div>
+
+    <a href="#" class="prog-start" onclick="event.preventDefault()">Démarrer la séance →</a>
+  </div>
+
+  <!-- ================ PAGE NUTRITION ================ -->
+  <div id="page-nutri" class="page">
+    <div class="eyebrow nutri-eyebrow">NUTRITION</div>
+    <div class="nutri-title">Fuel<span class="dot">.</span></div>
+    <div class="italic-date">Mardi 15 avril</div>
+
+    <div class="nutri-kcal-big">1 847<span class="sub"> / 2 200</span></div>
+    <div class="nutri-kcal-lbl">Kilocalories · Objectif 2 200</div>
+
+    <div class="macro-bars">
+      <div class="macro">
+        <div class="macro-top">
+          <span class="macro-name">Protéines</span>
+          <span class="macro-val"><b>142g</b> / 150g</span>
+        </div>
+        <div class="macro-track"><div class="macro-fill" style="width:94%;background:#02d1ba"></div></div>
+      </div>
+      <div class="macro">
+        <div class="macro-top">
+          <span class="macro-name">Glucides</span>
+          <span class="macro-val"><b>184g</b> / 250g</span>
+        </div>
+        <div class="macro-track"><div class="macro-fill" style="width:73%;background:#f97316"></div></div>
+      </div>
+      <div class="macro">
+        <div class="macro-top">
+          <span class="macro-name">Lipides</span>
+          <span class="macro-val"><b>62g</b> / 70g</span>
+        </div>
+        <div class="macro-track"><div class="macro-fill" style="width:88%;background:#a78bfa"></div></div>
+      </div>
+    </div>
+
+    <div class="meals">
+      <div class="meals-label">Repas du jour</div>
+      <div class="meal" style="border-left-color:#02d1ba">
+        <div class="meal-hour" style="color:#02d1ba">8h</div>
+        <div class="meal-name">Avoine + œufs + banane</div>
+        <div class="meal-kcal">540 kcal</div>
+      </div>
+      <div class="meal" style="border-left-color:#f97316">
+        <div class="meal-hour" style="color:#f97316">12h</div>
+        <div class="meal-name">Poulet, riz, brocolis</div>
+        <div class="meal-kcal">680 kcal</div>
+      </div>
+      <div class="meal" style="border-left-color:#a78bfa">
+        <div class="meal-hour" style="color:#a78bfa">16h</div>
+        <div class="meal-name">Shake protéiné + amandes</div>
+        <div class="meal-kcal">320 kcal</div>
+      </div>
+      <div class="meal" style="border-left-color:#60a5fa">
+        <div class="meal-hour" style="color:#60a5fa">20h</div>
+        <div class="meal-name">Saumon, patate douce, salade</div>
+        <div class="meal-kcal">307 kcal</div>
+      </div>
+    </div>
+
+    <div class="hydro-card">
+      <div class="hydro-top">
+        <span class="hydro-lbl">Hydratation</span>
+        <span class="hydro-val">1.85 L / 3.0 L</span>
+      </div>
+      <div class="hydro-track"><div class="hydro-fill"></div></div>
+    </div>
+
+    <button class="nutri-add">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+      Logger un repas
+    </button>
+  </div>
+
+  <!-- ================ PAGE PROFIL ================ -->
+  <div id="page-profil" class="page">
+    <div class="eyebrow">MON PROFIL</div>
+    <div class="profil-top">
+      <div>
+        <div class="profil-title">Rayan<span class="dot">.</span></div>
+        <div class="profil-quote">" Tu n'es pas là pour survivre. Tu es là pour dominer. "</div>
+      </div>
+      <div class="profil-avatar">RB</div>
+    </div>
+
+    <div class="profil-card">
+      <div>
+        <div class="profil-card-name">Rayan Bonte</div>
+        <div class="profil-card-mail">rayan.b2701@gmail.com</div>
+      </div>
+      <div class="profil-card-badge">Warrior</div>
+    </div>
+
+    <div class="profil-section">
+      <div class="profil-section-label">Niveau Athlete</div>
+      <div class="level-row">
+        <div class="level-n">04</div>
+        <div>
+          <div class="level-tag">Warrior</div>
+          <div class="level-next">Prochain : Elite — 295 XP restants</div>
+        </div>
+      </div>
+      <div class="xp-bar"><div class="xp-fill" style="width:67%"></div></div>
+      <div class="xp-txt"><span>605 XP</span><span>900 XP</span></div>
+
+      <div class="stats-grid">
+        <div class="stat-col stat-orange">
+          <div class="stat-n">2</div>
+          <div class="stat-l">Streak</div>
+        </div>
+        <div class="stat-col">
+          <div class="stat-n">2</div>
+          <div class="stat-l">Record</div>
+        </div>
+        <div class="stat-col">
+          <div class="stat-n" style="font-size:22px">—</div>
+          <div class="stat-l">Poids</div>
+        </div>
+      </div>
+      <div class="streak-bar"><div class="streak-fill"></div></div>
+      <div class="streak-pct">2/2j · objectif atteint</div>
+    </div>
+
+    <div class="profil-section">
+      <div class="trophies-header">
+        <div class="profil-section-label" style="margin-bottom:0">Trophées</div>
+        <div class="trophies-count">6 / 11</div>
+      </div>
+      <div class="trophies-grid">
+        <div class="trophy" style="border-color:rgba(2,209,186,.3);background:rgba(2,209,186,.04)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#02d1ba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <div class="trophy-xp" style="color:#02d1ba">+50 XP</div>
+          <div class="trophy-name">Premier pas</div>
+        </div>
+        <div class="trophy" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.04)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          <div class="trophy-xp" style="color:#f97316">+80 XP</div>
+          <div class="trophy-name">En feu</div>
+        </div>
+        <div class="trophy" style="border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.04)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <div class="trophy-xp" style="color:#a78bfa">+120 XP</div>
+          <div class="trophy-name">Warrior</div>
+        </div>
+        <div class="trophy" style="border-color:rgba(234,179,8,.3);background:rgba(234,179,8,.04)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <div class="trophy-xp" style="color:#eab308">+200 XP</div>
+          <div class="trophy-name">Champion</div>
+        </div>
+      </div>
+      <div class="next-badge">24/50 · Prochain : <b>Titan</b></div>
+    </div>
+
+    <div class="profil-section">
+      <div class="profil-section-label">Activité récente</div>
+      <div class="activity-row">
+        <div class="activity-dot"></div>
+        <div class="activity-name">Pesée</div>
+        <div class="activity-val">80 kg</div>
+      </div>
+      <div class="activity-row">
+        <div class="activity-dot" style="background:#a78bfa"></div>
+        <div class="activity-name">Badge Warrior débloqué</div>
+        <div class="activity-val" style="color:#a78bfa">+120 XP</div>
+      </div>
+      <div class="activity-row">
+        <div class="activity-dot" style="background:#f97316"></div>
+        <div class="activity-name">Streak 2 jours</div>
+        <div class="activity-val" style="color:#f97316">+40 XP</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================ BOTTOM NAV PILL ================ -->
+  <div class="bottom-nav">
+    <button class="nav-btn on" data-target="page-home" aria-label="Home">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </button>
+    <button class="nav-btn" data-target="page-body" aria-label="Body">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v3H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V9a2 2 0 0 0-2-2Z"/><path d="M7 11h10"/><path d="M7 15h10"/></svg>
+    </button>
+    <button class="nav-btn" data-target="page-prog" aria-label="Programme">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </button>
+    <button class="nav-btn" data-target="page-nutri" aria-label="Nutrition">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+    </button>
+    <button class="nav-btn" data-target="page-profil" aria-label="Profil">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="label">RB Perform — Vue client · Demo interactive</div>
+
+<script>
+(function(){
+  const buttons = document.querySelectorAll('.nav-btn');
+  const pages = document.querySelectorAll('.page');
+
+  function go(targetId){
+    pages.forEach(p => p.classList.toggle('active', p.id === targetId));
+    buttons.forEach(b => b.classList.toggle('on', b.dataset.target === targetId));
+    // Reset scroll on new page
+    const target = document.getElementById(targetId);
+    if (target) target.scrollTop = 0;
+  }
+
+  buttons.forEach(b => {
+    b.addEventListener('click', () => {
+      const target = b.dataset.target;
+      if (target) go(target);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
