@@ -141,7 +141,7 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .nav-logo:hover{transform:scale(1.05)}
 .nav-logo img{display:block;width:40px;height:40px;border-radius:10px}
 .nav-logo-text{font-family:'Inter',sans-serif;font-size:1.1rem;font-weight:900;letter-spacing:0.12em;color:#fff;text-transform:uppercase}
-.nav-logo-accent{color:#C8FF00;margin-left:2px}
+.nav-logo-accent{color:var(--teal);margin-left:2px}
 .nav-link{font-size:13px;color:rgba(255,255,255,0.7);letter-spacing:1.2px;text-transform:uppercase;font-weight:600;transition:color 0.2s;padding:8px 4px;display:inline-block}
 .nav-link:hover{color:#fff}
 
@@ -196,6 +196,18 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .manifeste-line{width:120px;height:2px;background:var(--orange);margin:50px auto;box-shadow:0 0 20px var(--orange)}
 .manifeste-sub{font-size:clamp(18px,2.5vw,30px);color:var(--text-dim);font-weight:400;letter-spacing:0.2px}
 .manifeste-sub b{color:#fff;font-weight:600}
+.manifeste-stats{margin-top:60px;display:grid;grid-template-columns:repeat(3,1fr);max-width:900px;margin-left:auto;margin-right:auto;position:relative}
+.manifeste-stats::before,.manifeste-stats::after{content:'';position:absolute;top:25%;bottom:25%;width:1px;background:var(--border)}
+.manifeste-stats::before{left:33.33%}
+.manifeste-stats::after{right:33.33%}
+.manifeste-stat{text-align:center;padding:20px}
+.manifeste-stat .num{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:var(--teal);letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(2,209,186,0.25)}
+.manifeste-stat .lbl{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700}
+@media(max-width:720px){
+  .manifeste-stats{grid-template-columns:1fr;gap:36px;margin-top:48px}
+  .manifeste-stats::before,.manifeste-stats::after{display:none}
+  .manifeste-stat{padding:0}
+}
 
 /* ========== CHIFFRES ========== */
 .chiffres{padding:130px 24px;background:var(--dark);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
@@ -729,6 +741,20 @@ html.light .founder-message strong{color:#0a0a0a}
     <p class="manifeste-text reveal" id="manifesteText">Certains coachs ont du talent. Les meilleurs ont un système.</p>
     <div class="manifeste-line" id="manifesteLine"></div>
     <p class="manifeste-sub reveal stagger-2">RB Perform est <b>ce système</b>.</p>
+    <div class="manifeste-stats">
+      <div class="manifeste-stat">
+        <div class="num" data-count="0" data-suffix="%">0%</div>
+        <div class="lbl">Commission</div>
+      </div>
+      <div class="manifeste-stat">
+        <div class="num" data-count="14" data-suffix="j">14j</div>
+        <div class="lbl">Gratuits</div>
+      </div>
+      <div class="manifeste-stat">
+        <div class="num" data-count="5" data-suffix="min">5min</div>
+        <div class="lbl">Pour démarrer</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -759,23 +785,9 @@ html.light .founder-message strong{color:#0a0a0a}
   </div>
 </section>
 
-<!-- ========== CHIFFRES ========== -->
-<section class="chiffres">
-  <div class="chiffres-grid">
-    <div class="chiffre-item reveal">
-      <div class="chiffre-num" data-count="0" data-suffix="%">0%</div>
-      <div class="chiffre-label">Commission</div>
-    </div>
-    <div class="chiffre-item reveal stagger-1">
-      <div class="chiffre-num" data-count="14" data-suffix="j">14j</div>
-      <div class="chiffre-label">Gratuits</div>
-    </div>
-    <div class="chiffre-item reveal stagger-2">
-      <div class="chiffre-num" data-count="5" data-suffix="min">5min</div>
-      <div class="chiffre-label">Pour démarrer</div>
-    </div>
-  </div>
-</section>
+<!-- Section chiffres standalone supprimee : les 3 chiffres sont
+     desormais integres dans la section .manifeste juste apres
+     "RB Perform est ce systeme." -->
 
 <!-- ========== PRODUCT REVEAL ========== -->
 <section class="product-reveal">
