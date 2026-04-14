@@ -90,8 +90,8 @@
 /* Navigation par chapitres : pas de scroll global */
 html,body{overflow:hidden;height:100%}
 /* Chaque section = ecran fullscreen, switching via .active */
-section{position:fixed !important;inset:0 !important;width:100% !important;height:100% !important;opacity:0 !important;pointer-events:none !important;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1) !important;overflow-y:auto !important;z-index:1 !important;-webkit-overflow-scrolling:touch}
-section.active{opacity:1 !important;pointer-events:all !important;z-index:10 !important}
+section{position:fixed !important;inset:0 !important;width:100% !important;height:100% !important;opacity:0 !important;pointer-events:none !important;background:#080808 !important;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1) !important;overflow-y:auto !important;z-index:1 !important;-webkit-overflow-scrolling:touch}
+section.active{opacity:1 !important;pointer-events:all !important;background:#080808 !important;z-index:10 !important}
 section.hero{overflow:hidden !important}
 .gsap-override *{opacity:1 !important;transform:none !important;visibility:visible !important}
 :root{--orange:#f97316;--orange-bright:#fb923c;--teal:#02d1ba;--teal-bright:#5ee8d4;--violet:#a78bfa;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
@@ -167,7 +167,7 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .menu-overlay.open .menu-chapter:nth-child(5){transition-delay:0.25s}
 .menu-chapter:hover .ch-name{opacity:0.5}
 
-.ch-num{font-size:11px;letter-spacing:0.2em;color:var(--accent,#C8FF00);font-family:'Courier New',monospace;min-width:32px;padding-top:6px}
+.ch-num{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,.25) !important;font-family:'Courier New',monospace;min-width:32px;padding-top:6px}
 .ch-name{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-0.02em;color:#F5F2EC;text-transform:uppercase;line-height:1;transition:opacity 0.2s ease}
 
 .menu-cta{margin-top:48px;opacity:0;transition:opacity 0.4s ease 0.35s}
@@ -222,7 +222,29 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .trust-item svg{flex-shrink:0;color:var(--teal)}
 
 /* ========== MANIFESTE ========== */
-.manifeste{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:180px 24px;text-align:center;background:var(--dark);position:relative}
+.manifeste{min-height:80vh;padding:120px 24px 0;text-align:center;background:var(--dark);position:relative}
+.manifeste > div{max-width:1000px;margin:0 auto}
+section.manifeste{overflow-y:auto !important;scrollbar-width:none}
+section.manifeste::-webkit-scrollbar{display:none}
+.manifeste-stacks{display:flex;flex-direction:column;gap:0;margin-top:72px;padding-bottom:80vh;text-align:left;max-width:860px;margin-left:auto;margin-right:auto}
+.mstack-card{position:sticky;border-radius:24px;padding:36px 40px;margin-bottom:0;min-height:68vh;display:flex;flex-direction:column;gap:14px;border:1px solid rgba(255,255,255,.07)}
+.mstack-card:nth-child(1){background:#0f0f0f;z-index:1;top:20px}
+.mstack-card:nth-child(2){background:#131313;z-index:2;top:50px}
+.mstack-card:nth-child(3){background:#171717;z-index:3;top:80px;border-color:rgba(2,209,186,.15)}
+.mstack-num{position:absolute;top:20px;right:28px;font-family:'JetBrains Mono',monospace;font-size:96px;font-weight:200;color:rgba(255,255,255,.03);letter-spacing:-4px;line-height:1;pointer-events:none}
+.mstack-accent{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#02d1ba}
+.mstack-title{font-family:'Syne',sans-serif;font-size:clamp(22px,3vw,32px);font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1.0}
+.mstack-desc{font-size:14px;color:rgba(255,255,255,.4);line-height:1.65;font-weight:300;max-width:540px;flex:1}
+.mstack-feats{display:flex;gap:8px;flex-wrap:wrap;padding-top:14px;border-top:1px solid rgba(255,255,255,.06);margin-top:auto}
+.mstack-feats span{font-size:11px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:100px;padding:4px 12px;font-family:'DM Sans',sans-serif}
+@media(max-width:768px){
+  .manifeste-stacks{margin-top:48px;padding:0 0 60vh;max-width:none}
+  .mstack-card{padding:28px 22px;min-height:60vh}
+  .mstack-card:nth-child(1){top:12px}
+  .mstack-card:nth-child(2){top:28px}
+  .mstack-card:nth-child(3){top:44px}
+  .mstack-num{font-size:60px;top:14px;right:18px}
+}
 .manifeste-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6.5vw,92px);max-width:1000px;line-height:1.02;letter-spacing:-1.5px;font-weight:400;margin:0 auto}
 .manifeste-sub{font-size:clamp(18px,2.5vw,30px);color:var(--text-dim);font-weight:400;letter-spacing:0.2px}
 .manifeste-sub b{color:#fff;font-weight:600}
@@ -766,127 +788,135 @@ section.how::-webkit-scrollbar{display:none}
   .sc-title{font-size:clamp(22px,6vw,30px)}
 }
 
-/* ========== FEAT REVEAL — 4 ecrans qui changent au scroll ========== */
-section.product-reveal{overflow-y:auto;scrollbar-width:none}
+/* ========== PRODUCT REVEAL — iPhone mockup + 4 ecrans scroll ========== */
+section.product-reveal{overflow-y:auto !important;scrollbar-width:none}
 section.product-reveal::-webkit-scrollbar{display:none}
 
-.feat-reveal-wrap{
+.pr-scene{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:48px;
-  padding:60px 64px;
+  grid-template-columns:1fr auto;
+  gap:60px;
+  padding:48px 64px;
+  min-height:100%;
+  align-items:start;
   max-width:1100px;
   margin:0 auto;
-  align-items:start;
+  width:100%;
+  box-sizing:border-box;
 }
 
-.feat-screen-sticky{position:sticky;top:40px}
-.feat-screen-frame{
-  background:#0d0d0d;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:20px;
-  overflow:hidden;
-  min-height:360px;
-  position:relative;
-}
-
-.feat-screen{
-  position:absolute;inset:0;
-  padding:24px;
-  opacity:0;
-  transform:translateY(12px);
-  transition:opacity .4s ease, transform .4s ease;
-  pointer-events:none;
-}
-.feat-screen.active{
-  opacity:1;
-  transform:translateY(0);
-  pointer-events:all;
-  position:relative;
-}
-
-.fs-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.fs-logo{font-family:'Syne',sans-serif;font-size:13px;font-weight:900;letter-spacing:.1em;color:#fff}
-.fs-logo span{color:#02d1ba}
-.fs-badge{
-  font-size:9px;font-weight:700;
-  letter-spacing:.12em;text-transform:uppercase;
-  background:rgba(2,209,186,.08);
-  border:1px solid rgba(2,209,186,.2);
-  color:#02d1ba;
-  padding:4px 10px;border-radius:100px;
-}
-
-.fs-hero{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
-.fs-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:.95}
-.fs-dot{color:#02d1ba}
-.fs-ring{position:relative;width:64px;height:64px;flex-shrink:0}
-.fs-ring svg{position:absolute;top:0;left:0}
-.fs-ring-n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#02d1ba}
-.fs-metrics{display:flex;gap:12px;margin-bottom:14px}
-.fs-metric{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
-.fs-ml{font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:5px}
-.fs-mv{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:300;color:#fff}
-.fs-alert{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.18);border-radius:10px;font-size:10px;color:#ef4444;font-weight:600}
-.fs-adot{width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0}
-
-.fs-cl-header{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:10px}
-.fs-client{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:12px;margin-bottom:7px}
-.fs-client.crit{border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.03)}
-.fs-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
-.fs-cinfo{flex:1;min-width:0}
-.fs-cname{font-size:12px;font-weight:600;color:#fff}
-.fs-csub{font-size:10px;color:rgba(255,255,255,.28);margin-top:1px}
-.fs-cpill{font-size:8px;font-weight:700;letter-spacing:.05em;padding:3px 9px;border-radius:100px;border:1px solid}
-.fs-cpill.crit{color:#ef4444;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
-.fs-cpill.warn{color:#f97316;border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)}
-.fs-cpill.ok{color:#02d1ba;border-color:rgba(2,209,186,.3);background:rgba(2,209,186,.08)}
-.fs-ia-badge{margin-top:12px;text-align:center;font-size:10px;color:rgba(255,255,255,.28);letter-spacing:.08em}
-
-.fs-macro-header{margin-bottom:16px}
-.fs-macro-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px}
-.fs-macro-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px}
-.fs-macros{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
-.fs-macro-bar{display:flex;align-items:center;gap:10px}
-.fs-macro-lbl{font-size:10px;color:rgba(255,255,255,.35);width:72px}
-.fs-bar-track{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
-.fs-bar-fill{height:100%;border-radius:100px}
-.fs-macro-val{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;color:rgba(255,255,255,.5);width:32px;text-align:right}
-.fs-meals{display:flex;flex-direction:column;gap:7px}
-.fs-meal{display:flex;align-items:center;gap:10px;font-size:11px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)}
-.fs-mhour{color:#02d1ba;font-weight:600;width:28px}
-.fs-mname{flex:1;color:rgba(255,255,255,.55)}
-.fs-mkcal{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.3)}
-
-.fs-prog-header{margin-bottom:14px}
-.fs-prog-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:900;color:#fff;letter-spacing:.04em}
-.fs-prog-sub{font-size:10px;color:rgba(255,255,255,.3);margin-top:3px}
-.fs-week-label{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#02d1ba;margin-bottom:10px}
-.fs-exercise{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;margin-bottom:8px}
-.fs-ex-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:7px}
-.fs-ex-tags{display:flex;gap:6px;flex-wrap:wrap}
-.fs-ex-tags span{font-size:9px;font-weight:600;color:rgba(255,255,255,.4);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:100px;padding:3px 9px;font-family:'JetBrains Mono',monospace}
-.fs-prog-cta{margin-top:12px;font-size:10px;color:rgba(255,255,255,.25);letter-spacing:.08em;text-align:center}
-
-.feat-texts{display:flex;flex-direction:column;gap:0}
-.feat-text-block{
+/* TEXTES GAUCHE */
+.pr-texts{display:flex;flex-direction:column;gap:0}
+.pr-text{
   min-height:80vh;
   display:flex;flex-direction:column;
   justify-content:center;
   padding:40px 0;
-  opacity:.3;
+  opacity:.25;
   transition:opacity .4s ease;
 }
-.feat-text-block.active{opacity:1}
-.ft-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:.2em;color:#02d1ba;margin-bottom:10px}
-.ft-tag{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px}
-.ft-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:.97;margin-bottom:18px}
-.ft-desc{font-size:14px;color:rgba(255,255,255,.42);line-height:1.65;font-weight:300;max-width:400px}
+.pr-text.active{opacity:1}
+.pr-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:.2em;color:#02d1ba;margin-bottom:10px}
+.pr-tag{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:16px}
+.pr-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,42px);font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:.97;margin-bottom:18px}
+.pr-desc{font-size:14px;color:rgba(255,255,255,.38);line-height:1.65;font-weight:300;max-width:380px}
+
+/* IPHONE */
+.pr-phone-wrap{
+  position:sticky;
+  top:40px;
+  flex-shrink:0;
+}
+.pr-phone{
+  width:260px;
+  background:#000;
+  border-radius:44px;
+  border:.5px solid rgba(255,255,255,.12);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  min-height:540px;
+  position:relative;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04), inset 0 0 0 1px rgba(255,255,255,.06), 0 30px 80px rgba(0,0,0,.5);
+}
+.pr-island{
+  width:88px;height:26px;
+  background:#000;
+  border-radius:100px;
+  margin:14px auto 0;
+  border:.5px solid rgba(255,255,255,.08);
+  flex-shrink:0;
+}
+
+/* Ecrans */
+.pr-screen{
+  flex:1;
+  padding:16px 18px 8px;
+  display:none;
+  flex-direction:column;
+  gap:10px;
+}
+.pr-screen.active{display:flex}
+
+.prs-top{margin-bottom:4px}
+.prs-eyebrow{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(2,209,186,.6);margin-bottom:6px}
+.prs-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:.9}
+
+.prs-score-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);border-radius:16px;padding:12px 14px}
+.prs-score-n{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:200;color:#02d1ba;letter-spacing:-2px;line-height:1}
+.prs-score-lbl{font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.25)}
+.prs-score-sub{font-size:11px;font-weight:600;color:#02d1ba;margin-top:2px}
+
+.prs-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.prs-mc{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
+.prs-ml{font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:4px}
+.prs-mv{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:200;letter-spacing:-1px;color:#fff}
+
+.prs-alert{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(239,68,68,.04);border:.5px solid rgba(239,68,68,.15);border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.12em;color:#ef4444}
+.prs-clients{display:flex;flex-direction:column;gap:6px}
+.prs-client{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.025);border:.5px solid rgba(255,255,255,.05);border-radius:12px}
+.prs-crit{border-color:rgba(239,68,68,.15) !important}
+.prs-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:.5px solid;flex-shrink:0}
+.prs-cn{font-size:11px;font-weight:600;color:#fff}
+.prs-cs{font-size:9px;color:rgba(255,255,255,.25);margin-top:1px}
+.prs-pill{font-size:8px;font-weight:700;letter-spacing:.08em;padding:2px 8px;border-radius:100px;border:.5px solid;margin-left:auto;flex-shrink:0}
+
+/* Churn */
+.prs-churn-list{display:flex;flex-direction:column;gap:8px}
+.prs-churn-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.025);border:.5px solid;border-radius:12px}
+.prs-ia-tag{font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.06em;text-align:center;margin-top:auto;padding-top:8px}
+
+/* Nutrition */
+.prs-macro-bars{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.prs-macro{display:flex;align-items:center;gap:8px}
+.prs-macro-lbl{font-size:10px;color:rgba(255,255,255,.3);width:64px}
+.prs-bar-wrap{flex:1;height:3px;background:rgba(255,255,255,.05);border-radius:100px;overflow:hidden}
+.prs-bar{height:100%;border-radius:100px}
+.prs-macro-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.4);width:28px;text-align:right}
+.prs-meals{display:flex;flex-direction:column;gap:0}
+.prs-meal{display:flex;align-items:center;gap:8px;font-size:11px;padding:7px 0;border-bottom:.5px solid rgba(255,255,255,.04)}
+.prs-mh{width:24px;font-weight:600}
+.prs-mn{flex:1;color:rgba(255,255,255,.5)}
+.prs-mk{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.25)}
+
+/* Programme Builder */
+.prs-prog-week{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#02d1ba;margin-bottom:8px}
+.prs-exercises{display:flex;flex-direction:column;gap:7px}
+.prs-ex{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px}
+.prs-ex-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:6px}
+.prs-ex-tags{display:flex;gap:5px;flex-wrap:wrap}
+.prs-ex-tags span{font-size:9px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.07);border-radius:100px;padding:2px 8px;font-family:'JetBrains Mono',monospace}
+.prs-export{font-size:9px;color:rgba(255,255,255,.2);letter-spacing:.08em;text-align:center;margin-top:auto;padding-top:8px}
+
+/* Bottom nav pill */
+.pr-nav{background:rgba(8,8,8,.97);border-top:.5px solid rgba(255,255,255,.05);display:flex;justify-content:space-around;align-items:center;padding:10px 12px 18px;flex-shrink:0}
+.pr-nav-item{width:42px;height:32px;border-radius:100px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.pr-nav-item.active-nav{background:#02d1ba}
 
 @media(max-width:900px){
-  .feat-reveal-wrap{grid-template-columns:1fr;gap:24px;padding:40px 24px}
-  .feat-screen-sticky{position:relative;top:auto}
-  .feat-text-block{min-height:auto;padding:24px 0;opacity:1}
+  .pr-scene{grid-template-columns:1fr;gap:24px;padding:32px 20px}
+  .pr-phone-wrap{position:relative;top:auto;margin:0 auto}
+  .pr-text{min-height:auto;padding:24px 0;opacity:1}
 }
 
 /* ========== FOUNDER NOTE ========== */
@@ -1111,8 +1141,8 @@ html.light .founder-message strong{color:#0a0a0a}
         <span class="ch-num">03</span>
         <span class="ch-name">Features</span>
       </a>
-      <a class="menu-chapter" data-target="cta-final">
-        <span class="ch-num">05</span>
+      <a class="menu-chapter" data-target="pricing">
+        <span class="ch-num">04</span>
         <span class="ch-name">Accès</span>
       </a>
     </nav>
@@ -1166,6 +1196,54 @@ html.light .founder-message strong{color:#0a0a0a}
         <div class="lbl">Pour démarrer</div>
       </div>
     </div>
+
+    <!-- Stacking cards COLOREES (degrade progressif) -->
+    <div class="manifeste-stacks">
+
+      <div class="mstack-card" style="--mi:0">
+        <div class="mstack-num">01</div>
+        <div class="mstack-accent">Dashboard CEO</div>
+        <h3 class="mstack-title">Tu sais exactement<br>où en est ton business.</h3>
+        <p class="mstack-desc">MRR, ARR, score business calculé en temps réel,
+        alertes d'expiration. Le cockpit que les autres plateformes cachent
+        derrière 3 onglets — tu l'as en hero.</p>
+        <div class="mstack-feats">
+          <span>Score 0–100 live</span>
+          <span>MRR · ARR · Rétention</span>
+          <span>Alertes expiration</span>
+        </div>
+      </div>
+
+      <div class="mstack-card" style="--mi:1">
+        <div class="mstack-num">02</div>
+        <div class="mstack-accent">Anti-Churn IA</div>
+        <h3 class="mstack-title">Tu sauves les clients<br>avant qu'ils partent.</h3>
+        <p class="mstack-desc">7 signaux analysés par client en continu.
+        Score de churn 0–100. Alerte avec action recommandée.
+        Tu interviens 7 jours avant que le client parte.</p>
+        <div class="mstack-feats">
+          <span>7 signaux comportementaux</span>
+          <span>Score prédictif</span>
+          <span>Action recommandée</span>
+        </div>
+      </div>
+
+      <div class="mstack-card" style="--mi:2">
+        <div class="mstack-num">03</div>
+        <div class="mstack-accent">Expérience client</div>
+        <h3 class="mstack-title">Tes clients vivent<br>quelque chose de différent.</h3>
+        <p class="mstack-desc">App branded à ton image. Programmes interactifs,
+        suivi nutritionnel, tracking d'activité, push notifications.
+        Ton client se sent suivi — pas géré.</p>
+        <div class="mstack-feats">
+          <span>White-label</span>
+          <span>Programmes multi-semaines</span>
+          <span>Push notifications</span>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </section>
 
@@ -1230,305 +1308,193 @@ html.light .founder-message strong{color:#0a0a0a}
 
 <!-- ========== PRODUCT REVEAL ========== -->
 <section class="product-reveal">
-  <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:0 48px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1100px;width:100%">
 
-      <!-- Gauche : pitch -->
-      <div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:16px">
-          Dashboard Coach — Live
-        </div>
-        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,72px);line-height:.95;letter-spacing:.02em;color:#fff;margin-bottom:28px">
-          Ton business<br>en une vue.
-        </h2>
-        <ul style="list-style:none;margin-bottom:36px;display:flex;flex-direction:column;gap:12px;padding:0">
-          <li style="font-size:14px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:10px">
-            <span style="width:4px;height:4px;border-radius:50%;background:#02d1ba;flex-shrink:0;display:block"></span>
-            Score business calculé en temps réel
-          </li>
-          <li style="font-size:14px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:10px">
-            <span style="width:4px;height:4px;border-radius:50%;background:#02d1ba;flex-shrink:0;display:block"></span>
-            Anti-churn IA — 7 signaux par client
-          </li>
-          <li style="font-size:14px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:10px">
-            <span style="width:4px;height:4px;border-radius:50%;background:#02d1ba;flex-shrink:0;display:block"></span>
-            MRR, rétention, alertes expiration
-          </li>
-          <li style="font-size:14px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:10px">
-            <span style="width:4px;height:4px;border-radius:50%;background:#02d1ba;flex-shrink:0;display:block"></span>
-            CRM, pipeline Kanban, analytics avancés
-          </li>
-        </ul>
-        <a href="/demo" target="_blank" rel="noopener"
-          style="display:inline-block;background:#02d1ba;color:#000;text-decoration:none;border-radius:100px;padding:14px 32px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;font-family:'DM Sans',sans-serif">
-          Essayer le dashboard en live →
-        </a>
-        <div style="font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.05em;display:block;margin-top:10px">
-          Accès immédiat · Aucun compte requis · 8 clients fictifs
-        </div>
+  <div class="pr-scene">
+
+    <!-- Textes à gauche -->
+    <div class="pr-texts">
+      <div class="pr-text active" data-pr="0">
+        <div class="pr-num">01</div>
+        <div class="pr-tag">Dashboard CEO</div>
+        <h3 class="pr-title">Ton business en<br>une seule vue.</h3>
+        <p class="pr-desc">Score business calculé en temps réel. MRR, rétention,
+        alertes d'expiration. Le cockpit que les plateformes concurrentes
+        cachent derrière 3 onglets.</p>
       </div>
-
-      <!-- Droite : mockup dashboard -->
-      <div style="background:#0d0d0d;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px">
-
-        <!-- Header -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.12em;color:#fff">
-            RB<span style="color:#02d1ba">PERFORM</span>
-          </span>
-          <!-- Score ring mini -->
-          <div style="position:relative;width:52px;height:52px">
-            <svg width="52" height="52" viewBox="0 0 52 52" style="transform:rotate(-90deg)">
-              <circle cx="26" cy="26" r="21" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
-              <circle cx="26" cy="26" r="21" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="131.9" stroke-dashoffset="17.1"/>
-            </svg>
-            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#02d1ba;line-height:1;letter-spacing:-1px">87</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Titre -->
-        <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1;margin-bottom:14px">
-          8 clients.<br>
-          <span style="color:#02d1ba">Tout roule.</span>
-        </div>
-
-        <!-- Stats -->
-        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
-          <span style="font-size:11px;color:rgba(255,255,255,.35)">7 programmes</span>
-          <span style="font-size:11px;color:rgba(255,255,255,.35)">3 en séance</span>
-          <span style="font-size:11px;color:rgba(255,255,255,.35)">87% rétention</span>
-        </div>
-
-        <!-- MRR card -->
-        <div style="background:rgba(2,209,186,.06);border:1px solid rgba(2,209,186,.15);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;margin-bottom:14px">
-          <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);align-self:center">MRR</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:200;color:#02d1ba;letter-spacing:-1px">2 400 €</span>
-        </div>
-
-        <!-- Clients -->
-        <div style="display:flex;flex-direction:column;gap:7px">
-          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.025);border-radius:10px">
-            <div style="width:6px;height:6px;border-radius:50%;background:#02d1ba;flex-shrink:0;box-shadow:0 0 8px #02d1ba"></div>
-            <span style="font-size:12px;color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif">Marie Laurent · En séance</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);border-radius:10px">
-            <div style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></div>
-            <span style="font-size:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif">Marc Dubois · Inactif 8j</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.025);border-radius:10px">
-            <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0"></div>
-            <span style="font-size:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif">Sofia Moreau · Vu hier</span>
-          </div>
-        </div>
-
+      <div class="pr-text" data-pr="1">
+        <div class="pr-num">02</div>
+        <div class="pr-tag">Intelligence Client</div>
+        <h3 class="pr-title">Chaque client.<br>Chaque signal.</h3>
+        <p class="pr-desc">Score de churn 0–100. 7 signaux par client en continu.
+        Tu sais qui appeler avant même qu'il pense à partir.</p>
+      </div>
+      <div class="pr-text" data-pr="2">
+        <div class="pr-num">03</div>
+        <div class="pr-tag">Nutrition</div>
+        <h3 class="pr-title">Suivi macro<br>au gramme près.</h3>
+        <p class="pr-desc">IA vocale pour logger un repas en 2 secondes.
+        Protéines, glucides, lipides, hydratation. Tout relié au programme.</p>
+      </div>
+      <div class="pr-text" data-pr="3">
+        <div class="pr-num">04</div>
+        <div class="pr-tag">Programme Builder</div>
+        <h3 class="pr-title">Des programmes<br>qui claquent.</h3>
+        <p class="pr-desc">Drag-and-drop multi-semaines. Tempo, RIR, charges,
+        vidéos YouTube. Preview live. Export PDF signé. Zéro Excel.</p>
       </div>
     </div>
-  </div>
 
-  <!-- ========== FEATURE REVEAL — 4 ECRANS CHANGEANT AU SCROLL ========== -->
-  <div class="feat-reveal-wrap">
-
-    <!-- Ecran sticky a droite -->
-    <div class="feat-screen-sticky">
-      <div class="feat-screen-frame">
+    <!-- iPhone à droite -->
+    <div class="pr-phone-wrap">
+      <div class="pr-phone">
+        <!-- Dynamic Island -->
+        <div class="pr-island"></div>
 
         <!-- Ecran 1 — Dashboard CEO -->
-        <div class="feat-screen active" data-screen="0">
-          <div class="fs-topbar">
-            <div class="fs-logo">RB<span>PERFORM</span></div>
-            <div class="fs-badge">Dashboard</div>
-          </div>
-          <div class="fs-hero">
-            <div class="fs-title">15 clients<span class="fs-dot">.</span><br>
-              <span style="color:#02d1ba">Tout roule.</span>
-            </div>
-            <div class="fs-ring">
-              <svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
-                <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
-                <circle cx="32" cy="32" r="26" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="21.2"/>
-              </svg>
-              <div class="fs-ring-n">87</div>
+        <div class="pr-screen active" data-screen="0">
+          <div class="prs-top">
+            <div class="prs-eyebrow">MON DASHBOARD</div>
+            <div class="prs-title">15 clients<span style="color:#02d1ba">.</span><br>
+              <span style="color:#02d1ba;font-size:0.7em">Tout roule.</span>
             </div>
           </div>
-          <div class="fs-metrics">
-            <div class="fs-metric">
-              <div class="fs-ml">MRR</div>
-              <div class="fs-mv" style="color:#02d1ba">1 800 €</div>
+          <div class="prs-score-row">
+            <div class="prs-score-n">87</div>
+            <div style="width:1px;height:36px;background:rgba(255,255,255,.07)"></div>
+            <div>
+              <div class="prs-score-lbl">Score business</div>
+              <div class="prs-score-sub">Excellent · +4 pts</div>
             </div>
-            <div class="fs-metric">
-              <div class="fs-ml">Rétention</div>
-              <div class="fs-mv" style="color:#02d1ba">87%</div>
+            <svg width="44" height="44" viewBox="0 0 44 44" style="margin-left:auto;transform:rotate(-90deg)">
+              <circle cx="22" cy="22" r="17" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
+              <circle cx="22" cy="22" r="17" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="13.9"/>
+            </svg>
+          </div>
+          <div class="prs-metrics">
+            <div class="prs-mc">
+              <div class="prs-ml">MRR</div>
+              <div class="prs-mv" style="color:#02d1ba">1 800€</div>
             </div>
-            <div class="fs-metric">
-              <div class="fs-ml">Actifs 7j</div>
-              <div class="fs-mv">11</div>
+            <div class="prs-mc">
+              <div class="prs-ml">Rétention</div>
+              <div class="prs-mv" style="color:#02d1ba">87%</div>
             </div>
           </div>
-          <div class="fs-alert">
-            <div class="fs-adot"></div>
-            <span>À agir maintenant · 2 clients</span>
+          <div class="prs-alert">
+            <div style="width:5px;height:5px;border-radius:50%;background:#ef4444;flex-shrink:0"></div>
+            <span>À AGIR · 2 clients</span>
+          </div>
+          <div class="prs-clients">
+            <div class="prs-client prs-crit">
+              <div class="prs-av" style="color:#ef4444;border-color:rgba(239,68,68,.2)">MD</div>
+              <div><div class="prs-cn">Marc Dubois</div><div class="prs-cs">Inactif 8j</div></div>
+              <div class="prs-pill" style="color:#ef4444;border-color:rgba(239,68,68,.3)">Critique</div>
+            </div>
+            <div class="prs-client">
+              <div class="prs-av" style="color:#02d1ba;border-color:rgba(2,209,186,.2)">ML</div>
+              <div><div class="prs-cn">Marie Laurent</div><div class="prs-cs">En séance · 2h</div></div>
+              <div class="prs-pill" style="color:#02d1ba;border-color:rgba(2,209,186,.3)">Live</div>
+            </div>
           </div>
         </div>
 
-        <!-- Ecran 2 — Intelligence client -->
-        <div class="feat-screen" data-screen="1">
-          <div class="fs-topbar">
-            <div class="fs-logo">RB<span>PERFORM</span></div>
-            <div class="fs-badge" style="background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3);color:#f97316">Anti-Churn IA</div>
+        <!-- Ecran 2 — Anti-Churn IA -->
+        <div class="pr-screen" data-screen="1">
+          <div class="prs-top">
+            <div class="prs-eyebrow">ANTI-CHURN IA</div>
+            <div class="prs-title">Clients<br><span style="color:#f97316;font-size:.7em">à risque</span></div>
           </div>
-          <div class="fs-client-list">
-            <div class="fs-cl-header">Clients à risque</div>
-            <div class="fs-client crit">
-              <div class="fs-av" style="background:rgba(239,68,68,.1);color:#ef4444">MD</div>
-              <div class="fs-cinfo">
-                <div class="fs-cname">Marc Dubois</div>
-                <div class="fs-csub">Inactif 8j · score churn 72/100</div>
-              </div>
-              <div class="fs-cpill crit">Critique</div>
+          <div class="prs-churn-list">
+            <div class="prs-churn-item" style="border-color:rgba(239,68,68,.2)">
+              <div class="prs-av" style="color:#ef4444;border-color:rgba(239,68,68,.2)">MD</div>
+              <div style="flex:1"><div class="prs-cn">Marc Dubois</div><div class="prs-cs">Churn 72/100</div></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:200;color:#ef4444">72</div>
             </div>
-            <div class="fs-client warn">
-              <div class="fs-av" style="background:rgba(249,115,22,.1);color:#f97316">KM</div>
-              <div class="fs-cinfo">
-                <div class="fs-cname">Kevin Martin</div>
-                <div class="fs-csub">Inactif 4j · score churn 61/100</div>
-              </div>
-              <div class="fs-cpill warn">Élevé</div>
+            <div class="prs-churn-item" style="border-color:rgba(249,115,22,.15)">
+              <div class="prs-av" style="color:#f97316;border-color:rgba(249,115,22,.2)">KM</div>
+              <div style="flex:1"><div class="prs-cn">Kevin Martin</div><div class="prs-cs">Churn 61/100</div></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:200;color:#f97316">61</div>
             </div>
-            <div class="fs-client ok">
-              <div class="fs-av" style="background:rgba(2,209,186,.1);color:#02d1ba">ML</div>
-              <div class="fs-cinfo">
-                <div class="fs-cname">Marie Laurent</div>
-                <div class="fs-csub">En séance · score 12/100</div>
-              </div>
-              <div class="fs-cpill ok">Safe</div>
+            <div class="prs-churn-item" style="border-color:rgba(2,209,186,.1)">
+              <div class="prs-av" style="color:#02d1ba;border-color:rgba(2,209,186,.2)">ML</div>
+              <div style="flex:1"><div class="prs-cn">Marie Laurent</div><div class="prs-cs">Churn 12/100</div></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:200;color:#02d1ba">12</div>
             </div>
           </div>
-          <div class="fs-ia-badge"><span>7 signaux analysés par client</span></div>
+          <div class="prs-ia-tag">7 signaux analysés par client</div>
         </div>
 
-        <!-- Ecran 3 — Nutrition macros -->
-        <div class="feat-screen" data-screen="2">
-          <div class="fs-topbar">
-            <div class="fs-logo">RB<span>PERFORM</span></div>
-            <div class="fs-badge" style="background:rgba(163,230,53,.08);border-color:rgba(163,230,53,.25);color:#a3e635">Nutrition</div>
+        <!-- Ecran 3 — Nutrition -->
+        <div class="pr-screen" data-screen="2">
+          <div class="prs-top">
+            <div class="prs-eyebrow">NUTRITION</div>
+            <div class="prs-title">Mardi<br><span style="color:#a3e635;font-size:.7em">1847 kcal</span></div>
           </div>
-          <div class="fs-macro-header">
-            <div class="fs-macro-title">Mardi · 1847 kcal</div>
-            <div class="fs-macro-sub">Objectif : 2200 kcal</div>
-          </div>
-          <div class="fs-macros">
-            <div class="fs-macro-bar">
-              <div class="fs-macro-lbl">Protéines</div>
-              <div class="fs-bar-track"><div class="fs-bar-fill" style="width:75%;background:#02d1ba"></div></div>
-              <div class="fs-macro-val">142g</div>
+          <div class="prs-macro-bars">
+            <div class="prs-macro">
+              <span class="prs-macro-lbl">Protéines</span>
+              <div class="prs-bar-wrap"><div class="prs-bar" style="width:75%;background:#02d1ba"></div></div>
+              <span class="prs-macro-val">142g</span>
             </div>
-            <div class="fs-macro-bar">
-              <div class="fs-macro-lbl">Glucides</div>
-              <div class="fs-bar-track"><div class="fs-bar-fill" style="width:60%;background:#f97316"></div></div>
-              <div class="fs-macro-val">184g</div>
+            <div class="prs-macro">
+              <span class="prs-macro-lbl">Glucides</span>
+              <div class="prs-bar-wrap"><div class="prs-bar" style="width:60%;background:#f97316"></div></div>
+              <span class="prs-macro-val">184g</span>
             </div>
-            <div class="fs-macro-bar">
-              <div class="fs-macro-lbl">Lipides</div>
-              <div class="fs-bar-track"><div class="fs-bar-fill" style="width:45%;background:#a78bfa"></div></div>
-              <div class="fs-macro-val">62g</div>
+            <div class="prs-macro">
+              <span class="prs-macro-lbl">Lipides</span>
+              <div class="prs-bar-wrap"><div class="prs-bar" style="width:45%;background:#a78bfa"></div></div>
+              <span class="prs-macro-val">62g</span>
             </div>
           </div>
-          <div class="fs-meals">
-            <div class="fs-meal">
-              <span class="fs-mhour">8h</span>
-              <span class="fs-mname">Avoine + œufs + banane</span>
-              <span class="fs-mkcal">540 kcal</span>
-            </div>
-            <div class="fs-meal">
-              <span class="fs-mhour">12h</span>
-              <span class="fs-mname">Poulet, riz, brocolis</span>
-              <span class="fs-mkcal">680 kcal</span>
-            </div>
-            <div class="fs-meal">
-              <span class="fs-mhour">16h</span>
-              <span class="fs-mname">Shake protéiné + amandes</span>
-              <span class="fs-mkcal">320 kcal</span>
-            </div>
+          <div class="prs-meals">
+            <div class="prs-meal"><span class="prs-mh" style="color:#02d1ba">8h</span><span class="prs-mn">Avoine + œufs</span><span class="prs-mk">540</span></div>
+            <div class="prs-meal"><span class="prs-mh" style="color:#02d1ba">12h</span><span class="prs-mn">Poulet, riz</span><span class="prs-mk">680</span></div>
+            <div class="prs-meal"><span class="prs-mh" style="color:#02d1ba">16h</span><span class="prs-mn">Shake protéiné</span><span class="prs-mk">320</span></div>
           </div>
         </div>
 
         <!-- Ecran 4 — Programme Builder -->
-        <div class="feat-screen" data-screen="3">
-          <div class="fs-topbar">
-            <div class="fs-logo">RB<span>BUILDER</span></div>
-            <div class="fs-badge" style="background:rgba(2,209,186,.08);border-color:rgba(2,209,186,.25);color:#02d1ba">Drag &amp; Drop</div>
+        <div class="pr-screen" data-screen="3">
+          <div class="prs-top">
+            <div class="prs-eyebrow">PROGRAMME BUILDER</div>
+            <div class="prs-title">PPL<br><span style="color:#02d1ba;font-size:.7em">8 semaines</span></div>
           </div>
-          <div class="fs-prog-header">
-            <div class="fs-prog-title">PUSH PULL LEGS — HYPERTROPHIE</div>
-            <div class="fs-prog-sub">8 semaines · Prise de masse</div>
-          </div>
-          <div class="fs-prog-week">
-            <div class="fs-week-label">S1 — Semaine 1 · Push</div>
-            <div class="fs-exercise">
-              <div class="fs-ex-name">Développé couché haltères</div>
-              <div class="fs-ex-tags">
-                <span>4×8</span><span>Tempo 30X0</span><span>RIR 2</span><span>32 kg</span>
-              </div>
+          <div class="prs-prog-week">S1 — Push</div>
+          <div class="prs-exercises">
+            <div class="prs-ex">
+              <div class="prs-ex-name">Développé couché</div>
+              <div class="prs-ex-tags"><span>4×8</span><span>30X0</span><span>32kg</span></div>
             </div>
-            <div class="fs-exercise">
-              <div class="fs-ex-name">Dips lestés</div>
-              <div class="fs-ex-tags">
-                <span>3×10</span><span>Tempo 20X1</span><span>RIR 1</span><span>15 kg</span>
-              </div>
+            <div class="prs-ex">
+              <div class="prs-ex-name">Dips lestés</div>
+              <div class="prs-ex-tags"><span>3×10</span><span>20X1</span><span>15kg</span></div>
+            </div>
+            <div class="prs-ex">
+              <div class="prs-ex-name">Écarté haltères</div>
+              <div class="prs-ex-tags"><span>4×12</span><span>2010</span><span>18kg</span></div>
             </div>
           </div>
-          <div class="fs-prog-cta"><span>Export PDF signé · Preview live</span></div>
+          <div class="prs-export">Export PDF signé · Preview live</div>
         </div>
 
+        <!-- Bottom pill nav -->
+        <div class="pr-nav">
+          <div class="pr-nav-item active-nav">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </div>
+          <div class="pr-nav-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <div class="pr-nav-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="pr-nav-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+        </div>
       </div>
     </div>
-
-    <!-- Textes a gauche qui scrollent -->
-    <div class="feat-texts">
-
-      <div class="feat-text-block" data-feat="0">
-        <div class="ft-num">01</div>
-        <div class="ft-tag">Dashboard CEO</div>
-        <h3 class="ft-title">Ton business en<br>une seule vue.</h3>
-        <p class="ft-desc">Score business calculé en temps réel. MRR,
-        rétention, activité client, alertes d'expiration, churn IA.
-        Le cockpit que les plateformes concurrentes cachent derrière
-        3 onglets — tu l'as en hero.</p>
-      </div>
-
-      <div class="feat-text-block" data-feat="1">
-        <div class="ft-num">02</div>
-        <div class="ft-tag">Intelligence Client</div>
-        <h3 class="ft-title">Chaque client.<br>Chaque signal.</h3>
-        <p class="ft-desc">Profils comportementaux automatiques, score de
-        risque de churn, dernière activité, tags CRM, pipeline de
-        renouvellement. Tu sais qui appeler avant même qu'il pense
-        à partir.</p>
-      </div>
-
-      <div class="feat-text-block" data-feat="2">
-        <div class="ft-num">03</div>
-        <div class="ft-tag">Nutrition</div>
-        <h3 class="ft-title">Suivi macro<br>au gramme près.</h3>
-        <p class="ft-desc">IA vocale pour logger un repas en 2 secondes,
-        scanner de codes-barres, base de 450K aliments. Protéines,
-        glucides, lipides, hydratation, sommeil. Tout relié au programme.</p>
-      </div>
-
-      <div class="feat-text-block" data-feat="3">
-        <div class="ft-num">04</div>
-        <div class="ft-tag">Programme Builder</div>
-        <h3 class="ft-title">Des programmes<br>qui claquent.</h3>
-        <p class="ft-desc">Interface drag-and-drop pour construire des
-        programmes multi-semaines. Tempo, RIR, charges, vidéos YouTube,
-        notes motivation, finisher. Preview live. Export PDF signé.
-        Zéro Excel.</p>
-      </div>
-
-    </div>
-
   </div>
 
 </section>
@@ -2654,36 +2620,33 @@ html.light .founder-message strong{color:#0a0a0a}
 })();
 </script>
 
-<!-- ========== FEAT REVEAL — IntersectionObserver scroll-driven ========== -->
+<!-- ========== PRODUCT REVEAL — IntersectionObserver iPhone ========== -->
 <script>
-(function() {
-  const blocks  = document.querySelectorAll('.feat-text-block');
-  const screens = document.querySelectorAll('.feat-screen');
-  if (!blocks.length || !screens.length) return;
+(function(){
+  const prSection = document.querySelector('section.product-reveal');
+  if(!prSection) return;
+  const prTexts = prSection.querySelectorAll('.pr-text');
+  const prScreens = prSection.querySelectorAll('.pr-screen');
+  if (!prTexts.length || !prScreens.length) return;
 
-  function activateFeat(index) {
-    blocks.forEach((b, i)  => b.classList.toggle('active', i === index));
-    screens.forEach((s, i) => s.classList.toggle('active', i === index));
+  function activatePR(i){
+    prTexts.forEach((t,j) => t.classList.toggle('active', i===j));
+    prScreens.forEach((s,j) => s.classList.toggle('active', i===j));
   }
-
-  // Activer le premier par défaut
-  activateFeat(0);
+  activatePR(0);
 
   if (!('IntersectionObserver' in window)) return;
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const idx = parseInt(entry.target.dataset.feat);
-        if (!Number.isNaN(idx)) activateFeat(idx);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        const idx = parseInt(e.target.dataset.pr);
+        if (!Number.isNaN(idx)) activatePR(idx);
       }
     });
-  }, {
-    root: document.querySelector('section.product-reveal'),
-    threshold: 0.5,
-  });
+  }, { root: prSection, threshold: 0.5 });
 
-  blocks.forEach(b => observer.observe(b));
+  prTexts.forEach(t => obs.observe(t));
 })();
 </script>
 </body>
