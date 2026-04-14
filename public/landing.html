@@ -122,9 +122,6 @@ html.light *:focus-visible{outline-color:var(--orange)}
 .gradient-text-orange{background:linear-gradient(135deg,#fff 30%,var(--orange) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .gradient-text-teal{background:linear-gradient(135deg,#fff 30%,var(--teal) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 
-/* Curseur custom retire — utilise le curseur natif du navigateur */
-.cursor{display:none !important}
-
 /* Spotlight cursor effect (gradient at cursor pos) */
 .spotlight{position:relative;overflow:hidden}
 .spotlight::before{content:'';position:absolute;inset:0;background:radial-gradient(600px circle at var(--mx,50%) var(--my,50%),rgba(249,115,22,0.06),transparent 40%);pointer-events:none;opacity:0;transition:opacity 0.3s ease;z-index:1}
@@ -194,9 +191,8 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(88px,15vw,200px);letter-spacing:-3px;line-height:0.88;font-weight:400;margin-bottom:36px;color:#fff}
 .hero-title .char{display:inline-block}
 .hero-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);margin:0 auto;font-weight:400;letter-spacing:0.2px;max-width:620px;line-height:1.5}
-.hero-arrow{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:4;color:rgba(255,255,255,0.5);transition:color 0.2s,transform 0.3s var(--ease-out);animation:arrowBounce 2.4s ease-in-out infinite}
-.hero-arrow:hover{color:#fff;transform:translateX(-50%) translateY(4px)}
-@keyframes arrowBounce{0%,100%{transform:translateX(-50%) translateY(0);opacity:0.5}50%{transform:translateX(-50%) translateY(8px);opacity:1}}
+.hero-arrow{z-index:4;color:rgba(255,255,255,0.5);transition:color 0.2s}
+.hero-arrow:hover{color:#fff}
 @media(max-width:640px){
   .hero{padding:100px 20px 60px}
 }
@@ -228,7 +224,6 @@ nav.topnav.hidden{transform:translateY(-100%)}
 /* ========== MANIFESTE ========== */
 .manifeste{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:180px 24px;text-align:center;background:var(--dark);position:relative}
 .manifeste-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6.5vw,92px);max-width:1000px;line-height:1.02;letter-spacing:-1.5px;font-weight:400;margin:0 auto}
-.manifeste-line{width:120px;height:2px;background:var(--orange);margin:50px auto;box-shadow:0 0 20px var(--orange)}
 .manifeste-sub{font-size:clamp(18px,2.5vw,30px);color:var(--text-dim);font-weight:400;letter-spacing:0.2px}
 .manifeste-sub b{color:#fff;font-weight:600}
 .manifeste-stats{margin-top:60px;display:grid;grid-template-columns:repeat(3,1fr);max-width:900px;margin-left:auto;margin-right:auto;position:relative}
@@ -488,7 +483,6 @@ html.light .footer-copy,html.light .footer-tagline,html.light .footer-links a{co
 html.light .footer-links a:hover{color:#0a0a0a}
 html.light .sticky-cta{background:rgba(255,255,255,0.95);border-color:rgba(249,115,22,0.3)}
 html.light .sticky-cta .label{color:#0a0a0a}
-/* Cursor light mode rule retire (cursor custom desactive) */
 
 /* ========== THEME TOGGLE ========== */
 .theme-toggle{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);transition:all 0.25s var(--ease-out);flex-shrink:0}
@@ -740,8 +734,6 @@ html.light .founder-message strong{color:#0a0a0a}
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>
 </div>
 
-<div class="cursor" id="cursor" aria-hidden="true"></div>
-
 <nav class="topnav" id="nav">
   <a href="#" class="nav-logo" aria-label="RB Perform">
     <span class="nav-logo-text">
@@ -811,7 +803,7 @@ html.light .founder-message strong{color:#0a0a0a}
     <p class="hero-sub">Le système qui transforme<br/>chaque coach en CEO.</p>
   </div>
   <button class="hero-arrow" id="heroEnter" onclick="document.querySelector('section.manifeste').classList.add('active');document.querySelector('section.hero').classList.remove('active')"
-    style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%);background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:8px 24px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;white-space:nowrap;z-index:5">
+    style="position:absolute;bottom:48px;left:50%;transform:translateX(-50%);white-space:nowrap;background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:8px 24px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;z-index:5">
     Entrer
   </button>
 </section>
@@ -820,8 +812,7 @@ html.light .founder-message strong{color:#0a0a0a}
 <section class="manifeste">
   <div>
     <p class="manifeste-text reveal" id="manifesteText">Certains coachs ont du talent. Les meilleurs ont un système.</p>
-    <div class="manifeste-line" id="manifesteLine"></div>
-    <p class="manifeste-sub reveal stagger-2">RB Perform est <b>ce système</b>.</p>
+    <p class="manifeste-sub reveal stagger-2" style="margin-top:32px">RB Perform est <b>ce système</b>.</p>
     <div class="manifeste-stats">
       <div class="manifeste-stat">
         <div class="num" data-count="0" data-suffix="%">0%</div>
@@ -1237,7 +1228,6 @@ html.light .founder-message strong{color:#0a0a0a}
   initLoader();
 
   if (prefersReducedMotion || !hasIntersectionObserver) {
-    initStaticCursor();
     initNavScroll();
     initHeroSplit(false);
     initCountUp();
@@ -1290,11 +1280,6 @@ html.light .founder-message strong{color:#0a0a0a}
     setTimeout(hide, 4000);
   }
 
-  // ===== Cursor custom =====
-  function initStaticCursor() {
-    // Curseur custom desactive : utilise le curseur natif du navigateur
-    return;
-  }
 
   // ===== Nav scroll =====
   function initNavScroll() {
