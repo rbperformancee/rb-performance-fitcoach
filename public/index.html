@@ -54,52 +54,85 @@
       html { height: 100%; height: -webkit-fill-available; }
       body { background: #0d0d0d; overscroll-behavior: none; min-height: 100%; min-height: -webkit-fill-available; min-height: 100dvh; }
       ::-webkit-scrollbar { width: 0; background: transparent; }
-      #sp {
-        position: fixed; inset: 0; z-index: 99999;
-        background: #0d0d0d;
+      #splash {
+        position: fixed; inset: 0;
+        background: #000;
         display: flex; flex-direction: column;
         align-items: center; justify-content: center;
-        transition: opacity 0.6s ease;
+        gap: 14px;
+        z-index: 99999;
+        transition: opacity .5s ease;
       }
-      #sp-logo {
+      #splash.fade-out { opacity: 0; pointer-events: none; }
+      #splash-logo {
         display: flex; align-items: center; gap: 10px;
-        opacity: 0; transform: scale(.92);
+        opacity: 0;
+        transform: scale(.92) translateY(6px);
         transition: opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1);
       }
-      #sp-logo.in { opacity: 1; transform: scale(1); }
-      #sp-logo svg { width: 20px; height: 44px; display: block; }
-      #sp-logo .txt {
+      #splash-logo.visible { opacity: 1; transform: scale(1) translateY(0); }
+      #splash-wordmark {
         font-family: 'Syne', -apple-system, Arial, sans-serif;
         font-size: 22px; font-weight: 900;
-        letter-spacing: .1em; color: #fff;
+        letter-spacing: .12em; color: #fff;
+        text-transform: uppercase;
       }
-      #sp-logo .txt .teal { color: #02d1ba; }
-      @keyframes splIn { from { opacity:0; transform:scale(0.82); } to { opacity:1; transform:scale(1); } }
+      #splash-wordmark span { color: #02d1ba; }
+      #splash-tagline {
+        font-family: 'Syne', -apple-system, Arial, sans-serif;
+        font-size: 10px; font-weight: 400;
+        letter-spacing: .3em;
+        color: rgba(255,255,255,.2);
+        text-transform: uppercase;
+        opacity: 0;
+        transition: opacity .4s ease .3s;
+      }
+      #splash-tagline.visible { opacity: 1; }
       @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
     </style>
   <!-- v1775847409 -->
 </head>
   <body>
-    <div id="sp">
-      <div id="sp-logo">
-        <svg viewBox="170 50 180 410" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba"/>
+    <div id="splash">
+      <div id="splash-logo">
+        <svg
+          viewBox="170 50 180 410"
+          width="18"
+          height="40"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <polygon
+            points="300,60 180,280 248,280 210,450 340,220 268,220 300,60"
+            fill="#02d1ba"
+          />
         </svg>
-        <span class="txt">RB<span class="teal">PERFORM</span></span>
+        <div id="splash-wordmark">RB<span>PERFORM</span></div>
       </div>
+      <div id="splash-tagline">La performance sans compromis</div>
     </div>
     <div id="root"></div>
     <script>
       (function(){
-        var s = document.getElementById('sp');
-        var logo = document.getElementById('sp-logo');
-        if (!s || !logo) return;
+        var splash = document.getElementById('splash');
+        var logo = document.getElementById('splash-logo');
+        var tagline = document.getElementById('splash-tagline');
+        if (!splash) return;
+
+        // Apparition du logo + tagline apres 80ms
         requestAnimationFrame(function(){
-          setTimeout(function(){ logo.classList.add('in'); }, 80);
+          setTimeout(function(){
+            logo.classList.add('visible');
+            tagline.classList.add('visible');
+          }, 80);
         });
+
+        // Disparition apres 1.4s
         setTimeout(function(){
-          s.style.opacity = '0';
-          setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 400);
+          splash.classList.add('fade-out');
+          setTimeout(function(){
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 500);
         }, 1400);
       })();
       // ===== Service Worker registration =====
