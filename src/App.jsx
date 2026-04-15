@@ -50,6 +50,7 @@ const SubscribePage = lazy(() => import("./components/SubscribePage"));
 const LoginPage  = lazy(() => import("./components/auth/LoginPage"));
 const SignupPage = lazy(() => import("./components/auth/SignupPage"));
 const JoinPage   = lazy(() => import("./components/client/JoinPage"));
+const ClientApp  = lazy(() => import("./components/client/ClientApp"));
 import ChatCoach from "./components/ChatCoach";
 import BookingModal from "./components/BookingModal";
 const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m => ({ default: m.CoachDashboard })));
@@ -445,6 +446,32 @@ function AppInner() {
     authLoading: sendingLink, error: authError, magicSent,
     sendMagicLink, signOut,
   } = useAuth();
+
+  // ===== ROUTING COACH vs CLIENT =====
+  // Check si l'utilisateur connecte est un coach (presence dans `coaches`).
+  // Si pas de session → null. Si coach → 'coach'. Si client → 'client'.
+  // Pendant le check → 'loading'. Skippe en mode demo (deja un coach).
+  const [userKind, setUserKind] = React.useState("loading");
+  React.useEffect(() => {
+    if (isDemo) { setUserKind("coach"); return; }
+    if (!user) { setUserKind(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("coaches")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setUserKind(data ? "coach" : "client");
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, isDemo]);
+
+  // Si user connecte ET pas un coach → afficher la nouvelle ClientApp PWA
+  if (user && !isDemo && userKind === "client") {
+    return <Suspense fallback={null}><ClientApp user={user} /></Suspense>;
+  }
 
   // Deep link /rejoindre/[slug] → convertit en ?coach=slug (lu par CoachCodeGate)
   React.useEffect(() => {
