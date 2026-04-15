@@ -17,9 +17,34 @@ const GOLD = "#fbbf24";
  * d'un client depuis le jour 1 : poids, seances, RPE, nutrition, timeline.
  * Bouton "Generer PDF" pour partager sur reseaux sociaux.
  */
-export default function TransformationView({ client, coach, onClose }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+// Donnees demo statiques (Lucas Bernard-like) pour le mode sandbox
+const DEMO_DATA = {
+  dayOne: new Date(Date.now() - 11 * 86400000),
+  daysSinceStart: 11,
+  weeksSinceStart: 2,
+  totalSessions: 1,
+  totalWeightLogs: 5,
+  weights: [
+    { date: new Date(Date.now() - 11 * 86400000).toISOString(), weight: 82.0 },
+    { date: new Date(Date.now() - 9 * 86400000).toISOString(),  weight: 82.2 },
+    { date: new Date(Date.now() - 6 * 86400000).toISOString(),  weight: 82.4 },
+    { date: new Date(Date.now() - 3 * 86400000).toISOString(),  weight: 82.6 },
+    { date: new Date(Date.now() - 2 * 86400000).toISOString(),  weight: 82.8 },
+  ],
+  sessions: [
+    { logged_at: new Date(Date.now() - 0.2 * 86400000).toISOString(), session_name: "Push — Semaine 1" },
+  ],
+  rpes: [
+    { date: new Date(Date.now() - 0.2 * 86400000).toISOString(), rpe: 3.5 },
+  ],
+  before: { weight: 82.0, sessionsWeek: 0, rpe: null, nutriDays: 0, avgCharge: null },
+  after:  { weight: 82.8, sessionsWeek: 1, rpe: 3.5, nutriDays: 2, avgCharge: null },
+  deltas: { weight: 0.8, sessionsWeek: 1, rpe: null, nutriDays: 2, charge: null },
+};
+
+export default function TransformationView({ client, coach, onClose, isDemo = false }) {
+  const [data, setData] = useState(isDemo ? DEMO_DATA : null);
+  const [loading, setLoading] = useState(!isDemo);
   const [generating, setGenerating] = useState(false);
 
   // Escape key pour fermer
@@ -30,6 +55,8 @@ export default function TransformationView({ client, coach, onClose }) {
   }, [onClose]);
 
   useEffect(() => {
+    // En demo, on sert les donnees statiques et on n'appelle pas Supabase
+    if (isDemo) { setData(DEMO_DATA); setLoading(false); return; }
     if (!client?.id) { setLoading(false); return; }
     let mounted = true;
     setLoading(true);
@@ -54,10 +81,15 @@ export default function TransformationView({ client, coach, onClose }) {
         if (mounted) { toast.error("Donnees non chargees"); setLoading(false); }
       });
     return () => { mounted = false; clearTimeout(timeoutId); };
-  }, [client?.id, client?.subscription_start_date]);
+  }, [client?.id, client?.subscription_start_date, isDemo]);
 
   const downloadPdf = async () => {
     if (!data) return;
+    if (isDemo) {
+      haptic.light();
+      toast.info("Disponible en version complete →");
+      return;
+    }
     setGenerating(true);
     haptic.success();
     try {

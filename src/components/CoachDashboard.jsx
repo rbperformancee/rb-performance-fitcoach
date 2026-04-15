@@ -20,6 +20,7 @@ import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
 import Onboarding from "./coach/Onboarding";
 import InviteClient from "./coach/InviteClient";
+import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
 import { BehavioralBadge } from "./coach/BehavioralBadge";
 import { enrichClientsForIntelligence } from "../lib/enrichClients";
@@ -30,6 +31,7 @@ import ActivityTimeline from "./coach/ActivityTimeline";
 import AnalyticsSection from "./coach/AnalyticsSection";
 import AchievementsSection from "./coach/AchievementsSection";
 import TransformationView from "./coach/TransformationView";
+import AIAnalyze from "./coach/AIAnalyze";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
 import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
@@ -385,8 +387,9 @@ function CreneauxManager() {
 }
 
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
-function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }) {
+function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false }) {
   const [showTransformation, setShowTransformation] = React.useState(false);
+  const [showAIAnalyze, setShowAIAnalyze] = React.useState(false);
   const [msgText,    setMsgText]    = useState("");
   const [sending,    setSending]    = useState(false);
   const [messages,   setMessages]   = useState([]);
@@ -558,6 +561,28 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
               </h1>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{client.email}</div>
             </div>
+            <button
+              onClick={() => { haptic.light(); setShowAIAnalyze(true); }}
+              title="Analyser ce client avec l'IA"
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "8px 14px",
+                background: "rgba(2,209,186,.06)",
+                border: `.5px solid rgba(2,209,186,.22)`,
+                borderRadius: 100,
+                color: "#02d1ba",
+                fontSize: 11, fontWeight: 700,
+                letterSpacing: ".05em", textTransform: "uppercase",
+                cursor: "pointer", fontFamily: "inherit",
+                flexShrink: 0,
+                transition: "all .15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,.1)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(2,209,186,.06)"; }}
+            >
+              <Icon name="zap" size={11} color="#02d1ba" />
+              Analyser
+            </button>
           </div>
 
           {/* Statut activite en badge */}
@@ -1448,7 +1473,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
             Seance Vivante
           </div>
           <div style={card}>
-            <SeanceVivanteCoach clientId={client.id} clientName={client.full_name} />
+            <SeanceVivanteCoach clientId={client.id} clientName={client.full_name} isDemo={isDemo} />
           </div>
         </div>
 
@@ -1468,8 +1493,23 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData }
       {/* ===== TRANSFORMATION VIEW (overlay) ===== */}
       {showTransformation && (
         <ErrorBoundary name="TransformationView">
-          <TransformationView client={client} coach={coachData} onClose={() => setShowTransformation(false)} />
+          <TransformationView
+            client={client}
+            coach={coachData}
+            onClose={() => setShowTransformation(false)}
+            isDemo={isDemo}
+          />
         </ErrorBoundary>
+      )}
+
+      {/* ===== AI ANALYZE (modal) ===== */}
+      {showAIAnalyze && (
+        <AIAnalyze
+          client={client}
+          coachId={coachData?.id}
+          isDemo={isDemo}
+          onClose={() => setShowAIAnalyze(false)}
+        />
       )}
 
       {/* ===== DRAWERS DONNEES (Poids / Eau / Sommeil) ===== */}
@@ -1711,7 +1751,7 @@ function CoachSkeleton() {
   );
 }
 
-function SeanceVivanteCoach({ clientId, clientName }) {
+function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
   const [text, setText] = React.useState("");
   const [sending, setSending] = React.useState(false);
   const [sent, setSent] = React.useState(false);
@@ -1724,9 +1764,31 @@ function SeanceVivanteCoach({ clientId, clientName }) {
   const chunksRef = React.useRef([]);
   const timerRef = React.useRef(null);
 
+  // Demo: simule une session live pour Marc Dubois
+  const demoLive = React.useMemo(() => {
+    if (!isDemo) return null;
+    const isMarc = /marc/i.test(clientName || "");
+    if (!isMarc) return null;
+    return {
+      session_name: "Push — Semaine 1",
+      started_at: new Date(Date.now() - 23 * 60000).toISOString(),
+      current_exercise: "Squat",
+      current_set: 3,
+      total_sets: 4,
+      current_weight: 100,
+      feed: [
+        { t: "12:34", text: "Developpe couche S1", weight: 80, done: true },
+        { t: "12:38", text: "Developpe couche S2", weight: 80, done: true },
+        { t: "12:43", text: "Squat S1", weight: 100, done: true },
+        { t: "12:47", text: "Squat S2", weight: 100, done: false },
+      ],
+    };
+  }, [isDemo, clientName]);
 
   React.useEffect(() => {
     if (!clientId) return;
+    // En demo on ne fait pas de polling
+    if (isDemo) { if (demoLive) setIsLive(true); return; }
     // Verifier si le client est en seance live
     const check = async () => {
       const { data } = await supabase.from("session_live")
@@ -1738,7 +1800,7 @@ function SeanceVivanteCoach({ clientId, clientName }) {
     check();
     const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
-  }, [clientId]);
+  }, [clientId, isDemo, demoLive]);
 
   const startRecording = async () => {
     try {
@@ -1809,7 +1871,38 @@ function SeanceVivanteCoach({ clientId, clientName }) {
         <div style={{ fontSize: 13, color: isLive ? "#02d1ba" : "rgba(255,255,255,0.3)", fontWeight: 600 }}>
           {isLive ? `${clientName?.split(" ")[0]} est en seance !` : "Pas en seance actuellement"}
         </div>
+        {demoLive && (
+          <div style={{ marginLeft: "auto", fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "#02d1ba", fontWeight: 500 }}>23 min</div>
+        )}
       </div>
+
+      {/* ===== DEMO: feed live simule pour Marc Dubois ===== */}
+      {demoLive && (
+        <div style={{ marginBottom: 16, padding: "14px 16px", background: "rgba(2,209,186,.03)", border: ".5px solid rgba(2,209,186,.15)", borderRadius: 12 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(2,209,186,.65)", marginBottom: 10 }}>
+            Exercice en cours
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+            <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: "-.5px" }}>{demoLive.current_exercise}</div>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "rgba(255,255,255,.55)" }}>
+              Serie {demoLive.current_set}/{demoLive.total_sets} · <span style={{ color: "#02d1ba" }}>{demoLive.current_weight}kg</span>
+            </div>
+          </div>
+          <div style={{ height: 3, background: "rgba(255,255,255,.06)", borderRadius: 100, overflow: "hidden", marginBottom: 14 }}>
+            <div style={{ height: "100%", width: `${Math.round(((demoLive.current_set - 1) / demoLive.total_sets) * 100)}%`, background: "#02d1ba", boxShadow: "0 0 8px rgba(2,209,186,.5)" }} />
+          </div>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginBottom: 8 }}>Feed en direct</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {demoLive.feed.map((f, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}>
+                <span style={{ color: "rgba(255,255,255,.3)", width: 38 }}>{f.t}</span>
+                <span style={{ color: "rgba(255,255,255,.6)", flex: 1 }}>{f.text} <span style={{ color: "#02d1ba" }}>{f.weight}kg</span></span>
+                <span style={{ color: f.done ? "#02d1ba" : "rgba(249,115,22,.85)", fontWeight: 600 }}>{f.done ? "✓" : "…"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Message flash — apparait en plein ecran pendant sa seance</div>
 
@@ -1837,6 +1930,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [search,    setSearch]    = useState("");
   const [showAdd,   setShowAdd]   = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -2387,20 +2481,44 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           </svg>
         </div>
 
-        {/* Decon */}
-        <div
-          onClick={() => { supabase.auth.signOut().then(() => onExit?.()); }}
-          style={{
-            fontSize: 10, color: "rgba(255,255,255,.15)",
-            textAlign: "center", paddingTop: 10, marginTop: 10,
-            borderTop: ".5px solid rgba(255,255,255,.04)",
-            cursor: "pointer",
-            transition: "color .15s",
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = "rgba(255,255,255,.5)"}
-          onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,.15)"}
-        >
-          Déconnexion
+        {/* Row: Settings + Deconnexion */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 10, marginTop: 10, borderTop: ".5px solid rgba(255,255,255,.04)" }}>
+          <button
+            onClick={() => { haptic.light(); setShowSettings(true); }}
+            aria-label="Parametres"
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "transparent", border: "none",
+              padding: "4px 6px",
+              color: "rgba(255,255,255,.45)",
+              fontSize: 10, fontFamily: "inherit",
+              cursor: "pointer",
+              transition: "color .15s",
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = "#02d1ba"}
+            onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,.45)"}
+          >
+            <Icon name="sparkles" size={12} color="currentColor" />
+            Parametres
+          </button>
+          <div
+            onClick={() => {
+              if (isDemo) {
+                supabase.auth.signOut().then(() => { window.location.href = "/"; });
+              } else {
+                supabase.auth.signOut().then(() => onExit?.());
+              }
+            }}
+            style={{
+              fontSize: 10, color: "rgba(255,255,255,.15)",
+              cursor: "pointer",
+              transition: "color .15s",
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = "rgba(255,255,255,.5)"}
+            onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,.15)"}
+          >
+            Déconnexion
+          </div>
         </div>
       </div>
     </aside>
@@ -2596,7 +2714,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {selected && (
         <ErrorBoundary name="ClientPanel">
-          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} />
+          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} />
         </ErrorBoundary>
       )}
       {showPipeline && (
@@ -2626,6 +2744,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         coachId={coachId}
         onInvited={() => { loadClients(); }}
       />
+
+      {showSettings && (
+        <Settings
+          coachData={coachData}
+          isDemo={isDemo}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
 
       <CommandPalette
         open={showCmdK}
