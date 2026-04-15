@@ -18,6 +18,7 @@ import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
 import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
+import Onboarding from "./coach/Onboarding";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
 import { BehavioralBadge } from "./coach/BehavioralBadge";
 import { enrichClientsForIntelligence } from "../lib/enrichClients";
@@ -2479,6 +2480,22 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       })}
     </div>
   );
+
+  // ========== ONBOARDING GATE ==========
+  // Si coach pas encore onboarde (et pas en mode demo), afficher le
+  // modal plein ecran 3 etapes. Il prend le relais du dashboard tant
+  // qu'il n'a pas flague onboarding_done=true.
+  if (!isDemo && coachData && coachData.onboarding_done === false) {
+    return (
+      <Onboarding
+        coach={coachData}
+        onComplete={() => {
+          // Force un reload pour recharger coachData avec onboarding_done=true
+          window.location.reload();
+        }}
+      />
+    );
+  }
 
   return (
     <div style={{

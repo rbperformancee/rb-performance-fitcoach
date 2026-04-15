@@ -472,6 +472,72 @@ section.manifeste.active .mstack-card:nth-child(3){animation:cardSlideIn .5s eas
 .plan:not(.featured) .cta-plan:hover{background:#fff;color:#000;border-color:#fff}
 .plan.featured .cta-plan{background:linear-gradient(135deg,var(--orange),#ea580c);color:#000;border:1px solid var(--orange);font-weight:800;box-shadow:0 12px 30px rgba(249,115,22,0.3)}
 .plan.featured .cta-plan:hover{background:linear-gradient(135deg,#fb923c,#f97316);box-shadow:0 18px 40px rgba(249,115,22,0.45)}
+/* ========== ROI CALCULATOR ========== */
+section.roi{background:#080808 !important}
+.roi-inner{max-width:920px;margin:0 auto;padding:60px 48px 80px;box-sizing:border-box}
+.roi-header{text-align:center;margin-bottom:48px}
+.roi-eyebrow{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px}
+.roi-title{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,52px);font-weight:900;color:#fff;letter-spacing:-2px;line-height:.95;margin:0 0 10px}
+.roi-sub{font-size:14px;color:rgba(255,255,255,.35);font-weight:300;letter-spacing:.02em}
+.roi-controls{display:flex;flex-direction:column;gap:28px;margin-bottom:36px;padding:28px 32px;background:rgba(255,255,255,.02);border:.5px solid rgba(255,255,255,.06);border-radius:20px}
+.roi-slider-block{display:flex;flex-direction:column;gap:12px}
+.roi-slider-label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:rgba(255,255,255,.65);font-weight:500;letter-spacing:.02em}
+.roi-slider-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:400;color:#02d1ba}
+input[type="range"].roi-range,#roi-clients,#roi-tarif{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:3px;
+  background:linear-gradient(to right,#02d1ba var(--progress,0%),rgba(255,255,255,.08) var(--progress,0%));
+  outline:none;border-radius:100px;cursor:pointer;
+  transition:background .1s;
+}
+#roi-clients::-webkit-slider-thumb,#roi-tarif::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:20px;height:20px;border-radius:50%;
+  background:#02d1ba;cursor:pointer;
+  box-shadow:0 0 16px rgba(2,209,186,.5),0 0 0 4px rgba(2,209,186,.1);
+  border:none;transition:transform .15s;
+}
+#roi-clients::-webkit-slider-thumb:hover,#roi-tarif::-webkit-slider-thumb:hover{transform:scale(1.15)}
+#roi-clients::-moz-range-thumb,#roi-tarif::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  background:#02d1ba;cursor:pointer;border:none;
+  box-shadow:0 0 16px rgba(2,209,186,.5);
+}
+
+.roi-main-card{background:linear-gradient(135deg,rgba(2,209,186,.08),rgba(2,209,186,.02));border:1px solid rgba(2,209,186,.2);border-radius:20px;padding:32px 36px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden}
+.roi-main-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(2,209,186,.4),transparent)}
+.roi-main-label{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(2,209,186,.7);margin-bottom:14px}
+.roi-main-val{font-family:'JetBrains Mono',monospace;font-size:clamp(44px,7vw,64px);font-weight:200;color:#02d1ba;letter-spacing:-3px;line-height:1;text-shadow:0 0 20px rgba(2,209,186,.15)}
+.roi-main-sub{font-size:12px;color:rgba(255,255,255,.35);margin-top:8px;letter-spacing:.02em}
+
+.roi-results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+.roi-card{background:rgba(255,255,255,.02);border:.5px solid rgba(255,255,255,.06);border-radius:16px;padding:20px;transition:border-color .2s}
+.roi-card.loss{border-color:rgba(239,68,68,.15)}
+.roi-card.gain{border-color:rgba(2,209,186,.15)}
+.roi-card.roi-multi{border-color:rgba(167,139,250,.15);background:rgba(167,139,250,.03)}
+.roi-card-label{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:10px}
+.roi-card-val{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:200;letter-spacing:-1.5px;line-height:1;color:#fff;transition:color .3s}
+.roi-card.loss .roi-card-val{color:#ef4444}
+.roi-card.gain .roi-card-val{color:#02d1ba}
+.roi-card.roi-multi .roi-card-val{color:#a78bfa}
+.roi-card-unit{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.04em;margin-top:4px}
+.roi-card-desc{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-top:10px;padding-top:10px;border-top:.5px solid rgba(255,255,255,.05);font-weight:300}
+
+.roi-conclusion{font-size:15px;color:rgba(255,255,255,.55);line-height:1.7;text-align:center;max-width:640px;margin:0 auto 32px;padding:20px 24px;background:rgba(255,255,255,.02);border:.5px solid rgba(255,255,255,.05);border-radius:14px;font-weight:300}
+.roi-conclusion strong{color:#02d1ba;font-weight:600}
+
+.roi-cta-block{text-align:center}
+.roi-cta{display:inline-block;background:#02d1ba;color:#000;text-decoration:none;border-radius:100px;padding:16px 40px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-family:'DM Sans',sans-serif;transition:opacity .2s,transform .2s;box-shadow:0 16px 40px rgba(2,209,186,.3)}
+.roi-cta:hover{opacity:.9;transform:translateY(-1px)}
+.roi-cta-note{font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.06em;margin-top:12px}
+
+@media(max-width:680px){
+  .roi-inner{padding:48px 24px 60px}
+  .roi-controls{padding:20px 22px;gap:22px}
+  .roi-main-card{padding:24px 20px}
+  .roi-results{grid-template-columns:1fr;gap:10px}
+}
+
 /* ========== CLIENT VIEW SECTION ========== */
 section.client-view{overflow-y:auto !important;scrollbar-width:none;background:#080808 !important}
 section.client-view::-webkit-scrollbar{display:none}
@@ -1199,9 +1265,8 @@ html.light .founder-message strong{color:#0a0a0a}
     font-size: 10px !important;
   }
 
-  /* MANIFESTE — scroll interne */
+  /* MANIFESTE — padding lateral uniquement */
   section.manifeste {
-    overflow-y: auto !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
   }
@@ -1216,30 +1281,18 @@ html.light .founder-message strong{color:#0a0a0a}
 
   /* HOW */
   section.how {
-    overflow-y: auto !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
   }
 
   /* PRODUCT REVEAL */
-  section.product-reveal {
-    overflow-y: auto !important;
-  }
   .pr-scene {
     grid-template-columns: 1fr !important;
     padding: 40px 20px !important;
   }
-  .pr-phone-wrap {
-    position: sticky !important;
-    top: 16px !important;
-    display: flex !important;
-    justify-content: center !important;
-    order: -1 !important;
-  }
   .pr-phone { width: 240px !important; }
   .pr-text {
     min-height: 55vh !important;
-    opacity: 1 !important;
     padding: 16px 0 !important;
   }
   .pr-title {
@@ -1253,7 +1306,6 @@ html.light .founder-message strong{color:#0a0a0a}
 
   /* BENTO */
   section.bento {
-    overflow-y: auto !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
   }
@@ -1268,7 +1320,6 @@ html.light .founder-message strong{color:#0a0a0a}
 
   /* FEATURES */
   section.features {
-    overflow-y: auto !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
   }
@@ -1278,7 +1329,6 @@ html.light .founder-message strong{color:#0a0a0a}
 
   /* CLIENT VIEW */
   section.client-view {
-    overflow-y: auto !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
   }
@@ -1287,14 +1337,11 @@ html.light .founder-message strong{color:#0a0a0a}
     align-items: center !important;
   }
   .cv-phone {
-    opacity: 1 !important;
-    transform: none !important;
     width: 220px !important;
   }
 
   /* PRICING */
   section.pricing {
-    overflow-y: auto !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
   }
@@ -1304,6 +1351,15 @@ html.light .founder-message strong{color:#0a0a0a}
   }
   .cta-title-inline {
     font-size: clamp(30px,9vw,44px) !important;
+  }
+
+  /* ROI (calculateur) */
+  section.roi {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+  .roi-results {
+    grid-template-columns: 1fr !important;
   }
 
   /* MENU OVERLAY */
@@ -1906,6 +1962,75 @@ html.light .founder-message strong{color:#0a0a0a}
         <div class="feature-desc">CRM intégré : tags automatiques, historique d'activité, rappels programmés. Rien ne passe à travers.</div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ========== ROI CALCULATOR ========== -->
+<section class="roi">
+  <div class="roi-inner">
+
+    <div class="roi-header">
+      <div class="roi-eyebrow">Retour sur investissement</div>
+      <h2 class="roi-title">Ce que RB te rapporte<span style="color:#02d1ba">.</span></h2>
+      <p class="roi-sub">Pas ce qu'il coute.</p>
+    </div>
+
+    <div class="roi-controls">
+      <div class="roi-slider-block">
+        <div class="roi-slider-label">
+          <span>Tu as combien de clients ?</span>
+          <span class="roi-slider-val"><span id="roi-clients-val">10</span> clients</span>
+        </div>
+        <input type="range" id="roi-clients" min="3" max="50" value="10" />
+      </div>
+
+      <div class="roi-slider-block">
+        <div class="roi-slider-label">
+          <span>Tu factures combien par mois ?</span>
+          <span class="roi-slider-val"><span id="roi-tarif-val">150</span>€ / mois</span>
+        </div>
+        <input type="range" id="roi-tarif" min="50" max="500" value="150" step="10" />
+      </div>
+    </div>
+
+    <div class="roi-main-card">
+      <div class="roi-main-label">Ton MRR actuel</div>
+      <div class="roi-main-val" id="roi-mrr">1 500€</div>
+      <div class="roi-main-sub" id="roi-mrr-sub">par mois · 18 000€ / an</div>
+    </div>
+
+    <div class="roi-results">
+      <div class="roi-card loss">
+        <div class="roi-card-label">Sans anti-churn</div>
+        <div class="roi-card-val" id="roi-loss">-450€</div>
+        <div class="roi-card-unit">par an</div>
+        <div class="roi-card-desc">1 client perdu tous les 4 mois en moyenne</div>
+      </div>
+
+      <div class="roi-card gain">
+        <div class="roi-card-label">Gain rétention</div>
+        <div class="roi-card-val" id="roi-gain">+360€</div>
+        <div class="roi-card-unit">par an</div>
+        <div class="roi-card-desc">En gardant 1 client de plus par trimestre</div>
+      </div>
+
+      <div class="roi-card roi-multi">
+        <div class="roi-card-label">ROI net RB Perform</div>
+        <div class="roi-card-val" id="roi-multiple">×2</div>
+        <div class="roi-card-unit">pour 1€ investi</div>
+        <div class="roi-card-desc">Plan Pro · 299€ / mois · ROI positif dès le 3e mois</div>
+      </div>
+    </div>
+
+    <div class="roi-conclusion" id="roi-conclusion">
+      Avec <strong>10 clients</strong> à <strong>150€</strong>, RB Perform te rapporte <strong>+360€</strong> par an — soit <strong>×2</strong> ton investissement.
+    </div>
+
+    <div class="roi-cta-block">
+      <a href="/demo" class="roi-cta">Commencer gratuitement →</a>
+      <div class="roi-cta-note">14 jours gratuits · Sans carte bancaire</div>
+    </div>
+
   </div>
 </section>
 
@@ -2809,7 +2934,7 @@ html.light .founder-message strong{color:#0a0a0a}
   // Liste des sections exposee pour le swipe tactile
   window.__SECTIONS__ = [
     'hero','manifeste','how','product-reveal',
-    'bento','features','client-view','pricing'
+    'bento','features','roi','client-view','pricing'
   ];
 
   const sections = document.querySelectorAll('section');
@@ -2898,7 +3023,7 @@ html.light .founder-message strong{color:#0a0a0a}
   // Navigation clavier (fleches gauche/droite/haut/bas)
   const ORDER = [
     'hero', 'manifeste', 'how', 'product-reveal',
-    'bento', 'features', 'client-view', 'pricing'
+    'bento', 'features', 'roi', 'client-view', 'pricing'
   ];
 
   function currentIndex() {
@@ -3031,6 +3156,58 @@ html.light .founder-message strong{color:#0a0a0a}
   // Init dots
   showSectionWithDots('hero');
 
+})();
+</script>
+
+<!-- ========== ROI CALCULATOR — live update sliders ========== -->
+<script>
+(function(){
+  const clientsSlider = document.getElementById('roi-clients');
+  const tarifSlider   = document.getElementById('roi-tarif');
+  if (!clientsSlider || !tarifSlider) return;
+
+  const clientsVal = document.getElementById('roi-clients-val');
+  const tarifVal   = document.getElementById('roi-tarif-val');
+  const mrrEl      = document.getElementById('roi-mrr');
+  const mrrSub     = document.getElementById('roi-mrr-sub');
+  const lossEl     = document.getElementById('roi-loss');
+  const gainEl     = document.getElementById('roi-gain');
+  const multEl     = document.getElementById('roi-multiple');
+  const concEl     = document.getElementById('roi-conclusion');
+
+  const PLAN_PRO_YEAR = 299 * 12; // 3 588 €
+
+  function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
+
+  function update(){
+    const clients = +clientsSlider.value;
+    const tarif   = +tarifSlider.value;
+    const mrr     = clients * tarif;
+    const annuel  = mrr * 12;
+    // Churn moyen: 1 client perdu / 4 mois = 3 clients/an
+    const lostPerYear = tarif * 12 * 3;
+    const gainPerYear = lostPerYear * 0.8;
+    const roiMult     = Math.max(2, Math.round(gainPerYear / PLAN_PRO_YEAR));
+
+    if (clientsVal) clientsVal.textContent = clients;
+    if (tarifVal)   tarifVal.textContent   = tarif;
+    if (mrrEl)      mrrEl.textContent      = fmt(mrr) + '€';
+    if (mrrSub)     mrrSub.textContent     = 'par mois · ' + fmt(annuel) + '€ / an';
+    if (lossEl)     lossEl.textContent     = '-' + fmt(lostPerYear) + '€';
+    if (gainEl)     gainEl.textContent     = '+' + fmt(gainPerYear) + '€';
+    if (multEl)     multEl.textContent     = '×' + roiMult;
+    if (concEl)     concEl.innerHTML       = 'Avec <strong>' + clients + ' clients</strong> à <strong>' + tarif + '€</strong>, RB Perform te rapporte <strong>+' + fmt(gainPerYear) + '€</strong> par an — soit <strong>×' + roiMult + '</strong> ton investissement.';
+
+    // Slider track progress (gradient fill)
+    const pClients = ((clients - 3) / (50 - 3)) * 100;
+    const pTarif   = ((tarif - 50) / (500 - 50)) * 100;
+    clientsSlider.style.setProperty('--progress', pClients + '%');
+    tarifSlider.style.setProperty('--progress', pTarif + '%');
+  }
+
+  clientsSlider.addEventListener('input', update);
+  tarifSlider.addEventListener('input', update);
+  update();
 })();
 </script>
 
