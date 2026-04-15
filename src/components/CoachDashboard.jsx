@@ -19,6 +19,7 @@ import haptic from "../lib/haptic";
 import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
 import Onboarding from "./coach/Onboarding";
+import InviteClient from "./coach/InviteClient";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
 import { BehavioralBadge } from "./coach/BehavioralBadge";
 import { enrichClientsForIntelligence } from "../lib/enrichClients";
@@ -1835,6 +1836,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [uploading, setUploading] = useState(false);
   const [search,    setSearch]    = useState("");
   const [showAdd,   setShowAdd]   = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -2618,6 +2620,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       <PullToRefreshIndicator pulling={ptr.pulling} progress={ptr.progress} refreshing={ptr.refreshing} />
 
+      <InviteClient
+        open={showInvite}
+        onClose={() => setShowInvite(false)}
+        coachId={coachId}
+        onInvited={() => { loadClients(); }}
+      />
+
       <CommandPalette
         open={showCmdK}
         onClose={() => setShowCmdK(false)}
@@ -2995,10 +3004,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                     Tes athletes<span style={{ color: "#02d1ba" }}>.</span>
                   </h1>
                 </div>
-                <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", background: showAdd ? "rgba(255,255,255,0.04)" : "#02d1ba", border: showAdd ? "1px solid rgba(255,255,255,0.1)" : "none", borderRadius: 100, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px", flexShrink: 0 }}>
-                  <Icon name={showAdd ? "x" : "plus"} size={12} />
-                  {showAdd ? "Annuler" : "Ajouter"}
-                </button>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                  <button onClick={() => { haptic.selection(); setShowInvite(true); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", background: "rgba(255,255,255,.04)", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 100, color: "rgba(255,255,255,.75)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px", transition: "background .15s" }}>
+                    <Icon name="message" size={12} color="rgba(255,255,255,.75)" />
+                    Inviter
+                  </button>
+                  <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", background: showAdd ? "rgba(255,255,255,0.04)" : "#02d1ba", border: showAdd ? "1px solid rgba(255,255,255,0.1)" : "none", borderRadius: 100, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px" }}>
+                    <Icon name={showAdd ? "x" : "plus"} size={12} />
+                    {showAdd ? "Annuler" : "Ajouter"}
+                  </button>
+                </div>
               </div>
             </div>
 

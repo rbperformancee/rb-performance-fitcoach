@@ -49,6 +49,7 @@ import { LoginScreen } from "./components/LoginScreen";
 const SubscribePage = lazy(() => import("./components/SubscribePage"));
 const LoginPage  = lazy(() => import("./components/auth/LoginPage"));
 const SignupPage = lazy(() => import("./components/auth/SignupPage"));
+const JoinPage   = lazy(() => import("./components/client/JoinPage"));
 import ChatCoach from "./components/ChatCoach";
 import BookingModal from "./components/BookingModal";
 const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m => ({ default: m.CoachDashboard })));
@@ -399,10 +400,12 @@ function AppInner() {
     const p = window.location.pathname;
     if (p === "/login")  return "login";
     if (p === "/signup") return "signup";
+    if (p === "/join")   return "join";
     return null;
   });
   if (authRoute === "login")  return <Suspense fallback={null}><LoginPage /></Suspense>;
   if (authRoute === "signup") return <Suspense fallback={null}><SignupPage /></Suspense>;
+  if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
 
   // ===== MODE DEMO (route /demo ou ?demo=true) =====
   // Detection au mount + auto-login compte sandbox
