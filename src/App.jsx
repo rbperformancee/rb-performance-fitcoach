@@ -500,16 +500,7 @@ function AppInner() {
   const [showSuperAdmin, setShowSuperAdmin] = React.useState(true);
   const [showLogin, setShowLogin] = React.useState(false);
   const [showSaasLanding, setShowSaasLanding] = React.useState(() => {
-    // Defaut : landing SaaS pour les coachs (route / non-connecte).
-    // Exceptions :
-    //   ?client=true → SubscribePage (vieux liens email client)
-    //   ?coach=<slug> avec slug != "true" → SubscribePage
-    //     (flow /rejoindre/:slug : un prospect client decouvre un coach)
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("client") === "true") return false;
-    const coachParam = params.get("coach");
-    if (coachParam && coachParam !== "true") return false;
-    return true;
+    return new URLSearchParams(window.location.search).get("coach") === "true";
   });
 
   React.useEffect(() => {
