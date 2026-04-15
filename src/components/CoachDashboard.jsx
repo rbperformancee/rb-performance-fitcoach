@@ -780,12 +780,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </div>
 
         {/* ===== POIDS + SPARKLINE ===== */}
-        {lastWeight && (
-          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.16s both" }}>
-            <div style={sectionTitle}>
-              <Icon name="trending" size={14} color={G} />
-              Poids
-            </div>
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.16s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="trending" size={14} color={G} />
+            Poids
+          </div>
+          {lastWeight ? (
             <div onClick={() => setDrawer("poids")} style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", transition: "border-color 0.2s" }}>
               <div>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
@@ -802,16 +802,24 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               </div>
               {weights.length >= 2 && <MiniSparkline data={[...weights].reverse()} color={G} w={120} h={40} />}
             </div>
-          </div>
-        )}
+          ) : (
+            <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
+              Aucune pesee enregistree — ton client peut en ajouter depuis son app.
+            </div>
+          )}
+        </div>
 
         {/* ===== ALIMENTATION 7 JOURS ===== */}
-        {nutDays.length > 0 && (
-          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.18s both" }}>
-            <div style={sectionTitle}>
-              <Icon name="apple" size={14} color={G} />
-              Alimentation — 7 derniers jours
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.18s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="apple" size={14} color={G} />
+            Alimentation — 7 derniers jours
+          </div>
+          {nutDays.length === 0 ? (
+            <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
+              Aucune alimentation loggee cette semaine.
             </div>
+          ) : (
             <div style={card}>
               {/* Barres de kcal par jour */}
               <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 100, marginBottom: 12 }}>
@@ -853,16 +861,20 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 );
               })()}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ===== ACTIVITE QUOTIDIENNE 7J (pas, eau, sommeil) ===== */}
-        {daily7d.length > 0 && (
-          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.2s both" }}>
-            <div style={sectionTitle}>
-              <Icon name="activity" size={14} color={G} />
-              Activite quotidienne — 7 jours
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.2s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="activity" size={14} color={G} />
+            Activite quotidienne — 7 jours
+          </div>
+          {daily7d.length === 0 ? (
+            <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
+              Aucune donnee d'activite cette semaine.
             </div>
+          ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
               {/* Pas — cliquable */}
               <div onClick={() => setDrawer("pas")} style={{ ...card, cursor: "pointer", transition: "border-color 0.2s" }}>
@@ -953,16 +965,20 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ===== HISTORIQUE SEANCES — avec detail poids souleves ===== */}
-        {sessions.length > 0 && (
-          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.22s both" }}>
-            <div style={sectionTitle}>
-              <Icon name="flame" size={14} color={G} />
-              Historique seances ({sessions.length})
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.22s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="flame" size={14} color={G} />
+            Historique seances{sessions.length > 0 ? ` (${sessions.length})` : ""}
+          </div>
+          {sessions.length === 0 ? (
+            <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
+              Aucune seance enregistree pour le moment.
             </div>
+          ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {sessions.slice(0, 12).map((s, i) => {
                 const date = new Date(s.logged_at);
@@ -1025,8 +1041,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* (historique poids complet supprime : accessible via le drawer sur la card poids) */}
 
@@ -1177,13 +1193,17 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </div>
 
         {/* ===== NUTRITION ===== */}
-        {nutGoals && (
-          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.28s both" }}>
-            <div style={sectionTitle}>
-              <Icon name="apple" size={14} color={G} />
-              Objectifs nutritionnels
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.28s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="apple" size={14} color={G} />
+            Objectifs nutritionnels
+          </div>
+          {!nutGoals ? (
+            <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
+              Chargement des objectifs...
             </div>
-            <div style={card}>
+          ) : (
+          <div style={card}>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 14 }}>
                 Definir les objectifs de {firstName}
               </div>
@@ -1220,8 +1240,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 {nutSaving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={16} color="#000" />Enregistrement</span>) : "Sauvegarder les objectifs"}
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ===== NIVEAU CLIENT AUTO ===== */}
         {(() => {
@@ -3286,7 +3306,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         </div>
       </div>
       </main>
-      {FloatingPill}
+      {/* FloatingPill cachee quand un panel client est ouvert (panel = position:fixed plein ecran) */}
+      {!selected && FloatingPill}
     </div>
   );
 }
