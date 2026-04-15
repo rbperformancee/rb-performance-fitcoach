@@ -468,11 +468,6 @@ function AppInner() {
     return () => { cancelled = true; };
   }, [user?.id, isDemo]);
 
-  // Si user connecte ET pas un coach → afficher la nouvelle ClientApp PWA
-  if (user && !isDemo && userKind === "client") {
-    return <Suspense fallback={null}><ClientApp user={user} /></Suspense>;
-  }
-
   // Deep link /rejoindre/[slug] → convertit en ?coach=slug (lu par CoachCodeGate)
   React.useEffect(() => {
     const m = window.location.pathname.match(/^\/rejoindre\/([a-z0-9-]+)/i);
@@ -638,6 +633,16 @@ function AppInner() {
   const handleDragOver  = e => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = () => setIsDragging(false);
   const handleDrop      = e => { e.preventDefault(); setIsDragging(false); handleLocalImport(e); };
+
+  // ===== EARLY RETURN : client connecte non-coach → ClientApp PWA =====
+  // IMPORTANT : ce check DOIT etre apres tous les hooks pour ne pas
+  // violer les Rules of Hooks (error #300 : "rendered fewer hooks than
+  // expected"). userKind peut flipper de "loading" a "client" apres la
+  // requete dans la table coaches — si on returnait avant certains hooks,
+  // ceux-ci seraient skip sur le 2e render et React crasherait.
+  if (user && !isDemo && userKind === "client") {
+    return <Suspense fallback={null}><ClientApp user={user} /></Suspense>;
+  }
 
   // Note : les paiements sont desormais traites uniquement sur le site
   // de vente (rbperform.app). Le webhook Stripe est appele directement
