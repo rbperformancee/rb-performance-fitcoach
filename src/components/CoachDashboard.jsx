@@ -529,13 +529,31 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       </div>
     )}
 
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "#000", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
-      <style>{`@keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    <div className="coach-client-panel">
+      <style>{`
+        @keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .coach-client-panel{
+          position:fixed;inset:0;z-index:200;
+          background:#000;overflow-y:auto;overflow-x:hidden;
+          -webkit-overflow-scrolling:touch;
+          font-family:'DM Sans',-apple-system,sans-serif;color:#fff;
+        }
+        @media(min-width:1024px){
+          .coach-client-panel{
+            position:relative;inset:auto;
+            width:440px;flex:0 0 440px;
+            height:100vh;z-index:auto;
+            border-left:.5px solid rgba(255,255,255,.06);
+          }
+          .coach-client-panel-ambient{position:absolute!important}
+          .coach-client-panel-inner{max-width:none!important;padding:0 22px 48px!important}
+        }
+      `}</style>
 
       {/* Ambient teal */}
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 40% -10%, rgba(2,209,186,0.1), transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
+      <div className="coach-client-panel-ambient" style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 40% -10%, rgba(2,209,186,0.1), transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "0 24px 100px" }}>
+      <div className="coach-client-panel-inner" style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "0 24px 100px" }}>
 
         <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f, uploadPlanId, uploadProgWeeks); e.target.value = ""; } }} />
 
@@ -3131,7 +3149,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           )}
 
       {/* ========== FENETRE PLEIN ECRAN LISTE CLIENTS ========== */}
-      {showClientList && (
+      {/* Cachee quand un panel client est ouvert : sur desktop le panel
+          est une colonne a droite + le dashboard au centre ; sur mobile
+          le panel est un overlay qui couvre la liste de toute facon. */}
+      {showClientList && !selected && (
         <div style={{ position: "fixed", inset: 0, zIndex: 150, background: "#000", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
