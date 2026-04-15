@@ -29,10 +29,11 @@
       "destination": "/landing.html"
     },
     { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" },
-    { "source": "/demo",   "destination": "/?demo=true" },
-    { "source": "/login",  "destination": "/index.html" },
-    { "source": "/signup", "destination": "/index.html" },
-    { "source": "/join",   "destination": "/index.html" }
+    { "source": "/demo",        "destination": "/?demo=true" },
+    { "source": "/login",       "destination": "/index.html" },
+    { "source": "/signup",      "destination": "/index.html" },
+    { "source": "/join",        "destination": "/index.html" },
+    { "source": "/coach/:slug", "destination": "/coach.html" }
   ],
   "headers": [
     {

@@ -154,6 +154,12 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
             <button onClick={saveProfile} disabled={saving} style={{ ...btnPrimary, marginTop: 16 }}>
               {saving ? "..." : "Sauvegarder"}
             </button>
+
+            {/* ===== VITRINE PUBLIQUE ===== */}
+            <PublicProfileSection coachData={coachData} isDemo={isDemo} />
+
+            {/* ===== PARRAINAGE ===== */}
+            <ReferralSection coachData={coachData} isDemo={isDemo} />
           </Section>
         )}
 
@@ -238,6 +244,183 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
         coachId={coachData?.id}
         isDemo={isDemo}
       />
+    </div>
+  );
+}
+
+// ===== VITRINE PUBLIQUE =====
+function PublicProfileSection({ coachData, isDemo }) {
+  const slug = coachData?.public_slug;
+  const enabled = coachData?.public_profile_enabled === true;
+  const baseUrl = (typeof window !== "undefined" ? window.location.origin : "");
+  const url = slug ? `${baseUrl}/coach/${slug}` : null;
+
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); toast.success("Copie"); }
+    catch { toast.error("Impossible de copier"); }
+  }
+
+  async function toggleEnabled() {
+    if (isDemo) { toast.info("Disponible en version complete →"); return; }
+    if (!coachData?.id) return;
+    try {
+      const { error } = await supabase
+        .from("coaches")
+        .update({ public_profile_enabled: !enabled })
+        .eq("id", coachData.id);
+      if (error) throw error;
+      toast.success(enabled ? "Vitrine masquee" : "Vitrine activee");
+      setTimeout(() => window.location.reload(), 600);
+    } catch (e) { toast.error(e.message); }
+  }
+
+  return (
+    <div style={{ marginTop: 32, padding: "20px 22px", background: "rgba(255,255,255,.025)", border: ".5px solid rgba(255,255,255,.07)", borderRadius: 14 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: enabled ? G : "rgba(255,255,255,.3)", marginBottom: 10 }}>
+        Vitrine publique {enabled && "· active"}
+      </div>
+      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+        {coachData?.full_name || "Ton profil"}<span style={{ color: G }}>.</span>
+      </div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 16, lineHeight: 1.5 }}>
+        Une page publique partageable a tes prospects. Les visiteurs peuvent demander a te rejoindre.
+      </div>
+
+      {url && (
+        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+          <input
+            readOnly
+            value={url}
+            style={{ ...input, fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}
+            onClick={(e) => e.target.select()}
+          />
+          <button onClick={() => copy(url)} style={{ ...btnGhost, flexShrink: 0 }} title="Copier">
+            <AppIcon name="check" size={14} color={G} />
+          </button>
+        </div>
+      )}
+
+      <button
+        onClick={toggleEnabled}
+        style={{
+          width: "100%",
+          padding: "11px 16px",
+          background: enabled ? "rgba(239,68,68,.06)" : G,
+          color: enabled ? "#ef4444" : "#000",
+          border: enabled ? ".5px solid rgba(239,68,68,.2)" : "none",
+          borderRadius: 10,
+          fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase",
+          cursor: "pointer", fontFamily: "'Syne', sans-serif",
+        }}
+      >
+        {enabled ? "Masquer ma vitrine" : "Activer ma vitrine publique"}
+      </button>
+    </div>
+  );
+}
+
+// ===== PARRAINAGE COACH =====
+function ReferralSection({ coachData, isDemo }) {
+  const code = coachData?.referral_code || "";
+  const baseUrl = (typeof window !== "undefined" ? window.location.origin : "");
+  const link = code ? `${baseUrl}/signup?ref=${code}` : null;
+  const [stats, setStats] = useState({ total: 0, active: 0, rewarded: 0 });
+
+  useEffect(() => {
+    if (!coachData?.id || isDemo) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("referrals")
+        .select("status")
+        .eq("referrer_id", coachData.id);
+      if (!cancelled && Array.isArray(data)) {
+        setStats({
+          total:    data.length,
+          active:   data.filter((r) => r.status === "active").length,
+          rewarded: data.filter((r) => r.status === "rewarded").length,
+        });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [coachData?.id, isDemo]);
+
+  // Demo stats
+  const displayStats = isDemo ? { total: 3, active: 2, rewarded: 1 } : stats;
+
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); toast.success("Lien copie"); }
+    catch { toast.error("Impossible de copier"); }
+  }
+
+  return (
+    <div style={{ marginTop: 16, padding: "20px 22px", background: "rgba(167,139,250,.04)", border: ".5px solid rgba(167,139,250,.2)", borderRadius: 14 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "#a78bfa", marginBottom: 10 }}>
+        Parrainage coach
+      </div>
+      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+        Invite un collegue<span style={{ color: "#a78bfa" }}>.</span>
+      </div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 16, lineHeight: 1.5 }}>
+        Pour chaque coach qui souscrit avec ton lien, tu gagnes <strong style={{ color: "#a78bfa" }}>1 mois offert</strong> sur ton plan.
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
+        <ReferralStat label="Invites" value={displayStats.total} />
+        <ReferralStat label="Actifs"  value={displayStats.active} accent="#a78bfa" />
+        <ReferralStat label="Mois offerts" value={displayStats.rewarded} accent={G} />
+      </div>
+
+      {/* Code */}
+      {code && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)" }}>
+            Ton code
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <div style={{ flex: 1, padding: "11px 14px", background: "rgba(167,139,250,.06)", border: ".5px solid rgba(167,139,250,.2)", borderRadius: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: "#a78bfa", letterSpacing: ".05em", textAlign: "center" }}>
+              {code}
+            </div>
+            <button onClick={() => copy(code)} style={{ ...btnGhost, flexShrink: 0 }} title="Copier le code">
+              <AppIcon name="check" size={14} color={G} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {link && (
+        <div style={{ display: "flex", gap: 6 }}>
+          <input
+            readOnly
+            value={link}
+            style={{ ...input, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
+            onClick={(e) => e.target.select()}
+          />
+          <button onClick={() => copy(link)} style={{ ...btnGhost, flexShrink: 0 }} title="Copier">
+            <AppIcon name="arrow-right" size={14} color={G} />
+          </button>
+        </div>
+      )}
+
+      {!code && !isDemo && (
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", textAlign: "center", padding: 14 }}>
+          Code de parrainage en cours de generation. Recharge la page dans quelques secondes.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReferralStat({ label, value, accent }) {
+  return (
+    <div style={{ padding: "12px 8px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.05)", borderRadius: 10, textAlign: "center" }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 200, color: accent || "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
+        {value}
+      </div>
+      <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginTop: 6 }}>
+        {label}
+      </div>
     </div>
   );
 }

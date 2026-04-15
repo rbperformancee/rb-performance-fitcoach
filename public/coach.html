@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coach RB Perform</title>
+<meta name="description" content="Vitrine publique d'un coach RB Perform. Decouvre ses specialites et rejoins son espace coaching." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@200;400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0a0a0a; color: #fff; min-height: 100vh; }
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Loading state */
+  #loading {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #0a0a0a; z-index: 100;
+    transition: opacity .3s ease;
+  }
+  #loading.hide { opacity: 0; pointer-events: none; }
+  .loading-bolt svg { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.92); } }
+
+  /* Error state */
+  .error-panel {
+    max-width: 480px; margin: 80px auto;
+    padding: 60px 32px;
+    text-align: center;
+  }
+  .error-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(239,68,68,.08);
+    border: .5px solid rgba(239,68,68,.25);
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .error-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px; font-weight: 900;
+    color: #fff; letter-spacing: -.5px;
+    margin-bottom: 10px;
+  }
+  .error-sub {
+    font-size: 13px; color: rgba(255,255,255,.45);
+    line-height: 1.6; max-width: 320px; margin: 0 auto;
+  }
+
+  /* Header avec photo */
+  .coach-hero {
+    max-width: 640px; margin: 0 auto;
+    padding: 60px 24px 40px;
+    text-align: center;
+  }
+  .coach-photo {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(2,209,186,.3), rgba(2,209,186,.05));
+    border: 1px solid rgba(2,209,186,.3);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 900;
+    color: #02d1ba;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .coach-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .coach-name {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 900; color: #fff;
+    letter-spacing: -2px; line-height: 1;
+    margin-bottom: 12px;
+  }
+  .coach-name .dot { color: #02d1ba; }
+  .coach-title {
+    font-size: 13px; color: rgba(255,255,255,.5);
+    letter-spacing: .03em;
+    margin-bottom: 18px;
+  }
+  .coach-bio {
+    font-size: 14px; color: rgba(255,255,255,.65);
+    line-height: 1.7; font-weight: 300;
+    max-width: 460px; margin: 0 auto;
+  }
+  .coach-rb-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 28px;
+    padding: 6px 14px;
+    background: rgba(2,209,186,.06);
+    border: .5px solid rgba(2,209,186,.18);
+    border-radius: 100px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .15em; text-transform: uppercase;
+    color: #02d1ba;
+    text-decoration: none;
+  }
+
+  /* Specialites pills */
+  .specialties {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    justify-content: center;
+    max-width: 540px; margin: 32px auto 0;
+  }
+  .spec-pill {
+    padding: 6px 14px;
+    background: rgba(255,255,255,.04);
+    border: .5px solid rgba(255,255,255,.08);
+    border-radius: 100px;
+    font-size: 12px; font-weight: 500;
+    color: rgba(255,255,255,.7);
+  }
+
+  /* Stats row */
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    max-width: 540px; margin: 40px auto 0;
+  }
+  .stat {
+    padding: 18px 16px;
+    background: rgba(255,255,255,.02);
+    border: .5px solid rgba(255,255,255,.06);
+    border-radius: 14px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px; font-weight: 200;
+    color: #fff; letter-spacing: -1.5px;
+    line-height: 1;
+  }
+  .stat-val.accent { color: #02d1ba; }
+  .stat-lbl {
+    font-size: 8px; font-weight: 700;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(255,255,255,.3);
+    margin-top: 8px;
+  }
+
+  /* Testimonials */
+  .testimonials-wrap {
+    max-width: 640px; margin: 60px auto 0;
+    padding: 0 24px;
+  }
+  .testimonials-label {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: .25em; text-transform: uppercase;
+    color: rgba(255,255,255,.2);
+    margin-bottom: 24px; text-align: center;
+  }
+  .testi {
+    padding: 22px 24px;
+    background: rgba(255,255,255,.02);
+    border: .5px solid rgba(255,255,255,.06);
+    border-radius: 16px;
+    margin-bottom: 12px;
+  }
+  .testi-content {
+    font-size: 14px; color: rgba(255,255,255,.7);
+    line-height: 1.65; font-style: italic;
+    margin-bottom: 14px;
+  }
+  .testi-author {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .testi-author-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(2,209,186,.08);
+    border: .5px solid rgba(2,209,186,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 900;
+    color: #02d1ba;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .testi-author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .testi-author-name {
+    font-size: 12px; color: rgba(255,255,255,.6);
+    font-weight: 500;
+  }
+
+  /* CTA principal */
+  .cta-wrap {
+    max-width: 480px; margin: 60px auto 80px;
+    padding: 36px 28px;
+    background: linear-gradient(135deg, rgba(2,209,186,.06), rgba(2,209,186,.02));
+    border: 1px solid rgba(2,209,186,.2);
+    border-radius: 22px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .cta-wrap::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(2,209,186,.4), transparent);
+  }
+  .cta-eyebrow {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: #02d1ba;
+    margin-bottom: 14px;
+  }
+  .cta-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 900; color: #fff;
+    letter-spacing: -1px; line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .cta-sub {
+    font-size: 13px; color: rgba(255,255,255,.45);
+    line-height: 1.6; margin-bottom: 28px;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: #02d1ba; color: #000;
+    text-decoration: none;
+    border-radius: 100px;
+    padding: 14px 36px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 900;
+    letter-spacing: .1em; text-transform: uppercase;
+    box-shadow: 0 16px 40px rgba(2,209,186,.3);
+    transition: opacity .15s, transform .15s;
+  }
+  .cta-btn:hover { opacity: .9; transform: translateY(-1px); }
+
+  /* Footer brand */
+  .brand-footer {
+    max-width: 640px; margin: 0 auto;
+    padding: 24px;
+    text-align: center;
+    border-top: .5px solid rgba(255,255,255,.05);
+  }
+  .brand-footer a {
+    color: rgba(255,255,255,.3);
+    font-size: 11px;
+    text-decoration: none;
+    letter-spacing: .04em;
+  }
+  .brand-footer a:hover { color: #02d1ba; }
+
+  @media (max-width: 480px) {
+    .coach-hero { padding: 40px 20px 32px; }
+    .stats { grid-template-columns: 1fr; }
+    .cta-wrap { margin: 40px 16px 60px; padding: 28px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="loading-bolt">
+    <svg viewBox="170 50 180 410" width="22" height="48">
+      <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="#02d1ba"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Content (rempli par JS) -->
+<div id="root"></div>
+
+<script>
+(function(){
+  // Recupere le slug depuis l'URL: /coach/<slug>
+  var path = window.location.pathname;
+  var match = path.match(/^\/coach\/([a-z0-9-]+)/i);
+  var slug = match ? match[1] : null;
+
+  // NB: les anon keys Supabase sont DESIGNEES pour etre publiques
+  // (RLS protege les donnees, pas la cle). CRA ne substitute pas
+  // les %REACT_APP_*% dans les .html hors index.html, donc on
+  // hardcode ici. Pour rotation: maj a la main + redeploy.
+  function safeGetEnv() {
+    return {
+      url: "https://pwkajyrpldhlybavmopd.supabase.co",
+      key: "sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud",
+    };
+  }
+
+  function showError(title, sub) {
+    document.getElementById("loading").classList.add("hide");
+    document.getElementById("root").innerHTML =
+      '<div class="error-panel">' +
+        '<div class="error-icon">' +
+          '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round">' +
+            '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/>' +
+          '</svg>' +
+        '</div>' +
+        '<div class="error-title">' + esc(title) + '</div>' +
+        '<div class="error-sub">' + esc(sub) + '</div>' +
+        '<a href="https://rb-perfor.vercel.app/landing.html" style="display:inline-block;margin-top:24px;color:#02d1ba;font-size:12px;letter-spacing:.04em;text-decoration:none">Decouvrir RB Perform →</a>' +
+      '</div>';
+  }
+
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = String(s == null ? "" : s);
+    return d.innerHTML;
+  }
+
+  if (!slug) {
+    showError("Coach introuvable", "L'URL doit contenir le slug du coach.");
+    return;
+  }
+
+  var env = safeGetEnv();
+  if (!env.url || !env.key) {
+    showError("Configuration manquante", "Cette page n'a pas pu se connecter au backend. Reessaie plus tard.");
+    return;
+  }
+
+  // Fetch coach (RLS publique sur coaches WHERE public_profile_enabled=true)
+  var headers = { apikey: env.key, Authorization: "Bearer " + env.key };
+  var qsCoach = "?public_slug=eq." + encodeURIComponent(slug)
+              + "&public_profile_enabled=eq.true"
+              + "&select=id,full_name,coaching_name,public_bio,public_specialties,public_photo_url,public_city,specialties";
+
+  fetch(env.url + "/rest/v1/coaches" + qsCoach, { headers: headers })
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if (!Array.isArray(rows) || rows.length === 0) {
+        showError("Coach introuvable", "Ce profil n'existe pas ou n'est plus public.");
+        return;
+      }
+      var coach = rows[0];
+
+      // Fetch testimonials (visible=true)
+      return fetch(env.url + "/rest/v1/coach_testimonials?coach_id=eq." + coach.id + "&visible=eq.true&select=client_name,client_photo_url,content,rating&order=ordre.asc&limit=3", { headers: headers })
+        .then(function(r){ return r.json(); })
+        .then(function(testis){
+          render(coach, Array.isArray(testis) ? testis : []);
+        })
+        .catch(function(){ render(coach, []); });
+    })
+    .catch(function(e){
+      showError("Erreur de chargement", "Impossible de joindre le serveur. Reessaie dans un instant.");
+    });
+
+  function render(coach, testis) {
+    var name = coach.coaching_name || coach.full_name || "Coach";
+    var initials = (coach.full_name || coach.coaching_name || "?")
+      .split(" ").map(function(s){ return s[0] || ""; }).join("").slice(0,2).toUpperCase();
+    var specs = coach.public_specialties && coach.public_specialties.length
+      ? coach.public_specialties
+      : (coach.specialties || []);
+    var city = coach.public_city || "";
+    var subtitle = "Coach sportif" + (city ? " · " + city : "");
+
+    var photo = coach.public_photo_url
+      ? '<img src="' + esc(coach.public_photo_url) + '" alt="' + esc(name) + '"/>'
+      : esc(initials);
+
+    var specsHtml = specs.length
+      ? '<div class="specialties">' + specs.map(function(s){
+          return '<span class="spec-pill">' + esc(s) + '</span>';
+        }).join('') + '</div>'
+      : '';
+
+    var testisHtml = testis.length
+      ? '<div class="testimonials-wrap">' +
+          '<div class="testimonials-label">Ils en parlent</div>' +
+          testis.map(function(t){
+            var avatarInit = (t.client_name || "?")
+              .split(" ").map(function(s){ return s[0] || ""; }).join("").slice(0,2).toUpperCase();
+            var avatar = t.client_photo_url
+              ? '<img src="' + esc(t.client_photo_url) + '" alt="' + esc(t.client_name) + '"/>'
+              : esc(avatarInit);
+            return '<div class="testi">' +
+                     '<div class="testi-content">"' + esc(t.content) + '"</div>' +
+                     '<div class="testi-author">' +
+                       '<div class="testi-author-avatar">' + avatar + '</div>' +
+                       '<div class="testi-author-name">' + esc(t.client_name || "Client") + '</div>' +
+                     '</div>' +
+                   '</div>';
+          }).join('') +
+        '</div>'
+      : '';
+
+    document.title = name + " · RB Perform";
+    document.getElementById("root").innerHTML =
+      '<header class="coach-hero">' +
+        '<div class="coach-photo">' + photo + '</div>' +
+        '<h1 class="coach-name">' + esc(name) + '<span class="dot">.</span></h1>' +
+        '<div class="coach-title">' + esc(subtitle) + '</div>' +
+        (coach.public_bio ? '<p class="coach-bio">' + esc(coach.public_bio) + '</p>' : '') +
+        '<a href="https://rb-perfor.vercel.app/landing.html" class="coach-rb-badge" target="_blank" rel="noopener">⚡ Propulse par RB Perform</a>' +
+      '</header>' +
+      specsHtml +
+      testisHtml +
+      '<div class="cta-wrap">' +
+        '<div class="cta-eyebrow">Rejoindre l\'espace</div>' +
+        '<div class="cta-title">Pret a t\'entrainer<br>avec ' + esc(name) + ' ?</div>' +
+        '<div class="cta-sub">Demande un acces. ' + esc(name.split(" ")[0] || name) + ' te recontactera pour t\'envoyer ton invitation.</div>' +
+        '<a href="mailto:?subject=Demande de coaching avec ' + encodeURIComponent(name) + '&body=Bonjour,%0A%0AJe souhaite rejoindre votre espace coaching sur RB Perform.%0A%0AMerci !" class="cta-btn">Demander un acces →</a>' +
+      '</div>' +
+      '<div class="brand-footer">' +
+        '<a href="https://rb-perfor.vercel.app/landing.html">RB Perform — La performance sans compromis</a>' +
+      '</div>';
+
+    document.getElementById("loading").classList.add("hide");
+    setTimeout(function(){
+      var l = document.getElementById("loading");
+      if (l && l.parentNode) l.parentNode.removeChild(l);
+    }, 400);
+  }
+})();
+</script>
+
+</body>
+</html>
