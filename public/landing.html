@@ -243,10 +243,7 @@ section.manifeste::-webkit-scrollbar{display:none}
 .mstack-card:nth-child(1) .mstack-feats span{color:rgba(2,209,186,.6);background:rgba(2,209,186,.06);border-color:rgba(2,209,186,.15)}
 .mstack-card:nth-child(2) .mstack-feats span{color:rgba(249,115,22,.6);background:rgba(249,115,22,.06);border-color:rgba(249,115,22,.15)}
 .mstack-card:nth-child(3) .mstack-feats span{color:rgba(167,139,250,.6);background:rgba(167,139,250,.06);border-color:rgba(167,139,250,.15)}
-@keyframes cardSlideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-section.manifeste.active .mstack-card:nth-child(1){animation:cardSlideIn .5s ease .1s both}
-section.manifeste.active .mstack-card:nth-child(2){animation:cardSlideIn .5s ease .2s both}
-section.manifeste.active .mstack-card:nth-child(3){animation:cardSlideIn .5s ease .3s both}
+/* cardSlideIn deplace APRES le @media 768 pour priorite explicite */
 .mstack-num{position:absolute;top:20px;right:28px;font-family:'JetBrains Mono',monospace;font-size:96px;font-weight:200;color:rgba(255,255,255,.03);letter-spacing:-4px;line-height:1;pointer-events:none}
 .mstack-accent{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#02d1ba}
 .mstack-title{font-family:'Syne',sans-serif;font-size:clamp(22px,3vw,32px);font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1.0}
@@ -1392,6 +1389,15 @@ html.light .founder-message strong{color:#0a0a0a}
   }
   footer { padding: 36px 20px 48px !important; }
 }
+
+/* ========== STACKING CARDS ANIM — apres @media pour priorite ========== */
+@keyframes cardSlideIn{
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+section.manifeste.active .mstack-card:nth-child(1){ animation: cardSlideIn .5s ease .1s both; }
+section.manifeste.active .mstack-card:nth-child(2){ animation: cardSlideIn .5s ease .2s both; }
+section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s ease .3s both; }
 
 </style>
 </head>
