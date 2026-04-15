@@ -47,6 +47,8 @@ import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPage
 import { LoginScreen } from "./components/LoginScreen";
 // Gros composants : charges a la demande pour booster le TTI cote clients
 const SubscribePage = lazy(() => import("./components/SubscribePage"));
+const LoginPage  = lazy(() => import("./components/auth/LoginPage"));
+const SignupPage = lazy(() => import("./components/auth/SignupPage"));
 import ChatCoach from "./components/ChatCoach";
 import BookingModal from "./components/BookingModal";
 const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m => ({ default: m.CoachDashboard })));
@@ -389,6 +391,19 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook, coa
 }
 
 function AppInner() {
+  // ===== ROUTES AUTH (/login, /signup) =====
+  // Prises en charge avant toute autre logique — pas d'auto-login demo,
+  // pas de check session. Affichage direct des pages d'auth.
+  const [authRoute] = React.useState(() => {
+    if (typeof window === "undefined") return null;
+    const p = window.location.pathname;
+    if (p === "/login")  return "login";
+    if (p === "/signup") return "signup";
+    return null;
+  });
+  if (authRoute === "login")  return <Suspense fallback={null}><LoginPage /></Suspense>;
+  if (authRoute === "signup") return <Suspense fallback={null}><SignupPage /></Suspense>;
+
   // ===== MODE DEMO (route /demo ou ?demo=true) =====
   // Detection au mount + auto-login compte sandbox
   const [isDemo] = React.useState(() => {

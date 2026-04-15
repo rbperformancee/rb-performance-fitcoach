@@ -29,7 +29,9 @@
       "destination": "/landing.html"
     },
     { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" },
-    { "source": "/demo", "destination": "/?demo=true" }
+    { "source": "/demo",   "destination": "/?demo=true" },
+    { "source": "/login",  "destination": "/index.html" },
+    { "source": "/signup", "destination": "/index.html" }
   ],
   "headers": [
     {
