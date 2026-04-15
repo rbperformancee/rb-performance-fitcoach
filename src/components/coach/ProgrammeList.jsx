@@ -141,7 +141,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
         <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 10 }}>
           Programmes coach
         </div>
-        <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-1.5px", lineHeight: 1, color: "#fff", margin: 0, marginBottom: 8 }}>
+        <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-0.035em", lineHeight: 1.05, color: "#fff", margin: 0, marginBottom: 8 }}>
           Tes programmes<span style={{ color: G }}>.</span>
         </h1>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.35)", letterSpacing: ".02em" }}>

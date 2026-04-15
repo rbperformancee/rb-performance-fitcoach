@@ -556,7 +556,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
             <Avatar name={client.full_name || client.email} size={60} active={!!prog} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 36, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 7vw, 36px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", margin: 0, lineHeight: 1.05, wordBreak: "break-word" }}>
                 {client.full_name || <span style={{ color: "rgba(255,255,255,0.35)" }}>Sans nom</span>}
               </h1>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{client.email}</div>
@@ -2837,7 +2837,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`;
                 })()}
               </div>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(36px, 5vw, 52px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: .9, color: "#fff", margin: 0 }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(34px, 5vw, 52px)", fontWeight: 900, letterSpacing: "-0.035em", lineHeight: 1.02, color: "#fff", margin: 0 }}>
                 <span style={{ color: "#fff" }}>
                   {total} client{total > 1 ? "s" : ""}.
                   <span style={{
@@ -3146,7 +3146,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 8 }}>Clients</div>
-                  <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 6vw, 52px)", fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: 0, lineHeight: 0.95 }}>
+                  <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 6vw, 52px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", margin: 0, lineHeight: 1.02 }}>
                     Tes athletes<span style={{ color: "#02d1ba" }}>.</span>
                   </h1>
                 </div>
