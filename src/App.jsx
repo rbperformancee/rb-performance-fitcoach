@@ -448,25 +448,35 @@ function AppInner() {
   } = useAuth();
 
   // ===== ROUTING COACH vs CLIENT =====
-  // Check si l'utilisateur connecte est un coach (presence dans `coaches`).
-  // Si pas de session → null. Si coach → 'coach'. Si client → 'client'.
-  // Pendant le check → 'loading'. Skippe en mode demo (deja un coach).
+  // Check si l'utilisateur connecte est un coach (table `coaches`) OU un
+  // super_admin (table `super_admins`). Les deux restent dans l'interface
+  // coach/admin — seul un vrai client va vers la ClientApp PWA.
+  // Valeurs : 'loading' (check en cours) | null (pas de session)
+  //         | 'coach' (coach OU super_admin) | 'client' (client standard)
+  // Skippe en mode demo (deja considere comme coach).
   const [userKind, setUserKind] = React.useState("loading");
   React.useEffect(() => {
     if (isDemo) { setUserKind("coach"); return; }
     if (!user) { setUserKind(null); return; }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("coaches")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
+      // Check coach par id ET par email (certains comptes sont lies par email)
+      // + check super_admin en parallele. Un seul match = route coach.
+      const [coachById, coachByEmail, adminByEmail] = await Promise.all([
+        supabase.from("coaches").select("id").eq("id", user.id).maybeSingle(),
+        user.email
+          ? supabase.from("coaches").select("id").eq("email", user.email).maybeSingle()
+          : Promise.resolve({ data: null }),
+        user.email
+          ? supabase.from("super_admins").select("id").eq("email", user.email).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
       if (cancelled) return;
-      setUserKind(data ? "coach" : "client");
+      const isCoachOrAdmin = !!(coachById.data || coachByEmail.data || adminByEmail.data);
+      setUserKind(isCoachOrAdmin ? "coach" : "client");
     })();
     return () => { cancelled = true; };
-  }, [user?.id, isDemo]);
+  }, [user?.id, user?.email, isDemo]);
 
   // Deep link /rejoindre/[slug] → convertit en ?coach=slug (lu par CoachCodeGate)
   React.useEffect(() => {
