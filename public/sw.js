@@ -120,21 +120,57 @@ self.addEventListener("message", (e) => {
   }
 });
 
-// Push notifications
+// ===== PUSH NOTIFICATIONS =====
+// Event 'push' : reception d'une push Web (envoyee via VAPID depuis une
+// Edge Function cote Supabase). Affiche une notification native systeme.
 self.addEventListener("push", (e) => {
-  const d = e.data ? e.data.json() : {};
-  e.waitUntil(
-    self.registration.showNotification(d.title || "Notification", {
-      body: d.body || "Message de ton coach",
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-      vibrate: [100, 50, 100],
-      data: { url: d.url || "/" },
-    })
-  );
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; }
+  catch { data = { title: "RB Perform", body: e.data && e.data.text() || "" }; }
+
+  const title = data.title || "RB Perform";
+  const options = {
+    body: data.body || "",
+    icon: data.icon || "/icon-192.png",
+    badge: data.badge || "/icon-192.png",
+    image: data.image,
+    tag: data.tag,                       // remplace une notification existante du meme tag
+    renotify: data.renotify === true,
+    requireInteraction: data.requireInteraction === true,
+    silent: data.silent === true,
+    vibrate: data.vibrate || [200, 100, 200],
+    data: {
+      url: data.url || "/",
+      clientId: data.clientId,
+      type: data.type,
+    },
+    actions: Array.isArray(data.actions) ? data.actions.slice(0, 2) : [],
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
 });
 
+// Clic sur la notification — ouvre ou focus la fenetre a l'URL cible.
+// Si une fenetre de l'app est deja ouverte, on la focus plutot que
+// d'en ouvrir une nouvelle.
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  e.waitUntil(clients.openWindow(e.notification.data.url || "/"));
+  const url = (e.notification.data && e.notification.data.url) || "/";
+  e.waitUntil((async () => {
+    const wins = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const w of wins) {
+      try {
+        if (new URL(w.url).origin === self.location.origin) {
+          w.focus();
+          w.navigate ? w.navigate(url) : w.postMessage({ type: "navigate", url });
+          return;
+        }
+      } catch (_) {}
+    }
+    if (clients.openWindow) await clients.openWindow(url);
+  })());
+});
+
+// Cleanup quand l'utilisateur ferme la notif sans cliquer (analytics futur)
+self.addEventListener("notificationclose", (e) => {
+  // no-op pour l'instant
 });
