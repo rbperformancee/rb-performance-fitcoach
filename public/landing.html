@@ -1577,103 +1577,179 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   </div>
 </section>
 
-<!-- ========== HOW IT WORKS ========== -->
-<section class="how">
-  <div class="stack-scene">
-    <div class="stack-header">
-      <div class="stack-eyebrow">Le Système</div>
-      <h2 class="stack-title">Plus qu'une app.<br>Un système.</h2>
+<!-- ========== LE SYSTÈME — FORMAT CINÉMATIQUE ========== -->
+<section class="how" style="background:#080C14">
+<style>
+.sys-block{min-height:100vh;display:flex;align-items:center;padding:80px 24px;max-width:1100px;margin:0 auto;gap:60px;border-bottom:1px solid rgba(0,201,167,0.12);opacity:0;transform:translateY(40px);transition:opacity .7s ease-out,transform .7s ease-out}
+.sys-block.vis{opacity:1;transform:translateY(0)}
+.sys-block .sys-left{flex:1;min-width:0}
+.sys-block .sys-right{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;min-height:280px}
+.sys-num{font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px}
+.sys-title{font-family:'Syne','Bebas Neue',sans-serif;font-size:clamp(36px,4.5vw,72px);font-weight:900;color:#fff;line-height:1.05;letter-spacing:-0.03em;margin:0 0 20px}
+.sys-sub{font-size:16px;color:#8A8A9A;line-height:1.6;max-width:420px;margin-bottom:24px}
+.sys-bullets{display:flex;flex-direction:column;gap:10px}
+.sys-bullets span{font-size:14px;color:rgba(255,255,255,0.7);display:flex;align-items:baseline;gap:10px}
+.sys-bullets span::before{content:'—';color:#00C9A7;font-weight:700;flex-shrink:0}
+.sys-ghost{position:absolute;font-size:clamp(100px,14vw,200px);font-weight:900;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none;user-select:none;letter-spacing:-0.04em}
+.sys-big{font-size:clamp(60px,8vw,120px);font-weight:900;color:#fff;line-height:1;position:relative;z-index:1;letter-spacing:-0.03em;opacity:0;transform:translateY(20px);transition:opacity .7s ease-out .2s,transform .7s ease-out .2s}
+.sys-block.vis .sys-big{opacity:1;transform:translateY(0)}
+.sys-unit{font-size:14px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-top:8px;position:relative;z-index:1;opacity:0;transition:opacity .7s ease-out .35s}
+.sys-block.vis .sys-unit{opacity:1}
+.sys-block .sys-bullets span{opacity:0;transform:translateY(12px);transition:opacity .5s ease-out,transform .5s ease-out}
+.sys-block.vis .sys-bullets span:nth-child(1){opacity:1;transform:translateY(0);transition-delay:.4s}
+.sys-block.vis .sys-bullets span:nth-child(2){opacity:1;transform:translateY(0);transition-delay:.5s}
+.sys-block.vis .sys-bullets span:nth-child(3){opacity:1;transform:translateY(0);transition-delay:.6s}
+@media(max-width:768px){
+  .sys-block{flex-direction:column;gap:40px;min-height:auto;padding:60px 20px}
+  .sys-right{min-height:180px}
+}
+</style>
+
+  <!-- Header -->
+  <div style="text-align:center;padding:120px 24px 40px">
+    <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:14px">Le Système</div>
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,64px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0">Plus qu'une app.<br>Un système.</h2>
+  </div>
+
+  <!-- 01 DASHBOARD CEO -->
+  <div class="sys-block">
+    <div class="sys-left">
+      <div class="sys-num">01 — Dashboard CEO</div>
+      <h3 class="sys-title">Tu sais exactement<br>où en est ton business.</h3>
+      <p class="sys-sub">MRR, ARR, score business live. Le cockpit que Trainerize cache derrière 3 onglets.</p>
+      <div class="sys-bullets">
+        <span>Score 0–100 en temps réel</span>
+        <span>MRR · ARR · Rétention</span>
+        <span>Alertes expiration auto</span>
+      </div>
     </div>
-    <div class="stack-cards">
-
-      <div class="stack-card" style="--i:0">
-        <div class="sc-num">01</div>
-        <div class="sc-tag">Dashboard CEO</div>
-        <h3 class="sc-title">Tu sais exactement<br>où en est ton business.</h3>
-        <p class="sc-desc">MRR, ARR, score business calculé en temps réel,
-        alertes d'expiration. Tout ce qu'un CEO regarde chaque matin
-        — adapté au coaching sportif. Tu ouvres l'app, tu sais.</p>
-        <div class="sc-feat">
-          <span>Score 0–100 en temps réel</span>
-          <span>MRR · ARR · Rétention</span>
-          <span>Alertes expiration auto</span>
-        </div>
-      </div>
-
-      <div class="stack-card" style="--i:1">
-        <div class="sc-num">02</div>
-        <div class="sc-tag">Anti-Churn IA</div>
-        <h3 class="sc-title">Tu sauves les clients<br>avant qu'ils partent.</h3>
-        <p class="sc-desc">7 signaux analysés par client en continu.
-        Score de churn 0–100. Alerte avec action recommandée.
-        Tu interviens 7 jours avant que le client décide de partir.</p>
-        <div class="sc-feat">
-          <span>7 signaux comportementaux</span>
-          <span>Score prédictif par client</span>
-          <span>Action recommandée auto</span>
-        </div>
-      </div>
-
-      <div class="stack-card" style="--i:2">
-        <div class="sc-num">03</div>
-        <div class="sc-tag">Expérience client</div>
-        <h3 class="sc-title">Tes clients vivent<br>quelque chose de différent.</h3>
-        <p class="sc-desc">App branded à ton image. Programmes interactifs,
-        suivi nutritionnel, tracking d'activité, push notifications.
-        Ton client se sent suivi — pas géré.</p>
-        <div class="sc-feat">
-          <span>App white-label à ton image</span>
-          <span>Programmes multi-semaines</span>
-          <span>Push notifications</span>
-        </div>
-      </div>
-
-      <div class="stack-card" style="--i:3">
-        <div class="sc-num">05</div>
-        <div class="sc-tag" style="color:#02d1ba">Automatisations</div>
-        <h3 class="sc-title">Tu travailles moins.<br>Tes clients avancent plus.</h3>
-        <p class="sc-desc">Tout ce qui peut être automatisé l'est.
-        Tu te concentres sur le coaching, pas sur l'admin.</p>
-        <div class="sc-feat">
-          <span>Rapports hebdo auto-envoyés au client</span>
-          <span>Relance auto si client inactif 3j</span>
-          <span>Renouvellement d'abonnement automatique</span>
-          <span>Zéro tâche manuelle</span>
-        </div>
-      </div>
-
-      <div class="stack-card" style="--i:4">
-        <div class="sc-num">06</div>
-        <div class="sc-tag" style="color:#f97316">Indépendance totale</div>
-        <h3 class="sc-title">Ton business<br>t'appartient.</h3>
-        <p class="sc-desc">Pas de commission, pas de dépendance,
-        pas de plateforme US qui change les règles du jeu.</p>
-        <div class="sc-feat">
-          <span>0% commission sur tes revenus, à vie</span>
-          <span>Export de tes données à tout moment</span>
-          <span>Ton domaine custom, ton branding</span>
-          <span>Jamais dépendant d'une plateforme US</span>
-        </div>
-      </div>
-
-      <div class="stack-card" style="--i:5">
-        <div class="sc-num">07</div>
-        <div class="sc-tag" style="color:#a78bfa">Intégrations</div>
-        <span style="display:inline-block;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);border-radius:100px;padding:3px 12px;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#a78bfa;margin-bottom:8px">Roadmap 2025</span>
-        <h3 class="sc-title">Connecté à tout ce que<br>tu utilises.</h3>
-        <p class="sc-desc">Les intégrations les plus demandées arrivent.
-        Tu restes sur tes outils — RB Perform s'y connecte.</p>
-        <div class="sc-feat">
-          <span>Google Calendar sync</span>
-          <span>Stripe direct</span>
-          <span>WhatsApp notifications</span>
-          <span>Apple Health / Strava / Garmin</span>
-        </div>
-      </div>
-
+    <div class="sys-right">
+      <div class="sys-ghost">87</div>
+      <div style="text-align:center"><div class="sys-big">87</div><div class="sys-unit">Score Live</div></div>
     </div>
   </div>
+
+  <!-- 02 ANTI-CHURN IA -->
+  <div class="sys-block">
+    <div class="sys-left">
+      <div class="sys-num">02 — Anti-Churn IA</div>
+      <h3 class="sys-title">Tu sauves les clients<br>avant qu'ils partent.</h3>
+      <p class="sys-sub">7 signaux par client. Tu interviens 7 jours avant qu'il décide.</p>
+      <div class="sys-bullets">
+        <span>7 signaux comportementaux</span>
+        <span>Score churn 0–100</span>
+        <span>Action recommandée auto</span>
+      </div>
+    </div>
+    <div class="sys-right">
+      <div class="sys-ghost">-68%</div>
+      <div style="text-align:center"><div class="sys-big">-68%</div><div class="sys-unit">De Churn</div></div>
+    </div>
+  </div>
+
+  <!-- 03 EXPÉRIENCE CLIENT -->
+  <div class="sys-block">
+    <div class="sys-left">
+      <div class="sys-num">03 — Expérience Client</div>
+      <h3 class="sys-title">Ton client vit<br>quelque chose de différent.</h3>
+      <p class="sys-sub">App branded. Ton logo. Ton client pense que t'as une équipe.</p>
+      <div class="sys-bullets">
+        <span>App white-label</span>
+        <span>Programmes multi-semaines</span>
+        <span>Push notifications</span>
+      </div>
+    </div>
+    <div class="sys-right">
+      <div class="sys-ghost">100%</div>
+      <div style="text-align:center"><div class="sys-big">100%</div><div class="sys-unit">Ton Branding</div></div>
+    </div>
+  </div>
+
+  <!-- 04 PROGRAMME BUILDER -->
+  <div class="sys-block">
+    <div class="sys-left">
+      <div class="sys-num">04 — Programme Builder</div>
+      <h3 class="sys-title">Tes programmes<br>en minutes pas en heures.</h3>
+      <p class="sys-sub">Drag & drop. PDF signé. Vidéos YouTube. Zéro Excel.</p>
+      <div class="sys-bullets">
+        <span>Drag & drop multi-semaines</span>
+        <span>Export PDF signé</span>
+        <span>Preview live</span>
+      </div>
+    </div>
+    <div class="sys-right">
+      <div class="sys-ghost">5</div>
+      <div style="text-align:center"><div class="sys-big">5</div><div class="sys-unit">Min Pour Créer</div></div>
+    </div>
+  </div>
+
+  <!-- 05 AUTOMATISATIONS -->
+  <div class="sys-block">
+    <div class="sys-left">
+      <div class="sys-num">05 — Automatisations</div>
+      <h3 class="sys-title">Tu travailles moins.<br>Tes clients avancent plus.</h3>
+      <p class="sys-sub">Rapports auto. Relances auto. Renouvellements auto.</p>
+      <div class="sys-bullets">
+        <span>Rapports hebdo auto-envoyés</span>
+        <span>Relance si inactif 3j</span>
+        <span>Renouvellement auto</span>
+      </div>
+    </div>
+    <div class="sys-right">
+      <div class="sys-ghost">3h</div>
+      <div style="text-align:center"><div class="sys-big">3h</div><div class="sys-unit">Gagnées/Semaine</div></div>
+    </div>
+  </div>
+
+  <!-- 06 ZÉRO COMMISSION -->
+  <div class="sys-block">
+    <div class="sys-left">
+      <div class="sys-num">06 — Zéro Commission</div>
+      <h3 class="sys-title">Ce que tu gagnes,<br>tu le gardes.</h3>
+      <p class="sys-sub">Trainerize prend jusqu'à 30%. Nous : zéro. À vie.</p>
+      <div class="sys-bullets">
+        <span>0% commission prélevée</span>
+        <span>Ton CA reste intégralement le tien</span>
+        <span>+450€/mois récupérés vs concurrents</span>
+      </div>
+    </div>
+    <div class="sys-right">
+      <div class="sys-ghost">0%</div>
+      <div style="text-align:center"><div class="sys-big">0%</div><div class="sys-unit">Commission</div></div>
+    </div>
+  </div>
+
+  <!-- 07 WHITE LABEL TOTAL -->
+  <div class="sys-block" style="border-bottom:none">
+    <div class="sys-left">
+      <div class="sys-num">07 — White Label Total</div>
+      <h3 class="sys-title">Tes clients voient ta marque.<br>Jamais la nôtre.</h3>
+      <p class="sys-sub">Ton logo. Tes couleurs. Ton domaine custom.</p>
+      <div class="sys-bullets">
+        <span>Logo et couleurs custom</span>
+        <span>Domaine custom inclus</span>
+        <span>Tes clients construisent ta réputation</span>
+      </div>
+    </div>
+    <div class="sys-right">
+      <div class="sys-ghost">100%</div>
+      <div style="text-align:center"><div class="sys-big">100%</div><div class="sys-unit">Ton Empire</div></div>
+    </div>
+  </div>
+
 </section>
+
+<!-- Intersection Observer pour les blocs .sys-block -->
+<script>
+(function(){
+  var blocks = document.querySelectorAll('.sys-block');
+  if (!blocks.length) return;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('vis'); });
+  }, { threshold: 0.15 });
+  blocks.forEach(function(b){ io.observe(b); });
+})();
+</script>
 
 <!-- Section chiffres standalone supprimee : les 3 chiffres sont
      desormais integres dans la section .manifeste juste apres
