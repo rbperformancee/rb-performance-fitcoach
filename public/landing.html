@@ -2212,76 +2212,63 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <style>
       @keyframes fcBorderGlow{0%,100%{border-color:rgba(0,201,167,0.3)}50%{border-color:rgba(0,201,167,0.55)}}
       @keyframes fcShine{0%{left:-100%}100%{left:200%}}
-      .fc-card{position:relative;border-radius:20px;padding:52px 48px;margin-bottom:56px;background:linear-gradient(135deg,rgba(0,201,167,0.08) 0%,rgba(8,12,20,1) 40%,rgba(8,12,20,1) 60%,rgba(0,201,167,0.04) 100%);border:1.5px solid rgba(0,201,167,0.3);overflow:hidden;animation:fcBorderGlow 4s ease-in-out infinite}
+      .fc-card{position:relative;border-radius:18px;padding:36px 40px;margin-bottom:48px;background:linear-gradient(135deg,rgba(0,201,167,0.08) 0%,rgba(8,12,20,1) 40%,rgba(8,12,20,1) 60%,rgba(0,201,167,0.04) 100%);border:1.5px solid rgba(0,201,167,0.3);overflow:hidden;animation:fcBorderGlow 4s ease-in-out infinite}
       .fc-card::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,201,167,0.06),transparent);transform:skewX(-20deg);animation:fcShine 6s ease-in-out infinite;pointer-events:none}
       .fc-card::after{content:'';position:absolute;top:-200px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(0,201,167,0.1),transparent 60%);filter:blur(80px);pointer-events:none}
-      .fc-timer-digit{font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,44px);font-weight:900;color:#fff;line-height:1;background:rgba(0,201,167,0.06);border:1px solid rgba(0,201,167,0.15);border-radius:10px;padding:10px 14px;min-width:56px;text-align:center}
-      .fc-check{display:flex;align-items:center;gap:12px;font-size:14px;color:rgba(255,255,255,0.75);padding:8px 0}
-      .fc-check::before{content:'';width:20px;height:20px;border-radius:50%;background:rgba(0,201,167,0.1);border:1.5px solid rgba(0,201,167,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300C9A7' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");background-size:12px;background-repeat:no-repeat;background-position:center}
-      @media(max-width:700px){.fc-inner{flex-direction:column !important}.fc-timer-digit{font-size:28px;min-width:48px;padding:8px 10px}}
+      .fc-timer-digit{font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:#fff;line-height:1;background:rgba(0,201,167,0.06);border:1px solid rgba(0,201,167,0.15);border-radius:8px;padding:6px 10px;min-width:44px;text-align:center}
+      .fc-check{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7);padding:5px 0}
+      .fc-check::before{content:'✓';color:#00C9A7;font-weight:700;font-size:12px;flex-shrink:0}
+      @media(max-width:700px){.fc-inner{flex-direction:column !important}.fc-timer-digit{font-size:24px;min-width:36px;padding:5px 8px}}
     </style>
     <div class="fc-card">
-      <div class="fc-inner" style="display:flex;gap:56px;align-items:flex-start;position:relative;z-index:1;flex-wrap:wrap">
+      <div class="fc-inner" style="display:flex;gap:40px;align-items:flex-start;position:relative;z-index:1;flex-wrap:wrap">
         <!-- Gauche -->
-        <div style="flex:1.2;min-width:300px">
-          <!-- Badge premium -->
-          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,201,167,0.12);border:1px solid rgba(0,201,167,0.25);border-radius:100px;padding:6px 16px;margin-bottom:24px">
-            <div style="width:6px;height:6px;border-radius:50%;background:#00C9A7;box-shadow:0 0 8px #00C9A7;animation:rbPulse 2s ease-in-out infinite"></div>
-            <span style="font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#00C9A7">Offre Fondateur</span>
-          </div>
-
-          <!-- Titre -->
-          <h3 style="font-family:'Syne',sans-serif;font-size:clamp(28px,3.5vw,40px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.1;margin:0 0 8px">
-            Le prix que tu paies<br>aujourd'hui est le prix<br>que tu paies <span style="color:#00C9A7">à vie</span>.
-          </h3>
-          <p style="font-size:15px;color:rgba(255,255,255,0.4);margin:0 0 28px;line-height:1.5">Après cette offre, le prix passe à 299€/mois. Pas de retour en arrière.</p>
-
-          <!-- Countdown -->
-          <div style="margin-bottom:28px">
-            <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:12px">Cette offre expire dans</div>
-            <div id="foundingCountdown" style="display:flex;gap:10px">
-              <div style="text-align:center"><div id="fc-days" class="fc-timer-digit">--</div><div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">jours</div></div>
-              <div style="color:rgba(255,255,255,0.15);font-size:28px;font-weight:200;padding-top:8px">:</div>
-              <div style="text-align:center"><div id="fc-hours" class="fc-timer-digit">--</div><div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">heures</div></div>
-              <div style="color:rgba(255,255,255,0.15);font-size:28px;font-weight:200;padding-top:8px">:</div>
-              <div style="text-align:center"><div id="fc-mins" class="fc-timer-digit">--</div><div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">min</div></div>
-              <div style="color:rgba(255,255,255,0.15);font-size:28px;font-weight:200;padding-top:8px">:</div>
-              <div style="text-align:center"><div id="fc-secs" class="fc-timer-digit">--</div><div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">sec</div></div>
+        <div style="flex:1.2;min-width:280px">
+          <!-- Badge + countdown inline -->
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,201,167,0.12);border:1px solid rgba(0,201,167,0.25);border-radius:100px;padding:5px 14px">
+              <div style="width:5px;height:5px;border-radius:50%;background:#00C9A7;box-shadow:0 0 6px #00C9A7;animation:rbPulse 2s ease-in-out infinite"></div>
+              <span style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#00C9A7">Offre Fondateur</span>
+            </div>
+            <div id="foundingCountdown" style="display:flex;gap:6px;align-items:center">
+              <div id="fc-days" class="fc-timer-digit">--</div><span style="color:rgba(255,255,255,0.15);font-size:18px;font-weight:200">:</span>
+              <div id="fc-hours" class="fc-timer-digit">--</div><span style="color:rgba(255,255,255,0.15);font-size:18px;font-weight:200">:</span>
+              <div id="fc-mins" class="fc-timer-digit">--</div><span style="color:rgba(255,255,255,0.15);font-size:18px;font-weight:200">:</span>
+              <div id="fc-secs" class="fc-timer-digit">--</div>
             </div>
           </div>
 
-          <!-- Prix -->
-          <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px">
-            <span style="font-family:'Syne',sans-serif;font-size:clamp(48px,6vw,64px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1">199€</span>
-            <span style="font-size:18px;font-weight:400;color:rgba(255,255,255,0.35)">/mois</span>
-          </div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:6px">Engagement 12 mois · Prix verrouillé à vie</div>
-          <div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#00C9A7;font-weight:700;margin-bottom:28px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C9A7" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-            Le prochain prix sera 299€
-          </div>
+          <!-- Titre compact 2 lignes -->
+          <h3 style="font-family:'Syne',sans-serif;font-size:clamp(24px,3vw,34px);font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.15;margin:0 0 10px">
+            Le prix d'aujourd'hui est ton prix <span style="color:#00C9A7">à vie</span>.
+          </h3>
+          <p style="font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 20px">Après cette offre, le prix passe à 299€. Pas de retour en arrière.</p>
 
-          <!-- CTA -->
-          <div>
-            <a id="foundingCTA" href="/register" style="display:inline-block;padding:16px 36px;background:#00C9A7;color:#080C14;font-size:14px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:10px;text-decoration:none;box-shadow:0 12px 40px rgba(0,201,167,0.3),inset 0 1px 0 rgba(255,255,255,0.2);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 16px 48px rgba(0,201,167,0.45),inset 0 1px 0 rgba(255,255,255,0.2)'" onmouseout="this.style.transform='';this.style.boxShadow='0 12px 40px rgba(0,201,167,0.3),inset 0 1px 0 rgba(255,255,255,0.2)'">
-              Rejoindre les Founding Coachs →
+          <!-- Prix + CTA sur la meme ligne -->
+          <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+            <div>
+              <span style="font-family:'Syne',sans-serif;font-size:clamp(40px,5vw,52px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1">199€</span>
+              <span style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.3)">/mois</span>
+              <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px">12 mois · Verrouillé à vie</div>
+            </div>
+            <a id="foundingCTA" href="/register" style="display:inline-block;padding:14px 28px;background:#00C9A7;color:#080C14;font-size:13px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:10px;text-decoration:none;box-shadow:0 10px 32px rgba(0,201,167,0.3);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+              Rejoindre →
             </a>
           </div>
         </div>
 
-        <!-- Droite — avantages premium -->
-        <div style="flex:1;min-width:260px;padding-top:16px">
-          <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.2);margin-bottom:16px">Ce que tu obtiens</div>
-          <div class="fc-check">Clients illimités</div>
-          <div class="fc-check">Toutes les features Pro incluses</div>
-          <div class="fc-check">Anti-churn IA inclus</div>
-          <div class="fc-check">Prix verrouillé à vie, jamais augmenté</div>
-          <div class="fc-check">Accès au groupe privé Founding Coachs</div>
-          <div class="fc-check">Vote sur la roadmap produit</div>
-          <div class="fc-check">Accès anticipé à toutes les features</div>
-          <div class="fc-check">Badge Founding Coach dans l'app</div>
-          <div style="height:1px;background:linear-gradient(90deg,rgba(0,201,167,0.2),transparent);margin:16px 0"></div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.25);line-height:1.5;font-style:italic">"Les 50 premiers. Ceux qui ont cru au projet avant tout le monde."</div>
+        <!-- Droite — avantages en 2 colonnes -->
+        <div style="flex:1;min-width:240px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 20px">
+            <div class="fc-check">Clients illimités</div>
+            <div class="fc-check">Features Pro incluses</div>
+            <div class="fc-check">Anti-churn IA</div>
+            <div class="fc-check">Prix verrouillé à vie</div>
+            <div class="fc-check">Groupe privé Founders</div>
+            <div class="fc-check">Vote roadmap</div>
+            <div class="fc-check">Accès anticipé</div>
+            <div class="fc-check">Badge Founding</div>
+          </div>
         </div>
       </div>
     </div>
