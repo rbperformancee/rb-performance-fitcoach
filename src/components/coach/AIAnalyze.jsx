@@ -72,12 +72,12 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
           if (json.code === "RATE_LIMIT") {
             setError(json.error || "Limite IA atteinte ce mois.");
           } else {
-            setError("L'analyse IA nécessite la configuration de l'Edge Function ai-coach dans Supabase. Contacte le support.");
+            setError(json.error || "Analyse indisponible");
           }
           setLoading(false);
           return;
         }
-        setData(json.data);
+        setData({ summary: json.summary, actions: json.actions || [] });
       } catch (e) {
         if (!cancelled) setError(e.message || "Erreur reseau");
       }
@@ -204,7 +204,7 @@ const overlay = {
   display: "flex", alignItems: "center", justifyContent: "center",
   padding: "6vh 16px",
   animation: "aiFadeIn .18s ease both",
-  fontFamily: "'DM Sans', -apple-system, sans-serif",
+  fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
   color: "#fff",
 };
 const card = {
@@ -271,7 +271,7 @@ const errBox = {
   background: "rgba(255,107,107,.06)",
   border: ".5px solid rgba(255,107,107,.2)",
   borderRadius: 10,
-  fontSize: 13, color: "#ef4444",
+  fontSize: 13, color: "#ff6b6b",
 };
 const demoCta = {
   display: "block",
