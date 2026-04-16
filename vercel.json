@@ -28,6 +28,11 @@
       "has": [{ "type": "host", "value": "www.rbperform.app" }],
       "destination": "/landing.html"
     },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "rb-perfor.vercel.app" }],
+      "destination": "/landing.html"
+    },
     { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" },
     { "source": "/demo",        "destination": "/?demo=true" },
     { "source": "/demo-client", "destination": "/?demo-client=true" },
