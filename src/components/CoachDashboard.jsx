@@ -2499,7 +2499,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       transform: pillVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(20px)",
       opacity: pillVisible ? 1 : 0,
       pointerEvents: pillVisible ? "all" : "none",
-      zIndex: 100,
+      zIndex: 250,
       background: "rgba(15,15,15,0.75)",
       border: "1px solid rgba(255,255,255,0.09)",
       borderRadius: 100,
@@ -2610,11 +2610,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         .coach-mobile-topbar,.coach-floating-pill{display:none}
         .coach-nav-item:hover{color:rgba(255,255,255,.65)!important;background:rgba(255,255,255,.035)!important}
         @media(max-width:1023px){
-          .coach-sidebar{display:none}
-          .coach-mobile-topbar{display:none}
-          .coach-floating-pill{display:flex}
+          .coach-sidebar{display:none !important}
+          .coach-mobile-topbar{display:none !important}
+          .coach-floating-pill{display:flex !important}
           .coach-main-inner{padding:12px 20px 120px !important;max-width:100% !important;overflow:hidden !important}
           .coach-mobile-bell{display:block !important}
+          .coach-client-panel-inner{padding:0 16px 120px !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
@@ -3093,7 +3094,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       </div>
       </main>
       {/* FloatingPill cachee quand un panel client est ouvert (panel = position:fixed plein ecran) */}
-      {!selected && FloatingPill}
+      {FloatingPill}
     </div>
   );
 }

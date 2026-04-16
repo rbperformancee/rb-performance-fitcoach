@@ -39,61 +39,63 @@ export default function DemoBanner({ onSignup }) {
       position: 'fixed',
       top: 0, left: 0, right: 0,
       zIndex: 9999,
-      background: '#02d1ba',
+      background: '#00C9A7',
       color: '#000',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '10px 24px',
-      fontFamily: "'DM Sans', -apple-system, sans-serif",
-      fontSize: 12,
+      padding: '8px 16px',
+      fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
+      fontSize: 11,
       fontWeight: 600,
-      gap: 12,
+      gap: 8,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <style>{`@media(max-width:768px){.demo-banner-long{display:none !important}.demo-banner-cta{display:none !important}}`}</style>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{
           background: 'rgba(0,0,0,0.15)',
           borderRadius: 100,
-          padding: '3px 10px',
+          padding: '2px 8px',
           fontSize: 9,
           fontWeight: 800,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           whiteSpace: 'nowrap',
         }}>
-          Mode Démo
+          Démo
         </div>
-        <span style={{ opacity: 0.8 }}>
-          Tu explores le dashboard d'un coach fictif — toutes les features sont actives.
+        <span className="demo-banner-long" style={{ opacity: 0.8, fontSize: 11 }}>
+          Dashboard fictif — toutes les features actives.
         </span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         <span style={{
           opacity: 0.6,
-          fontSize: 11,
+          fontSize: 10,
           fontFamily: "'JetBrains Mono', monospace",
           whiteSpace: 'nowrap',
         }}>
-          {timeStr} restantes
+          {timeStr}
         </span>
         <button
+          className="demo-banner-cta"
           onClick={onSignup}
           style={{
             background: '#000',
-            color: '#02d1ba',
+            color: '#00C9A7',
             border: 'none',
             borderRadius: 100,
-            padding: '7px 18px',
-            fontSize: 10,
+            padding: '5px 14px',
+            fontSize: 9,
             fontWeight: 700,
             cursor: 'pointer',
-            letterSpacing: '0.1em',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
             whiteSpace: 'nowrap',
             fontFamily: 'inherit',
           }}
         >
-          Démarrer mon essai →
+          Essai →
         </button>
       </div>
     </div>
