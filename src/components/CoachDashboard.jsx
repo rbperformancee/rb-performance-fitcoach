@@ -360,7 +360,7 @@ function CreneauxManager() {
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{slot.heure}</div>
                 </div>
                 <button onClick={() => deleteSlot(slot.id)}
-                  style={{ background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, width: 30, height: 30, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                  style={{ background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, width: 30, height: 30, color: "#ff6b6b", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
               </div>
             ))}
           </div>
@@ -1339,8 +1339,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             onClick={() => setShowTransformation(true)}
             style={{
               width: "100%", padding: "16px 20px",
-              background: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(0,201,167,0.04))",
-              border: "1px solid rgba(251,191,36,0.25)",
+              background: "linear-gradient(135deg, rgba(0,201,167,0.08), rgba(0,201,167,0.04))",
+              border: "1px solid rgba(0,201,167,0.25)",
               borderRadius: 16,
               color: "#fff",
               cursor: "pointer",
@@ -1349,8 +1349,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               textAlign: "left",
             }}
           >
-            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.35)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", flexShrink: 0 }}>
-              <Icon name="trending" size={18} color="#fbbf24" />
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(0,201,167,0.15)", border: "1px solid rgba(0,201,167,0.35)", display: "flex", alignItems: "center", justifyContent: "center", color: "#00C9A7", flexShrink: 0 }}>
+              <Icon name="trending" size={18} color="#00C9A7" />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 2 }}>Voir la transformation</div>
@@ -1990,7 +1990,7 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
         style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
 
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(255,107,107,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(255,107,107,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(255,107,107,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(255,107,107,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ff6b6b" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
           {recording ? "⏹ Stop (10s max)" : "🎙 Vocal"}
         </button>
         {audioBlob && <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "#02d1ba" }}>✓ Audio pret</div>}
