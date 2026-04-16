@@ -2234,11 +2234,18 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <div style="background:rgba(0,201,167,0.06);border:1px solid rgba(0,201,167,0.3);border-radius:16px;padding:40px;display:flex;gap:60px;align-items:flex-start;margin-bottom:48px;flex-wrap:wrap">
       <!-- Colonne gauche -->
       <div style="flex:1;min-width:280px">
-        <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:20px">⚡ Offre Fondateur · 1/50 places</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px">⚡ Offre Fondateur</div>
+        <!-- Countdown timer -->
+        <div id="foundingCountdown" style="display:flex;gap:20px;margin-bottom:24px">
+          <div style="text-align:center"><div id="fc-days" style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:#fff;line-height:1">--</div><div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">jours</div></div>
+          <div style="text-align:center"><div id="fc-hours" style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:#fff;line-height:1">--</div><div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">h</div></div>
+          <div style="text-align:center"><div id="fc-mins" style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:#fff;line-height:1">--</div><div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">min</div></div>
+          <div style="text-align:center"><div id="fc-secs" style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:#fff;line-height:1">--</div><div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">sec</div></div>
+        </div>
         <div style="font-family:'Syne',sans-serif;font-size:clamp(40px,5vw,56px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin-bottom:12px">199€<span style="font-size:20px;font-weight:400;color:rgba(255,255,255,0.4)">/mois</span></div>
         <div style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:6px">Engagement 12 mois · Prix verrouillé à vie.</div>
         <div style="font-size:13px;color:#00C9A7;font-weight:600;margin-bottom:24px">Le prochain prix sera 299€.</div>
-        <a href="/register" style="display:inline-block;padding:14px 28px;background:#00C9A7;color:#080C14;font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;border-radius:8px;text-decoration:none;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Rejoindre les Founding Coachs →</a>
+        <a id="foundingCTA" href="/register" style="display:inline-block;padding:14px 28px;background:#00C9A7;color:#080C14;font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;border-radius:8px;text-decoration:none;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Rejoindre les Founding Coachs →</a>
       </div>
       <!-- Colonne droite -->
       <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:12px;padding-top:8px">
@@ -2258,7 +2265,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <div class="plan reveal">
         <div class="name">Starter</div>
         <div class="desc">Pour les coachs qui démarrent leur activité.</div>
-        <div class="price"><span class="currency">€</span>149</div>
+        <div class="price"><span class="currency">€</span>199</div>
         <div class="period">Par mois</div>
         <ul class="f-list">
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Jusqu'à 5 clients</li>
@@ -2969,7 +2976,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     var RESULTS = {
       starter: {
         tag: 'Plan recommandé',
-        title: 'Starter — 149€/mois',
+        title: 'Starter — 199€/mois',
         desc: 'Parfait pour bâtir tes fondations : dashboard, programme builder, messagerie, jusqu\'à 10 clients. Tu démarres carré, sans surpayer.',
         href: 'https://rb-perfor.vercel.app/?coach=true&plan=starter',
         cta: 'Démarrer Starter'
@@ -3389,5 +3396,38 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 </script>
 
 
+<!-- Founding Coach countdown timer -->
+<script>
+(function(){
+  var end = new Date('2026-05-16T23:59:59').getTime();
+  var dEl = document.getElementById('fc-days');
+  var hEl = document.getElementById('fc-hours');
+  var mEl = document.getElementById('fc-mins');
+  var sEl = document.getElementById('fc-secs');
+  var cta = document.getElementById('foundingCTA');
+  if (!dEl) return;
+  function tick() {
+    var now = Date.now();
+    var diff = end - now;
+    if (diff <= 0) {
+      dEl.textContent = '00'; hEl.textContent = '00'; mEl.textContent = '00'; sEl.textContent = '00';
+      var wrap = document.getElementById('foundingCountdown');
+      if (wrap) wrap.innerHTML = '<div style="font-size:16px;font-weight:800;color:#ff6b6b;letter-spacing:0.1em;text-transform:uppercase">Offre expirée</div>';
+      if (cta) { cta.style.opacity = '0.4'; cta.style.cursor = 'not-allowed'; cta.onclick = function(e){ e.preventDefault(); }; }
+      return;
+    }
+    var d = Math.floor(diff / 86400000);
+    var h = Math.floor((diff % 86400000) / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var s = Math.floor((diff % 60000) / 1000);
+    dEl.textContent = String(d).padStart(2, '0');
+    hEl.textContent = String(h).padStart(2, '0');
+    mEl.textContent = String(m).padStart(2, '0');
+    sEl.textContent = String(s).padStart(2, '0');
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
 </body>
 </html>
