@@ -234,8 +234,8 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
           <div style={{
             marginTop: 8, marginBottom: 8,
             padding: "8px 12px",
-            background: "rgba(239,68,68,.06)",
-            border: ".5px solid rgba(239,68,68,.2)",
+            background: "rgba(255,107,107,.06)",
+            border: ".5px solid rgba(255,107,107,.2)",
             borderRadius: 8,
             fontSize: 12, color: "#ef4444",
           }}>{error}</div>

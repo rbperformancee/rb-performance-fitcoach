@@ -4,8 +4,8 @@ import AppIcon from "../AppIcon";
 import { calculateChurnRisk } from "../../lib/coachIntelligence";
 import haptic from "../../lib/haptic";
 
-const RED = "#ef4444";
-const ORANGE = "#f97316";
+const RED = "#ff6b6b";
+const ORANGE = "#00C9A7";
 const G = "#02d1ba";
 
 /**
@@ -107,7 +107,7 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
             background: RED, color: "#fff",
             fontSize: 9, fontWeight: 800,
             display: "inline-flex", alignItems: "center", justifyContent: "center",
-            border: "2px solid #050505",
+            border: "2px solid #080C14",
             animation: "bellPulse 2s ease-in-out infinite",
           }}>
             <style>{`@keyframes bellPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
@@ -125,11 +125,11 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
             role="dialog"
             aria-modal="true"
             aria-label="Notifications"
-            style={{ width: "100%", maxWidth: 380, background: "#0a0a0a", borderLeft: "1px solid rgba(255,255,255,0.08)", height: "100%", overflowY: "auto", WebkitOverflowScrolling: "touch", animation: "nbSlide 0.25s cubic-bezier(0.22,1,0.36,1) both" }}
+            style={{ width: "100%", maxWidth: 380, background: "#080C14", borderLeft: "1px solid rgba(255,255,255,0.08)", height: "100%", overflowY: "auto", WebkitOverflowScrolling: "touch", animation: "nbSlide 0.25s cubic-bezier(0.22,1,0.36,1) both" }}
           >
             <style>{`@keyframes nbSlide { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
             {/* Header */}
-            <div style={{ position: "sticky", top: 0, background: "#0a0a0a", padding: "calc(env(safe-area-inset-top, 16px) + 16px) 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ position: "sticky", top: 0, background: "#080C14", padding: "calc(env(safe-area-inset-top, 16px) + 16px) 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 2 }}>Notifications</div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>{totalCount} alerte{totalCount > 1 ? "s" : ""}</div>
@@ -177,7 +177,7 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
                   {/* Alertes clients */}
                   {alerts.length > 0 && (
                     <div>
-                      <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(239,68,68,0.7)", fontWeight: 700, marginBottom: 8 }}>Actions urgentes</div>
+                      <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,107,107,0.7)", fontWeight: 700, marginBottom: 8 }}>Actions urgentes</div>
                       {alerts.map((a) => (
                         <button
                           key={a.id}

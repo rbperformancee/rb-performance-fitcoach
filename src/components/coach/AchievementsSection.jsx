@@ -137,7 +137,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
       {/* Streak + Rank cards */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {/* Streak */}
-        <div style={{ background: "rgba(249,115,22,0.05)", border: "1px solid rgba(249,115,22,0.18)", borderRadius: 16, padding: "16px 18px" }}>
+        <div style={{ background: "rgba(0,201,167,0.05)", border: "1px solid rgba(0,201,167,0.18)", borderRadius: 16, padding: "16px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <AppIcon name="flame" size={14} color={ORANGE} />
             <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: `${ORANGE}d0`, fontWeight: 700 }}>Streak coach</div>

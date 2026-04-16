@@ -164,7 +164,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
                     fontSize: 96, fontWeight: 800,
                     letterSpacing: "-4px", lineHeight: 1,
                     color: data.deltas.weight < 0 ? G : ORANGE,
-                    textShadow: `0 0 40px ${data.deltas.weight < 0 ? "rgba(2,209,186,0.3)" : "rgba(249,115,22,0.3)"}`,
+                    textShadow: `0 0 40px ${data.deltas.weight < 0 ? "rgba(2,209,186,0.3)" : "rgba(0,201,167,0.3)"}`,
                   }}>
                     {data.deltas.weight > 0 ? "+" : ""}{data.deltas.weight.toFixed(1)}
                     <span style={{ fontSize: 32, color: "rgba(255,255,255,0.4)", marginLeft: 8 }}>kg</span>

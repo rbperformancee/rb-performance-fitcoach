@@ -24,8 +24,8 @@ function Avatar({ name, size = 28 }) {
 const G = "#02d1ba";
 const G_BDR = "rgba(2,209,186,0.22)";
 const G_DIM = "rgba(2,209,186,0.08)";
-const RED = "#ef4444";
-const ORANGE = "#f97316";
+const RED = "#ff6b6b";
+const ORANGE = "#00C9A7";
 
 /**
  * ProgrammeList — Vue liste des programmes actifs du coach.
@@ -312,7 +312,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
                   ) : (
                     <button
                       onClick={() => handleDelete(prog)}
-                      style={{ ...actionBtnStyle(false), color: RED, borderColor: "rgba(239,68,68,.2)" }}
+                      style={{ ...actionBtnStyle(false), color: RED, borderColor: "rgba(255,107,107,.2)" }}
                       title="Supprimer definitivement"
                     >
                       <AppIcon name="x" size={11} color={RED} />

@@ -133,7 +133,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
             </Field>
             <Field label="Couleur principale">
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {[G, "#a78bfa", "#f97316", "#ef4444", "#60a5fa", "#34d399", "#ec4899", "#eab308"].map((c) => (
+                {[G, "#00C9A7", "#00C9A7", "#ff6b6b", "#60a5fa", "#34d399", "#ec4899", "#eab308"].map((c) => (
                   <button
                     key={c}
                     type="button"
@@ -305,9 +305,9 @@ function PublicProfileSection({ coachData, isDemo }) {
         style={{
           width: "100%",
           padding: "11px 16px",
-          background: enabled ? "rgba(239,68,68,.06)" : G,
-          color: enabled ? "#ef4444" : "#000",
-          border: enabled ? ".5px solid rgba(239,68,68,.2)" : "none",
+          background: enabled ? "rgba(255,107,107,.06)" : G,
+          color: enabled ? "#ff6b6b" : "#000",
+          border: enabled ? ".5px solid rgba(255,107,107,.2)" : "none",
           borderRadius: 10,
           fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase",
           cursor: "pointer", fontFamily: "'Syne', sans-serif",
@@ -354,21 +354,21 @@ function ReferralSection({ coachData, isDemo }) {
   }
 
   return (
-    <div style={{ marginTop: 16, padding: "20px 22px", background: "rgba(167,139,250,.04)", border: ".5px solid rgba(167,139,250,.2)", borderRadius: 14 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "#a78bfa", marginBottom: 10 }}>
+    <div style={{ marginTop: 16, padding: "20px 22px", background: "rgba(0,201,167,.04)", border: ".5px solid rgba(0,201,167,.2)", borderRadius: 14 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "#00C9A7", marginBottom: 10 }}>
         Parrainage coach
       </div>
       <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
-        Invite un collegue<span style={{ color: "#a78bfa" }}>.</span>
+        Invite un collegue<span style={{ color: "#00C9A7" }}>.</span>
       </div>
       <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 16, lineHeight: 1.5 }}>
-        Pour chaque coach qui souscrit avec ton lien, tu gagnes <strong style={{ color: "#a78bfa" }}>1 mois offert</strong> sur ton plan.
+        Pour chaque coach qui souscrit avec ton lien, tu gagnes <strong style={{ color: "#00C9A7" }}>1 mois offert</strong> sur ton plan.
       </div>
 
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
         <ReferralStat label="Invites" value={displayStats.total} />
-        <ReferralStat label="Actifs"  value={displayStats.active} accent="#a78bfa" />
+        <ReferralStat label="Actifs"  value={displayStats.active} accent="#00C9A7" />
         <ReferralStat label="Mois offerts" value={displayStats.rewarded} accent={G} />
       </div>
 
@@ -379,7 +379,7 @@ function ReferralSection({ coachData, isDemo }) {
             Ton code
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            <div style={{ flex: 1, padding: "11px 14px", background: "rgba(167,139,250,.06)", border: ".5px solid rgba(167,139,250,.2)", borderRadius: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: "#a78bfa", letterSpacing: ".05em", textAlign: "center" }}>
+            <div style={{ flex: 1, padding: "11px 14px", background: "rgba(0,201,167,.06)", border: ".5px solid rgba(0,201,167,.2)", borderRadius: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: "#00C9A7", letterSpacing: ".05em", textAlign: "center" }}>
               {code}
             </div>
             <button onClick={() => copy(code)} style={{ ...btnGhost, flexShrink: 0 }} title="Copier le code">
@@ -487,7 +487,7 @@ function Toggle({ label, sub, defaultChecked = false }) {
 // ===== STYLES =====
 const wrap = {
   position: "fixed", inset: 0, zIndex: 200,
-  background: "#000",
+  background: "#080C14",
   fontFamily: "'DM Sans', -apple-system, sans-serif",
   color: "#fff",
   overflowY: "auto",
@@ -498,7 +498,7 @@ const header = {
   display: "flex", alignItems: "center", justifyContent: "space-between",
   padding: "calc(env(safe-area-inset-top, 12px) + 16px) 20px 16px",
   borderBottom: ".5px solid rgba(255,255,255,.05)",
-  background: "rgba(5,5,5,.95)",
+  background: "rgba(8,12,20,.95)",
   backdropFilter: "blur(16px)",
   position: "sticky", top: 0, zIndex: 10,
 };

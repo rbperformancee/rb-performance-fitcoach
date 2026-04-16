@@ -231,7 +231,7 @@ function LineGraph({ data, color = G, height = 200, unit = "kg", valueKey = "wei
 
         {/* Data points */}
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={vals.length > 30 ? 2 : 3.5} fill={color} stroke="#050505" strokeWidth="1.5" />
+          <circle key={i} cx={p.x} cy={p.y} r={vals.length > 30 ? 2 : 3.5} fill={color} stroke="#080C14" strokeWidth="1.5" />
         ))}
 
         {/* Y-axis labels */}
@@ -360,7 +360,7 @@ function CreneauxManager() {
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{slot.heure}</div>
                 </div>
                 <button onClick={() => deleteSlot(slot.id)}
-                  style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, width: 30, height: 30, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                  style={{ background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, width: 30, height: 30, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
               </div>
             ))}
           </div>
@@ -535,9 +535,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         @keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         .coach-client-panel{
           position:fixed;inset:0;z-index:200;
-          background:#000;overflow-y:auto;overflow-x:hidden;
+          background:#080C14;overflow-y:auto;overflow-x:hidden;
           -webkit-overflow-scrolling:touch;
-          font-family:'DM Sans',-apple-system,sans-serif;color:#fff;
+          font-family:'Inter',-apple-system,system-ui,sans-serif;color:#fff;
         }
         @media(min-width:1024px){
           .coach-client-panel{
@@ -623,7 +623,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   if (ok) toast.success(`Notification envoyee a ${name}`);
                   else toast.error(`${name} n'a pas encore active les notifs`);
                 }}
-                style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: RED, cursor: "pointer", fontFamily: "inherit" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: RED, cursor: "pointer", fontFamily: "inherit" }}
               >
                 <Icon name="alert" size={11} />
                 Relancer ({client._inactiveDays}j)
@@ -683,7 +683,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Maj</button>
-                    <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);toast.error('Erreur: '+error.message);return;} toast.success('Programme archive'); onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Suppr</button>
+                    <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);toast.error('Erreur: '+error.message);return;} toast.success('Programme archive'); onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Suppr</button>
                   </div>
                 </div>
 
@@ -719,13 +719,13 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
                 {/* Alerte expiration */}
                 {isExpiring && !isExpired && (
-                  <div style={{ marginTop: 10, padding: "8px 12px", background: daysLeft <= 7 ? "rgba(239,68,68,0.08)" : "rgba(249,115,22,0.06)", border: `1px solid ${daysLeft <= 7 ? "rgba(239,68,68,0.2)" : "rgba(249,115,22,0.2)"}`, borderRadius: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: daysLeft <= 7 ? RED : ORANGE }}>
+                  <div style={{ marginTop: 10, padding: "8px 12px", background: daysLeft <= 7 ? "rgba(255,107,107,0.08)" : "rgba(0,201,167,0.06)", border: `1px solid ${daysLeft <= 7 ? "rgba(255,107,107,0.2)" : "rgba(0,201,167,0.2)"}`, borderRadius: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: daysLeft <= 7 ? RED : ORANGE }}>
                     <Icon name="alert" size={12} />
                     {daysLeft <= 7 ? "Abonnement expire dans " + daysLeft + " jours !" : "Abonnement expire dans " + daysLeft + " jours"}
                   </div>
                 )}
                 {isExpired && (
-                  <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: RED }}>
+                  <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.25)", borderRadius: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: RED }}>
                     <Icon name="alert" size={12} />
                     Abonnement expire — renouvellement necessaire
                   </div>
@@ -733,7 +733,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               </div>
             );
           })() : (
-            <div style={{ ...card, background: "rgba(249,115,22,0.04)", border: "1px solid rgba(249,115,22,0.2)" }}>
+            <div style={{ ...card, background: "rgba(0,201,167,0.04)", border: "1px solid rgba(0,201,167,0.2)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: ORANGE, fontWeight: 700, marginBottom: 14 }}>
                 <Icon name="alert" size={14} />
                 Aucun programme assigne
@@ -768,8 +768,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     return (
                       <button key={w} onClick={() => setUploadProgWeeks(w)} style={{
                         padding: "7px 12px", borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                        background: on ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${on ? "rgba(167,139,250,0.3)" : "rgba(255,255,255,0.08)"}`,
+                        background: on ? "rgba(0,201,167,0.12)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${on ? "rgba(0,201,167,0.3)" : "rgba(255,255,255,0.08)"}`,
                         color: on ? VIOLET : "rgba(255,255,255,0.4)",
                       }}>{w} sem</button>
                     );
@@ -1300,7 +1300,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             onClick={() => setShowTransformation(true)}
             style={{
               width: "100%", padding: "16px 20px",
-              background: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(249,115,22,0.04))",
+              background: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(0,201,167,0.04))",
               border: "1px solid rgba(251,191,36,0.25)",
               borderRadius: 16,
               color: "#fff",
@@ -1517,10 +1517,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </div>
 
         {/* ===== ZONE DANGEREUSE ===== */}
-        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.4s both", paddingTop: 20, borderTop: "1px solid rgba(239,68,68,0.1)" }}>
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.4s both", paddingTop: 20, borderTop: "1px solid rgba(255,107,107,0.1)" }}>
           <button
             onClick={() => { if (window.confirm("Supprimer definitivement " + (client.full_name || client.email) + " ?")) onDelete(client.id, client.email); }}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(239,68,68,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,107,107,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
           >
             <Icon name="trash" size={12} />
             Supprimer ce client
@@ -1720,11 +1720,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 return (
                   <div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-                      <div style={{ textAlign: "center", padding: 12, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.15)", borderRadius: 12 }}>
+                      <div style={{ textAlign: "center", padding: 12, background: "rgba(0,201,167,0.06)", border: "1px solid rgba(0,201,167,0.15)", borderRadius: 12 }}>
                         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: VIOLET }}>{avg}</div>
                         <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>h / nuit</div>
                       </div>
-                      <div style={{ textAlign: "center", padding: 12, background: under7 > 0 ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${under7 > 0 ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)"}`, borderRadius: 12 }}>
+                      <div style={{ textAlign: "center", padding: 12, background: under7 > 0 ? "rgba(255,107,107,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${under7 > 0 ? "rgba(255,107,107,0.15)" : "rgba(255,255,255,0.05)"}`, borderRadius: 12 }}>
                         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: under7 > 0 ? RED : G }}>{under7}</div>
                         <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Nuits &lt; 7h</div>
                       </div>
@@ -1738,7 +1738,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       {data.slice(-14).reverse().map((d, i) => {
                         const under = d.sommeil_h < 7;
                         return (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: under ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.02)", border: under ? "1px solid rgba(239,68,68,0.15)" : "none", borderRadius: 8, fontSize: 12 }}>
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: under ? "rgba(255,107,107,0.06)" : "rgba(255,255,255,0.02)", border: under ? "1px solid rgba(255,107,107,0.15)" : "none", borderRadius: 8, fontSize: 12 }}>
                             <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
                             <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: under ? RED : VIOLET }}>{d.sommeil_h}h</span>
                           </div>
@@ -1936,7 +1936,7 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}>
                 <span style={{ color: "rgba(255,255,255,.3)", width: 38 }}>{f.t}</span>
                 <span style={{ color: "rgba(255,255,255,.6)", flex: 1 }}>{f.text} <span style={{ color: "#02d1ba" }}>{f.weight}kg</span></span>
-                <span style={{ color: f.done ? "#02d1ba" : "rgba(249,115,22,.85)", fontWeight: 600 }}>{f.done ? "✓" : "…"}</span>
+                <span style={{ color: f.done ? "#02d1ba" : "rgba(0,201,167,.85)", fontWeight: 600 }}>{f.done ? "✓" : "…"}</span>
               </div>
             ))}
           </div>
@@ -1949,7 +1949,7 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
         style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
 
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+        <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(255,107,107,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(255,107,107,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ef4444" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
           {recording ? "⏹ Stop (10s max)" : "🎙 Vocal"}
         </button>
         {audioBlob && <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "#02d1ba" }}>✓ Audio pret</div>}
@@ -2527,7 +2527,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-        @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+        @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,0.7)}50%{box-shadow:0 0 0 6px rgba(255,107,107,0)}}
         @keyframes glowFlame{0%,100%{filter:drop-shadow(0 0 8px rgba(2,209,186,0.4))}50%{filter:drop-shadow(0 0 16px rgba(2,209,186,0.7))}}
         @keyframes rbDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
         @keyframes rbPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
@@ -2578,8 +2578,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       {toast && (
         <div style={{
           position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
-          background: toast.type === "err" ? "rgba(239,68,68,0.12)" : "rgba(2,209,186,0.1)",
-          border: `1px solid ${toast.type === "err" ? "rgba(239,68,68,0.35)" : G_BORDER}`,
+          background: toast.type === "err" ? "rgba(255,107,107,0.12)" : "rgba(2,209,186,0.1)",
+          border: `1px solid ${toast.type === "err" ? "rgba(255,107,107,0.35)" : G_BORDER}`,
           borderRadius: 100, padding: "12px 22px", fontSize: 12, fontWeight: 700,
           color: toast.type === "err" ? RED : G,
           zIndex: 500, boxShadow: "0 16px 40px rgba(0,0,0,0.6), 0 0 30px rgba(2,209,186,0.1)",
@@ -2593,7 +2593,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       )}
 
       {uploading && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(5,5,5,0.85)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18 }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(8,12,20,0.9)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18 }}>
           <div style={{ width: 48, height: 48, border: "2.5px solid rgba(2,209,186,0.12)", borderTopColor: G, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
           <div style={{ color: G, fontSize: 12, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" }}>Upload en cours</div>
         </div>
@@ -2767,13 +2767,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               <div style={{
                 display:"flex", alignItems:"center", gap:10,
                 padding:"9px 16px",
-                background:"rgba(239,68,68,.04)",
-                border:".5px solid rgba(239,68,68,.15)",
+                background:"rgba(255,107,107,.04)",
+                border:".5px solid rgba(255,107,107,.15)",
                 borderRadius:10, marginBottom:10,
               }}>
                 <div style={{ width:5, height:5, borderRadius:"50%", background:"#ef4444", flexShrink:0 }} />
                 <span style={{ fontSize:8, fontWeight:700, letterSpacing:".22em", textTransform:"uppercase", color:"#ef4444" }}>À agir maintenant</span>
-                <div style={{ flex:1, height:".5px", background:"linear-gradient(90deg,rgba(239,68,68,.25),transparent)" }} />
+                <div style={{ flex:1, height:".5px", background:"linear-gradient(90deg,rgba(255,107,107,.25),transparent)" }} />
                 <span style={{ fontSize:10, color:"rgba(255,255,255,.2)" }}>
                   {urgentCount} client{urgentCount > 1 ? "s" : ""}
                 </span>
@@ -2786,8 +2786,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                     ? {
                         display: "flex", alignItems: "center", gap: 14,
                         padding: "13px 14px",
-                        background: "rgba(239,68,68,.03)",
-                        border: ".5px solid rgba(239,68,68,.1)",
+                        background: "rgba(255,107,107,.03)",
+                        border: ".5px solid rgba(255,107,107,.1)",
                         borderRadius: 10,
                         marginBottom: 4,
                         cursor: "pointer",
@@ -2820,7 +2820,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                       {isCritical ? (
                         <div style={{
                           fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase",
-                          color: "#ef4444", background: "rgba(239,68,68,.08)", border: ".5px solid rgba(239,68,68,.25)",
+                          color: "#ef4444", background: "rgba(255,107,107,.08)", border: ".5px solid rgba(255,107,107,.25)",
                           borderRadius: 100, padding: "3px 10px", flexShrink: 0, marginLeft: "auto",
                         }}>
                           Critique
@@ -2828,7 +2828,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                       ) : (
                         <div style={{
                           fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase",
-                          color: "#f97316", background: "rgba(249,115,22,.06)", border: ".5px solid rgba(249,115,22,.2)",
+                          color: "#f97316", background: "rgba(0,201,167,.06)", border: ".5px solid rgba(0,201,167,.2)",
                           borderRadius: 100, padding: "3px 10px", flexShrink: 0, marginLeft: "auto",
                         }}>
                           Alerte
@@ -2906,13 +2906,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 onClick={() => { haptic.light(); setShowAnalytics(true); }}
                 style={{
                   width: "100%", padding: "20px",
-                  background: "linear-gradient(135deg, rgba(167,139,250,0.08), rgba(2,209,186,0.04))",
-                  border: "1px solid rgba(167,139,250,0.25)",
+                  background: "linear-gradient(135deg, rgba(0,201,167,0.08), rgba(2,209,186,0.04))",
+                  border: "1px solid rgba(0,201,167,0.25)",
                   borderRadius: 18, color: "#fff", cursor: "pointer", fontFamily: "inherit",
                   display: "flex", alignItems: "center", gap: 14, textAlign: "left",
                 }}
               >
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(0,201,167,0.15)", border: "1px solid rgba(0,201,167,0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Icon name="chart" size={20} color="#a78bfa" />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -3044,7 +3044,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                       style={{
                         padding: "18px 20px",
                         background: "rgba(255,255,255,0.025)",
-                        border: c._inactive && hasProg ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(255,255,255,0.06)",
+                        border: c._inactive && hasProg ? "1px solid rgba(255,107,107,0.2)" : "1px solid rgba(255,255,255,0.06)",
                         borderRadius: 18,
                         cursor: "pointer",
                         transition: "all 0.2s",
@@ -3056,7 +3056,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                         <div style={{ position: "relative", flexShrink: 0 }}>
                           <Avatar name={c.full_name || c.email} size={46} active={!!prog} />
                           {c._inactive && hasProg && (
-                            <div style={{ position: "absolute", top: -2, right: -2, width: 11, height: 11, borderRadius: "50%", background: RED, border: "2px solid #050505", animation: "pulseDot 2s infinite" }} />
+                            <div style={{ position: "absolute", top: -2, right: -2, width: 11, height: 11, borderRadius: "50%", background: RED, border: "2px solid #080C14", animation: "pulseDot 2s infinite" }} />
                           )}
                         </div>
                         {/* Nom + email */}
@@ -3093,7 +3093,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                             {prog.programme_name || "Programme actif"}
                           </span>
                         ) : (
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: ORANGE, background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 100, padding: "3px 10px" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: ORANGE, background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 100, padding: "3px 10px" }}>
                             <Icon name="alert" size={9} />
                             Sans programme
                           </span>
@@ -3107,9 +3107,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                         {/* Badge abonnement avec jours restants */}
                         {c.subscription_end_date && (() => {
                           const dl = Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000);
-                          if (dl <= 0) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "2px 8px" }}>Expire</span>;
-                          if (dl <= 7) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 100, padding: "2px 8px" }}>{dl}j</span>;
-                          if (dl <= 14) return <span style={{ fontSize: 9, fontWeight: 700, color: ORANGE, background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 100, padding: "2px 8px" }}>{dl}j</span>;
+                          if (dl <= 0) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 100, padding: "2px 8px" }}>Expire</span>;
+                          if (dl <= 7) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 100, padding: "2px 8px" }}>{dl}j</span>;
+                          if (dl <= 14) return <span style={{ fontSize: 9, fontWeight: 700, color: ORANGE, background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 100, padding: "2px 8px" }}>{dl}j</span>;
                           return <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{dl}j</span>;
                         })()}
                       </div>

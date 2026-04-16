@@ -13,9 +13,9 @@ import AppIcon from "../AppIcon";
 import Spinner from "../Spinner";
 
 const G = "#02d1ba";
-const ORANGE = "#f97316";
-const VIOLET = "#a78bfa";
-const RED = "#ef4444";
+const ORANGE = "#00C9A7";
+const VIOLET = "#00C9A7";
+const RED = "#ff6b6b";
 const JOURS = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
 
 /**
@@ -98,17 +98,17 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
   }, [coachId, clients, period]);
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 240, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 240, background: "#080C14", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
       <style>{`@keyframes anFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* Header sticky */}
-      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(5,5,5,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 12px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 12px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
           <button onClick={onClose} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,0.6)" />
           </button>
           <div>
-            <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(167,139,250,0.8)", fontWeight: 700 }}>Analytics avancees</div>
+            <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(0,201,167,0.8)", fontWeight: 700 }}>Analytics avancees</div>
             <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: "-0.3px" }}>Performance globale</div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
                 <>
                   <Heatmap grid={data.heatmap} max={data.heatmapMax} />
                   {data.peak.count > 0 && (
-                    <div style={{ marginTop: 12, padding: "10px 12px", background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 10, fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+                    <div style={{ marginTop: 12, padding: "10px 12px", background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 10, fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
                       <strong style={{ color: ORANGE }}>Pic d'activite :</strong> {JOURS[data.peak.day].toLowerCase()} a {String(data.peak.hour).padStart(2, "0")}h ({data.peak.count} seance{data.peak.count > 1 ? "s" : ""}). Reserve tes creneaux disponibles autour de ce moment.
                     </div>
                   )}
@@ -272,7 +272,7 @@ function Heatmap({ grid, max }) {
           <div style={{ width: 26, fontSize: 8, color: "rgba(255,255,255,0.3)", fontWeight: 700, letterSpacing: "0.5px" }}>{JOURS[day]}</div>
           {row.map((count, hour) => {
             const intensity = count / max;
-            const bg = count === 0 ? "rgba(255,255,255,0.03)" : `rgba(249,115,22,${0.2 + intensity * 0.8})`;
+            const bg = count === 0 ? "rgba(255,255,255,0.03)" : `rgba(0,201,167,${0.2 + intensity * 0.8})`;
             return (
               <div
                 key={hour}

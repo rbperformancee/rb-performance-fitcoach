@@ -21,9 +21,9 @@ import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 
 const G = "#02d1ba";
-const ORANGE = "#f97316";
-const VIOLET = "#a78bfa";
-const RED = "#ef4444";
+const ORANGE = "#00C9A7";
+const VIOLET = "#00C9A7";
+const RED = "#ff6b6b";
 
 /**
  * BusinessSection — section dediee au business du coach dans le dashboard.
@@ -161,7 +161,7 @@ export default function BusinessSection({ coachData, clients = [] }) {
               <span style={{
                 fontSize: 11, fontWeight: 700, color: variation.direction === "up" ? G : RED,
                 display: "inline-flex", alignItems: "center", gap: 3,
-                background: variation.direction === "up" ? "rgba(2,209,186,0.12)" : "rgba(239,68,68,0.12)",
+                background: variation.direction === "up" ? "rgba(2,209,186,0.12)" : "rgba(255,107,107,0.12)",
                 padding: "2px 8px", borderRadius: 100,
               }}>
                 <span style={{ fontSize: 10 }}>{variation.direction === "up" ? "▲" : "▼"}</span>

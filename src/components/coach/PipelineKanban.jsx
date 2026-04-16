@@ -8,7 +8,7 @@ import { calculateChurnRisk } from "../../lib/coachIntelligence";
 const COLUMNS = [
   { id: "new",       label: "Nouveau",       color: "#818cf8", icon: "sparkles" },
   { id: "active",    label: "Actif",         color: "#02d1ba", icon: "check-circle" },
-  { id: "at_risk",   label: "A risque",      color: "#f97316", icon: "alert" },
+  { id: "at_risk",   label: "A risque",      color: "#00C9A7", icon: "alert" },
   { id: "to_renew",  label: "A renouveler",  color: "#fbbf24", icon: "calendar" },
   { id: "completed", label: "Termine",       color: "rgba(255,255,255,0.4)", icon: "check" },
 ];
@@ -74,12 +74,12 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
       role="dialog"
       aria-modal="true"
       aria-label="Pipeline clients"
-      style={{ position: "fixed", inset: 0, zIndex: 250, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
+      style={{ position: "fixed", inset: 0, zIndex: 250, background: "#080C14", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
     >
       <style>{`@keyframes kanFade{from{opacity:0}to{opacity:1}} @keyframes kanSlide{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
 
       {/* Header */}
-      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(5,5,5,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 12px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 12px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
             onClick={onClose}
@@ -207,11 +207,11 @@ function KanbanCard({ client, onOpen, onMoveTo, onDragStart, onDragEnd }) {
 
       {/* Stats ligne */}
       <div style={{ display: "flex", gap: 6, fontSize: 9, color: "rgba(255,255,255,0.5)", flexWrap: "wrap" }}>
-        <span style={{ padding: "2px 6px", background: `${churn >= 40 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.04)"}`, color: churn >= 40 ? "#ef4444" : "rgba(255,255,255,0.5)", borderRadius: 6, fontWeight: 700 }}>
+        <span style={{ padding: "2px 6px", background: `${churn >= 40 ? "rgba(255,107,107,0.12)" : "rgba(255,255,255,0.04)"}`, color: churn >= 40 ? "#ff6b6b" : "rgba(255,255,255,0.5)", borderRadius: 6, fontWeight: 700 }}>
           Risque {churn}
         </span>
         {daysLeft !== null && (
-          <span style={{ padding: "2px 6px", background: daysLeft <= 0 ? "rgba(239,68,68,0.12)" : daysLeft <= 14 ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.04)", color: daysLeft <= 0 ? "#ef4444" : daysLeft <= 14 ? "#f97316" : "rgba(255,255,255,0.5)", borderRadius: 6, fontWeight: 700 }}>
+          <span style={{ padding: "2px 6px", background: daysLeft <= 0 ? "rgba(255,107,107,0.12)" : daysLeft <= 14 ? "rgba(0,201,167,0.12)" : "rgba(255,255,255,0.04)", color: daysLeft <= 0 ? "#ff6b6b" : daysLeft <= 14 ? "#00C9A7" : "rgba(255,255,255,0.5)", borderRadius: 6, fontWeight: 700 }}>
             {daysLeft <= 0 ? "Expire" : `${daysLeft}j`}
           </span>
         )}

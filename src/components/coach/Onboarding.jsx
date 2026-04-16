@@ -313,8 +313,8 @@ export default function Onboarding({ coach, onComplete }) {
         .onboarding-error {
           width: 100%;
           padding: 10px 14px;
-          background: rgba(239,68,68,.06);
-          border: .5px solid rgba(239,68,68,.2);
+          background: rgba(255,107,107,.06);
+          border: .5px solid rgba(255,107,107,.2);
           border-radius: 8px;
           font-size: 12px; color: #ef4444;
           margin-bottom: 12px;

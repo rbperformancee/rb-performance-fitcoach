@@ -53,7 +53,7 @@ export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
   return (
     <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease both" }}>
       {/* Hero accueil */}
-      <div style={{ padding: "32px 24px", background: "linear-gradient(135deg, rgba(2,209,186,0.08), rgba(167,139,250,0.04))", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 22, marginBottom: 16, textAlign: "center" }}>
+      <div style={{ padding: "32px 24px", background: "linear-gradient(135deg, rgba(2,209,186,0.08), rgba(0,201,167,0.04))", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 22, marginBottom: 16, textAlign: "center" }}>
         <div style={{ width: 64, height: 64, borderRadius: 18, background: "rgba(2,209,186,0.15)", border: "1px solid rgba(2,209,186,0.35)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: G, marginBottom: 16, boxShadow: "0 0 30px rgba(2,209,186,0.25)" }}>
           <AppIcon name="sparkles" size={28} color={G} strokeWidth={1.5} />
         </div>
