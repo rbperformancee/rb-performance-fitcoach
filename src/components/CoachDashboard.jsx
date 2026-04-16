@@ -578,7 +578,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{client.email}</div>
             </div>
             <button
-              onClick={() => { haptic.light(); setShowAIAnalyze(true); }}
+              onClick={() => { try { haptic.light(); } catch(_) {} setShowAIAnalyze(true); }}
               title="Analyser ce client avec l'IA"
               style={{
                 display: "flex", alignItems: "center", gap: 6,

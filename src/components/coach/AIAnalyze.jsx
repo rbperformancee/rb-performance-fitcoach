@@ -42,44 +42,46 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const jwt = session?.access_token;
-        if (!jwt) throw new Error("Session expiree");
+        if (!jwt) throw new Error("Session expiree — reconnecte-toi");
 
-        // Context minimal pour Mistral (evite d'envoyer des PII sensibles)
+        const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+        if (!supabaseUrl) throw new Error("SUPABASE_URL non configure");
+
         const payload = {
           client_id: client.id,
           prenom: client.full_name?.split(" ")[0] || null,
-          objectif: client.objectif || null,
-          programme_name: client._prog_name || null,
-          semaine_actuelle: client._week || null,
-          poids_debut: client._weight_start,
-          poids_actuel: client._weight_now,
-          inactive_days: client._inactiveDays,
-          churn_score: client._churn_score,
-          derniere_seance: client._last_session_at,
-          rpe_moyen: client._rpe_avg,
-          sessions_count_14j: client._sessions_14d,
+          programme_name: client.programmes?.find(p => p.is_active)?.programme_name || null,
+          inactive_days: client._inactiveDays ?? null,
+          churn_score: client._churn_score ?? null,
+          rpe_moyen: client._rpe_avg ?? null,
+          sessions_count_14j: client._sessions_14d ?? null,
           tags: client.tags || [],
         };
 
-        const res = await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-coach`, {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        const res = await fetch(`${supabaseUrl}/functions/v1/ai-coach`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
           body: JSON.stringify({ type: "analyze_client", payload }),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
+
         const json = await res.json();
         if (cancelled) return;
         if (!res.ok || !json.success) {
-          if (json.code === "RATE_LIMIT") {
-            setError(json.error || "Limite IA atteinte ce mois.");
-          } else {
-            setError(json.error || "Analyse indisponible");
-          }
+          setError(json.error || `Erreur ${res.status}`);
           setLoading(false);
           return;
         }
         setData({ summary: json.summary, actions: json.actions || [] });
       } catch (e) {
-        if (!cancelled) setError(e.message || "Erreur reseau");
+        if (!cancelled) {
+          const msg = e.name === "AbortError" ? "Timeout — l'analyse a pris trop de temps" : (e.message || "Erreur reseau");
+          setError(msg);
+        }
       }
       if (!cancelled) setLoading(false);
     })();
