@@ -50,7 +50,8 @@ const SubscribePage = lazy(() => import("./components/SubscribePage"));
 const LoginPage  = lazy(() => import("./components/auth/LoginPage"));
 const SignupPage = lazy(() => import("./components/auth/SignupPage"));
 const JoinPage   = lazy(() => import("./components/client/JoinPage"));
-const ClientApp  = lazy(() => import("./components/client/ClientApp"));
+// ClientApp (version simplifiee 4 onglets) desactive — les clients utilisent
+// l'interface complete 5 onglets (Train/Body/Run/Fuel/Profil) dans AppInner.
 import ChatCoach from "./components/ChatCoach";
 import BookingModal from "./components/BookingModal";
 const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m => ({ default: m.CoachDashboard })));
@@ -648,7 +649,7 @@ function AppInner() {
   const [showSubscribe, setShowSubscribe] = useState(false);
   const [showCoachChat, setShowCoachChat] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [showHome, setShowHome] = useState(true);
+  const [showHome, setShowHome] = useState(() => !isClientDemo);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
   const [_sessionsDone, setSessionsDone] = React.useState(0);
@@ -705,24 +706,9 @@ function AppInner() {
   const handleDragLeave = () => setIsDragging(false);
   const handleDrop      = e => { e.preventDefault(); setIsDragging(false); handleLocalImport(e); };
 
-  // ===== EARLY RETURN : client connecte non-coach → ClientApp PWA =====
-  // IMPORTANT : ce check DOIT etre apres tous les hooks pour ne pas
-  // violer les Rules of Hooks (error #300 : "rendered fewer hooks than
-  // expected"). userKind peut flipper de "loading" a "client" apres la
-  // requete dans la table coaches — si on returnait avant certains hooks,
-  // ceux-ci seraient skip sur le 2e render et React crasherait.
-  if (user && !isDemo && userKind === "client") {
-    return (
-      <Suspense fallback={null}>
-        {isClientDemo && <ClientDemoBanner onExit={() => {
-          supabase.auth.signOut().then(() => { window.location.href = "/"; });
-        }} />}
-        <div style={isClientDemo ? { paddingTop: 44 } : undefined}>
-          <ClientApp user={user} />
-        </div>
-      </Suspense>
-    );
-  }
+  // NOTE : pas d'early return vers ClientApp ici. Les clients tombent
+  // naturellement sur l'interface complete 5 onglets (Train/Body/Run/Fuel/Profil)
+  // plus bas dans le render. Tous les hooks sont appeles dans tous les cas.
 
   // Note : les paiements sont desormais traites uniquement sur le site
   // de vente (rbperform.app). Le webhook Stripe est appele directement
@@ -1270,7 +1256,8 @@ function AppInner() {
 
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
-        <div style={{minHeight:'100vh', background:'#050505', position:'relative'}}>
+        <div style={{minHeight:'100vh', background:'#050505', position:'relative', paddingTop: isClientDemo ? 44 : 0}}>
+          {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
@@ -1297,6 +1284,8 @@ function AppInner() {
       {/* FaqAssistant deplace dans ProfilePage */}
       {programme && !authError && (
         <>
+          {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
+          {isClientDemo && <div style={{height:44}} />}
           {page === "training" ? (
             !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
               <TrainingPage
