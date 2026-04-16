@@ -2089,24 +2089,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   useEffect(() => { loadClients(); }, []);
 
-  // CountUp animation for dashboard metric cards
-  useEffect(() => {
-    const els = document.querySelectorAll(".dash-countup[data-target]");
-    els.forEach((el) => {
-      const target = parseInt(el.dataset.target);
-      const suffix = el.dataset.suffix || "";
-      if (isNaN(target)) return;
-      const start = performance.now();
-      const duration = 1200;
-      const tick = (now) => {
-        const t = Math.min((now - start) / duration, 1);
-        const ease = 1 - Math.pow(1 - t, 3);
-        el.textContent = Math.round(target * ease).toLocaleString() + suffix;
-        if (t < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    });
-  }, [loading, businessScore, mrr]);
 
   // Pull-to-refresh mobile (desactive pendant les overlays full-screen)
   const ptr = usePullToRefresh({
@@ -2294,6 +2276,25 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     return dl > 0 && dl <= 90;
   });
   const churnRisk90 = expiringIn90.reduce((sum, c) => sum + (PLAN_PRICES[c.subscription_plan] || 0), 0);
+
+  // CountUp animation for dashboard metric cards (must be after businessScore/mrr)
+  useEffect(() => {
+    const els = document.querySelectorAll(".dash-countup[data-target]");
+    els.forEach((el) => {
+      const target = parseInt(el.dataset.target);
+      const suffix = el.dataset.suffix || "";
+      if (isNaN(target)) return;
+      const start = performance.now();
+      const duration = 1200;
+      const tick = (now) => {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(target * ease).toLocaleString() + suffix;
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  }, [loading, businessScore, mrr]);
   // Retention : clients actifs avec programme / total clients onboardes
   const onboardedClients = clients.filter(c => c.onboarding_done);
   const retainedClients = onboardedClients.filter(c => c.programmes?.some(p => p.is_active));
