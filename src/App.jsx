@@ -447,34 +447,49 @@ function AppInner() {
       || new URLSearchParams(window.location.search).get("demo-client") === "true";
   });
 
-  // Auto-login demo coach OU demo client
+  // Auto-login demo COACH (mot de passe — compte demo@rbperform.app)
   React.useEffect(() => {
-    const isDemoMode = isDemo || isClientDemo;
-    if (!isDemoMode) return;
-    const email = isClientDemo
-      ? process.env.REACT_APP_DEMO_CLIENT_EMAIL
-      : process.env.REACT_APP_DEMO_EMAIL;
-    const password = isClientDemo
-      ? process.env.REACT_APP_DEMO_CLIENT_PASSWORD
-      : process.env.REACT_APP_DEMO_PASSWORD;
-    if (!email || !password) {
-      console.warn("[demo] credentials manquantes pour", isClientDemo ? "client" : "coach");
-      return;
-    }
+    if (!isDemo) return;
+    const email = process.env.REACT_APP_DEMO_EMAIL;
+    const password = process.env.REACT_APP_DEMO_PASSWORD;
+    if (!email || !password) { console.warn("[demo] REACT_APP_DEMO_EMAIL/PASSWORD manquantes"); return; }
     supabase.auth.getSession().then(({ data }) => {
       const sessionEmail = data?.session?.user?.email;
       if (sessionEmail === email) return;
       const tryLogin = () => supabase.auth.signInWithPassword({ email, password })
-        .then(({ error }) => {
-          if (error) console.error("[demo] login error:", error.message);
-        });
-      if (sessionEmail) {
-        supabase.auth.signOut().then(tryLogin);
-      } else {
-        tryLogin();
-      }
+        .then(({ error }) => { if (error) console.error("[demo] login error:", error.message); });
+      if (sessionEmail) { supabase.auth.signOut().then(tryLogin); }
+      else { tryLogin(); }
     });
-  }, [isDemo, isClientDemo]);
+  }, [isDemo]);
+
+  // Auto-login demo CLIENT (OTP via API serverless — zero mot de passe)
+  React.useEffect(() => {
+    if (!isClientDemo) return;
+    let cancelled = false;
+    (async () => {
+      // Verifier si deja connecte en tant que lucas.demo
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing?.user?.email === "lucas.demo@rbperform.app") return;
+      // Si connecte avec un autre compte, deconnecter d'abord
+      if (existing) await supabase.auth.signOut();
+      try {
+        const res = await fetch("/api/demo-client");
+        const json = await res.json();
+        if (cancelled || !json.access_token) {
+          console.error("[demo-client] API error:", json.error || "no token");
+          return;
+        }
+        await supabase.auth.setSession({
+          access_token: json.access_token,
+          refresh_token: json.refresh_token,
+        });
+      } catch (e) {
+        console.error("[demo-client] fetch error:", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isClientDemo]);
 
   // Auth
   const {
