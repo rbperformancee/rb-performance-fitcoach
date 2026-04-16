@@ -78,6 +78,31 @@ const LazyFallback = () => (
 
 const GREEN = "#02d1ba";
 
+function ClientDemoBanner({ onExit }) {
+  const [timeLeft, setTimeLeft] = React.useState(15 * 60);
+  React.useEffect(() => {
+    const t = setInterval(() => setTimeLeft(v => {
+      if (v <= 1) { clearInterval(t); onExit?.(); return 0; }
+      return v - 1;
+    }), 1000);
+    return () => clearInterval(t);
+  }, [onExit]);
+  const m = Math.floor(timeLeft / 60);
+  const s = (timeLeft % 60).toString().padStart(2, "0");
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999, background: "#02d1ba", color: "#000", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 24px", fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 12, fontWeight: 600, gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ background: "rgba(0,0,0,0.15)", borderRadius: 100, padding: "3px 10px", fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Mode Demo</span>
+        <span>Vue Client — Lucas Bernard</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <span style={{ fontFamily: "monospace", fontWeight: 700 }}>{m}:{s}</span>
+        <button onClick={onExit} style={{ background: "#000", color: "#02d1ba", border: "none", borderRadius: 100, padding: "6px 16px", fontSize: 11, fontWeight: 800, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "inherit" }}>Quitter</button>
+      </div>
+    </div>
+  );
+}
+
 const IconDumbbell = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <rect x="5" y="10" width="2" height="4" rx="1"/><rect x="17" y="10" width="2" height="4" rx="1"/>
@@ -408,26 +433,37 @@ function AppInner() {
   if (authRoute === "signup") return <Suspense fallback={null}><SignupPage /></Suspense>;
   if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
 
-  // ===== MODE DEMO (route /demo ou ?demo=true) =====
-  // Detection au mount + auto-login compte sandbox
+  // ===== MODE DEMO COACH (route /demo ou ?demo=true) =====
   const [isDemo] = React.useState(() => {
     if (typeof window === "undefined") return false;
     return window.location.pathname === "/demo"
       || new URLSearchParams(window.location.search).get("demo") === "true";
   });
 
+  // ===== MODE DEMO CLIENT (route /demo-client ou ?demo-client=true) =====
+  const [isClientDemo] = React.useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.location.pathname === "/demo-client"
+      || new URLSearchParams(window.location.search).get("demo-client") === "true";
+  });
+
+  // Auto-login demo coach OU demo client
   React.useEffect(() => {
-    if (!isDemo) return;
-    const email = process.env.REACT_APP_DEMO_EMAIL;
-    const password = process.env.REACT_APP_DEMO_PASSWORD;
+    const isDemoMode = isDemo || isClientDemo;
+    if (!isDemoMode) return;
+    const email = isClientDemo
+      ? process.env.REACT_APP_DEMO_CLIENT_EMAIL
+      : process.env.REACT_APP_DEMO_EMAIL;
+    const password = isClientDemo
+      ? process.env.REACT_APP_DEMO_CLIENT_PASSWORD
+      : process.env.REACT_APP_DEMO_PASSWORD;
     if (!email || !password) {
-      console.warn("[demo] REACT_APP_DEMO_EMAIL/PASSWORD manquantes");
+      console.warn("[demo] credentials manquantes pour", isClientDemo ? "client" : "coach");
       return;
     }
-    // Tente le sign-in. Si deja loge avec un autre compte, on signOut d'abord.
     supabase.auth.getSession().then(({ data }) => {
       const sessionEmail = data?.session?.user?.email;
-      if (sessionEmail === email) return; // deja connecte demo
+      if (sessionEmail === email) return;
       const tryLogin = () => supabase.auth.signInWithPassword({ email, password })
         .then(({ error }) => {
           if (error) console.error("[demo] login error:", error.message);
@@ -438,7 +474,7 @@ function AppInner() {
         tryLogin();
       }
     });
-  }, [isDemo]);
+  }, [isDemo, isClientDemo]);
 
   // Auth
   const {
@@ -456,7 +492,8 @@ function AppInner() {
   // Skippe en mode demo (deja considere comme coach).
   const [userKind, setUserKind] = React.useState("loading");
   React.useEffect(() => {
-    if (isDemo) { setUserKind("coach"); return; }
+    if (isDemo && !isClientDemo) { setUserKind("coach"); return; }
+    if (isClientDemo) { setUserKind("client"); return; }
     if (!user) { setUserKind(null); return; }
     let cancelled = false;
     (async () => {
@@ -660,7 +697,16 @@ function AppInner() {
   // requete dans la table coaches — si on returnait avant certains hooks,
   // ceux-ci seraient skip sur le 2e render et React crasherait.
   if (user && !isDemo && userKind === "client") {
-    return <Suspense fallback={null}><ClientApp user={user} /></Suspense>;
+    return (
+      <Suspense fallback={null}>
+        {isClientDemo && <ClientDemoBanner onExit={() => {
+          supabase.auth.signOut().then(() => { window.location.href = "/"; });
+        }} />}
+        <div style={isClientDemo ? { paddingTop: 44 } : undefined}>
+          <ClientApp user={user} />
+        </div>
+      </Suspense>
+    );
   }
 
   // Note : les paiements sont desormais traites uniquement sur le site

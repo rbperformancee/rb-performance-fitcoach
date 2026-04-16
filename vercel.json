@@ -30,6 +30,7 @@
     },
     { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" },
     { "source": "/demo",        "destination": "/?demo=true" },
+    { "source": "/demo-client", "destination": "/?demo-client=true" },
     { "source": "/login",       "destination": "/index.html" },
     { "source": "/signup",      "destination": "/index.html" },
     { "source": "/join",        "destination": "/index.html" },
