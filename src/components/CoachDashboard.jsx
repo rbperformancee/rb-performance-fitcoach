@@ -2475,24 +2475,23 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   // ===== MOBILE TOPBAR =====
   const MobileTopBar = (
     <div className="coach-mobile-topbar" style={{
-      height: 46,
       position: "sticky",
       top: isDemo ? 44 : 0,
       zIndex: 50,
       background: "rgba(8,12,20,.98)",
       backdropFilter: "blur(20px)",
       WebkitBackdropFilter: "blur(20px)",
-      borderBottom: "1px solid rgba(255,255,255,.05)",
       alignItems: "center",
       justifyContent: "space-between",
-      padding: "0 18px",
+      padding: "calc(env(safe-area-inset-top, 8px) + 8px) 20px 10px",
     }}>
-      <div style={{
-        fontFamily: "'Syne',sans-serif",
-        fontSize: 15, fontWeight: 900,
-        letterSpacing: ".08em", color: "#fff",
-      }}>
-        RB<span style={{ color: G }}>PERFORM</span>
+      <div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>
+          {(() => { const d = new Date(); const days = ["DIM","LUN","MAR","MER","JEU","VEN","SAM"]; const months = ["JAN","FEV","MAR","AVR","MAI","JUN","JUL","AOU","SEP","OCT","NOV","DEC"]; return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`; })()}
+        </div>
+        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 900, letterSpacing: ".05em", color: "#fff" }}>
+          RB<span style={{ color: G }}>PERFORM</span>
+        </div>
       </div>
       <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
     </div>
@@ -2507,18 +2506,20 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { id: "profile",     icon: "view",        label: "Compte",    onClick: () => setShowSettings(true) },
   ];
   const FloatingPill = (
-    <div className="coach-floating-pill" style={{
+    <nav className="coach-floating-pill" style={{
       position: "fixed",
-      bottom: 0,
-      left: 0, right: 0,
-      transform: pillVisible ? "translateY(0)" : "translateY(100%)",
+      bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+      left: "50%",
+      transform: pillVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(20px)",
       opacity: pillVisible ? 1 : 0,
       pointerEvents: pillVisible ? "all" : "none",
       zIndex: 50,
-      background: BG,
-      borderTop: "1px solid rgba(255,255,255,.06)",
-      padding: "8px 0 calc(env(safe-area-inset-bottom, 0px) + 8px)",
-      display: "flex", alignItems: "center", justifyContent: "space-around",
+      background: "rgba(12,12,12,0.85)",
+      border: "1px solid rgba(255,255,255,.08)",
+      borderRadius: 100,
+      padding: 5,
+      gap: 0,
+      boxShadow: "0 20px 50px rgba(0,0,0,.5)",
       backdropFilter: "blur(20px)",
       WebkitBackdropFilter: "blur(20px)",
       transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1)",
@@ -2528,21 +2529,22 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         return (
           <button
             key={p.id}
-            onClick={() => { haptic.selection(); p.onClick(); }}
+            onClick={() => { try { haptic.selection(); } catch(_) {} p.onClick(); }}
             style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-              background: "none", border: "none",
+              width: 46, height: 46,
+              borderRadius: 100, border: "none",
+              background: isActive ? G : "transparent",
+              color: isActive ? "#000" : "rgba(255,255,255,.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer",
-              padding: "4px 12px",
-              transition: "all .2s",
+              transition: "all .25s cubic-bezier(.22,1,.36,1)",
             }}
           >
-            <Icon name={p.icon} size={18} color={isActive ? G : "rgba(255,255,255,.3)"} />
-            <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? G : "rgba(255,255,255,.25)", letterSpacing: ".02em" }}>{p.label}</span>
+            <Icon name={p.icon} size={18} color={isActive ? "#000" : "rgba(255,255,255,.3)"} />
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 
   // ========== ONBOARDING GATE ==========
@@ -2624,14 +2626,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-sidebar{display:none}
           .coach-mobile-topbar{display:flex}
           .coach-floating-pill{display:flex}
-          .coach-main-inner{padding:20px 16px 100px !important;max-width:100% !important}
+          .coach-main-inner{padding:12px 20px 120px !important;max-width:100% !important}
         }
         @media(max-width:640px){
-          .coach-main-inner h1{font-size:clamp(28px,8vw,40px) !important}
-          .dash-metrics-grid{grid-template-columns:1fr 1fr !important}
-          .dash-metrics-grid > :last-child{grid-column:1 / -1}
-          .dash-metric-card{padding:20px 16px !important}
-          .dash-metric-card .dash-countup{font-size:clamp(28px,7vw,40px) !important}
+          .coach-main-inner h1{font-size:clamp(32px,10vw,44px) !important}
+          .dash-metrics-grid{grid-template-columns:1fr 1fr 1fr !important;gap:0 !important;border-top:1px solid rgba(255,255,255,0.06)}
+          .dash-metric-card{padding:16px 0 !important;background:transparent !important;border:none !important;border-radius:0 !important;border-top:none !important}
+          .dash-metric-card .dash-countup{font-size:clamp(28px,8vw,36px) !important;font-weight:200 !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
