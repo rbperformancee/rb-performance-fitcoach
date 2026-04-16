@@ -61,10 +61,10 @@ export function calculateChurnRisk(client) {
  * Categorise un score de risque pour affichage.
  */
 export function churnLevel(score) {
-  if (score >= 70) return { level: "critique", color: "#ef4444", label: "CRITIQUE" };
-  if (score >= 40) return { level: "eleve", color: "#f97316", label: "ELEVE" };
-  if (score >= 20) return { level: "modere", color: "#fbbf24", label: "MODERE" };
-  return { level: "faible", color: "#02d1ba", label: "FAIBLE" };
+  if (score >= 70) return { level: "critique", color: "#ff6b6b", label: "CRITIQUE" };
+  if (score >= 40) return { level: "eleve", color: "rgba(255,255,255,0.6)", label: "ELEVE" };
+  if (score >= 20) return { level: "modere", color: "rgba(255,255,255,0.4)", label: "MODERE" };
+  return { level: "faible", color: "#00C9A7", label: "FAIBLE" };
 }
 
 /**
@@ -122,10 +122,10 @@ export function calculateBehavioralProfile(client) {
   if (avgSleep >= 7) score += 10;
   else if (avgSleep >= 6) score += 6;
 
-  if (score >= 80) return { id: "champion",   label: "Champion",    color: "#fbbf24", bg: "rgba(251,191,36,0.14)", border: "rgba(251,191,36,0.3)" };
-  if (score >= 55) return { id: "regulier",   label: "Regulier",    color: "#02d1ba", bg: "rgba(2,209,186,0.12)",  border: "rgba(2,209,186,0.3)" };
-  if (score >= 30) return { id: "irregulier", label: "Irregulier",  color: "#f97316", bg: "rgba(249,115,22,0.12)", border: "rgba(249,115,22,0.3)" };
-  return             { id: "difficulte", label: "En difficulte", color: "#ef4444", bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.3)" };
+  if (score >= 80) return { id: "champion",   label: "Champion",    color: "#00C9A7", bg: "rgba(0,201,167,0.12)", border: "rgba(0,201,167,0.3)" };
+  if (score >= 55) return { id: "regulier",   label: "Regulier",    color: "#00C9A7", bg: "rgba(0,201,167,0.1)",  border: "rgba(0,201,167,0.25)" };
+  if (score >= 30) return { id: "irregulier", label: "Irregulier",  color: "rgba(255,255,255,0.5)", bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.1)" };
+  return             { id: "difficulte", label: "En difficulte", color: "#ff6b6b", bg: "rgba(255,107,107,0.1)",  border: "rgba(255,107,107,0.25)" };
 }
 
 // ===== NIVEAU ATHLETIQUE =====
@@ -142,7 +142,7 @@ export function calculateAthleticLevel(client) {
 
   if (totalSessions >= 60 && avgRpe <= 2.5) return { id: "elite",        label: "Elite",        color: "#a78bfa" };
   if (totalSessions >= 30 && avgRpe <= 3)   return { id: "avance",       label: "Avance",       color: "#02d1ba" };
-  if (totalSessions >= 12)                  return { id: "intermediaire", label: "Intermediaire", color: "#f97316" };
+  if (totalSessions >= 12)                  return { id: "intermediaire", label: "Intermediaire", color: "rgba(255,255,255,0.6)" };
   return                                           { id: "debutant",      label: "Debutant",     color: "rgba(255,255,255,0.5)" };
 }
 
@@ -177,9 +177,9 @@ export function calculateRenewalProbability(client) {
 }
 
 export function renewalColor(pct) {
-  if (pct >= 70) return "#02d1ba";
-  if (pct >= 40) return "#f97316";
-  return "#ef4444";
+  if (pct >= 70) return "#00C9A7";
+  if (pct >= 40) return "rgba(255,255,255,0.5)";
+  return "#ff6b6b";
 }
 
 export function renewalAction(pct, client) {

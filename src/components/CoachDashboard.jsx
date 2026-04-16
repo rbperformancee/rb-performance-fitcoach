@@ -2360,7 +2360,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   const CoachSidebar = (
     <aside className="coach-sidebar" style={{
-      width: 64,
+      width: 56,
       background: BG,
       borderRight: "1px solid rgba(255,255,255,.06)",
       flexDirection: "column",
@@ -2574,6 +2574,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         /* Nav item hover icon translate */
         .coach-nav-item svg{transition:transform .18s cubic-bezier(.22,1,.36,1)}
         .coach-nav-item:hover svg{transform:translateX(2px)}
+        .coach-nav-item{position:relative}
+        .coach-nav-item::after{content:attr(title);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);background:rgba(8,12,20,.95);color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;border:1px solid rgba(255,255,255,.08);letter-spacing:.02em;z-index:100}
+        .coach-nav-item:hover::after{opacity:1}
         .mini-nav-btn:hover{border-color:rgba(2,209,186,0.4) !important;color:rgba(255,255,255,0.85) !important}
         @media(max-width:760px){.dash-secondary-nav{display:none !important}}
         /* Sidebar / mobile responsive */
@@ -2801,10 +2804,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           {/* Tabs retirees — navigation via sidebar desktop + floating pill mobile */}
 
-          {/* ========== VUE D'ENSEMBLE (overview = churn alerts only) ========== */}
-          {!showClientList && (activeTab === "overview" || clients.length === 0) && clients.length > 0 && (
-            <ChurnAlertsSection clients={clients} onOpenClient={(c) => setSelected(c)} />
-          )}
+          {/* Vue d'ensemble : ecran propre, pas de section churn ici */}
 
           {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
           {!showClientList && activeTab === "business" && coachData && clients.length > 0 && (

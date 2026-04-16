@@ -2,58 +2,37 @@ import React from "react";
 import { calculateBehavioralProfile, calculateAthleticLevel } from "../../lib/coachIntelligence";
 
 /**
- * BehavioralBadge — badge pill colore affichant le profil comportemental
- * ou le niveau athletique du client. Utilise dans la liste clients.
+ * BehavioralBadge — point colore discret indiquant le profil comportemental.
+ * Vert/teal = champion/regulier, gris = irregulier, rouge = en difficulte.
  */
-export function BehavioralBadge({ client, compact = false }) {
+export function BehavioralBadge({ client }) {
   const profile = calculateBehavioralProfile(client);
+  const dotColor = (profile.id === "champion" || profile.id === "regulier") ? "#00C9A7"
+    : profile.id === "irregulier" ? "rgba(255,255,255,0.35)"
+    : "#ff6b6b";
   return (
-    <span
+    <div
+      title={profile.label}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 4,
-        padding: compact ? "2px 8px" : "3px 10px",
-        borderRadius: 100,
-        background: profile.bg,
-        border: `1px solid ${profile.border}`,
-        color: profile.color,
-        fontSize: compact ? 9 : 10,
-        fontWeight: 800,
-        letterSpacing: "0.5px",
-        textTransform: "uppercase",
-        fontFamily: "-apple-system,Inter,sans-serif",
-        whiteSpace: "nowrap",
+        width: 7, height: 7, borderRadius: "50%",
+        background: dotColor,
+        flexShrink: 0,
+        boxShadow: profile.id === "difficulte" ? "0 0 6px rgba(255,107,107,0.5)" : "none",
       }}
-      title={`Profil comportemental : ${profile.label}`}
-    >
-      {profile.label}
-    </span>
+    />
   );
 }
 
-export function LevelBadge({ client, compact = false }) {
+export function LevelBadge({ client }) {
   const level = calculateAthleticLevel(client);
   return (
-    <span
+    <div
+      title={level.label}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: compact ? "2px 8px" : "3px 10px",
-        borderRadius: 100,
-        background: `${level.color}12`,
-        border: `1px solid ${level.color}30`,
-        color: level.color,
-        fontSize: compact ? 9 : 10,
-        fontWeight: 800,
-        letterSpacing: "0.5px",
-        textTransform: "uppercase",
-        fontFamily: "-apple-system,Inter,sans-serif",
-        whiteSpace: "nowrap",
+        width: 7, height: 7, borderRadius: "50%",
+        background: "#00C9A7",
+        flexShrink: 0,
       }}
-      title={`Niveau athletique : ${level.label}`}
-    >
-      {level.label}
-    </span>
+    />
   );
 }
