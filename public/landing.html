@@ -2999,12 +2999,6 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       target.classList.add('active');
       target.classList.add('gsap-override');
       target.scrollTop = 0;
-      // Force GSAP a liberer les elements
-      if (window.gsap) {
-        target.querySelectorAll('*').forEach(el => {
-          gsap.set(el, { clearProps: "all" });
-        });
-      }
     }
     // Expose current section pour le swipe tactile
     window.__currentSection__ = className;
