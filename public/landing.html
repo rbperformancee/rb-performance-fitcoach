@@ -1495,7 +1495,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <h1 class="hero-title" id="heroTitle">RB PERFORM</h1>
     <p class="hero-sub">Le système qui transforme<br/>chaque coach en CEO.</p>
   </div>
-  <button class="hero-arrow" id="heroEnter" onclick="document.querySelector('section.how').classList.add('active');document.querySelector('section.hero').classList.remove('active')"
+  <button class="hero-arrow" id="heroEnter"
     style="position:absolute;bottom:48px;left:50%;transform:translateX(-50%);white-space:nowrap;background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:8px 24px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;z-index:5">
     Entrer
   </button>
@@ -3051,23 +3051,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if (e.key === 'Escape') closeMenu();
   });
 
-  // Navigation vers chapitre
-  document.querySelectorAll('.menu-chapter').forEach(link => {
-    link.addEventListener('click', () => {
-      const target = document.querySelector(
-        'section.' + link.dataset.target
-      );
-      closeMenu();
-      if (target) {
-        setTimeout(() => {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }, 420);
-      }
-    });
-  });
+  // Navigation vers chapitre — geree dans le script principal
 })();
 </script>
 
@@ -3146,159 +3130,44 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     }
   });
 
-  // Navigation depuis le menu overlay
-  document.querySelectorAll('.menu-chapter').forEach(link => {
-    link.addEventListener('click', (e) => {
+  // Highlight du chapitre actif dans le menu
+  var activeSection = 'hero';
+  function updateMenuHighlight(target) {
+    activeSection = target;
+    document.querySelectorAll('.menu-chapter').forEach(function(link) {
+      var isActive = link.dataset.target === target;
+      link.style.opacity = isActive ? '1' : '0.5';
+      link.querySelector('.ch-name').style.color = isActive ? '#00C9A7' : '#fff';
+    });
+  }
+
+  // Navigation depuis le menu hamburger — seul moyen de changer de section
+  document.querySelectorAll('.menu-chapter').forEach(function(link) {
+    link.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-
-      const targetClass = link.dataset.target;
-
-      // Fermer le menu
+      var target = link.dataset.target;
       burger.classList.remove('open');
       overlay.classList.remove('open');
       document.body.style.overflow = '';
-
-      // Switcher vers la section cible
-      setTimeout(() => showSection(targetClass), 350);
+      setTimeout(function() {
+        showSection(target);
+        updateMenuHighlight(target);
+      }, 350);
     });
   });
 
-  // Navigation clavier (fleches gauche/droite/haut/bas)
-  const ORDER = [
-    'hero', 'how',
-    'bento', 'demo-section', 'features', 'roi', 'client-view', 'pricing'
-  ];
-
-  function currentIndex() {
-    for (let i = 0; i < ORDER.length; i++) {
-      const s = document.querySelector('section.' + ORDER[i]);
-      if (s && s.classList.contains('active')) return i;
-    }
-    return 0;
-  }
-
-  document.addEventListener('keydown', (e) => {
-    if (overlay.classList.contains('open')) return;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      const next = ORDER[currentIndex() + 1];
-      if (next) showSection(next);
-    }
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      const prev = ORDER[currentIndex() - 1];
-      if (prev) showSection(prev);
-    }
-  });
-
-  // Swipe mobile (touch)
-  let touchStartX = 0;
-  let touchStartY = 0;
-  document.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-  document.addEventListener('touchend', (e) => {
-    if (overlay.classList.contains('open')) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
-    const absX = Math.abs(dx), absY = Math.abs(dy);
-    // Swipe vertical dominant (haut/bas)
-    if (absY > absX && absY > 50) {
-      if (dy < 0) {
-        const next = ORDER[currentIndex() + 1];
-        if (next) showSection(next);
-      } else {
-        const prev = ORDER[currentIndex() - 1];
-        if (prev) showSection(prev);
-      }
-      return;
-    }
-    // Swipe horizontal dominant (gauche/droite) — alternative mobile
-    if (absX > absY && absX > 50) {
-      if (dx < 0) {
-        const next = ORDER[currentIndex() + 1];
-        if (next) showSection(next);
-      } else {
-        const prev = ORDER[currentIndex() - 1];
-        if (prev) showSection(prev);
-      }
-    }
-  }, { passive: true });
-
-  // Indicateur de section actuelle (dots lateraux droite)
-  const dots = document.createElement('div');
-  dots.id = 'section-dots';
-  dots.style.cssText = `
-    position: fixed;
-    right: 24px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  `;
-
-  ORDER.forEach((cls, i) => {
-    const dot = document.createElement('div');
-    dot.dataset.index = i;
-    dot.style.cssText = `
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    `;
-    dot.addEventListener('click', () => showSectionWithDots(ORDER[i]));
-    dots.appendChild(dot);
-  });
-  document.body.appendChild(dots);
-
-  // Mettre a jour les dots quand la section change
-  function showSectionWithDots(className) {
-    showSection(className);
-    const idx = ORDER.indexOf(className);
-    dots.querySelectorAll('div').forEach((d, i) => {
-      d.style.background = i === idx
-        ? '#02d1ba'
-        : 'rgba(255,255,255,0.2)';
-      d.style.transform = i === idx ? 'scale(1.4)' : 'scale(1)';
-    });
-  }
-
-  // Remplacer showSection par la version avec dots sur tous les listeners
-  document.querySelectorAll('.menu-chapter').forEach(link => {
-    link.addEventListener('click', () => {
-      setTimeout(() => showSectionWithDots(link.dataset.target), 350);
-    });
-  });
-
-  // Le bouton Entrer doit aussi update les dots
-  const heroEnter = document.getElementById('heroEnter');
+  // Le bouton Entrer du hero ouvre la section Systeme
+  var heroEnter = document.getElementById('heroEnter');
   if (heroEnter) {
-    heroEnter.addEventListener('click', () => {
-      setTimeout(() => showSectionWithDots('how'), 50);
+    heroEnter.addEventListener('click', function() {
+      showSection('how');
+      updateMenuHighlight('how');
     });
   }
 
-  // Hook keyboard pour update dots
-  document.addEventListener('keydown', (e) => {
-    if (overlay.classList.contains('open')) return;
-    if (['ArrowRight','ArrowDown','ArrowLeft','ArrowUp'].includes(e.key)) {
-      // Leger delai pour laisser le premier handler agir
-      setTimeout(() => {
-        const idx = currentIndex();
-        dots.querySelectorAll('div').forEach((d, i) => {
-          d.style.background = i === idx ? '#02d1ba' : 'rgba(255,255,255,0.2)';
-          d.style.transform = i === idx ? 'scale(1.4)' : 'scale(1)';
-        });
-      }, 20);
-    }
-  });
-
-  // Init dots
-  showSectionWithDots('hero');
+  // Init
+  updateMenuHighlight('hero');
 
 })();
 </script>
