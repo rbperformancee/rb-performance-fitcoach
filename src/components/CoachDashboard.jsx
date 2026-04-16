@@ -115,12 +115,12 @@ function activityLabel(dateStr) {
   return { text: `Inactif ${diffD}j`, precise: true };
 }
 function activityColor(lastSeen) {
-  if (!lastSeen) return "#444";
+  if (!lastSeen) return "rgba(255,255,255,0.2)";
   const d = Math.floor((Date.now() - new Date(lastSeen)) / 86400000);
   if (d <= 1) return G;
-  if (d <= 3) return "#4ade80";
-  if (d <= 7) return "#f97316";
-  return "#ef4444";
+  if (d <= 3) return G;
+  if (d <= 7) return "rgba(255,255,255,0.4)";
+  return "#ff6b6b";
 }
 function Avatar({ name, size = 40, active }) {
   return (
@@ -559,9 +559,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           <div style={{ paddingTop: "env(safe-area-inset-top, 8px)" }}>
             <button
               onClick={onClose}
-              style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 14 }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginBottom: 14, transition: "all .15s" }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.3)"; e.currentTarget.style.color = "#fff"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
             >
-              <Icon name="arrow-left" size={12} />
+              <Icon name="arrow-left" size={13} />
               Retour
             </button>
           </div>
@@ -2808,7 +2810,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== ALERTE URGENTE ========== */}
           {urgentCount > 0 && (
             <div
-              onClick={() => { setShowClientList(true); setActiveTab("clients"); }}
+              onClick={() => { setShowClientList(true); setActiveTab("clients"); setFilter("inactive"); }}
               className="dash-alert-row"
               style={{
                 display: "flex", alignItems: "center", gap: 12, marginBottom: 32,
@@ -2988,7 +2990,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               </button>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 8 }}>Clients</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginBottom: 8 }}>Clients</div>
                   <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 6vw, 52px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", margin: 0, lineHeight: 1.02 }}>
                     Tes athletes<span style={{ color: "#02d1ba" }}>.</span>
                   </h1>

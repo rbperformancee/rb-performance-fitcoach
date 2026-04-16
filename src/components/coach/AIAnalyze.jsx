@@ -72,7 +72,7 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
           if (json.code === "RATE_LIMIT") {
             setError(json.error || "Limite IA atteinte ce mois.");
           } else {
-            setError(json.error || "Erreur d'analyse");
+            setError("L'analyse IA nécessite la configuration de l'Edge Function ai-coach dans Supabase. Contacte le support.");
           }
           setLoading(false);
           return;
