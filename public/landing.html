@@ -2098,45 +2098,115 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
     </div>
 
-    <!-- ========== BLOC 3 — AVANT / APRES ========== -->
+    <!-- ========== BLOC 3 — AVANT / APRES CINEMATIQUE ========== -->
+    <style>
+      @keyframes tlLineDown{from{height:0}to{height:100%}}
+      @keyframes tlItemLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+      @keyframes tlItemRight{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+      @keyframes tlReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes impactPulse{0%{transform:scale(1);text-shadow:0 0 0 transparent}50%{transform:scale(1.04);text-shadow:0 0 20px rgba(0,201,167,0.4)}100%{transform:scale(1);text-shadow:0 0 0 transparent}}
+      .tl-item{position:relative;display:flex;gap:20px;align-items:flex-start;padding:20px 0}
+      .tl-hour{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,48px);color:rgba(255,255,255,0.08);line-height:1;flex-shrink:0;min-width:80px}
+      .tl-ghost{position:absolute;right:0;top:8px;font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,40px);line-height:1;opacity:0.06;pointer-events:none}
+      .tl-text{font-size:14px;line-height:1.65;flex:1}
+      .tl-col{position:relative;padding:40px 32px;border-radius:16px}
+      .tl-col .tl-line{position:absolute;left:106px;top:80px;bottom:40px;width:2px;overflow:hidden}
+      .tl-col .tl-line-inner{width:100%;animation:tlLineDown 3s ease-out forwards}
+      .biz-versus .tl-col:first-child{background:linear-gradient(180deg,rgba(255,107,107,0.02) 0%,rgba(255,107,107,0.06) 100%)}
+      .biz-versus .tl-col:last-child{background:linear-gradient(180deg,rgba(0,201,167,0.02) 0%,rgba(0,201,167,0.06) 100%)}
+      @media(max-width:768px){.tl-hour{font-size:28px;min-width:56px}.tl-col .tl-line{left:70px}.tl-col{padding:28px 20px}}
+    </style>
     <div style="margin-top:80px;padding-top:60px;border-top:1px solid rgba(0,201,167,0.1)">
-      <div style="text-align:center;margin-bottom:48px">
-        <h3 style="font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin:0">Une journée.<br>Deux réalités.</h3>
+      <div style="text-align:center;margin-bottom:56px">
+        <h3 style="font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,48px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.1;margin:0">Une journée.<br>Deux réalités.</h3>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0" class="biz-versus">
+      <div style="display:grid;grid-template-columns:1fr 2px 1fr;gap:0" class="biz-versus">
+
         <!-- SANS RB -->
-        <div style="padding:32px 28px;background:rgba(255,107,107,0.02);border-radius:16px 0 0 16px">
-          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#ff6b6b;margin-bottom:24px">Sans RB Perform</div>
-          <div style="display:flex;flex-direction:column;gap:20px">
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">⏰</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">8h00</div><div style="font-size:13px;color:rgba(255,255,255,0.45);font-style:italic;line-height:1.5">Tu ouvres Excel. Tu cherches qui a payé. Tu ne sais pas.</div></div></div>
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">📱</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">10h30</div><div style="font-size:13px;color:rgba(255,107,107,0.7);line-height:1.5">Thomas n'a pas ouvert son app depuis 8 jours. Tu l'apprends trop tard.</div></div></div>
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">💬</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">14h00</div><div style="font-size:13px;color:rgba(255,107,107,0.7);line-height:1.5">Marie veut arrêter. Tu ne l'avais pas vu venir.</div></div></div>
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">📊</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">17h00</div><div style="font-size:13px;color:rgba(255,255,255,0.45);font-style:italic;line-height:1.5">2h de rapports manuels. 2h perdues.</div></div></div>
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">😓</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">20h00</div><div style="font-size:13px;color:#ff6b6b;font-weight:700;line-height:1.5">2 clients en moins. Sans comprendre pourquoi.</div></div></div>
+        <div class="tl-col" style="border-radius:16px 0 0 16px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#ff6b6b;margin-bottom:28px">Sans RB Perform</div>
+          <div class="tl-line"><div class="tl-line-inner" style="background:linear-gradient(180deg,rgba(255,107,107,0.1),rgba(255,107,107,0.5));height:0"></div></div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemLeft 0.6s ease 0.2s forwards">
+            <div class="tl-hour" style="color:rgba(255,107,107,0.12)">8h</div>
+            <div><div class="tl-text" style="color:rgba(255,255,255,0.45);font-style:italic">Tu ouvres Excel. Tu cherches qui a payé. Tu ne sais pas.</div></div>
+            <div class="tl-ghost" style="color:rgba(255,255,255,0.04)">0€</div>
+          </div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemLeft 0.6s ease 0.4s forwards">
+            <div class="tl-hour" style="color:rgba(255,107,107,0.15)">10h</div>
+            <div><div class="tl-text" style="color:rgba(255,107,107,0.7)">Thomas n'a pas ouvert son app depuis 8 jours. Tu l'apprends trop tard.</div></div>
+            <div class="tl-ghost" style="color:rgba(255,107,107,0.08)">-150€</div>
+          </div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemLeft 0.6s ease 0.6s forwards">
+            <div class="tl-hour" style="color:rgba(255,107,107,0.18)">14h</div>
+            <div><div class="tl-text" style="color:rgba(255,107,107,0.7)">Marie veut arrêter. Tu ne l'avais pas vu venir.</div></div>
+            <div class="tl-ghost" style="color:rgba(255,107,107,0.08)">-300€</div>
+          </div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemLeft 0.6s ease 0.8s forwards">
+            <div class="tl-hour" style="color:rgba(255,107,107,0.22)">17h</div>
+            <div><div class="tl-text" style="color:rgba(255,255,255,0.45);font-style:italic">2h de rapports manuels. 2h perdues.</div></div>
+            <div class="tl-ghost" style="color:rgba(255,255,255,0.04)">-2h</div>
+          </div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemLeft 0.6s ease 1.0s forwards">
+            <div class="tl-hour" style="color:rgba(255,107,107,0.3)">20h</div>
+            <div><div class="tl-text" style="color:#ff6b6b;font-weight:700;font-family:'Syne',sans-serif;font-size:15px">2 clients en moins. Sans comprendre pourquoi.</div></div>
+            <div class="tl-ghost" style="color:rgba(255,107,107,0.1);font-size:clamp(32px,5vw,48px)">-1800€</div>
           </div>
         </div>
 
-        <!-- Ligne verticale teal -->
-        <div style="background:rgba(0,201,167,0.2)"></div>
+        <!-- Ligne verticale teal animee -->
+        <div style="background:linear-gradient(180deg,rgba(0,201,167,0.1),rgba(0,201,167,0.4),rgba(0,201,167,0.1))"></div>
 
         <!-- AVEC RB -->
-        <div style="padding:32px 28px;background:rgba(0,201,167,0.02);border-radius:0 16px 16px 0">
-          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:24px">Avec RB Perform</div>
-          <div style="display:flex;flex-direction:column;gap:20px">
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">⏰</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">8h00</div><div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5">Dashboard ouvert. MRR, rétention, score : tout est là en 3 secondes.</div></div></div>
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">📱</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">10h30</div><div style="font-size:13px;color:#00C9A7;line-height:1.5">Alerte RB : Thomas à risque depuis 3 jours. Tu envoies un message en 1 clic. Il reste.</div></div></div>
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">💬</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">14h00</div><div style="font-size:13px;color:#00C9A7;line-height:1.5">Marie reçoit son rapport auto. Elle voit ses progrès. Elle renouvelle.</div></div></div>
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">📊</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">17h00</div><div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5">Les rapports sont partis automatiquement ce matin. Tu n'as rien fait.</div></div></div>
-            <div style="display:flex;gap:12px"><span style="font-size:13px;flex-shrink:0">😊</span><div><div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:4px">20h00</div><div style="font-size:13px;color:#00C9A7;font-weight:700;line-height:1.5">0 clients perdus. +150€ récupérés. Tu es CEO, pas gestionnaire.</div></div></div>
+        <div class="tl-col" style="border-radius:0 16px 16px 0">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:28px">Avec RB Perform</div>
+          <div class="tl-line"><div class="tl-line-inner" style="background:linear-gradient(180deg,rgba(0,201,167,0.1),rgba(0,201,167,0.5));height:0"></div></div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemRight 0.6s ease 0.3s forwards">
+            <div class="tl-hour" style="color:rgba(0,201,167,0.12)">8h</div>
+            <div><div class="tl-text" style="color:rgba(255,255,255,0.7)">Dashboard ouvert. MRR, rétention, score : tout est là en 3 secondes.</div></div>
+            <div class="tl-ghost" style="color:rgba(0,201,167,0.06)">3s</div>
+          </div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemRight 0.6s ease 0.5s forwards">
+            <div class="tl-hour" style="color:rgba(0,201,167,0.15)">10h</div>
+            <div><div class="tl-text" style="color:#00C9A7">Alerte RB : Thomas à risque depuis 3 jours. Message en 1 clic. Il reste.</div></div>
+            <div class="tl-ghost" style="color:rgba(0,201,167,0.08)">+150€</div>
+          </div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemRight 0.6s ease 0.7s forwards">
+            <div class="tl-hour" style="color:rgba(0,201,167,0.18)">14h</div>
+            <div><div class="tl-text" style="color:#00C9A7">Marie reçoit son rapport auto. Elle voit ses progrès. Elle renouvelle.</div></div>
+            <div class="tl-ghost" style="color:rgba(0,201,167,0.08)">+150€</div>
+          </div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemRight 0.6s ease 0.9s forwards">
+            <div class="tl-hour" style="color:rgba(0,201,167,0.22)">17h</div>
+            <div><div class="tl-text" style="color:rgba(255,255,255,0.7)">Les rapports sont partis automatiquement. Tu n'as rien fait.</div></div>
+            <div class="tl-ghost" style="color:rgba(0,201,167,0.06)">+3h</div>
+          </div>
+
+          <div class="tl-item" style="opacity:0;animation:tlItemRight 0.6s ease 1.1s forwards">
+            <div class="tl-hour" style="color:rgba(0,201,167,0.3)">20h</div>
+            <div><div class="tl-text" style="color:#00C9A7;font-weight:700;font-family:'Syne',sans-serif;font-size:15px">0 clients perdus. +150€ récupérés. Tu es CEO.</div></div>
+            <div class="tl-ghost" style="color:rgba(0,201,167,0.1);font-size:clamp(32px,5vw,48px)">+1800€</div>
           </div>
         </div>
+
       </div>
 
-      <!-- Conclusion -->
-      <div style="text-align:center;margin-top:48px;padding-top:32px;border-top:1px solid rgba(0,201,167,0.1)">
-        <div style="font-family:'Syne',sans-serif;font-size:clamp(22px,3vw,28px);font-weight:900;color:#fff;line-height:1.3">
-          La différence entre ces deux journées :<br><span style="color:#00C9A7">199€/mois.</span>
+      <!-- Conclusion cinematique -->
+      <div style="text-align:center;margin-top:56px;padding-top:40px;border-top:1px solid rgba(0,201,167,0.1)">
+        <div style="font-family:'Syne',sans-serif;font-size:clamp(20px,3vw,26px);font-weight:900;color:rgba(255,255,255,0.6);line-height:1.4;margin-bottom:12px;opacity:0;animation:tlReveal 0.8s ease 1.4s forwards">
+          La différence entre ces deux journées :
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:clamp(36px,5vw,56px);font-weight:900;color:#00C9A7;line-height:1;opacity:0;animation:tlReveal 0.8s ease 1.8s forwards,impactPulse 2s ease 2.6s 1">
+          199€/mois.
         </div>
       </div>
     </div>
