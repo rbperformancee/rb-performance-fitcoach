@@ -23,12 +23,21 @@ export default function ClientApp({ user }) {
     (async () => {
       setLoading(true);
       try {
-        // Load client row
-        const { data: c } = await supabase
+        // Load client row — cherche par user_id d'abord, puis par email en fallback
+        // (le compte demo client peut avoir un user_id different de l'auth UUID)
+        let { data: c } = await supabase
           .from("clients")
           .select("id, user_id, coach_id, email, full_name, subscription_start_date, onboarding_done")
           .eq("user_id", user.id)
           .maybeSingle();
+        if (!c && user.email) {
+          const { data: cByEmail } = await supabase
+            .from("clients")
+            .select("id, user_id, coach_id, email, full_name, subscription_start_date, onboarding_done")
+            .eq("email", user.email)
+            .maybeSingle();
+          c = cByEmail;
+        }
         if (cancelled) return;
         setClient(c);
 
