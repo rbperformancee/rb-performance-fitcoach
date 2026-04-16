@@ -2390,7 +2390,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { id: "overview",    label: "Dashboard",  icon: "chart",       group: "principal" },
     { id: "clients",     label: "Clients",    icon: "users",       group: "principal", badge: urgentCount },
     { id: "programmes",  label: "Programmes", icon: "document",    group: "principal" },
-    { id: "business",    label: "Business",   icon: "trending-up", group: "principal" },
+    { id: "business",    label: "Business",   icon: "trending",    group: "principal" },
     { id: "analytics",   label: "Analytics",  icon: "activity",    group: "outils" },
   ];
   const sidebarOnNav = (id) => {
