@@ -2303,7 +2303,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const _noAlert = withProg > 0 ? Math.max(0, 1 - inactiveAlerts / withProg) : 1;
   const businessScore = total > 0 ? Math.round((_coverage * 20) + (_act7d * 30) + (_actDay * 25) + (_noAlert * 25)) : 0;
   const scoreColor = businessScore >= 80 ? G : businessScore >= 50 ? ORANGE : RED;
-  const scoreLabel = businessScore >= 80 ? "Excellent" : businessScore >= 60 ? "Bien" : businessScore >= 40 ? "A ameliorer" : "Critique";
+  const scoreLabel = businessScore >= 75 ? "Excellent" : businessScore >= 50 ? "Bien" : businessScore >= 25 ? "A ameliorer" : "Critique";
 
   // ===== METRIQUES BUSINESS =====
   // MRR : somme des prix mensuels de tous les clients avec un abonnement actif
@@ -2372,7 +2372,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   // ===== COACH SIDEBAR INLINE (desktop) =====
   const coachName = coachData?.full_name || "Coach";
   const coachInitials = (coachName.split(" ").map(w => w[0]).join("").slice(0, 2) || "RB").toUpperCase();
-  const coachPlan = coachData?.subscription_plan || "Beta";
+  const coachPlan = coachData?.subscription_plan || "Founder";
 
   // Sparkline MRR 30 jours (reconstruit depuis snapshots ou fallback)
   const sparkPoints = (() => {
@@ -2784,7 +2784,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== 3 CARDS METRIQUES ========== */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 32 }}>
             {[
-              { v: businessScore, l: "SCORE", suffix: "", color: businessScore > 80 ? G : businessScore >= 60 ? "#fff" : "#ff6b6b" },
+              { v: businessScore, l: "SCORE", suffix: "", color: businessScore > 75 ? G : businessScore >= 50 ? "#fff" : "#ff6b6b" },
               { v: mrr, l: "MRR", suffix: " €", color: "#fff" },
               { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RETENTION", suffix: "%", color: "#fff" },
             ].map((m, i) => (
@@ -2848,56 +2848,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           {/* Tabs retirees — navigation via sidebar desktop + floating pill mobile */}
 
-          {/* ========== CLIENTS A RISQUE (premium, compact) ========== */}
-          {!showClientList && activeTab === "overview" && clientsToAct.length > 0 && (
-            <div style={{ marginBottom: 32, animation: "fadeUp 0.5s ease 0.15s both" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginBottom: 16 }}>Clients à surveiller</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {clientsToAct.slice(0, 5).map((c) => {
-                  const hasProg = c.programmes?.some(p => p.is_active);
-                  const days = c._inactiveDays || 0;
-                  const isExpiring = c.subscription_end_date && Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000) <= 14;
-                  const isCritical = days >= 7 || (isExpiring && Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000) <= 3);
-                  const dotColor = isCritical ? "#ff6b6b" : "rgba(255,255,255,0.3)";
-                  const reason = !hasProg ? "Sans programme" : isExpiring ? `Abo expire ${Math.max(0, Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000))}j` : `Inactif ${days}j`;
-                  return (
-                    <div
-                      key={c.id}
-                      onClick={() => setSelected(c)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 14,
-                        padding: "12px 16px",
-                        background: "rgba(255,255,255,0.02)",
-                        border: "1px solid rgba(255,255,255,0.05)",
-                        borderRadius: 12,
-                        cursor: "pointer",
-                        transition: "all .2s",
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.2)"; e.currentTarget.style.background = "rgba(0,201,167,0.03)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
-                    >
-                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: isCritical ? "0 0 6px rgba(255,107,107,0.4)" : "none" }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {c.full_name || c.email}
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 11, color: "#4A4A5A", flexShrink: 0 }}>{reason}</div>
-                      <Icon name="arrow-right" size={13} color="rgba(255,255,255,.15)" />
-                    </div>
-                  );
-                })}
-              </div>
-              {clientsToAct.length > 5 && (
-                <div
-                  onClick={() => { setShowClientList(true); setActiveTab("clients"); setFilter("inactive"); }}
-                  style={{ marginTop: 10, fontSize: 12, color: "rgba(0,201,167,0.5)", cursor: "pointer", textAlign: "center" }}
-                >
-                  Voir les {clientsToAct.length - 5} autres →
-                </div>
-              )}
-            </div>
-          )}
 
           </>)}
 
@@ -2957,14 +2907,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               <button
                 onClick={() => { setShowClientList(true); setActiveTab("clients"); }}
                 style={{
-                  width: "100%", padding: 18,
-                  background: "linear-gradient(135deg, " + G + ", #0891b2)",
-                  color: "#000", border: "none", borderRadius: 16,
-                  fontSize: 14, fontWeight: 800, cursor: "pointer",
-                  fontFamily: "inherit", letterSpacing: "0.5px", textTransform: "uppercase",
-                  boxShadow: "0 10px 36px rgba(2,209,186,0.3)",
+                  width: "100%", padding: 16,
+                  background: "transparent",
+                  color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10,
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  fontFamily: "inherit", letterSpacing: "0.02em",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                  transition: "all .2s",
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.3)"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
               >
                 <Icon name="users" size={16} />
                 Voir tous les clients ({total})
@@ -3115,13 +3067,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                         {/* Profil comportemental (intelligence) */}
                         {c._sessionsLast7d !== undefined && <BehavioralBadge client={c} compact />}
                         {prog ? (
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: G, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 100, padding: "3px 10px" }}>
-                            <Icon name="check" size={9} />
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "3px 10px" }}>
                             {prog.programme_name || "Programme actif"}
                           </span>
                         ) : (
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: ORANGE, background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 100, padding: "3px 10px" }}>
-                            <Icon name="alert" size={9} />
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, padding: "3px 10px" }}>
                             Sans programme
                           </span>
                         )}

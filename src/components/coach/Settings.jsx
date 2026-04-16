@@ -132,7 +132,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.25)" }}>Plan actuel</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginTop: 4 }}>
-                    {coachData?.plan || "Starter"}<span style={{ color: G }}>.</span>
+                    {coachData?.plan || "Founder"}<span style={{ color: G }}>.</span>
                   </div>
                 </div>
               </div>
@@ -252,7 +252,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
             <div style={planCard}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)" }}>Plan actuel</div>
               <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1px", color: "#fff", margin: "8px 0" }}>
-                Starter<span style={{ color: G }}>.</span>
+                {coachData?.plan || "Founder"}<span style={{ color: G }}>.</span>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)" }}>149€ / mois · Renouvelle le 14 mai 2026</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,.25)", marginTop: 12 }}>Utilisation IA ce mois : <span style={{ color: G, fontFamily: "'JetBrains Mono',monospace" }}>3/10</span></div>
