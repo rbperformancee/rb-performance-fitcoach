@@ -2200,40 +2200,67 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 </section>
 
 <!-- ========== FOUNDING COACH ========== -->
-<section class="founding" id="founding" style="display:flex;align-items:center;justify-content:center;padding:80px 24px;text-align:center">
-  <div style="max-width:640px;width:100%;position:relative">
-    <div style="position:absolute;inset:-1px;border-radius:20px;border:1px solid rgba(0,201,167,0.25);pointer-events:none"></div>
-    <div style="position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at top,rgba(0,201,167,0.06),transparent 60%);pointer-events:none"></div>
-    <div style="position:relative;padding:60px 32px">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.25);border-radius:100px;padding:6px 16px;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#00C9A7;margin-bottom:28px">
-        Offre de lancement
-      </div>
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,6vw,56px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0 0 20px">
-        50 places<br>Founding Coach
-      </h2>
-      <div style="display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:16px">
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,72px);color:#00C9A7;line-height:1;letter-spacing:-2px">149€</span>
-        <span style="font-size:16px;color:rgba(255,255,255,0.4);font-weight:500">/mois</span>
-      </div>
-      <div style="display:inline-block;background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);border-radius:100px;padding:4px 14px;font-size:11px;font-weight:700;color:#00C9A7;letter-spacing:0.5px;margin-bottom:24px">
-        Verrouillé à vie
-      </div>
-      <p style="font-size:clamp(15px,1.6vw,18px);color:rgba(255,255,255,0.5);line-height:1.6;max-width:440px;margin:0 auto 32px">
-        Les 50 premiers coachs gardent ce prix pour toujours.<br>
-        Aucune augmentation, aucune limite.
-      </p>
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px">
-        <div style="flex:1;max-width:280px;height:6px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden">
-          <div id="foundingBar" style="height:100%;width:62%;background:linear-gradient(90deg,#00C9A7,#0891b2);border-radius:100px;transition:width 0.6s ease"></div>
-        </div>
-        <span style="font-family:'Inter',monospace;font-size:13px;font-weight:700;color:#00C9A7;white-space:nowrap">
-          <span id="foundingCount">31</span> / 50 places prises
-        </span>
-      </div>
-      <a href="/demo" style="display:inline-block;padding:16px 36px;background:linear-gradient(135deg,#00C9A7,#0891b2);color:#080C14;font-size:14px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;border-radius:14px;text-decoration:none;box-shadow:0 12px 40px rgba(0,201,167,0.3);transition:transform 0.15s,box-shadow 0.15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 16px 48px rgba(0,201,167,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 12px 40px rgba(0,201,167,0.3)'">
-        Rejoindre les Founding Coachs →
-      </a>
+<section class="founding" id="founding" style="background:#0D1520;border-top:1px solid rgba(0,201,167,0.2);border-bottom:1px solid rgba(0,201,167,0.2);display:flex;align-items:center;justify-content:center;padding:80px 24px;text-align:center">
+  <div style="max-width:680px;width:100%">
+
+    <!-- Badge -->
+    <div style="display:inline-block;background:#00C9A7;color:#080C14;border-radius:999px;padding:8px 22px;font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:36px">
+      ⚡ Offre Fondateur · 50 places
     </div>
+
+    <!-- Titre -->
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,64px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0 0 20px">
+      Prix verrouillé à vie.
+    </h2>
+
+    <!-- Sous-titre -->
+    <p style="font-size:clamp(15px,1.6vw,18px);color:rgba(255,255,255,0.5);line-height:1.7;max-width:480px;margin:0 auto 32px">
+      Les 50 premiers coachs paient 149€/mois pour toujours.<br>
+      Le prochain prix sera 299€.
+    </p>
+
+    <!-- Compteur -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:40px">
+      <div style="flex:1;max-width:280px;height:5px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden">
+        <div style="height:100%;width:2%;background:#00C9A7;border-radius:100px;transition:width 0.8s ease"></div>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.6);white-space:nowrap">
+        <span style="color:#00C9A7;font-weight:900;font-size:16px">1</span> / 50 places prises
+      </span>
+    </div>
+
+    <!-- Avantages grille 2 colonnes -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;max-width:540px;margin:0 auto 40px;text-align:left">
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,0.7)">
+        <span style="color:#00C9A7;flex-shrink:0">✅</span> Clients illimités au tarif Starter
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,0.7)">
+        <span style="color:#00C9A7;flex-shrink:0">✅</span> Prix garanti à vie, jamais augmenté
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,0.7)">
+        <span style="color:#00C9A7;flex-shrink:0">✅</span> Appel mensuel direct avec le fondateur
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,0.7)">
+        <span style="color:#00C9A7;flex-shrink:0">✅</span> Badge Founding Coach dans l'app
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,0.7)">
+        <span style="color:#00C9A7;flex-shrink:0">✅</span> Vote sur la roadmap produit
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,0.7)">
+        <span style="color:#00C9A7;flex-shrink:0">✅</span> Accès anticipé à toutes les features
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <a href="/register" style="display:inline-block;padding:18px 44px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;border-radius:14px;text-decoration:none;box-shadow:0 12px 40px rgba(0,201,167,0.3);transition:transform 0.15s,box-shadow 0.15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 16px 48px rgba(0,201,167,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 12px 40px rgba(0,201,167,0.3)'">
+      Rejoindre les Founding Coachs →
+    </a>
+
+    <!-- Micro-copy -->
+    <p style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:20px;letter-spacing:0.3px">
+      14 jours gratuits · Sans carte · Prix garanti à vie · Résiliation en 1 clic
+    </p>
+
   </div>
 </section>
 
