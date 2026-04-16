@@ -453,7 +453,7 @@ section.manifeste::-webkit-scrollbar{display:none}
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:48px}
 .plan{background:var(--dark3);border:1px solid var(--border);border-radius:24px;padding:36px 28px;position:relative;transition:all 0.3s var(--ease-out);will-change:transform}
 .plan:hover{border-color:rgba(255,255,255,0.18);transform:translateY(-6px);box-shadow:0 30px 60px rgba(0,0,0,0.4)}
-.plan.featured{border-color:rgba(0,201,167,0.4);background:linear-gradient(180deg,rgba(0,201,167,0.06),var(--dark3));position:relative;overflow:hidden}
+.plan.featured{border-color:rgba(0,201,167,0.4);background:linear-gradient(180deg,rgba(0,201,167,0.06),var(--dark3));position:relative;overflow:visible}
 .plan.featured::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(0,201,167,0.08),transparent 50%);animation:planGlow 6s ease-in-out infinite;pointer-events:none}
 @keyframes planGlow{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(10%,10%) rotate(180deg)}}
 .plan > *{position:relative;z-index:2}
@@ -2224,10 +2224,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <section class="pricing" id="pricing">
   <div class="pricing-inner">
     <div class="intro">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px">Tarifs Coach</div>
-      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin:0 0 12px">Prêt à devenir CEO ?</h2>
-      <p style="font-size:16px;color:#8A8A9A;font-style:italic;margin:0 0 16px">Cesse de perdre de l'argent en perdant des clients.</p>
-      <p style="font-size:13px;color:rgba(255,255,255,0.3)">Support 7j/7</p>
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px;text-align:center">Tarifs Coach</div>
+      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin:0 0 12px;text-align:center">Prêt à devenir CEO ?</h2>
+      <p style="font-size:16px;color:#8A8A9A;font-style:italic;margin:0 auto 16px;text-align:center;max-width:500px">Cesse de perdre de l'argent en perdant des clients.</p>
+      <p style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center">Support 7j/7</p>
     </div>
     <!-- ===== BANNIERE FOUNDING COACH ===== -->
     <div style="background:rgba(0,201,167,0.06);border:1px solid rgba(0,201,167,0.3);border-radius:16px;padding:40px;display:flex;gap:60px;align-items:flex-start;margin-bottom:48px;flex-wrap:wrap">
@@ -2308,61 +2308,70 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
     </div>
 
-    <!-- ========== FAQ ========== -->
-    <div class="faq-block">
-      <div class="faq-eyebrow">Questions frequentes</div>
+    <!-- ========== FAQ PREMIUM ========== -->
+    <div style="max-width:680px;margin:64px auto 48px;padding:0 8px">
+      <div style="text-align:center;margin-bottom:36px">
+        <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:12px">Questions fréquentes</div>
+        <div style="font-size:clamp(22px,3vw,32px);font-weight:900;color:#fff;letter-spacing:-0.02em;font-family:'Syne',sans-serif">Tout ce que tu veux savoir.</div>
+      </div>
 
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">
-          Est-ce que mes clients paient des frais ?
-          <span class="faq-icon">+</span>
+      <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
+        <button class="faq-q" aria-expanded="false" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
+          Mes clients paient des frais ?
+          <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" hidden>
-          Non. Jamais. Tes clients accèdent à leur espace gratuitement.
-          Tu paies ton abonnement, c'est tout.
+        <div class="faq-a" hidden style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px 22px;max-width:580px">
+          Jamais. Tes clients accèdent à leur espace gratuitement. Tu paies ton abonnement, c'est tout. Zéro frais cachés, zéro surprise.
         </div>
       </div>
 
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">
-          Je peux annuler quand je veux ?
-          <span class="faq-icon">+</span>
-        </button>
-        <div class="faq-a" hidden>
-          Oui. En un clic depuis ton dashboard.
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">
+      <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
+        <button class="faq-q" aria-expanded="false" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
           C'est vraiment 0% de commission ?
-          <span class="faq-icon">+</span>
+          <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" hidden>
-          Vraiment. Ce que tu encaisses, tu le gardes intégralement.
-          Trainerize prend jusqu'à 30% sur tes revenus. Pas nous.
+        <div class="faq-a" hidden style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px 22px;max-width:580px">
+          Vraiment. Ce que tu encaisses, tu le gardes — intégralement. Trainerize prend jusqu'à 30%. Nous : zéro. Aujourd'hui, demain, toujours.
         </div>
       </div>
 
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">
+      <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
+        <button class="faq-q" aria-expanded="false" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
+          Je peux annuler quand je veux ?
+          <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
+        </button>
+        <div class="faq-a" hidden style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px 22px;max-width:580px">
+          Oui. En un clic depuis ton dashboard. Pas de justification, pas de préavis, pas d'appel de rétention. Tu es libre.
+        </div>
+      </div>
+
+      <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
+        <button class="faq-q" aria-expanded="false" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
           Mes clients doivent télécharger une app ?
-          <span class="faq-icon">+</span>
+          <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" hidden>
-          Non. Ils installent l'app en 2 taps depuis leur navigateur.
-          Pas d'App Store, pas de compte Google Play. Fonctionne sur iPhone et Android.
+        <div class="faq-a" hidden style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px 22px;max-width:580px">
+          Non. 2 taps depuis leur navigateur et c'est installé. Pas d'App Store, pas de compte Google Play. Ça marche sur iPhone et Android, instantanément.
         </div>
       </div>
 
-      <div class="faq-item">
-        <button class="faq-q" aria-expanded="false">
-          Que se passe-t-il après les 14 jours ?
-          <span class="faq-icon">+</span>
+      <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
+        <button class="faq-q" aria-expanded="false" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
+          Comment l'anti-churn IA fonctionne ?
+          <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" hidden>
-          Tu choisis un plan et tu rentres ta carte. Si tu ne fais rien,
-          ton accès est suspendu. Aucun prélèvement sans ton accord explicite.
+        <div class="faq-a" hidden style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px 22px;max-width:580px">
+          7 signaux comportementaux analysés en continu par client. Score de risque 0–100. Tu reçois une alerte avec l'action recommandée <strong style="color:rgba(255,255,255,0.7)">7 jours avant</strong> qu'il décide de partir. Tu interviens au bon moment, tu gardes ton client.
+        </div>
+      </div>
+
+      <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
+        <button class="faq-q" aria-expanded="false" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
+          C'est quoi l'offre Founding Coach ?
+          <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
+        </button>
+        <div class="faq-a" hidden style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px 22px;max-width:580px">
+          Les 50 premiers coachs paient <strong style="color:#00C9A7">199€/mois verrouillé à vie</strong>. Clients illimités, toutes les features Pro, accès au groupe privé, vote sur la roadmap. Le prix passera à 299€ après. Une fois verrouillé, ton prix ne bouge plus — jamais.
         </div>
       </div>
     </div>
