@@ -500,7 +500,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   };
 
   const RPE_LABELS = ["", "Facile", "Correct", "Difficile", "Tres dur", "Epuisant"];
-  const RPE_COLORS = ["", "#4ade80", G, ORANGE, RED, "#dc2626"];
+  const RPE_COLORS = ["", "rgba(255,255,255,0.15)", "rgba(255,255,255,0.15)", "rgba(255,255,255,0.15)", "#fff", "#ff6b6b"];
 
   const exMap = {};
   [...logs].reverse().forEach(l => {
@@ -605,10 +605,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <div style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              background: `${actColor}12`, border: `1px solid ${actColor}30`,
-              borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: actColor,
+              background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.25)",
+              borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: G,
             }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", background: actColor, boxShadow: inactiveDays != null && inactiveDays <= 1 ? `0 0 8px ${actColor}` : "none" }} />
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: actColor }} />
               {activityLabel(client._lastActivity).text}
             </div>
             {client._inactive && (
@@ -627,8 +627,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               </button>
             )}
             {prog && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: G }}>
-                <Icon name="check" size={11} />
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
+                <Icon name="check" size={11} color="rgba(255,255,255,0.4)" />
                 {prog.programme_name}
               </div>
             )}
