@@ -1578,10 +1578,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <!-- ========== LE SYSTÈME — FORMAT CINÉMATIQUE ========== -->
 <section class="how" style="background:#080C14">
 <style>
-.sys-block{min-height:100vh;display:flex;align-items:center;padding:80px 24px;max-width:1100px;margin:0 auto;gap:60px;border-bottom:1px solid rgba(0,201,167,0.12);opacity:0;transform:translateY(40px);transition:opacity .7s ease-out,transform .7s ease-out}
+.sys-block{display:flex;align-items:center;padding:56px 24px;max-width:1100px;margin:0 auto;gap:60px;border-bottom:1px solid rgba(0,201,167,0.12);opacity:0;transform:translateY(30px);transition:opacity .7s ease-out,transform .7s ease-out}
 .sys-block.vis{opacity:1;transform:translateY(0)}
 .sys-block .sys-left{flex:1;min-width:0}
-.sys-block .sys-right{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;min-height:280px}
+.sys-block .sys-right{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;min-height:140px}
 .sys-num{font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px}
 .sys-title{font-family:'Syne','Bebas Neue',sans-serif;font-size:clamp(36px,4.5vw,72px);font-weight:900;color:#fff;line-height:1.05;letter-spacing:-0.03em;margin:0 0 20px}
 .sys-sub{font-size:16px;color:#8A8A9A;line-height:1.6;max-width:420px;margin-bottom:24px}
@@ -1737,15 +1737,26 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
 </section>
 
-<!-- Intersection Observer pour les blocs .sys-block -->
+<!-- Animation sys-block : triggered quand section.how devient .active -->
 <script>
 (function(){
-  var blocks = document.querySelectorAll('.sys-block');
-  if (!blocks.length) return;
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('vis'); });
-  }, { threshold: 0.15 });
-  blocks.forEach(function(b){ io.observe(b); });
+  var section = document.querySelector('section.how');
+  if (!section) return;
+  var blocks = section.querySelectorAll('.sys-block');
+  function revealAll() {
+    blocks.forEach(function(b, i) {
+      setTimeout(function(){ b.classList.add('vis'); }, i * 120);
+    });
+  }
+  // Si deja active au load
+  if (section.classList.contains('active')) revealAll();
+  // Observer le changement de classe .active
+  var mo = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.attributeName === 'class' && section.classList.contains('active')) revealAll();
+    });
+  });
+  mo.observe(section, { attributes: true });
 })();
 </script>
 
