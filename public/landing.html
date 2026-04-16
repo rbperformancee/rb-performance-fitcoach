@@ -1578,35 +1578,48 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <!-- ========== LE SYSTÈME — FORMAT CINÉMATIQUE ========== -->
 <section class="how" style="background:#080C14">
 <style>
-.sys-block{display:flex;align-items:center;padding:56px 24px;max-width:1100px;margin:0 auto;gap:60px;border-bottom:1px solid rgba(0,201,167,0.12);opacity:0;transform:translateY(30px);transition:opacity .7s ease-out,transform .7s ease-out}
-.sys-block.vis{opacity:1;transform:translateY(0)}
+/* ===== SYSTÈME — ULTRA PREMIUM ===== */
+.sys-block{display:flex;align-items:center;padding:72px 24px;max-width:1100px;margin:0 auto;gap:72px;position:relative;opacity:0;transform:translateY(40px) scale(0.98);filter:blur(6px);transition:opacity .9s cubic-bezier(0.16,1,0.3,1),transform .9s cubic-bezier(0.16,1,0.3,1),filter .9s cubic-bezier(0.16,1,0.3,1)}
+.sys-block.vis{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+/* Séparateur dégradé premium (pas une ligne plate) */
+.sys-block::after{content:'';position:absolute;bottom:0;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,201,167,0.2) 30%,rgba(0,201,167,0.2) 70%,transparent)}
+.sys-block:last-child::after{display:none}
 .sys-block .sys-left{flex:1;min-width:0}
-.sys-block .sys-right{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;min-height:140px}
-.sys-num{font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px}
-.sys-title{font-family:'Syne','Bebas Neue',sans-serif;font-size:clamp(36px,4.5vw,72px);font-weight:900;color:#fff;line-height:1.05;letter-spacing:-0.03em;margin:0 0 20px}
-.sys-sub{font-size:16px;color:#8A8A9A;line-height:1.6;max-width:420px;margin-bottom:24px}
-.sys-bullets{display:flex;flex-direction:column;gap:10px}
-.sys-bullets span{font-size:14px;color:rgba(255,255,255,0.7);display:flex;align-items:baseline;gap:10px}
+.sys-block .sys-right{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;min-height:180px}
+.sys-num{font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:20px}
+.sys-title{font-family:'Syne','Bebas Neue',sans-serif;font-size:clamp(32px,4.5vw,56px);font-weight:900;color:#fff;line-height:1.08;letter-spacing:-0.03em;margin:0 0 20px}
+.sys-sub{font-size:16px;color:#8A8A9A;line-height:1.65;max-width:420px;margin-bottom:28px}
+.sys-bullets{display:flex;flex-direction:column;gap:12px}
+.sys-bullets span{font-size:14px;color:rgba(255,255,255,0.7);display:flex;align-items:baseline;gap:12px}
 .sys-bullets span::before{content:'—';color:#00C9A7;font-weight:700;flex-shrink:0}
-.sys-ghost{position:absolute;font-size:clamp(100px,14vw,200px);font-weight:900;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none;user-select:none;letter-spacing:-0.04em}
-.sys-big{font-size:clamp(60px,8vw,120px);font-weight:900;color:#fff;line-height:1;position:relative;z-index:1;letter-spacing:-0.03em;opacity:0;transform:translateY(20px);transition:opacity .7s ease-out .2s,transform .7s ease-out .2s}
-.sys-block.vis .sys-big{opacity:1;transform:translateY(0)}
-.sys-unit{font-size:14px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-top:8px;position:relative;z-index:1;opacity:0;transition:opacity .7s ease-out .35s}
-.sys-block.vis .sys-unit{opacity:1}
-.sys-block .sys-bullets span{opacity:0;transform:translateY(12px);transition:opacity .5s ease-out,transform .5s ease-out}
-.sys-block.vis .sys-bullets span:nth-child(1){opacity:1;transform:translateY(0);transition-delay:.4s}
-.sys-block.vis .sys-bullets span:nth-child(2){opacity:1;transform:translateY(0);transition-delay:.5s}
-.sys-block.vis .sys-bullets span:nth-child(3){opacity:1;transform:translateY(0);transition-delay:.6s}
+/* Chiffre ghost geant derriere */
+.sys-ghost{position:absolute;font-size:clamp(120px,16vw,220px);font-weight:900;color:rgba(255,255,255,0.03);line-height:1;pointer-events:none;user-select:none;letter-spacing:-0.04em}
+/* Glow teal derriere le chiffre */
+.sys-glow{position:absolute;width:200px;height:200px;background:radial-gradient(circle,rgba(0,201,167,0.08),transparent 65%);border-radius:50%;pointer-events:none;filter:blur(40px);z-index:0;opacity:0;transition:opacity 1.2s ease .3s}
+.sys-block.vis .sys-glow{opacity:1}
+/* Chiffre principal — countUp target */
+.sys-big{font-family:'Bebas Neue','Inter',sans-serif;font-size:clamp(64px,9vw,130px);font-weight:400;color:#fff;line-height:1;position:relative;z-index:1;letter-spacing:-0.02em;opacity:0;transform:translateY(24px) scale(0.9);transition:opacity .8s cubic-bezier(0.16,1,0.3,1) .25s,transform .8s cubic-bezier(0.16,1,0.3,1) .25s}
+.sys-block.vis .sys-big{opacity:1;transform:translateY(0) scale(1)}
+.sys-unit{font-size:13px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:#00C9A7;margin-top:10px;position:relative;z-index:1;opacity:0;transform:translateY(8px);transition:opacity .7s ease .5s,transform .7s ease .5s}
+.sys-block.vis .sys-unit{opacity:1;transform:translateY(0)}
+/* Bullets stagger */
+.sys-block .sys-bullets span{opacity:0;transform:translateX(-12px);transition:opacity .5s cubic-bezier(0.16,1,0.3,1),transform .5s cubic-bezier(0.16,1,0.3,1)}
+.sys-block.vis .sys-bullets span:nth-child(1){opacity:1;transform:translateX(0);transition-delay:.5s}
+.sys-block.vis .sys-bullets span:nth-child(2){opacity:1;transform:translateX(0);transition-delay:.6s}
+.sys-block.vis .sys-bullets span:nth-child(3){opacity:1;transform:translateX(0);transition-delay:.7s}
 @media(max-width:768px){
-  .sys-block{flex-direction:column;gap:40px;min-height:auto;padding:60px 20px}
-  .sys-right{min-height:180px}
+  .sys-block{flex-direction:column;gap:36px;padding:48px 20px}
+  .sys-block .sys-right{min-height:120px}
+  .sys-ghost{font-size:clamp(80px,20vw,140px)}
+  .sys-glow{width:140px;height:140px}
 }
 </style>
 
   <!-- Header -->
-  <div style="text-align:center;padding:120px 24px 40px">
-    <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:14px">Le Système</div>
-    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,64px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0">Plus qu'une app.<br>Un système.</h2>
+  <div style="text-align:center;padding:100px 24px 48px">
+    <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px">Le Système</div>
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,8vw,72px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0 0 16px">Plus qu'une app.<br>Un système.</h2>
+    <p style="font-size:15px;color:rgba(255,255,255,0.3);max-width:440px;margin:0 auto;line-height:1.5">7 piliers. Chacun conçu pour que tu gères 100+ clients sans sacrifier la qualité.</p>
   </div>
 
   <!-- 01 DASHBOARD CEO -->
@@ -1623,7 +1636,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </div>
     <div class="sys-right">
       <div class="sys-ghost">87</div>
-      <div style="text-align:center"><div class="sys-big">87</div><div class="sys-unit">Score Live</div></div>
+      <div class="sys-glow"></div>
+      <div style="text-align:center"><div class="sys-big" data-count="87">0</div><div class="sys-unit">Score Live</div></div>
     </div>
   </div>
 
@@ -1640,8 +1654,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
     </div>
     <div class="sys-right">
-      <div class="sys-ghost">-68%</div>
-      <div style="text-align:center"><div class="sys-big">-68%</div><div class="sys-unit">De Churn</div></div>
+      <div class="sys-ghost">68</div>
+      <div class="sys-glow"></div>
+      <div style="text-align:center"><div class="sys-big" data-count="-68" data-suffix="%">0</div><div class="sys-unit">De Churn</div></div>
     </div>
   </div>
 
@@ -1658,8 +1673,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
     </div>
     <div class="sys-right">
-      <div class="sys-ghost">100%</div>
-      <div style="text-align:center"><div class="sys-big">100%</div><div class="sys-unit">Ton Branding</div></div>
+      <div class="sys-ghost">100</div>
+      <div class="sys-glow"></div>
+      <div style="text-align:center"><div class="sys-big" data-count="100" data-suffix="%">0</div><div class="sys-unit">Ton Branding</div></div>
     </div>
   </div>
 
@@ -1677,7 +1693,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </div>
     <div class="sys-right">
       <div class="sys-ghost">5</div>
-      <div style="text-align:center"><div class="sys-big">5</div><div class="sys-unit">Min Pour Créer</div></div>
+      <div class="sys-glow"></div>
+      <div style="text-align:center"><div class="sys-big" data-count="5">0</div><div class="sys-unit">Min Pour Créer</div></div>
     </div>
   </div>
 
@@ -1695,7 +1712,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </div>
     <div class="sys-right">
       <div class="sys-ghost">3h</div>
-      <div style="text-align:center"><div class="sys-big">3h</div><div class="sys-unit">Gagnées/Semaine</div></div>
+      <div class="sys-glow"></div>
+      <div style="text-align:center"><div class="sys-big" data-count="3" data-suffix="h">0</div><div class="sys-unit">Gagnées / Semaine</div></div>
     </div>
   </div>
 
@@ -1713,12 +1731,13 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </div>
     <div class="sys-right">
       <div class="sys-ghost">0%</div>
-      <div style="text-align:center"><div class="sys-big">0%</div><div class="sys-unit">Commission</div></div>
+      <div class="sys-glow"></div>
+      <div style="text-align:center"><div class="sys-big" data-count="0" data-suffix="%">0</div><div class="sys-unit">Commission</div></div>
     </div>
   </div>
 
   <!-- 07 WHITE LABEL TOTAL -->
-  <div class="sys-block" style="border-bottom:none">
+  <div class="sys-block">
     <div class="sys-left">
       <div class="sys-num">07 — White Label Total</div>
       <h3 class="sys-title">Tes clients voient ta marque.<br>Jamais la nôtre.</h3>
@@ -1730,27 +1749,56 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
     </div>
     <div class="sys-right">
-      <div class="sys-ghost">100%</div>
-      <div style="text-align:center"><div class="sys-big">100%</div><div class="sys-unit">Ton Empire</div></div>
+      <div class="sys-ghost">100</div>
+      <div class="sys-glow"></div>
+      <div style="text-align:center"><div class="sys-big" data-count="100" data-suffix="%">0</div><div class="sys-unit">Ton Empire</div></div>
     </div>
   </div>
 
 </section>
 
-<!-- Animation sys-block : triggered quand section.how devient .active -->
+<!-- Animation premium : reveal cascade + countUp chiffres -->
 <script>
 (function(){
   var section = document.querySelector('section.how');
   if (!section) return;
   var blocks = section.querySelectorAll('.sys-block');
+  var counted = false;
+
+  function countUp(el) {
+    var target = parseInt(el.dataset.count);
+    var suffix = el.dataset.suffix || '';
+    var prefix = target < 0 ? '-' : '';
+    var abs = Math.abs(target);
+    var duration = 1600;
+    var start = performance.now();
+    function tick(now) {
+      var t = Math.min((now - start) / duration, 1);
+      // ease-out cubic
+      var ease = 1 - Math.pow(1 - t, 3);
+      var val = Math.round(abs * ease);
+      el.textContent = prefix + val + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   function revealAll() {
+    if (counted) return;
+    counted = true;
     blocks.forEach(function(b, i) {
-      setTimeout(function(){ b.classList.add('vis'); }, i * 120);
+      setTimeout(function(){
+        b.classList.add('vis');
+        // CountUp apres que le bloc soit visible
+        setTimeout(function(){
+          var big = b.querySelector('.sys-big[data-count]');
+          if (big) countUp(big);
+        }, 300);
+      }, i * 150);
     });
   }
-  // Si deja active au load
+
   if (section.classList.contains('active')) revealAll();
-  // Observer le changement de classe .active
   var mo = new MutationObserver(function(mutations) {
     mutations.forEach(function(m) {
       if (m.attributeName === 'class' && section.classList.contains('active')) revealAll();
