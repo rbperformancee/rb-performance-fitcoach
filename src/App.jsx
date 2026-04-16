@@ -915,8 +915,8 @@ function AppInner() {
     }
   }
 
-  // ── Programme non signe → Signature ──
-  if (user && !isCoach && cloudProgramme && programmeMeta && !programmeMeta.programme_accepted_at) {
+  // ── Programme non signe → Signature (bypass en mode demo client) ──
+  if (user && !isCoach && !isClientDemo && cloudProgramme && programmeMeta && !programmeMeta.programme_accepted_at) {
     return <ProgrammeSignature programme={programmeMeta} client={client} onSigned={() => window.location.reload()} />;
   }
 
