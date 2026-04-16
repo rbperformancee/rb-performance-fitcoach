@@ -101,13 +101,15 @@ export default function SaasLandingPage({ onSignup, onBack }) {
             </p>
 
             <h1 style={{
-              fontSize: "clamp(80px, 12vw, 160px)",
+              fontSize: "clamp(60px, 11vw, 140px)",
               fontWeight: 900, color: "#FFFFFF",
               lineHeight: 0.9, letterSpacing: "-0.05em",
               margin: "0 0 28px",
+              textAlign: "center",
               fontFamily: "'Syne', sans-serif",
             }}>
-              RB<br />PERFORM
+              <div>RB</div>
+              <div>PERFORM</div>
             </h1>
 
             <p style={{

@@ -6,7 +6,7 @@ import * as THREE from "three";
  *
  * Scenes :
  *   1. Grille 3D de 1200 points qui "respire" (oscillation sin en Z)
- *   2. 80 particules teal flottantes (mouvement brownien + pulse)
+ *   2. 120 particules teal flottantes (mouvement brownien + pulse)
  *   3. Lignes de connexion dynamiques entre particules proches (<120)
  *   4. Glow sprite central (texture radiale) en rotation lente
  *   + Parallax camera sur mouvement souris
@@ -21,7 +21,7 @@ const TEAL = 0x00c9a7;
 const GRID_COUNT_X = 40;
 const GRID_COUNT_Y = 30;
 const GRID_SPACING = 0.6;
-const PARTICLE_COUNT = 80;
+const PARTICLE_COUNT = 120;
 const CONNECTION_DIST = 2.5;
 const CONNECTION_DIST_SQ = CONNECTION_DIST * CONNECTION_DIST;
 
@@ -121,9 +121,9 @@ export default function HeroBackground() {
     partGeom.setAttribute("position", new THREE.BufferAttribute(partPositions, 3));
     const partMat = new THREE.PointsMaterial({
       color: TEAL,
-      size: 0.14,
+      size: 0.24,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.9,
       sizeAttenuation: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -155,7 +155,7 @@ export default function HeroBackground() {
       map: glowTex,
       color: 0xffffff,
       transparent: true,
-      opacity: 0.14,
+      opacity: 0.22,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
@@ -256,9 +256,9 @@ export default function HeroBackground() {
           const dz = az - bz;
           const dSq = dx * dx + dy * dy + dz * dz;
           if (dSq < CONNECTION_DIST_SQ) {
-            // alpha = 0.25 au plus proche, 0 a la limite
+            // alpha max 0.5 au plus proche, 0 a la limite (moyenne ~0.25)
             const d = Math.sqrt(dSq);
-            const a = 0.25 * (1 - d / CONNECTION_DIST);
+            const a = 0.5 * (1 - d / CONNECTION_DIST);
             lArr[vIdx * 3 + 0] = ax;
             lArr[vIdx * 3 + 1] = ay;
             lArr[vIdx * 3 + 2] = az;
