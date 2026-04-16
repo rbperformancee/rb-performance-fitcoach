@@ -2555,11 +2555,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   return (
     <div style={{
       height: "100vh",
+      width: "100vw",
       background: BG,
       fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
       color: "#fff",
       display: "flex",
       overflow: "hidden",
+      overflowX: "hidden",
       paddingTop: isDemo
         ? "calc(env(safe-area-inset-top, 0px) + 44px)"
         : "env(safe-area-inset-top, 0px)",
@@ -2615,7 +2617,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-sidebar{display:none}
           .coach-mobile-topbar{display:flex}
           .coach-floating-pill{display:flex}
-          .coach-main-inner{padding:0 28px 120px !important;max-width:100% !important}
+          .coach-main-inner{padding:0 20px 120px !important;max-width:100% !important;overflow:hidden !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
@@ -2730,9 +2732,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       }}>
       {MobileTopBar}
 
-      <div className="coach-main-inner" style={{ maxWidth: 900, margin: "0 auto", padding: "48px 56px 40px", position: "relative" }}>
-        {/* Glow teal subtil haut droite */}
-        <div style={{ position: "absolute", top: -100, right: -100, width: 600, height: 600, background: "radial-gradient(circle, rgba(0,201,167,0.04), transparent 65%)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
+      <div className="coach-main-inner" style={{ maxWidth: 900, margin: "0 auto", padding: "48px 56px 40px", position: "relative", overflow: "hidden" }}>
+        {/* Glow teal subtil haut droite — clippe par overflow hidden */}
+        <div style={{ position: "absolute", top: -100, right: -50, width: 400, height: 400, background: "radial-gradient(circle, rgba(0,201,167,0.04), transparent 65%)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
@@ -2751,7 +2753,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 400, letterSpacing: "1px", marginBottom: 6 }}>
                 {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}
               </div>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(36px, 10vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0, wordBreak: "break-word", maxWidth: "60vw" }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 9vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0, wordBreak: "break-word" }}>
                 {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
               </h1>
             </div>
