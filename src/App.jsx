@@ -857,6 +857,16 @@ function AppInner() {
     );
   }
 
+  // ── Demo client en cours de connexion → loading (pas la landing) ──
+  if (!user && isClientDemo) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#080C14", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <Spinner variant="dots" size={36} />
+        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Chargement démo client...</div>
+      </div>
+    );
+  }
+
   // ── Pas connecté → Landing SaaS / Pricing client / Login ──
   if (!user) {
     if (showLogin) {
