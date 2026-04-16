@@ -123,6 +123,26 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
             <button onClick={saveProfile} disabled={saving} style={{ ...btnPrimary, marginTop: 16 }}>
               {saving ? "..." : "Sauvegarder"}
             </button>
+
+            {/* Plan actuel + deconnexion */}
+            <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.06)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.25)" }}>Plan actuel</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginTop: 4 }}>
+                    {coachData?.plan || "Starter"}<span style={{ color: G }}>.</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    supabase.auth.signOut().then(() => { window.location.href = "/"; });
+                  }}
+                  style={{ padding: "10px 20px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 8, color: "#ff6b6b", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", transition: "border-color .15s" }}
+                >
+                  Se déconnecter
+                </button>
+              </div>
+            </div>
           </Section>
         )}
 
