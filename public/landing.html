@@ -167,7 +167,8 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .menu-overlay.open .menu-chapter:nth-child(3){transition-delay:0.15s}
 .menu-overlay.open .menu-chapter:nth-child(4){transition-delay:0.20s}
 .menu-overlay.open .menu-chapter:nth-child(5){transition-delay:0.25s}
-.menu-chapter:hover .ch-name{opacity:0.5}
+.menu-chapter:hover .ch-name{color:#00C9A7 !important}
+.menu-chapter:hover .ch-num{color:#00C9A7 !important}
 
 .ch-num{display:none}
 .ch-name{font-family:'Syne',sans-serif;font-size:clamp(36px,6vw,80px);font-weight:800;letter-spacing:-0.02em;color:#F5F2EC;text-transform:uppercase;line-height:1;text-align:center;transition:opacity 0.2s ease}
@@ -3085,8 +3086,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     activeSection = target;
     document.querySelectorAll('.menu-chapter').forEach(function(link) {
       var isActive = link.dataset.target === target;
-      link.style.opacity = isActive ? '1' : '0.5';
+      link.style.opacity = '1';
       link.querySelector('.ch-name').style.color = isActive ? '#00C9A7' : '#fff';
+      link.querySelector('.ch-num').style.color = isActive ? '#00C9A7' : 'rgba(255,255,255,0.3)';
     });
   }
 
