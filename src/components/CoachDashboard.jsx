@@ -2615,14 +2615,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-sidebar{display:none}
           .coach-mobile-topbar{display:flex}
           .coach-floating-pill{display:flex}
-          .coach-main-inner{padding:0 20px 120px !important;max-width:100% !important}
-          .coach-main-inner h1{font-size:clamp(32px,10vw,44px) !important}
-        }
-        @media(max-width:640px){
-          .dash-metrics-grid{grid-template-columns:1fr 1fr !important;gap:12px !important}
-          .dash-metrics-grid > :last-child{grid-column:1 / -1}
-          .dash-metric-card{padding:20px 16px !important}
-          .dash-metric-card .dash-countup{font-size:clamp(28px,8vw,36px) !important}
+          .coach-main-inner{padding:0 28px 120px !important;max-width:100% !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
@@ -2746,57 +2739,59 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== OVERVIEW (exclusif — masque quand autre tab active) ========== */}
           {!showClientList && activeTab === "overview" && (<>
 
-          {/* ========== TITRE ANIME ========== */}
-          <div style={{ marginBottom: 48 }}>
-            {/* Date */}
-            <div style={{
-              fontSize: 11, fontWeight: 600,
-              letterSpacing: ".25em", textTransform: "uppercase",
-              color: "#4A4A5A",
-              marginBottom: 12,
-            }}>
-              {(() => {
-                const d = new Date();
-                const days = ["DIMANCHE","LUNDI","MARDI","MERCREDI","JEUDI","VENDREDI","SAMEDI"];
-                const months = ["JANVIER","FEVRIER","MARS","AVRIL","MAI","JUIN","JUILLET","AOUT","SEPTEMBRE","OCTOBRE","NOVEMBRE","DECEMBRE"];
-                return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`;
-              })()}
+          {/* ========== AMBIENT GLOW (comme client) ========== */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "60%", background: "radial-gradient(ellipse at 50% -10%, rgba(0,201,167,0.12) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
+
+          {/* ========== TOP BAR — date + heure (comme client Tesla) ========== */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, position: "relative", zIndex: 2, marginBottom: 8 }}>
+            <div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>
+                {(() => { const d = new Date(); const days = ["DIM","LUN","MAR","MER","JEU","VEN","SAM"]; const months = ["JAN","FEV","MAR","AVR","MAI","JUN","JUL","AOU","SEP","OCT","NOV","DEC"]; return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`; })()}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 400, letterSpacing: "1px", marginBottom: 6 }}>
+                {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}
+              </div>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(36px, 10vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0, wordBreak: "break-word", maxWidth: "60vw" }}>
+                {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
+              </h1>
             </div>
-            {/* Greeting — lettre par lettre */}
-            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(40px, 4vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0 }}>
-              {`Bonjour ${coachData?.full_name?.split(" ")[0] || "Coach"}`.split("").map((ch, i) => (
-                <span key={i} style={{
-                  display: "inline-block",
-                  opacity: 0,
-                  animation: `dashCharIn 0.5s ease-out ${i * 0.03}s forwards`,
-                }}>{ch === " " ? "\u00A0" : ch}</span>
-              ))}
-              <span style={{ color: G, display: "inline-block", opacity: 0, animation: `dashCharIn 0.5s ease-out ${(`Bonjour ${coachData?.full_name?.split(" ")[0] || "Coach"}`.length) * 0.03}s forwards` }}>.</span>
-            </h1>
+            {/* Heure + anneau score */}
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ fontSize: 38, fontWeight: 100, color: "rgba(255,255,255,0.8)", letterSpacing: "-2px", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+                {String(new Date().getHours()).padStart(2,"0")}:{String(new Date().getMinutes()).padStart(2,"0")}
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                <div style={{ position: "relative", width: 52, height: 52 }}>
+                  <svg width="52" height="52" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+                    <circle cx="50" cy="50" r="40" fill="none" stroke={G} strokeWidth="8" strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - businessScore / 100)}`}
+                      style={{ filter: "drop-shadow(0 0 6px rgba(0,201,167,0.8))" }} />
+                  </svg>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: G }}>{businessScore}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* ========== 3 CARDS METRIQUES ========== */}
-          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
+          {/* ========== DIVIDER GRADIENT (comme client) ========== */}
+          <div style={{ height: 1, background: "linear-gradient(90deg, rgba(0,201,167,0.3) 0%, rgba(255,255,255,0.05) 100%)", position: "relative", zIndex: 2, margin: "24px 0" }} />
+
+          {/* ========== 3 STATS TESLA (comme client) ========== */}
+          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, marginBottom: 32, position: "relative", zIndex: 2, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             {[
               { v: businessScore, l: "SCORE", suffix: "", color: businessScore > 75 ? G : businessScore >= 50 ? "#fff" : "#ff6b6b" },
-              { v: mrr, l: "MRR", suffix: " €", color: "#fff" },
-              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RETENTION", suffix: "%", color: "#fff" },
+              { v: mrr, l: "MRR", suffix: " €", color: G },
+              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RETENTION", suffix: "%", color: "rgba(255,255,255,0.5)" },
             ].map((m, i) => (
               <div key={i} className="dash-metric-card" style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: 16, padding: 36,
-                textAlign: "center",
-                transition: "all .3s cubic-bezier(0.22,1,0.36,1)",
-                cursor: "default",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.25)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
-              >
-                <div className="dash-countup" data-target={typeof m.v === "number" ? m.v : 0} data-suffix={m.suffix} style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(36px, 4vw, 52px)", fontWeight: 700, color: m.color, lineHeight: 1 }}>
+                paddingTop: 16,
+                textAlign: "left",
+              }}>
+                <div className="dash-countup" data-target={typeof m.v === "number" ? m.v : 0} data-suffix={m.suffix} style={{ fontSize: "clamp(32px, 8vw, 52px)", fontWeight: 200, color: m.color, letterSpacing: "-1.5px", lineHeight: 1 }}>
                   {typeof m.v === "number" ? m.v.toLocaleString() : m.v}{m.suffix}
                 </div>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginTop: 14 }}>{m.l}</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", marginTop: 8 }}>{m.l}</div>
               </div>
             ))}
           </div>
