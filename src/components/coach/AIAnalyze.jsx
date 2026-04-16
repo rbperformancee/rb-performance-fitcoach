@@ -40,13 +40,6 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
     (async () => {
       setLoading(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const jwt = session?.access_token;
-        if (!jwt) throw new Error("Session expiree — reconnecte-toi");
-
-        const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-        if (!supabaseUrl) throw new Error("SUPABASE_URL non configure");
-
         const payload = {
           client_id: client.id,
           prenom: client.full_name?.split(" ")[0] || null,
@@ -58,30 +51,24 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
           tags: client.tags || [],
         };
 
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000);
-
-        const res = await fetch(`${supabaseUrl}/functions/v1/ai-coach`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
-          body: JSON.stringify({ type: "analyze_client", payload }),
-          signal: controller.signal,
+        const { data: json, error: fnError } = await supabase.functions.invoke("ai-coach", {
+          body: { type: "analyze_client", payload },
         });
-        clearTimeout(timeout);
 
-        const json = await res.json();
         if (cancelled) return;
-        if (!res.ok || !json.success) {
-          setError(json.error || `Erreur ${res.status}`);
+        if (fnError) {
+          setError(fnError.message || "Erreur appel IA");
+          setLoading(false);
+          return;
+        }
+        if (!json?.success) {
+          setError(json?.error || "Analyse indisponible");
           setLoading(false);
           return;
         }
         setData({ summary: json.summary, actions: json.actions || [] });
       } catch (e) {
-        if (!cancelled) {
-          const msg = e.name === "AbortError" ? "Timeout — l'analyse a pris trop de temps" : (e.message || "Erreur reseau");
-          setError(msg);
-        }
+        if (!cancelled) setError(e.message || "Erreur reseau");
       }
       if (!cancelled) setLoading(false);
     })();
