@@ -93,7 +93,7 @@ html,body{overflow:hidden;height:100%;background:#080C14}
 section{background:#080C14 !important}
 section{position:fixed !important;inset:0 !important;width:100% !important;height:100% !important;opacity:0 !important;pointer-events:none !important;background:#080C14 !important;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1) !important;overflow-y:auto !important;z-index:1 !important;-webkit-overflow-scrolling:touch}
 section.active{opacity:1 !important;pointer-events:all !important;background:#080C14 !important;z-index:10 !important}
-section.how,section.product-reveal,section.bento,section.demo-section,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080C14 !important}
+section.how,section.bento,section.demo-section,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080C14 !important}
 section.hero{overflow:hidden !important}
 .gsap-override *{opacity:1 !important;transform:none !important;visibility:visible !important}
 :root{--orange:#f97316;--orange-bright:#fb923c;--teal:#02d1ba;--teal-bright:#5ee8d4;--violet:#a78bfa;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
@@ -1460,20 +1460,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         <span class="ch-num">01</span>
         <span class="ch-name">Le Système</span>
       </a>
-      <a class="menu-chapter" data-target="product-reveal">
+      <a class="menu-chapter" data-target="demo-section">
         <span class="ch-num">02</span>
-        <span class="ch-name">Dashboard</span>
+        <span class="ch-name">Démo</span>
       </a>
       <a class="menu-chapter" data-target="features">
         <span class="ch-num">03</span>
         <span class="ch-name">Features</span>
       </a>
-      <a class="menu-chapter" data-target="demo-section">
-        <span class="ch-num">04</span>
-        <span class="ch-name">Démo</span>
-      </a>
       <a class="menu-chapter" data-target="pricing">
-        <span class="ch-num">05</span>
+        <span class="ch-num">04</span>
         <span class="ch-name">Accès</span>
       </a>
     </nav>
@@ -1794,199 +1790,6 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
      desormais integres dans la section .manifeste juste apres
      "RB Perform est ce systeme." -->
 
-<!-- ========== PRODUCT REVEAL ========== -->
-<section class="product-reveal">
-
-  <div class="pr-scene">
-
-    <!-- Textes à gauche -->
-    <div class="pr-texts">
-      <div class="pr-text active" data-pr="0">
-        <div class="pr-num">01</div>
-        <div class="pr-tag">Dashboard CEO</div>
-        <h3 class="pr-title">Ton business en<br>une seule vue.</h3>
-        <p class="pr-desc">Score business calculé en temps réel. MRR, rétention,
-        alertes d'expiration. Le cockpit que les plateformes concurrentes
-        cachent derrière 3 onglets.</p>
-      </div>
-      <div class="pr-text" data-pr="1">
-        <div class="pr-num">02</div>
-        <div class="pr-tag">Intelligence Client</div>
-        <h3 class="pr-title">Chaque client.<br>Chaque signal.</h3>
-        <p class="pr-desc">Score de churn 0–100. 7 signaux par client en continu.
-        Tu sais qui appeler avant même qu'il pense à partir.</p>
-      </div>
-      <div class="pr-text" data-pr="2">
-        <div class="pr-num">03</div>
-        <div class="pr-tag">Nutrition</div>
-        <h3 class="pr-title">Suivi macro<br>au gramme près.</h3>
-        <p class="pr-desc">IA vocale pour logger un repas en 2 secondes.
-        Protéines, glucides, lipides, hydratation. Tout relié au programme.</p>
-      </div>
-      <div class="pr-text" data-pr="3">
-        <div class="pr-num">04</div>
-        <div class="pr-tag">Programme Builder</div>
-        <h3 class="pr-title">Des programmes<br>qui claquent.</h3>
-        <p class="pr-desc">Drag-and-drop multi-semaines. Tempo, RIR, charges,
-        vidéos YouTube. Preview live. Export PDF signé. Zéro Excel.</p>
-      </div>
-    </div>
-
-    <!-- iPhone à droite -->
-    <div class="pr-phone-wrap">
-      <div class="pr-phone">
-        <!-- Dynamic Island -->
-        <div class="pr-island"></div>
-
-        <!-- Ecran 1 — Dashboard CEO -->
-        <div class="pr-screen active" data-screen="0">
-          <div class="prs-top">
-            <div class="prs-eyebrow">MON DASHBOARD</div>
-            <div class="prs-title">15 clients<span style="color:#02d1ba">.</span><br>
-              <span style="color:#02d1ba;font-size:0.7em">Tout roule.</span>
-            </div>
-          </div>
-          <div class="prs-score-row">
-            <div class="prs-score-n">87</div>
-            <div style="width:1px;height:36px;background:rgba(255,255,255,.07)"></div>
-            <div>
-              <div class="prs-score-lbl">Score business</div>
-              <div class="prs-score-sub">Excellent · +4 pts</div>
-            </div>
-            <svg width="44" height="44" viewBox="0 0 44 44" style="margin-left:auto;transform:rotate(-90deg)">
-              <circle cx="22" cy="22" r="17" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
-              <circle cx="22" cy="22" r="17" fill="none" stroke="#02d1ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="13.9"/>
-            </svg>
-          </div>
-          <div class="prs-metrics">
-            <div class="prs-mc">
-              <div class="prs-ml">MRR</div>
-              <div class="prs-mv" style="color:#02d1ba">1 800€</div>
-            </div>
-            <div class="prs-mc">
-              <div class="prs-ml">Rétention</div>
-              <div class="prs-mv" style="color:#02d1ba">87%</div>
-            </div>
-          </div>
-          <div class="prs-alert">
-            <div style="width:5px;height:5px;border-radius:50%;background:#ef4444;flex-shrink:0"></div>
-            <span>À AGIR · 2 clients</span>
-          </div>
-          <div class="prs-clients">
-            <div class="prs-client prs-crit">
-              <div class="prs-av" style="color:#ef4444;border-color:rgba(239,68,68,.2)">MD</div>
-              <div><div class="prs-cn">Marc Dubois</div><div class="prs-cs">Inactif 8j</div></div>
-              <div class="prs-pill" style="color:#ef4444;border-color:rgba(239,68,68,.3)">Critique</div>
-            </div>
-            <div class="prs-client">
-              <div class="prs-av" style="color:#02d1ba;border-color:rgba(2,209,186,.2)">ML</div>
-              <div><div class="prs-cn">Marie Laurent</div><div class="prs-cs">En séance · 2h</div></div>
-              <div class="prs-pill" style="color:#02d1ba;border-color:rgba(2,209,186,.3)">Live</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ecran 2 — Anti-Churn IA -->
-        <div class="pr-screen" data-screen="1">
-          <div class="prs-top">
-            <div class="prs-eyebrow">ANTI-CHURN IA</div>
-            <div class="prs-title">Clients<br><span style="color:#f97316;font-size:.7em">à risque</span></div>
-          </div>
-          <div class="prs-churn-list">
-            <div class="prs-churn-item" style="border-color:rgba(239,68,68,.2)">
-              <div class="prs-av" style="color:#ef4444;border-color:rgba(239,68,68,.2)">MD</div>
-              <div style="flex:1"><div class="prs-cn">Marc Dubois</div><div class="prs-cs">Churn 72/100</div></div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:200;color:#ef4444">72</div>
-            </div>
-            <div class="prs-churn-item" style="border-color:rgba(249,115,22,.15)">
-              <div class="prs-av" style="color:#f97316;border-color:rgba(249,115,22,.2)">KM</div>
-              <div style="flex:1"><div class="prs-cn">Kevin Martin</div><div class="prs-cs">Churn 61/100</div></div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:200;color:#f97316">61</div>
-            </div>
-            <div class="prs-churn-item" style="border-color:rgba(2,209,186,.1)">
-              <div class="prs-av" style="color:#02d1ba;border-color:rgba(2,209,186,.2)">ML</div>
-              <div style="flex:1"><div class="prs-cn">Marie Laurent</div><div class="prs-cs">Churn 12/100</div></div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:200;color:#02d1ba">12</div>
-            </div>
-          </div>
-          <div class="prs-ia-tag">7 signaux analysés par client</div>
-        </div>
-
-        <!-- Ecran 3 — Nutrition -->
-        <div class="pr-screen" data-screen="2">
-          <div class="prs-top">
-            <div class="prs-eyebrow">NUTRITION</div>
-            <div class="prs-title">Mardi<br><span style="color:#a3e635;font-size:.7em">1847 kcal</span></div>
-          </div>
-          <div class="prs-macro-bars">
-            <div class="prs-macro">
-              <span class="prs-macro-lbl">Protéines</span>
-              <div class="prs-bar-wrap"><div class="prs-bar" style="width:75%;background:#02d1ba"></div></div>
-              <span class="prs-macro-val">142g</span>
-            </div>
-            <div class="prs-macro">
-              <span class="prs-macro-lbl">Glucides</span>
-              <div class="prs-bar-wrap"><div class="prs-bar" style="width:60%;background:#f97316"></div></div>
-              <span class="prs-macro-val">184g</span>
-            </div>
-            <div class="prs-macro">
-              <span class="prs-macro-lbl">Lipides</span>
-              <div class="prs-bar-wrap"><div class="prs-bar" style="width:45%;background:#a78bfa"></div></div>
-              <span class="prs-macro-val">62g</span>
-            </div>
-          </div>
-          <div class="prs-meals">
-            <div class="prs-meal"><span class="prs-mh" style="color:#02d1ba">8h</span><span class="prs-mn">Avoine + œufs</span><span class="prs-mk">540</span></div>
-            <div class="prs-meal"><span class="prs-mh" style="color:#02d1ba">12h</span><span class="prs-mn">Poulet, riz</span><span class="prs-mk">680</span></div>
-            <div class="prs-meal"><span class="prs-mh" style="color:#02d1ba">16h</span><span class="prs-mn">Shake protéiné</span><span class="prs-mk">320</span></div>
-          </div>
-        </div>
-
-        <!-- Ecran 4 — Programme Builder -->
-        <div class="pr-screen" data-screen="3">
-          <div class="prs-top">
-            <div class="prs-eyebrow">PROGRAMME BUILDER</div>
-            <div class="prs-title">PPL<br><span style="color:#02d1ba;font-size:.7em">8 semaines</span></div>
-          </div>
-          <div class="prs-prog-week">S1 — Push</div>
-          <div class="prs-exercises">
-            <div class="prs-ex">
-              <div class="prs-ex-name">Développé couché</div>
-              <div class="prs-ex-tags"><span>4×8</span><span>30X0</span><span>32kg</span></div>
-            </div>
-            <div class="prs-ex">
-              <div class="prs-ex-name">Dips lestés</div>
-              <div class="prs-ex-tags"><span>3×10</span><span>20X1</span><span>15kg</span></div>
-            </div>
-            <div class="prs-ex">
-              <div class="prs-ex-name">Écarté haltères</div>
-              <div class="prs-ex-tags"><span>4×12</span><span>2010</span><span>18kg</span></div>
-            </div>
-          </div>
-          <div class="prs-export">Export PDF signé · Preview live</div>
-        </div>
-
-        <!-- Bottom pill nav -->
-        <div class="pr-nav">
-          <div class="pr-nav-item active-nav">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          </div>
-          <div class="pr-nav-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          </div>
-          <div class="pr-nav-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </div>
-          <div class="pr-nav-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-</section>
 
 <!-- ========== BENTO GRID (showcase Apple-style) ========== -->
 <section class="bento">
@@ -3313,7 +3116,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   // Liste des sections exposee pour le swipe tactile
   window.__SECTIONS__ = [
-    'hero','how','product-reveal',
+    'hero','how',
     'bento','features','roi','client-view','pricing'
   ];
 
@@ -3402,7 +3205,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   // Navigation clavier (fleches gauche/droite/haut/bas)
   const ORDER = [
-    'hero', 'how', 'product-reveal',
+    'hero', 'how',
     'bento', 'demo-section', 'features', 'roi', 'client-view', 'founding', 'pricing'
   ];
 
@@ -3625,35 +3428,6 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 })();
 </script>
 
-<!-- ========== PRODUCT REVEAL — IntersectionObserver iPhone ========== -->
-<script>
-(function(){
-  const prSection = document.querySelector('section.product-reveal');
-  if(!prSection) return;
-  const prTexts = prSection.querySelectorAll('.pr-text');
-  const prScreens = prSection.querySelectorAll('.pr-screen');
-  if (!prTexts.length || !prScreens.length) return;
-
-  function activatePR(i){
-    prTexts.forEach((t,j) => t.classList.toggle('active', i===j));
-    prScreens.forEach((s,j) => s.classList.toggle('active', i===j));
-  }
-  activatePR(0);
-
-  if (!('IntersectionObserver' in window)) return;
-
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if(e.isIntersecting){
-        const idx = parseInt(e.target.dataset.pr);
-        if (!Number.isNaN(idx)) activatePR(idx);
-      }
-    });
-  }, { root: prSection, threshold: 0.5 });
-
-  prTexts.forEach(t => obs.observe(t));
-})();
-</script>
 
 </body>
 </html>
