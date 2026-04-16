@@ -2804,7 +2804,56 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           {/* Tabs retirees — navigation via sidebar desktop + floating pill mobile */}
 
-          {/* Vue d'ensemble : ecran propre, pas de section churn ici */}
+          {/* ========== CLIENTS A RISQUE (premium, compact) ========== */}
+          {!showClientList && activeTab === "overview" && clientsToAct.length > 0 && (
+            <div style={{ marginBottom: 32, animation: "fadeUp 0.5s ease 0.15s both" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginBottom: 16 }}>Clients à surveiller</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {clientsToAct.slice(0, 5).map((c) => {
+                  const hasProg = c.programmes?.some(p => p.is_active);
+                  const days = c._inactiveDays || 0;
+                  const isExpiring = c.subscription_end_date && Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000) <= 14;
+                  const isCritical = days >= 7 || (isExpiring && Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000) <= 3);
+                  const dotColor = isCritical ? "#ff6b6b" : "rgba(255,255,255,0.3)";
+                  const reason = !hasProg ? "Sans programme" : isExpiring ? `Abo expire ${Math.max(0, Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000))}j` : `Inactif ${days}j`;
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => setSelected(c)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 14,
+                        padding: "12px 16px",
+                        background: "rgba(255,255,255,0.02)",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: 12,
+                        cursor: "pointer",
+                        transition: "all .2s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.2)"; e.currentTarget.style.background = "rgba(0,201,167,0.03)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+                    >
+                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: isCritical ? "0 0 6px rgba(255,107,107,0.4)" : "none" }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {c.full_name || c.email}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#4A4A5A", flexShrink: 0 }}>{reason}</div>
+                      <Icon name="arrow-right" size={13} color="rgba(255,255,255,.15)" />
+                    </div>
+                  );
+                })}
+              </div>
+              {clientsToAct.length > 5 && (
+                <div
+                  onClick={() => { setShowClientList(true); setActiveTab("clients"); setFilter("inactive"); }}
+                  style={{ marginTop: 10, fontSize: 12, color: "rgba(0,201,167,0.5)", cursor: "pointer", textAlign: "center" }}
+                >
+                  Voir les {clientsToAct.length - 5} autres →
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
           {!showClientList && activeTab === "business" && coachData && clients.length > 0 && (
