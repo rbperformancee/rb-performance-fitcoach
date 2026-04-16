@@ -2489,11 +2489,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Dashboard", onClick: () => setActiveTab("overview") },
+    { id: "overview",    icon: "chart",       label: "Dashboard", onClick: () => { setShowClientList(false); setActiveTab("overview"); } },
     { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Programmes",onClick: () => setActiveTab("programmes") },
-    { id: "business",    icon: "trending",    label: "Business",  onClick: () => setActiveTab("business") },
-    { id: "profile",     icon: "view",        label: "Compte",    onClick: () => setShowSettings(true) },
+    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setActiveTab("programmes"); } },
+    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setActiveTab("business"); } },
+    { id: "profile",     icon: "view",        label: "Compte",    onClick: () => { setShowSettings(true); } },
   ];
   const FloatingPill = (
     <nav className="coach-floating-pill" style={{
@@ -2920,7 +2920,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           est une colonne a droite + le dashboard au centre ; sur mobile
           le panel est un overlay qui couvre la liste de toute facon. */}
       {showClientList && !selected && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: BG, overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: BG, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", fontFamily: "'Inter',-apple-system,system-ui,sans-serif", color: "#fff" }}>
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
