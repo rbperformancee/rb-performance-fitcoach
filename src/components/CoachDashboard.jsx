@@ -2492,7 +2492,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         fontSize: 15, fontWeight: 900,
         letterSpacing: ".08em", color: "#fff",
       }}>
-        RB<span style={{ color: "#02d1ba" }}>PERFORM</span>
+        RB<span style={{ color: G }}>PERFORM</span>
       </div>
       <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
     </div>
@@ -2500,49 +2500,45 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const pillItems = [
-    { id: "overview",  icon: "chart",       onClick: () => setActiveTab("overview") },
-    { id: "clients",   icon: "users",       onClick: () => setActiveTab("clients") },
-    { id: "business",  icon: "trending-up", onClick: () => setActiveTab("business") },
-    { id: "analytics", icon: "activity",    onClick: () => setShowAnalytics(true) },
-    { id: "profile",   icon: "users",       onClick: () => onExit?.() },
+    { id: "overview",    icon: "chart",       label: "Dashboard", onClick: () => setActiveTab("overview") },
+    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setActiveTab("clients"); setShowClientList(true); } },
+    { id: "programmes",  icon: "document",    label: "Programmes",onClick: () => setActiveTab("programmes") },
+    { id: "business",    icon: "trending",    label: "Business",  onClick: () => setActiveTab("business") },
+    { id: "profile",     icon: "view",        label: "Compte",    onClick: () => setShowSettings(true) },
   ];
   const FloatingPill = (
     <div className="coach-floating-pill" style={{
       position: "fixed",
-      bottom: 20,
-      left: "50%",
-      transform: pillVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(20px)",
+      bottom: 0,
+      left: 0, right: 0,
+      transform: pillVisible ? "translateY(0)" : "translateY(100%)",
       opacity: pillVisible ? 1 : 0,
       pointerEvents: pillVisible ? "all" : "none",
       zIndex: 50,
-      background: "rgba(8,8,8,.97)",
-      border: ".5px solid rgba(255,255,255,.08)",
-      borderRadius: 100,
-      padding: "7px 10px",
-      alignItems: "center",
-      gap: 4,
-      boxShadow: "0 20px 50px rgba(0,0,0,.5)",
+      background: BG,
+      borderTop: "1px solid rgba(255,255,255,.06)",
+      padding: "8px 0 calc(env(safe-area-inset-bottom, 0px) + 8px)",
+      display: "flex", alignItems: "center", justifyContent: "space-around",
       backdropFilter: "blur(20px)",
       WebkitBackdropFilter: "blur(20px)",
       transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1)",
     }}>
       {pillItems.map((p) => {
-        const isActive = activeTab === p.id;
+        const isActive = activeTab === p.id || (p.id === "profile" && showSettings);
         return (
           <button
             key={p.id}
             onClick={() => { haptic.selection(); p.onClick(); }}
             style={{
-              width: 44, height: 34,
-              borderRadius: 100,
-              background: isActive ? "#02d1ba" : "transparent",
-              border: "none",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+              background: "none", border: "none",
               cursor: "pointer",
+              padding: "4px 12px",
               transition: "all .2s",
             }}
           >
-            <Icon name={p.icon} size={14} color={isActive ? "#000" : "rgba(255,255,255,.3)"} />
+            <Icon name={p.icon} size={18} color={isActive ? G : "rgba(255,255,255,.3)"} />
+            <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? G : "rgba(255,255,255,.25)", letterSpacing: ".02em" }}>{p.label}</span>
           </button>
         );
       })}
@@ -2628,7 +2624,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-sidebar{display:none}
           .coach-mobile-topbar{display:flex}
           .coach-floating-pill{display:flex}
-          .coach-main-inner{padding:24px 18px 90px !important}
+          .coach-main-inner{padding:20px 16px 100px !important;max-width:100% !important}
+        }
+        @media(max-width:640px){
+          .coach-main-inner h1{font-size:clamp(28px,8vw,40px) !important}
+          .dash-metrics-grid{grid-template-columns:1fr 1fr !important}
+          .dash-metrics-grid > :last-child{grid-column:1 / -1}
+          .dash-metric-card{padding:20px 16px !important}
+          .dash-metric-card .dash-countup{font-size:clamp(28px,7vw,40px) !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
@@ -2782,7 +2785,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           </div>
 
           {/* ========== 3 CARDS METRIQUES ========== */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 32 }}>
+          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
             {[
               { v: businessScore, l: "SCORE", suffix: "", color: businessScore > 75 ? G : businessScore >= 50 ? "#fff" : "#ff6b6b" },
               { v: mrr, l: "MRR", suffix: " €", color: "#fff" },
