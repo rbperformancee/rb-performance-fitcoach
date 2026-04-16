@@ -124,7 +124,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
               {saving ? "..." : "Sauvegarder"}
             </button>
 
-            {/* Plan actuel + deconnexion */}
+            {/* Plan actuel */}
             <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.06)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <div>
@@ -133,15 +133,50 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
                     {coachData?.plan || "Starter"}<span style={{ color: G }}>.</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    supabase.auth.signOut().then(() => { window.location.href = "/"; });
-                  }}
-                  style={{ padding: "10px 20px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 8, color: "#ff6b6b", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", transition: "border-color .15s" }}
-                >
-                  Se déconnecter
-                </button>
               </div>
+            </div>
+
+            {/* Lien d'invitation personnel */}
+            {coachData?.coach_slug && (
+              <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.06)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.25)", marginBottom: 10 }}>Ton lien d'invitation</div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input
+                    readOnly
+                    value={`https://rbperform.app/rejoindre/${coachData.coach_slug}`}
+                    onClick={(e) => e.target.select()}
+                    style={{ ...input, flex: 1, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: G }}
+                  />
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(`https://rbperform.app/rejoindre/${coachData.coach_slug}`);
+                        toast.success("Lien copié !");
+                      } catch { toast.error("Impossible de copier"); }
+                    }}
+                    style={{ padding: "10px 16px", background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 8, color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+                  >
+                    Copier
+                  </button>
+                </div>
+                {coachData?.coach_code && (
+                  <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,.3)" }}>
+                    Code coach : <span style={{ color: G, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>{coachData.coach_code}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Deconnexion */}
+            <div style={{ marginTop: 32 }}>
+              <button
+                onClick={() => {
+                  supabase.auth.signOut().then(() => { window.location.href = "/"; });
+                }}
+                style={{ padding: "12px 24px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 8, color: "#ff6b6b", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", width: "100%", transition: "border-color .15s" }}
+              >
+                Se déconnecter
+              </button>
             </div>
           </Section>
         )}

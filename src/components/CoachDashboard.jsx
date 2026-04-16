@@ -2769,16 +2769,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           {/* Tabs retirees — navigation via sidebar desktop + floating pill mobile */}
 
-          {/* ========== VUE D'ENSEMBLE (overview = churn + invitation) ========== */}
-          {!showClientList && (activeTab === "overview" || clients.length === 0) && (
-            <>
-              {clients.length > 0 && <ChurnAlertsSection clients={clients} onOpenClient={(c) => setSelected(c)} />}
-              {coachData && (
-                <div id="invitation-panel-anchor" style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
-                  <InvitationPanel coach={coachData} />
-                </div>
-              )}
-            </>
+          {/* ========== VUE D'ENSEMBLE (overview = churn alerts only) ========== */}
+          {!showClientList && (activeTab === "overview" || clients.length === 0) && clients.length > 0 && (
+            <ChurnAlertsSection clients={clients} onOpenClient={(c) => setSelected(c)} />
           )}
 
           {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
