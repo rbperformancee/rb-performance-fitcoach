@@ -2089,6 +2089,25 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   useEffect(() => { loadClients(); }, []);
 
+  // CountUp animation for dashboard metric cards
+  useEffect(() => {
+    const els = document.querySelectorAll(".dash-countup[data-target]");
+    els.forEach((el) => {
+      const target = parseInt(el.dataset.target);
+      const suffix = el.dataset.suffix || "";
+      if (isNaN(target)) return;
+      const start = performance.now();
+      const duration = 1200;
+      const tick = (now) => {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(target * ease).toLocaleString() + suffix;
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  }, [loading, businessScore, mrr]);
+
   // Pull-to-refresh mobile (desactive pendant les overlays full-screen)
   const ptr = usePullToRefresh({
     onRefresh: async () => { haptic.success(); await loadClients(); },
@@ -2525,6 +2544,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       )}
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes dashCharIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,0.7)}50%{box-shadow:0 0 0 6px rgba(255,107,107,0)}}
@@ -2678,17 +2698,19 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       }}>
       {MobileTopBar}
 
-      <div className="coach-main-inner" style={{ maxWidth: 1000, margin: "0 auto", padding: "48px 48px 40px", position: "relative" }}>
+      <div className="coach-main-inner" style={{ maxWidth: 900, margin: "0 auto", padding: "48px 56px 40px", position: "relative" }}>
+        {/* Glow teal subtil haut droite */}
+        <div style={{ position: "absolute", top: -100, right: -100, width: 600, height: 600, background: "radial-gradient(circle, rgba(0,201,167,0.04), transparent 65%)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
-          {/* ========== HERO CLEAN ========== */}
-          <div style={{ marginBottom: 60, animation: "fadeUp 0.4s ease both" }}>
-            {/* Date eyebrow */}
+          {/* ========== TITRE ANIME ========== */}
+          <div style={{ marginBottom: 48 }}>
+            {/* Date */}
             <div style={{
               fontSize: 11, fontWeight: 600,
-              letterSpacing: ".15em", textTransform: "uppercase",
-              color: "rgba(255,255,255,.2)",
+              letterSpacing: ".25em", textTransform: "uppercase",
+              color: "#4A4A5A",
               marginBottom: 12,
             }}>
               {(() => {
@@ -2698,55 +2720,64 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`;
               })()}
             </div>
-            {/* Greeting */}
-            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(40px, 4vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.05, color: "#fff", margin: 0 }}>
-              Bonjour {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
+            {/* Greeting — lettre par lettre */}
+            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(40px, 4vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0 }}>
+              {`Bonjour ${coachData?.full_name?.split(" ")[0] || "Coach"}`.split("").map((ch, i) => (
+                <span key={i} style={{
+                  display: "inline-block",
+                  opacity: 0,
+                  animation: `dashCharIn 0.5s ease-out ${i * 0.03}s forwards`,
+                }}>{ch === " " ? "\u00A0" : ch}</span>
+              ))}
+              <span style={{ color: G, display: "inline-block", opacity: 0, animation: `dashCharIn 0.5s ease-out ${(`Bonjour ${coachData?.full_name?.split(" ")[0] || "Coach"}`.length) * 0.03}s forwards` }}>.</span>
             </h1>
           </div>
 
-          {/* ========== 3 METRIQUES ========== */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 40 }}>
+          {/* ========== 3 CARDS METRIQUES ========== */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 32 }}>
             {[
-              { v: businessScore, l: "SCORE", suffix: "" },
-              { v: mrr, l: "MRR", suffix: " €" },
-              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RETENTION", suffix: "%" },
+              { v: businessScore, l: "SCORE", suffix: "", color: businessScore > 80 ? G : businessScore >= 60 ? "#fff" : "#ff6b6b" },
+              { v: mrr, l: "MRR", suffix: " €", color: "#fff" },
+              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RETENTION", suffix: "%", color: "#fff" },
             ].map((m, i) => (
-              <div key={i} style={{
+              <div key={i} className="dash-metric-card" style={{
                 background: "rgba(255,255,255,0.03)",
                 border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: 16, padding: "32px 24px",
+                borderRadius: 16, padding: 36,
                 textAlign: "center",
-                transition: "border-color .2s",
+                transition: "all .3s cubic-bezier(0.22,1,0.36,1)",
+                cursor: "default",
               }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(0,201,167,0.3)"}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.25)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
               >
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "clamp(36px, 4vw, 56px)", fontWeight: 200, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>
+                <div className="dash-countup" data-target={typeof m.v === "number" ? m.v : 0} data-suffix={m.suffix} style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(36px, 4vw, 52px)", fontWeight: 700, color: m.color, lineHeight: 1 }}>
                   {typeof m.v === "number" ? m.v.toLocaleString() : m.v}{m.suffix}
                 </div>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.25)", marginTop: 12 }}>{m.l}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginTop: 14 }}>{m.l}</div>
               </div>
             ))}
           </div>
 
-          {/* ========== ALERTE URGENTE (seulement si > 0) ========== */}
+          {/* ========== ALERTE URGENTE ========== */}
           {urgentCount > 0 && (
             <div
               onClick={() => { setShowClientList(true); setActiveTab("clients"); }}
+              className="dash-alert-row"
               style={{
-                display: "flex", alignItems: "center", gap: 10, marginBottom: 40,
+                display: "flex", alignItems: "center", gap: 12, marginBottom: 32,
                 padding: "14px 20px",
-                background: "rgba(255,107,107,0.04)",
-                border: "1px solid rgba(255,107,107,0.12)",
-                borderRadius: 12, cursor: "pointer",
-                transition: "border-color .2s",
+                background: "rgba(239,68,68,0.06)",
+                border: "1px solid rgba(239,68,68,0.15)",
+                borderRadius: 10, cursor: "pointer",
+                transition: "all .2s",
               }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(255,107,107,0.3)"}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(255,107,107,0.12)"}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.06)"}
             >
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: RED, flexShrink: 0 }} />
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,.6)", fontWeight: 500 }}>{urgentCount} client{urgentCount > 1 ? "s" : ""} à contacter</span>
-              <Icon name="arrow-right" size={14} color="rgba(255,255,255,.2)" />
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff6b6b", flexShrink: 0, animation: "rbPulse 2s ease-in-out infinite" }} />
+              <span style={{ fontSize: 14, color: "#fff", fontWeight: 500, flex: 1 }}>{urgentCount} client{urgentCount > 1 ? "s" : ""} à contacter</span>
+              <Icon name="arrow-right" size={14} color="rgba(255,255,255,.25)" />
             </div>
           )}
 
