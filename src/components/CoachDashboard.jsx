@@ -540,12 +540,6 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           font-family:'Inter',-apple-system,system-ui,sans-serif;color:#fff;
         }
         @media(min-width:1024px){
-          .coach-client-panel{
-            position:relative;inset:auto;
-            width:440px;flex:0 0 440px;
-            height:100vh;z-index:auto;
-            border-left:.5px solid rgba(255,255,255,.06);
-          }
           .coach-client-panel-ambient{position:absolute!important}
           .coach-client-panel-inner{max-width:none!important;padding:0 22px 48px!important}
         }

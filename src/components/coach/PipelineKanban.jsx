@@ -89,8 +89,8 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
             <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,0.6)" />
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>Vue Pipeline</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: "-0.3px" }}>Gestion des clients</div>
+            <div style={{ fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", fontWeight: 700 }}>Pipeline</div>
+            <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em" }}>Ton pipeline<span style={{ color: "#00C9A7" }}>.</span></div>
           </div>
         </div>
         {/* Search input */}
