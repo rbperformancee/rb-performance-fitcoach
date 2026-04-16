@@ -2702,6 +2702,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
+          {/* ========== OVERVIEW (exclusif — masque quand autre tab active) ========== */}
+          {!showClientList && activeTab === "overview" && (<>
+
           {/* ========== TITRE ANIME ========== */}
           <div style={{ marginBottom: 48 }}>
             {/* Date */}
@@ -2848,6 +2851,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               )}
             </div>
           )}
+
+          </>)}
 
           {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
           {!showClientList && activeTab === "business" && coachData && clients.length > 0 && (
