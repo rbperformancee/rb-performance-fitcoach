@@ -898,6 +898,9 @@ section.how::-webkit-scrollbar{display:none}
 .how .stack-card:nth-child(1){top:20px;background:#0f0f0f;border-color:rgba(255,255,255,.07);z-index:1}
 .how .stack-card:nth-child(2){top:52px;background:#131313;border-color:rgba(255,255,255,.07);z-index:2}
 .how .stack-card:nth-child(3){top:84px;background:#171717;border-color:rgba(2,209,186,.15);z-index:3}
+.how .stack-card:nth-child(4){top:116px;background:#0f1318;border-color:rgba(2,209,186,.15);z-index:4}
+.how .stack-card:nth-child(5){top:148px;background:#111318;border-color:rgba(249,115,22,.15);z-index:5}
+.how .stack-card:nth-child(6){top:180px;background:#131318;border-color:rgba(167,139,250,.15);z-index:6}
 .how .stack-card.faded{opacity:1;transform:none;pointer-events:auto}
 
 .sc-num{
@@ -946,6 +949,9 @@ section.how::-webkit-scrollbar{display:none}
   .how .stack-card:nth-child(1){top:12px}
   .how .stack-card:nth-child(2){top:28px}
   .how .stack-card:nth-child(3){top:44px}
+  .how .stack-card:nth-child(4){top:60px}
+  .how .stack-card:nth-child(5){top:76px}
+  .how .stack-card:nth-child(6){top:92px}
   .sc-num{font-size:60px;top:14px;right:18px}
   .sc-title{font-size:clamp(22px,6vw,30px)}
 }
@@ -1618,6 +1624,49 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         </div>
       </div>
 
+      <div class="stack-card" style="--i:3">
+        <div class="sc-num">05</div>
+        <div class="sc-tag" style="color:#02d1ba">Automatisations</div>
+        <h3 class="sc-title">Tu travailles moins.<br>Tes clients avancent plus.</h3>
+        <p class="sc-desc">Tout ce qui peut être automatisé l'est.
+        Tu te concentres sur le coaching, pas sur l'admin.</p>
+        <div class="sc-feat">
+          <span>Rapports hebdo auto-envoyés au client</span>
+          <span>Relance auto si client inactif 3j</span>
+          <span>Renouvellement d'abonnement automatique</span>
+          <span>Zéro tâche manuelle</span>
+        </div>
+      </div>
+
+      <div class="stack-card" style="--i:4">
+        <div class="sc-num">06</div>
+        <div class="sc-tag" style="color:#f97316">Indépendance totale</div>
+        <h3 class="sc-title">Ton business<br>t'appartient.</h3>
+        <p class="sc-desc">Pas de commission, pas de dépendance,
+        pas de plateforme US qui change les règles du jeu.</p>
+        <div class="sc-feat">
+          <span>0% commission sur tes revenus, à vie</span>
+          <span>Export de tes données à tout moment</span>
+          <span>Ton domaine custom, ton branding</span>
+          <span>Jamais dépendant d'une plateforme US</span>
+        </div>
+      </div>
+
+      <div class="stack-card" style="--i:5">
+        <div class="sc-num">07</div>
+        <div class="sc-tag" style="color:#a78bfa">Intégrations</div>
+        <span style="display:inline-block;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);border-radius:100px;padding:3px 12px;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#a78bfa;margin-bottom:8px">Roadmap 2025</span>
+        <h3 class="sc-title">Connecté à tout ce que<br>tu utilises.</h3>
+        <p class="sc-desc">Les intégrations les plus demandées arrivent.
+        Tu restes sur tes outils — RB Perform s'y connecte.</p>
+        <div class="sc-feat">
+          <span>Google Calendar sync</span>
+          <span>Stripe direct</span>
+          <span>WhatsApp notifications</span>
+          <span>Apple Health / Strava / Garmin</span>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -1817,28 +1866,41 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </div>
   </div>
 
-  <!-- ========== DEMO CTA BLOCK (sous la scene iPhone) ========== -->
-  <div class="pr-demo-cta">
-    <div class="pr-demo-inner">
-      <div class="pr-demo-left">
-        <div class="pr-demo-label">Sandbox live</div>
-        <div class="pr-demo-title">
-          Essaie le dashboard.<br>Sans créer de compte.
+  <!-- ========== DEMO PREMIUM (2 cartes cote a cote) ========== -->
+  <div style="max-width:1100px;margin:0 auto;padding:0 24px 60px">
+    <div style="text-align:center;margin-bottom:36px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:10px">Démo Premium</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px">15 min d'accès complet. Sans créer de compte.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <!-- Carte Coach -->
+      <div style="background:#0D1520;border:1px solid rgba(2,209,186,0.2);border-radius:20px;padding:36px 32px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba">Vue Coach</div>
+        <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1">Tu pilotes ton business.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+          <div style="font-size:13px;color:rgba(255,255,255,0.45)">· MRR live</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45)">· Anti-churn IA</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45)">· Pipeline</div>
         </div>
-        <div class="pr-demo-sub">
-          15 minutes d'accès complet. 8 clients fictifs.
-          Toutes les features actives. Aucune carte requise.
-        </div>
-      </div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <a href="/demo" class="pr-demo-btn">
-          👤 Voir la démo coach →
+        <a href="/demo" style="display:block;text-align:center;padding:14px 24px;background:#02d1ba;color:#080C14;font-size:13px;font-weight:800;border-radius:12px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          Explorer la démo coach →
         </a>
-        <a href="/demo-client" class="pr-demo-btn" style="background:rgba(2,209,186,0.12);color:#02d1ba;border:1px solid rgba(2,209,186,0.3)">
-          📱 Voir la démo client →
+      </div>
+      <!-- Carte Client -->
+      <div style="background:#0D1520;border:1px solid rgba(2,209,186,0.2);border-radius:20px;padding:36px 32px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba">Vue Client</div>
+        <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1">Ton client vit autre chose.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+          <div style="font-size:13px;color:rgba(255,255,255,0.45)">· App branded</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45)">· Programme</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45)">· Nutrition</div>
+        </div>
+        <a href="/demo-client" style="display:block;text-align:center;padding:14px 24px;background:rgba(2,209,186,0.08);color:#02d1ba;font-size:13px;font-weight:800;border:1px solid rgba(2,209,186,0.25);border-radius:12px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          Explorer la démo client →
         </a>
       </div>
     </div>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(255,255,255,0.2)">8 clients fictifs · Toutes les features actives · Aucune carte requise</div>
   </div>
 
 </section>
