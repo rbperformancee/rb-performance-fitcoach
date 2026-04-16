@@ -1,5 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { LOGO_B64 } from "../utils/logo";
+
+// HeroBackground charge en lazy pour eviter d'alourdir le bundle principal
+// avec three.js (~150kb). Fallback : rien, la hero reste lisible sans WebGL.
+const HeroBackground = lazy(() => import("./HeroBackground"));
 
 const G = "#02d1ba";
 const GOLD = "#f5c842";
@@ -71,26 +75,76 @@ export default function SaasLandingPage({ onSignup, onBack }) {
           </div>
         </div>
 
-        {/* ===== HERO ===== */}
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "80px 24px 60px", textAlign: "center", animation: "slFade 0.6s ease both" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 100, padding: "6px 16px", fontSize: 11, color: G, fontWeight: 700, marginBottom: 24, letterSpacing: "0.5px" }}>
-            La plateforme de coaching #1
+        {/* ===== HERO avec fond WebGL ===== */}
+        <section style={{ position: "relative", minHeight: "100vh", background: "#080C14", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 60 }}>
+          {/* Fond WebGL anime (lazy-load, fallback invisible) */}
+          <Suspense fallback={null}>
+            <HeroBackground />
+          </Suspense>
+
+          {/* Overlay gradient doux pour lisibilite du texte */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "radial-gradient(ellipse at center, transparent 20%, #080C14 80%)",
+            pointerEvents: "none",
+            zIndex: 1,
+          }} />
+
+          {/* Contenu */}
+          <div style={{ position: "relative", zIndex: 2, textAlign: "center", padding: "80px 24px", maxWidth: 900, animation: "slFade 0.6s ease both" }}>
+            <p style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
+              color: "#00C9A7", textTransform: "uppercase",
+              marginBottom: 20, margin: "0 0 20px",
+            }}>
+              ✦  Alerte churn predictive · 0% commission
+            </p>
+
+            <h1 style={{
+              fontSize: "clamp(80px, 12vw, 160px)",
+              fontWeight: 900, color: "#FFFFFF",
+              lineHeight: 0.9, letterSpacing: "-0.05em",
+              margin: "0 0 28px",
+              fontFamily: "'Syne', sans-serif",
+            }}>
+              RB<br />PERFORM
+            </h1>
+
+            <p style={{
+              fontSize: "clamp(16px, 1.8vw, 20px)",
+              color: "rgba(255,255,255,0.55)",
+              maxWidth: 480, margin: "0 auto 40px",
+              lineHeight: 1.65,
+            }}>
+              Tu sais quel client va partir.<br />
+              Avant qu'il parte.
+            </p>
+
+            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+              <button onClick={onSignup} style={{
+                padding: "14px 28px",
+                background: "#00C9A7", color: "#080C14",
+                fontWeight: 700, fontSize: 14, borderRadius: 8,
+                border: "none", cursor: "pointer",
+                letterSpacing: "0.02em",
+                fontFamily: "inherit",
+              }}>
+                Demarrer l'essai gratuit →
+              </button>
+              <button onClick={onSignup} style={{
+                padding: "14px 28px",
+                border: "1px solid rgba(255,255,255,0.15)",
+                background: "transparent",
+                color: "rgba(255,255,255,0.8)",
+                fontWeight: 600, fontSize: 14, borderRadius: 8,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}>
+                Voir la demo
+              </button>
+            </div>
           </div>
-          <h1 style={{ fontSize: "clamp(40px, 8vw, 72px)", fontWeight: 900, letterSpacing: "-3px", lineHeight: 0.92, margin: "0 0 24px" }}>
-            Ton business de<br />coaching, <span style={{ color: G }}>automatise.</span>
-          </h1>
-          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, maxWidth: 560, margin: "0 auto 40px", fontWeight: 400 }}>
-            Dashboard premium, suivi client complet, IA nutritionnelle, scanner code-barre. Tout ce dont un coach a besoin pour scaler a 100+ clients.
-          </p>
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onSignup} style={{ padding: "16px 32px", background: `linear-gradient(135deg, ${G}, #0891b2)`, color: "#000", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.5px", textTransform: "uppercase", boxShadow: "0 12px 40px rgba(2,209,186,0.3)" }}>
-              Commencer gratuitement
-            </button>
-            <button onClick={onSignup} style={{ padding: "16px 28px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-              Voir une demo →
-            </button>
-          </div>
-        </div>
+        </section>
 
         {/* ===== STATS BAR ===== */}
         <div style={{ maxWidth: 800, margin: "0 auto 80px", display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap", padding: "0 24px", animation: "slFade 0.6s ease 0.2s both" }}>
