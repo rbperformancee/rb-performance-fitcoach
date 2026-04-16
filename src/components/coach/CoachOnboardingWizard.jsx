@@ -52,20 +52,16 @@ export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
 
   return (
     <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease both" }}>
-      {/* Hero accueil */}
-      <div style={{ padding: "32px 24px", background: "linear-gradient(135deg, rgba(2,209,186,0.08), rgba(0,201,167,0.04))", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 22, marginBottom: 16, textAlign: "center" }}>
-        <div style={{ width: 64, height: 64, borderRadius: 18, background: "rgba(2,209,186,0.15)", border: "1px solid rgba(2,209,186,0.35)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: G, marginBottom: 16, boxShadow: "0 0 30px rgba(2,209,186,0.25)" }}>
-          <AppIcon name="sparkles" size={28} color={G} strokeWidth={1.5} />
+      {/* Hero accueil — premium */}
+      <div style={{ padding: "40px 28px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, marginBottom: 20, textAlign: "center" }}>
+        <div style={{ fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", fontWeight: 700, marginBottom: 12 }}>
+          Bienvenue
         </div>
-        <div style={{ fontSize: 11, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.8)", fontWeight: 700, marginBottom: 8 }}>
-          Bienvenue, {coach?.full_name?.split(" ")[0] || "Coach"}
-        </div>
-        <h2 style={{ fontSize: 26, fontWeight: 900, color: "#fff", margin: "0 0 10px", letterSpacing: "-1px", lineHeight: 1.1 }}>
-          On lance ton<br />
-          <span style={{ color: G }}>activite de coaching.</span>
+        <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 900, color: "#fff", margin: "0 0 12px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+          Lance ton activité<span style={{ color: G }}>.</span>
         </h2>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: "0 auto", maxWidth: 360 }}>
-          3 etapes pour avoir ton premier client actif. Chaque etape prend moins de 5 minutes.
+        <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: "0 auto", maxWidth: 380 }}>
+          3 étapes. 5 minutes. Ton premier client actif.
         </p>
       </div>
 

@@ -408,6 +408,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [newNote, setNewNote] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
   const [uploadPlanId, setUploadPlanId] = useState("3m");
+  const [panelTab, setPanelTab] = useState("resume");
   const [uploadProgWeeks, setUploadProgWeeks] = useState(6);
   const [showBuilder, setShowBuilder] = useState(false); // duree du programme en semaines
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
@@ -632,6 +633,29 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           </div>
         </div>
 
+        {/* ===== TAB BAR INTERNE ===== */}
+        <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.06)", animation: "cpFadeUp 0.3s ease 0.05s both" }}>
+          {[
+            { id: "resume", label: "Résumé" },
+            { id: "programme", label: "Programme" },
+            { id: "nutrition", label: "Nutrition" },
+            { id: "suivi", label: "Suivi" },
+          ].map(t => (
+            <button key={t.id} onClick={() => setPanelTab(t.id)} style={{
+              padding: "12px 20px",
+              fontSize: 12, fontWeight: panelTab === t.id ? 700 : 500,
+              color: panelTab === t.id ? "#fff" : "rgba(255,255,255,0.3)",
+              background: "none", border: "none", cursor: "pointer",
+              borderBottom: panelTab === t.id ? "2px solid #00C9A7" : "2px solid transparent",
+              fontFamily: "inherit", letterSpacing: ".02em",
+              transition: "all .2s",
+            }}>{t.label}</button>
+          ))}
+        </div>
+
+        {/* ===== TAB: RESUME ===== */}
+        {panelTab === "resume" && (<>
+
         {/* ===== STATS RAPIDES (une ligne — sans pesees ni pas, deja dans leurs cards) ===== */}
         <div style={{ ...section, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, animation: "cpFadeUp 0.4s ease 0.08s both" }}>
           {[
@@ -822,6 +846,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           )}
         </div>
 
+        </>)}
+
+        {/* ===== TAB: NUTRITION ===== */}
+        {panelTab === "nutrition" && (<>
+
         {/* ===== ALIMENTATION 7 JOURS ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.18s both" }}>
           <div style={sectionTitle}>
@@ -980,6 +1009,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             </div>
           )}
         </div>
+
+        </>)}
+
+        {/* ===== TAB: PROGRAMME ===== */}
+        {panelTab === "programme" && (<>
 
         {/* ===== HISTORIQUE SEANCES — avec detail poids souleves ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.22s both" }}>
@@ -1205,6 +1239,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           )}
         </div>
 
+        </>)}
+
+        {/* Objectifs nutritionnels dans l'onglet Nutrition */}
+        {panelTab === "nutrition" && (<>
         {/* ===== NUTRITION ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.28s both" }}>
           <div style={sectionTitle}>
@@ -1255,6 +1293,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             </div>
           )}
         </div>
+
+        </>)}
+
+        {/* ===== TAB: SUIVI ===== */}
+        {panelTab === "suivi" && (<>
 
         {/* ===== NIVEAU CLIENT AUTO ===== */}
         {(() => {
@@ -1520,6 +1563,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             Supprimer ce client
           </button>
         </div>
+
+        </>)}
 
       </div>
 

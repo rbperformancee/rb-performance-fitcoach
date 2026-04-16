@@ -68,13 +68,15 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
 
       {/* Header */}
       <div style={header}>
-        <button onClick={onClose} style={backBtn}>
+        <button onClick={onClose} style={{ ...backBtn, padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", transition: "all .15s" }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.3)"; e.currentTarget.style.background = "rgba(0,201,167,0.06)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+        >
           <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,.6)" />
           <span>Retour</span>
         </button>
-        <div style={headerTitle}>
-          <span style={{ color: "rgba(255,255,255,.3)" }}>⚙</span>
-          <span>Parametres</span>
+        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
+          Mon compte<span style={{ color: "#00C9A7" }}>.</span>
         </div>
         <div style={{ width: 80 }} />
       </div>

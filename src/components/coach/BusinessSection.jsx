@@ -140,12 +140,10 @@ export default function BusinessSection({ coachData, clients = [] }) {
 
   return (
     <div style={{ marginBottom: 40, animation: "fadeUp 0.4s ease both" }}>
-      {/* ===== HEADER SECTION ===== */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-        <AppIcon name="chart" size={16} color={G} />
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: `${G}b3` }}>
-          Business
-        </div>
+      {/* ===== HEADER ===== */}
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginBottom: 8 }}>Business</div>
+        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em" }}>Ton business<span style={{ color: G }}>.</span></div>
       </div>
 
       {/* ===== HERO MRR + SCORE ===== */}
