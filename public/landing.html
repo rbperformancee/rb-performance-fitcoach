@@ -93,7 +93,7 @@ html,body{overflow:hidden;height:100%;background:#080C14}
 section{background:#080C14 !important}
 section{position:fixed !important;inset:0 !important;width:100% !important;height:100% !important;opacity:0 !important;pointer-events:none !important;background:#080C14 !important;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1) !important;overflow-y:auto !important;z-index:1 !important;-webkit-overflow-scrolling:touch}
 section.active{opacity:1 !important;pointer-events:all !important;background:#080C14 !important;z-index:10 !important}
-section.manifeste,section.how,section.product-reveal,section.bento,section.demo-section,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080C14 !important}
+section.how,section.product-reveal,section.bento,section.demo-section,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080C14 !important}
 section.hero{overflow:hidden !important}
 .gsap-override *{opacity:1 !important;transform:none !important;visibility:visible !important}
 :root{--orange:#f97316;--orange-bright:#fb923c;--teal:#02d1ba;--teal-bright:#5ee8d4;--violet:#a78bfa;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
@@ -1499,81 +1499,12 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <h1 class="hero-title" id="heroTitle">RB PERFORM</h1>
     <p class="hero-sub">Le système qui transforme<br/>chaque coach en CEO.</p>
   </div>
-  <button class="hero-arrow" id="heroEnter" onclick="document.querySelector('section.manifeste').classList.add('active');document.querySelector('section.hero').classList.remove('active')"
+  <button class="hero-arrow" id="heroEnter" onclick="document.querySelector('section.how').classList.add('active');document.querySelector('section.hero').classList.remove('active')"
     style="position:absolute;bottom:48px;left:50%;transform:translateX(-50%);white-space:nowrap;background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:8px 24px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;z-index:5">
     Entrer
   </button>
 </section>
 
-<!-- ========== MANIFESTE ========== -->
-<section class="manifeste">
-  <div>
-    <p class="manifeste-text reveal" id="manifesteText">Certains coachs ont du talent. Les meilleurs ont un système.</p>
-    <p class="manifeste-sub reveal stagger-2" style="margin-top:32px">RB Perform est <b>ce système</b>.</p>
-    <div class="manifeste-stats">
-      <div class="manifeste-stat">
-        <div class="num" data-count="0" data-suffix="%">0%</div>
-        <div class="lbl">Commission</div>
-      </div>
-      <div class="manifeste-stat">
-        <div class="num" data-count="14" data-suffix="j">14j</div>
-        <div class="lbl">Gratuits</div>
-      </div>
-      <div class="manifeste-stat">
-        <div class="num" data-count="5" data-suffix="min">5min</div>
-        <div class="lbl">Pour démarrer</div>
-      </div>
-    </div>
-
-    <!-- Stacking cards COLOREES (degrade progressif) -->
-    <div class="manifeste-stacks">
-
-      <div class="mstack-card" style="--mi:0">
-        <div class="mstack-num">01</div>
-        <div class="mstack-accent">Dashboard CEO</div>
-        <h3 class="mstack-title">Tu sais exactement<br>où en est ton business.</h3>
-        <p class="mstack-desc">MRR, ARR, score business calculé en temps réel,
-        alertes d'expiration. Le cockpit que les autres plateformes cachent
-        derrière 3 onglets — tu l'as en hero.</p>
-        <div class="mstack-feats">
-          <span>Score 0–100 live</span>
-          <span>MRR · ARR · Rétention</span>
-          <span>Alertes expiration</span>
-        </div>
-      </div>
-
-      <div class="mstack-card" style="--mi:1">
-        <div class="mstack-num">02</div>
-        <div class="mstack-accent">Anti-Churn IA</div>
-        <h3 class="mstack-title">Tu sauves les clients<br>avant qu'ils partent.</h3>
-        <p class="mstack-desc">7 signaux analysés par client en continu.
-        Score de churn 0–100. Alerte avec action recommandée.
-        Tu interviens 7 jours avant que le client parte.</p>
-        <div class="mstack-feats">
-          <span>7 signaux comportementaux</span>
-          <span>Score prédictif</span>
-          <span>Action recommandée</span>
-        </div>
-      </div>
-
-      <div class="mstack-card" style="--mi:2">
-        <div class="mstack-num">03</div>
-        <div class="mstack-accent">Expérience client</div>
-        <h3 class="mstack-title">Tes clients vivent<br>quelque chose de différent.</h3>
-        <p class="mstack-desc">App branded à ton image. Programmes interactifs,
-        suivi nutritionnel, tracking d'activité, push notifications.
-        Ton client se sent suivi — pas géré.</p>
-        <div class="mstack-feats">
-          <span>White-label</span>
-          <span>Programmes multi-semaines</span>
-          <span>Push notifications</span>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-</section>
 
 <!-- ========== LE SYSTÈME — FORMAT CINÉMATIQUE ========== -->
 <section class="how" style="background:#080C14">
@@ -1618,8 +1549,24 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <!-- Header -->
   <div style="text-align:center;padding:100px 24px 48px">
     <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px">Le Système</div>
-    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,8vw,72px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0 0 16px">Plus qu'une app.<br>Un système.</h2>
-    <p style="font-size:15px;color:rgba(255,255,255,0.3);max-width:440px;margin:0 auto;line-height:1.5">Certains coachs ont du talent.<br>Les meilleurs ont un système.</p>
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6.5vw,92px);letter-spacing:-1.5px;line-height:1.02;color:#fff;margin:0 0 40px;max-width:1000px;display:inline-block">Certains coachs ont du talent.<br>Les meilleurs ont un système.</h2>
+    <!-- Stats 3 colonnes -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);max-width:900px;margin:0 auto;position:relative">
+      <div style="position:absolute;top:25%;bottom:25%;left:33.33%;width:1px;background:rgba(255,255,255,0.06)"></div>
+      <div style="position:absolute;top:25%;bottom:25%;right:33.33%;width:1px;background:rgba(255,255,255,0.06)"></div>
+      <div style="text-align:center;padding:20px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">0%</div>
+        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Commission</div>
+      </div>
+      <div style="text-align:center;padding:20px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">14j</div>
+        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Gratuits</div>
+      </div>
+      <div style="text-align:center;padding:20px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">5min</div>
+        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Pour démarrer</div>
+      </div>
+    </div>
   </div>
 
   <!-- 01 DASHBOARD CEO -->
@@ -3331,7 +3278,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   // Liste des sections exposee pour le swipe tactile
   window.__SECTIONS__ = [
-    'hero','manifeste','how','product-reveal',
+    'hero','how','product-reveal',
     'bento','features','roi','client-view','pricing'
   ];
 
@@ -3387,7 +3334,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   if (heroArrow) {
     heroArrow.addEventListener('click', (e) => {
       e.preventDefault();
-      showSection('manifeste');
+      showSection('how');
     });
   }
 
@@ -3396,7 +3343,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     const arrow = e.target.closest('a, button, [data-next]');
     if (arrow && arrow.classList.contains('hero-arrow')) {
       e.preventDefault();
-      showSection('manifeste');
+      showSection('how');
     }
   });
 
@@ -3420,7 +3367,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   // Navigation clavier (fleches gauche/droite/haut/bas)
   const ORDER = [
-    'hero', 'manifeste', 'how', 'product-reveal',
+    'hero', 'how', 'product-reveal',
     'bento', 'demo-section', 'features', 'roi', 'client-view', 'founding', 'pricing'
   ];
 
@@ -3532,7 +3479,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   const heroEnter = document.getElementById('heroEnter');
   if (heroEnter) {
     heroEnter.addEventListener('click', () => {
-      setTimeout(() => showSectionWithDots('manifeste'), 50);
+      setTimeout(() => showSectionWithDots('how'), 50);
     });
   }
 
