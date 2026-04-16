@@ -2477,9 +2477,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     <div className="coach-mobile-topbar" style={{
       alignItems: "center",
       justifyContent: "flex-end",
-      padding: "calc(env(safe-area-inset-top, 8px) + 8px) 20px 0",
+      padding: "0 0 0",
+      height: 0,
     }}>
-      <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
     </div>
   );
 
@@ -2611,9 +2611,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         .coach-nav-item:hover{color:rgba(255,255,255,.65)!important;background:rgba(255,255,255,.035)!important}
         @media(max-width:1023px){
           .coach-sidebar{display:none}
-          .coach-mobile-topbar{display:flex}
+          .coach-mobile-topbar{display:none}
           .coach-floating-pill{display:flex}
           .coach-main-inner{padding:12px 20px 120px !important;max-width:100% !important;overflow:hidden !important}
+          .coach-mobile-bell{display:block !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
@@ -2753,8 +2754,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
               </h1>
             </div>
-            {/* Heure + anneau score */}
-            <div style={{ textAlign: "right", flexShrink: 0 }}>
+            {/* Heure + anneau score + notif bell mobile */}
+            <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
               <div style={{ fontSize: 38, fontWeight: 100, color: "rgba(255,255,255,0.8)", letterSpacing: "-2px", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
                 {String(new Date().getHours()).padStart(2,"0")}:{String(new Date().getMinutes()).padStart(2,"0")}
               </div>
@@ -2768,6 +2769,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   </svg>
                   <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: G }}>{businessScore}</div>
                 </div>
+              </div>
+              <div className="coach-mobile-bell" style={{ display: "none" }}>
+                <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
               </div>
             </div>
           </div>
