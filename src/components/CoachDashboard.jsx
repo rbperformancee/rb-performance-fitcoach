@@ -47,16 +47,17 @@ const SUB_PLANS = [
   { id: "12m", label: "12 Mois", months: 12 },
 ];
 
-const G = "#02d1ba";
-const ORANGE = "#f97316";
-const VIOLET = "#a78bfa";
-const RED = "#ef4444";
+const G = "#00C9A7";
+const ORANGE = "#00C9A7";
+const VIOLET = "#00C9A7";
+const RED = "#ff6b6b";
+const BG = "#080C14";
 const PREMIUM_STYLES = {
-  card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)" },
-  badge: (color) => ({ display: "inline-flex", alignItems: "center", gap: 4, background: color + "15", border: "1px solid " + color + "30", color, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, letterSpacing: 0.5 }),
+  card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)" },
+  badge: (color) => ({ display: "inline-flex", alignItems: "center", gap: 4, background: color + "12", border: "1px solid " + color + "25", color, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, letterSpacing: 0.5 }),
 };
-const G_DIM = "rgba(2,209,186,0.12)";
-const G_BORDER = "rgba(2,209,186,0.25)";
+const G_DIM = "rgba(0,201,167,0.1)";
+const G_BORDER = "rgba(0,201,167,0.2)";
 
 // ===== Icon component premium (lucide/feather style) =====
 // Remplace TOUS les emojis du dashboard. stroke 1.8 pour finesse, size par defaut 18.
@@ -2339,225 +2340,73 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   const CoachSidebar = (
     <aside className="coach-sidebar" style={{
-      width: 220,
-      background: "#000",
-      borderRight: ".5px solid rgba(255,255,255,.04)",
+      width: 64,
+      background: BG,
+      borderRight: "1px solid rgba(255,255,255,.06)",
       flexDirection: "column",
+      alignItems: "center",
       height: "100vh",
       position: "sticky",
       top: 0,
       overflow: "hidden",
       flexShrink: 0,
     }}>
-      {/* LOGO RBPERFORM */}
-      <div style={{ padding: "28px 22px 32px", position: "relative", zIndex: 1 }}>
+      {/* LOGO RB· */}
+      <div style={{ padding: "20px 0 24px", position: "relative", zIndex: 1, textAlign: "center" }}>
         <div style={{
           fontFamily: "'Syne', sans-serif",
-          fontSize: 14, fontWeight: 900,
-          letterSpacing: ".1em", color: "#fff",
-          display: "flex", alignItems: "center", gap: 0,
+          fontSize: 11, fontWeight: 900,
+          letterSpacing: ".08em", color: "#fff",
         }}>
-          RB<span style={{ color: "#02d1ba" }}>PERFORM</span>
-          <div style={{
-            width: 5, height: 5, borderRadius: "50%",
-            background: "#02d1ba",
-            marginLeft: 3, marginBottom: 1,
-            animation: "rbDotPulse 2.4s ease-in-out infinite",
-          }} />
+          RB<span style={{ color: G }}>·</span>
         </div>
       </div>
 
-      {/* NAV ITEMS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, position: "relative", zIndex: 1 }}>
-        <div style={{
-          fontSize: 9, fontWeight: 700,
-          letterSpacing: ".2em", textTransform: "uppercase",
-          color: "rgba(255,255,255,.12)",
-          padding: "0 12px", marginBottom: 6, marginLeft: 10,
-        }}>Principal</div>
-        {navItems.filter(n => n.group === "principal").map(n => {
+      {/* NAV ICONS */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, alignItems: "center", position: "relative", zIndex: 1 }}>
+        {[...navItems, { id: "pipeline", label: "Pipeline", icon: "view", group: "outils" }].map(n => {
           const isActive = activeTab === n.id;
           return (
             <button
               key={n.id}
               onClick={() => sidebarOnNav(n.id)}
               className="coach-nav-item"
+              title={n.label}
               style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "9px 12px", margin: "0 10px",
-                borderRadius: 8,
-                fontSize: 12, fontWeight: isActive ? 500 : 400,
-                color: isActive ? "rgba(255,255,255,.88)" : "rgba(255,255,255,.22)",
-                background: isActive ? "rgba(255,255,255,.05)" : "transparent",
+                width: 40, height: 40,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                borderRadius: 10,
+                background: isActive ? "rgba(0,201,167,.1)" : "transparent",
                 border: "none", cursor: "pointer",
                 transition: "all .18s ease",
                 position: "relative",
-                letterSpacing: ".02em",
                 fontFamily: "inherit",
-                textAlign: "left",
               }}
             >
-              {isActive && <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 18, background: "#02d1ba", borderRadius: "0 3px 3px 0" }} />}
-              <Icon name={n.icon} size={14} color={isActive ? "rgba(255,255,255,.88)" : "rgba(255,255,255,.3)"} />
-              <span style={{ flex: 1 }}>{n.label}</span>
+              {isActive && <div style={{ position: "absolute", left: -12, top: "50%", transform: "translateY(-50%)", width: 3, height: 18, background: G, borderRadius: "0 3px 3px 0" }} />}
+              <Icon name={n.icon} size={18} color={isActive ? G : "rgba(255,255,255,.35)"} />
               {n.badge > 0 && (
-                <span style={{ background: "#ef4444", color: "#fff", fontSize: 9, fontWeight: 800, borderRadius: 100, padding: "2px 7px", fontFamily: "'JetBrains Mono',monospace" }}>{n.badge > 9 ? "9+" : n.badge}</span>
+                <div style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: RED, border: `2px solid ${BG}` }} />
               )}
             </button>
           );
         })}
-
-        <div style={{ height: ".5px", background: "rgba(255,255,255,.04)", margin: "12px 20px" }} />
-
-        <div style={{
-          fontSize: 9, fontWeight: 700,
-          letterSpacing: ".2em", textTransform: "uppercase",
-          color: "rgba(255,255,255,.12)",
-          padding: "0 12px", marginBottom: 6, marginLeft: 10,
-        }}>Outils</div>
-        {navItems.filter(n => n.group === "outils").map(n => (
-          <button
-            key={n.id}
-            onClick={() => sidebarOnNav(n.id)}
-            className="coach-nav-item"
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "9px 12px", margin: "0 10px",
-              borderRadius: 8,
-              fontSize: 12, fontWeight: 400,
-              color: "rgba(255,255,255,.22)",
-              background: "transparent",
-              border: "none", cursor: "pointer",
-              transition: "all .18s ease",
-              letterSpacing: ".02em",
-              fontFamily: "inherit",
-              textAlign: "left",
-            }}
-          >
-            <Icon name={n.icon} size={14} color="rgba(255,255,255,.3)" />
-            <span style={{ flex: 1 }}>{n.label}</span>
-          </button>
-        ))}
-        {clients.length > 0 && (
-          <button
-            onClick={() => { haptic.light(); setShowPipeline(true); }}
-            className="coach-nav-item"
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "9px 12px", margin: "0 10px",
-              borderRadius: 8,
-              fontSize: 12, fontWeight: 400,
-              color: "rgba(255,255,255,.22)",
-              background: "transparent",
-              border: "none", cursor: "pointer",
-              transition: "all .18s ease",
-              letterSpacing: ".02em",
-              fontFamily: "inherit",
-              textAlign: "left",
-            }}
-          >
-            <Icon name="view" size={14} color="rgba(255,255,255,.3)" />
-            <span style={{ flex: 1 }}>Pipeline</span>
-          </button>
-        )}
       </div>
 
-      {/* COACH CARD PREMIUM */}
-      <div style={{
-        margin: "auto 10px 16px",
-        background: "rgba(255,255,255,.025)",
-        border: ".5px solid rgba(255,255,255,.06)",
-        borderRadius: 16,
-        padding: "16px 14px",
-        position: "relative",
-        overflow: "hidden",
-        zIndex: 1,
-      }}>
-        {/* Ligne teal en haut */}
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0,
-          height: 1,
-          background: "linear-gradient(90deg,transparent,rgba(2,209,186,.3),transparent)",
-        }} />
-
-        {/* Avatar + infos */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: "50%",
-              background: "rgba(2,209,186,.08)",
-              border: ".5px solid rgba(2,209,186,.15)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "'Syne', sans-serif",
-              fontSize: 11, fontWeight: 900, color: "#02d1ba",
-            }}>{coachInitials}</div>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 13, fontWeight: 900, color: "#fff", letterSpacing: ".02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {coachName}<span style={{ color: "#02d1ba" }}>.</span>
-            </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", fontWeight: 400, marginTop: 1 }}>{coachPlan}</div>
-          </div>
-        </div>
-
-        {/* Score inline */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 12, marginBottom: 8 }}>
-          <span style={{ fontSize: 8, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", fontWeight: 700 }}>Score</span>
-          <span className="dash-score-num" style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 200, fontSize: 15, color: scoreColor, letterSpacing: "-0.5px" }}>{businessScore}</span>
-        </div>
-
-        {/* Sparkline MRR 30j */}
-        <div style={{ marginBottom: 4 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-            <span style={{ fontSize: 8, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.15)", fontWeight: 700 }}>MRR 30j</span>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 400, fontSize: 10, color: "#02d1ba" }}>{mrr.toLocaleString()} €</span>
-          </div>
-          <svg width="100%" height="28" viewBox="0 0 180 28" preserveAspectRatio="none" style={{ display: "block" }}>
-            <polyline points={`0,28 ${sparkPoints.split(" ").map(p => { const [x, y] = p.split(","); return `${x},${(parseFloat(y) * 28 / 32).toFixed(1)}`; }).join(" ")} 180,28`} fill="rgba(2,209,186,.04)" stroke="none" />
-            <polyline points={sparkPoints.split(" ").map(p => { const [x, y] = p.split(","); return `${x},${(parseFloat(y) * 28 / 32).toFixed(1)}`; }).join(" ")} fill="none" stroke="rgba(2,209,186,.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="180" cy={(parseFloat(sparkPoints.split(" ").pop().split(",")[1]) * 28 / 32).toFixed(1)} r="2" fill="#02d1ba" />
-          </svg>
-        </div>
-
-        {/* Row: Settings + Deconnexion */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 10, marginTop: 10, borderTop: ".5px solid rgba(255,255,255,.04)" }}>
-          <button
-            onClick={() => { haptic.light(); setShowSettings(true); }}
-            aria-label="Parametres"
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              background: "transparent", border: "none",
-              padding: "4px 6px",
-              color: "rgba(255,255,255,.45)",
-              fontSize: 10, fontFamily: "inherit",
-              cursor: "pointer",
-              transition: "color .15s",
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = "#02d1ba"}
-            onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,.45)"}
-          >
-            <Icon name="sparkles" size={12} color="currentColor" />
-            Parametres
-          </button>
-          <div
-            onClick={() => {
-              if (isDemo) {
-                supabase.auth.signOut().then(() => { window.location.href = "/"; });
-              } else {
-                supabase.auth.signOut().then(() => onExit?.());
-              }
-            }}
-            style={{
-              fontSize: 10, color: "rgba(255,255,255,.15)",
-              cursor: "pointer",
-              transition: "color .15s",
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = "rgba(255,255,255,.5)"}
-            onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,.15)"}
-          >
-            Déconnexion
-          </div>
-        </div>
+      {/* COACH AVATAR */}
+      <div style={{ margin: "auto 0 20px", position: "relative", zIndex: 1 }}>
+        <button
+          onClick={() => { haptic.light(); setShowSettings(true); }}
+          title={coachName}
+          style={{
+            width: 36, height: 36, borderRadius: "50%",
+            background: "rgba(0,201,167,.08)",
+            border: "1px solid rgba(0,201,167,.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "'Syne', sans-serif",
+            fontSize: 11, fontWeight: 900, color: G,
+            cursor: "pointer",
+          }}>{coachInitials}</button>
       </div>
     </aside>
   );
@@ -2569,7 +2418,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       position: "sticky",
       top: isDemo ? 44 : 0,
       zIndex: 50,
-      background: "rgba(8,8,8,.98)",
+      background: "rgba(8,12,20,.98)",
       backdropFilter: "blur(20px)",
       WebkitBackdropFilter: "blur(20px)",
       borderBottom: "1px solid rgba(255,255,255,.05)",
@@ -2658,8 +2507,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   return (
     <div style={{
       height: "100vh",
-      background: "#000",
-      fontFamily: "'DM Sans', -apple-system, sans-serif",
+      background: BG,
+      fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
       color: "#fff",
       display: "flex",
       overflow: "hidden",
@@ -2829,127 +2678,75 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       }}>
       {MobileTopBar}
 
-      <div className="coach-main-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "36px 44px 40px", position: "relative" }}>
-        {/* Ambient */}
-        <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 800, height: 400, background: "radial-gradient(ellipse at center, rgba(2,209,186,0.06), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
+      <div className="coach-main-inner" style={{ maxWidth: 1000, margin: "0 auto", padding: "48px 48px 40px", position: "relative" }}>
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
-          {/* ancien TOPNAV supprime — remplace par sidebar desktop + mobile topbar */}
-          {/* ========== HERO : phrase d'action + score business ========== */}
-          <div style={{ display: "flex", gap: 28, alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", animation: "fadeUp 0.4s ease both" }}>
-            {/* Phrase d'action a gauche */}
-            <div style={{ flex: 1, minWidth: 280 }}>
-              {/* Eyebrow date */}
-              <div style={{
-                fontSize: 9, fontWeight: 600,
-                letterSpacing: ".22em", textTransform: "uppercase",
-                color: "rgba(255,255,255,.18)",
-                marginBottom: 10,
-                fontFamily: "'DM Sans', sans-serif",
-              }}>
-                {(() => {
-                  const d = new Date();
-                  const days = ["DIM","LUN","MAR","MER","JEU","VEN","SAM"];
-                  const months = ["JAN","FEV","MAR","AVR","MAI","JUIN","JUIL","AOUT","SEP","OCT","NOV","DEC"];
-                  return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`;
-                })()}
-              </div>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(34px, 5vw, 52px)", fontWeight: 900, letterSpacing: "-0.035em", lineHeight: 1.02, color: "#fff", margin: 0 }}>
-                <span style={{ color: "#fff" }}>
-                  {total} client{total > 1 ? "s" : ""}.
-                  <span style={{
-                    display: "inline-block",
-                    width: 7, height: 7,
-                    borderRadius: "50%",
-                    background: "#02d1ba",
-                    marginLeft: 6,
-                    marginBottom: 6,
-                    verticalAlign: "middle",
-                    animation: "rbPulse 2.4s ease-in-out infinite",
-                  }} />
-                </span>
-                <br />
-                {urgentCount > 0 ? (
-                  <span style={{ color: "#ef4444", opacity: .85 }}>
-                    {urgentCount} à contacter.
-                  </span>
-                ) : (
-                  <span style={{ color: G }}>Tout roule.</span>
-                )}
-              </h1>
-              {/* Stats one-liner : lisible en 2 secondes */}
-              <div style={{ display: "flex", gap: 20, marginTop: 16, alignItems: "baseline", flexWrap: "wrap" }}>
-                {[
-                  { v: withProg, l: "programmes" },
-                  { v: activeToday, l: "en seance" },
-                  { v: activeWeek, l: "actifs 7j" },
-                  { v: inactiveAlerts, l: "inactifs" },
-                ].map((s, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "baseline" }}>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>{s.v}</span>
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,.25)", letterSpacing: ".06em", marginLeft: 4 }}>{s.l}</span>
-                  </div>
-                ))}
-              </div>
+          {/* ========== HERO CLEAN ========== */}
+          <div style={{ marginBottom: 60, animation: "fadeUp 0.4s ease both" }}>
+            {/* Date eyebrow */}
+            <div style={{
+              fontSize: 11, fontWeight: 600,
+              letterSpacing: ".15em", textTransform: "uppercase",
+              color: "rgba(255,255,255,.2)",
+              marginBottom: 12,
+            }}>
+              {(() => {
+                const d = new Date();
+                const days = ["DIMANCHE","LUNDI","MARDI","MERCREDI","JEUDI","VENDREDI","SAMEDI"];
+                const months = ["JANVIER","FEVRIER","MARS","AVRIL","MAI","JUIN","JUILLET","AOUT","SEPTEMBRE","OCTOBRE","NOVEMBRE","DECEMBRE"];
+                return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`;
+              })()}
             </div>
-
-            {/* Score Business a droite — anneau SVG progress 100x100 */}
-            <div style={{ position:"relative", width:100, height:100, flexShrink:0 }}>
-              <svg width="100" height="100" viewBox="0 0 100 100"
-                style={{ position:"absolute", top:0, left:0, transform:"rotate(-90deg)" }}>
-                <circle cx="50" cy="50" r="40"
-                  fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="3"/>
-                <circle cx="50" cy="50" r="40"
-                  fill="none" stroke={scoreColor} strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeDasharray="251.3"
-                  strokeDashoffset={`${251.3 * (1 - businessScore/100)}`}
-                  style={{ transition:"stroke-dashoffset 1s ease" }}
-                />
-              </svg>
-              <div style={{
-                position:"absolute", inset:0,
-                display:"flex", flexDirection:"column",
-                alignItems:"center", justifyContent:"center", gap:1
-              }}>
-                <div className="dash-score-num" style={{
-                  fontFamily:"'JetBrains Mono',monospace",
-                  fontSize:28, fontWeight:200,
-                  color:scoreColor, letterSpacing:"-2px", lineHeight:1
-                }}>{businessScore}</div>
-                <div style={{
-                  fontSize:7, fontWeight:700, letterSpacing:"2px",
-                  textTransform:"uppercase", color:"rgba(255,255,255,.2)"
-                }}>Score</div>
-                <div style={{
-                  fontSize: 9,
-                  fontWeight:600,
-                  color: scoreColor,
-                  opacity: .7,
-                }}>{scoreLabel}</div>
-              </div>
-            </div>
+            {/* Greeting */}
+            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(40px, 4vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.05, color: "#fff", margin: 0 }}>
+              Bonjour {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
+            </h1>
           </div>
 
-          {/* ========== METRIQUES BUSINESS ========== */}
-          {mrr > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginTop: 24, marginBottom: 28, animation: "fadeUp 0.5s ease 0.15s both" }}>
-              {[
-                { label: "MRR", value: mrr.toLocaleString() + " €", color: G, sub: mrr > 0 ? activeSubscriptions.length + " abos actifs" : null },
-                { label: "Prevision 90j", value: ((mrr * 3) - churnRisk90).toLocaleString() + " €", color: "#fff", sub: expiringIn90.length > 0 ? expiringIn90.length + " expirent" : "Stable" },
-                { label: "Retention", value: retentionRate + "%", color: retentionRate >= 80 ? G : retentionRate >= 60 ? ORANGE : RED, sub: retainedClients.length + "/" + onboardedClients.length + " actifs" },
-              ].map((m, i) => (
-                <div key={i} style={{
-                  background: "rgba(255,255,255,.02)",
-                  border: ".5px solid rgba(255,255,255,.05)",
-                  borderRadius: 14, padding: "18px 20px",
-                }}>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(255,255,255,.2)", marginBottom: 10 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 28, fontWeight: 200, color: m.color, letterSpacing: "-2px", lineHeight: 1 }}>{m.value}</div>
-                  {m.sub && <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,.2)", marginTop: 5, letterSpacing: ".03em" }}>{m.sub}</div>}
+          {/* ========== 3 METRIQUES ========== */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 40 }}>
+            {[
+              { v: businessScore, l: "SCORE", suffix: "" },
+              { v: mrr, l: "MRR", suffix: " €" },
+              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RETENTION", suffix: "%" },
+            ].map((m, i) => (
+              <div key={i} style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 16, padding: "32px 24px",
+                textAlign: "center",
+                transition: "border-color .2s",
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(0,201,167,0.3)"}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"}
+              >
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "clamp(36px, 4vw, 56px)", fontWeight: 200, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>
+                  {typeof m.v === "number" ? m.v.toLocaleString() : m.v}{m.suffix}
                 </div>
-              ))}
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.25)", marginTop: 12 }}>{m.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* ========== ALERTE URGENTE (seulement si > 0) ========== */}
+          {urgentCount > 0 && (
+            <div
+              onClick={() => { setShowClientList(true); setActiveTab("clients"); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 10, marginBottom: 40,
+                padding: "14px 20px",
+                background: "rgba(255,107,107,0.04)",
+                border: "1px solid rgba(255,107,107,0.12)",
+                borderRadius: 12, cursor: "pointer",
+                transition: "border-color .2s",
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(255,107,107,0.3)"}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(255,107,107,0.12)"}
+            >
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: RED, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,.6)", fontWeight: 500 }}>{urgentCount} client{urgentCount > 1 ? "s" : ""} à contacter</span>
+              <Icon name="arrow-right" size={14} color="rgba(255,255,255,.2)" />
             </div>
           )}
 
@@ -3153,7 +2950,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           est une colonne a droite + le dashboard au centre ; sur mobile
           le panel est un overlay qui couvre la liste de toute facon. */}
       {showClientList && !selected && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: "#000", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: BG, overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}>
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
