@@ -2747,11 +2747,11 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         item.classList.toggle('open');
         btn.setAttribute('aria-expanded', !isOpen);
         if (!isOpen) {
-          ans.style.maxHeight = ans.scrollHeight + 22 + 'px';
-          ans.style.padding = '0 24px 22px';
+          ans.style.maxHeight = '300px';
+          ans.style.paddingBottom = '22px';
         } else {
           ans.style.maxHeight = '0';
-          ans.style.padding = '0 24px';
+          ans.style.paddingBottom = '0';
         }
       });
     });
