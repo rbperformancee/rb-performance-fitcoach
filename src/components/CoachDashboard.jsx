@@ -2475,13 +2475,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   // ===== MOBILE TOPBAR =====
   const MobileTopBar = (
     <div className="coach-mobile-topbar" style={{
-      position: "sticky",
-      top: isDemo ? 44 : 0,
-      zIndex: 50,
-      background: "transparent",
       alignItems: "center",
       justifyContent: "flex-end",
-      padding: "calc(env(safe-area-inset-top, 8px) + 12px) 20px 0",
+      padding: "calc(env(safe-area-inset-top, 8px) + 8px) 20px 0",
     }}>
       <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
     </div>
@@ -2617,7 +2613,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-sidebar{display:none}
           .coach-mobile-topbar{display:flex}
           .coach-floating-pill{display:flex}
-          .coach-main-inner{padding:0 20px 120px !important;max-width:100% !important;overflow:hidden !important}
+          .coach-main-inner{padding:12px 20px 120px !important;max-width:100% !important;overflow:hidden !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
