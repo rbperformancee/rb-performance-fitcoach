@@ -1400,7 +1400,6 @@ section.manifeste.active .mstack-card:nth-child(2){ animation: cardSlideIn .5s e
 section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s ease .3s both; }
 
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 </head>
 <body>
 <a href="#main" class="skip-link">Aller au contenu</a>
@@ -1457,8 +1456,12 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         <span class="ch-num">03</span>
         <span class="ch-name">Features</span>
       </a>
-      <a class="menu-chapter" data-target="pricing">
+      <a class="menu-chapter" href="/demo">
         <span class="ch-num">04</span>
+        <span class="ch-name">Démo</span>
+      </a>
+      <a class="menu-chapter" data-target="pricing">
+        <span class="ch-num">05</span>
         <span class="ch-name">Accès</span>
       </a>
     </nav>
@@ -2183,6 +2186,44 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <strong>ta marque</strong>, jamais RB Perform.
     </div>
 
+  </div>
+</section>
+
+<!-- ========== FOUNDING COACH ========== -->
+<section class="founding" id="founding" style="display:flex;align-items:center;justify-content:center;padding:80px 24px;text-align:center">
+  <div style="max-width:640px;width:100%;position:relative">
+    <div style="position:absolute;inset:-1px;border-radius:20px;border:1px solid rgba(0,201,167,0.25);pointer-events:none"></div>
+    <div style="position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at top,rgba(0,201,167,0.06),transparent 60%);pointer-events:none"></div>
+    <div style="position:relative;padding:60px 32px">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.25);border-radius:100px;padding:6px 16px;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#00C9A7;margin-bottom:28px">
+        Offre de lancement
+      </div>
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,6vw,56px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0 0 20px">
+        50 places<br>Founding Coach
+      </h2>
+      <div style="display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:16px">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,72px);color:#00C9A7;line-height:1;letter-spacing:-2px">149€</span>
+        <span style="font-size:16px;color:rgba(255,255,255,0.4);font-weight:500">/mois</span>
+      </div>
+      <div style="display:inline-block;background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);border-radius:100px;padding:4px 14px;font-size:11px;font-weight:700;color:#00C9A7;letter-spacing:0.5px;margin-bottom:24px">
+        Verrouillé à vie
+      </div>
+      <p style="font-size:clamp(15px,1.6vw,18px);color:rgba(255,255,255,0.5);line-height:1.6;max-width:440px;margin:0 auto 32px">
+        Les 50 premiers coachs gardent ce prix pour toujours.<br>
+        Aucune augmentation, aucune limite.
+      </p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px">
+        <div style="flex:1;max-width:280px;height:6px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden">
+          <div id="foundingBar" style="height:100%;width:62%;background:linear-gradient(90deg,#00C9A7,#0891b2);border-radius:100px;transition:width 0.6s ease"></div>
+        </div>
+        <span style="font-family:'Inter',monospace;font-size:13px;font-weight:700;color:#00C9A7;white-space:nowrap">
+          <span id="foundingCount">31</span> / 50 places prises
+        </span>
+      </div>
+      <a href="/demo" style="display:inline-block;padding:16px 36px;background:linear-gradient(135deg,#00C9A7,#0891b2);color:#080C14;font-size:14px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;border-radius:14px;text-decoration:none;box-shadow:0 12px 40px rgba(0,201,167,0.3);transition:transform 0.15s,box-shadow 0.15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 16px 48px rgba(0,201,167,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 12px 40px rgba(0,201,167,0.3)'">
+        Rejoindre les Founding Coachs →
+      </a>
+    </div>
   </div>
 </section>
 
@@ -3358,6 +3399,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 })();
 </script>
 
+<!-- Three.js CDN — charge juste avant l'init pour garantir que THREE est defini -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- ========== THREE.JS HERO CANVAS ========== -->
 <script>
 (function(){
