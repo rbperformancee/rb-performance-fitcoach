@@ -2485,11 +2485,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Dashboard", onClick: () => { setShowClientList(false); setActiveTab("overview"); } },
-    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setActiveTab("programmes"); } },
-    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setActiveTab("business"); } },
-    { id: "profile",     icon: "view",        label: "Compte",    onClick: () => { setShowSettings(true); } },
+    { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setActiveTab("overview"); } },
+    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setActiveTab("clients"); setShowClientList(true); } },
+    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setShowSettings(false); setActiveTab("programmes"); } },
+    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setActiveTab("business"); } },
+    { id: "profile",     icon: "activity",    label: "Compte",    onClick: () => { setShowClientList(false); setShowSettings(true); } },
   ];
   const FloatingPill = (
     <nav className="coach-floating-pill" style={{
