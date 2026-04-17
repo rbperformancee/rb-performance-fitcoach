@@ -2749,11 +2749,21 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 {(() => { const d = new Date(); const days = ["DIM","LUN","MAR","MER","JEU","VEN","SAM"]; const months = ["JAN","FEV","MAR","AVR","MAI","JUN","JUL","AOU","SEP","OCT","NOV","DEC"]; return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`; })()}
               </div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 400, letterSpacing: "1px", marginBottom: 6 }}>
-                {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}
+                {new Date().getHours() < 6 ? "On grind" : new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : new Date().getHours() < 22 ? "Bonsoir" : "Late session"}
               </div>
               <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 9vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0, wordBreak: "break-word" }}>
                 {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
               </h1>
+              {clients.length > 0 && urgentCount === 0 && (
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 8, fontWeight: 400 }}>
+                  {total} client{total > 1 ? "s" : ""} · Tout roule.
+                </div>
+              )}
+              {clients.length > 0 && urgentCount > 0 && (
+                <div style={{ fontSize: 12, color: "rgba(255,107,107,0.6)", marginTop: 8, fontWeight: 500 }}>
+                  {urgentCount} client{urgentCount > 1 ? "s" : ""} {urgentCount > 1 ? "demandent" : "demande"} ton attention.
+                </div>
+              )}
             </div>
             {/* Heure + anneau score + notif bell mobile */}
             <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
@@ -2783,9 +2793,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== 3 STATS TESLA (comme client) ========== */}
           <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, marginBottom: 32, position: "relative", zIndex: 2, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             {[
-              { v: businessScore, l: "SCORE", suffix: "", color: businessScore > 75 ? G : businessScore >= 50 ? "#fff" : "#ff6b6b" },
-              { v: mrr, l: "MRR", suffix: " €", color: G },
-              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RETENTION", suffix: "%", color: "rgba(255,255,255,0.5)" },
+              { v: businessScore, l: "SCORE", sub: businessScore > 75 ? "Excellent" : businessScore >= 50 ? "Correct" : "À surveiller", suffix: "", color: businessScore > 75 ? G : businessScore >= 50 ? "#fff" : "#ff6b6b" },
+              { v: mrr, l: "MRR", sub: `${Math.round(mrr * 12).toLocaleString()}€/an`, suffix: " €", color: G },
+              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RÉTENTION", sub: `${activeWeek}/${total} actifs`, suffix: "%", color: "rgba(255,255,255,0.5)" },
             ].map((m, i) => (
               <div key={i} className="dash-metric-card" style={{
                 paddingTop: 16,
@@ -2795,6 +2805,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   {typeof m.v === "number" ? m.v.toLocaleString() : m.v}{m.suffix}
                 </div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", marginTop: 8 }}>{m.l}</div>
+                {m.sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.12)", marginTop: 3 }}>{m.sub}</div>}
               </div>
             ))}
           </div>
