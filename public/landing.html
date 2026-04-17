@@ -2164,7 +2164,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </style>
 
     <!-- 01 — Dashboard MRR (BUSINESS) -->
-    <div class="ft-block">
+    <div class="ft-block ft-reveal">
       <div class="ft-text">
         <div class="ft-eyebrow">Dashboard MRR + Prévision</div>
         <h3 class="ft-title">Tu sais ce que tu vas gagner le mois prochain. Pas approximativement.</h3>
@@ -2181,7 +2181,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </div>
 
     <!-- 02 — Anti-Churn IA (BUSINESS) -->
-    <div class="ft-block">
+    <div class="ft-block ft-reveal">
       <div class="ft-text">
         <div class="ft-eyebrow">Alertes Anti-Churn IA</div>
         <h3 class="ft-title">L'IA voit que ton client va partir. 7 jours avant lui.</h3>
@@ -3991,113 +3991,106 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <!-- ========== FEATURES INTERACTIVE ENGINE ========== -->
 <script>
 (function(){
-  // Scroll-triggered reveal for ft-reveal blocks
-  var reveals = document.querySelectorAll('.ft-reveal');
-  if (reveals.length && 'IntersectionObserver' in window) {
-    var revealObs = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting) {
-          e.target.classList.add('ft-visible');
-          revealObs.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.15 });
-    reveals.forEach(function(el){ revealObs.observe(el); });
-  }
-
-  // Also trigger on section.features becoming active
   var featSec = document.querySelector('section.features');
-  if (featSec) {
-    var mo = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        if (m.attributeName === 'class' && featSec.classList.contains('active')) {
-          // Stagger reveals
-          var blocks = featSec.querySelectorAll('.ft-reveal:not(.ft-visible)');
-          blocks.forEach(function(b, i){
-            setTimeout(function(){ b.classList.add('ft-visible'); }, i * 200);
-          });
-          // Score ring animation
-          triggerScoreRing();
-          // Macro cards cascade
-          triggerMacros();
-          // Typewriter
-          triggerTypewriter();
+  if (!featSec) return;
+
+  var blocks = featSec.querySelectorAll('.ft-reveal');
+  var scoreArc = featSec.querySelector('.ft-score-arc');
+  var scoreNum = featSec.querySelector('.ft-score-num');
+  var macroCards = featSec.querySelectorAll('.ft-macro-card');
+  var typeEl = featSec.querySelector('.ft-type');
+
+  var triggered = {};
+
+  function isInView(el) {
+    var rect = el.getBoundingClientRect();
+    var secRect = featSec.getBoundingClientRect();
+    // Element is visible when its top is within the section's viewport
+    return rect.top < secRect.bottom - 80 && rect.bottom > secRect.top + 80;
+  }
+
+  function checkScroll() {
+    blocks.forEach(function(b, i) {
+      if (b.classList.contains('ft-visible')) return;
+      if (isInView(b)) {
+        b.style.animationDelay = '0.1s';
+        b.classList.add('ft-visible');
+
+        // Score ring
+        if (b.querySelector('.ft-score-arc') && !triggered.score) {
+          triggered.score = true;
+          setTimeout(function(){
+            var target = 78;
+            scoreArc.style.strokeDashoffset = 327 - (327 * target / 100);
+            var curr = 0;
+            (function step(){ curr++; scoreNum.textContent = curr; if(curr < target) requestAnimationFrame(step); })();
+          }, 400);
         }
-      });
-    });
-    mo.observe(featSec, { attributes: true });
-    if (featSec.classList.contains('active')) {
-      setTimeout(function(){
-        var blocks = featSec.querySelectorAll('.ft-reveal:not(.ft-visible)');
-        blocks.forEach(function(b, i){ setTimeout(function(){ b.classList.add('ft-visible'); }, i * 200); });
-        triggerScoreRing(); triggerMacros(); triggerTypewriter();
-      }, 400);
-    }
-  }
 
-  // Score ring — animate to 78/100
-  var scoreTriggered = false;
-  function triggerScoreRing(){
-    if (scoreTriggered) return; scoreTriggered = true;
-    var arc = document.querySelector('.ft-score-arc');
-    var num = document.querySelector('.ft-score-num');
-    if (!arc || !num) return;
-    var target = 78;
-    var offset = 327 - (327 * target / 100);
-    setTimeout(function(){
-      arc.style.strokeDashoffset = offset;
-      // Count up
-      var curr = 0;
-      var step = function(){
-        curr += 1;
-        num.textContent = curr;
-        if (curr < target) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    }, 600);
-  }
+        // Macro cards
+        if (b.querySelector('.ft-macro-card') && !triggered.macros) {
+          triggered.macros = true;
+          macroCards.forEach(function(c, j){
+            setTimeout(function(){
+              c.style.transition = 'opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+              c.style.opacity = '1';
+              c.style.transform = 'translateY(0)';
+            }, 600 + j * 250);
+          });
+        }
 
-  // Macro cards cascade
-  var macrosTriggered = false;
-  function triggerMacros(){
-    if (macrosTriggered) return; macrosTriggered = true;
-    var cards = document.querySelectorAll('.ft-macro-card');
-    cards.forEach(function(c, i){
-      setTimeout(function(){
-        c.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        c.style.opacity = '1';
-        c.style.transform = 'translateY(0)';
-      }, 800 + i * 200);
-    });
-  }
-
-  // Typewriter effect
-  var typeTriggered = false;
-  function triggerTypewriter(){
-    if (typeTriggered) return; typeTriggered = true;
-    var el = document.querySelector('.ft-type');
-    if (!el) return;
-    var lines = [
-      '> RPE en hausse (+2.1)',
-      '> 2 seances manquees / 10j',
-      '> Nutrition irreguliere',
-      '',
-      '⚠ Risque de decrochage : 72/100',
-      '',
-      '→ Contact proactif recommande',
-      '→ Revoir charges semaine 3',
-      '→ Check-in telephone 15 min'
-    ];
-    var text = lines.join('\n');
-    var idx = 0;
-    setTimeout(function type(){
-      if (idx <= text.length) {
-        el.textContent = text.substring(0, idx);
-        idx++;
-        setTimeout(type, 25 + Math.random() * 20);
+        // Typewriter
+        if (b.querySelector('.ft-type') && !triggered.type) {
+          triggered.type = true;
+          var lines = [
+            '> RPE en hausse (+2.1)',
+            '> 2 seances manquees / 10j',
+            '> Nutrition irreguliere',
+            '',
+            '\u26A0 Risque de decrochage : 72/100',
+            '',
+            '\u2192 Contact proactif recommande',
+            '\u2192 Revoir charges semaine 3',
+            '\u2192 Check-in telephone 15 min'
+          ];
+          var text = lines.join('\n');
+          var idx = 0;
+          setTimeout(function type(){
+            if(idx <= text.length){ typeEl.textContent = text.substring(0, idx); idx++; setTimeout(type, 22 + Math.random() * 18); }
+          }, 500);
+        }
       }
-    }, 1000);
+    });
   }
+
+  // Reset all when leaving section
+  function resetAll() {
+    triggered = {};
+    blocks.forEach(function(b){ b.classList.remove('ft-visible'); });
+    if (scoreArc) { scoreArc.style.strokeDashoffset = '327'; }
+    if (scoreNum) { scoreNum.textContent = '0'; }
+    macroCards.forEach(function(c){ c.style.opacity = '0'; c.style.transform = 'translateY(8px)'; c.style.transition = 'none'; });
+    if (typeEl) { typeEl.textContent = ''; }
+  }
+
+  // Listen to scroll inside the section
+  featSec.addEventListener('scroll', checkScroll, { passive: true });
+
+  // Also trigger on section becoming active
+  var mo = new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      if (m.attributeName === 'class') {
+        if (featSec.classList.contains('active')) {
+          resetAll();
+          // First block visible after short delay (it's at the top)
+          setTimeout(checkScroll, 300);
+        } else {
+          resetAll();
+        }
+      }
+    });
+  });
+  mo.observe(featSec, { attributes: true });
 })();
 </script>
 
