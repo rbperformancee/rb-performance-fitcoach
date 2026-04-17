@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
+Allow: /founding
+Allow: /demo
+Allow: /legal.html
 Disallow: /api/
+Disallow: /static/
+Disallow: /demo-client
 
 Sitemap: https://rbperform.app/sitemap.xml
-Sitemap: https://rb-perfor.vercel.app/sitemap.xml

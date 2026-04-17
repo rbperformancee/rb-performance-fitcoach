@@ -2,6 +2,7 @@
 <html lang="fr" style="background:#080C14">
 <head>
 <meta charset="UTF-8">
+<script>window.onerror=function(m,s,l){console.warn('[landing]',m,s,l)}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#030303">
 <title>RB Perform — La performance sans compromis</title>
@@ -31,6 +32,9 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://js.stripe.com">
+<link rel="preload" href="/landing-style.css" as="style">
+<link rel="preload" href="/landing-script.js" as="script">
 <!-- Fonts en async non-bloquant pour Performance -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@200;300;400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@200;300;400;700&display=swap" rel="stylesheet"></noscript>
@@ -362,7 +366,7 @@ nav.topnav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 40px;dis
 </section>
 
 <!-- Animation premium : reveal cascade + countUp chiffres -->
-<!-- script extracted -->
+
 
 <!-- Section chiffres standalone supprimee : les 3 chiffres sont
      desormais integres dans la section .manifeste juste apres
@@ -1060,10 +1064,10 @@ nav.topnav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 40px;dis
     </div>
 
     <!-- Checkout JS pour les 3 plans -->
-    <!-- script extracted -->
+    
 
     <!-- FAQ toggle — standalone pour éviter tout crash -->
-    <!-- script extracted -->
+    
     <!-- ========== FAQ PREMIUM ========== -->
     <div style="max-width:680px;margin:64px auto 48px;padding:0 8px">
       <div style="text-align:center;margin-bottom:36px">
@@ -1193,7 +1197,7 @@ nav.topnav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 40px;dis
 </div>
 
 <!-- ========== SCRIPTS ========== -->
-<!-- script extracted -->
+
 
 <script>
 (function() {
@@ -1211,26 +1215,26 @@ nav.topnav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 40px;dis
 </script>
 
 <!-- ========== NAVIGATION PAR CHAPITRES FULLSCREEN ========== -->
-<!-- script extracted -->
+
 
 <!-- ========== FAQ accordion + compteur dynamique ========== -->
-<!-- script extracted -->
+
 
 <!-- ========== ROI CALCULATOR — live update sliders ========== -->
-<!-- script extracted -->
+
 
 
 <!-- Founding Coach countdown timer -->
-<!-- script extracted -->
+
 
 <!-- BLACK MIRROR ENGINE v3 — attend sliders + craquelure cinematique -->
-<!-- script extracted -->
+
 
 <!-- ========== TIMELINE CINEMATIC ENGINE ========== -->
-<!-- script extracted -->
+
 
 <!-- ========== FEATURES INTERACTIVE ENGINE ========== -->
-<!-- script extracted -->
+
 
 <!-- ========== FOOTER CLONE ��� Apple style, footer on every section ========== -->
 <script>
@@ -1250,7 +1254,7 @@ nav.topnav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 40px;dis
 <button class="btt" id="bttBtn" aria-label="Retour en haut">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
 </button>
-<!-- script extracted -->
+
 <!-- JS externe (55KB cacheable, defer = non-bloquant) -->
 <script src="/landing-script.js" defer></script>
 </body>
