@@ -34,6 +34,7 @@
       "destination": "/landing.html"
     },
     { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" },
+    { "source": "/founding",    "destination": "/founding.html" },
     { "source": "/demo",        "destination": "/?demo=true" },
     { "source": "/demo-client", "destination": "/?demo-client=true" },
     { "source": "/login",       "destination": "/index.html" },
