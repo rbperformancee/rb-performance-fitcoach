@@ -1151,7 +1151,7 @@ function AppInner() {
   const showImportFallback = !cloudProgramme && !localProgramme;
 
   return (
-    <div className={`app-root${userKind === "coach" || isDemo ? " coach-mode" : ""}`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+    <div className="app-root" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
