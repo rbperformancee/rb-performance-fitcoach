@@ -1425,21 +1425,28 @@ html.light .founder-message strong{color:#0a0a0a}
     word-break: break-word !important;
     margin-bottom: 24px !important;
   }
-  section.how div[style*="grid-template-columns"] {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
+  .sys-stats-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    grid-template-columns: unset !important;
+    gap: 0 !important;
     padding: 0 !important;
     width: 100% !important;
   }
-  section.how div[style*="position:absolute"][style*="width:1px"] {
-    display: none !important;
+  .sys-stats-grid > div:not(.sys-stats-divider) {
+    flex: 1 !important;
+    padding: 10px 4px !important;
   }
-  section.how div[style*="font-size:clamp(48px"] {
-    font-size: clamp(32px,9vw,48px) !important;
+  .sys-stats-divider { display: none !important; }
+  .sys-stats-num {
+    font-size: clamp(28px,8vw,40px) !important;
+    letter-spacing: -1px !important;
   }
-  section.how div[style*="letter-spacing:3px"] {
-    font-size: 10px !important;
-    letter-spacing: 2px !important;
+  .sys-stats-label {
+    font-size: 8px !important;
+    letter-spacing: 1.5px !important;
+    margin-top: 8px !important;
   }
   .how-inner { padding: 0 !important; }
   .sys-block { padding: 28px 16px !important; gap: 20px !important; flex-direction: column !important; }
@@ -1736,20 +1743,20 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px">Le Système</div>
     <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6.5vw,92px);letter-spacing:-1.5px;line-height:1.02;color:#fff;margin:0 0 40px;max-width:1000px;display:inline-block">Certains coachs ont du talent.<br>Les meilleurs ont un système.</h2>
     <!-- Stats 3 colonnes -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);max-width:900px;margin:0 auto;position:relative">
-      <div style="position:absolute;top:25%;bottom:25%;left:33.33%;width:1px;background:rgba(255,255,255,0.06)"></div>
-      <div style="position:absolute;top:25%;bottom:25%;right:33.33%;width:1px;background:rgba(255,255,255,0.06)"></div>
+    <div class="sys-stats-grid" style="display:grid;grid-template-columns:repeat(3,1fr);max-width:900px;margin:0 auto;position:relative">
+      <div class="sys-stats-divider" style="position:absolute;top:25%;bottom:25%;left:33.33%;width:1px;background:rgba(255,255,255,0.06)"></div>
+      <div class="sys-stats-divider" style="position:absolute;top:25%;bottom:25%;right:33.33%;width:1px;background:rgba(255,255,255,0.06)"></div>
       <div style="text-align:center;padding:20px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">0%</div>
-        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Commission</div>
+        <div class="sys-stats-num" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">0%</div>
+        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Commission</div>
       </div>
       <div style="text-align:center;padding:20px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">100</div>
-        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Clients / 1 coach</div>
+        <div class="sys-stats-num" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">100</div>
+        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Clients / 1 coach</div>
       </div>
       <div style="text-align:center;padding:20px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">5min</div>
-        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Pour démarrer</div>
+        <div class="sys-stats-num" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">5min</div>
+        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Pour démarrer</div>
       </div>
     </div>
   </div>
