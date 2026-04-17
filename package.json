@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.3.1",
+    "@capacitor/push-notifications": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@sentry/react": "^10.48.0",
     "@supabase/supabase-js": "^2.100.1",
     "@undecaf/zbar-wasm": "^0.11.0",
@@ -17,7 +25,11 @@
     "health": "node scripts/health-check.js",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:mobile": "playwright test --project=mobile-safari",
-    "test:e2e:headed": "playwright test --headed --project=chromium"
+    "test:e2e:headed": "playwright test --headed --project=chromium",
+    "audit": "node scripts/landing-audit.js",
+    "cap:build": "CI=false npm run build && npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android"
   },
   "browserslist": {
     "production": [
