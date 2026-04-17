@@ -521,7 +521,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     <>
     {/* Programme Builder plein ecran */}
     {showBuilder && (
-      <div style={{ position: "fixed", inset: 0, zIndex: 300 }}>
+      <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 300 }}>
         <ProgrammeBuilder
           client={client}
           coachData={null}
@@ -535,7 +535,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       <style>{`
         @keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         .coach-client-panel{
-          position:fixed;inset:0;z-index:200;
+          position:fixed;top:0;right:0;bottom:0;left:220px;z-index:200;
           background:#080C14;overflow-y:auto;overflow-x:hidden;
           -webkit-overflow-scrolling:touch;
           font-family:'Inter',-apple-system,system-ui,sans-serif;color:#fff;
@@ -2632,6 +2632,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-main-inner{padding:12px 20px 120px !important;max-width:100% !important;overflow:hidden !important}
           .coach-mobile-bell{display:block !important}
           .coach-client-panel-inner{padding:0 16px 120px !important}
+          .coach-client-panel,.coach-overlay-panel{left:0 !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
