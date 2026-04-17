@@ -95,6 +95,9 @@ section{position:fixed !important;inset:0 !important;width:100% !important;heigh
 section.active{opacity:1 !important;pointer-events:all !important;background:#080C14 !important;z-index:10 !important}
 section.how,section.business,section.bento,section.demo-section,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080C14 !important}
 section.hero{overflow:hidden !important}
+section{display:flex !important;flex-direction:column !important}
+section > *:not(footer):not(style):not(script){flex:1 0 auto}
+section > footer{flex-shrink:0 !important;margin-top:auto !important}
 .gsap-override *{opacity:1 !important;transform:none !important;visibility:visible !important}
 :root{--orange:#00C9A7;--orange-bright:#00C9A7;--teal:#00C9A7;--teal-bright:#5ee8d4;--violet:#00C9A7;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -191,7 +194,7 @@ nav.topnav.hidden{transform:translateY(-100%)}
 @keyframes blobDrift1{0%,100%{transform:translate(0,0)}25%{transform:translate(40px,-30px)}50%{transform:translate(-20px,40px)}75%{transform:translate(-40px,-20px)}}
 @keyframes blobDrift2{0%,100%{transform:translate(0,0)}25%{transform:translate(-35px,25px)}50%{transform:translate(30px,-35px)}75%{transform:translate(25px,30px)}}
 .hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 20%,#080C14 80%);z-index:2;pointer-events:none}
-.hero-content{position:relative;z-index:4;text-align:center;max-width:1100px;width:100%}
+.hero-content{position:relative;z-index:4;text-align:center;max-width:1100px;width:100%;margin:auto}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:10px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:24px;padding:8px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:100px;background:rgba(255,255,255,0.02);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 10px var(--orange);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.8)}}
@@ -730,7 +733,7 @@ section.client-view::-webkit-scrollbar{display:none}
 }
 
 /* ========== FOOTER (refonte 4 colonnes) ========== */
-footer{background:#000;border-top:.5px solid rgba(255,255,255,.06);padding:52px 64px 44px;position:relative;z-index:0;margin-top:80px}
+footer{background:#000;border-top:.5px solid rgba(255,255,255,.06);padding:52px 64px 44px;position:relative;z-index:0;margin-top:80px;width:100%;align-self:stretch;flex-shrink:0;box-sizing:border-box}
 .footer-inner{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:48px;max-width:1100px;margin:0 auto;align-items:start}
 .footer-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:900;letter-spacing:.1em;color:#fff;margin-bottom:12px;display:inline-block}
 .footer-logo span{color:#02d1ba}
@@ -1469,7 +1472,7 @@ html.light .founder-message strong{color:#0a0a0a}
   .bento-card { padding: 24px 20px !important; }
 
   /* DEMO SECTION — stack + padding */
-  section.demo-section { padding: 80px 16px 40px !important; align-items: flex-start !important; }
+  section.demo-section { padding: 80px 16px 40px !important; }
   section.demo-section > div { max-width: 100% !important; }
   section.demo-section div[style*="grid-template-columns:1fr 1fr"] {
     grid-template-columns: 1fr !important;
@@ -2046,8 +2049,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
 
 <!-- ========== DEMO SECTION (fullscreen, accessible depuis nav) ========== -->
-<section class="demo-section" id="demo-section" style="display:flex;align-items:center;justify-content:center;padding:200px 24px 80px;min-height:100vh">
-  <div style="max-width:1100px;width:100%;margin:0 auto">
+<section class="demo-section" id="demo-section" style="padding:200px 24px 80px;min-height:100vh">
+  <div style="max-width:1100px;width:100%;margin:auto">
 
     <!-- Header — padding-top genereux pour ne pas coller au burger -->
     <div style="text-align:center;margin-bottom:64px">
@@ -3794,8 +3797,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   var original = document.querySelector('section.pricing footer');
   if (!original) return;
   document.querySelectorAll('section').forEach(function(s){
-    if (s.classList.contains('hero') || s.classList.contains('pricing')) return;
+    if (s.classList.contains('pricing')) return;
     var clone = original.cloneNode(true);
+    clone.style.cssText = 'display:block;width:100%;box-sizing:border-box;';
     s.appendChild(clone);
   });
 })();
