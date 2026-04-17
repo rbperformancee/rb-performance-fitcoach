@@ -91,7 +91,7 @@
 html,body{overflow:hidden;height:100%;background:#080C14}
 /* Chaque section = ecran fullscreen, switching via .active */
 section{background:#080C14 !important}
-section{position:fixed !important;inset:0 !important;width:100% !important;height:100% !important;opacity:0 !important;pointer-events:none !important;background:#080C14 !important;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1) !important;overflow-y:auto !important;z-index:1 !important;-webkit-overflow-scrolling:touch}
+section{position:fixed !important;inset:0 !important;width:100% !important;height:100% !important;opacity:0 !important;pointer-events:none !important;background:#080C14 !important;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1) !important;overflow-y:auto !important;overflow-x:hidden !important;z-index:1 !important;-webkit-overflow-scrolling:touch}
 section.active{opacity:1 !important;pointer-events:all !important;background:#080C14 !important;z-index:10 !important}
 section.how,section.business,section.bento,section.demo-section,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080C14 !important}
 section.hero{overflow:hidden !important}
@@ -1395,6 +1395,9 @@ html.light .founder-message strong{color:#0a0a0a}
     font-size: clamp(30px,9vw,48px) !important;
   }
 
+  /* GLOBAL — empêcher tout débordement horizontal */
+  section > div, section > div > div { max-width: 100% !important; box-sizing: border-box !important; }
+
   /* NAV — touch targets + safe area */
   nav.topnav { padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); }
   .burger-btn { padding: 12px 16px; }
@@ -1408,7 +1411,9 @@ html.light .founder-message strong{color:#0a0a0a}
   }
 
   /* HOW / SYSTEME — stats grid empilées + blocs compacts */
-  section.how { padding: 72px 20px 48px !important; }
+  section.how { padding: 72px 16px 48px !important; }
+  .how-inner { padding: 0 !important; }
+  .sys-block { max-width: 100% !important; padding: 36px 16px !important; }
   section.how > div:first-child > div[style*="grid-template-columns:repeat(3"] {
     grid-template-columns: 1fr !important;
     gap: 20px !important;
@@ -1452,7 +1457,10 @@ html.light .founder-message strong{color:#0a0a0a}
   .tl-ghost { display: none !important; }
 
   /* PRICING — plans + founding coach + FAQ */
-  section.pricing { padding: 80px 20px !important; }
+  section.pricing { padding: 80px 16px !important; }
+  .pricing-inner { padding: 0 !important; max-width: 100% !important; }
+  .plan { padding: 28px 20px !important; }
+  .faq-inner { max-width: 100% !important; }
   .plan .price { font-size: 60px !important; }
   section.pricing div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
     grid-template-columns: 1fr 1fr !important;
