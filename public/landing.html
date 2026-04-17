@@ -2068,6 +2068,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         .bm-p{position:absolute;border-radius:50%;z-index:2;pointer-events:none;opacity:0}
       </style>
       <div id="blackMirror" style="position:relative;min-height:400px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <!-- Fond qui pulse -->
+        <div id="bmPulse" style="position:absolute;inset:0;z-index:0;background:radial-gradient(circle,rgba(255,255,255,0.01),transparent 70%);transition:background 1s,animation 0.5s"></div>
         <!-- Particules -->
         <div id="bmParticles" style="position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden"></div>
 
@@ -3435,7 +3437,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   // Etat dormant au demarrage
   showDormant();
 
-  // Lancer quand le prospect TOUCHE un slider (pas avant)
+  // Lancer quand le prospect TOUCHE un slider
   function onSliderTouch(){
     if(sliderTouched) return;
     sliderTouched = true;
@@ -3444,13 +3446,14 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   if(clientsEl) clientsEl.addEventListener('input', onSliderTouch);
   if(tarifEl) tarifEl.addEventListener('input', onSliderTouch);
 
-  // Si la section devient active et les sliders ont deja ete touches, relancer
+  // Aussi relancer quand la section redevient active
   var biz = document.querySelector('section.business');
   if (biz) {
     var mo = new MutationObserver(function(muts){
       muts.forEach(function(m){
-        if (m.attributeName === 'class' && biz.classList.contains('active') && sliderTouched && !started) {
-          setTimeout(run, 600);
+        if (m.attributeName === 'class' && biz.classList.contains('active')) {
+          if (sliderTouched && !started) setTimeout(run, 600);
+          else if (!sliderTouched) showDormant();
         }
       });
     });
