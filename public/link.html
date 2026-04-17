@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>RB Perform — Links</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,sans-serif;min-height:100vh;min-height:100dvh}
+.page{display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;padding:48px 24px 32px;max-width:420px;margin:0 auto}
+
+/* Avatar */
+.avatar{width:88px;height:88px;border-radius:50%;border:2px solid rgba(0,201,167,0.3);overflow:hidden;margin-bottom:16px;background:rgba(0,201,167,0.05);display:flex;align-items:center;justify-content:center}
+.avatar-text{font-family:'Syne',sans-serif;font-size:28px;font-weight:900;color:#00C9A7}
+
+/* Header */
+.name{font-family:'Syne',sans-serif;font-size:18px;font-weight:900;letter-spacing:-0.02em;margin-bottom:4px}
+.name span{color:#00C9A7}
+.handle{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:6px}
+.tagline{font-size:13px;color:rgba(255,255,255,0.45);text-align:center;line-height:1.5;margin-bottom:28px;max-width:300px}
+
+/* Section label */
+.section-label{font-size:9px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.15);margin-bottom:12px;align-self:flex-start}
+
+/* Links */
+.link{display:flex;align-items:center;gap:14px;width:100%;padding:16px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;text-decoration:none;color:#fff;margin-bottom:10px;transition:all 0.2s ease}
+.link:hover{border-color:rgba(0,201,167,0.25);background:rgba(0,201,167,0.03);transform:translateY(-1px)}
+.link:active{transform:translateY(0)}
+.link-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.link-icon svg{width:18px;height:18px}
+.link-text{flex:1}
+.link-title{font-size:14px;font-weight:700;letter-spacing:-0.01em}
+.link-sub{font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px}
+.link-arrow{color:rgba(255,255,255,0.15);font-size:16px}
+
+/* Highlight link */
+.link.highlight{border-color:rgba(0,201,167,0.2);background:rgba(0,201,167,0.04)}
+.link.highlight .link-icon{background:rgba(0,201,167,0.1)}
+.link.highlight .link-icon svg{color:#00C9A7}
+.link.highlight .link-title{color:#00C9A7}
+
+/* Badge */
+.badge-new{font-size:8px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,201,167,0.15);color:#00C9A7;padding:2px 8px;border-radius:100px;margin-left:8px}
+
+/* Footer */
+.foot{margin-top:auto;padding-top:32px;text-align:center}
+.foot-logo{font-family:'Syne',sans-serif;font-size:11px;font-weight:900;letter-spacing:0.1em;color:rgba(255,255,255,0.15)}
+.foot-logo span{color:rgba(0,201,167,0.3)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Avatar -->
+  <div class="avatar">
+    <div class="avatar-text">RB</div>
+  </div>
+
+  <!-- Header -->
+  <div class="name">Rayan <span>Bonte</span></div>
+  <div class="handle">@rb_perform</div>
+  <div class="tagline">Rugbyman semi-pro · Fondateur RB Perform<br>L'outil qui transforme chaque coach en CEO.</div>
+
+  <!-- COACHES -->
+  <div class="section-label">Pour les coachs</div>
+
+  <a href="/founding" class="link highlight">
+    <div class="link-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
+    </div>
+    <div class="link-text">
+      <div class="link-title">Founding Coach — 199€/mois <span class="badge-new">50 places</span></div>
+      <div class="link-sub">Plan Pro verrouillé à vie. Rejoins les premiers.</div>
+    </div>
+    <span class="link-arrow">→</span>
+  </a>
+
+  <a href="/" class="link">
+    <div class="link-icon" style="background:rgba(255,255,255,0.04)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </div>
+    <div class="link-text">
+      <div class="link-title">Découvrir RB Perform</div>
+      <div class="link-sub">Dashboard CEO · Anti-churn IA · App client</div>
+    </div>
+    <span class="link-arrow">→</span>
+  </a>
+
+  <a href="/demo" class="link">
+    <div class="link-icon" style="background:rgba(255,255,255,0.04)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </div>
+    <div class="link-text">
+      <div class="link-title">Tester la démo</div>
+      <div class="link-sub">15 min d'accès complet. Sans créer de compte.</div>
+    </div>
+    <span class="link-arrow">→</span>
+  </a>
+
+  <!-- ATHLETES -->
+  <div class="section-label" style="margin-top:20px">Pour les athlètes</div>
+
+  <a href="https://www.rbperform.com/programmes" class="link" target="_blank" rel="noopener">
+    <div class="link-icon" style="background:rgba(255,255,255,0.04)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    </div>
+    <div class="link-text">
+      <div class="link-title">Programmes d'entraînement</div>
+      <div class="link-sub">Force · Masse · Performance athlétique</div>
+    </div>
+    <span class="link-arrow">→</span>
+  </a>
+
+  <a href="https://www.rbperform.com" class="link" target="_blank" rel="noopener">
+    <div class="link-icon" style="background:rgba(255,255,255,0.04)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div class="link-text">
+      <div class="link-title">Coaching personnel</div>
+      <div class="link-sub">Accompagnement 1:1 sur mesure</div>
+    </div>
+    <span class="link-arrow">→</span>
+  </a>
+
+  <!-- Footer -->
+  <div class="foot">
+    <div class="foot-logo">RB<span>PERFORM</span></div>
+  </div>
+
+</div>
+</body>
+</html>
