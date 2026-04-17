@@ -2035,17 +2035,17 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
         <div style="display:flex;flex-direction:column;gap:12px">
           <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(0,201,167,0.15);border-radius:16px;padding:28px;text-align:center">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,64px);color:#00C9A7;letter-spacing:-1px;line-height:1" id="roi-mrr">200€</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,64px);color:#00C9A7;letter-spacing:-1px;line-height:1" id="roi-mrr">—</div>
             <div style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:8px">Ton MRR potentiel</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:4px" id="roi-mrr-sub">par mois · 2 400€ / an</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:4px" id="roi-mrr-sub"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#00C9A7;line-height:1" id="roi-gain">+960€</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#00C9A7;line-height:1" id="roi-gain">—</div>
               <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Argent récupéré / an</div>
             </div>
             <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#fff;line-height:1" id="roi-hours">+4h</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#fff;line-height:1" id="roi-hours">—</div>
               <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Heures gagnées / mois</div>
             </div>
           </div>
@@ -3279,7 +3279,6 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   clientsSlider.addEventListener('input', update);
   tarifSlider.addEventListener('input', update);
-  update();
 })();
 </script>
 
