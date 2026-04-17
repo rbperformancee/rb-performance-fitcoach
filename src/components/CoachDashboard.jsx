@@ -2625,7 +2625,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         .coach-sidebar{display:flex}
         .coach-mobile-topbar,.coach-floating-pill{display:none}
         .coach-nav-item:hover{color:rgba(255,255,255,.65)!important;background:rgba(255,255,255,.035)!important}
-        @media(max-width:1023px){
+        @media(max-width:768px){
           .coach-sidebar{display:none !important}
           .coach-mobile-topbar{display:none !important}
           .coach-floating-pill{display:flex !important}
