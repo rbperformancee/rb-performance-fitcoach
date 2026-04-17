@@ -1263,9 +1263,12 @@ html.light .founder-message strong{color:#0a0a0a}
 }
 
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
+  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}
   .reveal,.hero-title .char,.hero-sub,.manifeste-line{opacity:1!important;transform:none!important;width:120px}
   .step{opacity:1!important}
+  .ft-reveal,.ft-reveal *,.sys-block,.tl-item,.tl-title-wrap{opacity:1!important;transform:none!important}
+  .ft-macro-card{opacity:1!important;transform:none!important}
+  .hero-blob{display:none!important}
 }
 
 /* ========== MOBILE (<=768px) — RESIZE ONLY ==========
@@ -1713,8 +1716,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <section class="how" style="background:#080C14">
 <style>
 /* ===== SYSTÈME — ULTRA PREMIUM ===== */
-.sys-block{display:flex;align-items:center;padding:72px 24px;max-width:1100px;margin:0 auto;gap:72px;position:relative;opacity:0;transform:translateY(40px) scale(0.98);filter:blur(6px);transition:opacity .9s cubic-bezier(0.16,1,0.3,1),transform .9s cubic-bezier(0.16,1,0.3,1),filter .9s cubic-bezier(0.16,1,0.3,1)}
-.sys-block.vis{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+.sys-block{display:flex;align-items:center;padding:72px 24px;max-width:1100px;margin:0 auto;gap:72px;position:relative;opacity:0;transform:translateY(40px) scale(0.98);transition:opacity .9s cubic-bezier(0.16,1,0.3,1),transform .9s cubic-bezier(0.16,1,0.3,1)}
+.sys-block.vis{opacity:1;transform:translateY(0) scale(1)}
 /* Accent bar gauche */
 .sys-block::before{content:'';position:absolute;left:0;top:15%;bottom:15%;width:2px;background:linear-gradient(180deg,transparent,#00C9A7 40%,#00C9A7 60%,transparent);opacity:0;transition:opacity .8s ease .3s}
 .sys-block.vis::before{opacity:1}
@@ -2176,12 +2179,12 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       .ft-stat{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,80px);color:#00C9A7;line-height:1;text-shadow:0 0 40px rgba(0,201,167,0.2)}
       .ft-stat-label{font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:10px}
       @keyframes ftPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
-      @keyframes ftTextIn{0%{opacity:0;transform:translateY(24px);filter:blur(6px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}
-      @keyframes ftVisualIn{0%{opacity:0;transform:scale(0.85) translateY(20px);filter:blur(8px)}100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}}
+      @keyframes ftTextIn{0%{opacity:0;transform:translateY(24px)}100%{opacity:1;transform:translateY(0)}}
+      @keyframes ftVisualIn{0%{opacity:0;transform:scale(0.85) translateY(20px)}100%{opacity:1;transform:scale(1) translateY(0)}}
       @keyframes ftNumIn{0%{opacity:0;transform:scale(0.7)}100%{opacity:1;transform:scale(1)}}
       @keyframes ftGlowIn{0%{opacity:0;transform:scale(0.5)}100%{opacity:1;transform:scale(1)}}
-      @keyframes ftSlideLeft{0%{opacity:0;transform:translateX(-40px);filter:blur(4px)}100%{opacity:1;transform:translateX(0);filter:blur(0)}}
-      @keyframes ftSlideRight{0%{opacity:0;transform:translateX(40px);filter:blur(4px)}100%{opacity:1;transform:translateX(0);filter:blur(0)}}
+      @keyframes ftSlideLeft{0%{opacity:0;transform:translateX(-40px)}100%{opacity:1;transform:translateX(0)}}
+      @keyframes ftSlideRight{0%{opacity:0;transform:translateX(40px)}100%{opacity:1;transform:translateX(0)}}
       @keyframes ftMockRow{0%{opacity:0;transform:translateX(-16px)}100%{opacity:1;transform:translateX(0)}}
       .ft-reveal{opacity:0}
       .ft-reveal.ft-visible{opacity:1}
@@ -2500,10 +2503,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         @keyframes bmRise{0%{transform:translateY(500px);opacity:0}15%{opacity:0.6}100%{transform:translateY(-10px);opacity:0}}
         @keyframes bmCrack1{from{stroke-dashoffset:1200}to{stroke-dashoffset:0}}
         @keyframes bmCrack2{from{stroke-dashoffset:600}to{stroke-dashoffset:0}}
-        @keyframes bmNumIn{0%{filter:blur(20px);opacity:0;transform:perspective(800px) rotateX(18deg) scale(0.75)}100%{filter:blur(0);opacity:1;transform:perspective(800px) rotateX(0) scale(1)}}
+        @keyframes bmNumIn{0%{opacity:0;transform:perspective(800px) rotateX(18deg) scale(0.75)}100%{opacity:1;transform:perspective(800px) rotateX(0) scale(1)}}
         @keyframes bmFlash{0%{opacity:0.5}100%{opacity:0}}
         @keyframes bmGlowCta{0%,100%{box-shadow:0 0 20px rgba(0,201,167,0.2),0 0 60px rgba(0,201,167,0.08)}50%{box-shadow:0 0 32px rgba(0,201,167,0.4),0 0 80px rgba(0,201,167,0.15)}}
-        @keyframes bmFadeUp{0%{opacity:0;filter:blur(6px);transform:scale(0.98)}40%{opacity:0.6;filter:blur(2px);transform:scale(0.995)}100%{opacity:1;filter:blur(0);transform:scale(1)}}
+        @keyframes bmFadeUp{0%{opacity:0;transform:scale(0.98)}40%{opacity:0.6;transform:scale(0.995)}100%{opacity:1;transform:scale(1)}}
         .bm-p{position:absolute;border-radius:50%;z-index:2;pointer-events:none;opacity:0}
       </style>
       <div id="blackMirror" style="position:relative;min-height:560px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:transparent">
@@ -2539,14 +2542,14 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- ========== BLOC 3 — AVANT / APRES CINEMATIQUE ========== -->
     <style>
       @keyframes tlLineDown{from{height:0}to{height:100%}}
-      @keyframes tlItemLeft{0%{opacity:0;transform:translateX(-40px) scale(0.92);filter:blur(6px)}60%{opacity:0.8;filter:blur(1px)}100%{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
-      @keyframes tlItemRight{0%{opacity:0;transform:translateX(40px) scale(0.92);filter:blur(6px)}60%{opacity:0.8;filter:blur(1px)}100%{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
-      @keyframes tlTitleIn{0%{opacity:0;transform:translateY(24px) scale(0.96);filter:blur(10px)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+      @keyframes tlItemLeft{0%{opacity:0;transform:translateX(-40px) scale(0.92)}60%{opacity:0.8}100%{opacity:1;transform:translateX(0) scale(1)}}
+      @keyframes tlItemRight{0%{opacity:0;transform:translateX(40px) scale(0.92)}60%{opacity:0.8}100%{opacity:1;transform:translateX(0) scale(1)}}
+      @keyframes tlTitleIn{0%{opacity:0;transform:translateY(24px) scale(0.96)}100%{opacity:1;transform:translateY(0) scale(1)}}
       @keyframes tlImpactShake{0%,100%{transform:translateX(0)}8%{transform:translateX(-4px)}16%{transform:translateX(4px)}24%{transform:translateX(-3px)}32%{transform:translateX(3px)}40%{transform:translateX(-1px)}48%{transform:translateX(0)}}
-      @keyframes tlGhostReveal{0%{opacity:0;transform:scale(0.5) translateY(10px);filter:blur(10px)}100%{opacity:0.12;transform:scale(1) translateY(0);filter:blur(0)}}
+      @keyframes tlGhostReveal{0%{opacity:0;transform:scale(0.5) translateY(10px)}100%{opacity:0.12;transform:scale(1) translateY(0)}}
       @keyframes tlGlowPulse{0%,100%{box-shadow:inset 0 0 60px rgba(0,201,167,0),0 0 0 rgba(0,201,167,0)}50%{box-shadow:inset 0 0 60px rgba(0,201,167,0.04),0 0 80px rgba(0,201,167,0.06)}}
       @keyframes tlRedPulse{0%,100%{box-shadow:inset 0 0 60px rgba(255,107,107,0),0 0 0 rgba(255,107,107,0)}50%{box-shadow:inset 0 0 60px rgba(255,107,107,0.04),0 0 80px rgba(255,107,107,0.06)}}
-      @keyframes tlHourFade{0%{opacity:0;transform:scale(0.8);filter:blur(4px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
+      @keyframes tlHourFade{0%{opacity:0;transform:scale(0.8)}100%{opacity:1;transform:scale(1)}}
       @keyframes tlTextType{0%{opacity:0;clip-path:inset(0 100% 0 0)}100%{opacity:1;clip-path:inset(0 0% 0 0)}}
       @keyframes tlDividerGlow{0%{opacity:0;height:0}100%{opacity:1;height:100%}}
       .tl-item{position:relative;display:flex;gap:20px;align-items:flex-start;padding:22px 0;opacity:0}
