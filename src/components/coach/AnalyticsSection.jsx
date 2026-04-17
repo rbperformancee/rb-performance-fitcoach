@@ -131,7 +131,7 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
         </div>
       </div>
 
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 24px 80px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 24px 80px" }}>
         {loading ? (
           <div style={{ padding: 60, display: "flex", justifyContent: "center" }}>
             <Spinner variant="dots" size={32} color={VIOLET} label="Calcul des analytics" />

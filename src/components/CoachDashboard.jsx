@@ -549,7 +549,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       {/* Ambient teal */}
       <div className="coach-client-panel-ambient" style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 40% -10%, rgba(2,209,186,0.1), transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
-      <div className="coach-client-panel-inner" style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "0 24px 100px" }}>
+      <div className="coach-client-panel-inner" style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "0 24px 100px" }}>
 
         <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f, uploadPlanId, uploadProgWeeks); e.target.value = ""; } }} />
 
@@ -2730,7 +2730,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       }}>
       {MobileTopBar}
 
-      <div className="coach-main-inner" style={{ maxWidth: 900, margin: "0 auto", padding: "48px 56px 40px", position: "relative", overflow: "hidden" }}>
+      <div className="coach-main-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 56px 40px", position: "relative", overflow: "hidden" }}>
         {/* Glow teal subtil haut droite — clippe par overflow hidden */}
         <div style={{ position: "absolute", top: -100, right: -50, width: 400, height: 400, background: "radial-gradient(circle, rgba(0,201,167,0.04), transparent 65%)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
 
@@ -2936,7 +2936,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
-          <div style={{ position: "relative", zIndex: 1, maxWidth: 640, margin: "0 auto", padding: "0 20px calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "0 20px calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
             {/* Header */}
             <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
               <button onClick={() => setShowClientList(false)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}>
