@@ -190,22 +190,27 @@ else fail('FAQ structured data MISSING');
 // ===== 6. MOBILE CHECKS =====
 console.log('\n\x1b[1m6. Mobile Readiness\x1b[0m');
 
-if (landing.includes('overflow-x:hidden'))
+// Check in both HTML and external CSS
+const cssPath = path.join(publicDir, 'landing-style.css');
+const cssContent = fs.existsSync(cssPath) ? fs.readFileSync(cssPath, 'utf8') : '';
+const allContent = landing + cssContent;
+
+if (allContent.includes('overflow-x:hidden'))
   pass('overflow-x:hidden present on sections');
 else warn('overflow-x:hidden not found');
 
-if (landing.includes('max-width:768px') || landing.includes('max-width: 768px'))
+if (allContent.includes('max-width:768px') || allContent.includes('max-width: 768px'))
   pass('Mobile breakpoint @media(max-width:768px) present');
 else fail('No mobile breakpoint found');
 
-const vwCount = (landing.match(/width:\s*100vw/g) || []).length;
+const vwCount = (allContent.match(/width:\s*100vw/g) || []).length;
 if (vwCount === 0) {
   pass('No width:100vw (prevents scrollbar overflow)');
 } else {
   warn(`Found ${vwCount} instances of width:100vw — may cause horizontal scroll`);
 }
 
-if (landing.includes('env(safe-area-inset'))
+if (allContent.includes('env(safe-area-inset'))
   pass('Safe area insets used (notch support)');
 else warn('No safe area insets found');
 

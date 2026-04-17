@@ -85,6 +85,18 @@
       ]
     },
     {
+      "source": "/landing-style.css",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/landing-script.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+      ]
+    },
+    {
       "source": "/:path*.woff2",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
