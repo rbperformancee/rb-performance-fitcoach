@@ -3448,11 +3448,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     // Phrase dans le noir
     .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:900;color:rgba(255,255,255,0.25)">Et tu ne le sauras pas.</div>', 800, 1.4); })
 
-    // Noir
-    .then(function(){ return new Promise(function(r){ setTimeout(function(){ clear(); r(); },2000); }); })
-
-    // P4 — rewind teal
+    // Transition directe vers le teal — pas de vide
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
+      clear();
       if(glow) glow.style.opacity='1';
       if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(0,201,167,0.06),transparent 70%)'; }
       if(ghost){ ghost.style.color='rgba(0,201,167,0.03)'; ghost.textContent='+'+fmt(saved)+'€'; ghost.style.filter='blur(6px)'; }
@@ -3464,7 +3462,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(64px,14vw,110px);color:#00C9A7;line-height:1;margin:20px 0;animation:bmNumIn 1.2s cubic-bezier(0.16,1,0.3,1) forwards">+'+fmt(saved)+'€</div>', 1200, 1.2);
     })
     .then(function(){ return say('<div style="font-size:14px;color:rgba(255,255,255,0.22);margin-bottom:28px;letter-spacing:0.02em">par an. Récupérés avec RB Perform.</div>', 1000, 1.0); })
-    .then(function(){ return say('<a href="/demo" style="display:inline-block;padding:18px 40px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;animation:bmGlow 2.5s ease-in-out infinite">Voir la démo</a>', 1000, 1.0); })
+    .then(function(){ return say('<a href="javascript:void(0)" onclick="document.querySelector(\'[data-target=demo-section]\').click()" style="display:inline-block;padding:18px 40px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;cursor:pointer;animation:bmGlow 2.5s ease-in-out infinite">Voir la démo</a>', 1000, 1.0); })
     .then(function(){ setTimeout(function(){ started=false; clearP(); }, 8000);
     });
   }
@@ -3485,14 +3483,17 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   var idleTimer = null;
   var hasPlayed = false;
 
-  function onSliderMove(){
+  function onSliderMove(isReplay){
     if(idleTimer) clearTimeout(idleTimer);
 
     if(started){ abort(); }
 
-    if(!clientsTouched || !tarifTouched) return;
+    // Premier lancement : les 2 sliders doivent etre touches
+    // Relance : un seul suffit
+    if(!hasPlayed && (!clientsTouched || !tarifTouched)) return;
 
     idleTimer = setTimeout(function(){
+      hasPlayed = true;
       clear();
       say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:rgba(255,255,255,0.25)">Analyse en cours...</div>', 0);
       setTimeout(function(){ clear(); run(); }, 1500);
