@@ -280,6 +280,7 @@ input[type=number] { -moz-appearance: textfield; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 
 .app-root { display: flex; flex-direction: column; min-height: 100vh; max-width: 680px; margin: 0 auto; }
+.app-root.coach-mode { max-width: 100%; }
 
 /* ── TOPBAR ── */
 .topbar {
