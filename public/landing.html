@@ -3686,5 +3686,18 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   }
 })();
 </script>
+
+<!-- ========== FOOTER CLONE — Apple style, footer on every section ========== -->
+<script>
+(function(){
+  var original = document.querySelector('section.pricing footer');
+  if (!original) return;
+  document.querySelectorAll('section').forEach(function(s){
+    if (s.classList.contains('hero') || s.classList.contains('pricing')) return;
+    var clone = original.cloneNode(true);
+    s.appendChild(clone);
+  });
+})();
+</script>
 </body>
 </html>
