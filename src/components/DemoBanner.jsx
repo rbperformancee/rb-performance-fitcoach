@@ -95,7 +95,7 @@ export default function DemoBanner({ onSignup }) {
             fontFamily: 'inherit',
           }}
         >
-          Essai →
+          Rejoindre →
         </button>
       </div>
     </div>

@@ -160,13 +160,13 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
         {isDemo && !loading && !error && (
           <div style={{ marginTop: 24, padding: "16px 20px", background: "rgba(2,209,186,.04)", border: `.5px solid rgba(2,209,186,.2)`, borderRadius: 14 }}>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginBottom: 12, textAlign: "center", lineHeight: 1.55 }}>
-              L'IA analyse automatiquement tous tes clients en temps reel.
+              L'IA analyse automatiquement tous tes clients en temps réel.
             </div>
             <a
-              href="/signup"
+              href="/founding"
               style={demoCta}
             >
-              Demarrer mon essai →
+              Rejoindre les 50 Founding Coachs →
             </a>
           </div>
         )}

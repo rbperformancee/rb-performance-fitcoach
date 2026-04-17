@@ -127,7 +127,7 @@ export default function LoginPage() {
         </button>
 
         <div className="auth-foot">
-          Pas encore de compte ? <a href="/signup">Commencer gratuitement →</a>
+          Pas encore de compte ? <a href="/founding">Rejoindre →</a>
         </div>
       </div>
     </div>

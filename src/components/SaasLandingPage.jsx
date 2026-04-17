@@ -131,7 +131,7 @@ export default function SaasLandingPage({ onSignup, onBack }) {
                 letterSpacing: "0.02em",
                 fontFamily: "inherit",
               }}>
-                Demarrer l'essai gratuit →
+                Rejoindre les Founding Coachs →
               </button>
               <button onClick={onSignup} style={{
                 padding: "14px 28px",
