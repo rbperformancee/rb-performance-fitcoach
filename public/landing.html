@@ -2067,9 +2067,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         @keyframes bmFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
         .bm-p{position:absolute;border-radius:50%;z-index:2;pointer-events:none;opacity:0}
       </style>
-      <div id="blackMirror" style="position:relative;min-height:400px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+      <div id="blackMirror" style="position:relative;min-height:400px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:transparent">
         <!-- Fond qui pulse -->
-        <div id="bmPulse" style="position:absolute;inset:0;z-index:0;background:radial-gradient(circle,rgba(255,255,255,0.01),transparent 70%);transition:background 1s,animation 0.5s"></div>
+        <div id="bmPulse" style="position:absolute;inset:0;z-index:0;background:transparent;transition:background 1s"></div>
         <!-- Particules -->
         <div id="bmParticles" style="position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden"></div>
 
@@ -2084,7 +2084,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         </svg>
 
         <!-- Flash -->
-        <div id="bmFlash" style="position:absolute;inset:0;z-index:6;background:#fff;opacity:0;pointer-events:none"></div>
+        <div id="bmFlash" style="position:absolute;inset:0;z-index:6;background:#fff;opacity:0;pointer-events:none;display:none"></div>
 
         <!-- Glow teal -->
         <div id="bmGlow" style="position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;background:radial-gradient(circle at center,rgba(0,201,167,0.1),transparent 50%);transition:opacity 1.2s"></div>
@@ -3357,7 +3357,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if(!crack) return;
     crack.style.opacity='1';
     // Flash blanc a l impact
-    if(flash){ flash.style.animation='bmFlash 0.4s ease forwards'; setTimeout(function(){ flash.style.animation='none'; flash.style.opacity='0'; },400); }
+    if(flash){ flash.style.display='block'; flash.style.opacity='0.4'; setTimeout(function(){ flash.style.opacity='0'; setTimeout(function(){ flash.style.display='none'; },400); },100); }
     crack.querySelectorAll('.bm-crack-path').forEach(function(p){ p.style.animation='bmCrack1 1.2s ease forwards'; });
     setTimeout(function(){ crack.querySelectorAll('.bm-crack-sub').forEach(function(p){ p.style.animation='bmCrack2 0.8s ease forwards'; }); },400);
   }
