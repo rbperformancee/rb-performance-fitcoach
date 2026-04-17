@@ -2100,31 +2100,34 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- ========== BLOC 3 — AVANT / APRES CINEMATIQUE ========== -->
     <style>
       @keyframes tlLineDown{from{height:0}to{height:100%}}
-      @keyframes tlItemLeft{from{opacity:0;transform:translateX(-30px) scale(0.95);filter:blur(4px)}to{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
-      @keyframes tlItemRight{from{opacity:0;transform:translateX(30px) scale(0.95);filter:blur(4px)}to{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
-      @keyframes tlReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-      @keyframes tlTitleIn{from{opacity:0;transform:translateY(20px);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
-      @keyframes tlImpactShake{0%,100%{transform:translateX(0)}10%{transform:translateX(-3px)}20%{transform:translateX(3px)}30%{transform:translateX(-2px)}40%{transform:translateX(2px)}50%{transform:translateX(0)}}
-      @keyframes tlGhostReveal{from{opacity:0;transform:scale(0.6);filter:blur(8px)}to{opacity:0.12;transform:scale(1);filter:blur(0)}}
-      @keyframes tlGlowPulse{0%,100%{box-shadow:inset 0 0 40px rgba(0,201,167,0),0 0 0 rgba(0,201,167,0)}50%{box-shadow:inset 0 0 40px rgba(0,201,167,0.03),0 0 60px rgba(0,201,167,0.05)}}
-      @keyframes tlRedPulse{0%,100%{box-shadow:inset 0 0 40px rgba(255,107,107,0),0 0 0 rgba(255,107,107,0)}50%{box-shadow:inset 0 0 40px rgba(255,107,107,0.03),0 0 60px rgba(255,107,107,0.05)}}
-      @keyframes tlDividerGlow{from{opacity:0.3;box-shadow:0 0 0 transparent}to{opacity:1;box-shadow:0 0 20px rgba(0,201,167,0.3)}}
-      .tl-item{position:relative;display:flex;gap:20px;align-items:flex-start;padding:20px 0;opacity:0}
-      .tl-hour{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,48px);color:rgba(255,255,255,0.08);line-height:1;flex-shrink:0;min-width:80px;transition:color 0.8s ease}
-      .tl-ghost{position:absolute;right:0;top:8px;font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,40px);line-height:1;opacity:0;pointer-events:none}
+      @keyframes tlItemLeft{0%{opacity:0;transform:translateX(-40px) scale(0.92);filter:blur(6px)}60%{opacity:0.8;filter:blur(1px)}100%{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
+      @keyframes tlItemRight{0%{opacity:0;transform:translateX(40px) scale(0.92);filter:blur(6px)}60%{opacity:0.8;filter:blur(1px)}100%{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
+      @keyframes tlTitleIn{0%{opacity:0;transform:translateY(24px) scale(0.96);filter:blur(10px)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+      @keyframes tlImpactShake{0%,100%{transform:translateX(0)}8%{transform:translateX(-4px)}16%{transform:translateX(4px)}24%{transform:translateX(-3px)}32%{transform:translateX(3px)}40%{transform:translateX(-1px)}48%{transform:translateX(0)}}
+      @keyframes tlGhostReveal{0%{opacity:0;transform:scale(0.5) translateY(10px);filter:blur(10px)}100%{opacity:0.12;transform:scale(1) translateY(0);filter:blur(0)}}
+      @keyframes tlGlowPulse{0%,100%{box-shadow:inset 0 0 60px rgba(0,201,167,0),0 0 0 rgba(0,201,167,0)}50%{box-shadow:inset 0 0 60px rgba(0,201,167,0.04),0 0 80px rgba(0,201,167,0.06)}}
+      @keyframes tlRedPulse{0%,100%{box-shadow:inset 0 0 60px rgba(255,107,107,0),0 0 0 rgba(255,107,107,0)}50%{box-shadow:inset 0 0 60px rgba(255,107,107,0.04),0 0 80px rgba(255,107,107,0.06)}}
+      @keyframes tlHourFade{0%{opacity:0;transform:scale(0.8);filter:blur(4px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
+      @keyframes tlTextType{0%{opacity:0;clip-path:inset(0 100% 0 0)}100%{opacity:1;clip-path:inset(0 0% 0 0)}}
+      @keyframes tlDividerGlow{0%{opacity:0;height:0}100%{opacity:1;height:100%}}
+      .tl-item{position:relative;display:flex;gap:20px;align-items:flex-start;padding:22px 0;opacity:0}
+      .tl-hour{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,48px);color:rgba(255,255,255,0.08);line-height:1;flex-shrink:0;min-width:80px;transition:color 1s ease}
+      .tl-ghost{position:absolute;right:0;top:8px;font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,40px);line-height:1;opacity:0;pointer-events:none;transition:opacity 0.8s ease}
       .tl-text{font-size:14px;line-height:1.65;flex:1}
-      .tl-col{position:relative;padding:40px 32px;border-radius:16px;transition:box-shadow 1.5s ease}
+      .tl-col{position:relative;padding:40px 32px;border-radius:16px;transition:box-shadow 2s ease}
       .tl-col .tl-line{position:absolute;left:106px;top:80px;bottom:40px;width:2px;overflow:hidden}
-      .tl-col .tl-line-inner{width:100%;height:0}
-      .tl-col.tl-active .tl-line-inner{animation:tlLineDown 3s ease-out forwards}
+      .tl-col .tl-line-inner{width:100%;height:0;transition:none}
+      .tl-col.tl-active .tl-line-inner{animation:tlLineDown 4s cubic-bezier(0.22,1,0.36,1) forwards}
       .biz-versus .tl-col:first-child{background:linear-gradient(180deg,rgba(255,107,107,0.02) 0%,rgba(255,107,107,0.06) 100%)}
       .biz-versus .tl-col:last-child{background:linear-gradient(180deg,rgba(0,201,167,0.02) 0%,rgba(0,201,167,0.06) 100%)}
-      .tl-col.tl-active:first-child{animation:tlRedPulse 3s ease-in-out 2s 2}
-      .tl-col.tl-active:last-child{animation:tlGlowPulse 3s ease-in-out 2s 2}
-      .tl-impact{animation:tlImpactShake 0.5s ease}
-      .tl-ghost-visible{animation:tlGhostReveal 0.8s cubic-bezier(0.16,1,0.3,1) forwards !important}
+      .tl-col.tl-active:first-child{animation:tlRedPulse 4s ease-in-out 3s 2}
+      .tl-col.tl-active:last-child{animation:tlGlowPulse 4s ease-in-out 3s 2}
+      .tl-impact{animation:tlImpactShake 0.6s cubic-bezier(0.36,0.07,0.19,0.97)}
+      .tl-ghost-visible{animation:tlGhostReveal 1s cubic-bezier(0.16,1,0.3,1) forwards !important}
       .tl-title-wrap{opacity:0}
-      .tl-title-wrap.tl-visible{animation:tlTitleIn 0.8s cubic-bezier(0.16,1,0.3,1) forwards}
+      .tl-title-wrap.tl-visible{animation:tlTitleIn 1.2s cubic-bezier(0.16,1,0.3,1) forwards}
+      .tl-divider-inner{width:100%;height:0;background:linear-gradient(180deg,rgba(0,201,167,0.15),rgba(0,201,167,0.5),rgba(0,201,167,0.15));transition:none}
+      .tl-divider-inner.tl-active{animation:tlDividerGlow 3s cubic-bezier(0.22,1,0.36,1) forwards}
       @media(max-width:768px){.tl-hour{font-size:28px;min-width:56px}.tl-col .tl-line{left:70px}.tl-col{padding:28px 20px}}
     </style>
     <div id="tlSection" style="margin-top:80px;padding-top:60px;border-top:1px solid rgba(0,201,167,0.1)">
@@ -2171,7 +2174,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         </div>
 
         <!-- Ligne verticale teal animee -->
-        <div class="tl-divider" style="background:linear-gradient(180deg,rgba(0,201,167,0.1),rgba(0,201,167,0.4),rgba(0,201,167,0.1));opacity:0.3;transition:all 1.5s ease"></div>
+        <div class="tl-divider" style="overflow:hidden"><div class="tl-divider-inner"></div></div>
 
         <!-- AVEC RB -->
         <div class="tl-col" style="border-radius:0 16px 16px 0" data-tl-side="right">
@@ -3516,58 +3519,115 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 (function(){
   var section = document.getElementById('tlSection');
   if (!section) return;
-  var played = false;
+  var running = false;
+
+  function resetTimeline(){
+    var titleWrap = section.querySelector('.tl-title-wrap');
+    if (titleWrap) titleWrap.classList.remove('tl-visible');
+
+    var divInner = section.querySelector('.tl-divider-inner');
+    if (divInner) divInner.classList.remove('tl-active');
+
+    section.querySelectorAll('.tl-col').forEach(function(col){
+      col.classList.remove('tl-active');
+      col.style.animation = 'none';
+    });
+
+    section.querySelectorAll('.tl-item').forEach(function(item){
+      item.style.animation = 'none';
+      item.style.opacity = '0';
+      item.classList.remove('tl-impact');
+      var ghost = item.querySelector('.tl-ghost');
+      if (ghost) { ghost.classList.remove('tl-ghost-visible'); ghost.style.animation = 'none'; ghost.style.opacity = '0'; }
+      var hour = item.querySelector('.tl-hour');
+      if (hour) { hour.style.animation = 'none'; hour.style.opacity = ''; }
+    });
+
+    section.querySelectorAll('.tl-line-inner').forEach(function(l){ l.style.animation = 'none'; l.style.height = '0'; });
+  }
 
   function runTimeline(){
-    if (played) return;
-    played = true;
+    if (running) return;
+    running = true;
+    resetTimeline();
 
+    // Force reflow apres reset
+    void section.offsetHeight;
+
+    // Titre
     var titleWrap = section.querySelector('.tl-title-wrap');
-    if (titleWrap) titleWrap.classList.add('tl-visible');
+    setTimeout(function(){ if (titleWrap) titleWrap.classList.add('tl-visible'); }, 200);
 
-    var divider = section.querySelector('.tl-divider');
-    setTimeout(function(){
-      if (divider) { divider.style.opacity = '1'; divider.style.boxShadow = '0 0 20px rgba(0,201,167,0.3)'; }
-    }, 400);
+    // Divider grandit
+    var divInner = section.querySelector('.tl-divider-inner');
+    setTimeout(function(){ if (divInner) divInner.classList.add('tl-active'); }, 600);
 
-    var cols = section.querySelectorAll('.tl-col');
-    cols.forEach(function(col){
-      setTimeout(function(){ col.classList.add('tl-active'); }, 200);
+    // Colonne gauche demarre a 800ms, droite a 1200ms (decalage)
+    var leftCol = section.querySelector('[data-tl-side="left"]');
+    var rightCol = section.querySelector('[data-tl-side="right"]');
+    var leftBase = 800;
+    var rightBase = 1200;
+
+    function animateCol(col, baseDelay){
+      if (!col) return;
+      setTimeout(function(){ col.classList.add('tl-active'); }, baseDelay);
 
       var side = col.getAttribute('data-tl-side');
+      var anim = side === 'left' ? 'tlItemLeft' : 'tlItemRight';
       var items = col.querySelectorAll('.tl-item');
-      items.forEach(function(item){
-        var delay = parseInt(item.getAttribute('data-tl-delay') || '300');
+
+      items.forEach(function(item, i){
+        var delay = baseDelay + (i * 600) + 300;
         var isImpact = item.getAttribute('data-tl-impact') === 'true';
-        var anim = side === 'left' ? 'tlItemLeft' : 'tlItemRight';
 
         setTimeout(function(){
-          item.style.animation = anim + ' 0.7s cubic-bezier(0.16,1,0.3,1) forwards';
+          // Heure apparait d'abord
+          var hour = item.querySelector('.tl-hour');
+          if (hour) { hour.style.animation = 'tlHourFade 0.6s cubic-bezier(0.16,1,0.3,1) forwards'; }
 
+          // Puis le reste de la ligne
+          setTimeout(function(){
+            item.style.animation = anim + ' 0.9s cubic-bezier(0.16,1,0.3,1) forwards';
+          }, 150);
+
+          // Ghost number monte apres
           var ghost = item.querySelector('.tl-ghost');
           if (ghost) {
-            setTimeout(function(){ ghost.classList.add('tl-ghost-visible'); }, 300);
+            setTimeout(function(){ ghost.classList.add('tl-ghost-visible'); }, 500);
           }
 
+          // Impact shake sur la derniere ligne
           if (isImpact) {
-            setTimeout(function(){ item.classList.add('tl-impact'); }, 200);
+            setTimeout(function(){ item.classList.add('tl-impact'); }, 400);
           }
         }, delay);
       });
-    });
+    }
+
+    animateCol(leftCol, leftBase);
+    animateCol(rightCol, rightBase);
+
+    // Liberer pour le prochain run
+    var totalItems = section.querySelectorAll('.tl-item').length;
+    setTimeout(function(){ running = false; }, rightBase + totalItems * 600 + 1500);
   }
 
   var biz = document.querySelector('section.business');
   if (biz) {
     var mo = new MutationObserver(function(muts){
       muts.forEach(function(m){
-        if (m.attributeName === 'class' && biz.classList.contains('active')) {
-          setTimeout(runTimeline, 600);
+        if (m.attributeName === 'class') {
+          if (biz.classList.contains('active')) {
+            setTimeout(runTimeline, 400);
+          } else {
+            running = false;
+            resetTimeline();
+          }
         }
       });
     });
     mo.observe(biz, { attributes: true });
-    if (biz.classList.contains('active')) setTimeout(runTimeline, 600);
+    if (biz.classList.contains('active')) setTimeout(runTimeline, 400);
   }
 })();
 </script>
