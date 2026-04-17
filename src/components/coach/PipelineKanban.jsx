@@ -74,8 +74,7 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
       role="dialog"
       aria-modal="true"
       aria-label="Pipeline clients"
-      className="coach-overlay-panel"
-      style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 250, background: "#080C14", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
+      style={{ position: "fixed", inset: 0, zIndex: 250, background: "#080C14", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
     >
       <style>{`@keyframes kanFade{from{opacity:0}to{opacity:1}} @keyframes kanSlide{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
 
