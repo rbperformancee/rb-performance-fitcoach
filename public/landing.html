@@ -3363,7 +3363,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if(!crack) return;
     crack.style.opacity='1';
     // Flash blanc a l impact
-    if(flash){ flash.style.display='block'; flash.style.opacity='0.4'; setTimeout(function(){ flash.style.opacity='0'; setTimeout(function(){ flash.style.display='none'; },400); },100); }
+    if(flash){ flash.style.display='block'; flash.style.opacity='0.15'; setTimeout(function(){ flash.style.opacity='0'; setTimeout(function(){ flash.style.display='none'; },150); },50); }
     crack.querySelectorAll('.bm-crack-path').forEach(function(p){ p.style.animation='bmCrack1 1.2s ease forwards'; });
     setTimeout(function(){ crack.querySelectorAll('.bm-crack-sub').forEach(function(p){ p.style.animation='bmCrack2 0.8s ease forwards'; }); },400);
   }
@@ -3395,9 +3395,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     // P1 — tes chiffres
     say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:900;color:#fff;line-height:1.1">Tu as '+c+' clients.</div>',600)
     .then(function(){ return say('<div style="font-size:17px;color:rgba(255,255,255,0.45);margin-top:12px">Tu factures '+t+'€ par mois.</div>',1000); })
-    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.2);margin-top:12px;margin-bottom:32px">Tu penses que tout va bien.</div>',1200); })
+    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.2);margin-top:12px">Tu penses que tout va bien.</div>',1200); })
+    .then(function(){ return say('<div style="font-size:13px;color:rgba(255,255,255,0.15);margin-top:16px;margin-bottom:28px;font-style:italic">En moyenne, un coach perd 25% de ses clients par an. Soit '+lost+' sur '+c+' — sans le voir venir.</div>',1500); })
 
-    // P2 — IMPACT (pause longue puis crack)
+    // P2 — IMPACT
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
       if(pulse){ pulse.style.animation='bmHeartFast 1s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,107,107,0.06),transparent 70%)'; }
       doCrack();
