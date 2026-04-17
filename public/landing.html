@@ -95,9 +95,7 @@ section{position:fixed !important;inset:0 !important;width:100% !important;heigh
 section.active{opacity:1 !important;pointer-events:all !important;background:#080C14 !important;z-index:10 !important}
 section.how,section.business,section.bento,section.demo-section,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080C14 !important}
 section.hero{overflow:hidden !important}
-section:not(.hero){display:flex !important;flex-direction:column !important}
-section:not(.hero) > *:not(footer):not(style):not(script){flex:1 0 auto}
-section > footer{flex-shrink:0 !important;margin-top:auto !important;width:100% !important;box-sizing:border-box !important;align-self:stretch !important}
+section > footer{display:block !important;width:100% !important;box-sizing:border-box !important;clear:both !important}
 .gsap-override *{opacity:1 !important;transform:none !important;visibility:visible !important}
 :root{--orange:#00C9A7;--orange-bright:#00C9A7;--teal:#00C9A7;--teal-bright:#5ee8d4;--violet:#00C9A7;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -733,7 +731,7 @@ section.client-view::-webkit-scrollbar{display:none}
 }
 
 /* ========== FOOTER (refonte 4 colonnes) ========== */
-footer{background:#000;border-top:.5px solid rgba(255,255,255,.06);padding:52px 64px 44px;position:relative;z-index:0;margin-top:80px;width:100%;align-self:stretch;flex-shrink:0;box-sizing:border-box}
+footer{background:#000;border-top:.5px solid rgba(255,255,255,.06);padding:52px 64px 44px;position:relative;z-index:0;margin-top:80px;width:100vw;margin-left:calc(-50vw + 50%);box-sizing:border-box}
 .footer-inner{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:48px;max-width:1100px;margin:0 auto;align-items:start}
 .footer-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:900;letter-spacing:.1em;color:#fff;margin-bottom:12px;display:inline-block}
 .footer-logo span{color:#02d1ba}
@@ -2050,7 +2048,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
 <!-- ========== DEMO SECTION (fullscreen, accessible depuis nav) ========== -->
 <section class="demo-section" id="demo-section" style="padding:200px 24px 80px;min-height:100vh">
-  <div style="max-width:1100px;width:100%;margin:auto">
+  <div style="max-width:1100px;width:100%;margin:0 auto">
 
     <!-- Header — padding-top genereux pour ne pas coller au burger -->
     <div style="text-align:center;margin-bottom:64px">
@@ -3864,7 +3862,6 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   document.querySelectorAll('section').forEach(function(s){
     if (s.classList.contains('pricing') || s.classList.contains('hero')) return;
     var clone = original.cloneNode(true);
-    clone.style.cssText = 'display:block;width:100%;box-sizing:border-box;';
     s.appendChild(clone);
   });
 })();
