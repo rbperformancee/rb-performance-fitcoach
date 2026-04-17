@@ -1412,38 +1412,39 @@ html.light .founder-message strong{color:#0a0a0a}
     bottom: 28px !important;
   }
 
-  /* HOW / SYSTEME — tout compact, rien ne déborde */
+  /* HOW / SYSTEME — tout contenu, rien ne déborde */
   section.how { padding: 0 !important; }
-  section.how > * { max-width: 100% !important; overflow: hidden !important; }
-  section.how > div[style*="text-align:center"] {
-    padding: 72px 16px 32px !important;
-    max-width: 100% !important;
+  section.how * { max-width: 100% !important; box-sizing: border-box !important; }
+  section.how > div[style] {
+    padding: 60px 16px 28px !important;
+    width: 100% !important;
   }
   section.how h2[style] {
-    font-size: clamp(28px,7.5vw,44px) !important;
-    max-width: 100% !important;
+    font-size: clamp(26px,7vw,40px) !important;
     display: block !important;
     word-break: break-word !important;
+    margin-bottom: 24px !important;
   }
-  section.how div[style*="grid-template-columns:repeat(3"] {
+  section.how div[style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
-    gap: 16px !important;
-    max-width: 100% !important;
-    padding: 0 16px !important;
+    gap: 12px !important;
+    padding: 0 !important;
+    width: 100% !important;
   }
-  section.how div[style*="grid-template-columns:repeat(3"] > div[style*="position:absolute"] {
+  section.how div[style*="position:absolute"][style*="width:1px"] {
     display: none !important;
   }
-  section.how div[style*="grid-template-columns:repeat(3"] > div {
-    padding: 12px 0 !important;
+  section.how div[style*="font-size:clamp(48px"] {
+    font-size: clamp(32px,9vw,48px) !important;
   }
-  section.how div[style*="grid-template-columns:repeat(3"] div[style*="font-size:clamp(48px"] {
-    font-size: clamp(36px,10vw,56px) !important;
+  section.how div[style*="letter-spacing:3px"] {
+    font-size: 10px !important;
+    letter-spacing: 2px !important;
   }
-  .how-inner { padding: 0 !important; max-width: 100% !important; }
-  .sys-block { max-width: 100% !important; padding: 32px 16px !important; gap: 20px !important; flex-direction: column !important; }
-  .sys-left { max-width: 100% !important; width: 100% !important; }
-  .sys-title { font-size: clamp(22px,6.5vw,32px) !important; }
+  .how-inner { padding: 0 !important; }
+  .sys-block { padding: 28px 16px !important; gap: 20px !important; flex-direction: column !important; }
+  .sys-left { width: 100% !important; }
+  .sys-title { font-size: clamp(22px,6.5vw,30px) !important; }
   .sys-sub { font-size: 13px !important; }
   .sys-right { min-height: 80px !important; width: 100% !important; }
   .sys-ghost { font-size: clamp(50px,14vw,80px) !important; }
@@ -1451,7 +1452,7 @@ html.light .founder-message strong{color:#0a0a0a}
   .sys-bullets span { font-size: 12px !important; }
   .sys-stat { font-size: 10px !important; }
   .sys-badge { font-size: 9px !important; padding: 4px 10px !important; }
-  .sys-big { font-size: clamp(40px,12vw,64px) !important; }
+  .sys-big { font-size: clamp(36px,11vw,56px) !important; }
 
   /* BENTO — padding + mission card */
   section.bento { padding: 80px 16px !important; }
@@ -1504,24 +1505,54 @@ html.light .founder-message strong{color:#0a0a0a}
   .tl-item { padding: 14px 0 !important; gap: 12px !important; }
   .tl-text { font-size: 13px !important; }
 
-  /* PRICING — plans + founding coach + FAQ */
+  /* PRICING — tout contenu sur mobile */
   section.pricing { padding: 80px 16px 40px !important; }
-  .pricing-inner { padding: 0 !important; max-width: 100% !important; }
-  .plan { padding: 28px 20px !important; }
-  .plan .price { font-size: 56px !important; }
+  section.pricing * { max-width: 100% !important; box-sizing: border-box !important; }
+  .pricing-inner { padding: 0 !important; }
+  .plans { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .plan { padding: 24px 16px !important; }
+  .plan .price { font-size: 52px !important; }
   .plan .desc { font-size: 12px !important; min-height: auto !important; }
   .plan .f-list li { font-size: 12px !important; }
-  .faq-inner { max-width: 100% !important; }
-  .faq-item { margin-bottom: 8px !important; }
-  .faq-q { padding: 18px 16px !important; font-size: 14px !important; }
+
+  /* Founding Coach card */
+  section.pricing div[style*="padding:36px 40px"],
+  section.pricing div[style*="padding: 36px 40px"] {
+    padding: 20px 16px !important;
+  }
   section.pricing div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
     grid-template-columns: 1fr 1fr !important;
+    gap: 4px 12px !important;
   }
-  section.pricing div[style*="padding:36px 40px"] {
-    padding: 24px 16px !important;
+  section.pricing div[style*="display:flex"][style*="gap:24px"] {
+    gap: 12px !important;
   }
-  section.pricing div[style*="max-width:680px"] {
+  section.pricing a[style*="white-space:nowrap"] {
+    white-space: normal !important;
+    text-align: center !important;
+    padding: 12px 20px !important;
+  }
+  section.pricing div[style*="min-width:44px"] {
+    min-width: 36px !important;
+  }
+  section.pricing div[style*="font-size:32px"],
+  .fc-timer-digit { font-size: 22px !important; }
+
+  /* FAQ — full width, padding réduit */
+  section.pricing div[style*="max-width:680px"],
+  section.pricing div[style*="max-width:600px"] {
     max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .faq-item { margin-bottom: 8px !important; }
+  .faq-q { padding: 16px 14px !important; font-size: 13px !important; gap: 10px !important; }
+  .faq-a, section.pricing div[style*="padding:0 24px"] {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    max-width: 100% !important;
+    font-size: 13px !important;
   }
 
   /* STICKY CTA — safe area */
