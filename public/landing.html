@@ -95,7 +95,8 @@ section{position:fixed !important;inset:0 !important;width:100% !important;heigh
 section.active{opacity:1 !important;pointer-events:all !important;background:#080C14 !important;z-index:10 !important}
 section.how,section.business,section.bento,section.demo-section,section.features,section.pricing,section.cta-final,section.client-view,section.comparison,section.testimonial,section.faq,section.chiffres,section.trust-strip,section.founder,section.stacking{background:#080C14 !important}
 section.hero{overflow:hidden !important}
-section > footer{display:block !important;width:100% !important;box-sizing:border-box !important;clear:both !important}
+section:not(.hero){display:flex !important;flex-direction:column !important}
+section > footer{margin-top:auto !important}
 .gsap-override *{opacity:1 !important;transform:none !important;visibility:visible !important}
 :root{--orange:#00C9A7;--orange-bright:#00C9A7;--teal:#00C9A7;--teal-bright:#5ee8d4;--violet:#00C9A7;--dark:#030303;--dark2:#0a0a0a;--dark3:#0f0f0f;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);--text:#fff;--text-dim:rgba(255,255,255,0.55);--text-dimmer:rgba(255,255,255,0.35);--ease-out:cubic-bezier(0.22,1,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1)}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -2047,7 +2048,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
 
 <!-- ========== DEMO SECTION (fullscreen, accessible depuis nav) ========== -->
-<section class="demo-section" id="demo-section" style="padding:200px 24px 80px;min-height:100vh">
+<section class="demo-section" id="demo-section" style="padding:120px 24px 0;min-height:100vh">
   <div style="max-width:1100px;width:100%;margin:0 auto">
 
     <!-- Header — padding-top genereux pour ne pas coller au burger -->
