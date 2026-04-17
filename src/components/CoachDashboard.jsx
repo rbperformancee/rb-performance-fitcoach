@@ -2949,7 +2949,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           est une colonne a droite + le dashboard au centre ; sur mobile
           le panel est un overlay qui couvre la liste de toute facon. */}
       {showClientList && !selected && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 150, background: BG, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", fontFamily: "'Inter',-apple-system,system-ui,sans-serif", color: "#fff" }}>
+        <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 150, background: BG, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", fontFamily: "'Inter',-apple-system,system-ui,sans-serif", color: "#fff" }}>
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
