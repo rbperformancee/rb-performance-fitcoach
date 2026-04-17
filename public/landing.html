@@ -3463,22 +3463,30 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     });
   }
 
+  function abort(){
+    started = false;
+    clear(); undoCrack(); clearP();
+    if(ghost){ ghost.textContent=''; ghost.style.filter='blur(12px)'; }
+    if(glow) glow.style.opacity='0';
+    if(pulse){ pulse.style.animation='none'; pulse.style.background='transparent'; }
+  }
+
   // Etat dormant au demarrage
   showDormant();
 
-  // Attendre que les 2 sliders soient touches + 1s sans mouvement
   var clientsTouched = false;
   var tarifTouched = false;
   var idleTimer = null;
+  var hasPlayed = false;
+
   function onSliderMove(){
-    if(sliderTouched) return;
-    // Reset le timer a chaque mouvement
     if(idleTimer) clearTimeout(idleTimer);
+
+    if(started){ abort(); }
+
     if(!clientsTouched || !tarifTouched) return;
-    // Les deux ont ete touches — attendre 1s d'inactivite
+
     idleTimer = setTimeout(function(){
-      if(sliderTouched) return;
-      sliderTouched = true;
       clear();
       say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:rgba(255,255,255,0.25)">Analyse en cours...</div>', 0);
       setTimeout(function(){ clear(); run(); }, 1500);
@@ -3493,8 +3501,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     var mo = new MutationObserver(function(muts){
       muts.forEach(function(m){
         if (m.attributeName === 'class' && biz.classList.contains('active')) {
-          if (sliderTouched && !started) setTimeout(run, 600);
-          else if (!sliderTouched) showDormant();
+          if (clientsTouched && tarifTouched && !started) setTimeout(run, 600);
+          else if (!clientsTouched || !tarifTouched) showDormant();
         }
       });
     });
