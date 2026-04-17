@@ -3236,7 +3236,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   const multEl     = document.getElementById('roi-multiple');
   const concEl     = document.getElementById('roi-conclusion');
 
-  const RB_COST_YEAR = 199 * 12; // 2 388€/an (plan Starter)
+  // Cout RB selon le nombre de clients (Starter <= 5, Pro > 5)
+  function rbCost(c){ return c <= 5 ? 199 * 12 : 299 * 12; }
+  function rbPlan(c){ return c <= 5 ? 'Starter 199€' : 'Pro 299€'; }
 
   function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
 
@@ -3251,9 +3253,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     const perteTotale = clientsPerdus * tarif * 12;
     // RB sauve 80% des clients a risque
     const gainRB = Math.round(perteTotale * 0.8);
-    // ROI = gain net / cout RB (arrondi a 1 decimale)
-    const roiNet = gainRB - RB_COST_YEAR;
-    const roiMult = roiNet > 0 ? (gainRB / RB_COST_YEAR).toFixed(1) : '0';
+    // ROI = gain / cout RB du plan adapte
+    const cost = rbCost(clients);
+    const roiMult = cost > 0 ? (gainRB / cost).toFixed(1) : '0';
 
     if (clientsVal) clientsVal.textContent = clients;
     if (tarifVal)   tarifVal.textContent   = tarif;
@@ -3261,7 +3263,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if (mrrSub)     mrrSub.textContent     = 'par mois · ' + fmt(annuel) + '€ / an';
     if (gainEl)     gainEl.textContent     = roiNet > 0 ? '+' + fmt(gainRB) + '€' : fmt(gainRB) + '€';
     if (multEl)     multEl.textContent     = '×' + roiMult;
-    if (concEl)     concEl.innerHTML       = 'Avec <strong>' + clients + ' clients</strong> à <strong>' + tarif + '€</strong>, tu perds <strong>' + clientsPerdus + ' client' + (clientsPerdus>1?'s':'') + '/an</strong> sans anti-churn. RB Perform en sauve 80% — soit <strong>+' + fmt(gainRB) + '€</strong> récupérés pour un coût de 2 388€/an (<strong>×' + roiMult + '</strong>).';
+    if (concEl)     concEl.innerHTML       = 'Avec <strong>' + clients + ' clients</strong> à <strong>' + tarif + '€</strong>, tu perds <strong>' + clientsPerdus + ' client' + (clientsPerdus>1?'s':'') + '/an</strong> sans anti-churn. RB Perform en sauve 80% — soit <strong>+' + fmt(gainRB) + '€</strong> récupérés pour un plan ' + rbPlan(clients) + '/mois (<strong>×' + roiMult + '</strong>).';
 
     // Slider track progress
     const pClients = ((clients - 2) / (50 - 2)) * 100;
