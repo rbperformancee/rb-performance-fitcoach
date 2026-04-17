@@ -2039,14 +2039,18 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
             <div style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:8px">Ton MRR potentiel</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:4px" id="roi-mrr-sub">par mois · 2 400€ / an</div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
             <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#00C9A7;line-height:1" id="roi-gain">+960€</div>
-              <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Revenus suppl. / an</div>
+              <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Argent récupéré / an</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#fff;line-height:1" id="roi-hours">+12h</div>
+              <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Heures gagnées / mois</div>
             </div>
             <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#fff;line-height:1" id="roi-multiple">×0.4</div>
-              <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Multiplicateur RB</div>
+              <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Multiplicateur ROI</div>
             </div>
           </div>
           <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5;padding:8px 0" id="roi-conclusion">
@@ -3257,13 +3261,18 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     const cost = rbCost(clients);
     const roiMult = cost > 0 ? (gainRB / cost).toFixed(1) : '0';
 
+    // Heures gagnees : rapports auto (3h) + admin par client (0.5h × clients)
+    var hoursPerMonth = Math.round(3 + clients * 0.5);
+    var hoursEl = document.getElementById('roi-hours');
+
     if (clientsVal) clientsVal.textContent = clients;
     if (tarifVal)   tarifVal.textContent   = tarif;
+    if (hoursEl)    hoursEl.textContent    = '+' + hoursPerMonth + 'h';
     if (mrrEl)      mrrEl.textContent      = fmt(mrr) + '€';
     if (mrrSub)     mrrSub.textContent     = 'par mois · ' + fmt(annuel) + '€ / an';
     if (gainEl)     gainEl.textContent     = roiNet > 0 ? '+' + fmt(gainRB) + '€' : fmt(gainRB) + '€';
     if (multEl)     multEl.textContent     = '×' + roiMult;
-    if (concEl)     concEl.innerHTML       = 'Avec <strong>' + clients + ' clients</strong> à <strong>' + tarif + '€</strong>, tu perds <strong>' + clientsPerdus + ' client' + (clientsPerdus>1?'s':'') + '/an</strong> sans anti-churn. RB Perform en sauve 80% — soit <strong>+' + fmt(gainRB) + '€</strong> récupérés pour un plan ' + rbPlan(clients) + '/mois (<strong>×' + roiMult + '</strong>).';
+    if (concEl)     concEl.innerHTML       = '<strong>+' + fmt(gainRB) + '€/an</strong> récupérés · <strong>+' + hoursPerMonth + 'h/mois</strong> gagnées · Plan ' + rbPlan(clients) + ' · ROI <strong>×' + roiMult + '</strong>';
 
     // Slider track progress
     const pClients = ((clients - 2) / (50 - 2)) * 100;
