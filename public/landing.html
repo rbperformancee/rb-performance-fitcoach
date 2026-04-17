@@ -2055,35 +2055,45 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         </div>
       </div>
 
-      <!-- BLACK MIRROR — le prospect vit sa propre perte -->
+      <!-- BLACK MIRROR v3 — attend les sliders + craquelure cinematique -->
       <style>
-        @keyframes bmHeartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+        @keyframes bmHeart{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
         @keyframes bmHeartFast{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-        @keyframes bmParticleFall{0%{transform:translateY(-20px);opacity:0}20%{opacity:1}100%{transform:translateY(480px);opacity:0}}
-        @keyframes bmParticleRise{0%{transform:translateY(480px);opacity:0}20%{opacity:1}100%{transform:translateY(-20px);opacity:0}}
-        @keyframes bmCrackDraw{from{stroke-dashoffset:800}to{stroke-dashoffset:0}}
-        @keyframes bmNumberReveal{from{filter:blur(20px);opacity:0;transform:perspective(600px) rotateX(15deg) scale(0.8)}to{filter:blur(0);opacity:1;transform:perspective(600px) rotateX(0) scale(1)}}
-        @keyframes bmCtaGlow{0%,100%{box-shadow:0 0 20px rgba(0,201,167,0.2),0 0 60px rgba(0,201,167,0.1)}50%{box-shadow:0 0 30px rgba(0,201,167,0.4),0 0 80px rgba(0,201,167,0.2)}}
+        @keyframes bmFall{0%{transform:translateY(-10px);opacity:0}15%{opacity:0.8}100%{transform:translateY(520px);opacity:0}}
+        @keyframes bmRise{0%{transform:translateY(520px);opacity:0}15%{opacity:0.8}100%{transform:translateY(-10px);opacity:0}}
+        @keyframes bmCrack1{from{stroke-dashoffset:1200}to{stroke-dashoffset:0}}
+        @keyframes bmCrack2{from{stroke-dashoffset:600}to{stroke-dashoffset:0}}
+        @keyframes bmNumIn{0%{filter:blur(24px);opacity:0;transform:perspective(800px) rotateX(20deg) scale(0.7)}100%{filter:blur(0);opacity:1;transform:perspective(800px) rotateX(0) scale(1)}}
+        @keyframes bmFlash{0%{opacity:0.7}100%{opacity:0}}
+        @keyframes bmGlow{0%,100%{box-shadow:0 0 24px rgba(0,201,167,0.2),0 0 64px rgba(0,201,167,0.08)}50%{box-shadow:0 0 36px rgba(0,201,167,0.45),0 0 90px rgba(0,201,167,0.18)}}
+        @keyframes bmFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         #blackMirror{position:relative;min-height:520px;border-radius:20px;border:1px solid rgba(255,255,255,0.04);overflow:hidden;display:flex;align-items:center;justify-content:center}
-        #bmPulse{position:absolute;inset:0;z-index:0;background:radial-gradient(circle at center,rgba(255,255,255,0.02),#000 70%);animation:bmHeartbeat 3s ease-in-out infinite}
-        .bm-particle{position:absolute;width:3px;height:3px;border-radius:50%;z-index:2;pointer-events:none;opacity:0}
+        #bmPulse{position:absolute;inset:0;z-index:0;transition:background 1s ease}
+        .bm-p{position:absolute;border-radius:50%;z-index:2;pointer-events:none;opacity:0}
       </style>
       <div id="blackMirror">
-        <!-- Fond qui pulse comme un coeur -->
-        <div id="bmPulse"></div>
-
-        <!-- Particules (generees en JS) -->
+        <div id="bmPulse" style="background:radial-gradient(circle,rgba(255,255,255,0.015),#000 70%);animation:bmHeart 3s ease-in-out infinite"></div>
         <div id="bmParticles" style="position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden"></div>
 
-        <!-- Craquelure SVG organique -->
-        <svg id="bmCrack" style="position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;opacity:0;transition:opacity 0.4s" viewBox="0 0 600 500" preserveAspectRatio="none">
-          <path d="M0,200 L120,195 L180,210 L240,190 L300,250 L340,230 L400,260 L460,240 L520,255 L600,245" fill="none" stroke="rgba(255,107,107,0.5)" stroke-width="1.5" stroke-dasharray="800" stroke-dashoffset="800" style="animation:none"/>
-          <path d="M100,350 L200,340 L280,360 L360,330 L420,355 L500,340" fill="none" stroke="rgba(255,107,107,0.3)" stroke-width="1" stroke-dasharray="800" stroke-dashoffset="800" style="animation:none"/>
-          <path d="M200,100 L280,120 L350,95 L420,115 L480,105" fill="none" stroke="rgba(255,107,107,0.25)" stroke-width="0.8" stroke-dasharray="800" stroke-dashoffset="800" style="animation:none"/>
+        <!-- Craquelure SVG cinematique — branches multiples -->
+        <svg id="bmCrack" style="position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;opacity:0;transition:opacity 0.3s" viewBox="0 0 800 520" preserveAspectRatio="none">
+          <!-- Fissure principale (impact centre) -->
+          <path d="M400,260 L340,240 L280,255 L200,235 L140,250 L60,240 L0,248" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-dasharray="1200" stroke-dashoffset="1200" class="bm-crack-path"/>
+          <path d="M400,260 L460,275 L530,258 L600,270 L680,255 L760,265 L800,260" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-dasharray="1200" stroke-dashoffset="1200" class="bm-crack-path"/>
+          <!-- Branches secondaires -->
+          <path d="M280,255 L260,310 L240,360 L220,400" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-dasharray="600" stroke-dashoffset="600" class="bm-crack-sub"/>
+          <path d="M530,258 L550,200 L560,150 L575,100" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-dasharray="600" stroke-dashoffset="600" class="bm-crack-sub"/>
+          <path d="M340,240 L320,180 L310,130" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" stroke-dasharray="600" stroke-dashoffset="600" class="bm-crack-sub"/>
+          <path d="M460,275 L480,330 L500,390 L510,440" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" stroke-dasharray="600" stroke-dashoffset="600" class="bm-crack-sub"/>
+          <path d="M600,270 L620,320 L650,380" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.6" stroke-dasharray="600" stroke-dashoffset="600" class="bm-crack-sub"/>
+          <path d="M200,235 L180,180 L170,120" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.6" stroke-dasharray="600" stroke-dashoffset="600" class="bm-crack-sub"/>
         </svg>
 
-        <!-- Glow reparation teal -->
-        <div id="bmGlow" style="position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(circle at center,rgba(0,201,167,0.12),transparent 55%);transition:opacity 1s"></div>
+        <!-- Flash blanc a l'impact -->
+        <div id="bmFlash" style="position:absolute;inset:0;z-index:6;background:#fff;opacity:0;pointer-events:none"></div>
+
+        <!-- Glow teal rewind -->
+        <div id="bmGlow" style="position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(circle at center,rgba(0,201,167,0.14),transparent 55%);transition:opacity 1.2s"></div>
 
         <!-- Chiffre fantome arriere en 3D -->
         <div id="bmGhostNum" style="position:absolute;font-family:'Bebas Neue',sans-serif;font-size:clamp(120px,22vw,200px);color:rgba(255,107,107,0.03);z-index:1;pointer-events:none;line-height:1;transition:all 1.2s ease;filter:blur(8px)"></div>
@@ -3314,169 +3324,152 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 })();
 </script>
 
-<!-- BLACK MIRROR ENGINE v2 — PREMIUM -->
+<!-- BLACK MIRROR ENGINE v3 — attend sliders + craquelure cinematique -->
 <script>
 (function(){
-  var mirror = document.getElementById('blackMirror');
   var content = document.getElementById('bmContent');
   var crack = document.getElementById('bmCrack');
   var glow = document.getElementById('bmGlow');
   var ghost = document.getElementById('bmGhostNum');
   var pulse = document.getElementById('bmPulse');
   var particles = document.getElementById('bmParticles');
-  if (!mirror || !content) return;
+  var flash = document.getElementById('bmFlash');
+  if (!content) return;
 
   var clientsEl = document.getElementById('roi-clients');
   var tarifEl = document.getElementById('roi-tarif');
   var started = false;
+  var sliderTouched = false;
 
-  function getClients(){ return clientsEl ? +clientsEl.value : 10; }
-  function getTarif(){ return tarifEl ? +tarifEl.value : 150; }
+  function getC(){ return clientsEl ? +clientsEl.value : 10; }
+  function getT(){ return tarifEl ? +tarifEl.value : 150; }
   function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
 
-  function phase(html, delay){
-    return new Promise(function(r){
-      setTimeout(function(){
-        var d = document.createElement('div');
-        d.innerHTML = html;
-        d.style.animation = 'bmTypeIn 0.6s ease forwards';
-        content.appendChild(d);
-        r();
-      }, delay);
-    });
+  function say(html, ms){
+    return new Promise(function(r){ setTimeout(function(){
+      var d = document.createElement('div');
+      d.innerHTML = html;
+      d.style.animation = 'bmFadeUp 0.6s ease forwards';
+      content.appendChild(d); r();
+    }, ms); });
   }
-
-  function clearContent(){ content.innerHTML = ''; }
-
-  function spawnParticles(color, direction, count){
-    if (!particles) return;
-    particles.innerHTML = '';
-    for (var i = 0; i < (count||25); i++){
-      var p = document.createElement('div');
-      p.className = 'bm-particle';
-      p.style.left = Math.random()*100 + '%';
-      p.style.background = color;
-      p.style.width = (2+Math.random()*3)+'px';
-      p.style.height = p.style.width;
-      p.style.animation = (direction==='down'?'bmParticleFall':'bmParticleRise') + ' ' + (3+Math.random()*4)+'s linear ' + (Math.random()*2)+'s infinite';
+  function clear(){ content.innerHTML = ''; }
+  function spawn(color, dir, n){
+    if(!particles) return; particles.innerHTML='';
+    for(var i=0;i<(n||25);i++){
+      var p=document.createElement('div'); p.className='bm-p';
+      p.style.left=Math.random()*100+'%';
+      p.style.background=color;
+      var s=2+Math.random()*3; p.style.width=s+'px'; p.style.height=s+'px';
+      p.style.animation=(dir==='down'?'bmFall':'bmRise')+' '+(3+Math.random()*4)+'s linear '+(Math.random()*2)+'s infinite';
       particles.appendChild(p);
     }
   }
-
-  function clearParticles(){ if(particles) particles.innerHTML=''; }
-
-  function activateCracks(){
-    crack.style.opacity = '1';
-    crack.querySelectorAll('path').forEach(function(p){
-      p.style.animation = 'bmCrackDraw 1.5s ease forwards';
-    });
+  function clearP(){ if(particles) particles.innerHTML=''; }
+  function doCrack(){
+    if(!crack) return;
+    crack.style.opacity='1';
+    // Flash blanc a l impact
+    if(flash){ flash.style.animation='bmFlash 0.4s ease forwards'; setTimeout(function(){ flash.style.animation='none'; flash.style.opacity='0'; },400); }
+    crack.querySelectorAll('.bm-crack-path').forEach(function(p){ p.style.animation='bmCrack1 1.2s ease forwards'; });
+    setTimeout(function(){ crack.querySelectorAll('.bm-crack-sub').forEach(function(p){ p.style.animation='bmCrack2 0.8s ease forwards'; }); },400);
+  }
+  function undoCrack(){
+    if(!crack) return; crack.style.opacity='0';
+    crack.querySelectorAll('path').forEach(function(p){ p.style.animation='none'; p.setAttribute('stroke-dashoffset',p.getAttribute('stroke-dasharray')); });
   }
 
-  function deactivateCracks(){
-    crack.style.opacity = '0';
-    crack.querySelectorAll('path').forEach(function(p){
-      p.style.animation = 'none';
-      p.style.strokeDashoffset = '800';
-    });
+  // ETAT DORMANT — message d attente
+  function showDormant(){
+    clear();
+    content.innerHTML = '<div style="text-align:center;padding:20px 0">' +
+      '<div style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.15);margin-bottom:16px">Black Mirror</div>' +
+      '<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3vw,28px);font-weight:900;color:rgba(255,255,255,0.4);line-height:1.3">Règle tes chiffres à gauche.<br>Puis regarde.</div></div>';
   }
 
   function run(){
-    if (started) return;
-    started = true;
-    var c = getClients();
-    var t = getTarif();
-    var lost = Math.max(1, Math.round(c * 0.25));
-    var lostYear = lost * t * 12;
-    var saved = Math.round(lostYear * 0.8);
+    if(started) return; started=true;
+    var c=getC(), t=getT();
+    var lost=Math.max(1,Math.round(c*0.25));
+    var lostY=lost*t*12;
+    var saved=Math.round(lostY*0.8);
 
-    clearContent(); deactivateCracks(); clearParticles();
-    glow.style.opacity = '0';
-    ghost.textContent = ''; ghost.style.filter = 'blur(8px)';
-    ghost.style.color = 'rgba(255,107,107,0.03)';
-    if(pulse) pulse.style.animation = 'bmHeartbeat 3s ease-in-out infinite';
-    if(pulse) pulse.style.background = 'radial-gradient(circle at center,rgba(255,255,255,0.02),#000 70%)';
+    clear(); undoCrack(); clearP();
+    if(glow) glow.style.opacity='0';
+    if(ghost){ ghost.textContent=''; ghost.style.filter='blur(12px)'; ghost.style.color='rgba(255,107,107,0.03)'; }
+    if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,255,255,0.015),#000 70%)'; }
 
-    // Phase 1 — tes chiffres (heartbeat calme)
-    phase('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(24px,4vw,36px);font-weight:900;color:#fff;margin-bottom:8px">Tu as ' + c + ' clients.</div>', 800)
-    .then(function(){ return phase('<div style="font-size:16px;color:rgba(255,255,255,0.5);margin-bottom:8px">Tu factures ' + t + '€/mois.</div>', 1200); })
-    .then(function(){ return phase('<div style="font-size:15px;color:rgba(255,255,255,0.3);margin-bottom:24px">Tu penses que tout va bien.</div>', 1200); })
+    // P1 — tes chiffres
+    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(24px,4.5vw,38px);font-weight:900;color:#fff;margin-bottom:8px">Tu as '+c+' clients.</div>',600)
+    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.5);margin-bottom:8px">Tu factures '+t+'€/mois.</div>',1000); })
+    .then(function(){ return say('<div style="font-size:15px;color:rgba(255,255,255,0.25);margin-bottom:24px">Tu penses que tout va bien.</div>',1000); })
 
-    // Phase 2 — heartbeat accelere + craquelure + particules rouges
+    // P2 — IMPACT : flash + crack + particules
+    .then(function(){ return new Promise(function(r){ setTimeout(function(){
+      if(pulse){ pulse.style.animation='bmHeartFast 1s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,107,107,0.05),#000 70%)'; }
+      doCrack();
+      spawn('#ff6b6b','down',35);
+      if(ghost){ ghost.textContent='-'+fmt(lostY)+'€'; ghost.style.filter='blur(6px)'; }
+      r();
+    },1400); }); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(17px,2.8vw,22px);font-weight:900;color:#ff6b6b;margin-bottom:8px">Dans les 12 prochains mois, tu vas perdre '+lost+' client'+(lost>1?'s':'')+'.</div>',900); })
     .then(function(){
-      return new Promise(function(r){
-        setTimeout(function(){
-          if(pulse) pulse.style.animation = 'bmHeartFast 1.2s ease-in-out infinite';
-          if(pulse) pulse.style.background = 'radial-gradient(circle at center,rgba(255,107,107,0.04),#000 70%)';
-          activateCracks();
-          spawnParticles('#ff6b6b', 'down', 30);
-          ghost.textContent = '-' + fmt(lostYear) + '€';
-          ghost.style.filter = 'blur(4px)';
-          r();
-        }, 1500);
-      });
+      if(ghost) ghost.style.filter='blur(0)';
+      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(60px,14vw,110px);color:#ff6b6b;line-height:1;margin:16px 0;animation:bmNumIn 1.2s ease forwards">'+fmt(lostY)+'€</div>',1100);
     })
-    .then(function(){ return phase('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:#ff6b6b;margin-bottom:8px">Dans les 12 prochains mois, tu vas perdre ' + lost + ' client' + (lost>1?'s':'') + '.</div>', 1000); })
-    .then(function(){
-      ghost.style.filter = 'blur(0)';
-      return phase('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(56px,12vw,96px);color:#ff6b6b;line-height:1;margin:16px 0;animation:bmNumberReveal 1s ease forwards">' + fmt(lostYear) + '€</div>', 1200);
-    })
-    .then(function(){ return phase('<div style="font-size:14px;color:rgba(255,255,255,0.3)">perdus. En silence.</div>', 800); })
-    .then(function(){ return phase('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(16px,2.5vw,22px);font-weight:900;color:rgba(255,255,255,0.5);margin-top:24px">Et tu ne le sauras pas.</div>', 1500); })
+    .then(function(){ return say('<div style="font-size:14px;color:rgba(255,255,255,0.25)">perdus. En silence.</div>',700); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(15px,2.5vw,20px);font-weight:900;color:rgba(255,255,255,0.4);margin-top:24px">Et tu ne le sauras pas.</div>',1400); })
 
-    // Phase 3 — noir total
-    .then(function(){
-      return new Promise(function(r){
-        setTimeout(function(){
-          clearContent(); deactivateCracks(); clearParticles();
-          ghost.textContent = ''; ghost.style.filter = 'blur(8px)';
-          if(pulse) pulse.style.animation = 'none';
-          if(pulse) pulse.style.background = '#000';
-          r();
-        }, 2500);
-      });
-    })
+    // P3 — noir
+    .then(function(){ return new Promise(function(r){ setTimeout(function(){
+      clear(); undoCrack(); clearP();
+      if(ghost){ ghost.textContent=''; ghost.style.filter='blur(12px)'; }
+      if(pulse){ pulse.style.animation='none'; pulse.style.background='#000'; }
+      r();
+    },2500); }); })
 
-    // Phase 4 — rewind teal + particules montantes + glow
+    // P4 — rewind teal
+    .then(function(){ return new Promise(function(r){ setTimeout(function(){
+      if(glow) glow.style.opacity='1';
+      if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(0,201,167,0.06),#000 70%)'; }
+      spawn('#00C9A7','up',25);
+      if(ghost){ ghost.style.color='rgba(0,201,167,0.03)'; ghost.textContent='+'+fmt(saved)+'€'; ghost.style.filter='blur(6px)'; }
+      r();
+    },1000); }); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(17px,2.8vw,22px);font-weight:900;color:#00C9A7;margin-bottom:12px">Sauf si tu vois avant eux.</div>',500); })
     .then(function(){
-      return new Promise(function(r){
-        setTimeout(function(){
-          glow.style.opacity = '1';
-          if(pulse) pulse.style.animation = 'bmHeartbeat 3s ease-in-out infinite';
-          if(pulse) pulse.style.background = 'radial-gradient(circle at center,rgba(0,201,167,0.05),#000 70%)';
-          spawnParticles('#00C9A7', 'up', 25);
-          ghost.style.color = 'rgba(0,201,167,0.03)';
-          ghost.textContent = '+' + fmt(saved) + '€';
-          ghost.style.filter = 'blur(4px)';
-          r();
-        }, 1200);
-      });
+      if(ghost) ghost.style.filter='blur(0)';
+      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(52px,12vw,88px);color:#00C9A7;line-height:1;margin:12px 0;animation:bmNumIn 1s ease forwards">+'+fmt(saved)+'€/an</div>',900);
     })
-    .then(function(){ return phase('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:#00C9A7;margin-bottom:12px">Sauf si tu vois avant eux.</div>', 600); })
-    .then(function(){
-      ghost.style.filter = 'blur(0)';
-      return phase('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(48px,10vw,80px);color:#00C9A7;line-height:1;margin:12px 0;animation:bmNumberReveal 1s ease forwards">+' + fmt(saved) + '€/an</div>', 1000);
-    })
-    .then(function(){ return phase('<div style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:28px">récupérés avec RB Perform.</div>', 800); })
-    .then(function(){ return phase('<a href="/demo" style="display:inline-block;padding:16px 36px;background:#00C9A7;color:#080C14;font-size:14px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;animation:bmCtaGlow 2s ease-in-out infinite,bmPulseTeal 0.6s ease forwards">Voir ma démo</a>', 1000); })
-
-    // Reset after 10s
-    .then(function(){
-      setTimeout(function(){ started = false; clearParticles(); }, 8000);
+    .then(function(){ return say('<div style="font-size:13px;color:rgba(255,255,255,0.3);margin-bottom:28px">récupérés avec RB Perform.</div>',700); })
+    .then(function(){ return say('<a href="/demo" style="display:inline-block;padding:16px 36px;background:#00C9A7;color:#080C14;font-size:14px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;animation:bmGlow 2s ease-in-out infinite">Voir ma démo</a>',900); })
+    .then(function(){ setTimeout(function(){ started=false; clearP(); }, 8000);
     });
   }
 
-  // Lancer quand la section business devient visible
+  // Etat dormant au demarrage
+  showDormant();
+
+  // Lancer quand le prospect TOUCHE un slider (pas avant)
+  function onSliderTouch(){
+    if(sliderTouched) return;
+    sliderTouched = true;
+    setTimeout(run, 800);
+  }
+  if(clientsEl) clientsEl.addEventListener('input', onSliderTouch);
+  if(tarifEl) tarifEl.addEventListener('input', onSliderTouch);
+
+  // Si la section devient active et les sliders ont deja ete touches, relancer
   var biz = document.querySelector('section.business');
   if (biz) {
     var mo = new MutationObserver(function(muts){
       muts.forEach(function(m){
-        if (m.attributeName === 'class' && biz.classList.contains('active')) {
+        if (m.attributeName === 'class' && biz.classList.contains('active') && sliderTouched && !started) {
           setTimeout(run, 600);
         }
       });
     });
     mo.observe(biz, { attributes: true });
-    if (biz.classList.contains('active')) setTimeout(run, 600);
   }
 })();
 </script>
