@@ -2150,10 +2150,41 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       .ft-stat{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,80px);color:#00C9A7;line-height:1;text-shadow:0 0 40px rgba(0,201,167,0.2)}
       .ft-stat-label{font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:10px}
       @keyframes ftPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
-      @keyframes ftReveal{from{opacity:0;transform:translateY(30px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
-      @keyframes ftMacroIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes ftTextIn{0%{opacity:0;transform:translateY(24px);filter:blur(6px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}
+      @keyframes ftVisualIn{0%{opacity:0;transform:scale(0.85) translateY(20px);filter:blur(8px)}100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}}
+      @keyframes ftNumIn{0%{opacity:0;transform:scale(0.7)}100%{opacity:1;transform:scale(1)}}
+      @keyframes ftGlowIn{0%{opacity:0;transform:scale(0.5)}100%{opacity:1;transform:scale(1)}}
+      @keyframes ftSlideLeft{0%{opacity:0;transform:translateX(-40px);filter:blur(4px)}100%{opacity:1;transform:translateX(0);filter:blur(0)}}
+      @keyframes ftSlideRight{0%{opacity:0;transform:translateX(40px);filter:blur(4px)}100%{opacity:1;transform:translateX(0);filter:blur(0)}}
+      @keyframes ftMockRow{0%{opacity:0;transform:translateX(-16px)}100%{opacity:1;transform:translateX(0)}}
       .ft-reveal{opacity:0}
-      .ft-reveal.ft-visible{animation:ftReveal 0.8s cubic-bezier(0.16,1,0.3,1) forwards}
+      .ft-reveal.ft-visible{opacity:1}
+      .ft-reveal .ft-eyebrow{opacity:0}
+      .ft-reveal .ft-title{opacity:0}
+      .ft-reveal .ft-built{opacity:0}
+      .ft-reveal .ft-result{opacity:0}
+      .ft-reveal .ft-visual{opacity:0}
+      .ft-reveal .ft-num{opacity:0}
+      .ft-reveal.ft-visible .ft-eyebrow{animation:ftTextIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s forwards}
+      .ft-reveal.ft-visible .ft-title{animation:ftTextIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.25s forwards}
+      .ft-reveal.ft-visible .ft-built{animation:ftTextIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.4s forwards}
+      .ft-reveal.ft-visible .ft-result{animation:ftTextIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.55s forwards}
+      .ft-reveal.ft-visible .ft-visual{animation:ftVisualIn 1s cubic-bezier(0.16,1,0.3,1) 0.3s forwards}
+      .ft-reveal.ft-visible .ft-num{animation:ftNumIn 1.2s cubic-bezier(0.16,1,0.3,1) 0.1s forwards}
+      /* Alternance direction */
+      .ft-reveal:nth-child(odd).ft-visible .ft-text{animation:ftSlideLeft 0.9s cubic-bezier(0.16,1,0.3,1) forwards}
+      .ft-reveal:nth-child(even).ft-visible .ft-text{animation:ftSlideRight 0.9s cubic-bezier(0.16,1,0.3,1) forwards}
+      .ft-reveal:nth-child(odd).ft-visible .ft-visual{animation:ftSlideRight 1s cubic-bezier(0.16,1,0.3,1) 0.2s forwards}
+      .ft-reveal:nth-child(even).ft-visible .ft-visual{animation:ftSlideLeft 1s cubic-bezier(0.16,1,0.3,1) 0.2s forwards}
+      /* Glow behind visuals */
+      .ft-visual::before{content:'';position:absolute;width:200px;height:200px;background:radial-gradient(circle,rgba(0,201,167,0.08),transparent 65%);border-radius:50%;pointer-events:none;filter:blur(40px);opacity:0;transition:opacity 1.5s ease}
+      .ft-visible .ft-visual::before{animation:ftGlowIn 1.5s ease 0.5s forwards}
+      /* Mock rows stagger */
+      .ft-reveal .ft-mock-row{opacity:0}
+      .ft-reveal.ft-visible .ft-mock-row:nth-child(1){animation:ftMockRow 0.5s ease 0.5s forwards}
+      .ft-reveal.ft-visible .ft-mock-row:nth-child(2){animation:ftMockRow 0.5s ease 0.65s forwards}
+      .ft-reveal.ft-visible .ft-mock-row:nth-child(3){animation:ftMockRow 0.5s ease 0.8s forwards}
+      .ft-reveal.ft-visible .ft-mock-row:nth-child(4){animation:ftMockRow 0.5s ease 0.95s forwards}
       @media(max-width:768px){
         .ft-block,.ft-block:nth-child(even){flex-direction:column !important;gap:32px !important;padding:40px 0 !important}
         .ft-visual{min-height:120px}
