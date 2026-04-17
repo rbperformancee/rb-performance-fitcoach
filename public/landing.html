@@ -1413,15 +1413,21 @@ html.light .founder-message strong{color:#0a0a0a}
   section.how { padding: 0 !important; }
   section.how * { max-width: 100% !important; box-sizing: border-box !important; }
   section.how > div[style] {
-    padding: 80px 20px 40px !important;
+    padding: 80px 16px 24px !important;
     width: 100% !important;
   }
+  section.how > div[style] > div:first-child {
+    font-size: 10px !important;
+    letter-spacing: 0.35em !important;
+    margin-bottom: 20px !important;
+  }
   section.how h2[style] {
-    font-size: clamp(32px,9vw,48px) !important;
+    font-size: clamp(36px,10vw,52px) !important;
     display: block !important;
     word-break: break-word !important;
-    margin-bottom: 32px !important;
-    line-height: 1.0 !important;
+    margin-bottom: 0 !important;
+    line-height: 0.98 !important;
+    letter-spacing: -2px !important;
   }
   .sys-stats-grid {
     display: flex !important;
@@ -1429,25 +1435,29 @@ html.light .founder-message strong{color:#0a0a0a}
     justify-content: center !important;
     grid-template-columns: unset !important;
     gap: 0 !important;
-    padding: 16px 0 0 !important;
+    padding: 28px 0 0 !important;
+    margin-top: 28px !important;
     width: 100% !important;
-    border-top: .5px solid rgba(0,201,167,0.1) !important;
+    border-top: 1px solid rgba(0,201,167,0.08) !important;
+    border-bottom: 1px solid rgba(0,201,167,0.08) !important;
   }
   .sys-stats-grid > div:not(.sys-stats-divider) {
     flex: 1 !important;
-    padding: 16px 4px !important;
+    padding: 20px 4px 24px !important;
   }
   .sys-stats-divider { display: none !important; }
   .sys-stats-num {
-    font-size: clamp(36px,10vw,52px) !important;
-    letter-spacing: -1px !important;
-    text-shadow: 0 0 30px rgba(0,201,167,0.2) !important;
+    font-size: clamp(42px,12vw,60px) !important;
+    letter-spacing: -1.5px !important;
+    text-shadow: 0 0 40px rgba(0,201,167,0.25) !important;
+    color: #00C9A7 !important;
   }
   .sys-stats-label {
-    font-size: 9px !important;
-    letter-spacing: 2px !important;
-    margin-top: 10px !important;
-    color: rgba(255,255,255,0.4) !important;
+    font-size: 8px !important;
+    letter-spacing: 2.5px !important;
+    margin-top: 12px !important;
+    color: rgba(255,255,255,0.35) !important;
+    font-weight: 800 !important;
   }
   .how-inner { padding: 0 !important; }
   .sys-block { padding: 28px 16px !important; gap: 20px !important; flex-direction: column !important; }
