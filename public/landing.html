@@ -2775,10 +2775,20 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       if (!btn || !ans) return;
       btn.addEventListener('click', function() {
         var isOpen = item.classList.contains('open');
+        // Fermer tous les autres
+        document.querySelectorAll('.faq-item').forEach(function(other) {
+          if (other !== item && other.classList.contains('open')) {
+            other.classList.remove('open');
+            var ob = other.querySelector('.faq-q');
+            var oa = other.querySelector('.faq-a');
+            if (ob) ob.setAttribute('aria-expanded', 'false');
+            if (oa) { oa.style.maxHeight = '0'; oa.style.paddingBottom = '0'; }
+          }
+        });
         item.classList.toggle('open');
-        btn.setAttribute('aria-expanded', !isOpen);
+        btn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
         if (!isOpen) {
-          ans.style.maxHeight = '300px';
+          ans.style.maxHeight = ans.scrollHeight + 22 + 'px';
           ans.style.paddingBottom = '22px';
         } else {
           ans.style.maxHeight = '0';
@@ -3201,23 +3211,6 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <!-- ========== FAQ accordion + compteur dynamique ========== -->
 <script>
 (function(){
-  // Accordion FAQ
-  document.querySelectorAll('.faq-q').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const open = btn.getAttribute('aria-expanded') === 'true';
-      document.querySelectorAll('.faq-q').forEach(b => {
-        b.setAttribute('aria-expanded', 'false');
-        const a = b.nextElementSibling;
-        if (a) a.hidden = true;
-      });
-      if (!open) {
-        btn.setAttribute('aria-expanded', 'true');
-        const a = btn.nextElementSibling;
-        if (a) a.hidden = false;
-      }
-    });
-  });
-
   // Compteur dynamique (jamais 50 pour garder un sentiment d'urgence)
   const takenEl = document.getElementById('counter-taken');
   const todayEl = document.getElementById('counter-today-n');
