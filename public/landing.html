@@ -1395,6 +1395,76 @@ html.light .founder-message strong{color:#0a0a0a}
     font-size: clamp(30px,9vw,48px) !important;
   }
 
+  /* NAV — touch targets + safe area */
+  nav.topnav { padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); }
+  .burger-btn { padding: 12px 16px; }
+  .nav-link { padding: 8px 4px; }
+
+  /* HERO — bouton Entrer plus gros pour le pouce */
+  section.hero button, #heroEnter {
+    padding: 12px 28px !important;
+    font-size: 10px !important;
+    bottom: 28px !important;
+  }
+
+  /* HOW / SYSTEME — stats grid empilées + blocs compacts */
+  section.how { padding: 72px 20px 48px !important; }
+  section.how > div:first-child > div[style*="grid-template-columns:repeat(3"] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  .sys-block { padding: 36px 16px !important; gap: 20px !important; }
+  .sys-title { font-size: clamp(24px,7vw,34px) !important; }
+  .sys-sub { font-size: 14px !important; }
+  .sys-right { min-height: 100px !important; }
+  .sys-ghost { font-size: clamp(60px,16vw,100px) !important; }
+  .sys-bullets span { font-size: 13px !important; }
+
+  /* BENTO — padding vertical + titre mission card */
+  section.bento { padding: 80px 20px !important; }
+  .bento-card .b-title { font-size: 28px !important; }
+
+  /* DEMO SECTION — padding + cards */
+  section.demo-section { padding: 100px 16px 40px !important; }
+  section.demo-section div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  section.demo-section .demo-card,
+  section.demo-section > div > div > div[style*="padding:40px 36px"] {
+    padding: 28px 20px 0 !important;
+  }
+
+  /* BUSINESS — ROI + Black Mirror + Timeline */
+  section.business { padding: 80px 16px 60px !important; }
+  section.business div[style*="grid-template-columns:1fr 1fr"]:not(.biz-versus) {
+    grid-template-columns: 1fr !important;
+  }
+  #blackMirror { min-height: 360px !important; }
+  #roi-clients::-webkit-slider-thumb, #roi-tarif::-webkit-slider-thumb {
+    width: 28px !important; height: 28px !important;
+  }
+  #roi-clients::-moz-range-thumb, #roi-tarif::-moz-range-thumb {
+    width: 28px !important; height: 28px !important;
+  }
+
+  /* BUSINESS — Timeline Avant/Apres */
+  #tlSection { margin-top: 48px !important; padding-top: 32px !important; }
+  .tl-ghost { display: none !important; }
+
+  /* PRICING — plans + founding coach + FAQ */
+  section.pricing { padding: 80px 20px !important; }
+  .plan .price { font-size: 60px !important; }
+  section.pricing div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  section.pricing div[style*="padding:36px 40px"] {
+    padding: 28px 20px !important;
+  }
+
+  /* STICKY CTA — safe area */
+  .sticky-cta { bottom: max(24px, env(safe-area-inset-bottom)) !important; }
+  .sticky-cta .close { width: 44px !important; height: 44px !important; }
+
   /* FOOTER */
   .footer-inner {
     grid-template-columns: 1fr 1fr !important;
