@@ -1,15 +1,25 @@
 import React, { useState, useRef, useCallback, useMemo, Suspense, lazy } from "react";
 import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
-import { BadgeSystem } from "./components/BadgeSystem";
 import { ToastProvider, toast } from "./components/Toast";
-import ProfilePage from "./components/ProfilePage";
-// ===== Lazy-loaded : composants lourds charges a la demande pour reduire le bundle initial =====
+import { useAppData } from "./hooks/useAppData";
+import { useTheme } from "./hooks/useTheme";
+
+// ===== Lazy-loaded : composants charges a la demande =====
 const FuelPage = lazy(() => import("./components/FuelPage"));
 const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
 const MovePage = lazy(() => import("./components/MovePage"));
-import { useAppData } from "./hooks/useAppData";
-import { SeanceVivante } from "./components/SeanceVivante";
-import TrainingPage from "./components/TrainingPage";
+const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
+const TrainingPage = lazy(() => import("./components/TrainingPage"));
+const ProfilePage = lazy(() => import("./components/ProfilePage"));
+const SessionTimer = lazy(() => import("./components/SessionTimer"));
+const ActivityWidget = lazy(() => import("./components/ActivityWidget"));
+const BadgeSystem = lazy(() => import("./components/BadgeSystem").then(m => ({ default: m.BadgeSystem })));
+const SeanceVivante = lazy(() => import("./components/SeanceVivante").then(m => ({ default: m.SeanceVivante })));
+
+// Petits composants — import sync (< 100 lignes)
+import AvatarPicker from "./components/AvatarPicker";
+import GoalWidget from "./components/GoalWidget";
+import WelcomeScreen from "./components/WelcomeScreen";
 
 function SkeletonLoader() {
   return (
@@ -20,14 +30,6 @@ function SkeletonLoader() {
     </div>
   );
 }
-import SessionTimer from "./components/SessionTimer";
-// OnboardingFlow utilise uniquement si onboarding_done !== true (1 fois par client)
-const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
-import AvatarPicker from "./components/AvatarPicker";
-import GoalWidget from "./components/GoalWidget";
-import { useTheme } from "./hooks/useTheme";
-import ActivityWidget from "./components/ActivityWidget";
-import WelcomeScreen from "./components/WelcomeScreen";
 import StreakBadge from "./components/StreakBadge";
 import { useHaptic } from "./hooks/useHaptic";
 import { useStreak } from "./hooks/useStreak";
