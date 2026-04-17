@@ -2784,7 +2784,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             </div>
             {/* Heure + anneau score + notif bell mobile */}
             <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-              <div style={{ fontSize: 38, fontWeight: 100, color: "rgba(255,255,255,0.8)", letterSpacing: "-2px", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+              <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 38, fontWeight: 400, color: "rgba(255,255,255,0.8)", letterSpacing: "-1px", lineHeight: 1 }}>
                 {String(new Date().getHours()).padStart(2,"0")}:{String(new Date().getMinutes()).padStart(2,"0")}
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
@@ -2818,7 +2818,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 paddingTop: 16,
                 textAlign: "left",
               }}>
-                <div className="dash-countup" data-target={typeof m.v === "number" ? m.v : 0} data-suffix={m.suffix} style={{ fontSize: "clamp(32px, 8vw, 52px)", fontWeight: 200, color: m.color, letterSpacing: "-1.5px", lineHeight: 1 }}>
+                <div className="dash-countup" data-target={typeof m.v === "number" ? m.v : 0} data-suffix={m.suffix} style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(32px, 8vw, 52px)", fontWeight: 400, color: m.color, letterSpacing: "-1px", lineHeight: 1 }}>
                   {typeof m.v === "number" ? m.v.toLocaleString() : m.v}{m.suffix}
                 </div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", marginTop: 8 }}>{m.l}</div>
