@@ -34,7 +34,6 @@
 <!-- Fonts en async non-bloquant pour Performance -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=JetBrains+Mono:wght@200;300;400;700&display=swap" rel="stylesheet">
 
 <!-- Schema.org JSON-LD pour SEO -->
 <script type="application/ld+json">
@@ -1264,12 +1263,9 @@ html.light .founder-message strong{color:#0a0a0a}
 }
 
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}
+  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
   .reveal,.hero-title .char,.hero-sub,.manifeste-line{opacity:1!important;transform:none!important;width:120px}
   .step{opacity:1!important}
-  .ft-reveal,.ft-reveal *,.sys-block,.tl-item,.tl-title-wrap{opacity:1!important;transform:none!important}
-  .ft-macro-card{opacity:1!important;transform:none!important}
-  .hero-blob{display:none!important}
 }
 
 /* ========== MOBILE (<=768px) — RESIZE ONLY ==========
@@ -1687,7 +1683,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </nav>
 
     <div class="menu-cta">
-      <a href="/founding" class="menu-cta-btn">
+      <a href="/founding.html" class="menu-cta-btn">
         Rejoindre les 50 Founding Coachs →
       </a>
     </div>
@@ -1717,8 +1713,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <section class="how" style="background:#080C14">
 <style>
 /* ===== SYSTÈME — ULTRA PREMIUM ===== */
-.sys-block{display:flex;align-items:center;padding:72px 24px;max-width:1100px;margin:0 auto;gap:72px;position:relative;opacity:0;transform:translateY(40px) scale(0.98);transition:opacity .9s cubic-bezier(0.16,1,0.3,1),transform .9s cubic-bezier(0.16,1,0.3,1)}
-.sys-block.vis{opacity:1;transform:translateY(0) scale(1)}
+.sys-block{display:flex;align-items:center;padding:72px 24px;max-width:1100px;margin:0 auto;gap:72px;position:relative;opacity:0;transform:translateY(40px) scale(0.98);filter:blur(6px);transition:opacity .9s cubic-bezier(0.16,1,0.3,1),transform .9s cubic-bezier(0.16,1,0.3,1),filter .9s cubic-bezier(0.16,1,0.3,1)}
+.sys-block.vis{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
 /* Accent bar gauche */
 .sys-block::before{content:'';position:absolute;left:0;top:15%;bottom:15%;width:2px;background:linear-gradient(180deg,transparent,#00C9A7 40%,#00C9A7 60%,transparent);opacity:0;transition:opacity .8s ease .3s}
 .sys-block.vis::before{opacity:1}
@@ -2065,8 +2061,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
       <!-- CTA card -->
       <div class="bento-card b-cta span2 reveal stagger-1">
-        <div class="b-cta-title">50 places. Prix verrouillé à vie.</div>
-        <a href="/founding" class="btn btn-orange magnetic">
+        <div class="b-cta-title">Rejoins la beta.</div>
+        <a href="/founding.html" class="btn btn-orange magnetic">
           Rejoindre les Founding Coachs →
           <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>
@@ -2122,7 +2118,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <div style="background:#080C14;border:1px solid rgba(2,209,186,0.12);border-radius:24px;overflow:hidden;position:relative;display:flex;flex-direction:column">
         <div style="position:absolute;top:-60px;right:15%;width:300px;height:200px;background:radial-gradient(circle,rgba(2,209,186,0.08),transparent 65%);pointer-events:none"></div>
         <div style="position:relative;z-index:1;padding:40px 36px 0">
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px">Vue Client · App Premium</div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px">Vue Client · App Branded</div>
           <h3 style="font-size:clamp(22px,2.5vw,28px);font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1;margin:0 0 12px">
             Ton client vit une<br>expérience premium.
           </h3>
@@ -2180,12 +2176,12 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       .ft-stat{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,80px);color:#00C9A7;line-height:1;text-shadow:0 0 40px rgba(0,201,167,0.2)}
       .ft-stat-label{font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:10px}
       @keyframes ftPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
-      @keyframes ftTextIn{0%{opacity:0;transform:translateY(24px)}100%{opacity:1;transform:translateY(0)}}
-      @keyframes ftVisualIn{0%{opacity:0;transform:scale(0.85) translateY(20px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+      @keyframes ftTextIn{0%{opacity:0;transform:translateY(24px);filter:blur(6px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}
+      @keyframes ftVisualIn{0%{opacity:0;transform:scale(0.85) translateY(20px);filter:blur(8px)}100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}}
       @keyframes ftNumIn{0%{opacity:0;transform:scale(0.7)}100%{opacity:1;transform:scale(1)}}
       @keyframes ftGlowIn{0%{opacity:0;transform:scale(0.5)}100%{opacity:1;transform:scale(1)}}
-      @keyframes ftSlideLeft{0%{opacity:0;transform:translateX(-40px)}100%{opacity:1;transform:translateX(0)}}
-      @keyframes ftSlideRight{0%{opacity:0;transform:translateX(40px)}100%{opacity:1;transform:translateX(0)}}
+      @keyframes ftSlideLeft{0%{opacity:0;transform:translateX(-40px);filter:blur(4px)}100%{opacity:1;transform:translateX(0);filter:blur(0)}}
+      @keyframes ftSlideRight{0%{opacity:0;transform:translateX(40px);filter:blur(4px)}100%{opacity:1;transform:translateX(0);filter:blur(0)}}
       @keyframes ftMockRow{0%{opacity:0;transform:translateX(-16px)}100%{opacity:1;transform:translateX(0)}}
       .ft-reveal{opacity:0}
       .ft-reveal.ft-visible{opacity:1}
@@ -2504,10 +2500,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         @keyframes bmRise{0%{transform:translateY(500px);opacity:0}15%{opacity:0.6}100%{transform:translateY(-10px);opacity:0}}
         @keyframes bmCrack1{from{stroke-dashoffset:1200}to{stroke-dashoffset:0}}
         @keyframes bmCrack2{from{stroke-dashoffset:600}to{stroke-dashoffset:0}}
-        @keyframes bmNumIn{0%{opacity:0;transform:perspective(800px) rotateX(18deg) scale(0.75)}100%{opacity:1;transform:perspective(800px) rotateX(0) scale(1)}}
+        @keyframes bmNumIn{0%{filter:blur(20px);opacity:0;transform:perspective(800px) rotateX(18deg) scale(0.75)}100%{filter:blur(0);opacity:1;transform:perspective(800px) rotateX(0) scale(1)}}
         @keyframes bmFlash{0%{opacity:0.5}100%{opacity:0}}
         @keyframes bmGlowCta{0%,100%{box-shadow:0 0 20px rgba(0,201,167,0.2),0 0 60px rgba(0,201,167,0.08)}50%{box-shadow:0 0 32px rgba(0,201,167,0.4),0 0 80px rgba(0,201,167,0.15)}}
-        @keyframes bmFadeUp{0%{opacity:0;transform:scale(0.98)}40%{opacity:0.6;transform:scale(0.995)}100%{opacity:1;transform:scale(1)}}
+        @keyframes bmFadeUp{0%{opacity:0;filter:blur(6px);transform:scale(0.98)}40%{opacity:0.6;filter:blur(2px);transform:scale(0.995)}100%{opacity:1;filter:blur(0);transform:scale(1)}}
         .bm-p{position:absolute;border-radius:50%;z-index:2;pointer-events:none;opacity:0}
       </style>
       <div id="blackMirror" style="position:relative;min-height:560px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:transparent">
@@ -2543,14 +2539,14 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- ========== BLOC 3 — AVANT / APRES CINEMATIQUE ========== -->
     <style>
       @keyframes tlLineDown{from{height:0}to{height:100%}}
-      @keyframes tlItemLeft{0%{opacity:0;transform:translateX(-40px) scale(0.92)}60%{opacity:0.8}100%{opacity:1;transform:translateX(0) scale(1)}}
-      @keyframes tlItemRight{0%{opacity:0;transform:translateX(40px) scale(0.92)}60%{opacity:0.8}100%{opacity:1;transform:translateX(0) scale(1)}}
-      @keyframes tlTitleIn{0%{opacity:0;transform:translateY(24px) scale(0.96)}100%{opacity:1;transform:translateY(0) scale(1)}}
+      @keyframes tlItemLeft{0%{opacity:0;transform:translateX(-40px) scale(0.92);filter:blur(6px)}60%{opacity:0.8;filter:blur(1px)}100%{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
+      @keyframes tlItemRight{0%{opacity:0;transform:translateX(40px) scale(0.92);filter:blur(6px)}60%{opacity:0.8;filter:blur(1px)}100%{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
+      @keyframes tlTitleIn{0%{opacity:0;transform:translateY(24px) scale(0.96);filter:blur(10px)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
       @keyframes tlImpactShake{0%,100%{transform:translateX(0)}8%{transform:translateX(-4px)}16%{transform:translateX(4px)}24%{transform:translateX(-3px)}32%{transform:translateX(3px)}40%{transform:translateX(-1px)}48%{transform:translateX(0)}}
-      @keyframes tlGhostReveal{0%{opacity:0;transform:scale(0.5) translateY(10px)}100%{opacity:0.12;transform:scale(1) translateY(0)}}
+      @keyframes tlGhostReveal{0%{opacity:0;transform:scale(0.5) translateY(10px);filter:blur(10px)}100%{opacity:0.12;transform:scale(1) translateY(0);filter:blur(0)}}
       @keyframes tlGlowPulse{0%,100%{box-shadow:inset 0 0 60px rgba(0,201,167,0),0 0 0 rgba(0,201,167,0)}50%{box-shadow:inset 0 0 60px rgba(0,201,167,0.04),0 0 80px rgba(0,201,167,0.06)}}
       @keyframes tlRedPulse{0%,100%{box-shadow:inset 0 0 60px rgba(255,107,107,0),0 0 0 rgba(255,107,107,0)}50%{box-shadow:inset 0 0 60px rgba(255,107,107,0.04),0 0 80px rgba(255,107,107,0.06)}}
-      @keyframes tlHourFade{0%{opacity:0;transform:scale(0.8)}100%{opacity:1;transform:scale(1)}}
+      @keyframes tlHourFade{0%{opacity:0;transform:scale(0.8);filter:blur(4px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
       @keyframes tlTextType{0%{opacity:0;clip-path:inset(0 100% 0 0)}100%{opacity:1;clip-path:inset(0 0% 0 0)}}
       @keyframes tlDividerGlow{0%{opacity:0;height:0}100%{opacity:1;height:100%}}
       .tl-item{position:relative;display:flex;gap:20px;align-items:flex-start;padding:22px 0;opacity:0}
@@ -2684,8 +2680,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="pricing-inner">
     <div class="intro">
       <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px;text-align:center">Tarifs Coach</div>
-      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin:0 0 12px;text-align:center">Combien tu perds<br>en ne sachant pas ?</h2>
-      <p style="font-size:16px;color:#8A8A9A;font-style:italic;margin:0 auto 16px;text-align:center;max-width:500px">Chaque mois sans visibilité, c'est un client qui part en silence.</p>
+      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin:0 0 12px;text-align:center">Prêt à devenir CEO ?</h2>
+      <p style="font-size:16px;color:#8A8A9A;font-style:italic;margin:0 auto 16px;text-align:center;max-width:500px">Cesse de perdre de l'argent en perdant des clients.</p>
       <p style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center">Support 7j/7</p>
     </div>
     <!-- ===== BANNIERE FOUNDING COACH — ULTRA PREMIUM ===== -->
@@ -2729,7 +2725,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
               <span style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.3)">/mois</span>
               <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px">12 mois · Verrouillé à vie</div>
             </div>
-            <a id="foundingCTA" href="/founding" style="display:inline-block;padding:14px 28px;background:#00C9A7;color:#080C14;font-size:13px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:10px;text-decoration:none;box-shadow:0 10px 32px rgba(0,201,167,0.3);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+            <a id="foundingCTA" href="/founding.html" style="display:inline-block;padding:14px 28px;background:#00C9A7;color:#080C14;font-size:13px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:10px;text-decoration:none;box-shadow:0 10px 32px rgba(0,201,167,0.3);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
               Rejoindre →
             </a>
           </div>
@@ -2765,7 +2761,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Messagerie + push notifs</li>
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>0% commission sur tes revenus</li>
         </ul>
-        <button class="cta-plan magnetic" onclick="startPlanCheckout('starter',this)">Commencer →</button>
+        <a href="/founding.html" class="cta-plan magnetic">Rejoindre →</a>
       </div>
       <div class="plan featured reveal stagger-1">
         <div class="badge">Recommandé</div>
@@ -2780,7 +2776,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automatisations avancées</li>
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Rapports hebdo auto</li>
         </ul>
-        <button class="cta-plan magnetic" onclick="startPlanCheckout('pro',this)">Commencer →</button>
+        <a href="/founding.html" class="cta-plan magnetic">Rejoindre →</a>
       </div>
       <div class="plan reveal stagger-2">
         <div class="name">Elite</div>
@@ -2795,50 +2791,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Groupe privé Elite</li>
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Domaine custom inclus</li>
         </ul>
-        <button class="cta-plan magnetic" onclick="startPlanCheckout('elite',this)">Commencer →</button>
+        <a href="/founding.html" class="cta-plan magnetic">Rejoindre →</a>
       </div>
     </div>
-
-    <!-- Checkout JS pour les 3 plans -->
-    <script>
-    // MODE LANCEMENT : true = tout redirige vers /founding
-    // Quand les 50 places sont prises, passe à false pour activer les plans Stripe
-    var FOUNDING_MODE = true;
-
-    function startPlanCheckout(plan, btn) {
-      if (FOUNDING_MODE) {
-        window.location.href = '/founding';
-        return;
-      }
-      var originalText = btn.textContent;
-      btn.textContent = 'Redirection...';
-      btn.disabled = true;
-      btn.style.opacity = '0.7';
-
-      fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: plan })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          alert(data.error || 'Erreur. Contacte rb.performancee@gmail.com');
-          btn.textContent = originalText;
-          btn.disabled = false;
-          btn.style.opacity = '1';
-        }
-      })
-      .catch(function() {
-        alert('Erreur réseau. Réessaie.');
-        btn.textContent = originalText;
-        btn.disabled = false;
-        btn.style.opacity = '1';
-      });
-    }
-    </script>
 
     <!-- FAQ toggle — standalone pour éviter tout crash -->
     <script>
@@ -2901,7 +2856,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
         <div class="faq-a" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
-          Oui, une vraie app disponible sur l'App Store et Google Play. Ton client la télécharge, entre son code, et c'est parti. iPhone et Android.
+          Non. 2 taps depuis leur navigateur et c'est installé. Pas d'App Store, pas de compte Google Play. Ça marche sur iPhone et Android, instantanément.
         </div>
       </div>
 
@@ -2968,7 +2923,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <div class="footer-col">
         <div class="footer-col-label">Contact</div>
         <a href="mailto:rb.performancee@gmail.com" class="footer-link">rb.performancee@gmail.com</a>
-        <a href="/founding" class="footer-link">Devenir Founding Coach →</a>
+        <a href="/founding.html" class="footer-link">Devenir Founding Coach →</a>
       </div>
     </div>
   </footer>
@@ -2980,7 +2935,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <!-- ========== STICKY CTA ========== -->
 <div class="sticky-cta" id="stickyCta" aria-hidden="true">
   <div class="label"><b>50 places</b> — Founding Coach Program</div>
-  <a href="/founding" class="btn btn-orange magnetic">Rejoindre les 50 Founding Coachs →
+  <a href="/founding.html" class="btn btn-orange magnetic">Rejoindre les 50 Founding Coachs →
     <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
   </a>
   <button class="close" id="stickyCtaClose" aria-label="Fermer">×</button>
