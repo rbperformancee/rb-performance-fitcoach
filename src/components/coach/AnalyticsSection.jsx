@@ -98,7 +98,7 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
   }, [coachId, clients, period]);
 
   return (
-    <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 240, background: "#080C14", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
+    <div className="coach-overlay-panel" style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 240, background: "#080C14", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}>
       <style>{`@keyframes anFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* Header sticky */}

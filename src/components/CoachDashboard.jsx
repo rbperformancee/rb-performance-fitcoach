@@ -521,7 +521,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     <>
     {/* Programme Builder plein ecran */}
     {showBuilder && (
-      <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 300 }}>
+      <div className="coach-overlay-panel" style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 300 }}>
         <ProgrammeBuilder
           client={client}
           coachData={null}
@@ -535,7 +535,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       <style>{`
         @keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         .coach-client-panel{
-          position:fixed;top:0;right:0;bottom:0;left:220px;z-index:200;
+          position:absolute;top:0;right:0;bottom:0;left:0;z-index:200;
           background:#080C14;overflow-y:auto;overflow-x:hidden;
           -webkit-overflow-scrolling:touch;
           font-family:'Inter',-apple-system,system-ui,sans-serif;color:#fff;
@@ -2416,13 +2416,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       borderRight: "1px solid rgba(255,255,255,.06)",
       flexDirection: "column",
       height: "100vh",
-      position: "fixed",
+      position: "sticky",
       top: 0,
-      left: 0,
       overflow: "hidden",
       flexShrink: 0,
       padding: "0 12px",
-      zIndex: 400,
+      zIndex: 500,
     }}>
       {/* LOGO */}
       <div style={{ padding: "24px 8px 28px", position: "relative", zIndex: 1 }}>
@@ -2644,8 +2643,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-main-inner{padding:12px 20px 120px !important;max-width:100% !important;overflow:hidden !important}
           .coach-mobile-bell{display:block !important}
           .coach-client-panel-inner{padding:0 16px 120px !important}
-          .coach-client-panel,.coach-overlay-panel{left:0 !important}
-          .coach-main{margin-left:0 !important}
+          .coach-client-panel,.coach-overlay-panel{position:fixed !important;left:0 !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
@@ -2757,7 +2755,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         overflowX: "hidden",
         WebkitOverflowScrolling: "touch",
         position: "relative",
-        marginLeft: 220,
       }}>
       {MobileTopBar}
 
@@ -2963,7 +2960,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           est une colonne a droite + le dashboard au centre ; sur mobile
           le panel est un overlay qui couvre la liste de toute facon. */}
       {showClientList && !selected && (
-        <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 150, background: BG, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", fontFamily: "'Inter',-apple-system,system-ui,sans-serif", color: "#fff" }}>
+        <div className="coach-overlay-panel" style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 150, background: BG, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", fontFamily: "'Inter',-apple-system,system-ui,sans-serif", color: "#fff" }}>
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
