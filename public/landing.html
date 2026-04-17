@@ -2064,7 +2064,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         @keyframes bmNumIn{0%{filter:blur(20px);opacity:0;transform:perspective(800px) rotateX(18deg) scale(0.75)}100%{filter:blur(0);opacity:1;transform:perspective(800px) rotateX(0) scale(1)}}
         @keyframes bmFlash{0%{opacity:0.5}100%{opacity:0}}
         @keyframes bmGlowCta{0%,100%{box-shadow:0 0 20px rgba(0,201,167,0.2),0 0 60px rgba(0,201,167,0.08)}50%{box-shadow:0 0 32px rgba(0,201,167,0.4),0 0 80px rgba(0,201,167,0.15)}}
-        @keyframes bmFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes bmFadeUp{from{opacity:0;transform:translateY(8px) scale(0.97);filter:blur(4px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
         .bm-p{position:absolute;border-radius:50%;z-index:2;pointer-events:none;opacity:0}
       </style>
       <div id="blackMirror" style="position:relative;min-height:560px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:transparent">
@@ -3354,11 +3354,13 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   function getT(){ return tarifEl ? +tarifEl.value : 150; }
   function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
 
-  function say(html, ms){
+  function say(html, ms, dur){
+    var duration = dur || 0.9;
     return new Promise(function(r){ setTimeout(function(){
       var d = document.createElement('div');
       d.innerHTML = html;
-      d.style.animation = 'bmFadeUp 0.6s ease forwards';
+      d.style.opacity = '0';
+      d.style.animation = 'bmFadeUp ' + duration + 's cubic-bezier(0.16,1,0.3,1) forwards';
       content.appendChild(d); r();
     }, ms); });
   }
@@ -3408,40 +3410,40 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if(ghost){ ghost.textContent=''; ghost.style.filter='blur(12px)'; ghost.style.color='rgba(255,107,107,0.03)'; }
     if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,255,255,0.015),#000 70%)'; }
 
-    // P1 — tes chiffres (rapide)
-    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:900;color:#fff;line-height:1.1">Tu as '+c+' clients.</div>',400)
-    .then(function(){ return say('<div style="font-size:17px;color:rgba(255,255,255,0.45);margin-top:10px">Tu factures '+t+'€ par mois.</div>',700); })
-    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.2);margin-top:10px">Tu penses que tout va bien.</div>',800); })
-    .then(function(){ return say('<div style="font-size:13px;color:rgba(255,255,255,0.15);margin-top:14px;margin-bottom:20px;font-style:italic">En moyenne, un coach perd 25% de ses clients par an. Soit '+lost+' sur '+c+'.</div>',1000); })
+    // P1 — ouverture lente, respiration
+    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:900;color:#fff;line-height:1.1">Tu as '+c+' clients.</div>', 800, 1.1)
+    .then(function(){ return say('<div style="font-size:17px;color:rgba(255,255,255,0.45);margin-top:12px">Tu factures '+t+'€ par mois.</div>', 1200, 1.0); })
+    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.18);margin-top:14px">Tu penses que tout va bien.</div>', 1400, 1.2); })
+    .then(function(){ return say('<div style="font-size:13px;color:rgba(255,255,255,0.12);margin-top:18px;margin-bottom:20px;font-style:italic;letter-spacing:0.02em">En moyenne, un coach perd 25% de ses clients par an.<br>Soit '+lost+' sur '+c+'.</div>', 1600, 1.2); })
 
-    // P2 — IMPACT (crack direct)
+    // P2 — IMPACT (crack)
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
       if(pulse){ pulse.style.animation='bmHeartFast 1s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,107,107,0.06),transparent 70%)'; }
       doCrack();
       if(ghost){ ghost.textContent='-'+fmt(lostY)+'€'; ghost.style.filter='blur(6px)'; }
       r();
-    },1000); }); })
-    .then(function(){ return new Promise(function(r){ setTimeout(function(){ clear(); r(); },400); }); })
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#ff6b6b;line-height:1.2">Tu vas perdre '+lost+' client'+(lost>1?'s':'')+' cette année.</div>',150); })
+    },1400); }); })
+    .then(function(){ return new Promise(function(r){ setTimeout(function(){ clear(); r(); },600); }); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#ff6b6b;line-height:1.2">Tu vas perdre '+lost+' client'+(lost>1?'s':'')+' cette année.</div>', 300, 1.0); })
     .then(function(){
       if(ghost) ghost.style.filter='blur(0)';
-      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(72px,16vw,130px);color:#ff6b6b;line-height:1;margin:20px 0;animation:bmNumIn 1s cubic-bezier(0.16,1,0.3,1) forwards">'+fmt(lostY)+'€</div>',1000);
+      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(72px,16vw,130px);color:#ff6b6b;line-height:1;margin:20px 0;animation:bmNumIn 1.2s cubic-bezier(0.16,1,0.3,1) forwards">'+fmt(lostY)+'€</div>', 1200, 1.2);
     })
-    .then(function(){ return say('<div style="font-size:15px;color:rgba(255,255,255,0.2);letter-spacing:0.05em">perdus. En silence.</div>',800); })
+    .then(function(){ return say('<div style="font-size:15px;color:rgba(255,255,255,0.18);letter-spacing:0.05em">perdus. En silence.</div>', 1000, 1.0); })
 
-    // P3 — noir
+    // P3 — fondu au noir
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
       clear(); undoCrack(); clearP();
       if(ghost){ ghost.textContent=''; ghost.style.filter='blur(12px)'; }
       if(pulse){ pulse.style.animation='none'; pulse.style.background='transparent'; }
       r();
-    },1800); }); })
+    },2200); }); })
 
     // Phrase dans le noir
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:900;color:rgba(255,255,255,0.3)">Et tu ne le sauras pas.</div>',600); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:900;color:rgba(255,255,255,0.25)">Et tu ne le sauras pas.</div>', 800, 1.4); })
 
     // Noir
-    .then(function(){ return new Promise(function(r){ setTimeout(function(){ clear(); r(); },1500); }); })
+    .then(function(){ return new Promise(function(r){ setTimeout(function(){ clear(); r(); },2000); }); })
 
     // P4 — rewind teal
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
@@ -3449,14 +3451,14 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(0,201,167,0.06),transparent 70%)'; }
       if(ghost){ ghost.style.color='rgba(0,201,167,0.03)'; ghost.textContent='+'+fmt(saved)+'€'; ghost.style.filter='blur(6px)'; }
       r();
-    },800); }); })
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#00C9A7;line-height:1.2">Sauf si tu vois avant eux.</div>',400); })
+    },1000); }); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#00C9A7;line-height:1.2">Sauf si tu vois avant eux.</div>', 600, 1.1); })
     .then(function(){
       if(ghost) ghost.style.filter='blur(0)';
-      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(64px,14vw,110px);color:#00C9A7;line-height:1;margin:20px 0;animation:bmNumIn 1s cubic-bezier(0.16,1,0.3,1) forwards">+'+fmt(saved)+'€</div>',1000);
+      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(64px,14vw,110px);color:#00C9A7;line-height:1;margin:20px 0;animation:bmNumIn 1.2s cubic-bezier(0.16,1,0.3,1) forwards">+'+fmt(saved)+'€</div>', 1200, 1.2);
     })
-    .then(function(){ return say('<div style="font-size:14px;color:rgba(255,255,255,0.25);margin-bottom:28px">par an. Récupérés avec RB Perform.</div>',800); })
-    .then(function(){ return say('<a href="/demo" style="display:inline-block;padding:18px 40px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;animation:bmGlow 2.5s ease-in-out infinite">Voir la démo</a>',800); })
+    .then(function(){ return say('<div style="font-size:14px;color:rgba(255,255,255,0.22);margin-bottom:28px;letter-spacing:0.02em">par an. Récupérés avec RB Perform.</div>', 1000, 1.0); })
+    .then(function(){ return say('<a href="/demo" style="display:inline-block;padding:18px 40px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;animation:bmGlow 2.5s ease-in-out infinite">Voir la démo</a>', 1000, 1.0); })
     .then(function(){ setTimeout(function(){ started=false; clearP(); }, 8000);
     });
   }
