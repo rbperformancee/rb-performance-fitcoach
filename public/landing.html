@@ -3393,50 +3393,56 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if(ghost){ ghost.textContent=''; ghost.style.filter='blur(12px)'; ghost.style.color='rgba(255,107,107,0.03)'; }
     if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,255,255,0.015),#000 70%)'; }
 
-    // P1 — tes chiffres
-    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(24px,4.5vw,38px);font-weight:900;color:#fff;margin-bottom:8px">Tu as '+c+' clients.</div>',600)
-    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.5);margin-bottom:8px">Tu factures '+t+'€/mois.</div>',1000); })
-    .then(function(){ return say('<div style="font-size:15px;color:rgba(255,255,255,0.25);margin-bottom:24px">Tu penses que tout va bien.</div>',1000); })
+    // P1 — tes chiffres (lent, cinematique)
+    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:900;color:#fff;line-height:1.1">Tu as '+c+' clients.</div>',1000)
+    .then(function(){ return say('<div style="font-size:17px;color:rgba(255,255,255,0.45);margin-top:12px">Tu factures '+t+'€ par mois.</div>',1500); })
+    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.2);margin-top:12px;margin-bottom:32px">Tu penses que tout va bien.</div>',1800); })
 
-    // P2 — IMPACT : flash + crack + particules
+    // P2 — IMPACT (pause longue puis crack)
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
-      if(pulse){ pulse.style.animation='bmHeartFast 1s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,107,107,0.05),#000 70%)'; }
+      if(pulse){ pulse.style.animation='bmHeartFast 1s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,107,107,0.06),transparent 70%)'; }
       doCrack();
-      spawn('#ff6b6b','down',35);
-      if(ghost){ ghost.textContent='-'+fmt(lostY)+'€'; ghost.style.filter='blur(6px)'; }
+      spawn('#ff6b6b','down',40);
+      if(ghost){ ghost.textContent='-'+fmt(lostY)+'€'; ghost.style.filter='blur(8px)'; }
       r();
-    },1400); }); })
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(17px,2.8vw,22px);font-weight:900;color:#ff6b6b;margin-bottom:8px">Dans les 12 prochains mois, tu vas perdre '+lost+' client'+(lost>1?'s':'')+'.</div>',900); })
+    },2000); }); })
+    .then(function(){ return new Promise(function(r){ setTimeout(function(){ clear(); r(); },800); }); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#ff6b6b;line-height:1.2">Tu vas perdre '+lost+' client'+(lost>1?'s':'')+' cette année.</div>',200); })
     .then(function(){
       if(ghost) ghost.style.filter='blur(0)';
-      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(60px,14vw,110px);color:#ff6b6b;line-height:1;margin:16px 0;animation:bmNumIn 1.2s ease forwards">'+fmt(lostY)+'€</div>',1100);
+      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(72px,16vw,130px);color:#ff6b6b;line-height:1;margin:24px 0;animation:bmNumIn 1.5s cubic-bezier(0.16,1,0.3,1) forwards">'+fmt(lostY)+'€</div>',1500);
     })
-    .then(function(){ return say('<div style="font-size:14px;color:rgba(255,255,255,0.25)">perdus. En silence.</div>',700); })
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(15px,2.5vw,20px);font-weight:900;color:rgba(255,255,255,0.4);margin-top:24px">Et tu ne le sauras pas.</div>',1400); })
+    .then(function(){ return say('<div style="font-size:15px;color:rgba(255,255,255,0.2);letter-spacing:0.05em">perdus. En silence.</div>',1200); })
 
-    // P3 — noir
+    // P3 — noir (longue pause dramatique)
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
       clear(); undoCrack(); clearP();
       if(ghost){ ghost.textContent=''; ghost.style.filter='blur(12px)'; }
-      if(pulse){ pulse.style.animation='none'; pulse.style.background='#000'; }
+      if(pulse){ pulse.style.animation='none'; pulse.style.background='transparent'; }
       r();
-    },2500); }); })
+    },3500); }); })
 
-    // P4 — rewind teal
+    // Phrase dans le noir
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:900;color:rgba(255,255,255,0.3);letter-spacing:-0.01em">Et tu ne le sauras pas.</div>',1500); })
+
+    // Noir total
+    .then(function(){ return new Promise(function(r){ setTimeout(function(){ clear(); r(); },2500); }); })
+
+    // P4 — rewind (apparition lente du teal)
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
       if(glow) glow.style.opacity='1';
-      if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(0,201,167,0.06),#000 70%)'; }
-      spawn('#00C9A7','up',25);
-      if(ghost){ ghost.style.color='rgba(0,201,167,0.03)'; ghost.textContent='+'+fmt(saved)+'€'; ghost.style.filter='blur(6px)'; }
+      if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(0,201,167,0.06),transparent 70%)'; }
+      spawn('#00C9A7','up',20);
+      if(ghost){ ghost.style.color='rgba(0,201,167,0.03)'; ghost.textContent='+'+fmt(saved)+'€'; ghost.style.filter='blur(8px)'; }
       r();
-    },1000); }); })
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(17px,2.8vw,22px);font-weight:900;color:#00C9A7;margin-bottom:12px">Sauf si tu vois avant eux.</div>',500); })
+    },1500); }); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#00C9A7;line-height:1.2">Sauf si tu vois avant eux.</div>',800); })
     .then(function(){
       if(ghost) ghost.style.filter='blur(0)';
-      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(52px,12vw,88px);color:#00C9A7;line-height:1;margin:12px 0;animation:bmNumIn 1s ease forwards">+'+fmt(saved)+'€/an</div>',900);
+      return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(64px,14vw,110px);color:#00C9A7;line-height:1;margin:24px 0;animation:bmNumIn 1.5s cubic-bezier(0.16,1,0.3,1) forwards">+'+fmt(saved)+'€</div>',1500);
     })
-    .then(function(){ return say('<div style="font-size:13px;color:rgba(255,255,255,0.3);margin-bottom:28px">récupérés avec RB Perform.</div>',700); })
-    .then(function(){ return say('<a href="/demo" style="display:inline-block;padding:16px 36px;background:#00C9A7;color:#080C14;font-size:14px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;animation:bmGlow 2s ease-in-out infinite">Voir ma démo</a>',900); })
+    .then(function(){ return say('<div style="font-size:14px;color:rgba(255,255,255,0.25);margin-bottom:36px">par an. Récupérés avec RB Perform.</div>',1200); })
+    .then(function(){ return say('<a href="/demo" style="display:inline-block;padding:18px 40px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;animation:bmGlow 2.5s ease-in-out infinite">Voir la démo</a>',1200); })
     .then(function(){ setTimeout(function(){ started=false; clearP(); }, 8000);
     });
   }
@@ -3444,16 +3450,22 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   // Etat dormant au demarrage
   showDormant();
 
-  // Lancer quand le prospect TOUCHE un slider
-  function onSliderTouch(){
+  // Attendre que LES DEUX sliders aient ete touches
+  var clientsTouched = false;
+  var tarifTouched = false;
+  function checkBothTouched(){
+    if(!clientsTouched || !tarifTouched) return;
     if(sliderTouched) return;
     sliderTouched = true;
-    setTimeout(run, 800);
+    // Petit delai pour que le prospect finisse de regler
+    clear();
+    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:rgba(255,255,255,0.3)">Analyse en cours...</div>', 0);
+    setTimeout(function(){ clear(); run(); }, 1500);
   }
-  if(clientsEl) clientsEl.addEventListener('input', onSliderTouch);
-  if(tarifEl) tarifEl.addEventListener('input', onSliderTouch);
+  if(clientsEl) clientsEl.addEventListener('input', function(){ clientsTouched=true; checkBothTouched(); });
+  if(tarifEl) tarifEl.addEventListener('input', function(){ tarifTouched=true; checkBothTouched(); });
 
-  // Aussi relancer quand la section redevient active
+  // Relancer quand la section redevient active
   var biz = document.querySelector('section.business');
   if (biz) {
     var mo = new MutationObserver(function(muts){
