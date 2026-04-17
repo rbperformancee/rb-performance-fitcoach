@@ -2021,36 +2021,36 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         <div style="margin-bottom:24px">
           <div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">
             <span>Nombre de clients</span>
-            <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-clients-val">10</span> clients</span>
+            <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-clients-val">2</span> clients</span>
           </div>
-          <input type="range" id="roi-clients" min="3" max="50" value="10" style="width:100%;accent-color:#00C9A7" />
+          <input type="range" id="roi-clients" min="2" max="50" value="2" style="width:100%;accent-color:#00C9A7" />
         </div>
         <div style="margin-bottom:32px">
           <div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">
             <span>Tarif mensuel</span>
-            <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-tarif-val">150</span>€ / mois</span>
+            <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-tarif-val">100</span>€ / mois</span>
           </div>
-          <input type="range" id="roi-tarif" min="50" max="500" value="150" step="10" style="width:100%;accent-color:#00C9A7" />
+          <input type="range" id="roi-tarif" min="50" max="500" value="100" step="10" style="width:100%;accent-color:#00C9A7" />
         </div>
 
         <div style="display:flex;flex-direction:column;gap:12px">
           <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(0,201,167,0.15);border-radius:16px;padding:28px;text-align:center">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,64px);color:#00C9A7;letter-spacing:-1px;line-height:1" id="roi-mrr">1 500€</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,64px);color:#00C9A7;letter-spacing:-1px;line-height:1" id="roi-mrr">200€</div>
             <div style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:8px">Ton MRR potentiel</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:4px" id="roi-mrr-sub">par mois · 18 000€ / an</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:4px" id="roi-mrr-sub">par mois · 2 400€ / an</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#00C9A7;line-height:1" id="roi-gain">+360€</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#00C9A7;line-height:1" id="roi-gain">+960€</div>
               <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Revenus suppl. / an</div>
             </div>
             <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#fff;line-height:1" id="roi-multiple">×2</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#fff;line-height:1" id="roi-multiple">×0.4</div>
               <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Multiplicateur RB</div>
             </div>
           </div>
           <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5;padding:8px 0" id="roi-conclusion">
-            Avec <strong style="color:#fff">10 clients</strong> à <strong style="color:#fff">150€</strong>, RB Perform te rapporte <strong style="color:#00C9A7">+360€</strong> par an.
+            Règle tes chiffres pour voir ton potentiel.
           </div>
         </div>
       </div>
@@ -3234,7 +3234,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   const multEl     = document.getElementById('roi-multiple');
   const concEl     = document.getElementById('roi-conclusion');
 
-  const PLAN_PRO_YEAR = 299 * 12; // 3 588 €
+  const RB_COST_YEAR = 199 * 12; // 2 388€/an (plan Starter)
 
   function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
 
@@ -3243,22 +3243,26 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     const tarif   = +tarifSlider.value;
     const mrr     = clients * tarif;
     const annuel  = mrr * 12;
-    // Churn moyen: 1 client perdu / 4 mois = 3 clients/an
-    const lostPerYear = tarif * 12 * 3;
-    const gainPerYear = lostPerYear * 0.8;
-    const roiMult     = Math.max(2, Math.round(gainPerYear / PLAN_PRO_YEAR));
+    // Churn moyen coaching : 25% des clients perdus par an
+    const clientsPerdus = Math.max(1, Math.round(clients * 0.25));
+    // Valeur perdue = clients perdus × tarif × 12 mois
+    const perteTotale = clientsPerdus * tarif * 12;
+    // RB sauve 80% des clients a risque
+    const gainRB = Math.round(perteTotale * 0.8);
+    // ROI = gain net / cout RB (arrondi a 1 decimale)
+    const roiNet = gainRB - RB_COST_YEAR;
+    const roiMult = roiNet > 0 ? (gainRB / RB_COST_YEAR).toFixed(1) : '0';
 
     if (clientsVal) clientsVal.textContent = clients;
     if (tarifVal)   tarifVal.textContent   = tarif;
     if (mrrEl)      mrrEl.textContent      = fmt(mrr) + '€';
     if (mrrSub)     mrrSub.textContent     = 'par mois · ' + fmt(annuel) + '€ / an';
-    if (lossEl)     lossEl.textContent     = '-' + fmt(lostPerYear) + '€';
-    if (gainEl)     gainEl.textContent     = '+' + fmt(gainPerYear) + '€';
+    if (gainEl)     gainEl.textContent     = roiNet > 0 ? '+' + fmt(gainRB) + '€' : fmt(gainRB) + '€';
     if (multEl)     multEl.textContent     = '×' + roiMult;
-    if (concEl)     concEl.innerHTML       = 'Avec <strong>' + clients + ' clients</strong> à <strong>' + tarif + '€</strong>, RB Perform te rapporte <strong>+' + fmt(gainPerYear) + '€</strong> par an — soit <strong>×' + roiMult + '</strong> ton investissement.';
+    if (concEl)     concEl.innerHTML       = 'Avec <strong>' + clients + ' clients</strong> à <strong>' + tarif + '€</strong>, tu perds <strong>' + clientsPerdus + ' client' + (clientsPerdus>1?'s':'') + '/an</strong> sans anti-churn. RB Perform en sauve 80% — soit <strong>+' + fmt(gainRB) + '€</strong> récupérés pour un coût de 2 388€/an (<strong>×' + roiMult + '</strong>).';
 
-    // Slider track progress (gradient fill)
-    const pClients = ((clients - 3) / (50 - 3)) * 100;
+    // Slider track progress
+    const pClients = ((clients - 2) / (50 - 2)) * 100;
     const pTarif   = ((tarif - 50) / (500 - 50)) * 100;
     clientsSlider.style.setProperty('--progress', pClients + '%');
     tarifSlider.style.setProperty('--progress', pTarif + '%');
