@@ -521,7 +521,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     <>
     {/* Programme Builder plein ecran */}
     {showBuilder && (
-      <div className="coach-overlay-panel" style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 300 }}>
+      <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 300 }}>
         <ProgrammeBuilder
           client={client}
           coachData={null}
@@ -535,7 +535,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       <style>{`
         @keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         .coach-client-panel{
-          position:absolute;top:0;right:0;bottom:0;left:0;z-index:200;
+          position:fixed;top:0;right:0;bottom:0;left:220px;z-index:200;
           background:#080C14;overflow-y:auto;overflow-x:hidden;
           -webkit-overflow-scrolling:touch;
           font-family:'Inter',-apple-system,system-ui,sans-serif;color:#fff;
@@ -2960,7 +2960,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           est une colonne a droite + le dashboard au centre ; sur mobile
           le panel est un overlay qui couvre la liste de toute facon. */}
       {showClientList && !selected && (
-        <div className="coach-overlay-panel" style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 150, background: BG, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", fontFamily: "'Inter',-apple-system,system-ui,sans-serif", color: "#fff" }}>
+        <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 150, background: BG, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", fontFamily: "'Inter',-apple-system,system-ui,sans-serif", color: "#fff" }}>
           {/* Ambient */}
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
