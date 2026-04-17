@@ -2176,9 +2176,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       .ft-reveal:nth-child(even).ft-visible .ft-text{animation:ftSlideRight 0.9s cubic-bezier(0.16,1,0.3,1) forwards}
       .ft-reveal:nth-child(odd).ft-visible .ft-visual{animation:ftSlideRight 1s cubic-bezier(0.16,1,0.3,1) 0.2s forwards}
       .ft-reveal:nth-child(even).ft-visible .ft-visual{animation:ftSlideLeft 1s cubic-bezier(0.16,1,0.3,1) 0.2s forwards}
-      /* Glow behind visuals — subtil */
-      .ft-visual::before{content:'';position:absolute;width:160px;height:160px;background:radial-gradient(circle,rgba(0,201,167,0.03),transparent 65%);border-radius:50%;pointer-events:none;filter:blur(50px);opacity:0;transition:opacity 2s ease}
-      .ft-visible .ft-visual::before{opacity:1}
+      /* Ligne accent sur le visuel */
+      .ft-visual::before{content:'';position:absolute;top:50%;left:0;width:1px;height:0;background:linear-gradient(180deg,transparent,rgba(0,201,167,0.15),transparent);pointer-events:none;transform:translateY(-50%);transition:height 1.2s cubic-bezier(0.16,1,0.3,1) 0.4s}
+      .ft-visible .ft-visual::before{height:60%}
       /* Mock rows stagger */
       .ft-reveal .ft-mock-row{opacity:0}
       .ft-reveal.ft-visible .ft-mock-row:nth-child(1){animation:ftMockRow 0.5s ease 0.5s forwards}
