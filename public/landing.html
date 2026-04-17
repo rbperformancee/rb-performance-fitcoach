@@ -3450,20 +3450,26 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   // Etat dormant au demarrage
   showDormant();
 
-  // Attendre que LES DEUX sliders aient ete touches
+  // Attendre que les 2 sliders soient touches + 1s sans mouvement
   var clientsTouched = false;
   var tarifTouched = false;
-  function checkBothTouched(){
-    if(!clientsTouched || !tarifTouched) return;
+  var idleTimer = null;
+  function onSliderMove(){
     if(sliderTouched) return;
-    sliderTouched = true;
-    // Petit delai pour que le prospect finisse de regler
-    clear();
-    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:rgba(255,255,255,0.3)">Analyse en cours...</div>', 0);
-    setTimeout(function(){ clear(); run(); }, 1500);
+    // Reset le timer a chaque mouvement
+    if(idleTimer) clearTimeout(idleTimer);
+    if(!clientsTouched || !tarifTouched) return;
+    // Les deux ont ete touches — attendre 1s d'inactivite
+    idleTimer = setTimeout(function(){
+      if(sliderTouched) return;
+      sliderTouched = true;
+      clear();
+      say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:rgba(255,255,255,0.25)">Analyse en cours...</div>', 0);
+      setTimeout(function(){ clear(); run(); }, 1500);
+    }, 1000);
   }
-  if(clientsEl) clientsEl.addEventListener('input', function(){ clientsTouched=true; checkBothTouched(); });
-  if(tarifEl) tarifEl.addEventListener('input', function(){ tarifTouched=true; checkBothTouched(); });
+  if(clientsEl) clientsEl.addEventListener('input', function(){ clientsTouched=true; onSliderMove(); });
+  if(tarifEl) tarifEl.addEventListener('input', function(){ tarifTouched=true; onSliderMove(); });
 
   // Relancer quand la section redevient active
   var biz = document.querySelector('section.business');
