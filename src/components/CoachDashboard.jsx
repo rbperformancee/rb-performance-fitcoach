@@ -2394,8 +2394,18 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { id: "analytics",   label: "Analytics",  icon: "activity",    group: "outils" },
   ];
   const sidebarOnNav = (id) => {
-    if (id === "analytics") { haptic.light(); setShowAnalytics(true); return; }
-    if (id === "pipeline") { haptic.light(); setShowPipeline(true); return; }
+    haptic.light();
+    // Fermer tout d'abord
+    setSelected(null);
+    setShowSettings(false);
+    setShowAnalytics(false);
+    setShowPipeline(false);
+
+    if (id === "analytics") { setShowAnalytics(true); setShowClientList(false); return; }
+    if (id === "pipeline") { setShowPipeline(true); setShowClientList(false); return; }
+    if (id === "clients") { setShowClientList(true); setActiveTab("clients"); return; }
+
+    setShowClientList(false);
     setActiveTab(id);
   };
 
