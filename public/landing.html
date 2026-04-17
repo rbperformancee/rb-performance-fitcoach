@@ -3272,7 +3272,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if (mrrSub)     mrrSub.textContent     = 'par mois · ' + fmt(annuel) + '€ / an';
     if (gainEl)     gainEl.textContent     = roiNet > 0 ? '+' + fmt(gainRB) + '€' : fmt(gainRB) + '€';
     if (multEl)     multEl.textContent     = '×' + roiMult;
-    if (concEl)     concEl.innerHTML       = '<strong>+' + fmt(gainRB) + '€/an</strong> récupérés · <strong>+' + hoursPerMonth + 'h/mois</strong> gagnées · Plan ' + rbPlan(clients) + ' · ROI <strong>×' + roiMult + '</strong>';
+    if (concEl)     concEl.innerHTML       = 'Avec <strong>' + clients + ' clients</strong> à <strong>' + tarif + '€</strong>, tu perds <strong>' + clientsPerdus + ' client' + (clientsPerdus>1?'s':'') + '/an</strong> sans anti-churn. RB Perform en sauve 80% — soit <strong>+' + fmt(gainRB) + '€/an</strong> récupérés et <strong>+' + hoursPerMonth + 'h/mois</strong> gagnées, pour un plan ' + rbPlan(clients) + '/mois (<strong>×' + roiMult + '</strong>).';
 
     // Slider track progress
     const pClients = ((clients - 2) / (50 - 2)) * 100;
