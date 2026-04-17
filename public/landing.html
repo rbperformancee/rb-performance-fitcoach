@@ -1440,7 +1440,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   </a>
 
   <button class="burger-btn" id="burgerBtn"
-          aria-label="Ouvrir le menu">
+          aria-label="Ouvrir le menu"
+          onclick="var b=this,o=document.getElementById('menuOverlay');if(!o)return;var isOpen=o.classList.contains('open');b.classList.toggle('open');o.classList.toggle('open');o.setAttribute('aria-hidden',isOpen?'true':'false');document.body.style.overflow=isOpen?'':'hidden';">
     <span></span>
     <span></span>
     <span></span>
