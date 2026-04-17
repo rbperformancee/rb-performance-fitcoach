@@ -197,13 +197,13 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:10px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:24px;padding:8px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:100px;background:rgba(255,255,255,0.02);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 10px var(--orange);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.8)}}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(88px,15vw,200px);letter-spacing:-3px;line-height:0.88;font-weight:400;margin-bottom:36px;color:#fff}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(88px,15vw,200px);letter-spacing:-3px;line-height:0.88;font-weight:400;margin-bottom:16px;color:#fff}
 .hero-title .char{display:inline-block}
 .hero-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);margin:0 auto;font-weight:400;letter-spacing:0.2px;max-width:620px;line-height:1.5}
 .hero-arrow{z-index:4;color:rgba(255,255,255,0.5);transition:color 0.2s}
 .hero-arrow:hover{color:#fff}
 /* Fix GSAP qui efface le transform translateX(-50%) au mount */
-section.hero button#heroEnter{transform:translateX(-50%) !important}
+section.hero button#heroEnter{}
 @media(max-width:640px){
   .hero{padding:100px 20px 60px}
 }
@@ -1288,10 +1288,6 @@ html.light .founder-message strong{color:#0a0a0a}
     font-size: clamp(56px,16vw,80px) !important;
     letter-spacing: -2px !important;
   }
-  section.hero button, #heroEnter {
-    transform: translateX(-50%) !important;
-    font-size: 10px !important;
-  }
   .hero-sub {
     font-size: clamp(14px,3.5vw,18px) !important;
   }
@@ -1409,13 +1405,9 @@ html.light .founder-message strong{color:#0a0a0a}
   .burger-btn { padding: 12px 16px; }
   .nav-link { padding: 8px 4px; font-size: 11px; }
 
-  /* HERO — bouton Entrer visible + safe area */
+  /* HERO */
   section.hero { padding: 80px 20px 60px !important; }
-  section.hero button, #heroEnter {
-    padding: 14px 32px !important;
-    font-size: 11px !important;
-    bottom: max(32px, env(safe-area-inset-bottom)) !important;
-  }
+  #heroEnter { padding: 12px 28px !important; font-size: 10px !important; }
 
   /* HOW / SYSTEME — tout contenu, rien ne déborde */
   section.how { padding: 0 !important; }
@@ -1698,14 +1690,13 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="hero-blob hero-blob-2" aria-hidden="true"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <div class="hero-eyebrow"><span class="dot"></span>La plateforme des coachs ambitieux</div>
     <h1 class="hero-title" id="heroTitle">RB PERFORM</h1>
-    <p class="hero-sub">Le système qui transforme<br/>chaque coach en CEO.</p>
+    <p class="hero-sub" style="margin-bottom:32px">Le système qui transforme<br/>chaque coach en CEO.</p>
+    <button class="hero-arrow" id="heroEnter"
+      style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:10px 28px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;z-index:5">
+      Entrer
+    </button>
   </div>
-  <button class="hero-arrow" id="heroEnter"
-    style="position:absolute;bottom:48px;left:50%;transform:translateX(-50%);white-space:nowrap;background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:8px 24px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;z-index:5">
-    Entrer
-  </button>
 </section>
 
 
