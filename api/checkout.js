@@ -1,0 +1,88 @@
+/**
+ * POST /api/checkout
+ *
+ * Crée une Stripe Checkout Session pour les plans standard.
+ *
+ * Body: { plan: 'starter' | 'pro' | 'elite' }
+ *
+ * Env vars requises :
+ *   STRIPE_SECRET_KEY
+ *   STRIPE_PRICE_STARTER  — price_... (199€/mois)
+ *   STRIPE_PRICE_PRO      — price_... (299€/mois)
+ *   STRIPE_PRICE_ELITE    — price_... (499€/mois)
+ */
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+const PLANS = {
+  starter: {
+    priceEnv: 'STRIPE_PRICE_STARTER',
+    name: 'Starter',
+    amount: 199,
+  },
+  pro: {
+    priceEnv: 'STRIPE_PRICE_PRO',
+    name: 'Pro',
+    amount: 299,
+  },
+  elite: {
+    priceEnv: 'STRIPE_PRICE_ELITE',
+    name: 'Elite',
+    amount: 499,
+  },
+};
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  try {
+    const { plan } = req.body || {};
+
+    if (!plan || !PLANS[plan]) {
+      return res.status(400).json({
+        error: `Plan invalide. Choisis: ${Object.keys(PLANS).join(', ')}`,
+      });
+    }
+
+    const config = PLANS[plan];
+    const priceId = process.env[config.priceEnv];
+
+    if (!priceId) {
+      return res.status(500).json({
+        error: `${config.priceEnv} not configured. Create price in Stripe Dashboard.`,
+      });
+    }
+
+    const origin = req.headers.origin || req.headers.referer || 'https://rbperform.app';
+    const baseUrl = origin.replace(/\/$/, '');
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{
+        price: priceId,
+        quantity: 1,
+      }],
+      subscription_data: {
+        metadata: {
+          plan: plan,
+          plan_name: config.name,
+          amount: String(config.amount),
+        },
+      },
+      success_url: `${baseUrl}/?checkout=success&plan=${plan}`,
+      cancel_url: `${baseUrl}/?checkout=cancelled&plan=${plan}`,
+      allow_promotion_codes: true,
+    });
+
+    return res.status(200).json({ url: session.url });
+  } catch (err) {
+    console.error('[checkout] Error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+};

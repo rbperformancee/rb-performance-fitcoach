@@ -2761,7 +2761,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Messagerie + push notifs</li>
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>0% commission sur tes revenus</li>
         </ul>
-        <a href="/founding" class="cta-plan magnetic">Rejoindre →</a>
+        <button class="cta-plan magnetic" onclick="startPlanCheckout('starter',this)">Commencer →</button>
       </div>
       <div class="plan featured reveal stagger-1">
         <div class="badge">Recommandé</div>
@@ -2776,7 +2776,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automatisations avancées</li>
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Rapports hebdo auto</li>
         </ul>
-        <a href="/founding" class="cta-plan magnetic">Rejoindre →</a>
+        <button class="cta-plan magnetic" onclick="startPlanCheckout('pro',this)">Commencer →</button>
       </div>
       <div class="plan reveal stagger-2">
         <div class="name">Elite</div>
@@ -2791,9 +2791,50 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Groupe privé Elite</li>
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Domaine custom inclus</li>
         </ul>
-        <a href="/founding" class="cta-plan magnetic">Rejoindre →</a>
+        <button class="cta-plan magnetic" onclick="startPlanCheckout('elite',this)">Commencer →</button>
       </div>
     </div>
+
+    <!-- Checkout JS pour les 3 plans -->
+    <script>
+    // MODE LANCEMENT : true = tout redirige vers /founding
+    // Quand les 50 places sont prises, passe à false pour activer les plans Stripe
+    var FOUNDING_MODE = true;
+
+    function startPlanCheckout(plan, btn) {
+      if (FOUNDING_MODE) {
+        window.location.href = '/founding';
+        return;
+      }
+      var originalText = btn.textContent;
+      btn.textContent = 'Redirection...';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+
+      fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: plan })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert(data.error || 'Erreur. Contacte rb.performancee@gmail.com');
+          btn.textContent = originalText;
+          btn.disabled = false;
+          btn.style.opacity = '1';
+        }
+      })
+      .catch(function() {
+        alert('Erreur réseau. Réessaie.');
+        btn.textContent = originalText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      });
+    }
+    </script>
 
     <!-- FAQ toggle — standalone pour éviter tout crash -->
     <script>
