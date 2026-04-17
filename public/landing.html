@@ -1412,28 +1412,46 @@ html.light .founder-message strong{color:#0a0a0a}
     bottom: 28px !important;
   }
 
-  /* HOW / SYSTEME — tout compact */
-  section.how { padding: 72px 16px 48px !important; }
-  .how-inner { padding: 0 !important; max-width: 100% !important; }
-  section.how > div:first-child { padding: 0 !important; max-width: 100% !important; }
-  section.how > div:first-child > div[style*="grid-template-columns:repeat(3"] {
+  /* HOW / SYSTEME — tout compact, rien ne déborde */
+  section.how { padding: 0 !important; }
+  section.how > * { max-width: 100% !important; overflow: hidden !important; }
+  section.how > div[style*="text-align:center"] {
+    padding: 72px 16px 32px !important;
+    max-width: 100% !important;
+  }
+  section.how h2[style] {
+    font-size: clamp(28px,7.5vw,44px) !important;
+    max-width: 100% !important;
+    display: block !important;
+    word-break: break-word !important;
+  }
+  section.how div[style*="grid-template-columns:repeat(3"] {
     grid-template-columns: 1fr !important;
-    gap: 20px !important;
+    gap: 16px !important;
+    max-width: 100% !important;
+    padding: 0 16px !important;
   }
-  section.how > div:first-child > div[style*="grid-template-columns:repeat(3"] > div[style*="border-right"],
-  section.how > div:first-child > div[style*="grid-template-columns:repeat(3"] > div[style*="border-left"] {
-    border: none !important;
+  section.how div[style*="grid-template-columns:repeat(3"] > div[style*="position:absolute"] {
+    display: none !important;
   }
-  section.how h2[style] { font-size: clamp(32px,8vw,48px) !important; }
-  .sys-block { max-width: 100% !important; padding: 36px 16px !important; gap: 20px !important; flex-direction: column !important; }
-  .sys-left { max-width: 100% !important; }
-  .sys-title { font-size: clamp(24px,7vw,34px) !important; }
-  .sys-sub { font-size: 14px !important; }
-  .sys-right { min-height: 100px !important; width: 100% !important; }
-  .sys-ghost { font-size: clamp(60px,16vw,100px) !important; }
-  .sys-bullets span { font-size: 13px !important; }
-  .sys-stat { font-size: 11px !important; }
-  .sys-badge { font-size: 10px !important; }
+  section.how div[style*="grid-template-columns:repeat(3"] > div {
+    padding: 12px 0 !important;
+  }
+  section.how div[style*="grid-template-columns:repeat(3"] div[style*="font-size:clamp(48px"] {
+    font-size: clamp(36px,10vw,56px) !important;
+  }
+  .how-inner { padding: 0 !important; max-width: 100% !important; }
+  .sys-block { max-width: 100% !important; padding: 32px 16px !important; gap: 20px !important; flex-direction: column !important; }
+  .sys-left { max-width: 100% !important; width: 100% !important; }
+  .sys-title { font-size: clamp(22px,6.5vw,32px) !important; }
+  .sys-sub { font-size: 13px !important; }
+  .sys-right { min-height: 80px !important; width: 100% !important; }
+  .sys-ghost { font-size: clamp(50px,14vw,80px) !important; }
+  .sys-glow { width: 100px !important; height: 100px !important; }
+  .sys-bullets span { font-size: 12px !important; }
+  .sys-stat { font-size: 10px !important; }
+  .sys-badge { font-size: 9px !important; padding: 4px 10px !important; }
+  .sys-big { font-size: clamp(40px,12vw,64px) !important; }
 
   /* BENTO — padding + mission card */
   section.bento { padding: 80px 16px !important; }
