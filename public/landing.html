@@ -458,7 +458,7 @@ section.manifeste::-webkit-scrollbar{display:none}
 .plan.featured::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(0,201,167,0.08),transparent 50%);animation:planGlow 6s ease-in-out infinite;pointer-events:none}
 @keyframes planGlow{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(10%,10%) rotate(180deg)}}
 .plan > *{position:relative;z-index:2}
-.plan .badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#00C9A7;color:#080C14;font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;letter-spacing:0.15em;text-transform:uppercase;z-index:3;box-shadow:0 8px 24px rgba(0,201,167,0.35)}
+.plan .badge{position:absolute;top:-14px;left:0;right:0;margin:0 auto;width:fit-content;background:#00C9A7;color:#080C14;font-size:11px;font-weight:800;padding:4px 16px;border-radius:20px;letter-spacing:0.15em;text-transform:uppercase;z-index:3;box-shadow:0 8px 24px rgba(0,201,167,0.35);white-space:nowrap}
 .plan .name{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:-0.5px;margin-bottom:6px;font-weight:400}
 .plan .desc{font-size:13px;color:var(--text-dim);margin-bottom:26px;min-height:40px;line-height:1.5}
 .plan .price{font-family:'Bebas Neue',sans-serif;font-size:76px;line-height:1;letter-spacing:-2px;margin-bottom:2px;font-weight:400}
