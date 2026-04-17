@@ -3069,34 +3069,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
 <script>
 (function() {
-  const burger  = document.getElementById('burgerBtn');
-  const overlay = document.getElementById('menuOverlay');
-  if (!burger || !overlay) return;
-
-  function openMenu() {
-    burger.classList.add('open');
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeMenu() {
-    burger.classList.remove('open');
-    overlay.classList.remove('open');
-    overlay.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  }
-
-  burger.addEventListener('click', () => {
-    overlay.classList.contains('open')
-      ? closeMenu() : openMenu();
-  });
-
   // Fermer avec Escape
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeMenu();
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var b = document.getElementById('burgerBtn');
+      var o = document.getElementById('menuOverlay');
+      if (b) b.classList.remove('open');
+      if (o) { o.classList.remove('open'); o.setAttribute('aria-hidden','true'); }
+      document.body.style.overflow = '';
+    }
   });
-
-  // Navigation vers chapitre — geree dans le script principal
 })();
 </script>
 
