@@ -2401,30 +2401,30 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   const CoachSidebar = (
     <aside className="coach-sidebar" style={{
-      width: 56,
+      width: 220,
       background: BG,
       borderRight: "1px solid rgba(255,255,255,.06)",
       flexDirection: "column",
-      alignItems: "center",
       height: "100vh",
       position: "sticky",
       top: 0,
       overflow: "hidden",
       flexShrink: 0,
+      padding: "0 12px",
     }}>
-      {/* LOGO RB· */}
-      <div style={{ padding: "20px 0 24px", position: "relative", zIndex: 1, textAlign: "center" }}>
+      {/* LOGO */}
+      <div style={{ padding: "24px 8px 28px", position: "relative", zIndex: 1 }}>
         <div style={{
           fontFamily: "'Syne', sans-serif",
-          fontSize: 11, fontWeight: 900,
-          letterSpacing: ".08em", color: "#fff",
+          fontSize: 14, fontWeight: 900,
+          letterSpacing: ".1em", color: "#fff",
         }}>
-          RB<span style={{ color: G }}>·</span>
+          RB<span style={{ color: G }}>PERFORM</span>
         </div>
       </div>
 
-      {/* NAV ICONS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, alignItems: "center", position: "relative", zIndex: 1 }}>
+      {/* NAV ITEMS */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, position: "relative", zIndex: 1 }}>
         {[...navItems, { id: "pipeline", label: "Pipeline", icon: "view", group: "outils" }].map(n => {
           const isActive = activeTab === n.id;
           return (
@@ -2432,42 +2432,58 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               key={n.id}
               onClick={() => sidebarOnNav(n.id)}
               className="coach-nav-item"
-              title={n.label}
               style={{
-                width: 40, height: 40,
-                display: "flex", alignItems: "center", justifyContent: "center",
+                width: "100%",
+                padding: "10px 12px",
+                display: "flex", alignItems: "center", gap: 12,
                 borderRadius: 10,
-                background: isActive ? "rgba(0,201,167,.1)" : "transparent",
+                background: isActive ? "rgba(0,201,167,.08)" : "transparent",
                 border: "none", cursor: "pointer",
                 transition: "all .18s ease",
                 position: "relative",
                 fontFamily: "inherit",
+                textAlign: "left",
               }}
             >
               {isActive && <div style={{ position: "absolute", left: -12, top: "50%", transform: "translateY(-50%)", width: 3, height: 18, background: G, borderRadius: "0 3px 3px 0" }} />}
               <Icon name={n.icon} size={18} color={isActive ? G : "rgba(255,255,255,.35)"} />
+              <span style={{
+                fontSize: 13, fontWeight: isActive ? 700 : 500,
+                color: isActive ? "#fff" : "rgba(255,255,255,.4)",
+                letterSpacing: "0.01em",
+              }}>{n.label}</span>
               {n.badge > 0 && (
-                <div style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: RED, border: `2px solid ${BG}` }} />
+                <div style={{ marginLeft: "auto", minWidth: 18, height: 18, borderRadius: 100, background: "rgba(255,107,107,.15)", border: "1px solid rgba(255,107,107,.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: RED }}>{n.badge}</div>
               )}
             </button>
           );
         })}
       </div>
 
-      {/* COACH AVATAR */}
-      <div style={{ margin: "auto 0 20px", position: "relative", zIndex: 1 }}>
+      {/* COACH PROFILE */}
+      <div style={{ padding: "16px 0 20px", position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,.04)" }}>
         <button
           onClick={() => { haptic.light(); setShowSettings(true); }}
-          title={coachName}
           style={{
-            width: 36, height: 36, borderRadius: "50%",
+            width: "100%", padding: "10px 8px",
+            display: "flex", alignItems: "center", gap: 10,
+            background: "transparent", border: "none",
+            cursor: "pointer", borderRadius: 10,
+            fontFamily: "inherit", textAlign: "left",
+          }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
             background: "rgba(0,201,167,.08)",
             border: "1px solid rgba(0,201,167,.15)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontFamily: "'Syne', sans-serif",
-            fontSize: 11, fontWeight: 900, color: G,
-            cursor: "pointer",
-          }}>{coachInitials}</button>
+            fontSize: 10, fontWeight: 900, color: G, flexShrink: 0,
+          }}>{coachInitials}</div>
+          <div style={{ overflow: "hidden" }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coachName}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)" }}>Paramètres</div>
+          </div>
+        </button>
       </div>
     </aside>
   );
