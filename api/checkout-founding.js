@@ -50,8 +50,8 @@ module.exports = async (req, res) => {
           locked_price: '199',
         },
       },
-      success_url: `${baseUrl}/founding.html?success=true`,
-      cancel_url: `${baseUrl}/founding.html?cancelled=true`,
+      success_url: `${baseUrl}/founding?success=true`,
+      cancel_url: `${baseUrl}/founding?cancelled=true`,
       allow_promotion_codes: true,
     });
 

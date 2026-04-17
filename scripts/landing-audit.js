@@ -91,17 +91,17 @@ const internalLinks = [...hrefs].filter(h => h.startsWith('/') && !h.startsWith(
 internalLinks.forEach(link => {
   const cleanLink = link.split('?')[0].split('#')[0];
   if (cleanLink === '/' || cleanLink === '') return;
+  // Check for Vercel rewrites first
+  const vercelRewrites = ['/demo', '/demo-client', '/login', '/signup', '/join', '/founding'];
+  if (vercelRewrites.includes(cleanLink)) {
+    pass(`Internal link ${link} → Vercel rewrite`);
+    return;
+  }
   const filePath = path.join(publicDir, cleanLink);
   if (fs.existsSync(filePath)) {
     pass(`Internal link ${link} → file exists`);
   } else {
-    // Check if it's a Vercel rewrite
-    const rewrites = ['/demo', '/demo-client', '/login', '/signup', '/join'];
-    if (rewrites.includes(cleanLink)) {
-      pass(`Internal link ${link} → Vercel rewrite`);
-    } else {
-      warn(`Internal link ${link} → file NOT found (may be rewrite)`);
-    }
+    warn(`Internal link ${link} → file NOT found (may be rewrite)`);
   }
 });
 
@@ -134,8 +134,8 @@ const foundingPath = path.join(publicDir, 'founding.html');
 if (fs.existsSync(foundingPath)) {
   const founding = fs.readFileSync(foundingPath, 'utf8');
 
-  if (founding.includes('149')) pass('Price 149€ present');
-  else fail('Price 149€ MISSING');
+  if (founding.includes('199')) pass('Price 199€ present');
+  else fail('Price 199€ MISSING');
 
   if (founding.includes('299')) pass('Crossed-out price 299€ present');
   else fail('Crossed-out price 299€ MISSING');
@@ -237,9 +237,9 @@ if (rewrites.some(r => r.source === '/demo-client'))
 else warn('/demo-client rewrite missing');
 
 // Check if founding.html needs a rewrite
-if (rewrites.some(r => r.destination === '/founding.html'))
+if (rewrites.some(r => r.destination === '/founding'))
   pass('/founding rewrite configured');
-else warn('No /founding rewrite — direct access via /founding.html only');
+else warn('No /founding rewrite — direct access via /founding only');
 
 // ===== RESULTS =====
 console.log('\n' + '='.repeat(50));

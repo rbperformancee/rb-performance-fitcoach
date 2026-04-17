@@ -5,7 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Founding Coach — RB Perform</title>
 <meta name="description" content="Rejoins les 50 premiers coachs. Plan Pro à 199€/mois verrouillé à vie au lieu de 299€.">
-<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Founding Coach — 199€/mois verrouillé à vie">
+<meta property="og:description" content="50 places. Plan Pro complet. Anti-churn IA, dashboard MRR, app client. Le prix d'aujourd'hui est ton prix à vie.">
+<meta property="og:url" content="https://rbperform.app/founding">
+<meta property="og:image" content="https://rbperform.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Founding Coach — RB Perform">
+<meta name="twitter:description" content="50 places. Plan Pro à 199€/mois verrouillé à vie.">
+<meta name="twitter:image" content="https://rbperform.app/og-image.png">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -89,8 +97,8 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
 <div class="page">
   <div class="content">
 
-    <a href="/landing.html" class="back">← Retour</a>
-    <a href="/landing.html" class="logo">RB<span>PERFORM</span></a>
+    <a href="/" class="back">← Retour</a>
+    <a href="/" class="logo">RB<span>PERFORM</span></a>
 
     <div class="badge"><span class="dot"></span>Founding Coach Program</div>
 
@@ -216,6 +224,32 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       Garantie 30 jours — Si RB Perform n'identifie pas au moins 1 client à risque, remboursement intégral.
     </div>
+
+    <!-- Email capture fallback -->
+    <div style="text-align:center;margin-top:32px;padding-top:32px;border-top:.5px solid rgba(255,255,255,0.04)">
+      <div style="font-size:13px;color:rgba(255,255,255,0.25);margin-bottom:12px">Pas encore prêt ? Sois notifié au lancement.</div>
+      <form id="notifyForm" onsubmit="submitNotify(event)" style="display:flex;gap:8px;max-width:380px;margin:0 auto">
+        <input type="email" id="notifyEmail" required placeholder="ton@email.com" style="flex:1;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(0,201,167,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+        <button type="submit" style="padding:12px 20px;background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);border-radius:10px;color:#00C9A7;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(0,201,167,0.15)'" onmouseout="this.style.background='rgba(0,201,167,0.1)'">Notifier</button>
+      </form>
+      <div id="notifySuccess" style="display:none;font-size:13px;color:#00C9A7;margin-top:12px">Tu seras notifié. À bientôt.</div>
+    </div>
+
+    <script>
+    function submitNotify(e) {
+      e.preventDefault();
+      var email = document.getElementById('notifyEmail').value;
+      // Envoyer à Supabase ou un endpoint
+      fetch('/api/notify-founding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      }).catch(function(){});
+      // Toujours montrer le succès (même si l'API échoue)
+      document.getElementById('notifyForm').style.display = 'none';
+      document.getElementById('notifySuccess').style.display = 'block';
+    }
+    </script>
 
   </div>
 

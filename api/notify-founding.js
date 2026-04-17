@@ -1,0 +1,46 @@
+/**
+ * POST /api/notify-founding
+ *
+ * Stocke l'email d'un prospect intéressé par le Founding Coach Program.
+ * Sauvegarde dans Supabase table `founding_waitlist`.
+ *
+ * Body: { email: string }
+ */
+
+const { createClient } = require('@supabase/supabase-js');
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  try {
+    const { email } = req.body || {};
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Email invalide' });
+    }
+
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      await supabase.from('founding_waitlist').upsert(
+        { email: email.toLowerCase().trim(), created_at: new Date().toISOString() },
+        { onConflict: 'email' }
+      );
+    } else {
+      // Fallback: log to console (visible in Vercel logs)
+      console.log('[founding-waitlist]', email);
+    }
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('[notify-founding] Error:', err.message);
+    // Always return success to user (email captured or not, UX stays clean)
+    return res.status(200).json({ ok: true });
+  }
+};
