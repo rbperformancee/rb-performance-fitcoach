@@ -54,7 +54,7 @@ const G = "#00C9A7";
 const ORANGE = "#00C9A7";
 const VIOLET = "#00C9A7";
 const RED = "#ff6b6b";
-const BG = "#080C14";
+const BG = "#050505";
 const PREMIUM_STYLES = {
   card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)" },
   badge: (color) => ({ display: "inline-flex", alignItems: "center", gap: 4, background: color + "12", border: "1px solid " + color + "25", color, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, letterSpacing: 0.5 }),
@@ -2844,8 +2844,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       {MobileTopBar}
 
       <div className="coach-main-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 56px 40px", position: "relative", overflow: "hidden" }}>
-        {/* Glow teal subtil haut droite — clippe par overflow hidden */}
-        <div style={{ position: "absolute", top: -100, right: -50, width: 400, height: 400, background: "radial-gradient(circle, rgba(0,201,167,0.04), transparent 65%)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
+        {/* Ambiance gradients */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "60%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.15) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "40%", background: "radial-gradient(ellipse at 50% 120%, rgba(2,209,186,0.06) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
