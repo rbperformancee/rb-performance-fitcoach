@@ -2511,12 +2511,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   );
 
   // ===== FLOATING PILL MOBILE =====
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setActiveTab("overview"); } },
-    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setShowAnalytics(false); setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setActiveTab("programmes"); } },
-    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setActiveTab("business"); } },
-    { id: "profile",     icon: "flame",       label: "Compte",    onClick: () => { setShowClientList(false); setShowAnalytics(false); setShowSettings(true); } },
+    { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("overview"); } },
+    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
+    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
+    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("business"); } },
+    { id: "more",        icon: "plus",        label: "Plus",      onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   const FloatingPill = (
     <nav className="coach-floating-pill" style={{
@@ -2537,7 +2538,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1)",
     }}>
       {pillItems.map((p) => {
-        const isActive = (p.id === "profile" && showSettings) || (!showSettings && activeTab === p.id);
+        const isActive = (p.id === "more" && (showSettings || showAnalytics || showMoreMenu)) || (!showSettings && !showAnalytics && !showMoreMenu && activeTab === p.id);
         return (
           <button
             key={p.id}
@@ -2558,6 +2559,47 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       })}
     </nav>
   );
+
+  // ===== MORE MENU (popup above pill) =====
+  const MoreMenu = showMoreMenu ? (
+    <div style={{
+      position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)",
+      left: "50%", transform: "translateX(-50%)",
+      zIndex: 260, background: "rgba(15,15,15,0.95)",
+      border: "1px solid rgba(255,255,255,0.1)",
+      borderRadius: 16, padding: 6,
+      backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+      display: "flex", flexDirection: "column", gap: 2,
+      minWidth: 180, animation: "fadeUp 0.2s ease both",
+      boxShadow: "0 -10px 40px rgba(0,0,0,0.5)",
+    }}>
+      {[
+        { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowAnalytics(true); } },
+        { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowPipeline(true); } },
+        { icon: "flame",    label: "Compte",    onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(true); } },
+      ].map((item) => (
+        <button key={item.label} onClick={item.onClick} style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "12px 16px", borderRadius: 12,
+          background: "transparent", border: "none",
+          color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 500,
+          cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+          transition: "background 0.15s",
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+        >
+          <Icon name={item.icon} size={18} color={G} />
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ) : null;
+
+  // Fermer le more menu si on clique ailleurs
+  const MoreMenuBackdrop = showMoreMenu ? (
+    <div onClick={() => setShowMoreMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 255, background: "transparent" }} />
+  ) : null;
 
   // ========== ONBOARDING GATE ==========
   // Si coach pas encore onboarde (et pas en mode demo), afficher le
@@ -2850,6 +2892,23 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               </div>
             ))}
           </div>
+
+          {/* ========== ANALYSE CONTEXTUELLE (comme panel client) ========== */}
+          {clients.length > 0 && (
+            <div className="dash-card" style={{ padding: "20px 24px", marginBottom: 24, cursor: "default" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88`, marginBottom: 10 }}>Situation</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
+                {(() => {
+                  const retPct = total > 0 ? Math.round((activeWeek / total) * 100) : 0;
+                  const arrEst = Math.round(mrr * 12);
+                  if (businessScore >= 80) return `Ton business est solide. ${total} clients actifs, ${retPct}% de rétention, ${arrEst.toLocaleString()}€ d'ARR estimé. Continue de maintenir cette dynamique.`;
+                  if (businessScore >= 60) return `Ton business tourne correctement. ${urgentCount > 0 ? `${urgentCount} client${urgentCount > 1 ? 's' : ''} mérite${urgentCount > 1 ? 'nt' : ''} ton attention — un message proactif peut tout changer.` : `Ta rétention est à ${retPct}%, regarde si tu peux passer au-dessus de 90%.`}`;
+                  if (businessScore >= 40) return `Attention : ton score business est à ${businessScore}/100. ${urgentCount > 0 ? `${urgentCount} client${urgentCount > 1 ? 's sont' : ' est'} à risque.` : ''} Concentre-toi sur la rétention avant d'acquérir de nouveaux clients.`;
+                  return `Score critique : ${businessScore}/100. ${urgentCount} client${urgentCount > 1 ? 's' : ''} en décrochage. Action immédiate nécessaire — ouvre la liste clients et contacte les profils à risque.`;
+                })()}
+              </div>
+            </div>
+          )}
 
           {/* ========== ALERTE URGENTE ========== */}
           {urgentCount > 0 && (
@@ -3147,7 +3206,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         </div>
       </div>
       </main>
-      {/* FloatingPill cachee quand un panel client est ouvert (panel = position:fixed plein ecran) */}
+      {/* FloatingPill + More menu */}
+      {MoreMenuBackdrop}
+      {MoreMenu}
       {FloatingPill}
     </div>
   );
