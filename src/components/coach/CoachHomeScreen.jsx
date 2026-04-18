@@ -115,7 +115,7 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
       <div style={{ flex: 1, minHeight: 20 }} />
 
       {/* FLOATING PILL — identique au client */}
-      <nav style={{ position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0, background: "rgba(15,15,15,0.75)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 100, padding: 5, zIndex: 101, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
+      <nav onClick={(e) => e.stopPropagation()} style={{ position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0, background: "rgba(15,15,15,0.75)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 100, padding: 5, zIndex: 101, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
         {[
           { id: "overview", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>, active: true },
           { id: "clients", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg> },
