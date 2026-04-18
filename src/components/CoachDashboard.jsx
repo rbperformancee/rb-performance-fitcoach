@@ -2851,47 +2851,24 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== OVERVIEW (exclusif — masque quand autre tab active) ========== */}
           {!showClientList && activeTab === "overview" && (<>
 
-          {/* ========== AMBIENT GLOW (comme client) ========== */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "60%", background: "radial-gradient(ellipse at 50% -10%, rgba(0,201,167,0.12) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
-
-          {/* ========== TOP BAR — date + heure (comme client Tesla) ========== */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, position: "relative", zIndex: 2, marginBottom: 8 }}>
+          {/* ========== OVERVIEW HEADER (compact — le home screen fait le wow) ========== */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 2, marginBottom: 24 }}>
             <div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>
-                {(() => { const d = new Date(); const days = ["DIM","LUN","MAR","MER","JEU","VEN","SAM"]; const months = ["JAN","FEV","MAR","AVR","MAI","JUN","JUL","AOU","SEP","OCT","NOV","DEC"]; return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`; })()}
-              </div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 400, letterSpacing: "1px", marginBottom: 6 }}>
                 {new Date().getHours() < 6 ? "On grind" : new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : new Date().getHours() < 22 ? "Bonsoir" : "Late session"}
               </div>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 9vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0, wordBreak: "break-word" }}>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(24px, 6vw, 36px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0 }}>
                 {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
               </h1>
-              {clients.length > 0 && urgentCount === 0 && (
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 8, fontWeight: 400 }}>
-                  {total} client{total > 1 ? "s" : ""} · Tout roule.
-                </div>
-              )}
-              {clients.length > 0 && urgentCount > 0 && (
-                <div style={{ fontSize: 12, color: "rgba(255,107,107,0.6)", marginTop: 8, fontWeight: 500 }}>
-                  {urgentCount} client{urgentCount > 1 ? "s" : ""} {urgentCount > 1 ? "demandent" : "demande"} ton attention.
-                </div>
-              )}
             </div>
-            {/* Heure + anneau score + notif bell mobile */}
-            <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-              <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 38, fontWeight: 400, color: "rgba(255,255,255,0.8)", letterSpacing: "-1px", lineHeight: 1 }}>
-                {String(new Date().getHours()).padStart(2,"0")}:{String(new Date().getMinutes()).padStart(2,"0")}
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-                <div style={{ position: "relative", width: 52, height: 52 }}>
-                  <svg width="52" height="52" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-                    <circle cx="50" cy="50" r="40" fill="none" stroke={G} strokeWidth="8" strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - businessScore / 100)}`}
-                      style={{ filter: "drop-shadow(0 0 6px rgba(0,201,167,0.8))" }} />
-                  </svg>
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: G }}>{businessScore}</div>
-                </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ position: "relative", width: 44, height: 44 }}>
+                <svg width="44" height="44" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+                  <circle cx="50" cy="50" r="40" fill="none" stroke={G} strokeWidth="8" strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - businessScore / 100)}`} />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: G }}>{businessScore}</div>
               </div>
               <div className="coach-mobile-bell" style={{ display: "none" }}>
                 <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
@@ -2899,25 +2876,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             </div>
           </div>
 
-          {/* ========== DIVIDER GRADIENT (comme client) ========== */}
-          <div style={{ height: 1, background: "linear-gradient(90deg, rgba(0,201,167,0.3) 0%, rgba(255,255,255,0.05) 100%)", position: "relative", zIndex: 2, margin: "24px 0" }} />
-
-          {/* ========== 3 STATS TESLA (comme client) ========== */}
-          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 0, marginBottom: 32, position: "relative", zIndex: 2, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          {/* ========== 3 STATS COMPACT ========== */}
+          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 24, position: "relative", zIndex: 2 }}>
             {[
-              { v: businessScore, l: "SCORE", sub: businessScore > 75 ? "Excellent" : businessScore >= 50 ? "Correct" : "À surveiller", suffix: "", color: businessScore > 75 ? G : businessScore >= 50 ? "#fff" : "#ff6b6b" },
-              { v: mrr, l: "MRR", sub: `${Math.round(mrr * 12).toLocaleString()}€/an`, suffix: " €", color: G },
-              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RÉTENTION", sub: `${activeWeek}/${total} actifs`, suffix: "%", color: "rgba(255,255,255,0.5)" },
+              { v: total, l: "CLIENTS", color: "#fff" },
+              { v: mrr.toLocaleString() + "€", l: "MRR", color: G },
+              { v: (total > 0 ? Math.round((activeWeek / total) * 100) : 0) + "%", l: "RÉTENTION", color: "rgba(255,255,255,0.5)" },
             ].map((m, i) => (
-              <div key={i} className="dash-metric-card" style={{
-                paddingTop: 16,
-                textAlign: "left",
-              }}>
-                <div className="dash-countup" data-target={typeof m.v === "number" ? m.v : 0} data-suffix={m.suffix} style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(32px, 8vw, 52px)", fontWeight: 400, color: m.color, letterSpacing: "-1px", lineHeight: 1 }}>
-                  {typeof m.v === "number" ? m.v.toLocaleString() : m.v}{m.suffix}
-                </div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", marginTop: 8 }}>{m.l}</div>
-                {m.sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.12)", marginTop: 3 }}>{m.sub}</div>}
+              <div key={i} className="dash-card" style={{ padding: "14px 16px" }}>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, fontWeight: 400, color: m.color, letterSpacing: "-1px", lineHeight: 1 }}>{m.v}</div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginTop: 6 }}>{m.l}</div>
               </div>
             ))}
           </div>
