@@ -191,7 +191,7 @@ const overlay = {
   backdropFilter: "blur(12px)",
   WebkitBackdropFilter: "blur(12px)",
   display: "flex", alignItems: "center", justifyContent: "center",
-  padding: "6vh 16px",
+  padding: "max(6vh, 56px) 16px 16px",
   animation: "aiFadeIn .18s ease both",
   fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
   color: "#fff",

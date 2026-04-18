@@ -3180,13 +3180,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   </h1>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={() => { haptic.selection(); setShowInvite(true); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 12px", background: "rgba(255,255,255,.04)", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 100, color: "rgba(255,255,255,.75)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px", transition: "background .15s" }}>
-                    <Icon name="message" size={11} color="rgba(255,255,255,.75)" />
-                    Inviter
+                  <button onClick={() => { haptic.selection(); setShowInvite(true); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, background: "rgba(255,255,255,.04)", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 100, color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .15s" }}>
+                    <Icon name="message" size={14} color="rgba(255,255,255,.75)" />
                   </button>
-                  <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 14px", background: showAdd ? "rgba(255,255,255,0.04)" : "#02d1ba", border: showAdd ? "1px solid rgba(255,255,255,0.1)" : "none", borderRadius: 100, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", fontSize: 10, fontWeight: 700, cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px" }}>
-                    <Icon name={showAdd ? "x" : "plus"} size={11} />
-                    {showAdd ? "Annuler" : "Ajouter"}
+                  <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, background: showAdd ? "rgba(255,255,255,0.04)" : "#02d1ba", border: showAdd ? "1px solid rgba(255,255,255,0.1)" : "none", borderRadius: 100, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)" }}>
+                    <Icon name={showAdd ? "x" : "plus"} size={14} />
                   </button>
                 </div>
               </div>

@@ -845,19 +845,19 @@ function AppInner() {
   if (authLoading) {
     return (
       <div style={{
-        minHeight: "100vh", background: "#0d0d0d",
+        minHeight: "100vh", background: "#050505",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       }}>
-        <Spinner variant="dots" size={36} label="Chargement" />
+        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.12em", color: "rgba(255,255,255,0.15)" }}>RB<span style={{ color: "rgba(2,209,186,0.3)" }}>PERFORM</span></div>
       </div>
     );
   }
 
-  // ── Demo client en cours de connexion → loading (pas la landing) ──
+  // ── Demo client en cours de connexion → loading avec splash ──
   if (!user && isClientDemo) {
     return (
-      <div style={{ minHeight: "100vh", background: "#080C14", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <Spinner variant="dots" size={36} />
+      <div style={{ minHeight: "100vh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.12em", color: "rgba(255,255,255,0.15)" }}>RB<span style={{ color: "rgba(2,209,186,0.3)" }}>PERFORM</span></div>
         <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Chargement démo client...</div>
       </div>
     );
