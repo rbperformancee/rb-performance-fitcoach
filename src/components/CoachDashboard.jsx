@@ -2027,10 +2027,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showCmdK, setShowCmdK] = useState(false);
 
   // Sentinel gating: Pro/Elite/Founding only, behind feature flag
-  const sentinelEnabled = process.env.REACT_APP_SENTINEL_ENABLED === "true" || coachData?.features?.sentinel_beta === true;
-  const SENTINEL_PLANS = ["pro", "elite"];
-  const isFounding = coachData?.is_founding === true;
-  const hasSentinelAccess = isFounding || SENTINEL_PLANS.includes(coachData?.subscription_plan);
+  const sentinelEnabled = true; // TODO: re-enable gating after beta — was: process.env.REACT_APP_SENTINEL_ENABLED === "true" || coachData?.features?.sentinel_beta === true
+  const hasSentinelAccess = true; // TODO: re-enable plan check — was: isFounding || SENTINEL_PLANS.includes(coachData?.subscription_plan)
   const [activeTab, setActiveTab] = useState("overview");
   const [pillVisible, setPillVisible] = useState(true);
   const [showCoachHome, setShowCoachHome] = useState(true);
