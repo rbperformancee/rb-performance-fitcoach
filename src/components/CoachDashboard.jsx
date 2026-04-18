@@ -2416,10 +2416,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       borderRight: "1px solid rgba(255,255,255,.06)",
       flexDirection: "column",
       height: "100vh",
-      position: "sticky",
+      position: "fixed",
       top: 0,
+      left: 0,
       overflow: "hidden",
-      flexShrink: 0,
       padding: "0 12px",
       zIndex: 500,
     }}>
@@ -2655,6 +2655,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-mobile-bell{display:block !important}
           .coach-client-panel-inner{padding:0 16px 120px !important}
           .coach-client-panel,.coach-overlay-panel{position:fixed !important;left:0 !important}
+          .coach-main{margin-left:0 !important}
         }
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
@@ -2766,6 +2767,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         overflowX: "hidden",
         WebkitOverflowScrolling: "touch",
         position: "relative",
+        marginLeft: 220,
       }}>
       {MobileTopBar}
 
