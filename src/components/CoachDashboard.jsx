@@ -2853,43 +2853,64 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== OVERVIEW (exclusif — masque quand autre tab active) ========== */}
           {!showClientList && activeTab === "overview" && (<>
 
-          {/* ========== OVERVIEW HEADER (compact — le home screen fait le wow) ========== */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 2, marginBottom: 24 }}>
-            <div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 400, letterSpacing: "1px", marginBottom: 6 }}>
-                {new Date().getHours() < 6 ? "On grind" : new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : new Date().getHours() < 22 ? "Bonsoir" : "Late session"}
-              </div>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(24px, 6vw, 36px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0 }}>
-                {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
-              </h1>
+          {/* ========== HERO (identique au format FuelPage / client panel) ========== */}
+          <div style={{ padding: "8px 24px 0", position: "relative", zIndex: 2 }}>
+            <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Dashboard</div>
+            <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>
+              {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ position: "relative", width: 44, height: 44 }}>
-                <svg width="44" height="44" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
+              {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            </div>
+          </div>
+
+          {/* ========== SCORE CARD (même format que FuelPage score énergie) ========== */}
+          <div style={{ margin: "20px 24px", background: "rgba(255,255,255,0.025)", border: `1px solid ${G}33`, borderRadius: 22, padding: 20, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -40, right: -40, width: 140, height: 140, background: `radial-gradient(circle, ${G}14 0%, transparent 70%)`, pointerEvents: "none" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+              <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
+                <svg width="52" height="52" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
                   <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
                   <circle cx="50" cy="50" r="40" fill="none" stroke={G} strokeWidth="8" strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - businessScore / 100)}`} />
+                    strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - businessScore / 100)}`}
+                    style={{ filter: `drop-shadow(0 0 6px ${G}cc)` }} />
                 </svg>
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: G }}>{businessScore}</div>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: G }}>{businessScore}</div>
               </div>
-              <div className="coach-mobile-bell" style={{ display: "none" }}>
-                <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Score business</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, fontStyle: "italic" }}>
+                  "{businessScore >= 80 ? "Ton business est solide." : businessScore >= 60 ? "Correctement. Quelques ajustements." : businessScore >= 40 ? "Attention. Rétention à surveiller." : "Action requise. Interviens."}"
+                </div>
               </div>
             </div>
           </div>
 
-          {/* ========== 3 STATS COMPACT ========== */}
-          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 24, position: "relative", zIndex: 2 }}>
-            {[
-              { v: total, l: "CLIENTS", color: "#fff" },
-              { v: mrr.toLocaleString() + "€", l: "MRR", color: G },
-              { v: (total > 0 ? Math.round((activeWeek / total) * 100) : 0) + "%", l: "RÉTENTION", color: "rgba(255,255,255,0.5)" },
-            ].map((m, i) => (
-              <div key={i} className="dash-card" style={{ padding: "14px 16px" }}>
-                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, fontWeight: 400, color: m.color, letterSpacing: "-1px", lineHeight: 1 }}>{m.v}</div>
-                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginTop: 6 }}>{m.l}</div>
+          {/* ========== STATS (même format que FuelPage macros) ========== */}
+          <div style={{ margin: "0 24px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 22, padding: 20, position: "relative", zIndex: 2 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>MRR</div>
+                <div style={{ fontSize: 38, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
+                  {mrr.toLocaleString("fr-FR")}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}>€/mois</span>
+                </div>
               </div>
-            ))}
+              <div style={{ background: `${G}18`, border: `1px solid ${G}33`, borderRadius: 100, padding: "4px 12px", fontSize: 11, color: G, fontWeight: 600 }}>
+                {Math.round(mrr * 12).toLocaleString("fr-FR")}€/an
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 0 }}>
+              {[
+                { v: total, l: "Clients", color: "#fff" },
+                { v: activeWeek, l: "Actifs 7j", color: G },
+                { v: (total > 0 ? Math.round((activeWeek / total) * 100) : 0) + "%", l: "Rétention", color: "rgba(255,255,255,0.5)" },
+              ].map((s, i) => (
+                <div key={i} style={{ flex: 1, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, textAlign: i === 0 ? "left" : i === 2 ? "right" : "center" }}>
+                  <div style={{ fontSize: 24, fontWeight: 200, color: s.color, letterSpacing: "-1px", lineHeight: 1 }}>{s.v}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ========== ANALYSE CONTEXTUELLE (comme panel client) ========== */}
