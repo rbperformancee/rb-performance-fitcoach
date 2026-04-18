@@ -66,6 +66,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
 
   return (
     <div style={wrap}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.1) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
       <style>{`
         .set-input:focus { border-color: ${G} !important; background: rgba(2,209,186,.03) !important; outline: none; }
         .set-tab:hover { color: rgba(255,255,255,.75) !important; }
@@ -555,7 +556,7 @@ function Toggle({ label, sub, defaultChecked = false }) {
 // ===== STYLES =====
 const wrap = {
   position: "fixed", inset: 0, zIndex: 200,
-  background: "#080C14",
+  background: "#050505",
   fontFamily: "'DM Sans', -apple-system, sans-serif",
   color: "#fff",
   overflowY: "auto",

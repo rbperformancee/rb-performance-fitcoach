@@ -74,9 +74,10 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
       role="dialog"
       aria-modal="true"
       aria-label="Pipeline clients"
-      style={{ position: "fixed", inset: 0, zIndex: 600, background: "#080C14", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
+      style={{ position: "fixed", inset: 0, zIndex: 600, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
     >
       <style>{`@keyframes kanFade{from{opacity:0}to{opacity:1}} @keyframes kanSlide{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.12) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       {/* Header */}
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 12px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
