@@ -1103,13 +1103,16 @@ function AppInner() {
   // ── Coach → dashboard coach normal ──
   if (isCoach && showCoachDash) {
     return (
-      <CoachDashboard
-        coachId={coachId}
-        coachData={coachData}
-        onExit={() => setShowCoachDash(false)}
-        onSwitchToSuperAdmin={isSuperAdmin ? () => setShowSuperAdmin(true) : null}
-        isDemo={isDemo}
-      />
+      <>
+        <CoachDashboard
+          coachId={coachId}
+          coachData={coachData}
+          onExit={() => setShowCoachDash(false)}
+          onSwitchToSuperAdmin={isSuperAdmin ? () => setShowSuperAdmin(true) : null}
+          isDemo={isDemo}
+        />
+        <ToastProvider />
+      </>
     );
   }
 
@@ -1179,6 +1182,7 @@ function AppInner() {
   return (
     <div className="app-root" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <ToastProvider />
 
       {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
       {showMentions && <MentionsLegales onClose={() => setShowMentions(false)} />}

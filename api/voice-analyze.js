@@ -134,7 +134,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   // Securite : origin + rate limit (20 requetes / heure / IP)
-  if (!secureRequest(req, res, { max: 20, windowMs: 3600000 })) return;
+  if (!secureRequest(req, res, { max: 60, windowMs: 3600000 })) return;
 
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey) {
