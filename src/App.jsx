@@ -1071,13 +1071,34 @@ function AppInner() {
     );
   }
 
+  // Transition loader (lightning bolt) entre SuperAdmin et Coach
+  const [showTransition, setShowTransition] = React.useState(false);
+
   // ── Super-admin → dashboard plateforme avec toggle coach ──
   if (isSuperAdmin && isCoach && showSuperAdmin && showCoachDash) {
     return (
       <SuperAdminDashboard
-        onSwitchToCoach={() => setShowSuperAdmin(false)}
+        onSwitchToCoach={() => {
+          setShowTransition(true);
+          setTimeout(() => { setShowSuperAdmin(false); setShowTransition(false); }, 1200);
+        }}
         onExit={() => { setShowCoachDash(false); setShowSuperAdmin(false); }}
       />
+    );
+  }
+
+  {/* Transition overlay */}
+  if (showTransition) {
+    return (
+      <div style={{ position: "fixed", inset: 0, background: "#080C14", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, zIndex: 99999 }}>
+        <div style={{ width: 80, height: 80, position: "relative" }}>
+          <svg viewBox="0 0 512 512" style={{ width: "100%", height: "100%", filter: "drop-shadow(0 0 20px rgba(2,209,186,0.4))" }}>
+            <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill="transparent" stroke="#02d1ba" strokeWidth="8" strokeDasharray="1200" strokeDashoffset="1200" style={{ animation: "splashDraw 0.8s cubic-bezier(.22,1,.36,1) forwards, splashFill .2s ease 0.8s forwards" }}/>
+          </svg>
+        </div>
+        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 900, letterSpacing: 6, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>RB PERFORM</div>
+        <style>{`@keyframes splashDraw{to{stroke-dashoffset:0}}@keyframes splashFill{to{fill:#02d1ba;stroke-width:0}}`}</style>
+      </div>
     );
   }
 
