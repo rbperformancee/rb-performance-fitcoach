@@ -16,14 +16,18 @@
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+const { secureRequest } = require('./_security');
+
 module.exports = async (req, res) => {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || '';
+  res.setHeader('Access-Control-Allow-Origin', origin || 'https://rbperform.app');
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!secureRequest(req, res, { max: 10, windowMs: 3600000 })) return;
 
   try {
     const priceId = process.env.STRIPE_FOUNDING_PRICE_ID;
@@ -34,8 +38,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const origin = req.headers.origin || req.headers.referer || 'https://rbperform.app';
-    const baseUrl = origin.replace(/\/$/, '');
+    const baseUrl = 'https://rbperform.app';
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

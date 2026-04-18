@@ -36,11 +36,11 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: "Missing Supabase config" });
   }
 
-  // Rate limit basique : 1 req / 5s par IP
+  // Rate limit : 1 req / 30s par IP
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
   const now = Date.now();
-  if (lastCall[ip] && now - lastCall[ip] < 5000) {
-    return res.status(429).json({ error: "Too fast — retry in a few seconds" });
+  if (lastCall[ip] && now - lastCall[ip] < 30000) {
+    return res.status(429).json({ error: "Too fast — retry in 30 seconds" });
   }
   lastCall[ip] = now;
 

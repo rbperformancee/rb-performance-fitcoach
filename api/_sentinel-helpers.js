@@ -20,7 +20,7 @@ const SENTINEL_PLANS = ["pro", "elite"];
 
 function isAuthorizedCron(req) {
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true;
+  if (!cronSecret) return process.env.NODE_ENV !== "production";
   const auth = req.headers.authorization || "";
   return auth === `Bearer ${cronSecret}`;
 }
