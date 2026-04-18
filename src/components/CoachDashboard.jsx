@@ -2583,7 +2583,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               transition: "all .25s cubic-bezier(.22,1,.36,1)",
             }}
           >
-            <Icon name={p.icon} size={20} color={isActive ? "#000" : "rgba(255,255,255,.35)"} />
+            <Icon name={p.icon} size={20} strokeWidth={2.5} color={isActive ? "#000" : "rgba(255,255,255,.35)"} />
           </button>
         );
       })}
@@ -3243,6 +3243,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           clients={clients}
           urgentCount={urgentCount}
           onDismiss={() => setShowCoachHome(false)}
+          onNavigate={(id) => {
+            if (id === "clients") { setShowClientList(true); setActiveTab("clients"); }
+            else if (id === "more") { setShowMoreMenu(true); }
+            else { setShowClientList(false); setShowSettings(false); setActiveTab(id); }
+          }}
         />
       )}
 

@@ -2,7 +2,7 @@ import React from "react";
 
 const G = "#02d1ba";
 
-export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0, clients = [], urgentCount = 0, onDismiss }) {
+export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0, clients = [], urgentCount = 0, onDismiss, onNavigate }) {
   const _h = new Date().getHours();
   const _g = _h < 12 ? "Bonjour" : _h < 18 ? "Bon apres-midi" : "Bonsoir";
   const _fn = coachData?.full_name?.split(" ")[0] || "Coach";
@@ -117,11 +117,13 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
       {/* FLOATING PILL — identique au client */}
       <nav style={{ position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0, background: "rgba(15,15,15,0.75)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 100, padding: 5, zIndex: 101, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
         {[
-          { id: "dashboard", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>, active: true },
+          { id: "overview", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>, active: true },
           { id: "clients", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg> },
-          { id: "profile", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" /></svg> },
+          { id: "programmes", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
+          { id: "business", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg> },
+          { id: "more", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> },
         ].map(tab => (
-          <button key={tab.id} onClick={onDismiss} style={{ width: 50, height: 50, borderRadius: 100, border: "none", background: tab.active ? G : "transparent", color: tab.active ? "#000" : "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)" }}>
+          <button key={tab.id} onClick={() => { onDismiss(); if (onNavigate) onNavigate(tab.id); }} style={{ width: 50, height: 50, borderRadius: 100, border: "none", background: tab.active ? G : "transparent", color: tab.active ? "#000" : "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)" }}>
             {tab.icon}
           </button>
         ))}
