@@ -1,13 +1,15 @@
 /**
  * Calculs business du coach : MRR, retention, score, objectif, projections.
  *
- * Prix mensuels par plan (EUR) :
+ * DEPRECATED — anciennes constantes hardcodées (gardées pour rollback)
+ * Utiliser coach_plans table à la place.
  *   - 8sem  : 39€/mois
  *   - 3m    : 120€/mois
  *   - 6m    : 110€/mois
  *   - 12m   : 100€/mois
  */
 
+// DEPRECATED — use coach_plans table
 export const PLAN_MRR = {
   "8sem": 39,
   "3m": 120,
@@ -15,6 +17,7 @@ export const PLAN_MRR = {
   "12m": 100,
 };
 
+// DEPRECATED — use coach_plans table
 export const PLAN_MONTHS = {
   "8sem": 2,
   "3m": 3,
@@ -24,12 +27,13 @@ export const PLAN_MONTHS = {
 
 /**
  * Calcule le MRR du coach depuis sa liste de clients.
- * Ne compte que les abonnements actifs (status === 'active').
+ * Utilise c._plan_price (dénormalisé) si disponible, sinon fallback sur PLAN_MRR.
  */
 export function calculateMRR(clients = []) {
   return clients.reduce((sum, c) => {
-    if (c.subscription_status !== "active" || !c.subscription_plan) return sum;
-    return sum + (PLAN_MRR[c.subscription_plan] || 0);
+    if (c.subscription_status !== "active") return sum;
+    const price = Number(c._plan_price) || PLAN_MRR[c.subscription_plan] || 0;
+    return sum + price;
   }, 0);
 }
 
@@ -125,13 +129,12 @@ export function annualizedRevenue(mrr) {
  */
 export function clientsNeededForGoal(currentMrr, goal, clients = []) {
   if (goal <= 0 || currentMrr >= goal) return 0;
-  // Prix moyen des plans actifs du coach (sinon 110€/mois par defaut)
-  const active = clients.filter((c) => c.subscription_status === "active" && c.subscription_plan);
+  const active = clients.filter((c) => c.subscription_status === "active" && (c._plan_price || c.subscription_plan));
   const avg = active.length > 0
-    ? active.reduce((s, c) => s + PLAN_MRR[c.subscription_plan], 0) / active.length
-    : 110;
+    ? active.reduce((s, c) => s + (Number(c._plan_price) || PLAN_MRR[c.subscription_plan] || 0), 0) / active.length
+    : 100; // fallback neutre
   const delta = goal - currentMrr;
-  return Math.ceil(delta / avg);
+  return Math.max(1, Math.ceil(delta / avg));
 }
 
 /**
