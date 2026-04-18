@@ -26,13 +26,18 @@ export default function CoachOnboarding({ coachData, onComplete }) {
   const [saving, setSaving] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
+  // Facturation
+  const [siret, setSiret] = useState(coachData?.siret || "");
+  const [businessName, setBusinessName] = useState(coachData?.business_name || "");
+  const [businessAddress, setBusinessAddress] = useState(coachData?.business_address || "");
+  const [tvaStatus, setTvaStatus] = useState(coachData?.tva_status || "non_applicable");
 
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 6;
   const firstName = fullName.split(" ")[0] || "Coach";
 
   // Generate invite code on step 4
   useEffect(() => {
-    if (step === 4 && coachData?.id) {
+    if (step === 5 && coachData?.id) {
       const code = String(Math.floor(100000 + Math.random() * 900000));
       setInviteCode(code);
     }
@@ -67,10 +72,14 @@ export default function CoachOnboarding({ coachData, onComplete }) {
       activity: activity.trim() || null,
       city: city.trim() || null,
       logo_url: logoUrl || null,
+      siret: siret.trim() || null,
+      business_name: businessName.trim() || null,
+      business_address: businessAddress.trim() || null,
+      tva_status: tvaStatus || "non_applicable",
     };
     await supabase.from("coaches").update(payload).eq("id", coachData.id);
     setSaving(false);
-    setStep(4);
+    setStep(5);
   };
 
   const copyCode = () => {
@@ -143,10 +152,11 @@ export default function CoachOnboarding({ coachData, onComplete }) {
             </div>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.15)" }}>
               {step === 1 && "30 secondes"}
-              {step === 2 && "Presque fini"}
-              {step === 3 && "Derniers détails"}
-              {step === 4 && "Ton premier client"}
-              {step === 5 && "C'est parti"}
+              {step === 2 && "Identité visuelle"}
+              {step === 3 && "Profil public"}
+              {step === 4 && "Facturation"}
+              {step === 5 && "Ton premier client"}
+              {step === 6 && "C'est parti"}
             </div>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden" }}>
@@ -278,14 +288,76 @@ export default function CoachOnboarding({ coachData, onComplete }) {
                     <Spinner variant="dots" size={18} color="#000" />
                     Création...
                   </span>
-                ) : "Créer mon espace →"}
+                ) : "Continuer →"}
               </button>
             </div>
           </div>
         )}
 
-        {/* ===== STEP 4 : Invite ton premier client ===== */}
+        {/* ===== STEP 4 : Facturation ===== */}
         {step === 4 && (
+          <div style={{ animation: "coFade 0.4s ease both" }}>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>Facturation</div>
+            <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
+              Tes infos<br /><span style={{ color: accentColor }}>légales.</span>
+            </h1>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, marginBottom: 24 }}>
+              Obligatoire pour générer des factures conformes à tes clients.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
+              <div>
+                <div style={label}>SIRET</div>
+                <input type="text" value={siret} onChange={e => setSiret(e.target.value.replace(/[^0-9]/g, '').slice(0, 14))} placeholder="14 chiffres" inputMode="numeric" style={inputStyle} />
+              </div>
+              <div>
+                <div style={label}>Raison sociale / Nom commercial</div>
+                <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder={brandName || "Nom sur la facture"} style={inputStyle} />
+              </div>
+              <div>
+                <div style={label}>Adresse de facturation</div>
+                <input type="text" value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} placeholder="12 rue de la Paix, 75002 Paris" style={inputStyle} />
+              </div>
+              <div>
+                <div style={label}>TVA</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[
+                    { id: "non_applicable", label: "Non applicable (art. 293B)" },
+                    { id: "applicable", label: "Assujetti TVA" },
+                  ].map(t => (
+                    <button key={t.id} onClick={() => setTvaStatus(t.id)} style={{
+                      flex: 1, padding: "12px 8px", borderRadius: 12, cursor: "pointer",
+                      background: tvaStatus === t.id ? `${accentColor}12` : "rgba(255,255,255,0.02)",
+                      border: `1.5px solid ${tvaStatus === t.id ? accentColor : "rgba(255,255,255,0.06)"}`,
+                      color: tvaStatus === t.id ? accentColor : "rgba(255,255,255,0.4)",
+                      fontSize: 11, fontWeight: 600, fontFamily: "inherit", textAlign: "center",
+                      transition: "all 0.2s",
+                    }}>{t.label}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setStep(3)} style={btnBack}>←</button>
+              <button onClick={save} disabled={saving} style={btnPrimary(!saving)}>
+                {saving ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                    <Spinner variant="dots" size={18} color="#000" />
+                    Création...
+                  </span>
+                ) : "Créer mon espace →"}
+              </button>
+            </div>
+
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 16, textAlign: "center" }}>
+              Tu pourras compléter plus tard dans les paramètres.
+            </div>
+          </div>
+        )}
+
+        {/* ===== STEP 5 : Invite ton premier client ===== */}
+        {step === 5 && (
           <div style={{ animation: "coFade 0.4s ease both" }}>
             <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>Ton premier client</div>
             <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
@@ -328,7 +400,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
             </p>
 
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setStep(5)} style={{
+              <button onClick={() => setStep(6)} style={{
                 ...btnPrimary(), width: "100%",
               }}>
                 Accéder à mon dashboard →
@@ -337,8 +409,8 @@ export default function CoachOnboarding({ coachData, onComplete }) {
           </div>
         )}
 
-        {/* ===== STEP 5 : Bienvenue CEO ===== */}
-        {step === 5 && (
+        {/* ===== STEP 6 : Bienvenue CEO ===== */}
+        {step === 6 && (
           <div style={{ textAlign: "center", animation: "coFade 0.5s ease both" }}>
             <div style={{
               width: 80, height: 80, borderRadius: "50%",

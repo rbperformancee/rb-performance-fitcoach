@@ -51,8 +51,10 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
 
   doc.setFontSize(9);
   doc.setTextColor(...gray);
-  doc.text(coach?.full_name || "", M, 37);
+  doc.text(coach?.business_name || coach?.full_name || "", M, 37);
   doc.text(coach?.email || "", M, 42);
+  if (coach?.business_address) doc.text(coach.business_address, M, 47);
+  if (coach?.siret) doc.text("SIRET : " + coach.siret, M, coach?.business_address ? 52 : 47);
 
   // Badge FACTURE
   doc.setFillColor(...teal[0], teal[1], teal[2]);
@@ -159,9 +161,11 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   const legalY = totalY + 55;
   doc.setFontSize(7);
   doc.setTextColor(80, 80, 80);
-  doc.text("TVA non applicable - art. 293 B du CGI", M, legalY);
+  const tvaText = coach?.tva_status === "applicable" ? "TVA applicable" : "TVA non applicable - art. 293 B du CGI";
+  doc.text(tvaText, M, legalY);
   doc.text("Paiement par carte bancaire securise", M, legalY + 5);
-  doc.text("SIRET : 99063780300018", M, legalY + 10);
+  if (coach?.siret) doc.text("SIRET : " + coach.siret, M, legalY + 10);
+  if (coach?.business_address) doc.text(coach.business_address, M, legalY + 15);
 
   // ===== FOOTER =====
   doc.setFontSize(8);
