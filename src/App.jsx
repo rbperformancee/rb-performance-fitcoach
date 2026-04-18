@@ -51,6 +51,7 @@ import { LoginScreen } from "./components/LoginScreen";
 const SubscribePage = lazy(() => import("./components/SubscribePage"));
 const LoginPage  = lazy(() => import("./components/auth/LoginPage"));
 const SignupPage = lazy(() => import("./components/auth/SignupPage"));
+const SetPasswordPage = lazy(() => import("./components/auth/SetPasswordPage"));
 const JoinPage   = lazy(() => import("./components/client/JoinPage"));
 // ClientApp (version simplifiee 4 onglets) desactive — les clients utilisent
 // l'interface complete 5 onglets (Train/Body/Run/Fuel/Profil) dans AppInner.
@@ -427,14 +428,20 @@ function AppInner() {
   const [authRoute] = React.useState(() => {
     if (typeof window === "undefined") return null;
     const p = window.location.pathname;
+    const hash = window.location.hash;
     if (p === "/login")  return "login";
     if (p === "/signup") return "signup";
     if (p === "/join")   return "join";
+    // Supabase recovery link → page créer mot de passe
+    if (hash.includes("type=recovery") || hash.includes("type=invite")) return "set-password";
+    // Welcome param from webhook redirect
+    if (new URLSearchParams(window.location.search).get("welcome") === "true") return "set-password";
     return null;
   });
   if (authRoute === "login")  return <Suspense fallback={null}><LoginPage /></Suspense>;
   if (authRoute === "signup") return <Suspense fallback={null}><SignupPage /></Suspense>;
   if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
+  if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/"; }} /></Suspense>;
 
   // ===== MODE DEMO COACH (route /demo ou ?demo=true) =====
   const [isDemo] = React.useState(() => {
