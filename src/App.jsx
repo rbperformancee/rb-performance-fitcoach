@@ -1087,7 +1087,7 @@ function AppInner() {
     );
   }
 
-  {/* Transition overlay */}
+  // Transition overlay
   if (showTransition) {
     return (
       <div style={{ position: "fixed", inset: 0, background: "#080C14", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, zIndex: 99999 }}>
