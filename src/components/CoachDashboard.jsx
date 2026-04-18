@@ -2563,7 +2563,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     }
   };
   const FloatingPill = (
-    <nav className="coach-floating-pill" style={{
+    <nav className="coach-floating-pill"
+      onTouchStart={(e) => { pillSwipeRef.current.startX = e.touches[0].clientX; }}
+      onTouchEnd={(e) => {
+        const dx = e.changedTouches[0].clientX - pillSwipeRef.current.startX;
+        if (Math.abs(dx) > 50) handlePillSwipe(dx < 0 ? "left" : "right");
+      }}
+      style={{
       position: "fixed",
       bottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)",
       left: "50%",
@@ -2619,7 +2625,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       {[
         { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowAnalytics(true); } },
         { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowPipeline(true); } },
-        { icon: "flame",    label: "Compte",    onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(true); } },
+        { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(true); } },
       ].map((item) => (
         <button key={item.label} onClick={item.onClick} style={{
           display: "flex", alignItems: "center", gap: 12,
@@ -2733,7 +2739,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           .coach-sidebar{display:none !important}
           .coach-mobile-topbar{display:none !important}
           .coach-floating-pill{display:flex !important}
-          .coach-main-inner{padding:12px 20px 120px !important;max-width:100% !important;overflow:hidden !important}
+          .coach-main-inner{padding:0 20px 120px !important;max-width:100% !important;overflow:hidden !important}
           .coach-mobile-bell{display:block !important}
           .coach-client-panel-inner{padding:0 16px 120px !important}
           .coach-client-panel,.coach-overlay-panel{position:fixed !important;left:0 !important}
@@ -2844,11 +2850,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       {CoachSidebar}
 
       <main ref={mainScrollRef} className="coach-main"
-        onTouchStart={(e) => { pillSwipeRef.current.startX = e.touches[0].clientX; }}
-        onTouchEnd={(e) => {
-          const dx = e.changedTouches[0].clientX - pillSwipeRef.current.startX;
-          if (Math.abs(dx) > 60) handlePillSwipe(dx < 0 ? "left" : "right");
-        }}
         style={{
         flex: 1, minWidth: 0,
         overflowY: "auto",
@@ -3079,10 +3080,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "0 20px calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
             {/* Header */}
             <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
-              <button onClick={() => setShowClientList(false)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}>
-                <Icon name="arrow-left" size={12} />
-                Dashboard
-              </button>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Clients</div>
