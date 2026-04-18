@@ -134,8 +134,8 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
                 <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 2 }}>Notifications</div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>{totalCount} alerte{totalCount > 1 ? "s" : ""}</div>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <AppIcon name="x" size={12} color="rgba(255,255,255,0.5)" />
+              <button onClick={() => setOpen(false)} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, width: 44, height: 44, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <AppIcon name="x" size={18} color="rgba(255,255,255,0.85)" />
               </button>
             </div>
 

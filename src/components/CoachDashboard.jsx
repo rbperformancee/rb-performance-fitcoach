@@ -9,6 +9,7 @@ import { supabase } from "../lib/supabase";
 import { generateInvoicePDF } from "../utils/invoicePDF";
 import ProgrammeBuilder from "./ProgrammeBuilder";
 import { useClientRelance } from "../hooks/useClientRelance";
+import { useCoachPlans } from "../hooks/useCoachPlans";
 import { LOGO_B64 } from "../utils/logo";
 import ErrorBoundary from "./ErrorBoundary";
 import InvitationPanel from "./InvitationPanel";
@@ -33,6 +34,9 @@ import AchievementsSection from "./coach/AchievementsSection";
 import TransformationView from "./coach/TransformationView";
 import AIAnalyze from "./coach/AIAnalyze";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
+import CoachHomeScreen from "./coach/CoachHomeScreen";
+import MonCompte from "./coach/MonCompte";
+import Sentinel, { SentinelTeaser } from "./coach/Sentinel";
 import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
@@ -41,7 +45,8 @@ import ThemeSwitcher from "./ThemeSwitcher";
 import { calculateChurnRisk } from "../lib/coachIntelligence";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
-const SUB_PLANS = [
+// DEPRECATED — anciennes constantes, remplacées par coach_plans table
+const SUB_PLANS_LEGACY = [
   { id: "3m", label: "3 Mois", months: 3 },
   { id: "6m", label: "6 Mois", months: 6 },
   { id: "12m", label: "12 Mois", months: 12 },
@@ -51,7 +56,7 @@ const G = "#00C9A7";
 const ORANGE = "#00C9A7";
 const VIOLET = "#00C9A7";
 const RED = "#ff6b6b";
-const BG = "#080C14";
+const BG = "#050505";
 const PREMIUM_STYLES = {
   card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)" },
   badge: (color) => ({ display: "inline-flex", alignItems: "center", gap: 4, background: color + "12", border: "1px solid " + color + "25", color, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, letterSpacing: 0.5 }),
@@ -688,7 +693,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             const isExpiring = daysLeft !== null && daysLeft <= 14 && daysLeft > 0;
             const isExpired = daysLeft !== null && daysLeft <= 0;
             const subColor = isExpired ? RED : isExpiring ? (daysLeft <= 7 ? RED : ORANGE) : G;
-            const planLabel = { "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan;
+            const planLabel = client._plan_name || { "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan || "Plan non défini";
 
             return (
               <div style={card}>
@@ -763,16 +768,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               {!client.subscription_start_date && (
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>Abonnement</div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {SUB_PLANS.map(p => {
-                      const on = uploadPlanId === p.id;
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {(coachPlans.length > 0 ? coachPlans : SUB_PLANS_LEGACY).map(p => {
+                      const planId = p.id;
+                      const label = p.name || p.label;
+                      const on = uploadPlanId === planId;
                       return (
-                        <button key={p.id} onClick={() => setUploadPlanId(p.id)} style={{
+                        <button key={planId} onClick={() => setUploadPlanId(planId)} style={{
                           padding: "7px 14px", borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                           background: on ? G_DIM : "rgba(255,255,255,0.03)",
                           border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.08)"}`,
                           color: on ? G : "rgba(255,255,255,0.4)",
-                        }}>{p.label}</button>
+                        }}>{label}</button>
                       );
                     })}
                   </div>
@@ -2014,9 +2021,21 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showMonCompte, setShowMonCompte] = useState(false);
+  const [showSentinel, setShowSentinel] = useState(false);
+  const [showSentinelTeaser, setShowSentinelTeaser] = useState(false);
   const [showCmdK, setShowCmdK] = useState(false);
+
+  // Sentinel gating: Pro/Elite/Founding only, behind feature flag
+  const sentinelEnabled = process.env.REACT_APP_SENTINEL_ENABLED === "true" || coachData?.features?.sentinel_beta === true;
+  const SENTINEL_PLANS = ["pro", "elite"];
+  const isFounding = coachData?.is_founding === true;
+  const hasSentinelAccess = isFounding || SENTINEL_PLANS.includes(coachData?.subscription_plan);
   const [activeTab, setActiveTab] = useState("overview");
   const [pillVisible, setPillVisible] = useState(true);
+  const [showCoachHome, setShowCoachHome] = useState(true);
+  const homeScreenDismissed = useRef(false);
+  const { plans: coachPlans } = useCoachPlans(coachId);
 
   // Scroll listener sur <main> pour hide/show floating pill mobile
   const mainScrollRef = useRef(null);
@@ -2090,8 +2109,26 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           _lastActivity: lastActivity,
           _inactive: inactiveDays >= 7,
           _inactiveDays: inactiveDays < 999 ? inactiveDays : null,
+          // Dynamic plan pricing (enriched below if coach_plans table exists)
+          _plan_price: 0,
+          _plan_name: "—",
+          _plan_months: null,
         };
       }));
+      // Enrichissement plan pricing (optionnel — table peut ne pas exister)
+      try {
+        if (coachPlans.length > 0) {
+          enriched.forEach(c => {
+            const plan = coachPlans.find(p => p.id === c.subscription_plan_id);
+            if (plan) {
+              c._plan_price = plan.price_per_month;
+              c._plan_name = plan.name;
+              c._plan_months = plan.duration_months;
+            }
+          });
+        }
+      } catch (_) {}
+
       // Enrichissement pour intelligence predictive (1 volee de queries parallele)
       try {
         const enrichedWithIntel = await enrichClientsForIntelligence(enriched);
@@ -2134,7 +2171,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   // Pull-to-refresh mobile (desactive pendant les overlays full-screen)
   const ptr = usePullToRefresh({
     onRefresh: async () => { haptic.success(); await loadClients(); },
-    disabled: showClientList || !!selected || showPipeline || showAnalytics || showCmdK,
+    disabled: showClientList || !!selected || showPipeline || showAnalytics || showMonCompte || showCmdK,
   });
 
   // Systeme de relance automatique (push notifs aux clients inactifs / abos expirants)
@@ -2239,14 +2276,19 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       // pas les dates d'abonnement — le coach upload plusieurs programmes
       // pendant la duree de l'abonnement.
       if (!client.subscription_start_date && planId) {
-        const plan = SUB_PLANS.find(p => p.id === planId);
-        if (plan) {
+        // Try dynamic plan first, fallback to legacy
+        const dynPlan = coachPlans.find(p => p.id === planId);
+        const legacyPlan = SUB_PLANS_LEGACY.find(p => p.id === planId);
+        const months = dynPlan?.duration_months || legacyPlan?.months || 3;
+        const planName = dynPlan?.name || legacyPlan?.id || planId;
+        if (dynPlan || legacyPlan) {
           const startDate = new Date();
           const endDate = new Date();
-          endDate.setMonth(endDate.getMonth() + plan.months);
+          endDate.setMonth(endDate.getMonth() + months);
           await supabase.from("clients").update({
-            subscription_plan: plan.id,
-            subscription_duration_months: plan.months,
+            subscription_plan: planName, // text column (rollback safe)
+            subscription_plan_id: dynPlan?.id || null, // FK (new)
+            subscription_duration_months: months,
             subscription_start_date: startDate.toISOString(),
             subscription_end_date: endDate.toISOString(),
             subscription_status: "active",
@@ -2492,7 +2534,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           }}>{coachInitials}</div>
           <div style={{ overflow: "hidden" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coachName}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)" }}>Paramètres</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", fontWeight: 600 }}>⚙ Paramètres</div>
           </div>
         </button>
       </div>
@@ -2512,15 +2554,43 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const pillTabs = ["overview", "clients", "programmes", "business"];
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("overview"); } },
-    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
-    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("business"); } },
-    { id: "more",        icon: "plus",        label: "Plus",      onClick: () => { setShowMoreMenu(!showMoreMenu); } },
+    { id: "overview",    icon: "chart",       label: "Home",      shortLabel: "HOME",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
+    { id: "clients",     icon: "users",       label: "Clients",   shortLabel: "CLIENTS", onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
+    { id: "programmes",  icon: "document",    label: "Prog",      shortLabel: "PROG",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
+    { id: "business",    icon: "trending",    label: "Business",  shortLabel: "BIZ",     onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
+    { id: "more",        icon: "plus",        label: "Plus",      shortLabel: "PLUS",    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
+  // Swipe gesture sur la pill
+  const pillSwipeRef = useRef({ startX: 0 });
+  const handlePillSwipe = (dir) => {
+    const currentIdx = pillTabs.indexOf(activeTab);
+    if (currentIdx < 0) return;
+    const nextIdx = dir === "left" ? Math.min(currentIdx + 1, pillTabs.length - 1) : Math.max(currentIdx - 1, 0);
+    if (nextIdx !== currentIdx) {
+      const item = pillItems.find(p => p.id === pillTabs[nextIdx]);
+      if (item) item.onClick();
+    }
+  };
+  // Coachmark first-time
+  const [pillShowcase, setPillShowcase] = useState(false);
+  useEffect(() => {
+    if (!localStorage.getItem("coachmark_pill_seen")) {
+      setPillShowcase(true);
+      localStorage.setItem("coachmark_pill_seen", "1");
+      setTimeout(() => setPillShowcase(false), 3000);
+    }
+  }, []);
+
   const FloatingPill = (
-    <nav className="coach-floating-pill" style={{
+    <nav className={`coach-floating-pill${pillShowcase ? " pill-showcase" : ""}`}
+      onTouchStart={(e) => { pillSwipeRef.current.startX = e.touches[0].clientX; }}
+      onTouchEnd={(e) => {
+        const dx = e.changedTouches[0].clientX - pillSwipeRef.current.startX;
+        if (Math.abs(dx) > 50) handlePillSwipe(dx < 0 ? "left" : "right");
+      }}
+      style={{
       position: "fixed",
       bottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)",
       left: "50%",
@@ -2538,22 +2608,27 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1)",
     }}>
       {pillItems.map((p) => {
-        const isActive = (p.id === "more" && (showSettings || showAnalytics || showMoreMenu)) || (!showSettings && !showAnalytics && !showMoreMenu && activeTab === p.id);
+        const isActive = (p.id === "more" && (showSettings || showAnalytics || showMonCompte || showMoreMenu)) || (!showSettings && !showAnalytics && !showMonCompte && !showMoreMenu && activeTab === p.id);
         return (
           <button
             key={p.id}
             onClick={() => { try { haptic.selection(); } catch(_) {} p.onClick(); }}
+            data-label={p.label}
+            aria-label={p.label}
+            role="button"
             style={{
               width: 50, height: 50,
               borderRadius: 100, border: "none",
               background: isActive ? G : "transparent",
               color: isActive ? "#000" : "rgba(255,255,255,.35)",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               cursor: "pointer",
               transition: "all .25s cubic-bezier(.22,1,.36,1)",
+              gap: 1,
             }}
           >
-            <Icon name={p.icon} size={20} color={isActive ? "#000" : "rgba(255,255,255,.35)"} />
+            <Icon name={p.icon} size={18} strokeWidth={2.5} color={isActive ? "#000" : "rgba(255,255,255,.35)"} />
+            <div className="pill-label" style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.05em", color: isActive ? "#000" : "rgba(255,255,255,0.35)", lineHeight: 1, marginTop: 1 }}>{p.shortLabel}</div>
           </button>
         );
       })}
@@ -2561,6 +2636,28 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   );
 
   // ===== MORE MENU (popup above pill) =====
+  const moreMenuItems = [
+    ...(sentinelEnabled ? [{
+      icon: "lightning", label: "Sentinel", color: "#818cf8",
+      locked: !hasSentinelAccess,
+      onClick: () => {
+        setShowMoreMenu(false);
+        if (hasSentinelAccess) {
+          setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowSentinel(true);
+        } else {
+          setShowSentinelTeaser(true);
+        }
+      },
+    }] : []),
+    { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
+    { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); } },
+    { type: "separator" },
+    { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
+    { icon: "users",    label: "Mon compte", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
+    { type: "separator" },
+    { icon: "message",  label: "Aide", color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); toast.success("Support : rb.performancee@gmail.com"); } },
+    { icon: "arrow-right", label: "Déconnexion", color: RED, onClick: () => { setShowMoreMenu(false); supabase.auth.signOut().then(() => { window.location.href = "/"; }); } },
+  ];
   const MoreMenu = showMoreMenu ? (
     <div style={{
       position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)",
@@ -2570,29 +2667,30 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       borderRadius: 16, padding: 6,
       backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
       display: "flex", flexDirection: "column", gap: 2,
-      minWidth: 180, animation: "fadeUp 0.2s ease both",
+      minWidth: 200, animation: "fadeUp 0.2s ease both",
       boxShadow: "0 -10px 40px rgba(0,0,0,0.5)",
     }}>
-      {[
-        { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowAnalytics(true); } },
-        { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowPipeline(true); } },
-        { icon: "flame",    label: "Compte",    onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(true); } },
-      ].map((item) => (
-        <button key={item.label} onClick={item.onClick} style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "12px 16px", borderRadius: 12,
-          background: "transparent", border: "none",
-          color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 500,
-          cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-          transition: "background 0.15s",
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
-        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-        >
-          <Icon name={item.icon} size={18} color={G} />
-          {item.label}
-        </button>
-      ))}
+      {moreMenuItems.map((item, i) =>
+        item.type === "separator" ? (
+          <div key={`sep-${i}`} style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "4px 12px" }} />
+        ) : (
+          <button key={item.label} onClick={item.onClick} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "12px 16px", borderRadius: 12,
+            background: "transparent", border: "none",
+            color: item.color || "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 500,
+            cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <Icon name={item.icon} size={18} color={item.color || G} />
+            {item.label}
+            {item.locked && <span style={{ fontSize: 10, marginLeft: "auto", opacity: 0.4 }}>Pro</span>}
+          </button>
+        )
+      )}
     </div>
   ) : null;
 
@@ -2618,8 +2716,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   }
 
   return (
-    <div style={{
-      height: "100vh",
+    <div className={isDemo ? "coach-root demo-active" : "coach-root"} style={{
+      height: "100dvh",
       width: "100vw",
       background: BG,
       fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
@@ -2627,9 +2725,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       display: "flex",
       overflow: "hidden",
       overflowX: "hidden",
-      paddingTop: isDemo
-        ? "calc(env(safe-area-inset-top, 0px) + 44px)"
-        : "env(safe-area-inset-top, 0px)",
     }}>
       {isDemo && (
         <DemoBanner onSignup={() => {
@@ -2685,20 +2780,38 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         .coach-nav-item:hover::after{opacity:1}
         .mini-nav-btn:hover{border-color:rgba(2,209,186,0.4) !important;color:rgba(255,255,255,0.85) !important}
         @media(max-width:760px){.dash-secondary-nav{display:none !important}}
-        /* Sidebar / mobile responsive */
-        .coach-sidebar{display:flex}
-        .coach-mobile-topbar,.coach-floating-pill{display:none}
-        .coach-nav-item:hover{color:rgba(255,255,255,.65)!important;background:rgba(255,255,255,.035)!important}
+        /* Pill navigation — partout (desktop + mobile) */
+        .coach-sidebar{display:none !important}
+        .coach-mobile-topbar{display:none !important}
+        .coach-floating-pill{display:flex !important}
+        .coach-main{margin-left:0 !important}
+        .coach-main-inner{max-width:100% !important;overflow:hidden !important}
+        .coach-client-panel,.coach-overlay-panel{left:0 !important}
+        .coach-mobile-bell{display:block !important}
         @media(max-width:768px){
-          .coach-sidebar{display:none !important}
-          .coach-mobile-topbar{display:none !important}
-          .coach-floating-pill{display:flex !important}
-          .coach-main-inner{padding:12px 20px 120px !important;max-width:100% !important;overflow:hidden !important}
-          .coach-mobile-bell{display:block !important}
+          .coach-main-inner{padding:0 16px 120px !important}
           .coach-client-panel-inner{padding:0 16px 120px !important}
-          .coach-client-panel,.coach-overlay-panel{position:fixed !important;left:0 !important}
-          .coach-main{margin-left:0 !important}
         }
+        @media(min-width:769px){
+          .coach-main-inner{padding:20px 56px 120px !important}
+          .coach-client-panel-inner{padding:0 24px 120px !important}
+        }
+        /* Desktop pill tooltips */
+        @media(hover:hover) and (min-width:769px){
+          .coach-floating-pill button{position:relative}
+          .coach-floating-pill button::after{content:attr(data-label);position:absolute;top:-36px;left:50%;transform:translateX(-50%) translateY(4px);background:rgba(8,12,20,0.95);color:#fff;font-size:11px;font-weight:600;letter-spacing:0.02em;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 120ms ease,transform 120ms ease}
+          .coach-floating-pill button:hover::after{opacity:1;transform:translateX(-50%) translateY(0)}
+        }
+        /* Mobile pill labels hidden on desktop */
+        @media(min-width:769px){
+          .pill-label{display:none !important}
+        }
+        /* Coachmark first-time tooltip reveal */
+        .coach-floating-pill.pill-showcase button::after{opacity:1 !important;transform:translateX(-50%) translateY(0) !important;animation:pillFadeOut 400ms ease 2600ms forwards}
+        @keyframes pillFadeOut{to{opacity:0}}
+        /* Demo banner offset — push overlay headers down when demo banner visible */
+        .demo-active .mc-header,.demo-active .an-header,.demo-active .kan-header,.demo-active .set-header,.demo-active .sent-header{padding-top:calc(36px + 16px) !important}
+        .demo-active .coach-main{padding-top:36px !important}
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
         .cd-row:hover .cd-avatar-glow{opacity:1!important}
@@ -2773,6 +2886,32 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           onClose={() => setShowSettings(false)}
         />
       )}
+      {showMonCompte && (
+        <MonCompte
+          coachData={coachData}
+          isDemo={isDemo}
+          onClose={() => setShowMonCompte(false)}
+        />
+      )}
+      {showSentinel && hasSentinelAccess && (
+        <ErrorBoundary name="Sentinel">
+          <Sentinel
+            coachData={coachData}
+            onClose={() => setShowSentinel(false)}
+            onNavigate={(target) => {
+              setShowSentinel(false);
+              if (target === "clients") { setShowClientList(true); setActiveTab("clients"); }
+              else if (target === "settings") { setShowSettings(true); }
+            }}
+          />
+        </ErrorBoundary>
+      )}
+      {showSentinelTeaser && (
+        <SentinelTeaser
+          onClose={() => setShowSentinelTeaser(false)}
+          onUpgrade={() => { setShowSentinelTeaser(false); toast.success("Stripe Customer Portal — bientot disponible"); }}
+        />
+      )}
 
       <CommandPalette
         open={showCmdK}
@@ -2801,96 +2940,90 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         ]}
       />
 
-      {CoachSidebar}
+      {/* Sidebar désactivée — pill navigation partout */}
+      {false && CoachSidebar}
 
-      <main ref={mainScrollRef} className="coach-main" style={{
+      <main ref={mainScrollRef} className="coach-main"
+        style={{
         flex: 1, minWidth: 0,
         overflowY: "auto",
         overflowX: "hidden",
         WebkitOverflowScrolling: "touch",
         position: "relative",
         marginLeft: 220,
+        paddingTop: isDemo ? "calc(env(safe-area-inset-top, 0px) + 44px)" : "env(safe-area-inset-top, 0px)",
+        visibility: (showCoachHome && !homeScreenDismissed.current) ? "hidden" : "visible",
       }}>
       {MobileTopBar}
 
       <div className="coach-main-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 56px 40px", position: "relative", overflow: "hidden" }}>
-        {/* Glow teal subtil haut droite — clippe par overflow hidden */}
-        <div style={{ position: "absolute", top: -100, right: -50, width: 400, height: 400, background: "radial-gradient(circle, rgba(0,201,167,0.04), transparent 65%)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
+        {/* Ambiance gradients */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "60%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.15) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "40%", background: "radial-gradient(ellipse at 50% 120%, rgba(2,209,186,0.06) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
           {/* ========== OVERVIEW (exclusif — masque quand autre tab active) ========== */}
           {!showClientList && activeTab === "overview" && (<>
 
-          {/* ========== AMBIENT GLOW (comme client) ========== */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "60%", background: "radial-gradient(ellipse at 50% -10%, rgba(0,201,167,0.12) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
-
-          {/* ========== TOP BAR — date + heure (comme client Tesla) ========== */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, position: "relative", zIndex: 2, marginBottom: 8 }}>
-            <div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>
-                {(() => { const d = new Date(); const days = ["DIM","LUN","MAR","MER","JEU","VEN","SAM"]; const months = ["JAN","FEV","MAR","AVR","MAI","JUN","JUL","AOU","SEP","OCT","NOV","DEC"]; return `${days[d.getDay()]} · ${d.getDate()} ${months[d.getMonth()]}`; })()}
-              </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 400, letterSpacing: "1px", marginBottom: 6 }}>
-                {new Date().getHours() < 6 ? "On grind" : new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : new Date().getHours() < 22 ? "Bonsoir" : "Late session"}
-              </div>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 9vw, 64px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1, color: "#fff", margin: 0, wordBreak: "break-word" }}>
-                {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
-              </h1>
-              {clients.length > 0 && urgentCount === 0 && (
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 8, fontWeight: 400 }}>
-                  {total} client{total > 1 ? "s" : ""} · Tout roule.
-                </div>
-              )}
-              {clients.length > 0 && urgentCount > 0 && (
-                <div style={{ fontSize: 12, color: "rgba(255,107,107,0.6)", marginTop: 8, fontWeight: 500 }}>
-                  {urgentCount} client{urgentCount > 1 ? "s" : ""} {urgentCount > 1 ? "demandent" : "demande"} ton attention.
-                </div>
-              )}
+          {/* ========== HERO (identique au format FuelPage / client panel) ========== */}
+          <div style={{ padding: "8px 24px 0", position: "relative", zIndex: 2 }}>
+            <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Dashboard</div>
+            <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>
+              {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
             </div>
-            {/* Heure + anneau score + notif bell mobile */}
-            <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-              <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 38, fontWeight: 400, color: "rgba(255,255,255,0.8)", letterSpacing: "-1px", lineHeight: 1 }}>
-                {String(new Date().getHours()).padStart(2,"0")}:{String(new Date().getMinutes()).padStart(2,"0")}
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
+              {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            </div>
+          </div>
+
+          {/* ========== SCORE CARD (même format que FuelPage score énergie) ========== */}
+          <div style={{ margin: "20px 24px", background: "rgba(255,255,255,0.025)", border: `1px solid ${G}33`, borderRadius: 22, padding: 20, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -40, right: -40, width: 140, height: 140, background: `radial-gradient(circle, ${G}14 0%, transparent 70%)`, pointerEvents: "none" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+              <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
+                <svg width="52" height="52" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+                  <circle cx="50" cy="50" r="40" fill="none" stroke={G} strokeWidth="8" strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - businessScore / 100)}`}
+                    style={{ filter: `drop-shadow(0 0 6px ${G}cc)` }} />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: G }}>{businessScore}</div>
               </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-                <div style={{ position: "relative", width: 52, height: 52 }}>
-                  <svg width="52" height="52" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-                    <circle cx="50" cy="50" r="40" fill="none" stroke={G} strokeWidth="8" strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - businessScore / 100)}`}
-                      style={{ filter: "drop-shadow(0 0 6px rgba(0,201,167,0.8))" }} />
-                  </svg>
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: G }}>{businessScore}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Score business</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, fontStyle: "italic" }}>
+                  "{businessScore >= 80 ? "Ton business est solide." : businessScore >= 60 ? "Correctement. Quelques ajustements." : businessScore >= 40 ? "Attention. Rétention à surveiller." : "Action requise. Interviens."}"
                 </div>
-              </div>
-              <div className="coach-mobile-bell" style={{ display: "none" }}>
-                <NotificationBell clients={clients} coachId={coachId} onOpenClient={(c) => setSelected(c)} />
               </div>
             </div>
           </div>
 
-          {/* ========== DIVIDER GRADIENT (comme client) ========== */}
-          <div style={{ height: 1, background: "linear-gradient(90deg, rgba(0,201,167,0.3) 0%, rgba(255,255,255,0.05) 100%)", position: "relative", zIndex: 2, margin: "24px 0" }} />
-
-          {/* ========== 3 STATS TESLA (comme client) ========== */}
-          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 0, marginBottom: 32, position: "relative", zIndex: 2, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            {[
-              { v: businessScore, l: "SCORE", sub: businessScore > 75 ? "Excellent" : businessScore >= 50 ? "Correct" : "À surveiller", suffix: "", color: businessScore > 75 ? G : businessScore >= 50 ? "#fff" : "#ff6b6b" },
-              { v: mrr, l: "MRR", sub: `${Math.round(mrr * 12).toLocaleString()}€/an`, suffix: " €", color: G },
-              { v: total > 0 ? Math.round((activeWeek / total) * 100) : 0, l: "RÉTENTION", sub: `${activeWeek}/${total} actifs`, suffix: "%", color: "rgba(255,255,255,0.5)" },
-            ].map((m, i) => (
-              <div key={i} className="dash-metric-card" style={{
-                paddingTop: 16,
-                textAlign: "left",
-              }}>
-                <div className="dash-countup" data-target={typeof m.v === "number" ? m.v : 0} data-suffix={m.suffix} style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(32px, 8vw, 52px)", fontWeight: 400, color: m.color, letterSpacing: "-1px", lineHeight: 1 }}>
-                  {typeof m.v === "number" ? m.v.toLocaleString() : m.v}{m.suffix}
+          {/* ========== STATS (même format que FuelPage macros) ========== */}
+          <div style={{ margin: "0 24px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 22, padding: 20, position: "relative", zIndex: 2 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>MRR</div>
+                <div style={{ fontSize: 38, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
+                  {mrr.toLocaleString("fr-FR")}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}>€/mois</span>
                 </div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", marginTop: 8 }}>{m.l}</div>
-                {m.sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.12)", marginTop: 3 }}>{m.sub}</div>}
               </div>
-            ))}
+              <div style={{ background: `${G}18`, border: `1px solid ${G}33`, borderRadius: 100, padding: "4px 12px", fontSize: 11, color: G, fontWeight: 600 }}>
+                {Math.round(mrr * 12).toLocaleString("fr-FR")}€/an
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 0 }}>
+              {[
+                { v: total, l: "Clients", color: "#fff" },
+                { v: activeWeek, l: "Actifs 7j", color: G },
+                { v: (total > 0 ? Math.round((activeWeek / total) * 100) : 0) + "%", l: "Rétention", color: "rgba(255,255,255,0.5)" },
+              ].map((s, i) => (
+                <div key={i} style={{ flex: 1, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, textAlign: i === 0 ? "left" : i === 2 ? "right" : "center" }}>
+                  <div style={{ fontSize: 24, fontWeight: 200, color: s.color, letterSpacing: "-1px", lineHeight: 1 }}>{s.v}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ========== ANALYSE CONTEXTUELLE (comme panel client) ========== */}
@@ -2956,7 +3089,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
           {!showClientList && activeTab === "business" && coachData && clients.length > 0 && (
-            <BusinessSection coachData={coachData} clients={clients} />
+            <BusinessSection coachData={coachData} clients={clients} hasSentinelAccess={sentinelEnabled && hasSentinelAccess} onOpenSentinel={() => setShowSentinel(true)} />
           )}
 
           {/* ========== PROGRAMMES — liste des programmes coach ========== */}
@@ -3041,14 +3174,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "0 20px calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
             {/* Header */}
             <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
-              <button onClick={() => setShowClientList(false)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}>
-                <Icon name="arrow-left" size={12} />
-                Dashboard
-              </button>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginBottom: 8 }}>Clients</div>
-                  <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 6vw, 52px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", margin: 0, lineHeight: 1.02 }}>
+                  <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Clients</div>
+                  <h1 style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, margin: 0 }}>
                     Tes athletes<span style={{ color: "#02d1ba" }}>.</span>
                   </h1>
                 </div>
@@ -3206,6 +3335,25 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         </div>
       </div>
       </main>
+      {/* Coach Home Screen */}
+      {showCoachHome && !homeScreenDismissed.current && !loading && (
+        <CoachHomeScreen
+          coachData={coachData}
+          businessScore={businessScore}
+          mrr={mrr}
+          clients={clients}
+          urgentCount={urgentCount}
+          onDismiss={() => { homeScreenDismissed.current = true; setShowCoachHome(false); }}
+          onNavigate={(id) => {
+            homeScreenDismissed.current = true;
+            setShowCoachHome(false);
+            if (id === "clients") { setShowClientList(true); setActiveTab("clients"); }
+            else if (id === "more") { setShowMoreMenu(true); }
+            else { setShowClientList(false); setShowSettings(false); setActiveTab(id); }
+          }}
+        />
+      )}
+
       {/* FloatingPill + More menu */}
       {MoreMenuBackdrop}
       {MoreMenu}

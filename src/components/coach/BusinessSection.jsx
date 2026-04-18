@@ -37,7 +37,7 @@ const RED = "#ff6b6b";
  *   - Retention + duree moyenne abonnements + benchmark
  *   - Prochain palier
  */
-export default function BusinessSection({ coachData, clients = [] }) {
+export default function BusinessSection({ coachData, clients = [], hasSentinelAccess = false, onOpenSentinel }) {
   const [goal, setGoal] = useState(coachData?.monthly_revenue_goal || 0);
   const [editingGoal, setEditingGoal] = useState(false);
   const [newGoal, setNewGoal] = useState("");
@@ -46,6 +46,27 @@ export default function BusinessSection({ coachData, clients = [] }) {
   const [lastMonthMrr, setLastMonthMrr] = useState(null);
   const [platformBenchmark, setPlatformBenchmark] = useState(null);
   const [previewMode, setPreviewMode] = useState(clients.length === 0);
+  const [sentinelCard, setSentinelCard] = useState(null);
+
+  // Fetch latest daily playbook card from Sentinel (for Pro/Elite/Founding)
+  useEffect(() => {
+    if (!hasSentinelAccess || !coachData?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("sentinel_cards")
+          .select("id,title,body,data,cta_label,cta_action")
+          .eq("module", "daily_playbook")
+          .eq("status", "active")
+          .order("priority", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!cancelled && data) setSentinelCard(data);
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+  }, [hasSentinelAccess, coachData?.id]);
 
   // Next Move + Forecast (stubs → null pour vrais users, mock pour aperçu)
   const nextMove = useMemo(() => previewMode ? MOCK_BUSINESS_DATA.nextMove : computeNextMove(clients, coachData), [clients, coachData, previewMode]);
@@ -148,10 +169,13 @@ export default function BusinessSection({ coachData, clients = [] }) {
 
   return (
     <div style={{ marginBottom: 40, animation: "fadeUp 0.4s ease both" }}>
-      {/* ===== HEADER ===== */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginBottom: 8 }}>Business</div>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em" }}>Ton business<span style={{ color: G }}>.</span></div>
+      {/* ===== HERO (format FuelPage) ===== */}
+      <div style={{ padding: "8px 0 20px" }}>
+        <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Business</div>
+        <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Ton business<span style={{ color: G }}>.</span></div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
+          {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+        </div>
       </div>
 
       {/* ===== BANNER APERÇU (0 clients) ===== */}
@@ -164,28 +188,57 @@ export default function BusinessSection({ coachData, clients = [] }) {
         </div>
       )}
 
-      {/* ===== NEXT MOVE WIDGET ===== */}
-      <div style={{ borderRadius: 18, padding: "20px 22px", marginBottom: 18, background: nextMove ? "linear-gradient(135deg, rgba(2,209,186,0.06), rgba(139,92,246,0.04))" : "rgba(255,255,255,0.02)", border: `1px solid ${nextMove ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.06)"}`, position: "relative", overflow: "hidden" }}>
-        {previewMode && nextMove && <div style={{ position: "absolute", top: 10, right: 14, fontSize: 9, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>Exemple fictif</div>}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill={G}/></svg>
-          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88` }}>Ta prochaine action</span>
+      {/* ===== NEXT MOVE / SENTINEL WIDGET ===== */}
+      {hasSentinelAccess && sentinelCard ? (
+        /* Sentinel compact card — reads from daily_playbook */
+        <div
+          onClick={() => { haptic.light(); onOpenSentinel?.(); }}
+          style={{ borderRadius: 18, padding: "20px 22px", marginBottom: 18, background: "linear-gradient(135deg, rgba(129,140,248,0.06), rgba(2,209,186,0.04))", border: "1px solid rgba(129,140,248,0.25)", position: "relative", overflow: "hidden", cursor: "pointer" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(129,140,248,0.7)" }}>Sentinel · Playbook du jour</span>
+          </div>
+          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(16px, 4vw, 20px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8 }}>{sentinelCard.title}</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{sentinelCard.body}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "#818cf8" }}>
+            Voir mes 3 actions
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </div>
         </div>
-        {nextMove ? (
-          <>
-            <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(18px, 5vw, 22px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 10 }}>{nextMove.title}</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 18 }}>
-              {nextMove.description?.split(/(\d+%?€?)/g).map((part, i) => /\d/.test(part) ? <span key={i} style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{part}</span> : part)}
-            </div>
-            <div className="nm-btns" style={{ display: "flex", gap: 10 }}>
-              <button style={{ flex: 1, padding: "12px 16px", background: "transparent", border: `1px solid ${G}40`, borderRadius: 12, color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{nextMove.action_secondary_label}</button>
-              <button style={{ flex: 1, padding: "12px 16px", background: G, border: "none", borderRadius: 12, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>{nextMove.action_primary_label}</button>
-            </div>
-          </>
-        ) : (
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>Aucune action critique cette semaine. Continue comme ça.</div>
-        )}
-      </div>
+      ) : hasSentinelAccess && !sentinelCard ? (
+        /* Sentinel enabled but no card yet */
+        <div style={{ borderRadius: 18, padding: "20px 22px", marginBottom: 18, background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)", position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(129,140,248,0.5)" }}>Sentinel</span>
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>Sentinel prepare ta journee — reviens demain a 7h.</div>
+        </div>
+      ) : (
+        /* Starter: original Next Move widget (teaser) */
+        <div style={{ borderRadius: 18, padding: "20px 22px", marginBottom: 18, background: nextMove ? "linear-gradient(135deg, rgba(2,209,186,0.06), rgba(139,92,246,0.04))" : "rgba(255,255,255,0.02)", border: `1px solid ${nextMove ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.06)"}`, position: "relative", overflow: "hidden" }}>
+          {previewMode && nextMove && <div style={{ position: "absolute", top: 10, right: 14, fontSize: 9, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>Exemple fictif</div>}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill={G}/></svg>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88` }}>Ta prochaine action</span>
+          </div>
+          {nextMove ? (
+            <>
+              <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(18px, 5vw, 22px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 10 }}>{nextMove.title}</div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 18 }}>
+                {nextMove.description?.split(/(\d+%?€?)/g).map((part, i) => /\d/.test(part) ? <span key={i} style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{part}</span> : part)}
+              </div>
+              <div className="nm-btns" style={{ display: "flex", gap: 10 }}>
+                <button style={{ flex: 1, padding: "12px 16px", background: "transparent", border: `1px solid ${G}40`, borderRadius: 12, color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{nextMove.action_secondary_label}</button>
+                <button style={{ flex: 1, padding: "12px 16px", background: G, border: "none", borderRadius: 12, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>{nextMove.action_primary_label}</button>
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>Aucune action critique cette semaine. Continue comme ca.</div>
+          )}
+        </div>
+      )}
 
       {/* ===== HERO MRR + SCORE ===== */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 18 }}>

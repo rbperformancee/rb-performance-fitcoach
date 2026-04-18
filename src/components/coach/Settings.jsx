@@ -3,6 +3,8 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import AppIcon from "../AppIcon";
 import PushNotifModal from "./PushNotifModal";
+import CoachPlansSettings from "./CoachPlansSettings";
+import { useCoachPlans } from "../../hooks/useCoachPlans";
 
 const G = "#02d1ba";
 
@@ -20,7 +22,7 @@ const G = "#02d1ba";
  *   onClose: () => void
  */
 export default function Settings({ coachData, isDemo = false, onClose }) {
-  const [tab, setTab] = useState("profil");
+  const [tab, setTab] = useState("branding");
   const [showPushModal, setShowPushModal] = useState(false);
 
   // Local state (les champs sont editables meme en demo)
@@ -51,23 +53,26 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
     setSaving(false);
   }
 
+  const { plans: coachPlans, reload: reloadPlans } = useCoachPlans(coachData?.id);
+
   const TABS = [
-    { id: "profil", label: "Profil" },
     { id: "branding", label: "Coaching" },
+    { id: "plans", label: "Mes plans" },
     { id: "notifications", label: "Notifications" },
-    { id: "abonnement", label: "Abonnement" },
     { id: "paiements", label: "Paiements" },
   ];
 
   return (
     <div style={wrap}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.1) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
       <style>{`
         .set-input:focus { border-color: ${G} !important; background: rgba(2,209,186,.03) !important; outline: none; }
         .set-tab:hover { color: rgba(255,255,255,.75) !important; }
+        @media(max-width:600px){.set-content{padding-left:16px !important;padding-right:16px !important}}
       `}</style>
 
       {/* Header */}
-      <div style={header}>
+      <div className="set-header" style={header}>
         <button onClick={onClose} style={{ ...backBtn, padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", transition: "all .15s" }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.3)"; e.currentTarget.style.background = "rgba(0,201,167,0.06)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
@@ -75,8 +80,8 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
           <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,.6)" />
           <span>Retour</span>
         </button>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
-          Mon compte<span style={{ color: "#00C9A7" }}>.</span>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px" }}>
+          Paramètres<span style={{ color: "#00C9A7" }}>.</span>
         </div>
         <div style={{ width: 80 }} />
       </div>
@@ -110,79 +115,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
       </div>
 
       {/* Content */}
-      <div style={content}>
-        {tab === "profil" && (
-          <Section title="Mon profil" sub="Informations affichees sur ton dashboard et cote clients.">
-            <Field label="Prenom">
-              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} style={input} className="set-input" />
-            </Field>
-            <Field label="Nom">
-              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} style={input} className="set-input" />
-            </Field>
-            <Field label="Email" sub="Contacte le support pour changer">
-              <input type="email" value={coachData?.email || ""} disabled style={{ ...input, opacity: .5, cursor: "not-allowed" }} />
-            </Field>
-            <button onClick={saveProfile} disabled={saving} style={{ ...btnPrimary, marginTop: 16 }}>
-              {saving ? "..." : "Sauvegarder"}
-            </button>
-
-            {/* Plan actuel */}
-            <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.06)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.25)" }}>Plan actuel</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginTop: 4 }}>
-                    {coachData?.plan || "Founder"}<span style={{ color: G }}>.</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Lien d'invitation personnel */}
-            {coachData?.coach_slug && (
-              <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.06)" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.25)", marginBottom: 10 }}>Ton lien d'invitation</div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input
-                    readOnly
-                    value={`https://rbperform.app/rejoindre/${coachData.coach_slug}`}
-                    onClick={(e) => e.target.select()}
-                    style={{ ...input, flex: 1, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: G }}
-                  />
-                  <button
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(`https://rbperform.app/rejoindre/${coachData.coach_slug}`);
-                        toast.success("Lien copié !");
-                      } catch { toast.error("Impossible de copier"); }
-                    }}
-                    style={{ padding: "10px 16px", background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 8, color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
-                  >
-                    Copier
-                  </button>
-                </div>
-                {coachData?.coach_code && (
-                  <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,.3)" }}>
-                    Code coach : <span style={{ color: G, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>{coachData.coach_code}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Deconnexion */}
-            <div style={{ marginTop: 32 }}>
-              <button
-                onClick={() => {
-                  supabase.auth.signOut().then(() => { window.location.href = "/"; });
-                }}
-                style={{ padding: "12px 24px", background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 8, color: "#ff6b6b", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", width: "100%", transition: "border-color .15s" }}
-              >
-                Se déconnecter
-              </button>
-            </div>
-          </Section>
-        )}
-
+      <div className="set-content" style={content}>
         {tab === "branding" && (
           <Section title="Mon coaching" sub="Personnalise l'experience vue par tes clients.">
             <Field label="Nom du coaching" sub="Affiche a la place de 'RB Perform' dans l'app client">
@@ -220,6 +153,12 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
           </Section>
         )}
 
+        {tab === "plans" && (
+          <Section>
+            <CoachPlansSettings coachId={coachData?.id} plans={coachPlans} onReload={reloadPlans} />
+          </Section>
+        )}
+
         {tab === "notifications" && (
           <Section title="Notifications" sub="Choisis ce que tu veux recevoir par email et push.">
             <div style={{ marginBottom: 24 }}>
@@ -243,31 +182,6 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
                 <AppIcon name="bell" size={14} color={G} />
                 Activer les notifications push
               </button>
-            </div>
-          </Section>
-        )}
-
-        {tab === "abonnement" && (
-          <Section title="Mon abonnement" sub="Gere ton plan RB Perform.">
-            <div style={planCard}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)" }}>Plan actuel</div>
-              <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1px", color: "#fff", margin: "8px 0" }}>
-                {coachData?.plan || "Founder"}<span style={{ color: G }}>.</span>
-              </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)" }}>149€ / mois · Renouvelle le 14 mai 2026</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,.25)", marginTop: 12 }}>Utilisation IA ce mois : <span style={{ color: G, fontFamily: "'JetBrains Mono',monospace" }}>3/10</span></div>
-            </div>
-            <a
-              href="https://rb-perfor.vercel.app/pricing"
-              target="_blank"
-              rel="noopener"
-              style={{ ...btnPrimary, textDecoration: "none", textAlign: "center", marginTop: 12, display: "block" }}
-              onClick={(e) => { if (isDemo) { e.preventDefault(); toast.info("Disponible en version complete →"); } }}
-            >
-              Changer de plan
-            </a>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.25)", textAlign: "center", marginTop: 8 }}>
-              La facturation se gere sur le web (App Store compatible)
             </div>
           </Section>
         )}
@@ -543,8 +457,8 @@ function Toggle({ label, sub, defaultChecked = false }) {
 
 // ===== STYLES =====
 const wrap = {
-  position: "fixed", inset: 0, zIndex: 200,
-  background: "#080C14",
+  position: "fixed", inset: 0, zIndex: 600,
+  background: "#050505",
   fontFamily: "'DM Sans', -apple-system, sans-serif",
   color: "#fff",
   overflowY: "auto",
@@ -553,9 +467,9 @@ const wrap = {
 };
 const header = {
   display: "flex", alignItems: "center", justifyContent: "space-between",
-  padding: "calc(env(safe-area-inset-top, 12px) + 16px) 20px 16px",
+  padding: "calc(env(safe-area-inset-top, 0px) + 16px) 20px 16px",
   borderBottom: ".5px solid rgba(255,255,255,.05)",
-  background: "rgba(8,12,20,.95)",
+  background: "rgba(5,5,5,.95)",
   backdropFilter: "blur(16px)",
   position: "sticky", top: 0, zIndex: 10,
 };

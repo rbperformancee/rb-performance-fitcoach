@@ -74,12 +74,13 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
       role="dialog"
       aria-modal="true"
       aria-label="Pipeline clients"
-      style={{ position: "fixed", inset: 0, zIndex: 600, background: "#080C14", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
+      style={{ position: "fixed", inset: 0, zIndex: 600, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
     >
-      <style>{`@keyframes kanFade{from{opacity:0}to{opacity:1}} @keyframes kanSlide{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
+      <style>{`@keyframes kanFade{from{opacity:0}to{opacity:1}} @keyframes kanSlide{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}} @media(max-width:600px){.kan-header{padding-left:16px !important;padding-right:16px !important}}`}</style>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.12) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       {/* Header */}
-      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 12px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div className="kan-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
             onClick={onClose}
@@ -89,8 +90,8 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
             <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,0.6)" />
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", fontWeight: 700 }}>Pipeline</div>
-            <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em" }}>Ton pipeline<span style={{ color: "#00C9A7" }}>.</span></div>
+            <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Pipeline</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-2px", lineHeight: 0.92 }}>Ton pipeline<span style={{ color: "#00C9A7" }}>.</span></div>
           </div>
         </div>
         {/* Search input */}

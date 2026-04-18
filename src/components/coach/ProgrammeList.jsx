@@ -137,12 +137,12 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
   return (
     <div style={{ padding: "0 4px", animation: "fadeUp .35s ease both" }}>
       {/* HEADER */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 10 }}>
-          Programmes coach
+      <div style={{ padding: "8px 0 20px" }}>
+        <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>
+          Programmes
         </div>
-        <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-0.035em", lineHeight: 1.05, color: "#fff", margin: 0, marginBottom: 8 }}>
-          Tes programmes<span style={{ color: G }}>.</span>
+        <h1 style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, margin: 0, marginBottom: 8 }}>
+          Programmes<span style={{ color: G }}>.</span>
         </h1>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.35)", letterSpacing: ".02em" }}>
           {counts.total} programme{counts.total > 1 ? "s" : ""}
