@@ -964,7 +964,9 @@ function AppInner() {
     };
     const _ctx = getContextMsg();
     return (
-      <div style={{minHeight:'100vh',background:'#050505',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden'}}>
+      <div style={{minHeight:'100vh',background:'#050505',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden',maxWidth:isClientDemo?430:'none',margin:isClientDemo?'0 auto':0}}>
+        {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
+        {isClientDemo && <div style={{height:52}} />}
 
         {/* Particules d'ambiance */}
         <div style={{position:'absolute',top:0,left:0,right:0,height:'60%',background:'radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.15) 0%, transparent 60%)',pointerEvents:'none'}}/>
