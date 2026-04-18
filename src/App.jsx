@@ -75,7 +75,7 @@ import Spinner from "./components/Spinner";
 
 // Fallback minimal pour Suspense (pas de flash blanc)
 const LazyFallback = () => (
-  <div style={{ position: "fixed", inset: 0, background: "#050505", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+  <div style={{ position: "fixed", inset: 0, background: "#080C14", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
     <Spinner variant="dots" size={36} />
   </div>
 );
