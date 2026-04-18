@@ -9,8 +9,10 @@
  */
 
 const ALLOWED_ORIGINS = [
+  "https://rbperform.app",
+  "https://www.rbperform.app",
+  "https://app.rbperform.app",
   "https://rb-perfor.vercel.app",
-  "https://rb-performance-fitcoach.vercel.app",
 ];
 // Tolere aussi les preview deployments vercel
 const VERCEL_PREVIEW_REGEX = /^https:\/\/[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$/;

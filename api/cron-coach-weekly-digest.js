@@ -151,7 +151,7 @@ function buildDigestHtml({ coach, clients, weekStats }) {
       </ul>
     </div>
 
-    <a href="https://rb-perfor.vercel.app" style="display:inline-block;background:#02d1ba;color:#000;font-size:14px;font-weight:800;text-decoration:none;padding:14px 28px;border-radius:12px;letter-spacing:0.3px;">
+    <a href="https://rbperform.app/login" style="display:inline-block;background:#02d1ba;color:#000;font-size:14px;font-weight:800;text-decoration:none;padding:14px 28px;border-radius:12px;letter-spacing:0.3px;">
       Acceder au dashboard
     </a>
 

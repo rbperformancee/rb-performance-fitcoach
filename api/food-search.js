@@ -17,7 +17,7 @@ const { secureRequest } = require("./_security");
 
 export default async function handler(req, res) {
   const origin = req.headers.origin || "";
-  res.setHeader("Access-Control-Allow-Origin", origin || "https://rb-perfor.vercel.app");
+  res.setHeader("Access-Control-Allow-Origin", origin || "https://rbperform.app");
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");

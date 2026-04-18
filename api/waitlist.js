@@ -8,14 +8,21 @@
  */
 
 const { createClient } = require('@supabase/supabase-js');
+const { rateLimit, getIP } = require('./_security');
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || '';
+  res.setHeader('Access-Control-Allow-Origin', origin || 'https://rbperform.app');
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Rate limit: 5 submissions per hour per IP
+  const rl = rateLimit(req, { max: 5, windowMs: 3600000 });
+  if (!rl.allowed) return res.status(429).json({ error: 'Trop de tentatives. Reessaie plus tard.' });
 
   try {
     const { name, email, clients, problem, source } = req.body || {};

@@ -556,7 +556,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
       <div className="coach-client-panel-inner" style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "0 24px 100px" }}>
 
-        <input ref={fileRef} type="file" accept=".html,.htm" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; console.log("[upload] file selected:", f?.name, f?.type, f?.size); if (f) { onUpload(client, f, uploadPlanId, uploadProgWeeks); e.target.value = ""; } else { console.warn("[upload] no file selected"); } }} />
+        <input ref={fileRef} type="file" accept=".html,.htm" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f, uploadPlanId, uploadProgWeeks); e.target.value = ""; } }} />
 
         {/* ===== HERO CLIENT (bouton retour integre, pas de topbar sticky) ===== */}
         <div style={{ padding: "28px 0 0", marginBottom: 28, animation: "cpFadeUp 0.4s ease both" }}>

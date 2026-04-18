@@ -52,7 +52,7 @@ export function MentionsLegales({ onClose }) {
         Email : rb.performancee@gmail.com
         <br />06 95 12 93 47
         <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA<br />
-        Site web : rb-perfor.vercel.app</p>
+        Site web : rbperform.app</p>
       </Section>
 
       <Section title="2. Hébergement">
