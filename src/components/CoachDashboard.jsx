@@ -2074,7 +2074,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       // ===== MULTI-TENANT : filtrage par coach_id =====
       let query = supabase
         .from("clients")
-        .select("*, programmes(id, programme_name, uploaded_at, is_active), coach_plans:subscription_plan_id(id, name, price_per_month, duration_months, billing_type)")
+        .select("*, programmes(id, programme_name, uploaded_at, is_active)")
         .order("created_at", { ascending: false });
       // Si coachId est fourni, on filtre. Sinon (fallback legacy) on charge tout.
       if (coachId) query = query.eq("coach_id", coachId);
@@ -2095,12 +2095,26 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           _lastActivity: lastActivity,
           _inactive: inactiveDays >= 7,
           _inactiveDays: inactiveDays < 999 ? inactiveDays : null,
-          // Dynamic plan pricing
-          _plan_price: c.coach_plans?.price_per_month ?? 0,
-          _plan_name: c.coach_plans?.name ?? "—",
-          _plan_months: c.coach_plans?.duration_months ?? null,
+          // Dynamic plan pricing (enriched below if coach_plans table exists)
+          _plan_price: 0,
+          _plan_name: "—",
+          _plan_months: null,
         };
       }));
+      // Enrichissement plan pricing (optionnel — table peut ne pas exister)
+      try {
+        if (coachPlans.length > 0) {
+          enriched.forEach(c => {
+            const plan = coachPlans.find(p => p.id === c.subscription_plan_id);
+            if (plan) {
+              c._plan_price = plan.price_per_month;
+              c._plan_name = plan.name;
+              c._plan_months = plan.duration_months;
+            }
+          });
+        }
+      } catch (_) {}
+
       // Enrichissement pour intelligence predictive (1 volee de queries parallele)
       try {
         const enrichedWithIntel = await enrichClientsForIntelligence(enriched);
