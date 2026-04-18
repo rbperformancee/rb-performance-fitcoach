@@ -147,8 +147,13 @@ export default function CoachPlansSettings({ coachId, plans = [], onReload }) {
             width: "100%", maxWidth: 420, background: "#0a0c10",
             border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 24px",
           }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 20 }}>
-              {editing === "new" ? "Nouveau plan" : "Modifier le plan"}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>
+                {editing === "new" ? "Nouveau plan" : "Modifier le plan"}
+              </div>
+              <button onClick={() => setEditing(null)} aria-label="Fermer" style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, cursor: "pointer", color: "rgba(255,255,255,0.6)", flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

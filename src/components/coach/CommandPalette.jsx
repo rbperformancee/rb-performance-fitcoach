@@ -120,7 +120,7 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
           animation: "cpSlide 0.2s cubic-bezier(0.22,1,0.36,1) both",
         }}
       >
-        {/* Search input */}
+        {/* Search input + X button */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <AppIcon name="search" size={16} color="rgba(255,255,255,0.5)" />
           <input
@@ -141,7 +141,9 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
               fontWeight: 500,
             }}
           />
-          <kbd style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "2px 6px", fontFamily: "'JetBrains Mono',monospace" }}>ESC</kbd>
+          <button onClick={onClose} aria-label="Fermer" style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, cursor: "pointer", color: "rgba(255,255,255,0.6)", flexShrink: 0, fontFamily: "inherit" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
 
         {/* Results */}

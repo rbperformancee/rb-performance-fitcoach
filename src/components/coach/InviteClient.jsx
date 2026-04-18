@@ -160,7 +160,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
               background: "rgba(255,255,255,.04)",
               border: "none",
               borderRadius: 8,
-              width: 28, height: 28,
+              width: 44, height: 44,
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer",
               color: "rgba(255,255,255,.5)",
