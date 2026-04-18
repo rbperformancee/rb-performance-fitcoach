@@ -560,8 +560,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
         {/* ===== HERO CLIENT (bouton retour integre, pas de topbar sticky) ===== */}
         <div style={{ padding: "28px 0 0", marginBottom: 28, animation: "cpFadeUp 0.4s ease both" }}>
-          {/* Ligne retour — integre dans safe-area top */}
-          <div style={{ paddingTop: "env(safe-area-inset-top, 8px)" }}>
+          {/* Ligne retour — integre dans safe-area top + offset demo banner */}
+          <div style={{ paddingTop: isDemo ? "calc(44px + 8px)" : "env(safe-area-inset-top, 8px)" }}>
             <button
               onClick={onClose}
               style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginBottom: 14, transition: "all .15s" }}
@@ -2554,10 +2554,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const pillTabs = ["overview", "clients", "programmes", "business"];
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Home",      shortLabel: "HOME",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
-    { id: "clients",     icon: "users",       label: "Clients",   shortLabel: "CLIENTS", onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Prog",      shortLabel: "PROG",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
-    { id: "business",    icon: "trending",    label: "Business",  shortLabel: "BIZ",     onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
+    { id: "overview",    icon: "chart",       label: "Home",      shortLabel: "HOME",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
+    { id: "clients",     icon: "users",       label: "Clients",   shortLabel: "CLIENTS", onClick: () => { setSelected(null); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
+    { id: "programmes",  icon: "document",    label: "Prog",      shortLabel: "PROG",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
+    { id: "business",    icon: "trending",    label: "Business",  shortLabel: "BIZ",     onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
     { id: "more",        icon: "plus",        label: "Plus",      shortLabel: "PLUS",    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   // Swipe gesture sur la pill
@@ -3172,20 +3172,20 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "0 20px calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
             {/* Header */}
             <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
-                <div>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Clients</div>
-                  <h1 style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, margin: 0 }}>
+                  <h1 style={{ fontSize: "clamp(32px, 8vw, 52px)", fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, margin: 0 }}>
                     Tes athletes<span style={{ color: "#02d1ba" }}>.</span>
                   </h1>
                 </div>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                  <button onClick={() => { haptic.selection(); setShowInvite(true); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", background: "rgba(255,255,255,.04)", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 100, color: "rgba(255,255,255,.75)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px", transition: "background .15s" }}>
-                    <Icon name="message" size={12} color="rgba(255,255,255,.75)" />
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={() => { haptic.selection(); setShowInvite(true); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 12px", background: "rgba(255,255,255,.04)", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 100, color: "rgba(255,255,255,.75)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px", transition: "background .15s" }}>
+                    <Icon name="message" size={11} color="rgba(255,255,255,.75)" />
                     Inviter
                   </button>
-                  <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", background: showAdd ? "rgba(255,255,255,0.04)" : "#02d1ba", border: showAdd ? "1px solid rgba(255,255,255,0.1)" : "none", borderRadius: 100, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px" }}>
-                    <Icon name={showAdd ? "x" : "plus"} size={12} />
+                  <button onClick={() => setShowAdd((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 14px", background: showAdd ? "rgba(255,255,255,0.04)" : "#02d1ba", border: showAdd ? "1px solid rgba(255,255,255,0.1)" : "none", borderRadius: 100, color: showAdd ? "rgba(255,255,255,0.55)" : "#000", fontSize: 10, fontWeight: 700, cursor: "pointer", boxShadow: showAdd ? "none" : "0 6px 20px rgba(2,209,186,0.25)", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.3px" }}>
+                    <Icon name={showAdd ? "x" : "plus"} size={11} />
                     {showAdd ? "Annuler" : "Ajouter"}
                   </button>
                 </div>
