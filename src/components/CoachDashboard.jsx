@@ -659,7 +659,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         {panelTab === "resume" && (<>
 
         {/* ===== STATS RAPIDES (une ligne — sans pesees ni pas, deja dans leurs cards) ===== */}
-        <div style={{ ...section, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, animation: "cpFadeUp 0.4s ease 0.08s both" }}>
+        <div style={{ ...section, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, animation: "cpFadeUp 0.4s ease 0.08s both" }}>
           {[
             { l: "Seances", v: Math.ceil(logs.length / 3) || 0, ic: "activity", c: G },
             { l: "Cette sem.", v: weekLogs.length, ic: "flame", c: weekLogs.length > 0 ? G : "rgba(255,255,255,0.4)" },
@@ -1117,7 +1117,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             const totalSessions = sessions.length;
             const avgRpe = rpeData.length > 0 ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "--";
             return (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 20 }}>
                 <div style={{ ...card, textAlign: "center", padding: "14px 8px" }}>
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: G, lineHeight: 1 }}>{streak}</div>
                   <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>Jours de streak</div>
@@ -2832,7 +2832,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ height: 1, background: "linear-gradient(90deg, rgba(0,201,167,0.3) 0%, rgba(255,255,255,0.05) 100%)", position: "relative", zIndex: 2, margin: "24px 0" }} />
 
           {/* ========== 3 STATS TESLA (comme client) ========== */}
-          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, marginBottom: 32, position: "relative", zIndex: 2, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="dash-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 0, marginBottom: 32, position: "relative", zIndex: 2, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             {[
               { v: businessScore, l: "SCORE", sub: businessScore > 75 ? "Excellent" : businessScore >= 50 ? "Correct" : "À surveiller", suffix: "", color: businessScore > 75 ? G : businessScore >= 50 ? "#fff" : "#ff6b6b" },
               { v: mrr, l: "MRR", sub: `${Math.round(mrr * 12).toLocaleString()}€/an`, suffix: " €", color: G },

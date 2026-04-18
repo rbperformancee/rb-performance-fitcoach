@@ -142,7 +142,7 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
             <Card title="Evolution clientele" subtitle={`${period === 365 ? "12 derniers mois" : `${period} derniers jours`}`} accent={G}>
               {data.evolution?.count > 0 ? (
                 <div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 14 }}>
                     <Metric label="Delta poids moyen" value={`${data.evolution.avg > 0 ? "+" : ""}${data.evolution.avg} kg`} color={data.evolution.avg < 0 ? G : data.evolution.avg > 0 ? ORANGE : "rgba(255,255,255,0.5)"} />
                     <Metric label="Sur" value={`${data.evolution.count} clients`} color="rgba(255,255,255,0.6)" />
                     <Metric label="Progression" value={`${data.progression}%`} color={data.progression >= 70 ? G : data.progression >= 40 ? ORANGE : RED} />

@@ -147,7 +147,7 @@ export default function BusinessSection({ coachData, clients = [] }) {
       </div>
 
       {/* ===== HERO MRR + SCORE ===== */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 18 }}>
         {/* MRR card */}
         <div style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 18, padding: "20px 22px", position: "relative", overflow: "hidden" }}>
           <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", fontWeight: 700, marginBottom: 8 }}>MRR du mois</div>
@@ -266,7 +266,7 @@ export default function BusinessSection({ coachData, clients = [] }) {
       </div>
 
       {/* ===== RETENTION + DUREE MOYENNE + PROCHAIN PALIER ===== */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
         <StatCard
           label="Retention 30j+"
           value={`${retention}%`}
