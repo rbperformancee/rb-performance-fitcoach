@@ -556,7 +556,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
       <div className="coach-client-panel-inner" style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "0 24px 100px" }}>
 
-        <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { onUpload(client, f, uploadPlanId, uploadProgWeeks); e.target.value = ""; } }} />
+        <input ref={fileRef} type="file" accept=".html,.htm" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; console.log("[upload] file selected:", f?.name, f?.type, f?.size); if (f) { onUpload(client, f, uploadPlanId, uploadProgWeeks); e.target.value = ""; } else { console.warn("[upload] no file selected"); } }} />
 
         {/* ===== HERO CLIENT (bouton retour integre, pas de topbar sticky) ===== */}
         <div style={{ padding: "28px 0 0", marginBottom: 28, animation: "cpFadeUp 0.4s ease both" }}>
@@ -2216,7 +2216,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   const uploadProg = async (client, file, planId, progWeeks) => {
-    if (isDemo) { toast.error("Désactivé en mode démo"); return; }
+    if (isDemo) { toast.info("Upload desactive en mode demo"); return; }
     // ===== VALIDATION FICHIER =====
     // 1. Taille max 5MB
     const MAX_SIZE = 5 * 1024 * 1024;
