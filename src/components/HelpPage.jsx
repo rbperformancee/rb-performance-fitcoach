@@ -191,7 +191,7 @@ export default function HelpPage({ onClose }) {
     >
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "30%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08), transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto", padding: "40px 24px 80px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto", padding: "calc(env(safe-area-inset-top, 12px) + 28px) 24px 80px" }}>
         {/* Header */}
         <div style={{ paddingTop: "env(safe-area-inset-top, 8px)", marginBottom: 28, animation: "helpExpand 0.3s ease both" }}>
           <button
