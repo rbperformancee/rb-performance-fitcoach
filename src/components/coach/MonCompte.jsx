@@ -79,6 +79,7 @@ export default function MonCompte({ coachData, isDemo = false, onClose }) {
   };
 
   const logout = async () => {
+    if (isDemo) { toast.success("Desactive en mode demo"); return; }
     await supabase.auth.signOut();
     window.location.href = "/";
   };

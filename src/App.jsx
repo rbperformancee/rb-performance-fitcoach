@@ -904,15 +904,14 @@ function AppInner() {
   // Gate code coach : si le client n'a pas de coach_id assigne, demander le code
   // avant de montrer l'onboarding. Ne concerne PAS les clients existants qui ont
   // deja coach_id (backfill migration 001).
-  if (user && !isCoach && !authLoading && client && !client.coach_id) {
+  if (!isClientDemo && user && !isCoach && !authLoading && client && !client.coach_id) {
     return <CoachCodeGate client={client} onLinked={() => window.location.reload()} />;
   }
-  // Cas client n'existe pas encore en DB : on ouvre aussi le gate
-  if (user && !isCoach && !authLoading && !client) {
+  if (!isClientDemo && user && !isCoach && !authLoading && !client) {
     return <CoachCodeGate client={{ email: user.email, id: null }} onLinked={() => window.location.reload()} />;
   }
 
-  if (user && !isCoach && !authLoading && client?.onboarding_done !== true) {
+  if (!isClientDemo && user && !isCoach && !authLoading && client?.onboarding_done !== true) {
     return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
   }
 
@@ -1339,7 +1338,7 @@ function AppInner() {
           ) : page === "fuel" ? (
               <FuelPage key={page} client={client} appData={appData} />
           ) : page === "profile" ? (
-              <ProfilePage key={page} client={client} coachInfo={coachInfo} onLogout={() => supabase.auth.signOut()} supabase={supabase} appData={appData} />
+              <ProfilePage key={page} client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Desactive en mode demo") : () => supabase.auth.signOut()} supabase={supabase} appData={appData} />
           ) : (
             <main className="main" style={{ paddingTop: 8 }}>
               <WeightChart key={page} clientId={client?.id} client={client} appData={appData} />

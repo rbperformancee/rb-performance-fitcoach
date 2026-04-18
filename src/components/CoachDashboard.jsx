@@ -2654,7 +2654,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { icon: "users",    label: "Mon compte", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
     { type: "separator" },
     { icon: "message",  label: "Aide", color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); toast.success("Support : rb.performancee@gmail.com"); } },
-    { icon: "arrow-right", label: "Déconnexion", color: RED, onClick: () => { setShowMoreMenu(false); supabase.auth.signOut().then(() => { window.location.href = "/"; }); } },
+    { icon: "arrow-right", label: "Déconnexion", color: RED, onClick: () => { setShowMoreMenu(false); if (isDemo) { toast.info("Desactive en mode demo"); return; } supabase.auth.signOut().then(() => { window.location.href = "/"; }); } },
   ];
   const MoreMenu = showMoreMenu ? (
     <div style={{
