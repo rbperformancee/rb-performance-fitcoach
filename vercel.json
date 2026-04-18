@@ -28,13 +28,15 @@
       "schedule": "0 7 * * 1"
     }
   ],
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "app.rbperform.app" }],
-      "destination": "/index.html"
-    },
-    { "source": "/", "destination": "/landing.html" },
+      "missing": [{ "type": "host", "value": "app.rbperform.app" }],
+      "destination": "/landing.html",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
     { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" },
     { "source": "/founding",    "destination": "/founding.html" },
     { "source": "/link",        "destination": "/link.html" },
