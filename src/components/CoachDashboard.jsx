@@ -9,6 +9,7 @@ import { supabase } from "../lib/supabase";
 import { generateInvoicePDF } from "../utils/invoicePDF";
 import ProgrammeBuilder from "./ProgrammeBuilder";
 import { useClientRelance } from "../hooks/useClientRelance";
+import { useCoachPlans } from "../hooks/useCoachPlans";
 import { LOGO_B64 } from "../utils/logo";
 import ErrorBoundary from "./ErrorBoundary";
 import InvitationPanel from "./InvitationPanel";
@@ -41,7 +42,8 @@ import ThemeSwitcher from "./ThemeSwitcher";
 import { calculateChurnRisk } from "../lib/coachIntelligence";
 
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
-const SUB_PLANS = [
+// DEPRECATED — anciennes constantes, remplacées par coach_plans table
+const SUB_PLANS_LEGACY = [
   { id: "3m", label: "3 Mois", months: 3 },
   { id: "6m", label: "6 Mois", months: 6 },
   { id: "12m", label: "12 Mois", months: 12 },
@@ -688,7 +690,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             const isExpiring = daysLeft !== null && daysLeft <= 14 && daysLeft > 0;
             const isExpired = daysLeft !== null && daysLeft <= 0;
             const subColor = isExpired ? RED : isExpiring ? (daysLeft <= 7 ? RED : ORANGE) : G;
-            const planLabel = { "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan;
+            const planLabel = client._plan_name || { "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan || "Plan non défini";
 
             return (
               <div style={card}>
@@ -763,16 +765,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               {!client.subscription_start_date && (
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>Abonnement</div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {SUB_PLANS.map(p => {
-                      const on = uploadPlanId === p.id;
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {(coachPlans.length > 0 ? coachPlans : SUB_PLANS_LEGACY).map(p => {
+                      const planId = p.id;
+                      const label = p.name || p.label;
+                      const on = uploadPlanId === planId;
                       return (
-                        <button key={p.id} onClick={() => setUploadPlanId(p.id)} style={{
+                        <button key={planId} onClick={() => setUploadPlanId(planId)} style={{
                           padding: "7px 14px", borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                           background: on ? G_DIM : "rgba(255,255,255,0.03)",
                           border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.08)"}`,
                           color: on ? G : "rgba(255,255,255,0.4)",
-                        }}>{p.label}</button>
+                        }}>{label}</button>
                       );
                     })}
                   </div>
@@ -2017,6 +2021,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showCmdK, setShowCmdK] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [pillVisible, setPillVisible] = useState(true);
+  const { plans: coachPlans } = useCoachPlans(coachId);
 
   // Scroll listener sur <main> pour hide/show floating pill mobile
   const mainScrollRef = useRef(null);
@@ -2069,7 +2074,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       // ===== MULTI-TENANT : filtrage par coach_id =====
       let query = supabase
         .from("clients")
-        .select("*, programmes(id, programme_name, uploaded_at, is_active)")
+        .select("*, programmes(id, programme_name, uploaded_at, is_active), coach_plans:subscription_plan_id(id, name, price_per_month, duration_months, billing_type)")
         .order("created_at", { ascending: false });
       // Si coachId est fourni, on filtre. Sinon (fallback legacy) on charge tout.
       if (coachId) query = query.eq("coach_id", coachId);
@@ -2090,6 +2095,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           _lastActivity: lastActivity,
           _inactive: inactiveDays >= 7,
           _inactiveDays: inactiveDays < 999 ? inactiveDays : null,
+          // Dynamic plan pricing
+          _plan_price: c.coach_plans?.price_per_month ?? 0,
+          _plan_name: c.coach_plans?.name ?? "—",
+          _plan_months: c.coach_plans?.duration_months ?? null,
         };
       }));
       // Enrichissement pour intelligence predictive (1 volee de queries parallele)
@@ -2239,14 +2248,19 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       // pas les dates d'abonnement — le coach upload plusieurs programmes
       // pendant la duree de l'abonnement.
       if (!client.subscription_start_date && planId) {
-        const plan = SUB_PLANS.find(p => p.id === planId);
-        if (plan) {
+        // Try dynamic plan first, fallback to legacy
+        const dynPlan = coachPlans.find(p => p.id === planId);
+        const legacyPlan = SUB_PLANS_LEGACY.find(p => p.id === planId);
+        const months = dynPlan?.duration_months || legacyPlan?.months || 3;
+        const planName = dynPlan?.name || legacyPlan?.id || planId;
+        if (dynPlan || legacyPlan) {
           const startDate = new Date();
           const endDate = new Date();
-          endDate.setMonth(endDate.getMonth() + plan.months);
+          endDate.setMonth(endDate.getMonth() + months);
           await supabase.from("clients").update({
-            subscription_plan: plan.id,
-            subscription_duration_months: plan.months,
+            subscription_plan: planName, // text column (rollback safe)
+            subscription_plan_id: dynPlan?.id || null, // FK (new)
+            subscription_duration_months: months,
             subscription_start_date: startDate.toISOString(),
             subscription_end_date: endDate.toISOString(),
             subscription_status: "active",
