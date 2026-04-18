@@ -3,6 +3,8 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import AppIcon from "../AppIcon";
 import PushNotifModal from "./PushNotifModal";
+import CoachPlansSettings from "./CoachPlansSettings";
+import { useCoachPlans } from "../../hooks/useCoachPlans";
 
 const G = "#02d1ba";
 
@@ -51,9 +53,12 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
     setSaving(false);
   }
 
+  const { plans: coachPlans, reload: reloadPlans } = useCoachPlans(coachData?.id);
+
   const TABS = [
     { id: "profil", label: "Profil" },
     { id: "branding", label: "Coaching" },
+    { id: "plans", label: "Mes plans" },
     { id: "notifications", label: "Notifications" },
     { id: "abonnement", label: "Abonnement" },
     { id: "paiements", label: "Paiements" },
@@ -217,6 +222,12 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
 
             {/* ===== PARRAINAGE ===== */}
             <ReferralSection coachData={coachData} isDemo={isDemo} />
+          </Section>
+        )}
+
+        {tab === "plans" && (
+          <Section>
+            <CoachPlansSettings coachId={coachData?.id} plans={coachPlans} onReload={reloadPlans} />
           </Section>
         )}
 
