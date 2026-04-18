@@ -2633,7 +2633,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   return (
     <div style={{
-      height: "100vh",
+      height: "100dvh",
       width: "100vw",
       background: BG,
       fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
@@ -2641,9 +2641,6 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       display: "flex",
       overflow: "hidden",
       overflowX: "hidden",
-      paddingTop: isDemo
-        ? "calc(env(safe-area-inset-top, 0px) + 44px)"
-        : "env(safe-area-inset-top, 0px)",
     }}>
       {isDemo && (
         <DemoBanner onSignup={() => {
@@ -2824,6 +2821,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         WebkitOverflowScrolling: "touch",
         position: "relative",
         marginLeft: 220,
+        paddingTop: isDemo ? "calc(env(safe-area-inset-top, 0px) + 44px)" : "env(safe-area-inset-top, 0px)",
       }}>
       {MobileTopBar}
 
