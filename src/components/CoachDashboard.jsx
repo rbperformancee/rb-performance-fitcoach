@@ -2023,6 +2023,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [activeTab, setActiveTab] = useState("overview");
   const [pillVisible, setPillVisible] = useState(true);
   const [showCoachHome, setShowCoachHome] = useState(true);
+  const homeScreenDismissed = useRef(false);
   const { plans: coachPlans } = useCoachPlans(coachId);
 
   // Scroll listener sur <main> pour hide/show floating pill mobile
@@ -3235,21 +3236,20 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       </div>
       </main>
       {/* Coach Home Screen */}
-      {showCoachHome && !loading && clients.length > 0 && (
+      {showCoachHome && !homeScreenDismissed.current && !loading && clients.length > 0 && (
         <CoachHomeScreen
           coachData={coachData}
           businessScore={businessScore}
           mrr={mrr}
           clients={clients}
           urgentCount={urgentCount}
-          onDismiss={() => setShowCoachHome(false)}
+          onDismiss={() => { homeScreenDismissed.current = true; setShowCoachHome(false); }}
           onNavigate={(id) => {
+            homeScreenDismissed.current = true;
             setShowCoachHome(false);
-            setTimeout(() => {
-              if (id === "clients") { setShowClientList(true); setActiveTab("clients"); }
-              else if (id === "more") { setShowMoreMenu(true); }
-              else { setShowClientList(false); setShowSettings(false); setActiveTab(id); }
-            }, 50);
+            if (id === "clients") { setShowClientList(true); setActiveTab("clients"); }
+            else if (id === "more") { setShowMoreMenu(true); }
+            else { setShowClientList(false); setShowSettings(false); setActiveTab(id); }
           }}
         />
       )}
