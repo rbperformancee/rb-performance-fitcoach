@@ -172,52 +172,11 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
       </div>
     </div>
 
-    <!-- CTA -->
-    <button class="cta" id="checkoutBtn" onclick="startCheckout()">
-      Rejoindre les 50 Founding Coachs →
-    </button>
-    <div class="cta-sub">Paiement sécurisé par Stripe · Annulable à tout moment · Sans engagement</div>
-
-    <!-- Success/Cancel messages -->
-    <div id="successMsg" style="display:none;padding:20px;background:rgba(0,201,167,0.06);border:1px solid rgba(0,201,167,0.2);border-radius:14px;text-align:center;margin-bottom:20px">
-      <div style="font-size:24px;margin-bottom:8px">&#10003;</div>
-      <div style="font-size:16px;font-weight:700;color:#00C9A7;margin-bottom:4px">Bienvenue, Founding Coach.</div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.4)">Ton paiement est confirmé. Check tes emails.</div>
-    </div>
-
-    <script>
-    function startCheckout() {
-      var btn = document.getElementById('checkoutBtn');
-      btn.textContent = 'Redirection vers Stripe...';
-      btn.style.opacity = '0.7';
-      btn.disabled = true;
-
-      fetch('/api/checkout-founding', { method: 'POST' })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data.url) {
-            window.location.href = data.url;
-          } else {
-            alert(data.error || 'Erreur. Contacte rb.performancee@gmail.com');
-            btn.textContent = 'Rejoindre les 50 Founding Coachs →';
-            btn.style.opacity = '1';
-            btn.disabled = false;
-          }
-        })
-        .catch(function() {
-          alert('Erreur réseau. Réessaie ou contacte rb.performancee@gmail.com');
-          btn.textContent = 'Rejoindre les 50 Founding Coachs →';
-          btn.style.opacity = '1';
-          btn.disabled = false;
-        });
-    }
-
-    // Show success/cancel message from Stripe redirect
-    if (window.location.search.includes('success=true')) {
-      document.getElementById('successMsg').style.display = 'block';
-      document.getElementById('checkoutBtn').style.display = 'none';
-    }
-    </script>
+    <!-- CTA — Waitlist en attendant le lancement -->
+    <a class="cta" href="/waitlist">
+      Rejoindre la Waitlist Founding →
+    </a>
+    <div class="cta-sub">Lancement mai 2026 · Inscris-toi pour bloquer ton prix a vie</div>
 
     <!-- Guarantee -->
     <div class="guarantee">
