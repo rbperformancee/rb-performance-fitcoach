@@ -35,6 +35,8 @@ import TransformationView from "./coach/TransformationView";
 import AIAnalyze from "./coach/AIAnalyze";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
 import CoachHomeScreen from "./coach/CoachHomeScreen";
+import MonCompte from "./coach/MonCompte";
+import Sentinel, { SentinelTeaser } from "./coach/Sentinel";
 import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
@@ -2019,7 +2021,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showMonCompte, setShowMonCompte] = useState(false);
+  const [showSentinel, setShowSentinel] = useState(false);
+  const [showSentinelTeaser, setShowSentinelTeaser] = useState(false);
   const [showCmdK, setShowCmdK] = useState(false);
+
+  // Sentinel gating: Pro/Elite/Founding only, behind feature flag
+  const sentinelEnabled = process.env.REACT_APP_SENTINEL_ENABLED === "true" || coachData?.features?.sentinel_beta === true;
+  const SENTINEL_PLANS = ["pro", "elite"];
+  const isFounding = coachData?.is_founding === true;
+  const hasSentinelAccess = isFounding || SENTINEL_PLANS.includes(coachData?.subscription_plan);
   const [activeTab, setActiveTab] = useState("overview");
   const [pillVisible, setPillVisible] = useState(true);
   const [showCoachHome, setShowCoachHome] = useState(true);
@@ -2160,7 +2171,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   // Pull-to-refresh mobile (desactive pendant les overlays full-screen)
   const ptr = usePullToRefresh({
     onRefresh: async () => { haptic.success(); await loadClients(); },
-    disabled: showClientList || !!selected || showPipeline || showAnalytics || showCmdK,
+    disabled: showClientList || !!selected || showPipeline || showAnalytics || showMonCompte || showCmdK,
   });
 
   // Systeme de relance automatique (push notifs aux clients inactifs / abos expirants)
@@ -2545,10 +2556,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const pillTabs = ["overview", "clients", "programmes", "business"];
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Home",      shortLabel: "HOME",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("overview"); } },
-    { id: "clients",     icon: "users",       label: "Clients",   shortLabel: "CLIENTS", onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Prog",      shortLabel: "PROG",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
-    { id: "business",    icon: "trending",    label: "Business",  shortLabel: "BIZ",     onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("business"); } },
+    { id: "overview",    icon: "chart",       label: "Home",      shortLabel: "HOME",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
+    { id: "clients",     icon: "users",       label: "Clients",   shortLabel: "CLIENTS", onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
+    { id: "programmes",  icon: "document",    label: "Prog",      shortLabel: "PROG",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
+    { id: "business",    icon: "trending",    label: "Business",  shortLabel: "BIZ",     onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
     { id: "more",        icon: "plus",        label: "Plus",      shortLabel: "PLUS",    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   // Swipe gesture sur la pill
@@ -2597,7 +2608,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1)",
     }}>
       {pillItems.map((p) => {
-        const isActive = (p.id === "more" && (showSettings || showAnalytics || showMoreMenu)) || (!showSettings && !showAnalytics && !showMoreMenu && activeTab === p.id);
+        const isActive = (p.id === "more" && (showSettings || showAnalytics || showMonCompte || showMoreMenu)) || (!showSettings && !showAnalytics && !showMonCompte && !showMoreMenu && activeTab === p.id);
         return (
           <button
             key={p.id}
@@ -2625,6 +2636,28 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   );
 
   // ===== MORE MENU (popup above pill) =====
+  const moreMenuItems = [
+    ...(sentinelEnabled ? [{
+      icon: "lightning", label: "Sentinel", color: "#818cf8",
+      locked: !hasSentinelAccess,
+      onClick: () => {
+        setShowMoreMenu(false);
+        if (hasSentinelAccess) {
+          setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowSentinel(true);
+        } else {
+          setShowSentinelTeaser(true);
+        }
+      },
+    }] : []),
+    { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
+    { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); } },
+    { type: "separator" },
+    { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
+    { icon: "users",    label: "Mon compte", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
+    { type: "separator" },
+    { icon: "message",  label: "Aide", color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); toast.success("Support : rb.performancee@gmail.com"); } },
+    { icon: "arrow-right", label: "Déconnexion", color: RED, onClick: () => { setShowMoreMenu(false); supabase.auth.signOut().then(() => { window.location.href = "/"; }); } },
+  ];
   const MoreMenu = showMoreMenu ? (
     <div style={{
       position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)",
@@ -2634,29 +2667,30 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       borderRadius: 16, padding: 6,
       backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
       display: "flex", flexDirection: "column", gap: 2,
-      minWidth: 180, animation: "fadeUp 0.2s ease both",
+      minWidth: 200, animation: "fadeUp 0.2s ease both",
       boxShadow: "0 -10px 40px rgba(0,0,0,0.5)",
     }}>
-      {[
-        { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowAnalytics(true); } },
-        { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowPipeline(true); } },
-        { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(true); } },
-      ].map((item) => (
-        <button key={item.label} onClick={item.onClick} style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "12px 16px", borderRadius: 12,
-          background: "transparent", border: "none",
-          color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 500,
-          cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-          transition: "background 0.15s",
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
-        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-        >
-          <Icon name={item.icon} size={18} color={G} />
-          {item.label}
-        </button>
-      ))}
+      {moreMenuItems.map((item, i) =>
+        item.type === "separator" ? (
+          <div key={`sep-${i}`} style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "4px 12px" }} />
+        ) : (
+          <button key={item.label} onClick={item.onClick} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "12px 16px", borderRadius: 12,
+            background: "transparent", border: "none",
+            color: item.color || "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 500,
+            cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <Icon name={item.icon} size={18} color={item.color || G} />
+            {item.label}
+            {item.locked && <span style={{ fontSize: 10, marginLeft: "auto", opacity: 0.4 }}>Pro</span>}
+          </button>
+        )
+      )}
     </div>
   ) : null;
 
@@ -2682,7 +2716,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   }
 
   return (
-    <div style={{
+    <div className={isDemo ? "coach-root demo-active" : "coach-root"} style={{
       height: "100dvh",
       width: "100vw",
       background: BG,
@@ -2755,7 +2789,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         .coach-client-panel,.coach-overlay-panel{left:0 !important}
         .coach-mobile-bell{display:block !important}
         @media(max-width:768px){
-          .coach-main-inner{padding:0 20px 120px !important}
+          .coach-main-inner{padding:0 16px 120px !important}
           .coach-client-panel-inner{padding:0 16px 120px !important}
         }
         @media(min-width:769px){
@@ -2775,6 +2809,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         /* Coachmark first-time tooltip reveal */
         .coach-floating-pill.pill-showcase button::after{opacity:1 !important;transform:translateX(-50%) translateY(0) !important;animation:pillFadeOut 400ms ease 2600ms forwards}
         @keyframes pillFadeOut{to{opacity:0}}
+        /* Demo banner offset — push overlay headers down when demo banner visible */
+        .demo-active .mc-header,.demo-active .an-header,.demo-active .kan-header,.demo-active .set-header,.demo-active .sent-header{padding-top:calc(36px + 16px) !important}
+        .demo-active .coach-main{padding-top:36px !important}
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
         .cd-row:hover .cd-avatar-glow{opacity:1!important}
@@ -2847,6 +2884,32 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           coachData={coachData}
           isDemo={isDemo}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+      {showMonCompte && (
+        <MonCompte
+          coachData={coachData}
+          isDemo={isDemo}
+          onClose={() => setShowMonCompte(false)}
+        />
+      )}
+      {showSentinel && hasSentinelAccess && (
+        <ErrorBoundary name="Sentinel">
+          <Sentinel
+            coachData={coachData}
+            onClose={() => setShowSentinel(false)}
+            onNavigate={(target) => {
+              setShowSentinel(false);
+              if (target === "clients") { setShowClientList(true); setActiveTab("clients"); }
+              else if (target === "settings") { setShowSettings(true); }
+            }}
+          />
+        </ErrorBoundary>
+      )}
+      {showSentinelTeaser && (
+        <SentinelTeaser
+          onClose={() => setShowSentinelTeaser(false)}
+          onUpgrade={() => { setShowSentinelTeaser(false); toast.success("Stripe Customer Portal — bientot disponible"); }}
         />
       )}
 
