@@ -560,6 +560,7 @@ function AppInner() {
   const [isCoach, setIsCoach] = React.useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [showSuperAdmin, setShowSuperAdmin] = React.useState(true);
+  const [showTransition, setShowTransition] = React.useState(false);
   const [showLogin, setShowLogin] = React.useState(false);
   const [showSaasLanding, setShowSaasLanding] = React.useState(() => {
     // Defaut : landing SaaS pour les coachs (route / non-connecte).
@@ -1070,9 +1071,6 @@ function AppInner() {
       />
     );
   }
-
-  // Transition loader (lightning bolt) entre SuperAdmin et Coach
-  const [showTransition, setShowTransition] = React.useState(false);
 
   // ── Super-admin → dashboard plateforme avec toggle coach ──
   if (isSuperAdmin && isCoach && showSuperAdmin && showCoachDash) {
