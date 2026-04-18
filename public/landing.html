@@ -2160,108 +2160,95 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </p>
     </div>
 
-    <!-- ===== TIME MACHINE — LOSS SIMULATOR (inside features) ===== -->
-    <div id="time-machine" style="position:relative;min-height:60vh;background:#000;border-radius:22px;margin-bottom:60px;overflow:hidden;display:flex;align-items:center;justify-content:center">
+    <!-- ===== SENTINEL LIVE DEMO (inside features) ===== -->
+    <div id="sentinel-demo" style="position:relative;background:#000;border-radius:22px;margin-bottom:60px;overflow:hidden;padding:32px 24px">
     <style>
-      #time-machine *{box-sizing:border-box}
-      .tm-form,.tm-journey,.tm-cta{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-      .tm-hidden{display:none !important}
-      .tm-title{font-family:'Syne',sans-serif;font-size:clamp(32px,7vw,64px);font-weight:900;letter-spacing:-2px;color:#fff;text-align:center;line-height:1.05;margin:0}
-      .tm-title span{color:#02d1ba}
-      .tm-sub{font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(255,255,255,.5);margin-top:16px;text-align:center}
-      .tm-inputs{max-width:460px;width:100%;margin-top:32px;display:flex;flex-direction:column;gap:18px}
-      .tm-field{display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(255,255,255,.4)}
-      .tm-field label{flex:1;text-align:right;white-space:nowrap;min-width:0}
-      .tm-field input{width:100px;background:rgba(2,209,186,.05);border:none;border-bottom:1px solid rgba(2,209,186,.3);padding:10px 12px;color:#02d1ba;font-family:'JetBrains Mono',monospace;font-size:16px;outline:none;text-align:center;transition:border-color .2s}
-      .tm-field input:focus{border-bottom:2px solid #02d1ba;box-shadow:0 2px 12px rgba(2,209,186,.2)}
-      .tm-field input::placeholder{color:rgba(2,209,186,.25)}
-      .tm-field .tm-unit{color:rgba(2,209,186,.3);min-width:24px}
-      .tm-launch{margin-top:28px;padding:14px 40px;background:#02d1ba;color:#000;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;border:none;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;position:relative;overflow:hidden;transition:opacity .2s}
-      .tm-launch:disabled{opacity:.3;cursor:not-allowed}
-      .tm-launch::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);transition:none}
-      .tm-launch:not(:disabled):hover::after{animation:tmShimmer .6s ease}
-      @keyframes tmShimmer{to{left:100%}}
-      .tm-skip{position:absolute;top:16px;right:16px;z-index:10;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.25);background:none;border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;cursor:pointer;transition:color .2s}
-      .tm-skip:hover{color:rgba(255,255,255,.5)}
-      .tm-dot{width:8px;height:8px;border-radius:50%;background:#02d1ba;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
-      .tm-dot.active{transform:translate(-50%,-50%) scale(1)}
-      .tm-ring{position:absolute;top:50%;left:50%;border-radius:50%;border:1px solid rgba(2,209,186,.6);transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none}
-      @keyframes tmRing{0%{transform:translate(-50%,-50%) scale(0);opacity:.8}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
-      .tm-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(2,209,186,.03) 2px,rgba(2,209,186,.03) 4px);pointer-events:none;opacity:0;transition:opacity .5s}
-      .tm-scanlines.active{opacity:1}
-      .tm-typewriter{font-family:'JetBrains Mono',monospace;color:rgba(2,209,186,.7);font-size:13px;letter-spacing:2px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap}
-      .tm-dates{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'JetBrains Mono',monospace;font-size:clamp(18px,4vw,32px);color:rgba(255,255,255,.15);text-align:center;pointer-events:none}
-      .tm-dates .current{color:#02d1ba;text-shadow:0 0 20px rgba(2,209,186,.4)}
-      .tm-timeline{max-width:600px;width:100%;position:relative;padding-left:32px}
-      .tm-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#02d1ba;transform:scaleY(0);transform-origin:top;transition:transform 1.5s ease}
-      .tm-timeline.draw::before{transform:scaleY(1)}
-      .tm-event{opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(.22,1,.36,1);margin-bottom:16px;border:1px solid rgba(2,209,186,.2);border-radius:8px;padding:14px 18px;background:rgba(2,209,186,.03);font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;color:rgba(255,255,255,.6);position:relative}
-      .tm-event.show{opacity:1;transform:translateY(0)}
-      .tm-event .tm-date{color:rgba(255,255,255,.3);font-size:10px;margin-bottom:6px}
-      .tm-event .tm-warn{color:#fbbf24}
-      .tm-event .tm-fail{color:#ff3b3b}
-      .tm-event .tm-loss{color:#ff3b3b;font-size:14px;font-weight:700;margin-top:4px}
-      .tm-event .tm-dot-tl{position:absolute;left:-28px;top:18px;width:10px;height:10px;border-radius:50%;background:#02d1ba;border:2px solid #000}
-      .tm-total-label{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:3px;text-transform:uppercase;text-align:center}
-      .tm-total-value{font-family:'Syne',sans-serif;font-size:clamp(48px,12vw,110px);font-weight:900;color:#ff3b3b;text-align:center;line-height:1;margin-top:12px;text-shadow:0 0 60px rgba(255,59,59,.3)}
-      @keyframes tmPulseRed{0%,100%{text-shadow:0 0 60px rgba(255,59,59,.3)}50%{text-shadow:0 0 100px rgba(255,59,59,.5)}}
-      .tm-total-value.pulse{animation:tmPulseRed 2s ease infinite}
-      .tm-recover{max-width:500px;width:100%;text-align:left}
-      .tm-recover-line{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:clamp(12px,2.5vw,15px);color:#02d1ba;opacity:0;transform:translateX(-10px);transition:all .5s ease;margin-bottom:12px}
-      .tm-recover-line.show{opacity:1;transform:translateX(0)}
-      .tm-recover-line .check{width:22px;height:22px;border-radius:50%;background:rgba(2,209,186,.15);border:1px solid rgba(2,209,186,.3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-      .tm-roi{text-align:center;font-family:'JetBrains Mono',monospace;font-size:14px;color:rgba(255,255,255,.6);line-height:2.2}
-      .tm-roi .val{color:#fff;font-weight:700}
-      .tm-roi .roi-num{color:#02d1ba;font-size:clamp(24px,5vw,40px);font-weight:900;display:block;margin-top:8px}
-      .tm-roi .divider{display:block;width:180px;height:1px;background:#02d1ba;margin:8px auto}
-      .tm-final-title{font-family:'Syne',sans-serif;font-size:clamp(24px,5vw,40px);font-weight:900;color:#fff;text-align:center;letter-spacing:-1px;line-height:1.15}
-      .tm-final-title span{color:#02d1ba}
-      .tm-final-btn{margin-top:24px;padding:16px 40px;background:#02d1ba;color:#000;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;border:none;border-radius:8px;cursor:pointer;letter-spacing:1px;transition:transform .15s;box-shadow:0 8px 30px rgba(2,209,186,.3)}
-      .tm-final-btn:hover{transform:scale(1.04)}
-      .tm-replay{margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.2);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-      .tm-replay:hover{color:rgba(255,255,255,.4)}
-      @media(prefers-reduced-motion:reduce){.tm-form,.tm-journey,.tm-cta{transition:none}.tm-event{transition:none}.tm-recover-line{transition:none}.tm-timeline::before{transition:none}}
-      @media(max-width:600px){.tm-field{flex-direction:column;gap:4px;align-items:stretch}.tm-field label{text-align:left;font-size:10px}.tm-field input{width:100%}.tm-event{font-size:10px;padding:10px 12px}.tm-inputs{margin-top:20px;gap:14px}}
+      #sentinel-demo *{box-sizing:border-box}
+      .sl-header{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+      .sl-dot{width:8px;height:8px;border-radius:50%;background:#02d1ba;box-shadow:0 0 10px rgba(2,209,186,.6);animation:slPulse 2s ease infinite}
+      @keyframes slPulse{0%,100%{opacity:1}50%{opacity:.4}}
+      .sl-badge{font-family:'JetBrains Mono',monospace;font-size:10px;color:#02d1ba;letter-spacing:2px;text-transform:uppercase;background:rgba(2,209,186,.08);border:1px solid rgba(2,209,186,.2);border-radius:100px;padding:4px 12px}
+      .sl-title{font-family:'Syne',sans-serif;font-size:clamp(22px,5vw,36px);font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:6px}
+      .sl-title span{color:#818cf8}
+      .sl-sub{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.35);margin-bottom:28px}
+      .sl-feed{display:flex;flex-direction:column;gap:10px;max-width:600px}
+      .sl-notif{display:flex;gap:12px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:rgba(255,255,255,.6);opacity:0;transform:translateY(12px);transition:all .5s cubic-bezier(.22,1,.36,1)}
+      .sl-notif.show{opacity:1;transform:translateY(0)}
+      .sl-notif .sl-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+      .sl-notif .sl-time{font-size:10px;color:rgba(255,255,255,.2);margin-bottom:2px}
+      .sl-notif .sl-text{flex:1}
+      .sl-notif .sl-val{color:#02d1ba;font-weight:700}
+      .sl-notif .sl-warn{color:#fbbf24;font-weight:700}
+      .sl-notif .sl-ok{color:#02d1ba}
+      .sl-total{margin-top:20px;padding:16px 20px;background:rgba(2,209,186,.06);border:1px solid rgba(2,209,186,.2);border-radius:14px;display:flex;align-items:center;justify-content:space-between;opacity:0;transform:translateY(12px);transition:all .5s ease}
+      .sl-total.show{opacity:1;transform:translateY(0)}
+      .sl-total-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px}
+      .sl-total-val{font-family:'Syne',sans-serif;font-size:clamp(24px,5vw,36px);font-weight:900;color:#02d1ba;letter-spacing:-1px}
+      @media(max-width:500px){.sl-notif{font-size:11px;padding:10px 12px}.sl-notif .sl-icon{width:28px;height:28px;font-size:12px}}
     </style>
-    <div class="tm-form" id="tmForm">
-      <h2 class="tm-title" style="font-size:clamp(24px,5vw,44px)">J'ai mis en place un Sentinel.</h2>
-      <h2 class="tm-title" style="font-size:clamp(24px,5vw,44px)"><span>Il surveille tout pour toi.</span></h2>
-      <p class="tm-sub">Rentre tes chiffres. Decouvre ce que tu perds chaque annee.</p>
-      <div class="tm-inputs">
-        <div class="tm-field"><label>Nombre de clients</label><input type="number" id="tmClients" min="1" placeholder="15" inputmode="numeric" style="background:rgba(2,209,186,.08);border:1px solid rgba(2,209,186,.25);border-radius:8px"></div>
-        <div class="tm-field"><label>Prix moyen / mois</label><input type="number" id="tmPrice" min="1" placeholder="120" inputmode="numeric" style="background:rgba(2,209,186,.08);border:1px solid rgba(2,209,186,.25);border-radius:8px"><span class="tm-unit">EUR</span></div>
-      </div>
-      <button class="tm-launch" id="tmLaunch" disabled>> LANCER</button>
+    <!-- Header -->
+    <div class="sl-header">
+      <div class="sl-dot"></div>
+      <span class="sl-badge">Sentinel actif</span>
     </div>
-    <div class="tm-journey tm-hidden" id="tmJourney">
-      <div class="tm-scanlines" id="tmScanlines"></div>
-      <div class="tm-dot" id="tmDot"></div>
-      <div id="tmRings"></div>
-      <div class="tm-typewriter tm-hidden" id="tmTypewriter"></div>
-      <div class="tm-dates tm-hidden" id="tmDates"></div>
-      <button class="tm-skip tm-hidden" id="tmSkip" onclick="tmSkipToResults()">skip →</button>
-      <div class="tm-hidden" id="tmTimeline" style="width:100%;display:flex;flex-direction:column;align-items:center;padding:20px">
-        <div style="font-family:'Syne',sans-serif;font-size:clamp(12px,2.5vw,16px);font-weight:700;color:rgba(255,255,255,.3);letter-spacing:3px;text-transform:uppercase;text-align:center;margin-bottom:24px">// 30 DERNIERS JOURS //</div>
-        <div class="tm-timeline" id="tmTimelineInner">
-          <div class="tm-event" id="tmEvent1"><div class="tm-dot-tl"></div></div>
-          <div class="tm-event" id="tmEvent2"><div class="tm-dot-tl"></div></div>
-          <div class="tm-event" id="tmEvent3"><div class="tm-dot-tl"></div></div>
+    <div class="sl-title">Tu perds de l'argent chaque jour sans le savoir<span>.</span></div>
+    <div class="sl-sub" style="max-width:520px;line-height:1.7;margin-bottom:20px">Clients qui partent en silence. Upsells jamais proposes. Prix en dessous du marche. J'ai construit une IA qui detecte tout ca a ta place. Elle s'appelle Sentinel. Elle tourne chaque matin a 7h. Voila ce qu'elle fait pendant que tu dors :</div>
+    <!-- Feed -->
+    <div class="sl-feed" id="slFeed">
+      <div class="sl-notif" data-sl="0">
+        <div class="sl-icon" style="background:rgba(255,107,107,.1);color:#ff6b6b">!</div>
+        <div class="sl-text">
+          <div class="sl-time">07:31</div>
+          <span class="sl-warn">ALERTE CHURN</span> — Client M.D. inactif depuis 6 jours<br>→ Message de relance automatique envoye <span class="sl-val">(+120EUR sauve)</span>
         </div>
       </div>
-      <div class="tm-hidden" id="tmTotalWrap" style="text-align:center;padding:20px"><div class="tm-total-label">TOTAL PERDU EN 30 JOURS :</div><div class="tm-total-value" id="tmTotalValue">-0 EUR</div></div>
-      <div class="tm-hidden" id="tmTwist" style="display:flex;flex-direction:column;align-items:center;padding:20px">
-        <div style="font-family:'Syne',sans-serif;font-size:clamp(14px,3.5vw,24px);font-weight:700;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:24px">AVEC SENTINEL :</div>
-        <div class="tm-recover" id="tmRecover"></div>
+      <div class="sl-notif" data-sl="1">
+        <div class="sl-icon" style="background:rgba(251,191,36,.1);color:#fbbf24">↑</div>
+        <div class="sl-text">
+          <div class="sl-time">07:32</div>
+          <span class="sl-warn">UPSELL DETECTE</span> — Client S.R. fin de pack dans 5 jours<br>→ Proposition pack 6 mois generee <span class="sl-val">(+660EUR potentiel)</span>
+        </div>
       </div>
-      <div class="tm-hidden" id="tmRoi" style="padding:20px"><div class="tm-roi" id="tmRoiInner"></div></div>
+      <div class="sl-notif" data-sl="2">
+        <div class="sl-icon" style="background:rgba(129,140,248,.1);color:#818cf8">$</div>
+        <div class="sl-text">
+          <div class="sl-time">07:33</div>
+          <span style="color:#818cf8;font-weight:700">PRIX MARCHE</span> — Tes tarifs sont 18% sous la mediane<br>→ Recommandation : +15EUR/mois/client <span class="sl-val">(+225EUR/mois)</span>
+        </div>
+      </div>
+      <div class="sl-notif" data-sl="3">
+        <div class="sl-icon" style="background:rgba(2,209,186,.1);color:#02d1ba">✓</div>
+        <div class="sl-text">
+          <div class="sl-time">07:34</div>
+          <span class="sl-ok">PLAYBOOK DU JOUR</span> — 3 actions generees pour ce matin<br>→ Impact estime : <span class="sl-val">+340EUR ce mois</span>
+        </div>
+      </div>
     </div>
-    <div class="tm-cta tm-hidden" id="tmCta">
-      <div class="tm-final-title">TU ARRETES DE PERDRE.<br><span>TU REJOINS.</span></div>
-      <button class="tm-final-btn" onclick="window.location.href='/waitlist'">> REJOINDRE → 50 PLACES</button>
-      <button class="tm-replay" onclick="tmReplay()">< REFAIRE LA SIMULATION</button>
+    <!-- Total -->
+    <div class="sl-total" id="slTotal">
+      <div class="sl-total-label">Recupere ce mois grace a Sentinel</div>
+      <div class="sl-total-val" id="slTotalVal">+1 345EUR</div>
     </div>
     <script>
-    (function(){var $=function(id){return document.getElementById(id)};var cl=$('tmClients'),pr=$('tmPrice'),btn=$('tmLaunch');var rm=window.matchMedia('(prefers-reduced-motion:reduce)').matches;if(localStorage.tm_clients)cl.value=localStorage.tm_clients;if(localStorage.tm_price)pr.value=localStorage.tm_price;cv();[cl,pr].forEach(function(i){i.addEventListener('input',cv)});function cv(){btn.disabled=!(+cl.value>=1&&+pr.value>=1)}function cL(c,p){var a=Math.round(c*.15*p*12),b=Math.round(c*.08*p*12),d=Math.round(c*.25*p*12),t=a+b+d;return{lostChurn:a,lostUpsell:b,lostPricing:d,total:t,roi:(t/(199*12)).toFixed(1)}}function cU(el,tgt,dur,pre,suf){var s=performance.now();var f=function(n){return n.toLocaleString('fr-FR')};function tk(now){var p=Math.min((now-s)/dur,1);var e=1-Math.pow(1-p,3);el.textContent=pre+f(Math.round(tgt*e))+suf;if(p<1)requestAnimationFrame(tk)}requestAnimationFrame(tk)}function tw(el,txt,spd,cb){el.textContent='';el.classList.remove('tm-hidden');var i=0;var iv=setInterval(function(){el.textContent=txt.slice(0,++i)+(i<txt.length?'|':'');if(i>=txt.length){clearInterval(iv);if(cb)setTimeout(cb,300)}},spd)}var sk=false;window.tmSkipToResults=function(){sk=true};window.tmReplay=function(){sk=false;$('tmForm').classList.remove('tm-hidden');$('tmJourney').classList.add('tm-hidden');$('tmCta').classList.add('tm-hidden');$('tmDot').classList.remove('active');$('tmScanlines').classList.remove('active');$('tmRings').innerHTML='';['tmTypewriter','tmDates','tmTimeline','tmTotalWrap','tmTwist','tmRoi'].forEach(function(id){$(id).classList.add('tm-hidden')});$('tmSkip').classList.add('tm-hidden');['tmEvent1','tmEvent2','tmEvent3'].forEach(function(id){$(id).classList.remove('show')});$('tmTimelineInner').classList.remove('draw')};btn.addEventListener('click',function(){var c=+cl.value,p=+pr.value;if(c<1||p<1)return;localStorage.tm_clients=c;localStorage.tm_price=p;var L=cL(c,p);var now=new Date();var fD=function(dt,h,m){return dt.getFullYear()+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+String(dt.getDate()).padStart(2,'0')+' — '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')};try{if(window.gtag)window.gtag('event','time_machine_started',{clients:c,price:p})}catch(e){}if(rm){$('tmForm').classList.add('tm-hidden');$('tmJourney').classList.remove('tm-hidden');sT(L,now,c,p);return}$('tmForm').classList.add('tm-hidden');setTimeout(function(){$('tmJourney').classList.remove('tm-hidden');$('tmSkip').classList.remove('tm-hidden');$('tmDot').classList.add('active');$('tmScanlines').classList.add('active');[0,400,800].forEach(function(dl){setTimeout(function(){var r=document.createElement('div');r.className='tm-ring';r.style.cssText='width:200vmax;height:200vmax;animation:tmRing 1.2s ease-out forwards';$('tmRings').appendChild(r);setTimeout(function(){r.remove()},1400)},dl)});setTimeout(function(){tw($('tmTypewriter'),'SENTINEL ANALYSE EN COURS...',40)},800);setTimeout(function(){if(sk)return sT(L,now,c,p);$('tmTypewriter').classList.add('tm-hidden');$('tmDot').classList.remove('active');var de=$('tmDates');de.classList.remove('tm-hidden');de.innerHTML='<div style="font-size:11px;color:rgba(2,209,186,.4);letter-spacing:2px;margin-bottom:8px">ANALYSE SUR 12 MOIS...</div><div class="current"></div>';var dd=de.querySelector('.current');var di=0;var iv=setInterval(function(){if(sk){clearInterval(iv);sT(L,now,c,p);return}var dt=new Date(now.getTime()-di*30*864e5);dd.textContent=fD(dt,now.getHours(),now.getMinutes());di++;if(di>12){clearInterval(iv);setTimeout(function(){if(sk)return sT(L,now,c,p);de.classList.add('tm-hidden');sT(L,now,c,p)},600)}},120)},3200)},400)});function sT(L,now,c,p){$('tmSkip').classList.add('tm-hidden');$('tmScanlines').classList.remove('active');$('tmDot').classList.remove('active');$('tmDates').classList.add('tm-hidden');$('tmTypewriter').classList.add('tm-hidden');var tl=$('tmTimeline');tl.classList.remove('tm-hidden');tl.style.opacity='1';var inner=$('tmTimelineInner');var fF=function(dt){return dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}).toUpperCase()};var d1=new Date(now.getTime()-300*864e5),d2=new Date(now.getTime()-180*864e5),d3=new Date(now.getTime()-60*864e5);$('tmEvent1').innerHTML='<div class="tm-dot-tl"></div><div class="tm-date">'+fF(d1)+'</div>15% de tes clients partent sans alerte<br><span class="tm-warn">CHURN SILENCIEUX x12 mois</span><br><span class="tm-fail">NON DETECTE</span><br><span class="tm-loss">PERTE: -<span id="tmL1">0</span> EUR/an</span>';$('tmEvent2').innerHTML='<div class="tm-dot-tl"></div><div class="tm-date">'+fF(d2)+'</div>8% auraient upgrade si relances<br><span class="tm-warn">UPSELL MANQUE x12 mois</span><br><span class="tm-fail">NON PROPOSE</span><br><span class="tm-loss">MANQUE: -<span id="tmL2">0</span> EUR/an</span>';$('tmEvent3').innerHTML='<div class="tm-dot-tl"></div><div class="tm-date">'+fF(d3)+'</div>Tes prix sont 25% sous le marche<br>'+p+'EUR vs '+Math.round(p*1.25)+'EUR x '+c+' clients x 12 mois<br><span class="tm-fail">NON IDENTIFIE</span><br><span class="tm-loss">PERDU: -<span id="tmL3">0</span> EUR/an</span>';setTimeout(function(){inner.classList.add('draw')},100);var sp=rm?0:1500;setTimeout(function(){$('tmEvent1').classList.add('show');setTimeout(function(){cU($('tmL1'),L.lostChurn,800,'','')},300)},sp?500:0);setTimeout(function(){$('tmEvent2').classList.add('show');setTimeout(function(){cU($('tmL2'),L.lostUpsell,800,'','')},300)},sp?2000:100);setTimeout(function(){$('tmEvent3').classList.add('show');setTimeout(function(){cU($('tmL3'),L.lostPricing,800,'','')},300)},sp?3500:200);setTimeout(function(){tl.style.transition='opacity .6s';tl.style.opacity='.3';var tw2=$('tmTotalWrap');tw2.classList.remove('tm-hidden');var tv=$('tmTotalValue');cU(tv,L.total,2000,'-',' EUR/AN');setTimeout(function(){tv.classList.add('pulse')},2100)},sp?5500:1000);setTimeout(function(){$('tmTotalWrap').classList.add('tm-hidden');tl.classList.add('tm-hidden');$('tmTwist').classList.remove('tm-hidden');var rec=$('tmRecover');rec.innerHTML='';[{t:'Alertes churn → clients sauves',v:L.lostChurn},{t:'Upsells automatiques → convertis',v:L.lostUpsell},{t:'Prix realignes → recuperes',v:L.lostPricing}].forEach(function(l,i){var div=document.createElement('div');div.className='tm-recover-line';div.innerHTML='<span class="check">✓</span><span>'+l.t+' (+<span id="tmR'+i+'">0</span>EUR/an)</span>';rec.appendChild(div);setTimeout(function(){div.classList.add('show');setTimeout(function(){cU($('tmR'+i),l.v,600,'+','')},200)},i*(rm?100:600))})},sp?9000:2000);setTimeout(function(){$('tmTwist').classList.add('tm-hidden');var rW=$('tmRoi');rW.classList.remove('tm-hidden');var rI=$('tmRoiInner');rI.innerHTML='';var l1=document.createElement('div');l1.textContent='SENTINEL (Pro): 2 388 EUR/an';l1.style.opacity='0';var l2=document.createElement('div');l2.innerHTML='RECUPERE: <span class="val">'+L.total.toLocaleString('fr-FR')+' EUR/an</span>';l2.style.opacity='0';var dv=document.createElement('span');dv.className='divider';dv.style.opacity='0';var l3=document.createElement('div');l3.style.opacity='0';l3.innerHTML='ROI: <span class="roi-num">'+L.roi+'x</span>';rI.append(l1,l2,dv,l3);var dd=rm?100:800;setTimeout(function(){l1.style.opacity='1'},0);setTimeout(function(){l2.style.opacity='1'},dd);setTimeout(function(){dv.style.opacity='1'},dd*2);setTimeout(function(){l3.style.opacity='1'},dd*3)},sp?12500:3000);setTimeout(function(){$('tmJourney').classList.add('tm-hidden');$('tmCta').classList.remove('tm-hidden');try{if(window.gtag)window.gtag('event','time_machine_completed',{total:L.total,roi:L.roi})}catch(e){}},sp?16500:4500)}})();
+    (function(){
+      var feed=document.getElementById('slFeed');
+      var notifs=feed.querySelectorAll('.sl-notif');
+      var total=document.getElementById('slTotal');
+      var shown=false;
+      function reveal(){
+        if(shown)return;shown=true;
+        notifs.forEach(function(n,i){
+          setTimeout(function(){n.classList.add('show')},i*600);
+        });
+        setTimeout(function(){total.classList.add('show')},notifs.length*600+400);
+      }
+      // Reveal on scroll into view
+      if(window.IntersectionObserver){
+        new IntersectionObserver(function(entries){
+          if(entries[0].isIntersecting)reveal();
+        },{threshold:0.3}).observe(feed);
+      }else{reveal()}
+    })();
     </script>
     </div>
 
