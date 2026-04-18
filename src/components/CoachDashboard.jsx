@@ -2514,7 +2514,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const pillItems = [
     { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setActiveTab("overview"); } },
     { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setShowAnalytics(false); setActiveTab("clients"); setShowClientList(true); } },
-    { id: "analytics",   icon: "activity",    label: "Stats",     onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(true); } },
+    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setActiveTab("programmes"); } },
     { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setActiveTab("business"); } },
     { id: "profile",     icon: "flame",       label: "Compte",    onClick: () => { setShowClientList(false); setShowAnalytics(false); setShowSettings(true); } },
   ];
@@ -2537,7 +2537,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1)",
     }}>
       {pillItems.map((p) => {
-        const isActive = activeTab === p.id || (p.id === "profile" && showSettings);
+        const isActive = (p.id === "profile" && showSettings) || (!showSettings && activeTab === p.id);
         return (
           <button
             key={p.id}
