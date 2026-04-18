@@ -2545,11 +2545,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const pillTabs = ["overview", "clients", "programmes", "business"];
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("overview"); } },
-    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
-    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("business"); } },
-    { id: "more",        icon: "plus",        label: "Plus",      onClick: () => { setShowMoreMenu(!showMoreMenu); } },
+    { id: "overview",    icon: "chart",       label: "Home",      shortLabel: "HOME",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("overview"); } },
+    { id: "clients",     icon: "users",       label: "Clients",   shortLabel: "CLIENTS", onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
+    { id: "programmes",  icon: "document",    label: "Prog",      shortLabel: "PROG",    onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
+    { id: "business",    icon: "trending",    label: "Business",  shortLabel: "BIZ",     onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("business"); } },
+    { id: "more",        icon: "plus",        label: "Plus",      shortLabel: "PLUS",    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   // Swipe gesture sur la pill
   const pillSwipeRef = useRef({ startX: 0 });
@@ -2562,8 +2562,18 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       if (item) item.onClick();
     }
   };
+  // Coachmark first-time
+  const [pillShowcase, setPillShowcase] = useState(false);
+  useEffect(() => {
+    if (!localStorage.getItem("coachmark_pill_seen")) {
+      setPillShowcase(true);
+      localStorage.setItem("coachmark_pill_seen", "1");
+      setTimeout(() => setPillShowcase(false), 3000);
+    }
+  }, []);
+
   const FloatingPill = (
-    <nav className="coach-floating-pill"
+    <nav className={`coach-floating-pill${pillShowcase ? " pill-showcase" : ""}`}
       onTouchStart={(e) => { pillSwipeRef.current.startX = e.touches[0].clientX; }}
       onTouchEnd={(e) => {
         const dx = e.changedTouches[0].clientX - pillSwipeRef.current.startX;
@@ -2592,17 +2602,22 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <button
             key={p.id}
             onClick={() => { try { haptic.selection(); } catch(_) {} p.onClick(); }}
+            data-label={p.label}
+            aria-label={p.label}
+            role="button"
             style={{
               width: 50, height: 50,
               borderRadius: 100, border: "none",
               background: isActive ? G : "transparent",
               color: isActive ? "#000" : "rgba(255,255,255,.35)",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               cursor: "pointer",
               transition: "all .25s cubic-bezier(.22,1,.36,1)",
+              gap: 1,
             }}
           >
-            <Icon name={p.icon} size={20} strokeWidth={2.5} color={isActive ? "#000" : "rgba(255,255,255,.35)"} />
+            <Icon name={p.icon} size={18} strokeWidth={2.5} color={isActive ? "#000" : "rgba(255,255,255,.35)"} />
+            <div className="pill-label" style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.05em", color: isActive ? "#000" : "rgba(255,255,255,0.35)", lineHeight: 1, marginTop: 1 }}>{p.shortLabel}</div>
           </button>
         );
       })}
@@ -2731,20 +2746,35 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         .coach-nav-item:hover::after{opacity:1}
         .mini-nav-btn:hover{border-color:rgba(2,209,186,0.4) !important;color:rgba(255,255,255,0.85) !important}
         @media(max-width:760px){.dash-secondary-nav{display:none !important}}
-        /* Sidebar / mobile responsive */
-        .coach-sidebar{display:flex}
-        .coach-mobile-topbar,.coach-floating-pill{display:none}
-        .coach-nav-item:hover{color:rgba(255,255,255,.65)!important;background:rgba(255,255,255,.035)!important}
+        /* Pill navigation — partout (desktop + mobile) */
+        .coach-sidebar{display:none !important}
+        .coach-mobile-topbar{display:none !important}
+        .coach-floating-pill{display:flex !important}
+        .coach-main{margin-left:0 !important}
+        .coach-main-inner{max-width:100% !important;overflow:hidden !important}
+        .coach-client-panel,.coach-overlay-panel{left:0 !important}
+        .coach-mobile-bell{display:block !important}
         @media(max-width:768px){
-          .coach-sidebar{display:none !important}
-          .coach-mobile-topbar{display:none !important}
-          .coach-floating-pill{display:flex !important}
-          .coach-main-inner{padding:0 20px 120px !important;max-width:100% !important;overflow:hidden !important}
-          .coach-mobile-bell{display:block !important}
+          .coach-main-inner{padding:0 20px 120px !important}
           .coach-client-panel-inner{padding:0 16px 120px !important}
-          .coach-client-panel,.coach-overlay-panel{position:fixed !important;left:0 !important}
-          .coach-main{margin-left:0 !important}
         }
+        @media(min-width:769px){
+          .coach-main-inner{padding:20px 56px 120px !important}
+          .coach-client-panel-inner{padding:0 24px 120px !important}
+        }
+        /* Desktop pill tooltips */
+        @media(hover:hover) and (min-width:769px){
+          .coach-floating-pill button{position:relative}
+          .coach-floating-pill button::after{content:attr(data-label);position:absolute;top:-36px;left:50%;transform:translateX(-50%) translateY(4px);background:rgba(8,12,20,0.95);color:#fff;font-size:11px;font-weight:600;letter-spacing:0.02em;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 120ms ease,transform 120ms ease}
+          .coach-floating-pill button:hover::after{opacity:1;transform:translateX(-50%) translateY(0)}
+        }
+        /* Mobile pill labels hidden on desktop */
+        @media(min-width:769px){
+          .pill-label{display:none !important}
+        }
+        /* Coachmark first-time tooltip reveal */
+        .coach-floating-pill.pill-showcase button::after{opacity:1 !important;transform:translateX(-50%) translateY(0) !important;animation:pillFadeOut 400ms ease 2600ms forwards}
+        @keyframes pillFadeOut{to{opacity:0}}
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
         .cd-row:hover .cd-avatar-glow{opacity:1!important}
@@ -2847,7 +2877,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         ]}
       />
 
-      {CoachSidebar}
+      {/* Sidebar désactivée — pill navigation partout */}
+      {false && CoachSidebar}
 
       <main ref={mainScrollRef} className="coach-main"
         style={{
