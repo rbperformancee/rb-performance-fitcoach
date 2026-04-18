@@ -2839,6 +2839,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         position: "relative",
         marginLeft: 220,
         paddingTop: isDemo ? "calc(env(safe-area-inset-top, 0px) + 44px)" : "env(safe-area-inset-top, 0px)",
+        visibility: (showCoachHome && !homeScreenDismissed.current) ? "hidden" : "visible",
       }}>
       {MobileTopBar}
 
@@ -3204,7 +3205,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       </div>
       </main>
       {/* Coach Home Screen */}
-      {showCoachHome && !homeScreenDismissed.current && !loading && clients.length > 0 && (
+      {showCoachHome && !homeScreenDismissed.current && !loading && (
         <CoachHomeScreen
           coachData={coachData}
           businessScore={businessScore}
