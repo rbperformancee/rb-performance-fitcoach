@@ -22,7 +22,7 @@ const G = "#02d1ba";
  *   onClose: () => void
  */
 export default function Settings({ coachData, isDemo = false, onClose }) {
-  const [tab, setTab] = useState("branding");
+  const [tab, setTab] = useState("plans");
   const [showPushModal, setShowPushModal] = useState(false);
 
   // Local state (les champs sont editables meme en demo)
@@ -56,9 +56,9 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
   const { plans: coachPlans, reload: reloadPlans } = useCoachPlans(coachData?.id);
 
   const TABS = [
-    { id: "branding", label: "Coaching" },
     { id: "plans", label: "Mes plans" },
-    { id: "notifications", label: "Notifications" },
+    { id: "branding", label: "Coaching" },
+    { id: "notifications", label: "Notifs" },
     { id: "paiements", label: "Paiements" },
   ];
 
