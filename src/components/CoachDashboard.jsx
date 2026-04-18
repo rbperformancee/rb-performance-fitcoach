@@ -2523,7 +2523,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           }}>{coachInitials}</div>
           <div style={{ overflow: "hidden" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coachName}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)" }}>Paramètres</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", fontWeight: 600 }}>⚙ Paramètres</div>
           </div>
         </button>
       </div>
