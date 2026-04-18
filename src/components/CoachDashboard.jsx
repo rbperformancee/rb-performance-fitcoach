@@ -3089,7 +3089,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
           {!showClientList && activeTab === "business" && coachData && clients.length > 0 && (
-            <BusinessSection coachData={coachData} clients={clients} />
+            <BusinessSection coachData={coachData} clients={clients} hasSentinelAccess={sentinelEnabled && hasSentinelAccess} onOpenSentinel={() => setShowSentinel(true)} />
           )}
 
           {/* ========== PROGRAMMES — liste des programmes coach ========== */}
