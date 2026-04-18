@@ -32,19 +32,10 @@
   "rewrites": [
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "rbperform.app" }],
-      "destination": "/landing.html"
+      "has": [{ "type": "host", "value": "app.rbperform.app" }],
+      "destination": "/index.html"
     },
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "www.rbperform.app" }],
-      "destination": "/landing.html"
-    },
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "rb-perfor.vercel.app" }],
-      "destination": "/landing.html"
-    },
+    { "source": "/", "destination": "/landing.html" },
     { "source": "/rejoindre/:slug", "destination": "/?coach=:slug" },
     { "source": "/founding",    "destination": "/founding.html" },
     { "source": "/link",        "destination": "/link.html" },
