@@ -2607,6 +2607,17 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         @keyframes rbPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
         /* Micro-animations premium */
         @keyframes rowStagger{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        /* Premium card interactions — same as client app */
+        .dash-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;transition:all 0.2s cubic-bezier(0.22,1,0.36,1);position:relative;overflow:hidden}
+        .dash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(2,209,186,0.3),transparent);opacity:0;transition:opacity 0.2s}
+        .dash-card:hover{border-color:rgba(2,209,186,0.15) !important}
+        .dash-card:hover::before{opacity:1}
+        .dash-card:active{transform:scale(0.98)}
+        /* Smooth section transitions */
+        .dash-section{animation:fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both}
+        /* Stats hover */
+        .dash-metric-card{transition:background 0.2s ease;border-radius:12px;padding:16px 12px !important}
+        .dash-metric-card:hover{background:rgba(255,255,255,0.02)}
         @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
         @keyframes ringDraw{from{stroke-dashoffset:251.3}}
         /* Stagger sur enfants d'un container .dash-stagger */
@@ -2911,12 +2922,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {!showClientList && activeTab === "analytics" && clients.length > 0 && (
             <div style={{ marginBottom: 28 }}>
               <button
+                className="dash-card"
                 onClick={() => { haptic.light(); setShowAnalytics(true); }}
                 style={{
                   width: "100%", padding: "20px",
-                  background: "linear-gradient(135deg, rgba(0,201,167,0.08), rgba(2,209,186,0.04))",
-                  border: "1px solid rgba(0,201,167,0.25)",
-                  borderRadius: 18, color: "#fff", cursor: "pointer", fontFamily: "inherit",
+                  background: "linear-gradient(135deg, rgba(0,201,167,0.06), rgba(2,209,186,0.02))",
+                  border: "1px solid rgba(0,201,167,0.15)",
+                  borderRadius: 16, color: "#fff", cursor: "pointer", fontFamily: "inherit",
                   display: "flex", alignItems: "center", gap: 14, textAlign: "left",
                 }}
               >
@@ -2936,11 +2948,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {!showClientList && activeTab !== "clients" && (
             <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.2s both" }}>
               <button
+                className="dash-card"
                 onClick={() => { setShowClientList(true); setActiveTab("clients"); }}
                 style={{
                   width: "100%", padding: 16,
-                  background: "transparent",
-                  color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10,
+                  background: "rgba(255,255,255,0.03)",
+                  color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16,
                   fontSize: 13, fontWeight: 600, cursor: "pointer",
                   fontFamily: "inherit", letterSpacing: "0.02em",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
