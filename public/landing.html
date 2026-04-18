@@ -2147,6 +2147,394 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   </div>
 </section>
 
+<!-- ========== TIME MACHINE — LOSS SIMULATOR ========== -->
+<section id="time-machine" style="min-height:100vh;background:#000;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;scroll-snap-align:start">
+<style>
+  #time-machine *{box-sizing:border-box}
+  .tm-form,.tm-journey,.tm-cta{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .4s ease}
+  .tm-hidden{opacity:0;pointer-events:none}
+  .tm-title{font-family:'Syne',sans-serif;font-size:clamp(36px,8vw,80px);font-weight:900;letter-spacing:-2px;color:#fff;text-align:center;line-height:1.05;margin:0}
+  .tm-title span{color:#02d1ba}
+  .tm-sub{font-family:'JetBrains Mono',monospace;font-size:14px;color:rgba(255,255,255,.5);margin-top:16px;text-align:center}
+  .tm-inputs{max-width:500px;width:100%;margin-top:40px;display:flex;flex-direction:column;gap:20px}
+  .tm-field{display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-size:14px;color:rgba(255,255,255,.4)}
+  .tm-field label{flex:1;text-align:right;white-space:nowrap;min-width:0}
+  .tm-field input{width:100px;background:rgba(2,209,186,.05);border:none;border-bottom:1px solid rgba(2,209,186,.3);padding:10px 12px;color:#02d1ba;font-family:'JetBrains Mono',monospace;font-size:16px;outline:none;text-align:center;transition:border-color .2s}
+  .tm-field input:focus{border-bottom:2px solid #02d1ba;box-shadow:0 2px 12px rgba(2,209,186,.2)}
+  .tm-field input::placeholder{color:rgba(2,209,186,.25)}
+  .tm-field .tm-unit{color:rgba(2,209,186,.3);min-width:24px}
+  .tm-launch{margin-top:36px;padding:16px 48px;background:#02d1ba;color:#000;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;border:none;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;position:relative;overflow:hidden;transition:opacity .2s}
+  .tm-launch:disabled{opacity:.3;cursor:not-allowed}
+  .tm-launch::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);transition:none}
+  .tm-launch:not(:disabled):hover::after{animation:tmShimmer .6s ease}
+  @keyframes tmShimmer{to{left:100%}}
+  .tm-skip{position:fixed;top:20px;right:20px;z-index:10;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.25);background:none;border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;cursor:pointer;transition:color .2s}
+  .tm-skip:hover{color:rgba(255,255,255,.5)}
+  /* Journey animations */
+  .tm-dot{width:8px;height:8px;border-radius:50%;background:#02d1ba;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+  .tm-dot.active{transform:translate(-50%,-50%) scale(1)}
+  .tm-ring{position:absolute;top:50%;left:50%;border-radius:50%;border:1px solid rgba(2,209,186,.6);transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none}
+  @keyframes tmRing{0%{transform:translate(-50%,-50%) scale(0);opacity:.8}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+  .tm-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(2,209,186,.03) 2px,rgba(2,209,186,.03) 4px);pointer-events:none;opacity:0;transition:opacity .5s}
+  .tm-scanlines.active{opacity:1}
+  .tm-typewriter{font-family:'JetBrains Mono',monospace;color:rgba(2,209,186,.7);font-size:13px;letter-spacing:2px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap}
+  .tm-dates{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'JetBrains Mono',monospace;font-size:clamp(20px,5vw,36px);color:rgba(255,255,255,.15);text-align:center;pointer-events:none}
+  .tm-dates .current{color:#02d1ba;text-shadow:0 0 20px rgba(2,209,186,.4)}
+  /* Timeline cards */
+  .tm-timeline{max-width:700px;width:100%;position:relative;padding-left:32px}
+  .tm-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#02d1ba;transform:scaleY(0);transform-origin:top;transition:transform 1.5s ease}
+  .tm-timeline.draw::before{transform:scaleY(1)}
+  .tm-event{opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(.22,1,.36,1);margin-bottom:20px;border:1px solid rgba(2,209,186,.2);border-radius:8px;padding:16px 20px;background:rgba(2,209,186,.03);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;color:rgba(255,255,255,.6);position:relative}
+  .tm-event.show{opacity:1;transform:translateY(0)}
+  .tm-event .tm-date{color:rgba(255,255,255,.3);font-size:11px;margin-bottom:8px}
+  .tm-event .tm-warn{color:#fbbf24}
+  .tm-event .tm-fail{color:#ff3b3b}
+  .tm-event .tm-loss{color:#ff3b3b;font-size:16px;font-weight:700;margin-top:6px}
+  .tm-event .tm-dot-tl{position:absolute;left:-28px;top:20px;width:10px;height:10px;border-radius:50%;background:#02d1ba;border:2px solid #000}
+  /* Total */
+  .tm-total-label{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:3px;text-transform:uppercase;text-align:center}
+  .tm-total-value{font-family:'Syne',sans-serif;font-size:clamp(56px,15vw,130px);font-weight:900;color:#ff3b3b;text-align:center;line-height:1;margin-top:12px;text-shadow:0 0 60px rgba(255,59,59,.3)}
+  @keyframes tmPulseRed{0%,100%{text-shadow:0 0 60px rgba(255,59,59,.3)}50%{text-shadow:0 0 100px rgba(255,59,59,.5)}}
+  .tm-total-value.pulse{animation:tmPulseRed 2s ease infinite}
+  /* Twist teal */
+  .tm-recover{max-width:600px;width:100%;text-align:left}
+  .tm-recover-line{display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-size:clamp(13px,3vw,16px);color:#02d1ba;opacity:0;transform:translateX(-10px);transition:all .5s ease;margin-bottom:14px}
+  .tm-recover-line.show{opacity:1;transform:translateX(0)}
+  .tm-recover-line .check{width:24px;height:24px;border-radius:50%;background:rgba(2,209,186,.15);border:1px solid rgba(2,209,186,.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  /* ROI */
+  .tm-roi{text-align:center;font-family:'JetBrains Mono',monospace;font-size:15px;color:rgba(255,255,255,.6);line-height:2.2}
+  .tm-roi .val{color:#fff;font-weight:700}
+  .tm-roi .roi-num{color:#02d1ba;font-size:clamp(28px,6vw,44px);font-weight:900;display:block;margin-top:8px}
+  .tm-roi .divider{display:block;width:200px;height:1px;background:#02d1ba;margin:8px auto}
+  /* CTA final */
+  .tm-final-title{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,48px);font-weight:900;color:#fff;text-align:center;letter-spacing:-1px;line-height:1.15}
+  .tm-final-title span{color:#02d1ba}
+  .tm-final-btn{margin-top:32px;padding:20px 48px;background:#02d1ba;color:#000;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;border:none;border-radius:8px;cursor:pointer;letter-spacing:1px;transition:transform .15s;box-shadow:0 8px 30px rgba(2,209,186,.3)}
+  .tm-final-btn:hover{transform:scale(1.04)}
+  .tm-replay{margin-top:24px;font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.2);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .tm-replay:hover{color:rgba(255,255,255,.4)}
+  /* Reduced motion */
+  @media(prefers-reduced-motion:reduce){
+    .tm-form,.tm-journey,.tm-cta{transition:none}
+    .tm-event{transition:none}
+    .tm-recover-line{transition:none}
+    .tm-timeline::before{transition:none}
+  }
+  @media(max-width:600px){
+    .tm-field{flex-direction:column;gap:4px;align-items:stretch}
+    .tm-field label{text-align:left;font-size:11px}
+    .tm-field input{width:100%}
+    .tm-event{font-size:11px;padding:12px 14px}
+    .tm-inputs{margin-top:24px;gap:16px}
+  }
+</style>
+
+<!-- FORM STATE -->
+<div class="tm-form" id="tmForm">
+  <h2 class="tm-title">REMONTE LE TEMPS.</h2>
+  <h2 class="tm-title"><span>DECOUVRE CE QUE TU PERDS.</span></h2>
+  <p class="tm-sub">30 secondes. 3 chiffres. Ton vrai ROI revele.</p>
+  <div class="tm-inputs">
+    <div class="tm-field">
+      <label>COACH.CLIENTS_COUNT</label>
+      <input type="number" id="tmClients" min="1" placeholder="15" inputmode="numeric">
+      <span class="tm-unit"></span>
+    </div>
+    <div class="tm-field">
+      <label>COACH.AVG_PRICE_EUR</label>
+      <input type="number" id="tmPrice" min="1" placeholder="120" inputmode="numeric">
+      <span class="tm-unit">EUR</span>
+    </div>
+    <div class="tm-field">
+      <label>COACH.AVG_DURATION_MONTHS</label>
+      <input type="number" id="tmDuration" min="1" placeholder="3" inputmode="numeric">
+      <span class="tm-unit">mois</span>
+    </div>
+  </div>
+  <button class="tm-launch" id="tmLaunch" disabled>> LANCER LA SIMULATION</button>
+</div>
+
+<!-- JOURNEY STATE -->
+<div class="tm-journey tm-hidden" id="tmJourney">
+  <div class="tm-scanlines" id="tmScanlines"></div>
+  <div class="tm-dot" id="tmDot"></div>
+  <div id="tmRings"></div>
+  <div class="tm-typewriter tm-hidden" id="tmTypewriter"></div>
+  <div class="tm-dates tm-hidden" id="tmDates"></div>
+  <button class="tm-skip tm-hidden" id="tmSkip" onclick="tmSkipToResults()">skip →</button>
+
+  <!-- Phase 4: Timeline -->
+  <div class="tm-hidden" id="tmTimeline" style="width:100%;display:flex;flex-direction:column;align-items:center;padding:24px">
+    <div style="font-family:'Syne',sans-serif;font-size:clamp(14px,3vw,18px);font-weight:700;color:rgba(255,255,255,.3);letter-spacing:3px;text-transform:uppercase;text-align:center;margin-bottom:32px">// VOYAGE DANS TON PASSE — 30 DERNIERS JOURS //</div>
+    <div class="tm-timeline" id="tmTimelineInner">
+      <div class="tm-event" id="tmEvent1"><div class="tm-dot-tl"></div></div>
+      <div class="tm-event" id="tmEvent2"><div class="tm-dot-tl"></div></div>
+      <div class="tm-event" id="tmEvent3"><div class="tm-dot-tl"></div></div>
+    </div>
+  </div>
+
+  <!-- Phase 5: Total -->
+  <div class="tm-hidden" id="tmTotalWrap" style="text-align:center;padding:24px">
+    <div class="tm-total-label">TOTAL PERDU EN 30 JOURS :</div>
+    <div class="tm-total-value" id="tmTotalValue">-0 EUR</div>
+  </div>
+
+  <!-- Phase 6: Twist -->
+  <div class="tm-hidden" id="tmTwist" style="display:flex;flex-direction:column;align-items:center;padding:24px">
+    <div style="font-family:'Syne',sans-serif;font-size:clamp(16px,4vw,28px);font-weight:700;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:28px">AVEC SENTINEL ACTIVE CE MOIS :</div>
+    <div class="tm-recover" id="tmRecover"></div>
+  </div>
+
+  <!-- Phase 7: ROI -->
+  <div class="tm-hidden" id="tmRoi" style="padding:24px">
+    <div class="tm-roi" id="tmRoiInner"></div>
+  </div>
+</div>
+
+<!-- CTA STATE -->
+<div class="tm-cta tm-hidden" id="tmCta">
+  <div class="tm-final-title">TU ARRETES DE PERDRE.<br><span>TU REJOINS LA WAITLIST.</span></div>
+  <button class="tm-final-btn" onclick="window.location.href='/waitlist'">> REJOINDRE → 50 PLACES FOUNDING</button>
+  <button class="tm-replay" onclick="tmReplay()">< REFAIRE LA SIMULATION</button>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const cl=$tmClients=$('tmClients'),pr=$tmPrice=$('tmPrice'),du=$tmDuration=$('tmDuration');
+  const btn=$('tmLaunch');
+  const reducedMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  // Restore from localStorage
+  if(localStorage.tm_clients)cl.value=localStorage.tm_clients;
+  if(localStorage.tm_price)pr.value=localStorage.tm_price;
+  if(localStorage.tm_duration)du.value=localStorage.tm_duration;
+  checkValid();
+
+  [cl,pr,du].forEach(i=>i.addEventListener('input',checkValid));
+  function checkValid(){btn.disabled=!(+cl.value>=1&&+pr.value>=1&&+du.value>=1)}
+
+  function computeLosses(c,p,d){
+    const lostChurn=Math.round(c*0.15*p);
+    const lostUpsell=Math.round(c*0.08*p*3);
+    const lostPricing=Math.round(c*0.25*p);
+    const total=lostChurn+lostUpsell+lostPricing;
+    const roi=(total/199).toFixed(1);
+    return{lostChurn,lostUpsell,lostPricing,total,roi};
+  }
+
+  function countUp(el,target,duration,prefix,suffix){
+    const start=performance.now();
+    const fmt=n=>n.toLocaleString('fr-FR');
+    function tick(now){
+      const p=Math.min((now-start)/duration,1);
+      const ease=1-Math.pow(1-p,3);
+      el.textContent=prefix+fmt(Math.round(target*ease))+suffix;
+      if(p<1)requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function typewrite(el,text,speed,cb){
+    el.textContent='';el.classList.remove('tm-hidden');
+    let i=0;
+    const iv=setInterval(()=>{
+      el.textContent=text.slice(0,++i)+(i<text.length?'|':'');
+      if(i>=text.length){clearInterval(iv);if(cb)setTimeout(cb,300)}
+    },speed);
+  }
+
+  let skipRequested=false;
+  window.tmSkipToResults=function(){skipRequested=true};
+  window.tmReplay=function(){
+    skipRequested=false;
+    $('tmForm').classList.remove('tm-hidden');
+    $('tmJourney').classList.add('tm-hidden');
+    $('tmCta').classList.add('tm-hidden');
+    // Reset journey internals
+    $('tmDot').classList.remove('active');
+    $('tmScanlines').classList.remove('active');
+    $('tmRings').innerHTML='';
+    ['tmTypewriter','tmDates','tmTimeline','tmTotalWrap','tmTwist','tmRoi'].forEach(id=>{$(id).classList.add('tm-hidden')});
+    $('tmSkip').classList.add('tm-hidden');
+    ['tmEvent1','tmEvent2','tmEvent3'].forEach(id=>$(id).classList.remove('show'));
+    $('tmTimelineInner').classList.remove('draw');
+  };
+
+  btn.addEventListener('click',function(){
+    const c=+cl.value,p=+pr.value,d=+du.value;
+    if(c<1||p<1||d<1)return;
+    localStorage.tm_clients=c;localStorage.tm_price=p;localStorage.tm_duration=d;
+
+    const L=computeLosses(c,p,d);
+    const now=new Date();
+    const ago=new Date(now.getTime()-30*864e5);
+    const fmtD=(dt,h,m)=>{const dd=String(dt.getDate()).padStart(2,'0'),mm=String(dt.getMonth()+1).padStart(2,'0');return dt.getFullYear()+'/'+mm+'/'+dd+' — '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')};
+
+    // Analytics
+    try{if(window.gtag)window.gtag('event','time_machine_started',{clients:c,price:p})}catch(e){}
+
+    if(reducedMotion){
+      // Skip to results directly
+      $('tmForm').classList.add('tm-hidden');
+      $('tmJourney').classList.remove('tm-hidden');
+      showTimeline(L,now,ago,c,p);
+      return;
+    }
+
+    // Phase 2: transition
+    $('tmForm').classList.add('tm-hidden');
+    setTimeout(()=>{
+      $('tmJourney').classList.remove('tm-hidden');
+      $('tmSkip').classList.remove('tm-hidden');
+      $('tmDot').classList.add('active');
+      $('tmScanlines').classList.add('active');
+
+      // Rings
+      [0,400,800].forEach(delay=>{
+        setTimeout(()=>{
+          const ring=document.createElement('div');
+          ring.className='tm-ring';
+          ring.style.cssText='width:200vmax;height:200vmax;animation:tmRing 1.2s ease-out forwards';
+          $('tmRings').appendChild(ring);
+          setTimeout(()=>ring.remove(),1400);
+        },delay);
+      });
+
+      // Typewriter
+      setTimeout(()=>typewrite($('tmTypewriter'),'INITIALIZING TIME MACHINE...',40),800);
+
+      // Phase 3: dates rewind
+      setTimeout(()=>{
+        if(skipRequested)return showTimeline(L,now,ago,c,p);
+        $('tmTypewriter').classList.add('tm-hidden');
+        $('tmDot').classList.remove('active');
+        const datesEl=$('tmDates');datesEl.classList.remove('tm-hidden');
+        datesEl.innerHTML='<div style="font-size:11px;color:rgba(2,209,186,.4);letter-spacing:2px;margin-bottom:8px">REWINDING 30 DAYS...</div><div class="current"></div>';
+        const dateDisp=datesEl.querySelector('.current');
+        let dayIdx=0;
+        const dateIv=setInterval(()=>{
+          if(skipRequested){clearInterval(dateIv);showTimeline(L,now,ago,c,p);return}
+          const dt=new Date(now.getTime()-dayIdx*864e5);
+          dateDisp.textContent=fmtD(dt,now.getHours(),now.getMinutes());
+          dayIdx++;
+          if(dayIdx>30){clearInterval(dateIv);setTimeout(()=>{
+            if(skipRequested)return showTimeline(L,now,ago,c,p);
+            datesEl.classList.add('tm-hidden');
+            showTimeline(L,now,ago,c,p);
+          },800)}
+        },60);
+      },3200);
+    },400);
+  });
+
+  function showTimeline(L,now,ago,c,p){
+    $('tmSkip').classList.add('tm-hidden');
+    $('tmScanlines').classList.remove('active');
+    $('tmDot').classList.remove('active');
+    $('tmDates').classList.add('tm-hidden');
+    $('tmTypewriter').classList.add('tm-hidden');
+
+    const tl=$('tmTimeline');tl.classList.remove('tm-hidden');tl.style.opacity='1';
+    const inner=$('tmTimelineInner');
+
+    // Dates for events
+    const d1=new Date(now.getTime()-28*864e5);
+    const d2=new Date(now.getTime()-19*864e5);
+    const d3=new Date(now.getTime()-11*864e5);
+    const fmtFr=dt=>dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+
+    $('tmEvent1').innerHTML='<div class="tm-dot-tl"></div>'+
+      '<div class="tm-date">'+fmtFr(d1)+' — 14:37</div>'+
+      'Client "SAMPLE_07" — 14 jours d\'inactivite<br>'+
+      '<span class="tm-warn">CHURN_PROBABILITY: 67% ↑</span><br>'+
+      '<span class="tm-fail">NON_SIGNALE: no Sentinel active</span><br>'+
+      '<span class="tm-loss">PERTE: -<span id="tmL1">0</span> EUR</span>';
+
+    $('tmEvent2').innerHTML='<div class="tm-dot-tl"></div>'+
+      '<div class="tm-date">'+fmtFr(d2)+' — 09:12</div>'+
+      'Client "SAMPLE_03" — Fin de pack J-5<br>'+
+      '<span class="tm-warn">UPSELL_OPPORTUNITY: pack 6m (82% conversion)</span><br>'+
+      '<span class="tm-fail">NON_PROPOSE: no Sentinel reminder</span><br>'+
+      '<span class="tm-loss">OPPORTUNITE MANQUEE: -<span id="tmL2">0</span> EUR</span>';
+
+    $('tmEvent3').innerHTML='<div class="tm-dot-tl"></div>'+
+      '<div class="tm-date">'+fmtFr(d3)+' — 11:45</div>'+
+      'ANALYSE_TARIFAIRE:<br>'+
+      '&nbsp;&nbsp;TON PRIX MOYEN: '+p+'EUR/mois<br>'+
+      '&nbsp;&nbsp;MARCHE SIMILAIRE: '+Math.round(p*1.25)+'EUR/mois<br>'+
+      '&nbsp;&nbsp;GAP: -'+Math.round(p*0.25)+'EUR/client x '+c+' clients<br>'+
+      '<span class="tm-fail">NON_IDENTIFIE: no Sentinel benchmark</span><br>'+
+      '<span class="tm-loss">ARGENT SUR LA TABLE: -<span id="tmL3">0</span> EUR</span>';
+
+    // Draw timeline + stagger events
+    setTimeout(()=>inner.classList.add('draw'),100);
+    const speed=reducedMotion?0:1500;
+
+    setTimeout(()=>{$('tmEvent1').classList.add('show');setTimeout(()=>countUp($('tmL1'),L.lostChurn,800,'',''),300)},speed?500:0);
+    setTimeout(()=>{$('tmEvent2').classList.add('show');setTimeout(()=>countUp($('tmL2'),L.lostUpsell,800,'',''),300)},speed?2000:100);
+    setTimeout(()=>{$('tmEvent3').classList.add('show');setTimeout(()=>countUp($('tmL3'),L.lostPricing,800,'',''),300)},speed?3500:200);
+
+    // Phase 5: total
+    setTimeout(()=>{
+      tl.style.transition='opacity .6s';tl.style.opacity='.3';
+      const tw=$('tmTotalWrap');tw.classList.remove('tm-hidden');
+      const tv=$('tmTotalValue');
+      countUp(tv,L.total,2000,'-',' EUR');
+      setTimeout(()=>tv.classList.add('pulse'),2100);
+    },speed?5500:1000);
+
+    // Phase 6: twist
+    setTimeout(()=>{
+      $('tmTotalWrap').classList.add('tm-hidden');
+      tl.classList.add('tm-hidden');
+      const tw=$('tmTwist');tw.classList.remove('tm-hidden');
+      const rec=$('tmRecover');
+      rec.innerHTML='';
+      const lines=[
+        {text:'Alerte churn J-14 → client sauve',val:L.lostChurn},
+        {text:'Upsell pack 6m J-5 → converti',val:L.lostUpsell},
+        {text:'Prix realigne → recupere',val:L.lostPricing},
+      ];
+      lines.forEach((l,i)=>{
+        const div=document.createElement('div');
+        div.className='tm-recover-line';
+        div.innerHTML='<span class="check">✓</span><span>'+l.text+' (<span id="tmR'+i+'">+0</span>EUR)</span>';
+        rec.appendChild(div);
+        setTimeout(()=>{div.classList.add('show');setTimeout(()=>countUp($('tmR'+i),l.val,600,'+',''),200)},i*(reducedMotion?100:600));
+      });
+    },speed?9000:2000);
+
+    // Phase 7: ROI
+    setTimeout(()=>{
+      $('tmTwist').classList.add('tm-hidden');
+      const roiW=$('tmRoi');roiW.classList.remove('tm-hidden');
+      const roiI=$('tmRoiInner');
+      roiI.innerHTML='';
+      const l1=document.createElement('div');l1.textContent='SENTINEL (inclus Pro):          199EUR/mois';l1.style.opacity='0';
+      const l2=document.createElement('div');l2.innerHTML='TU AURAIS RECUPERE:          <span class="val">'+L.total.toLocaleString('fr-FR')+' EUR/mois</span>';l2.style.opacity='0';
+      const dv=document.createElement('span');dv.className='divider';dv.style.opacity='0';
+      const l3=document.createElement('div');l3.style.opacity='0';
+      l3.innerHTML='ROI:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="roi-num">'+L.roi+'x</span>';
+      roiI.append(l1,l2,dv,l3);
+      const d=reducedMotion?100:800;
+      setTimeout(()=>l1.style.opacity='1',0);
+      setTimeout(()=>l2.style.opacity='1',d);
+      setTimeout(()=>dv.style.opacity='1',d*2);
+      setTimeout(()=>l3.style.opacity='1',d*3);
+    },speed?12500:3000);
+
+    // Phase 8: CTA
+    setTimeout(()=>{
+      $('tmJourney').classList.add('tm-hidden');
+      $('tmCta').classList.remove('tm-hidden');
+      try{if(window.gtag)window.gtag('event','time_machine_completed',{total:L.total,roi:L.roi})}catch(e){}
+    },speed?16500:4500);
+  }
+})();
+</script>
+</section>
+
 <!-- ========== FEATURES — STORY-DRIVEN ========== -->
 <section class="features" id="features">
   <div class="features-inner">
