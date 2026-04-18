@@ -2074,11 +2074,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   }, []);
   const [newEmail,  setNewEmail]  = useState("");
   const [newName,   setNewName]   = useState("");
-  const [toast,     setToast]     = useState(null);
+  const [toastMsg,  setToastMsg]  = useState(null);
   const [selected,  setSelected]  = useState(null);
   const [filter,    setFilter]    = useState("all");
 
-  const showToast = (msg, type = "ok") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  const showToast = (msg, type = "ok") => { setToastMsg({ msg, type }); setTimeout(() => setToastMsg(null), 3000); };
 
   const loadClients = async () => {
     setLoading(true);
@@ -2653,7 +2653,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
     { icon: "users",    label: "Mon compte", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
     { type: "separator" },
-    { icon: "message",  label: "Aide", color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); try { toast.success("Support : rb.performancee@gmail.com"); } catch(e) { alert("Support : rb.performancee@gmail.com"); } } },
+    { icon: "message",  label: "Aide", color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); toast.success("Support : rb.performancee@gmail.com"); } },
     { icon: "arrow-right", label: "Déconnexion", color: RED, onClick: () => { setShowMoreMenu(false); supabase.auth.signOut().then(() => { window.location.href = "/"; }); } },
   ];
   const MoreMenu = showMoreMenu ? (
@@ -2820,20 +2820,20 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       `}</style>
 
       {/* Toast */}
-      {toast && (
+      {toastMsg && (
         <div style={{
           position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
-          background: toast.type === "err" ? "rgba(255,107,107,0.12)" : "rgba(2,209,186,0.1)",
-          border: `1px solid ${toast.type === "err" ? "rgba(255,107,107,0.35)" : G_BORDER}`,
+          background: toastMsg.type === "err" ? "rgba(255,107,107,0.12)" : "rgba(2,209,186,0.1)",
+          border: `1px solid ${toastMsg.type === "err" ? "rgba(255,107,107,0.35)" : G_BORDER}`,
           borderRadius: 100, padding: "12px 22px", fontSize: 12, fontWeight: 700,
-          color: toast.type === "err" ? RED : G,
+          color: toastMsg.type === "err" ? RED : G,
           zIndex: 500, boxShadow: "0 16px 40px rgba(0,0,0,0.6), 0 0 30px rgba(2,209,186,0.1)",
           whiteSpace: "nowrap", animation: "fadeUp 0.25s cubic-bezier(0.22,1,0.36,1)",
           display: "flex", alignItems: "center", gap: 8,
           backdropFilter: "blur(20px)",
         }}>
-          <Icon name={toast.type === "err" ? "alert" : "check"} size={14} />
-          {toast.msg}
+          <Icon name={toastMsg.type === "err" ? "alert" : "check"} size={14} />
+          {toastMsg.msg}
         </div>
       )}
 

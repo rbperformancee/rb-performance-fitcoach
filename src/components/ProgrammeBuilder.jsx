@@ -300,23 +300,47 @@ function useIsDesktop() {
 }
 
 export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }) {
-  const [progName, setProgName] = useState("");
-  const [tagline, setTagline] = useState("LA DISCIPLINE EST LA CLE DU SUCCES");
-  const [duration, setDuration] = useState("");
-  const [objective, setObjective] = useState("");
-  const [level, setLevel] = useState("Intermediaire");
-  const [weeks, setWeeks] = useState([emptyWeek()]);
+  const draftKey = "pb_draft_" + (client?.id || "new");
+
+  // Load draft from localStorage
+  const loadDraft = () => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return null;
+  };
+  const draft = useRef(loadDraft());
+
+  const [progName, setProgName] = useState(draft.current?.progName || "");
+  const [tagline, setTagline] = useState(draft.current?.tagline || "LA DISCIPLINE EST LA CLE DU SUCCES");
+  const [duration, setDuration] = useState(draft.current?.duration || "");
+  const [objective, setObjective] = useState(draft.current?.objective || "");
+  const [level, setLevel] = useState(draft.current?.level || "Intermediaire");
+  const [weeks, setWeeks] = useState(draft.current?.weeks || [emptyWeek()]);
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [savedTick, setSavedTick] = useState(0); // force re-render du timer
-  // Tick toutes les 15s pour rafraichir le label "il y a Xs" sans sur-rendre
+  const [savedTick, setSavedTick] = useState(0);
   useEffect(() => {
     if (!lastSavedAt) return;
     const id = setInterval(() => setSavedTick((t) => t + 1), 15000);
     return () => clearInterval(id);
   }, [lastSavedAt]);
-  const [accessMode, setAccessMode] = useState("immediate");
-  const [scheduledDate, setScheduledDate] = useState("");
+  const [accessMode, setAccessMode] = useState(draft.current?.accessMode || "immediate");
+  const [scheduledDate, setScheduledDate] = useState(draft.current?.scheduledDate || "");
+
+  // Auto-save draft every 5 seconds when content changes
+  const draftTimer = useRef(null);
+  useEffect(() => {
+    if (draftTimer.current) clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      try {
+        const data = { progName, tagline, duration, objective, level, weeks, accessMode, scheduledDate };
+        localStorage.setItem(draftKey, JSON.stringify(data));
+      } catch (_) {}
+    }, 5000);
+    return () => { if (draftTimer.current) clearTimeout(draftTimer.current); };
+  }, [progName, tagline, duration, objective, level, weeks, accessMode, scheduledDate, draftKey]);
 
   const isDesktop = useIsDesktop();
   const [mobileTab, setMobileTab] = useState("edit"); // edit | preview
@@ -462,6 +486,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
 
       toast.success("Programme enregistre pour " + (client.full_name || client.email));
       setLastSavedAt(Date.now());
+      try { localStorage.removeItem(draftKey); } catch (_) {}
       if (onSaved) onSaved();
       if (onClose) onClose();
     } catch (e) {
