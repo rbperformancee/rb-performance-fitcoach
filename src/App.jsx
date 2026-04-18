@@ -659,7 +659,7 @@ function AppInner() {
   const [showSubscribe, setShowSubscribe] = useState(false);
   const [showCoachChat, setShowCoachChat] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [showHome, setShowHome] = useState(() => !isClientDemo);
+  const [showHome, setShowHome] = useState(true);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
   const [_sessionsDone, setSessionsDone] = React.useState(0);
