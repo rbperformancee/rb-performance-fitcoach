@@ -3067,8 +3067,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               </button>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginBottom: 8 }}>Clients</div>
-                  <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 6vw, 52px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", margin: 0, lineHeight: 1.02 }}>
+                  <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Clients</div>
+                  <h1 style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, margin: 0 }}>
                     Tes athletes<span style={{ color: "#02d1ba" }}>.</span>
                   </h1>
                 </div>

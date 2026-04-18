@@ -148,10 +148,13 @@ export default function BusinessSection({ coachData, clients = [] }) {
 
   return (
     <div style={{ marginBottom: 40, animation: "fadeUp 0.4s ease both" }}>
-      {/* ===== HEADER ===== */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", marginBottom: 8 }}>Business</div>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em" }}>Ton business<span style={{ color: G }}>.</span></div>
+      {/* ===== HERO (format FuelPage) ===== */}
+      <div style={{ padding: "8px 0 20px" }}>
+        <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Business</div>
+        <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Ton business<span style={{ color: G }}>.</span></div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
+          {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+        </div>
       </div>
 
       {/* ===== BANNER APERÇU (0 clients) ===== */}

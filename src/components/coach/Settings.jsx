@@ -81,7 +81,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
           <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,.6)" />
           <span>Retour</span>
         </button>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px" }}>
           Mon compte<span style={{ color: "#00C9A7" }}>.</span>
         </div>
         <div style={{ width: 80 }} />
