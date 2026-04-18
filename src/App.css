@@ -536,6 +536,14 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 
+/* ===== COACH DASHBOARD RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .coach-client-panel { left: 0 !important; width: 100% !important; }
+  .coach-overlay-panel { left: 0 !important; width: 100% !important; }
+  .coach-main { margin-left: 0 !important; }
+  .coach-sidebar { display: none !important; }
+}
+
 /* ===== ANIMATIONS PREMIUM ===== */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(16px); }
