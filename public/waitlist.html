@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Waitlist — RB Perform</title>
+<meta name="description" content="Accès prioritaire à RB Perform. Inscris-toi avant le lancement du 2 mai.">
+<meta property="og:title" content="RB Perform — Accès prioritaire">
+<meta property="og:description" content="Je lance RB Perform le 2 mai. Inscris-toi pour un accès prioritaire.">
+<meta property="og:image" content="https://rbperform.app/og-image.png">
+<meta property="og:url" content="https://rbperform.app/waitlist">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+.page{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:0 24px}
+.content{max-width:480px;width:100%;margin:0 auto;padding:80px 0 40px;flex:1;display:flex;flex-direction:column}
+
+.logo{font-family:'Syne',sans-serif;font-size:14px;font-weight:900;letter-spacing:.12em;color:#fff;text-decoration:none;text-align:center;margin-bottom:48px;display:block}
+.logo span{color:#00C9A7}
+
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:100px;padding:6px 16px;font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:24px;align-self:center}
+.dot{width:6px;height:6px;border-radius:50%;background:#00C9A7;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.1;text-align:center;margin-bottom:12px}
+.sub{font-size:15px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.6;margin-bottom:40px}
+.sub strong{color:rgba(255,255,255,0.7)}
+
+.countdown{display:flex;justify-content:center;gap:16px;margin-bottom:40px}
+.cd-block{text-align:center}
+.cd-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:#00C9A7;line-height:1;min-width:44px;text-shadow:0 0 30px rgba(0,201,167,0.2)}
+.cd-label{font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.2);margin-top:6px}
+.cd-sep{font-family:'Bebas Neue',sans-serif;font-size:30px;color:rgba(255,255,255,0.1);padding-top:2px}
+
+.form{display:flex;flex-direction:column;gap:16px;margin-bottom:32px}
+.field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px;font-weight:600}
+.field input,.field select{width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;color:#fff;font-size:16px;outline:none;font-family:inherit;transition:border-color 0.2s}
+.field input:focus,.field select:focus{border-color:rgba(0,201,167,0.3)}
+.field input::placeholder{color:rgba(255,255,255,0.2)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+.field select option{background:#0a0c10;color:#fff}
+
+.cta{display:block;width:100%;padding:18px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;text-align:center;border:none;border-radius:14px;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:0 16px 40px rgba(0,201,167,0.25);transition:transform 0.15s,box-shadow 0.15s}
+.cta:hover{transform:translateY(-2px);box-shadow:0 20px 50px rgba(0,201,167,0.35)}
+.cta:active{transform:translateY(0)}
+.cta:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.cta-sub{font-size:11px;color:rgba(255,255,255,0.2);text-align:center;margin-top:12px}
+
+.success{text-align:center;animation:fadeIn 0.5s ease}
+.success-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#00C9A7,rgba(0,201,167,0.8));display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:28px;color:#000;box-shadow:0 12px 40px rgba(0,201,167,0.4)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.foot{text-align:center;padding:24px 0;margin-top:auto}
+.foot a{font-size:11px;color:rgba(255,255,255,0.15);text-decoration:none;margin:0 8px}
+.foot a:hover{color:#00C9A7}
+
+@media(max-width:480px){
+  .content{padding:60px 0 32px}
+  .countdown{gap:10px}
+  .cd-num{font-size:28px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="content">
+
+  <a href="/" class="logo">RB<span>PERFORM</span></a>
+  <div class="badge"><span class="dot"></span>Lancement 2 mai 2026</div>
+
+  <h1>Accès prioritaire.<br>Avant tout le monde.</h1>
+  <p class="sub">RB Perform lance le <strong>2 mai</strong>. Les inscrits sur la waitlist auront un accès anticipé + une offre réservée.</p>
+
+  <!-- Countdown -->
+  <div class="countdown">
+    <div class="cd-block"><div class="cd-num" id="cd-d">00</div><div class="cd-label">Jours</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-block"><div class="cd-num" id="cd-h">00</div><div class="cd-label">Heures</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-block"><div class="cd-num" id="cd-m">00</div><div class="cd-label">Min</div></div>
+  </div>
+
+  <!-- Form -->
+  <div id="formWrap">
+    <form class="form" id="waitlistForm" onsubmit="submitWaitlist(event)">
+      <div class="field">
+        <label>Ton prénom</label>
+        <input type="text" id="wl-name" required placeholder="Prénom" autocomplete="given-name">
+      </div>
+      <div class="field">
+        <label>Ton email</label>
+        <input type="email" id="wl-email" required placeholder="coach@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Combien de clients tu coaches actuellement ?</label>
+        <select id="wl-clients" required>
+          <option value="" disabled selected>Sélectionne</option>
+          <option value="0-5">0 à 5</option>
+          <option value="5-15">5 à 15</option>
+          <option value="15-30">15 à 30</option>
+          <option value="30+">30+</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ton plus gros problème en tant que coach ?</label>
+        <select id="wl-problem" required>
+          <option value="" disabled selected>Sélectionne</option>
+          <option value="visibility">Je ne sais pas combien je vais gagner le mois prochain</option>
+          <option value="churn">Je perds des clients sans comprendre pourquoi</option>
+          <option value="admin">Je passe trop de temps sur l'admin au lieu de coacher</option>
+          <option value="tools">J'utilise 4+ outils différents et c'est le chaos</option>
+          <option value="scale">Je veux passer de 10 à 30+ clients mais je ne sais pas comment</option>
+        </select>
+      </div>
+      <button type="submit" class="cta" id="wlBtn">Réserver mon accès prioritaire →</button>
+      <div class="cta-sub">Pas de carte bancaire. Juste ton email.</div>
+    </form>
+  </div>
+
+  <!-- Success -->
+  <div id="successWrap" style="display:none">
+    <div class="success">
+      <div class="success-icon">✓</div>
+      <h1 style="font-size:28px;margin-bottom:12px">Tu es sur la liste.</h1>
+      <p class="sub" style="margin-bottom:24px">Tu recevras un email le 2 mai avec ton accès prioritaire. En attendant, suis <a href="https://instagram.com/rb_perform" target="_blank" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> sur Instagram.</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <a href="/">← Retour</a>
+    <a href="/legal.html">Mentions légales</a>
+  </div>
+
+</div>
+</div>
+
+<script>
+// Countdown to May 2, 2026
+(function(){
+  var end = new Date('2026-05-02T08:00:00').getTime();
+  function tick(){
+    var diff = end - Date.now();
+    if(diff<=0){ document.querySelector('.countdown').innerHTML='<div style="font-size:14px;font-weight:700;color:#00C9A7;letter-spacing:0.1em;text-transform:uppercase">C\'est le jour J</div>'; return; }
+    var d=Math.floor(diff/864e5), h=Math.floor(diff%864e5/36e5), m=Math.floor(diff%36e5/6e4);
+    document.getElementById('cd-d').textContent=String(d).padStart(2,'0');
+    document.getElementById('cd-h').textContent=String(h).padStart(2,'0');
+    document.getElementById('cd-m').textContent=String(m).padStart(2,'0');
+  }
+  tick(); setInterval(tick,60000);
+})();
+
+function submitWaitlist(e) {
+  e.preventDefault();
+  var btn = document.getElementById('wlBtn');
+  btn.textContent = 'Inscription...';
+  btn.disabled = true;
+
+  var data = {
+    name: document.getElementById('wl-name').value.trim(),
+    email: document.getElementById('wl-email').value.trim().toLowerCase(),
+    clients: document.getElementById('wl-clients').value,
+    problem: document.getElementById('wl-problem').value,
+    source: 'waitlist',
+    created_at: new Date().toISOString()
+  };
+
+  fetch('/api/waitlist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).catch(function(){});
+
+  // Always show success
+  document.getElementById('formWrap').style.display = 'none';
+  document.getElementById('successWrap').style.display = 'block';
+}
+</script>
+</body>
+</html>
