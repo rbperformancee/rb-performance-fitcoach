@@ -34,6 +34,7 @@ import AchievementsSection from "./coach/AchievementsSection";
 import TransformationView from "./coach/TransformationView";
 import AIAnalyze from "./coach/AIAnalyze";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
+import CoachHomeScreen from "./coach/CoachHomeScreen";
 import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
@@ -2021,6 +2022,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showCmdK, setShowCmdK] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [pillVisible, setPillVisible] = useState(true);
+  const [showCoachHome, setShowCoachHome] = useState(true);
   const { plans: coachPlans } = useCoachPlans(coachId);
 
   // Scroll listener sur <main> pour hide/show floating pill mobile
@@ -3232,6 +3234,18 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         </div>
       </div>
       </main>
+      {/* Coach Home Screen */}
+      {showCoachHome && !loading && clients.length > 0 && (
+        <CoachHomeScreen
+          coachData={coachData}
+          businessScore={businessScore}
+          mrr={mrr}
+          clients={clients}
+          urgentCount={urgentCount}
+          onDismiss={() => setShowCoachHome(false)}
+        />
+      )}
+
       {/* FloatingPill + More menu */}
       {MoreMenuBackdrop}
       {MoreMenu}
