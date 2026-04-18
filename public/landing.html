@@ -2191,8 +2191,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <div class="sl-dot"></div>
       <span class="sl-badge">Sentinel actif</span>
     </div>
-    <div class="sl-title">J'ai mis en place un Sentinel<span>.</span></div>
-    <div class="sl-sub" style="max-width:520px;line-height:1.7;margin-bottom:20px">Chaque matin a 7h, il empeche ton argent de s'envoler. Clients qui decrochent, upsells oublies, prix trop bas — il detecte tout et agit avant que tu perdes un centime.</div>
+    <div class="sl-title">Tu laisses 1 200EUR/mois sur la table<span>.</span> J'ai regle ca.</div>
+    <div class="sl-sub" style="max-width:520px;line-height:1.7;margin-bottom:20px">15% de tes clients partent sans que tu le voies. 8% auraient paye plus cher si tu avais demande. Tes prix sont en dessous du marche et personne te le dit. J'ai mis une IA qui scanne tout ca a 7h chaque matin. Elle s'appelle Sentinel. Voila ce qu'elle fait pendant que tu dors :</div>
     <!-- Feed -->
     <div class="sl-feed" id="slFeed">
       <div class="sl-notif" data-sl="0">
@@ -2238,16 +2238,29 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       function reveal(){
         if(shown)return;shown=true;
         notifs.forEach(function(n,i){
-          setTimeout(function(){n.classList.add('show')},i*600);
+          setTimeout(function(){n.classList.add('show')},i*800);
         });
-        setTimeout(function(){total.classList.add('show')},notifs.length*600+400);
+        setTimeout(function(){total.classList.add('show')},notifs.length*800+600);
       }
-      // Reveal on scroll into view
+      function reset(){
+        shown=false;
+        notifs.forEach(function(n){n.classList.remove('show')});
+        total.classList.remove('show');
+      }
+      // Reveal when features section becomes active (fullscreen nav system)
+      var featSection=document.querySelector('section.features');
+      if(featSection){
+        new MutationObserver(function(){
+          if(featSection.classList.contains('active')){setTimeout(reveal,400)}
+          else{reset()}
+        }).observe(featSection,{attributes:true,attributeFilter:['class']});
+      }
+      // Fallback: IntersectionObserver for normal scroll
       if(window.IntersectionObserver){
         new IntersectionObserver(function(entries){
           if(entries[0].isIntersecting)reveal();
-        },{threshold:0.3}).observe(feed);
-      }else{reveal()}
+        },{threshold:0.2}).observe(feed);
+      }
     })();
     </script>
     </div>
