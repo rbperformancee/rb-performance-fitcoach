@@ -2907,7 +2907,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       {showSentinelTeaser && (
         <SentinelTeaser
           onClose={() => setShowSentinelTeaser(false)}
-          onUpgrade={() => { setShowSentinelTeaser(false); toast.success("Stripe Customer Portal — bientot disponible"); }}
+          onUpgrade={() => { setShowSentinelTeaser(false); toast.info("Disponible au lancement — inscris-toi sur la waitlist"); }}
         />
       )}
 

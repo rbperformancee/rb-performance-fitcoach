@@ -22,7 +22,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
-const APP_BASE_URL = Deno.env.get('APP_BASE_URL') ?? 'https://rb-perfor.vercel.app'
+const APP_BASE_URL = Deno.env.get('APP_BASE_URL') ?? 'https://rbperform.app'
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'RB Perform <noreply@rbperform.com>'
 
 const corsHeaders = {

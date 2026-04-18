@@ -48,6 +48,26 @@ module.exports = async (req, res) => {
       console.log('[waitlist]', JSON.stringify({ name, email, clients, problem }));
     }
 
+    // Email de confirmation waitlist (si Resend configuré)
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey) {
+      try {
+        const firstName = (name || '').trim().split(' ')[0] || 'Coach';
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: process.env.EMAIL_FROM || 'RB Perform <noreply@rbperform.app>',
+            to: [email.toLowerCase().trim()],
+            subject: 'Tu es sur la liste — RB Perform',
+            html: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px"><tr><td align="center"><table width="500" cellpadding="0" cellspacing="0" style="max-width:500px;width:100%"><tr><td style="text-align:center;padding-bottom:24px"><span style="font-size:14px;font-weight:900;letter-spacing:3px;color:rgba(255,255,255,0.2)">RB<span style="color:rgba(2,209,186,0.4)">PERFORM</span></span></td></tr><tr><td style="background:#111;border-radius:20px;border:1px solid rgba(255,255,255,0.06);padding:40px 32px"><div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px">Salut ${firstName},</div><div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:16px;line-height:1.3">Tu es sur la liste<span style="color:#02d1ba">.</span></div><div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:24px">RB Perform lance en mai 2026. Tu fais partie des premiers coachs a avoir reserve ta place. On te previent des que c est pret.</div><div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:24px">En attendant, tu peux deja tester la demo :</div><div style="text-align:center;margin-bottom:24px"><a href="https://rbperform.app/demo" style="display:inline-block;background:#02d1ba;color:#000;font-size:13px;font-weight:800;text-decoration:none;padding:14px 28px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase">Tester la demo coach</a></div><div style="font-size:12px;color:rgba(255,255,255,0.25);text-align:center">50 places Founding Coach a 199EUR/mois verrouille a vie.</div></td></tr><tr><td style="padding:24px 0 0;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.15)">RB Perform — rb.performancee@gmail.com</div></td></tr></table></td></tr></table></body></html>`,
+          }),
+        });
+      } catch (e) {
+        console.error('[waitlist] email error:', e.message);
+      }
+    }
+
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('[waitlist] Error:', err.message);
