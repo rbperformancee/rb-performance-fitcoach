@@ -1288,7 +1288,7 @@ function AppInner() {
 
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
-        <div style={{minHeight:'100vh', background:'#050505', position:'relative', paddingTop: isClientDemo ? 44 : 0}}>
+        <div style={{minHeight:'100vh', background:'#050505', position:'relative', paddingTop: isClientDemo ? 52 : 0, maxWidth: isClientDemo ? 430 : 'none', margin: isClientDemo ? '0 auto' : 0}}>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
@@ -1315,9 +1315,9 @@ function AppInner() {
       {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
       {/* FaqAssistant deplace dans ProfilePage */}
       {programme && !authError && (
-        <>
+        <div style={isClientDemo ? {maxWidth:430,margin:'0 auto',position:'relative'} : undefined}>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
-          {isClientDemo && <div style={{height:44}} />}
+          {isClientDemo && <div style={{height:52}} />}
           {page === "training" ? (
             !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
               <TrainingPage
@@ -1393,7 +1393,7 @@ function AppInner() {
           <button onClick={() => setShowDeleteConfirm(true)} style={{ background:"none", border:"none", fontSize:10, color:"#ef4444", cursor:"pointer", textDecoration:"underline" }}>Supprimer mes données</button>
         )}
       </div>
-        </>
+        </div>
       )}
       {showGlobalHelp && (
         <Suspense fallback={null}>

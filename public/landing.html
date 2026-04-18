@@ -400,9 +400,8 @@ section.manifeste::-webkit-scrollbar{display:none}
 .section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6.5vw,92px);letter-spacing:-2px;line-height:0.95;max-width:900px;margin:0 auto;font-weight:400}
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;perspective:1500px}
 .feature-card{background:var(--dark3);border:1px solid var(--border);border-radius:20px;padding:32px;transition:border-color 0.4s var(--ease-out),box-shadow 0.4s var(--ease-out);transform-style:preserve-3d;will-change:transform;position:relative;overflow:hidden}
-.feature-card::before{content:'';position:absolute;inset:0;border-radius:20px;background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(0,201,167,0.08),transparent 40%);opacity:0;transition:opacity 0.3s ease;pointer-events:none}
-.feature-card:hover::before{opacity:1}
-.feature-card:hover{border-color:rgba(0,201,167,0.3);box-shadow:0 30px 80px rgba(0,201,167,0.1)}
+.feature-card::before{display:none}
+.feature-card:hover{border-color:rgba(0,201,167,0.2)}
 .feature-icon{width:46px;height:46px;border-radius:12px;background:rgba(2,209,186,0.08);display:flex;align-items:center;justify-content:center;color:var(--teal);margin-bottom:22px;transition:transform 0.4s var(--ease-out)}
 .feature-card:hover .feature-icon{transform:scale(1.1) rotate(-3deg)}
 .feature-eyebrow{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(2,209,186,0.6);margin-bottom:10px}
@@ -2172,8 +2171,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       .sl-title span{color:#818cf8}
       .sl-sub{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.35);margin-bottom:28px}
       .sl-feed{display:flex;flex-direction:column;gap:10px;max-width:600px}
-      .sl-notif{display:flex;gap:12px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:rgba(255,255,255,.6);opacity:0;transform:translateY(12px);transition:all .5s cubic-bezier(.22,1,.36,1)}
-      .sl-notif.show{opacity:1;transform:translateY(0)}
+      .sl-notif{display:flex;gap:12px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:rgba(255,255,255,.6);opacity:0;transform:translateX(-20px);transition:all .6s cubic-bezier(.22,1,.36,1)}
+      .sl-notif.show{opacity:1;transform:translateX(0);animation:slFlash .6s ease}
+      @keyframes slFlash{0%{border-color:rgba(2,209,186,.4);box-shadow:0 0 20px rgba(2,209,186,.1)}100%{border-color:rgba(255,255,255,.06);box-shadow:none}}
       .sl-notif .sl-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
       .sl-notif .sl-time{font-size:10px;color:rgba(255,255,255,.2);margin-bottom:2px}
       .sl-notif .sl-text{flex:1}

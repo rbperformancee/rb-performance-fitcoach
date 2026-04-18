@@ -2808,8 +2808,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         .coach-floating-pill.pill-showcase button::after{opacity:1 !important;transform:translateX(-50%) translateY(0) !important;animation:pillFadeOut 400ms ease 2600ms forwards}
         @keyframes pillFadeOut{to{opacity:0}}
         /* Demo banner offset — push overlay headers down when demo banner visible */
-        .demo-active .mc-header,.demo-active .an-header,.demo-active .kan-header,.demo-active .set-header,.demo-active .sent-header{padding-top:calc(36px + 16px) !important}
-        .demo-active .coach-main{padding-top:36px !important}
+        .demo-active .mc-header,.demo-active .an-header,.demo-active .kan-header,.demo-active .set-header,.demo-active .sent-header{padding-top:calc(44px + 16px) !important}
+        .demo-active .coach-main{padding-top:44px !important}
         .cd-row:hover{background:rgba(2,209,186,0.04)!important;cursor:pointer}
         .cd-row:hover .cd-arrow{opacity:1!important;transform:translateX(2px)}
         .cd-row:hover .cd-avatar-glow{opacity:1!important}
