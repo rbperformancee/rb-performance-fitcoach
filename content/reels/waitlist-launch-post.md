@@ -2,7 +2,7 @@
 
 ## Caption
 
-Je lance RB Perform le début mai.
+Je lance RB Perform mai 2026.
 
 Pendant 3 ans, j'ai coaché 20 personnes avec Excel, Canva et WhatsApp. Un jour j'ai réalisé que chaque coach autour de moi avait le même problème :
 
@@ -32,7 +32,7 @@ Le prix d'aujourd'hui sera ton prix à vie.
 
 ## Format
 - **Type** : Carrousel ou face caméra 30-60s
-- **Slide 1** (si carrousel) : "Je lance RB Perform le début mai." (fond noir, texte blanc, logo teal)
+- **Slide 1** (si carrousel) : "Je lance RB Perform mai 2026." (fond noir, texte blanc, logo teal)
 - **Slide 2** : "Le problème" (3 bullets)
 - **Slide 3** : "Ce que j'ai construit" (4 features avec ⚡)
 - **Slide 4** : Screenshot du dashboard
@@ -41,10 +41,10 @@ Le prix d'aujourd'hui sera ton prix à vie.
 ## Horaire
 - Poster entre 7h-8h ou 18h-19h
 - Stories : 3 stories dans la journée qui teasent le post
-  - Story 1 (matin) : "Quelque chose arrive le début mai..."
+  - Story 1 (matin) : "Quelque chose arrive mai 2026..."
   - Story 2 (midi) : screenshot flou du dashboard + "👀"
   - Story 3 (soir) : "Le post est live. Lien en bio."
 
 ## CTA bio
-Changer le lien en bio vers : rbperform.app/waitlist (temporaire, jusqu'au début mai)
-Après le début mai : remettre rbperform.app/link
+Changer le lien en bio vers : rbperform.app/waitlist (temporaire, jusqu'au mai 2026)
+Après mai 2026 : remettre rbperform.app/link

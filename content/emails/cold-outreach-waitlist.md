@@ -24,7 +24,7 @@ Si la réponse est non, c'est normal. 90% des coachs ne le savent pas. Ils coach
 
 Je construis un outil qui change ça. Dashboard MRR, prévision 90 jours, IA qui détecte les clients qui vont partir — 7 jours avant qu'ils décident.
 
-On lance le début mai. La waitlist est ouverte → rbperform.app/waitlist
+On lance mai 2026. La waitlist est ouverte → rbperform.app/waitlist
 
 Pas de carte bancaire. Juste ton email pour un accès prioritaire.
 
@@ -52,7 +52,7 @@ Si non, c'est normal. Gymkee est excellent pour les programmes. Mais il ne te di
 
 J'ai construit RB Perform pour ça. Un vrai dashboard CEO pour les coachs — MRR, rétention, anti-churn IA.
 
-On lance le début mai. Inscris-toi pour un accès prioritaire :
+On lance mai 2026. Inscris-toi pour un accès prioritaire :
 → rbperform.app/waitlist
 
 — Rayan
@@ -73,7 +73,7 @@ Sur 20 clients à 150€, ça fait 9 000€ perdus. En silence.
 
 J'ai construit un outil qui détecte les décrochages 7 jours à l'avance. Tu reçois une alerte. Tu agis. Le client reste.
 
-Lancement le début mai. Waitlist ouverte :
+Lancement mai 2026. Waitlist ouverte :
 → rbperform.app/waitlist
 
 — Rayan
@@ -114,7 +114,7 @@ Un seul truc : la waitlist ferme le fin avril. Les inscrits auront une offre que
 ## Volume cible
 - Semaine 1 : 100 emails → 15-20% open → 5-8% clic → 5-8 inscrits waitlist
 - Semaine 2 : 100 emails + follow-ups → idem
-- Total avant le début mai : ~200 emails envoyés → 10-16 inscrits waitlist par email seul
+- Total avant mai 2026 : ~200 emails envoyés → 10-16 inscrits waitlist par email seul
 
 ## Où trouver les emails
 - Bio Instagram → souvent un lien Linktree → email visible
