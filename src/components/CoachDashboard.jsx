@@ -2543,6 +2543,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const pillTabs = ["overview", "clients", "programmes", "business"];
   const pillItems = [
     { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("overview"); } },
     { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
@@ -2550,6 +2551,17 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMoreMenu(false); setActiveTab("business"); } },
     { id: "more",        icon: "plus",        label: "Plus",      onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
+  // Swipe gesture sur la pill
+  const pillSwipeRef = useRef({ startX: 0 });
+  const handlePillSwipe = (dir) => {
+    const currentIdx = pillTabs.indexOf(activeTab);
+    if (currentIdx < 0) return;
+    const nextIdx = dir === "left" ? Math.min(currentIdx + 1, pillTabs.length - 1) : Math.max(currentIdx - 1, 0);
+    if (nextIdx !== currentIdx) {
+      const item = pillItems.find(p => p.id === pillTabs[nextIdx]);
+      if (item) item.onClick();
+    }
+  };
   const FloatingPill = (
     <nav className="coach-floating-pill" style={{
       position: "fixed",
@@ -2831,7 +2843,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {CoachSidebar}
 
-      <main ref={mainScrollRef} className="coach-main" style={{
+      <main ref={mainScrollRef} className="coach-main"
+        onTouchStart={(e) => { pillSwipeRef.current.startX = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          const dx = e.changedTouches[0].clientX - pillSwipeRef.current.startX;
+          if (Math.abs(dx) > 60) handlePillSwipe(dx < 0 ? "left" : "right");
+        }}
+        style={{
         flex: 1, minWidth: 0,
         overflowY: "auto",
         overflowX: "hidden",
