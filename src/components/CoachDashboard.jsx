@@ -3244,9 +3244,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           urgentCount={urgentCount}
           onDismiss={() => setShowCoachHome(false)}
           onNavigate={(id) => {
-            if (id === "clients") { setShowClientList(true); setActiveTab("clients"); }
-            else if (id === "more") { setShowMoreMenu(true); }
-            else { setShowClientList(false); setShowSettings(false); setActiveTab(id); }
+            setShowCoachHome(false);
+            setTimeout(() => {
+              if (id === "clients") { setShowClientList(true); setActiveTab("clients"); }
+              else if (id === "more") { setShowMoreMenu(true); }
+              else { setShowClientList(false); setShowSettings(false); setActiveTab(id); }
+            }, 50);
           }}
         />
       )}

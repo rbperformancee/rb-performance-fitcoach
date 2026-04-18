@@ -42,7 +42,7 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
   const _ctx = getCtx();
 
   return (
-    <div onClick={onDismiss} style={{ minHeight: "100vh", minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", fontFamily: "-apple-system,Inter,sans-serif", position: "fixed", inset: 0, zIndex: 100, overflow: "hidden", cursor: "pointer" }}>
+    <div style={{ minHeight: "100vh", minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", fontFamily: "-apple-system,Inter,sans-serif", position: "fixed", inset: 0, zIndex: 100, overflow: "hidden" }}>
 
       {/* Particules d'ambiance */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "60%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.15) 0%, transparent 60%)", pointerEvents: "none" }} />
@@ -123,7 +123,7 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
           { id: "business", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg> },
           { id: "more", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 20, height: 20 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> },
         ].map(tab => (
-          <button key={tab.id} onClick={() => { onDismiss(); if (onNavigate) onNavigate(tab.id); }} style={{ width: 50, height: 50, borderRadius: 100, border: "none", background: tab.active ? G : "transparent", color: tab.active ? "#000" : "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)" }}>
+          <button key={tab.id} onClick={(e) => { e.stopPropagation(); if (onNavigate) onNavigate(tab.id); onDismiss(); }} style={{ width: 50, height: 50, borderRadius: 100, border: "none", background: tab.active ? G : "transparent", color: tab.active ? "#000" : "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)" }}>
             {tab.icon}
           </button>
         ))}
