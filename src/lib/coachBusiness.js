@@ -157,3 +157,41 @@ export function mrrVariation(current, previous) {
     direction: variation > 0 ? "up" : variation < 0 ? "down" : "flat",
   };
 }
+
+// ===== STUBS — vrais calculs IA dans un PR séparé =====
+
+export function computeForecast(clients, snapshots) {
+  // TODO: Monte Carlo sur 6 derniers mois
+  return null;
+}
+
+export function computeNextMove(clients, coachData) {
+  // TODO: Scan churn pondéré par poids MRR
+  return null;
+}
+
+export const MOCK_BUSINESS_DATA = {
+  mrr: 3480, lastMonthMrr: 3220, active: 15, retention: 82,
+  avgDuration: 127, activity: 76, score: 78,
+  platformBenchmark: { score: 64, retention: 58 },
+  history30d: Array.from({ length: 30 }, (_, i) => ({
+    snapshot_date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
+    business_score: Math.round(71 + (i / 29) * 7 + (Math.random() - 0.5) * 3),
+    mrr: Math.round(3200 + (i / 29) * 280 + (Math.random() - 0.5) * 80),
+  })),
+  nextMove: {
+    title: "Un client n'a pas bougé depuis 14 jours",
+    description: "Il représente 10% de ton MRR. Si tu ne le relances pas avant vendredi, sa probabilité de churn passe de 28% à 64%.",
+    action_primary_label: "Relancer",
+    action_secondary_label: "Voir le profil",
+  },
+  forecast: {
+    points: [
+      { day: 0, p10: 3480, p50: 3480, p90: 3480 },
+      { day: 30, p10: 3100, p50: 3400, p90: 3700 },
+      { day: 60, p10: 3200, p50: 3550, p90: 3900 },
+      { day: 90, p10: 3300, p50: 3720, p90: 4100 },
+    ],
+    scenario_text: "Si tu perds 1 client sans le remplacer : -149 €/mois immédiat.",
+  },
+};
