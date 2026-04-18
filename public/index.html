@@ -59,7 +59,7 @@
         align-items: center; justify-content: center;
         gap: 14px;
         z-index: 99999;
-        transition: opacity .2s ease;
+        transition: opacity .5s ease;
       }
       #splash.fade-out { opacity: 0; pointer-events: none; }
       #splash-logo {
@@ -117,19 +117,21 @@
         var tagline = document.getElementById('splash-tagline');
         if (!splash) return;
 
-        // Apparition instantanee
+        // Apparition du logo + tagline apres 80ms
         requestAnimationFrame(function(){
-          logo.classList.add('visible');
-          tagline.classList.add('visible');
+          setTimeout(function(){
+            logo.classList.add('visible');
+            tagline.classList.add('visible');
+          }, 80);
         });
 
-        // Disparition rapide (400ms)
+        // Disparition apres 1.4s
         setTimeout(function(){
           splash.classList.add('fade-out');
           setTimeout(function(){
             if (splash.parentNode) splash.parentNode.removeChild(splash);
-          }, 200);
-        }, 400);
+          }, 500);
+        }, 1400);
       })();
       // ===== Service Worker registration =====
       // Sans ca : pas de cache offline, pas de push notifications, pas de PWA fullsize.
