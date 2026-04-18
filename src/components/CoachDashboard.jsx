@@ -2512,11 +2512,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setActiveTab("overview"); } },
-    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Prog",      onClick: () => { setShowClientList(false); setShowSettings(false); setActiveTab("programmes"); } },
-    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setActiveTab("business"); } },
-    { id: "profile",     icon: "activity",    label: "Compte",    onClick: () => { setShowClientList(false); setShowSettings(true); } },
+    { id: "overview",    icon: "chart",       label: "Home",      onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setActiveTab("overview"); } },
+    { id: "clients",     icon: "users",       label: "Clients",   onClick: () => { setShowSettings(false); setShowAnalytics(false); setActiveTab("clients"); setShowClientList(true); } },
+    { id: "analytics",   icon: "activity",    label: "Stats",     onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(true); } },
+    { id: "business",    icon: "trending",    label: "Business",  onClick: () => { setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setActiveTab("business"); } },
+    { id: "profile",     icon: "flame",       label: "Compte",    onClick: () => { setShowClientList(false); setShowAnalytics(false); setShowSettings(true); } },
   ];
   const FloatingPill = (
     <nav className="coach-floating-pill" style={{
