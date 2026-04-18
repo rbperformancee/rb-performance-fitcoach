@@ -254,7 +254,12 @@ function Empty({ text }) {
 }
 
 function Heatmap({ grid, max }) {
-  const cellSize = 14;
+  const [cellSize, setCellSize] = React.useState(typeof window !== 'undefined' && window.innerWidth < 480 ? 10 : 14);
+  React.useEffect(() => {
+    const onResize = () => setCellSize(window.innerWidth < 480 ? 10 : 14);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   const gap = 2;
   return (
     <div>
