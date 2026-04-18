@@ -57,7 +57,7 @@ const JoinPage   = lazy(() => import("./components/client/JoinPage"));
 // l'interface complete 5 onglets (Train/Body/Run/Fuel/Profil) dans AppInner.
 import ChatCoach from "./components/ChatCoach";
 import BookingModal from "./components/BookingModal";
-const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m => ({ default: m.CoachDashboard })));
+import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
 import { supabase } from "./lib/supabase";
