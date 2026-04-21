@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import { supabase } from "../lib/supabase";
 import { useFuel } from "../hooks/useFuel";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
 import EmptyState from "./EmptyState";
@@ -122,6 +123,144 @@ const ScoreRing = ({ score }) => {
     </div>
   );
 };
+
+// ===== SUPPLEMENTS TAB COMPONENT =====
+function SupplementsTab({ clientId }) {
+  const [supplements, setSupplements] = useState([]);
+  const [logs, setLogs] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newDose, setNewDose] = useState("");
+  const today = new Date().toISOString().slice(0, 10);
+
+  const loadData = useCallback(async () => {
+    if (!clientId) return;
+    const { data: sups } = await supabase
+      .from("client_supplements")
+      .select("*")
+      .eq("client_id", clientId)
+      .eq("is_active", true)
+      .order("created_at");
+    setSupplements(sups || []);
+
+    const { data: todayLogs } = await supabase
+      .from("supplement_logs")
+      .select("supplement_id,taken")
+      .eq("client_id", clientId)
+      .eq("date", today);
+    const logMap = {};
+    (todayLogs || []).forEach(l => { logMap[l.supplement_id] = l.taken; });
+    setLogs(logMap);
+    setLoading(false);
+  }, [clientId, today]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const toggleTaken = async (supId) => {
+    const wasTaken = logs[supId] || false;
+    setLogs(prev => ({ ...prev, [supId]: !wasTaken }));
+    await supabase.from("supplement_logs").upsert({
+      client_id: clientId,
+      supplement_id: supId,
+      date: today,
+      taken: !wasTaken,
+    }, { onConflict: "supplement_id,date" });
+  };
+
+  const addSupplement = async () => {
+    if (!newName.trim()) return;
+    await supabase.from("client_supplements").insert({
+      client_id: clientId,
+      name: newName.trim(),
+      dose: newDose.trim() || null,
+      added_by: "client",
+    });
+    setNewName("");
+    setNewDose("");
+    setShowAdd(false);
+    loadData();
+  };
+
+  const removeSupplement = async (id) => {
+    await supabase.from("client_supplements").update({ is_active: false }).eq("id", id);
+    loadData();
+  };
+
+  const takenCount = Object.values(logs).filter(Boolean).length;
+  const totalCount = supplements.length;
+
+  if (loading) return <div style={{ padding: "40px 24px", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Chargement...</div>;
+
+  return (
+    <div style={{ padding: "20px 24px" }}>
+      {/* Header avec progression */}
+      {totalCount > 0 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Aujourd'hui</div>
+            <div style={{ fontSize: 24, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
+              {takenCount}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}>/{totalCount}</span>
+            </div>
+          </div>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: takenCount === totalCount && totalCount > 0 ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${takenCount === totalCount && totalCount > 0 ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.06)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: takenCount === totalCount && totalCount > 0 ? GREEN : "rgba(255,255,255,0.15)" }}>
+            {takenCount === totalCount && totalCount > 0 ? "✓" : "○"}
+          </div>
+        </div>
+      )}
+
+      {/* Liste */}
+      {supplements.map((sup) => {
+        const taken = logs[sup.id] || false;
+        return (
+          <div key={sup.id} style={{
+            display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
+            background: taken ? "rgba(2,209,186,0.04)" : "rgba(255,255,255,0.025)",
+            border: `1px solid ${taken ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.06)"}`,
+            borderRadius: 14, marginBottom: 8, transition: "all 0.2s",
+          }}>
+            <button onClick={() => toggleTaken(sup.id)} style={{
+              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
+              background: taken ? GREEN : "rgba(255,255,255,0.06)",
+              color: taken ? "#000" : "rgba(255,255,255,0.2)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, fontWeight: 800, flexShrink: 0, transition: "all 0.15s",
+            }}>{taken ? "✓" : ""}</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: taken ? "rgba(255,255,255,0.4)" : "#fff", textDecoration: taken ? "line-through" : "none", transition: "all 0.2s" }}>{sup.name}</div>
+              {sup.dose && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{sup.dose}{sup.added_by === "coach" ? " · Prescrit par ton coach" : ""}</div>}
+            </div>
+            <button onClick={() => removeSupplement(sup.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.15)", cursor: "pointer", fontSize: 16, padding: 4 }}>×</button>
+          </div>
+        );
+      })}
+
+      {/* Empty state */}
+      {supplements.length === 0 && !showAdd && (
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Aucun complement ajoute</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", lineHeight: 1.6 }}>Ajoute tes complements pour suivre ta prise quotidienne.</div>
+        </div>
+      )}
+
+      {/* Formulaire ajout */}
+      {showAdd ? (
+        <div style={{ marginTop: 12, padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 }}>
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom (ex: Creatine)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }} />
+          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder="Dose (ex: 5g)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit" }} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => { setShowAdd(false); setNewName(""); setNewDose(""); }} style={{ flex: 1, padding: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
+            <button onClick={addSupplement} disabled={!newName.trim()} style={{ flex: 1, padding: 12, background: newName.trim() ? ORANGE : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: newName.trim() ? "#000" : "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 800, cursor: newName.trim() ? "pointer" : "not-allowed", fontFamily: "inherit" }}>Ajouter</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setShowAdd(true)} style={{ width: "100%", marginTop: 12, padding: 14, background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)", borderRadius: 14, color: ORANGE, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          + Ajouter un complement
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function FuelPage({ client, appData }) {
   const fuelData = useFuel(client?.id);
@@ -518,49 +657,7 @@ export default function FuelPage({ client, appData }) {
         </div>
 
         {/* ===== SUPPLEMENTS TAB ===== */}
-        {fuelTab === "supplements" && (
-          <div style={{ padding: "20px 24px" }}>
-            <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Mes complements</div>
-
-            {[
-              { name: "Proteine Whey", dose: "30g", timing: "Post-entrainement", icon: "P", color: "#60a5fa" },
-              { name: "Creatine Monohydrate", dose: "5g", timing: "Tous les jours", icon: "C", color: ORANGE },
-              { name: "Omega 3", dose: "2 capsules", timing: "Matin", icon: "O", color: GREEN },
-              { name: "Vitamine D3", dose: "2000 UI", timing: "Matin avec repas", icon: "D", color: "#fbbf24" },
-              { name: "Magnesium", dose: "400mg", timing: "Soir", icon: "M", color: PURPLE },
-              { name: "Multivitamines", dose: "1 comprime", timing: "Matin", icon: "V", color: "#34d399" },
-            ].map((sup, i) => (
-              <div key={i} style={{
-                display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
-                background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: 14, marginBottom: 8,
-              }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: `${sup.color}15`, border: `1px solid ${sup.color}30`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14, fontWeight: 800, color: sup.color, flexShrink: 0,
-                }}>{sup.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{sup.name}</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{sup.dose} · {sup.timing}</div>
-                </div>
-                <div style={{
-                  width: 28, height: 28, borderRadius: 8,
-                  background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14, color: GREEN, cursor: "pointer",
-                }}>✓</div>
-              </div>
-            ))}
-
-            <div style={{ marginTop: 20, padding: "16px", background: "rgba(249,115,22,0.04)", border: "1px solid rgba(249,115,22,0.12)", borderRadius: 14, textAlign: "center" }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-                Les complements sont definis par ton coach dans tes parametres de suivi. Demande-lui d'ajuster si besoin.
-              </div>
-            </div>
-          </div>
-        )}
+        {fuelTab === "supplements" && <SupplementsTab clientId={client?.id} />}
 
         <div style={{ display: fuelTab === "nutrition" ? "block" : "none" }}>
         {/* SCORE ENERGIE */}
