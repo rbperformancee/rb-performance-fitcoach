@@ -465,7 +465,7 @@ function CoachSupplementsPanel({ clientId }) {
 }
 
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
-function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false }) {
+function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [] }) {
   const [showTransformation, setShowTransformation] = React.useState(false);
   const [showAIAnalyze, setShowAIAnalyze] = React.useState(false);
   const [msgText,    setMsgText]    = useState("");
@@ -2924,7 +2924,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {selected && (
         <ErrorBoundary name="ClientPanel">
-          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} />
+          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} />
         </ErrorBoundary>
       )}
       {showPipeline && (
