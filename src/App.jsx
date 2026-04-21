@@ -911,9 +911,11 @@ function AppInner() {
     return <CoachCodeGate client={{ email: user.email, id: null }} onLinked={() => window.location.reload()} />;
   }
 
-  if (!isClientDemo && user && !isCoach && !authLoading && client?.onboarding_done !== true) {
-    return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
-  }
+  // OnboardingFlow desactive pour le lancement — le client arrive directement sur l'app
+  // TODO: reactiver quand le questionnaire sera integre dans le flow coach
+  // if (!isClientDemo && user && !isCoach && !authLoading && client?.onboarding_done !== true) {
+  //   return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
+  // }
 
   // ── Coach → Dashboard admin ──
   // ── Programme avec date de debut future → Countdown ──
