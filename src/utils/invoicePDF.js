@@ -42,7 +42,8 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
 
   // Resolve plan info — priorite aux plans dynamiques
   const plan = client.subscription_plan || "3m";
-  const planLabel = client._plan_name || PLAN_LABELS_LEGACY[plan] || "Programme coaching";
+  const rawLabel = client._plan_name || client.description || client.subscription_plan || PLAN_LABELS_LEGACY[plan];
+  const planLabel = (rawLabel && rawLabel !== "—" && rawLabel.trim()) ? rawLabel : "Programme coaching";
   const priceMonth = client._plan_price || PLAN_PRICES_LEGACY[plan] || 0;
   const months = client._plan_duration || client.subscription_duration_months || PLAN_MONTHS_LEGACY[plan] || 1;
   const total = Math.round(priceMonth * months * 100) / 100;
@@ -103,7 +104,7 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   // Periode
   if (client.subscription_start_date && client.subscription_end_date) {
     const fmt = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-    doc.text("Periode : " + fmt(client.subscription_start_date) + " \u2192 " + fmt(client.subscription_end_date), M, 90);
+    doc.text("Periode : " + fmt(client.subscription_start_date) + " - " + fmt(client.subscription_end_date), M, 90);
   }
 
   // ===== TABLE =====
