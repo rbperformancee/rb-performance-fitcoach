@@ -1,291 +1,369 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { PrivacyPolicy } from './PrivacyPolicy';
-import { LOGO_B64 } from '../utils/logo';
-import Spinner from './Spinner';
 
-function Particles() {
-  const canvasRef = React.useRef(null);
-  React.useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const particles = Array.from({ length: 40 }, () => ({
-      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-      r: Math.random() * 1.5 + 0.3, dx: (Math.random() - 0.5) * 0.3, dy: (Math.random() - 0.5) * 0.3,
-      opacity: Math.random() * 0.4 + 0.1,
-    }));
-    let raf;
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(2,209,186,' + p.opacity + ')'; ctx.fill();
-        p.x += p.dx; p.y += p.dy;
-        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
-      });
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => cancelAnimationFrame(raf);
-  }, []);
-  return React.createElement('canvas', { ref: canvasRef, style: { position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 } });
-}
+const G = '#02d1ba';
 
-const PHRASES = [
-  ['LA PERFORMANCE', "N'ATTEND PAS."],
-  ['CHAQUE SÉANCE', 'COMPTE.'],
-  ['TON CORPS.', 'TON PROGRAMME.'],
-  ['ZERO EXCUSE.', 'MAX RÉSULTAT.'],
-];
-
-export function LoginScreen({ onSendMagicLink, loading, onBack }) {
+/**
+ * LoginScreen — page de connexion unifiee RB Perform.
+ *
+ * Vue par defaut : CLIENT (OTP 6 chiffres par email)
+ * Vue secondaire : COACH (email + mot de passe)
+ *
+ * Design coherent avec la landing (fond noir, typo Syne/Inter, accent teal).
+ */
+export function LoginScreen({ onBack }) {
+  const [mode, setMode] = useState('client'); // client | coach
   const [email, setEmail] = useState('');
   const [step, setStep] = useState('email'); // email | otp
   const [otp, setOtp] = useState('');
-  const [showPrivacy, setShowPrivacy] = useState(false);
-  const [accepted, setAccepted] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [error, setError] = useState('');
-  const [phraseIdx] = useState(() => Math.floor(Math.random() * PHRASES.length));
-  const [coachMode, setCoachMode] = useState(false);
   const [password, setPassword] = useState('');
-  const [pwdFocused, setPwdFocused] = useState(false);
-  const [coachError, setCoachError] = useState('');
-  const [coachLoading, setCoachLoading] = useState(false);
-  const [coachSignup, setCoachSignup] = useState(false); // toggle login/signup
-  const [coachName, setCoachName] = useState('');
-  const otpRefs = React.useRef([]);
-  const phrase = PHRASES[phraseIdx];
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const otpRef = useRef(null);
+
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // Envoyer le code OTP
-  const handleSendOTP = async () => {
-    if (!validEmail || !accepted) return;
-    setSending(true);
+  // Auto-redirect si deja connecte
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data?.session?.user) {
+        window.location.href = '/';
+      }
+    });
+  }, []);
+
+  // ===== CLIENT : envoyer OTP =====
+  const sendOTP = async () => {
+    if (!validEmail) return;
+    setLoading(true);
     setError('');
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
-        options: { shouldCreateUser: false }
+        options: { shouldCreateUser: false },
       });
       if (error) throw error;
       setStep('otp');
-      setTimeout(() => otpRefs.current[0]?.focus(), 100);
-    } catch(e) {
-      setError(e.message || 'Erreur envoi du code');
+      setSuccess('Code envoye a ' + email);
+      setTimeout(() => otpRef.current?.focus(), 100);
+    } catch (e) {
+      setError(e.message === 'Signups not allowed for otp'
+        ? 'Aucun compte trouve avec cet email. Contacte ton coach.'
+        : e.message || 'Erreur lors de l\'envoi du code.');
     }
-    setSending(false);
+    setLoading(false);
   };
 
-  const handleOtpChange = (val) => {
-    const cleaned = val.replace(/[^0-9]/g, '').substring(0, 8);
-    setOtp(cleaned);
-    if (cleaned.length >= 6) verifyOTP(cleaned);
-  };
-
-  // Vérifier le code OTP
+  // ===== CLIENT : verifier OTP =====
   const verifyOTP = async (code) => {
     if (code.length < 6) return;
-    setVerifying(true);
+    setLoading(true);
     setError('');
     try {
       const { error } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token: code,
         type: 'email',
-        options: {
-          // Session longue si "Se souvenir de moi"
-          ...(rememberMe ? {} : {})
-        }
       });
       if (error) {
-        setError('Code incorrect ou expiré. Réessaie.');
-        setOtp(['', '', '', '', '', '']);
-        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+        setError('Code incorrect ou expire. Reessaie.');
+        setOtp('');
+        setTimeout(() => otpRef.current?.focus(), 100);
       }
-      // Si succès → Supabase met à jour la session automatiquement
-    } catch(e) {
-      setError('Erreur de vérification');
+      // Succes → Supabase met a jour la session, App.jsx detecte et redirige
+    } catch (e) {
+      setError('Erreur de verification');
     }
-    setVerifying(false);
+    setLoading(false);
   };
 
+  const handleOtpChange = (val) => {
+    const cleaned = val.replace(/[^0-9]/g, '').substring(0, 6);
+    setOtp(cleaned);
+    if (cleaned.length === 6) verifyOTP(cleaned);
+  };
+
+  // ===== COACH : login password =====
   const handleCoachLogin = async (e) => {
     e.preventDefault();
-    setCoachLoading(true);
-    setCoachError('');
+    if (!validEmail || !password) return;
+    setLoading(true);
+    setError('');
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setCoachError('Email ou mot de passe incorrect');
-    } catch(err) {
-      setCoachError('Erreur de connexion');
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (error) {
+        setError('Email ou mot de passe incorrect.');
+      } else {
+        // Redirect vers la racine, App.jsx detecte le role et redirige
+        window.location.href = '/';
+      }
+    } catch (e) {
+      setError('Erreur de connexion.');
     }
-    setCoachLoading(false);
+    setLoading(false);
+  };
+
+  // ===== COACH : mot de passe oublie =====
+  const handleForgotPassword = async () => {
+    if (!validEmail) { setError('Entre ton email d\'abord.'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        { redirectTo: window.location.origin + '/#type=recovery' }
+      );
+      if (error) throw error;
+      setSuccess('Email de reinitialisation envoye.');
+    } catch (e) {
+      setError(e.message || 'Erreur');
+    }
+    setLoading(false);
   };
 
   return (
-    <>
-      {showPrivacy && React.createElement(PrivacyPolicy, { onClose: () => setShowPrivacy(false) })}
-      {React.createElement(Particles)}
-      <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(2,209,186,0.07) 0%, #0d0d0d 60%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', fontFamily: 'Inter, -apple-system, sans-serif', position: 'relative', zIndex: 1 }}>
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent 0%, #02d1ba 50%, transparent 100%)', opacity: 0.7 }} />
-        
-        <div style={{ width: '100%', maxWidth: 360 }}>
-          {/* Logo + Phrase */}
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            {onBack && (
-            <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 12, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', marginBottom: 28, letterSpacing: '0.3px' }}>
-              <span style={{ fontSize: 16 }}>←</span>
-              <span>Découvrir les offres</span>
-            </button>
-          )}
-          <img src={LOGO_B64} alt="RB PERFORM" style={{ width: 88, height: 88, objectFit: 'cover', objectPosition: 'center 60%', display: 'block', margin: '0 auto 20px', borderRadius: 22, boxShadow: '0 0 0 1px rgba(2,209,186,0.2), 0 20px 60px rgba(2,209,186,0.12)' }} />
-            {[phrase[0], phrase[1]].map((line, li) => (
-              <div key={li} style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1.05, color: li === 0 ? '#f5f5f5' : '#02d1ba' }}>{line}</div>
-            ))}
-            <p style={{ fontSize: 10, color: '#4b5563', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', margin: '8px 0 0' }}>Programmes d entraînement personnalisés</p>
+    <div style={{
+      minHeight: '100vh', background: '#050505',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '32px 24px', fontFamily: "'Inter', -apple-system, sans-serif", position: 'relative',
+    }}>
+      {/* Ambiance */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', background: 'radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.08) 0%, transparent 60%)', pointerEvents: 'none' }} />
+
+      <div style={{ width: '100%', maxWidth: 380, position: 'relative', zIndex: 1 }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 900, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.2)' }}>
+            RB<span style={{ color: 'rgba(2,209,186,0.4)' }}>PERFORM</span>
           </div>
+        </div>
 
-          {/* Step Email */}
-          {step === 'email' && !coachMode && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input type="email" placeholder="ton@email.com" value={email}
-                onChange={e => setEmail(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-                onKeyDown={e => e.key === 'Enter' && handleSendOTP()}
-                autoFocus enterKeyHint="next"
-                style={{ width: '100%', boxSizing: 'border-box', background: focused ? 'rgba(2,209,186,0.04)' : 'rgba(255,255,255,0.03)', border: '1.5px solid ' + (focused ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.08)'), borderRadius: 14, padding: '16px 18px', color: '#f5f5f5', fontSize: 16, fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s' }} />
+        {/* Titre */}
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-1px', margin: '0 0 8px' }}>
+            {mode === 'client' ? 'Connexion' : 'Espace coach'}
+            <span style={{ color: G }}>.</span>
+          </h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0, lineHeight: 1.5 }}>
+            {mode === 'client'
+              ? 'Entre ton email pour recevoir ton code de connexion.'
+              : 'Connecte-toi avec ton email et ton mot de passe.'}
+          </p>
+        </div>
 
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-                <div onClick={() => setAccepted(a => !a)} style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2, background: accepted ? '#02d1ba' : 'transparent', border: '1.5px solid ' + (accepted ? '#02d1ba' : 'rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
-                  {accepted && <span style={{ fontSize: 10, color: '#0d0d0d', fontWeight: 900 }}>✓</span>}
-                </div>
-                <span style={{ fontSize: 11, color: '#4b5563', lineHeight: 1.6 }}>
-                  J accepte la <button type="button" onClick={() => setShowPrivacy(true)} style={{ background: 'none', border: 'none', color: '#02d1ba', cursor: 'pointer', fontSize: 11, padding: 0, textDecoration: 'underline' }}>politique de confidentialité</button> et le traitement de mes données RGPD.
-                </span>
-              </label>
-
-              {/* Se souvenir de moi */}
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <div onClick={() => setRememberMe(r => !r)} style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, background: rememberMe ? '#02d1ba' : 'transparent', border: '1.5px solid ' + (rememberMe ? '#02d1ba' : 'rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
-                  {rememberMe && <span style={{ fontSize: 10, color: '#0d0d0d', fontWeight: 900 }}>✓</span>}
-                </div>
-                <span style={{ fontSize: 11, color: '#4b5563' }}>Se souvenir de moi sur cet appareil</span>
-              </label>
-
-              {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#ef4444', textAlign: 'center' }}>{error}</div>}
-
-              <button onClick={handleSendOTP} disabled={!validEmail || !accepted || sending}
-                style={{ marginTop: 4, width: '100%', padding: '17px', borderRadius: 14, border: 'none', background: validEmail && accepted ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: validEmail && accepted ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', cursor: validEmail && accepted ? 'pointer' : 'not-allowed', transition: 'all 0.15s' }}>
-                {sending ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Envoi</span>) : 'Recevoir mon code →'}
-              </button>
-              <p style={{ textAlign: 'center', fontSize: 11, color: '#374151', margin: '4px 0 0' }}>Code à 6 chiffres par email — sans mot de passe</p>
-            </div>
-          )}
-
-          {/* Step OTP */}
-          {step === 'otp' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>📬</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#f5f5f5', marginBottom: 4 }}>Code envoyé !</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>Vérifie <span style={{ color: '#02d1ba' }}>{email}</span></div>
+        {/* ===== CLIENT MODE ===== */}
+        {mode === 'client' && (
+          <>
+            {step === 'email' ? (
+              <div>
+                <label style={labelStyle}>Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && sendOTP()}
+                  placeholder="ton@email.com"
+                  autoFocus
+                  style={inputStyle}
+                />
+                <button
+                  onClick={sendOTP}
+                  disabled={!validEmail || loading}
+                  style={{
+                    ...btnStyle,
+                    opacity: (!validEmail || loading) ? 0.4 : 1,
+                    cursor: (!validEmail || loading) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {loading ? 'Envoi...' : 'Recevoir mon code'}
+                </button>
               </div>
-
-              {/* Input OTP unique */}
-              <input
-                type="text" inputMode="numeric" pattern="[0-9]*"
-                value={otp} onChange={e => handleOtpChange(e.target.value)}
-                placeholder="_ _ _ _ _ _" maxLength={8} autoFocus
-                style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center', fontSize: 32, fontWeight: 900, letterSpacing: 12, fontFamily: 'monospace', background: otp.length >= 6 ? 'rgba(2,209,186,0.08)' : 'rgba(255,255,255,0.04)', border: '2px solid ' + (otp.length >= 6 ? 'rgba(2,209,186,0.5)' : 'rgba(255,255,255,0.1)'), borderRadius: 16, padding: '20px 16px', color: '#02d1ba', outline: 'none', transition: 'all 0.2s' }}
-              />
-
-              {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#ef4444', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}>{error}</div>}
-
-              {verifying && <div style={{ fontSize: 13, color: '#02d1ba' }}>Vérification...</div>}
-
-              <button onClick={() => { setStep('email'); setOtp(''); setError(''); }}
-                style={{ background: 'none', border: 'none', color: '#374151', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
-                ← Changer d email
-              </button>
-
-              <button onClick={handleSendOTP} disabled={sending}
-                style={{ background: 'none', border: 'none', color: '#02d1ba', fontSize: 12, cursor: 'pointer' }}>
-                {sending ? 'Envoi…' : 'Renvoyer le code'}
-              </button>
-            </div>
-          )}
-
-          {/* Espace Coach — login OU inscription */}
-          {coachMode && (
-            <form onSubmit={coachSignup ? async (e) => {
-              e.preventDefault();
-              setCoachLoading(true); setCoachError('');
-              try {
-                // 1. Creer le compte auth Supabase
-                const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-                  email: email.trim().toLowerCase(),
-                  password,
-                  options: { data: { full_name: coachName.trim() } },
-                });
-                if (signUpErr) throw signUpErr;
-                // 2. Inserer dans la table coaches
-                const { error: insErr } = await supabase.from("coaches").insert({
-                  email: email.trim().toLowerCase(),
-                  full_name: coachName.trim() || null,
-                  is_active: true,
-                });
-                if (insErr && insErr.code !== "23505") throw insErr; // 23505 = email deja existant
-                // 3. Auto-login (signUp auto-login si email_confirm = false dans les settings Supabase)
-                // Si email_confirm est active, on tente un login direct
-                if (!signUpData?.session) {
-                  await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
-                }
-              } catch(err) {
-                setCoachError(err.message || 'Erreur inscription');
-              }
-              setCoachLoading(false);
-            } : handleCoachLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-              {/* Toggle login / signup */}
-              <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden', marginBottom: 4 }}>
-                <button type="button" onClick={() => { setCoachSignup(false); setCoachError(''); }} style={{ flex: 1, padding: '10px', border: 'none', background: !coachSignup ? 'rgba(2,209,186,0.1)' : 'transparent', color: !coachSignup ? '#02d1ba' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Se connecter</button>
-                <button type="button" onClick={() => { setCoachSignup(true); setCoachError(''); }} style={{ flex: 1, padding: '10px', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.08)', background: coachSignup ? 'rgba(2,209,186,0.1)' : 'transparent', color: coachSignup ? '#02d1ba' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>S'inscrire</button>
+            ) : (
+              <div>
+                <label style={labelStyle}>Code a 6 chiffres</label>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: '0 0 12px' }}>
+                  Envoye a {email}
+                </p>
+                <input
+                  ref={otpRef}
+                  type="text"
+                  inputMode="numeric"
+                  value={otp}
+                  onChange={(e) => handleOtpChange(e.target.value)}
+                  placeholder="------"
+                  maxLength={6}
+                  autoFocus
+                  style={{
+                    ...inputStyle,
+                    textAlign: 'center',
+                    letterSpacing: '8px',
+                    fontSize: 24,
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
+                />
+                <button
+                  onClick={() => verifyOTP(otp)}
+                  disabled={otp.length < 6 || loading}
+                  style={{
+                    ...btnStyle,
+                    opacity: (otp.length < 6 || loading) ? 0.4 : 1,
+                    cursor: (otp.length < 6 || loading) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {loading ? 'Verification...' : 'Me connecter'}
+                </button>
+                <button
+                  onClick={() => { setStep('email'); setOtp(''); setError(''); setSuccess(''); }}
+                  style={linkBtnStyle}
+                >
+                  Changer d'email
+                </button>
               </div>
+            )}
+          </>
+        )}
 
-              {coachSignup && (
-                <input type="text" placeholder="Ton nom complet" value={coachName} onChange={e => setCoachName(e.target.value)} autoFocus
-                  style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 16, fontFamily: 'inherit', outline: 'none' }} />
-              )}
-              <input type="email" placeholder="coach@email.com" value={email} onChange={e => setEmail(e.target.value)} autoFocus={!coachSignup}
-                style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 16, fontFamily: 'inherit', outline: 'none' }} />
-              <input type="password" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)}
-                style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '15px 18px', color: '#f5f5f5', fontSize: 16, fontFamily: 'inherit', outline: 'none' }} />
-              {coachError && <div style={{ fontSize: 12, color: '#ef4444', textAlign: 'center', background: 'rgba(239,68,68,0.1)', padding: '8px', borderRadius: 8 }}>{coachError}</div>}
-              <button type="submit" disabled={!password || !email || coachLoading || (coachSignup && !coachName.trim())}
-                style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: password && email ? '#02d1ba' : 'rgba(255,255,255,0.06)', color: password && email ? '#0d0d0d' : '#374151', fontSize: 14, fontWeight: 800, cursor: password && email ? 'pointer' : 'not-allowed', letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.15s', fontFamily: 'inherit' }}>
-                {coachLoading ? (coachSignup ? 'Inscription...' : 'Connexion...') : (coachSignup ? 'Creer mon compte coach →' : 'Acceder au dashboard →')}
-              </button>
-            </form>
-          )}
+        {/* ===== COACH MODE ===== */}
+        {mode === 'coach' && (
+          <form onSubmit={handleCoachLogin}>
+            <label style={labelStyle}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="coach@email.com"
+              autoFocus
+              style={inputStyle}
+            />
+            <label style={{ ...labelStyle, marginTop: 16 }}>Mot de passe</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Ton mot de passe"
+              style={inputStyle}
+            />
+            <button
+              type="submit"
+              disabled={!validEmail || !password || loading}
+              style={{
+                ...btnStyle,
+                opacity: (!validEmail || !password || loading) ? 0.4 : 1,
+                cursor: (!validEmail || !password || loading) ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? 'Connexion...' : 'Me connecter'}
+            </button>
+            <button type="button" onClick={handleForgotPassword} style={linkBtnStyle}>
+              Mot de passe oublie ?
+            </button>
+          </form>
+        )}
 
-          {step === 'email' && (
-            <button onClick={() => { setCoachMode(m => !m); setCoachError(''); setError(''); }}
-              style={{ background: 'none', border: 'none', color: coachMode ? '#02d1ba' : '#374151', fontSize: 11, cursor: 'pointer', margin: '16px auto 0', display: 'block', textDecoration: 'underline' }}>
-              {coachMode ? '← Retour client' : 'Espace Coach'}
+        {/* Erreur / Succes */}
+        {error && (
+          <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', borderRadius: 12, fontSize: 13, color: '#ff6b6b', textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
+        {success && !error && (
+          <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(2,209,186,0.08)', border: `1px solid rgba(2,209,186,0.2)`, borderRadius: 12, fontSize: 13, color: G, textAlign: 'center' }}>
+            {success}
+          </div>
+        )}
+
+        {/* Switch mode */}
+        <div style={{ textAlign: 'center', marginTop: 40 }}>
+          {mode === 'client' ? (
+            <button onClick={() => { setMode('coach'); setError(''); setSuccess(''); }} style={switchStyle}>
+              Tu es coach ? Espace coach
+            </button>
+          ) : (
+            <button onClick={() => { setMode('client'); setStep('email'); setError(''); setSuccess(''); }} style={switchStyle}>
+              Retour espace client
             </button>
           )}
         </div>
 
-        <div style={{ position: 'fixed', bottom: 20, fontSize: 10, color: '#1f2937', letterSpacing: '1.5px', fontWeight: 600, textTransform: 'uppercase' }}>RB PERFORM · SIRET 99063780300018</div>
-        <style>{'input::placeholder { color: #374151; }'}</style>
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: 32, fontSize: 11, color: 'rgba(255,255,255,0.12)' }}>
+          RB Perform — rbperform.app
+        </div>
       </div>
-    </>
+    </div>
   );
 }
+
+// ===== STYLES =====
+const labelStyle = {
+  display: 'block',
+  fontSize: 10,
+  fontWeight: 600,
+  letterSpacing: '2px',
+  textTransform: 'uppercase',
+  color: 'rgba(255,255,255,0.35)',
+  marginBottom: 8,
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '14px 16px',
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 12,
+  color: '#fff',
+  fontSize: 16,
+  fontFamily: 'inherit',
+  outline: 'none',
+  boxSizing: 'border-box',
+  transition: 'border-color 0.2s',
+};
+
+const btnStyle = {
+  width: '100%',
+  padding: '16px',
+  marginTop: 20,
+  background: G,
+  color: '#000',
+  border: 'none',
+  borderRadius: 12,
+  fontSize: 14,
+  fontWeight: 800,
+  fontFamily: "'Syne', sans-serif",
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  boxShadow: '0 8px 24px rgba(2,209,186,0.25)',
+};
+
+const linkBtnStyle = {
+  display: 'block',
+  width: '100%',
+  marginTop: 12,
+  background: 'none',
+  border: 'none',
+  color: 'rgba(255,255,255,0.3)',
+  fontSize: 12,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  textAlign: 'center',
+};
+
+const switchStyle = {
+  background: 'none',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 100,
+  padding: '10px 24px',
+  color: 'rgba(255,255,255,0.4)',
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  transition: 'all 0.15s',
+};
+
+export default LoginScreen;

@@ -49,7 +49,7 @@ import { MentionsLegales, CGU, DeleteConfirmModal } from "./components/LegalPage
 import { LoginScreen } from "./components/LoginScreen";
 // Gros composants : charges a la demande pour booster le TTI cote clients
 const SubscribePage = lazy(() => import("./components/SubscribePage"));
-const LoginPage  = lazy(() => import("./components/auth/LoginPage"));
+// LoginPage remplace par LoginScreen unifie
 const SignupPage = lazy(() => import("./components/auth/SignupPage"));
 const SetPasswordPage = lazy(() => import("./components/auth/SetPasswordPage"));
 const JoinPage   = lazy(() => import("./components/client/JoinPage"));
@@ -438,7 +438,7 @@ function AppInner() {
     if (new URLSearchParams(window.location.search).get("welcome") === "true") return "set-password";
     return null;
   });
-  if (authRoute === "login")  return <Suspense fallback={null}><LoginPage /></Suspense>;
+  if (authRoute === "login")  return <LoginScreen />;
   if (authRoute === "signup") return <Suspense fallback={null}><SignupPage /></Suspense>;
   if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
   if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/"; }} /></Suspense>;
