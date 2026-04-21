@@ -46,7 +46,7 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
   const id = ytId(vidUrl);
   if (playing && id) {
     return (
-      <div style={{ borderRadius: 14, overflow: "hidden", background: "#000", margin: "0 0 12px" }}>
+      <div style={{ borderRadius: 14, overflow: "hidden", background: "#000", margin: "0 0 12px", position: "relative" }}>
         <iframe
           src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
           style={{ width: "100%", aspectRatio: "16/9", border: "none", display: "block" }}
@@ -60,8 +60,21 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
       </div>
     );
   }
+  // Video HTML5 pour les URLs non-YouTube (mp4, webm, etc.)
+  if (playing && !id && vidUrl) {
+    return (
+      <div style={{ borderRadius: 14, overflow: "hidden", background: "#000", margin: "0 0 12px", position: "relative" }}>
+        <video src={vidUrl} controls autoPlay playsInline style={{ width: "100%", aspectRatio: "16/9", display: "block" }} />
+        <button onClick={() => setPlaying(false)} style={{
+          position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)", border: "none",
+          borderRadius: "50%", width: 30, height: 30, color: "#fff", fontSize: 16, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>×</button>
+      </div>
+    );
+  }
   return (
-    <button onClick={() => id ? setPlaying(true) : window.open(vidUrl, "_blank")} style={{
+    <button onClick={() => vidUrl ? setPlaying(true) : null} style={{
       display: "block", width: "100%", position: "relative", borderRadius: 14, overflow: "hidden",
       background: "#050505", cursor: "pointer", border: "none", padding: 0, aspectRatio: "16/9", margin: "0 0 12px",
     }}>
@@ -150,13 +163,22 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const latest = getLatest(weekIdx, sessionIdx, exIdx);
   const delta = getDelta(weekIdx, sessionIdx, exIdx);
 
-  const allDone = doneCount >= (typeof ex.sets === "number" && ex.sets > 0 ? ex.sets : 1) && doneCount > 0;
+  // Extraire le nombre de series — depuis ex.sets, ou depuis rawReps "3x5", ou fallback 1
+  const parsedSets = (() => {
+    if (typeof ex.sets === "number" && ex.sets > 0) return ex.sets;
+    if (ex.rawReps) {
+      const m = ex.rawReps.match(/^(\d+)\s*[xX×]/);
+      if (m) return parseInt(m[1], 10);
+    }
+    return 1;
+  })();
+  const allDone = doneCount >= parsedSets && doneCount > 0;
   const deltaPos = delta !== null && delta > 0;
   const deltaNeg = delta !== null && delta < 0;
   const hasVideo = !!ex.vidUrl;
   const chipsReps = ex.rawReps || (ex.sets && ex.reps ? `${ex.sets}×${ex.reps}` : ex.reps) || null;
   const restSecs = parseRestSeconds(ex.rest);
-  const setsCount = (typeof ex.sets === "number" && ex.sets > 0) ? ex.sets : 1;
+  const setsCount = parsedSets;
 
   // Calcul du volume de l exercice
   const volume = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0);

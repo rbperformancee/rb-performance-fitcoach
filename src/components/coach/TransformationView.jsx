@@ -117,7 +117,19 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
       await navigator.clipboard.writeText(text);
       toast.success("Texte copie");
     } catch {
-      toast.error("Partage indisponible");
+      // Fallback textarea hack pour iOS Safari / PWA
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.cssText = "position:fixed;opacity:0;left:-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        toast.success("Texte copie");
+      } catch {
+        toast.info(text);
+      }
     }
   };
 

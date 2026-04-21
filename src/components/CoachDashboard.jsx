@@ -2244,6 +2244,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   useEffect(() => { loadClients(); }, []);
+  // Auto-refresh clients toutes les 60s pour tracking activite en temps reel
+  useEffect(() => {
+    const iv = setInterval(() => { loadClients(); }, 60000);
+    return () => clearInterval(iv);
+  }, []);
 
 
   // Pull-to-refresh mobile (desactive pendant les overlays full-screen)
