@@ -41,7 +41,7 @@ export function LoginScreen({ onBack }) {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
-        options: { shouldCreateUser: false },
+        options: { shouldCreateUser: true },
       });
       if (error) throw error;
       setStep('otp');
