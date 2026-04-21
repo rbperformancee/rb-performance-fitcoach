@@ -1171,6 +1171,7 @@ function AppInner() {
       });
     } catch (e) { console.warn("Email suppression non envoye", e); }
     await supabase.auth.signOut();
+    window.location.href = "/login";
   };
 
   const handleExportPDF = async () => {
@@ -1340,7 +1341,7 @@ function AppInner() {
           ) : page === "fuel" ? (
               <FuelPage key={page} client={client} appData={appData} />
           ) : page === "profile" ? (
-              <ProfilePage key={page} client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Desactive en mode demo") : () => supabase.auth.signOut()} supabase={supabase} appData={appData} />
+              <ProfilePage key={page} client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Desactive en mode demo") : () => supabase.auth.signOut().then(() => { window.location.href = "/login"; })} supabase={supabase} appData={appData} />
           ) : (
             <main className="main" style={{ paddingTop: 8 }}>
               <WeightChart key={page} clientId={client?.id} client={client} appData={appData} />
