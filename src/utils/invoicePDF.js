@@ -16,6 +16,11 @@ function loadJsPDF() {
   });
 }
 
+// Format montant francais : 360,00 EUR
+function fmtEur(n) {
+  return n.toFixed(2).replace('.', ',') + ' EUR';
+}
+
 // Legacy fallback — utilise seulement si aucun plan dynamique
 const PLAN_LABELS_LEGACY = { "3m": "Programme 3 Mois", "6m": "Programme 6 Mois", "12m": "Programme 12 Mois" };
 const PLAN_PRICES_LEGACY = { "3m": 120, "6m": 110, "12m": 100 };
@@ -129,10 +134,10 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   doc.setFontSize(9);
   doc.setTextColor(...gray);
   doc.text(months + " mois", M + 84, rowY);
-  doc.text(priceMonth.toFixed(2) + " EUR", W - M - 55, rowY);
+  doc.text(fmtEur(priceMonth), W - M - 55, rowY);
 
   doc.setTextColor(...white);
-  doc.text(total.toFixed(2) + " EUR", W - M - 25, rowY);
+  doc.text(fmtEur(total), W - M - 25, rowY);
 
   // Separateur
   doc.setDrawColor(30, 30, 30);
@@ -151,7 +156,7 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
 
   doc.setFontSize(9);
   doc.setTextColor(...white);
-  doc.text(total.toFixed(2) + " EUR", W - M - 10, totalY + 10, { align: "right" });
+  doc.text(fmtEur(total), W - M - 10, totalY + 10, { align: "right" });
   doc.text("0,00 EUR", W - M - 10, totalY + 17, { align: "right" });
 
   // Total TTC
@@ -160,7 +165,7 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   doc.setFontSize(10);
   doc.setTextColor(...bg);
   doc.text("TOTAL TTC", W - M - 65, totalY + 32);
-  doc.text(total.toFixed(2) + " EUR", W - M - 10, totalY + 32, { align: "right" });
+  doc.text(fmtEur(total), W - M - 10, totalY + 32, { align: "right" });
 
   // ===== MENTIONS LEGALES =====
   const legalY = totalY + 55;
@@ -168,9 +173,12 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   doc.setTextColor(80, 80, 80);
   const tvaText = coach?.tva_status === "applicable" ? "TVA applicable" : "TVA non applicable - art. 293 B du CGI";
   doc.text(tvaText, M, legalY);
-  doc.text("Paiement par carte bancaire securise", M, legalY + 5);
-  if (coach?.siret) doc.text("SIRET : " + coach.siret, M, legalY + 10);
+  if (coach?.siret) doc.text("SIRET : " + coach.siret, M, legalY + 5);
+  if (coach?.business_name) doc.text(coach.business_name, M, legalY + 10);
   if (coach?.business_address) doc.text(coach.business_address, M, legalY + 15);
+  doc.text("Conditions de paiement : a reception", M, legalY + 22);
+  doc.text("Penalites de retard : 3 fois le taux d'interet legal", M, legalY + 27);
+  doc.text("Indemnite forfaitaire de recouvrement : 40 EUR", M, legalY + 32);
 
   // ===== FOOTER =====
   doc.setFontSize(8);

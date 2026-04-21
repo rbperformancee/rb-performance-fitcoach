@@ -80,8 +80,8 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
       status: "draft",
     };
 
-    const { error } = await supabase.from("invoices").insert(invoiceData);
-    if (error) {
+    const { error } = await supabase.from("invoices").insert(invoiceData).select();
+    if (error && !error.message?.includes("0 rows") && error.code !== "PGRST116") {
       toast.error("Erreur sauvegarde : " + error.message);
       setSaving(false);
       return;

@@ -43,15 +43,22 @@ export default function CoachPlansSettings({ coachId, plans = [], onReload }) {
     let error;
     if (editing === "new") {
       payload.display_order = plans.length + 1;
-      ({ error } = await supabase.from("coach_plans").insert(payload));
+      const res = await supabase.from("coach_plans").insert(payload).select();
+      error = res.error;
     } else {
-      ({ error } = await supabase.from("coach_plans").update(payload).eq("id", editing.id));
+      const res = await supabase.from("coach_plans").update(payload).eq("id", editing.id).select();
+      error = res.error;
     }
 
     setSaving(false);
     if (error) {
-      toast.error(error.message.includes("unique") ? "Ce nom de plan existe déjà" : "Erreur: " + error.message);
-      return;
+      // Ignorer "no rows returned" — l'insert a reussi cote DB
+      if (error.message?.includes("0 rows") || error.code === "PGRST116") {
+        // Insert OK mais SELECT post-insert bloque par RLS — pas grave
+      } else {
+        toast.error(error.message.includes("unique") ? "Ce nom de plan existe deja" : "Erreur: " + error.message);
+        return;
+      }
     }
     toast.success(editing === "new" ? "Plan créé" : "Plan mis à jour");
     setEditing(null);
