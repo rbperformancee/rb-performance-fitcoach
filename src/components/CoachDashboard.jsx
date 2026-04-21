@@ -2265,13 +2265,15 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     if (coachId) insertData.coach_id = coachId;
     const { error } = await supabase.from("clients").insert(insertData);
     if (error) { showToast(error.code === "23505" ? "Email déjà utilisé" : error.message, "err"); return; }
-    // Envoyer l'email de bienvenue
+    // Envoyer l'email de bienvenue via Vercel API (Zoho SMTP)
     try {
-      await supabase.functions.invoke("send-welcome", {
-        body: { email, full_name: fullName },
+      await fetch("/api/send-welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, full_name: fullName }),
       });
     } catch (e) {
-      console.warn("Email de bienvenue non envoyé:", e);
+      console.warn("Email de bienvenue non envoye:", e);
     }
     showToast(`${email} ajoute — email de bienvenue envoye`);
     setNewEmail(""); setNewName(""); setShowAdd(false);

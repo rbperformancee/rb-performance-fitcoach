@@ -475,11 +475,11 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
         });
       } catch {}
 
-      // Email "programme pret" au client
+      // Email "programme pret" au client via Vercel API (Zoho SMTP)
       try {
-        await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-welcome`, {
+        await fetch("/api/send-welcome", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}` },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: client.email, full_name: client.full_name, type: "programme_ready", programme_name: progName.trim() }),
         });
       } catch {}
