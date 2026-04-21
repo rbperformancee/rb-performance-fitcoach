@@ -14,6 +14,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
   const [clientId, setClientId] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
   const [description, setDescription] = useState("Programme coaching");
   const [amount, setAmount] = useState("");
   const [durationMonths, setDurationMonths] = useState(1);
@@ -90,6 +91,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
     const fakeClient = {
       full_name: clientName,
       email: clientEmail,
+      address: clientAddress,
       _plan_name: description,
       _plan_price: durationMonths > 0 ? amountNum / durationMonths : amountNum,
       _plan_duration: durationMonths,
@@ -137,6 +139,9 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
             <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="email@client.com" style={inputStyle} />
           </div>
         </div>
+
+        <Label text="Adresse du client" />
+        <input type="text" value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder="12 rue de la Paix, 75002 Paris" style={inputStyle} />
 
         {/* Description */}
         <Label text="Description" />

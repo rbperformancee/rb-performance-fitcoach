@@ -98,6 +98,7 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   doc.setFontSize(9);
   doc.setTextColor(...gray);
   if (client.email) doc.text(client.email, M, 84);
+  if (client.address) doc.text(client.address, M, 89);
 
   // Periode
   if (client.subscription_start_date && client.subscription_end_date) {
