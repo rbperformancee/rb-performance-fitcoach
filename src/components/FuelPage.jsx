@@ -262,13 +262,63 @@ function SupplementsTab({ clientId }) {
   );
 }
 
+// ===== OBJECTIFS TAB =====
+function ObjectifsTab({ goals, onSave }) {
+  const [cal, setCal] = useState(goals?.calories || 2000);
+  const [prot, setProt] = useState(goals?.proteines || 150);
+  const [gluc, setGluc] = useState(goals?.glucides || 250);
+  const [lip, setLip] = useState(goals?.lipides || 70);
+  const [eau, setEau] = useState(goals?.eau_ml || 2500);
+  const [pas, setPas] = useState(goals?.pas || 8000);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave({ calories: cal, proteines: prot, glucides: gluc, lipides: lip, eau_ml: eau, pas });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const fieldStyle = { width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "inherit", textAlign: "center" };
+
+  return (
+    <div style={{ padding: "20px 24px" }}>
+      <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 20 }}>Mes objectifs quotidiens</div>
+      {[
+        { label: "Calories (kcal)", value: cal, set: setCal },
+        { label: "Proteines (g)", value: prot, set: setProt },
+        { label: "Glucides (g)", value: gluc, set: setGluc },
+        { label: "Lipides (g)", value: lip, set: setLip },
+        { label: "Eau (ml)", value: eau, set: setEau },
+        { label: "Pas", value: pas, set: setPas },
+      ].map((f, i) => (
+        <div key={i} style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>{f.label}</div>
+          <input type="number" value={f.value} onChange={e => f.set(parseInt(e.target.value) || 0)} inputMode="numeric" style={fieldStyle} />
+        </div>
+      ))}
+      <button onClick={handleSave} disabled={saving} style={{
+        width: "100%", padding: 16, marginTop: 8,
+        background: saved ? "rgba(2,209,186,0.15)" : "linear-gradient(135deg, #f97316, #ea580c)",
+        color: saved ? GREEN : "#000", border: "none", borderRadius: 14,
+        fontSize: 14, fontWeight: 800, cursor: saving ? "not-allowed" : "pointer",
+        fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
+      }}>
+        {saving ? "Enregistrement..." : saved ? "Enregistre ✓" : "Enregistrer"}
+      </button>
+    </div>
+  );
+}
+
 export default function FuelPage({ client, appData }) {
   const fuelData = useFuel(client?.id);
   const goals = appData?.nutritionGoals || fuelData.goals;
   const logs = fuelData.logs;
   const dailyTracking = fuelData.dailyTracking || appData?.dailyTracking;
   const loading = appData ? appData.loading : fuelData.loading;
-  const { totals, addFood, removeFood, updateFood, updateTracking, score } = fuelData;
+  const { totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score } = fuelData;
   const { results, loading: searching, search, scanBarcode } = useOpenFoodFacts();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedRepas, setSelectedRepas] = useState("Dejeuner");
@@ -646,6 +696,7 @@ export default function FuelPage({ client, appData }) {
           {[
             { id: "nutrition", label: "Nutrition" },
             { id: "supplements", label: "Complements" },
+            { id: "objectifs", label: "Objectifs" },
           ].map((t) => (
             <button key={t.id} onClick={() => setFuelTab(t.id)} style={{
               padding: "8px 18px", borderRadius: 100, border: "none", cursor: "pointer",
@@ -658,6 +709,9 @@ export default function FuelPage({ client, appData }) {
 
         {/* ===== SUPPLEMENTS TAB ===== */}
         {fuelTab === "supplements" && <SupplementsTab clientId={client?.id} />}
+
+        {/* ===== OBJECTIFS TAB ===== */}
+        {fuelTab === "objectifs" && <ObjectifsTab goals={goals} onSave={fuelData.updateGoals} />}
 
         <div style={{ display: fuelTab === "nutrition" ? "block" : "none" }}>
         {/* SCORE ENERGIE */}

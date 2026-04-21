@@ -97,5 +97,19 @@ export function useFuel(clientId) {
     return score;
   };
 
-  return { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateFood, updateTracking, score: calcScore(), fetchAll };
+  const updateGoals = async (newGoals) => {
+    if (!clientId) return;
+    setGoals(newGoals);
+    await supabase.from("nutrition_goals").upsert({
+      client_id: clientId,
+      calories: newGoals.calories,
+      proteines: newGoals.proteines,
+      glucides: newGoals.glucides,
+      lipides: newGoals.lipides,
+      eau_ml: newGoals.eau_ml,
+      pas: newGoals.pas,
+    }, { onConflict: "client_id" });
+  };
+
+  return { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score: calcScore(), fetchAll };
 }
