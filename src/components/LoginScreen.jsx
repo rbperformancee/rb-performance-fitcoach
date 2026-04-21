@@ -28,7 +28,7 @@ export function LoginScreen({ onBack }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data?.session?.user) {
-        window.location.href = '/';
+        window.location.href = '/app.html';
       }
     });
   }, []);
@@ -98,8 +98,8 @@ export function LoginScreen({ onBack }) {
       if (error) {
         setError('Email ou mot de passe incorrect.');
       } else {
-        // Redirect vers la racine, App.jsx detecte le role et redirige
-        window.location.href = '/';
+        // Redirect vers app.html, App.jsx detecte le role et affiche le dashboard
+        window.location.href = '/app.html';
       }
     } catch (e) {
       setError('Erreur de connexion.');
