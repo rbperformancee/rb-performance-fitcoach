@@ -143,17 +143,20 @@ export function LoginScreen({ onBack }) {
           </div>
         </div>
 
-        {/* Titre */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-1px', margin: '0 0 8px' }}>
-            {mode === 'client' ? 'Connexion' : 'Espace coach'}
+        {/* Titre — style dashboard coach */}
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ fontSize: 10, color: 'rgba(2,209,186,0.55)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>
+            {mode === 'client' ? 'Espace client' : 'Espace coach'}
+          </div>
+          <div style={{ fontSize: 52, fontWeight: 800, color: '#fff', letterSpacing: '-3px', lineHeight: 0.92, marginBottom: 10 }}>
+            {mode === 'client' ? 'Connexion' : 'Coach'}
             <span style={{ color: G }}>.</span>
-          </h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0, lineHeight: 1.5 }}>
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>
             {mode === 'client'
               ? 'Entre ton email pour recevoir ton code de connexion.'
               : 'Connecte-toi avec ton email et ton mot de passe.'}
-          </p>
+          </div>
         </div>
 
         {/* ===== CLIENT MODE ===== */}
@@ -328,16 +331,16 @@ const btnStyle = {
   width: '100%',
   padding: '16px',
   marginTop: 20,
-  background: G,
+  background: `linear-gradient(135deg, #02d1ba, #02d1bacc)`,
   color: '#000',
   border: 'none',
-  borderRadius: 12,
+  borderRadius: 14,
   fontSize: 14,
   fontWeight: 800,
-  fontFamily: "'Syne', sans-serif",
+  fontFamily: "inherit",
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
-  boxShadow: '0 8px 24px rgba(2,209,186,0.25)',
+  boxShadow: '0 8px 24px rgba(2,209,186,0.3)',
 };
 
 const linkBtnStyle = {
