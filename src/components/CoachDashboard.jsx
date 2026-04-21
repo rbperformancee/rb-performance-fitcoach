@@ -36,6 +36,7 @@ import AIAnalyze from "./coach/AIAnalyze";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
 import CoachHomeScreen from "./coach/CoachHomeScreen";
 import MonCompte from "./coach/MonCompte";
+import InvoiceModal from "./coach/InvoiceModal";
 import Sentinel, { SentinelTeaser } from "./coach/Sentinel";
 import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
@@ -2102,6 +2103,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showMonCompte, setShowMonCompte] = useState(false);
   const [showSentinel, setShowSentinel] = useState(false);
   const [showSentinelTeaser, setShowSentinelTeaser] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
   const [showCmdK, setShowCmdK] = useState(false);
 
   // Sentinel gating: Pro/Elite/Founding only, behind feature flag
@@ -2728,6 +2730,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
     { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); } },
     { type: "separator" },
+    { icon: "document", label: "Facture", onClick: () => { setShowMoreMenu(false); setShowInvoice(true); } },
     { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
     { icon: "users",    label: "Mon compte", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
     { type: "separator" },
@@ -2986,6 +2989,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         <SentinelTeaser
           onClose={() => setShowSentinelTeaser(false)}
           onUpgrade={() => { setShowSentinelTeaser(false); toast.info("Disponible au lancement — inscris-toi sur la waitlist"); }}
+        />
+      )}
+      {showInvoice && (
+        <InvoiceModal
+          coachData={coachData}
+          clients={clients}
+          onClose={() => setShowInvoice(false)}
         />
       )}
 
