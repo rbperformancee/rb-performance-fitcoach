@@ -471,6 +471,32 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                   </div>
                 </div>
 
+                {/* ESTIMATION KCAL */}
+                {(() => {
+                  // Estimation basee sur : duree (min), volume (kg), nombre d'exos, intensite (RPE)
+                  const durationMin = Math.max(1, Math.round(chrono / 60));
+                  const volume = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
+                    const h = getHistory(activeWeek, activeSession, ei) || [];
+                    if (h.length === 0) return tot;
+                    return tot + (parseFloat(h[h.length-1]?.weight) || 0) * (parseInt(ex.sets)||1) * (parseInt(ex.reps)||1);
+                  }, 0);
+                  // MET moyen musculation : 3-6 selon intensite
+                  const met = 3 + (selectedRessenti || 2) * 0.7;
+                  // Poids client (fallback 75kg)
+                  const bodyWeight = client?.weight || client?.current_weight || 75;
+                  // Formule : kcal = MET x poids(kg) x duree(h)
+                  const kcalBase = Math.round(met * bodyWeight * (durationMin / 60));
+                  // Bonus volume : +1 kcal par 100kg de volume
+                  const kcalVolume = Math.round(volume / 100);
+                  const kcalTotal = kcalBase + kcalVolume;
+                  return (
+                    <div style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)", borderRadius: 18, padding: "16px 12px", textAlign: "center", marginBottom: 12 }}>
+                      <div style={{ fontSize: 32, fontWeight: 100, color: "#f97316", letterSpacing: "-1.5px", lineHeight: 1 }}>{kcalTotal}</div>
+                      <div style={{ fontSize: 8, color: "rgba(249,115,22,0.5)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>kcal estimees</div>
+                    </div>
+                  );
+                })()}
+
                 {/* RPE + XP */}
                 <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
                   <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>

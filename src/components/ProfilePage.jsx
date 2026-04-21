@@ -6,7 +6,7 @@ import { useWeightTracking } from "../hooks/useWeightTracking";
 import { useXP, getLevelInfo } from "../hooks/useXP";
 import { supabase } from "../lib/supabase";
 import ChatCoach from "./ChatCoach";
-import FaqAssistant from "./FaqAssistant";
+// FaqAssistant retire — Centre d'aide suffit
 import { PoweredByBadge } from "./CoachBranding";
 import haptic from "../lib/haptic";
 import LanguageToggle from "./LanguageToggle";
@@ -229,11 +229,6 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
           <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, overflow: "hidden", height: 360 }}>
             {client?.id && <ChatCoach clientId={client.id} coachEmail="" isCoach={false} />}
           </div>
-        </div>
-
-        {/* FAQ ASSISTANT */}
-        <div style={{ padding: "0 24px", marginBottom: 20 }}>
-          <FaqAssistant inline={true} />
         </div>
 
         {/* LANGUE */}
