@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")
-const APP_URL = "https://rb-perfor.vercel.app"
+const APP_URL = Deno.env.get("APP_BASE_URL") ?? "https://rbperform.app"
 
 // ===== DESIGN TOKENS =====
 const BG = "#0a0a0a"
@@ -89,7 +89,11 @@ function welcomeEmail(name: string) {
     infoBox("Installer sur iPhone",
       `<strong style="color:${TEXT}">1.</strong> Ouvre Safari sur ${APP_URL}<br>
        <strong style="color:${TEXT}">2.</strong> Appuie sur Partager en bas<br>
-       <strong style="color:${TEXT}">3.</strong> Selectionne "Sur l'ecran d'accueil"`)
+       <strong style="color:${TEXT}">3.</strong> Selectionne "Sur l'ecran d'accueil"`) +
+    infoBox("Installer sur Android",
+      `<strong style="color:${TEXT}">1.</strong> Ouvre Chrome sur ${APP_URL}<br>
+       <strong style="color:${TEXT}">2.</strong> Appuie sur les 3 points en haut a droite<br>
+       <strong style="color:${TEXT}">3.</strong> Selectionne "Ajouter a l'ecran d'accueil"`)
   )
 }
 
@@ -264,7 +268,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "RB Perform <noreply@rbperform.com>",
+        from: Deno.env.get("EMAIL_FROM") ?? "RB Perform <noreply@rbperform.app>",
         to: [email],
         subject,
         html,
