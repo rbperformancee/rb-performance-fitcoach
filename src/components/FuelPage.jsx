@@ -155,6 +155,7 @@ export default function FuelPage({ client, appData }) {
   const fileInputRef = useRef(null); // <input type=file capture=environment> qui ouvre la camera native
 
   // Edition d'un aliment deja loggue
+  const [fuelTab, setFuelTab] = useState("nutrition"); // nutrition | supplements
   const [editingFood, setEditingFood] = useState(null); // log d'origine, immutable, pour calculer les ratios
   const [editAliment, setEditAliment] = useState("");
   const [editQuantite, setEditQuantite] = useState(0);
@@ -501,6 +502,67 @@ export default function FuelPage({ client, appData }) {
           </div>
         </div>
 
+        {/* TABS */}
+        <div style={{ display: "flex", gap: 4, margin: "16px 24px 0", overflow: "hidden" }}>
+          {[
+            { id: "nutrition", label: "Nutrition" },
+            { id: "supplements", label: "Complements" },
+          ].map((t) => (
+            <button key={t.id} onClick={() => setFuelTab(t.id)} style={{
+              padding: "8px 18px", borderRadius: 100, border: "none", cursor: "pointer",
+              background: fuelTab === t.id ? "rgba(249,115,22,0.12)" : "transparent",
+              color: fuelTab === t.id ? ORANGE : "rgba(255,255,255,0.35)",
+              fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
+            }}>{t.label}</button>
+          ))}
+        </div>
+
+        {/* ===== SUPPLEMENTS TAB ===== */}
+        {fuelTab === "supplements" && (
+          <div style={{ padding: "20px 24px" }}>
+            <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Mes complements</div>
+
+            {[
+              { name: "Proteine Whey", dose: "30g", timing: "Post-entrainement", icon: "P", color: "#60a5fa" },
+              { name: "Creatine Monohydrate", dose: "5g", timing: "Tous les jours", icon: "C", color: ORANGE },
+              { name: "Omega 3", dose: "2 capsules", timing: "Matin", icon: "O", color: GREEN },
+              { name: "Vitamine D3", dose: "2000 UI", timing: "Matin avec repas", icon: "D", color: "#fbbf24" },
+              { name: "Magnesium", dose: "400mg", timing: "Soir", icon: "M", color: PURPLE },
+              { name: "Multivitamines", dose: "1 comprime", timing: "Matin", icon: "V", color: "#34d399" },
+            ].map((sup, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
+                background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 14, marginBottom: 8,
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: `${sup.color}15`, border: `1px solid ${sup.color}30`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, fontWeight: 800, color: sup.color, flexShrink: 0,
+                }}>{sup.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{sup.name}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{sup.dose} · {sup.timing}</div>
+                </div>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, color: GREEN, cursor: "pointer",
+                }}>✓</div>
+              </div>
+            ))}
+
+            <div style={{ marginTop: 20, padding: "16px", background: "rgba(249,115,22,0.04)", border: "1px solid rgba(249,115,22,0.12)", borderRadius: 14, textAlign: "center" }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+                Les complements sont definis par ton coach dans tes parametres de suivi. Demande-lui d'ajuster si besoin.
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: fuelTab === "nutrition" ? "block" : "none" }}>
         {/* SCORE ENERGIE */}
         <div style={{ margin: "0 24px 20px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 22, padding: 20, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: -40, right: -40, width: 140, height: 140, background: "radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
@@ -660,6 +722,7 @@ export default function FuelPage({ client, appData }) {
           })}
         </div>
 
+      </div>
       </div>
 
       {/* MODAL AJOUT ALIMENT ULTRA PREMIUM */}
