@@ -110,7 +110,7 @@ export default function ClientApp({ user }) {
       {/* Badge RB Perform (Starter only) */}
       {showBadge && (
         <a
-          href="https://rb-perfor.vercel.app/landing.html"
+          href="https://rbperform.app"
           target="_blank" rel="noopener"
           style={rbBadge}
         >
