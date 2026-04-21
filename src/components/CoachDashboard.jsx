@@ -392,6 +392,78 @@ function CreneauxManager() {
   );
 }
 
+/* ── Panel supplements cote coach ── */
+function CoachSupplementsPanel({ clientId }) {
+  const [supplements, setSupplements] = React.useState([]);
+  const [logs7d, setLogs7d] = React.useState({});
+  const [loading, setLoading] = React.useState(true);
+  const [showAdd, setShowAdd] = React.useState(false);
+  const [newName, setNewName] = React.useState("");
+  const [newDose, setNewDose] = React.useState("");
+
+  const load = React.useCallback(async () => {
+    if (!clientId) return;
+    const { data: sups } = await supabase.from("client_supplements").select("*").eq("client_id", clientId).eq("is_active", true).order("created_at");
+    setSupplements(sups || []);
+    const d7 = new Date(); d7.setDate(d7.getDate() - 7);
+    const { data: recentLogs } = await supabase.from("supplement_logs").select("supplement_id,date,taken").eq("client_id", clientId).gte("date", d7.toISOString().slice(0, 10));
+    const map = {};
+    (recentLogs || []).forEach(l => { if (!map[l.supplement_id]) map[l.supplement_id] = 0; if (l.taken) map[l.supplement_id]++; });
+    setLogs7d(map);
+    setLoading(false);
+  }, [clientId]);
+
+  React.useEffect(() => { load(); }, [load]);
+
+  const addSupplement = async () => {
+    if (!newName.trim()) return;
+    await supabase.from("client_supplements").insert({ client_id: clientId, name: newName.trim(), dose: newDose.trim() || null, added_by: "coach" });
+    setNewName(""); setNewDose(""); setShowAdd(false); load();
+  };
+
+  const removeSupplement = async (id) => {
+    await supabase.from("client_supplements").update({ is_active: false }).eq("id", id);
+    load();
+  };
+
+  if (loading) return <div style={{ padding: 20, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Chargement...</div>;
+
+  return (
+    <div style={{ animation: "cpFadeUp 0.3s ease both" }}>
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 16 }}>Complements du client</div>
+
+      {supplements.map(sup => (
+        <div key={sup.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, marginBottom: 6 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{sup.name}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+              {sup.dose || "—"} · {sup.added_by === "coach" ? "Prescrit par toi" : "Ajoute par le client"} · <span style={{ color: (logs7d[sup.id] || 0) >= 5 ? "#02d1ba" : "rgba(255,255,255,0.3)" }}>{logs7d[sup.id] || 0}/7j pris</span>
+            </div>
+          </div>
+          <button onClick={() => removeSupplement(sup.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.15)", cursor: "pointer", fontSize: 16 }}>×</button>
+        </div>
+      ))}
+
+      {supplements.length === 0 && !showAdd && (
+        <div style={{ padding: "24px 16px", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Aucun complement. Ajoute-en pour ton client.</div>
+      )}
+
+      {showAdd ? (
+        <div style={{ marginTop: 8, padding: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom (ex: Creatine)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 6, fontFamily: "inherit" }} />
+          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder="Dose (ex: 5g)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 10, fontFamily: "inherit" }} />
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => { setShowAdd(false); setNewName(""); setNewDose(""); }} style={{ flex: 1, padding: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
+            <button onClick={addSupplement} disabled={!newName.trim()} style={{ flex: 1, padding: 10, background: newName.trim() ? "#02d1ba" : "rgba(255,255,255,0.04)", border: "none", borderRadius: 8, color: newName.trim() ? "#000" : "rgba(255,255,255,0.2)", fontSize: 11, fontWeight: 800, cursor: newName.trim() ? "pointer" : "not-allowed", fontFamily: "inherit" }}>Ajouter</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setShowAdd(true)} style={{ width: "100%", marginTop: 8, padding: 12, background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 12, color: "#02d1ba", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Prescrire un complement</button>
+      )}
+    </div>
+  );
+}
+
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
 function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false }) {
   const [showTransformation, setShowTransformation] = React.useState(false);
@@ -646,6 +718,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             { id: "resume", label: "Résumé" },
             { id: "programme", label: "Programme" },
             { id: "nutrition", label: "Nutrition" },
+            { id: "supplements", label: "Compléments" },
             { id: "suivi", label: "Suivi" },
           ].map(t => (
             <button key={t.id} onClick={() => setPanelTab(t.id)} style={{
@@ -1304,6 +1377,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </div>
 
         </>)}
+
+        {/* ===== TAB: SUPPLEMENTS ===== */}
+        {panelTab === "supplements" && (
+          <CoachSupplementsPanel clientId={client.id} />
+        )}
 
         {/* ===== TAB: SUIVI ===== */}
         {panelTab === "suivi" && (<>
