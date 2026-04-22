@@ -184,7 +184,6 @@ nav.topnav.hidden{transform:translateY(-100%)}
 
 /* ========== HERO (centered Ferrari-style, epure) ========== */
 .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:80px 24px;background:#080C14}
-.hero-video{display:none}
 .hero-mesh{display:none}
 .hero-grid-overlay{display:none}
 .hero-blob{position:absolute;border-radius:50%;pointer-events:none;z-index:1}
@@ -202,6 +201,13 @@ nav.topnav.hidden{transform:translateY(-100%)}
 .hero-sub{font-size:clamp(16px,2vw,22px);color:var(--text-dim);margin:0 auto;font-weight:400;letter-spacing:0.2px;max-width:620px;line-height:1.5}
 .hero-arrow{z-index:4;color:rgba(255,255,255,0.5);transition:color 0.2s}
 .hero-arrow:hover{color:#fff}
+/* Hero background video (Sora) — ambiance loopable, fond de la section */
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0.7;pointer-events:none}
+/* Accessibility : reduce motion → fallback image statique */
+@media (prefers-reduced-motion: reduce){
+  .hero-video{display:none}
+  section.hero{background-image:url('/images/hero-poster.jpg');background-size:cover;background-position:center}
+}
 /* Fix GSAP qui efface le transform translateX(-50%) au mount */
 section.hero button#heroEnter{}
 @media(max-width:640px){
@@ -1694,6 +1700,17 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <!-- ========== HERO ========== -->
 <main id="main">
 <section class="hero active" aria-labelledby="heroTitle">
+  <video
+    class="hero-video"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+    poster="/images/hero-poster.jpg"
+    aria-label="Background atmospheric video of RB Perform">
+    <source src="/videos/20260421_2313_New%20Video_simple_compose_01kpry843afhp9ffg64765v2pc.mp4" type="video/mp4">
+  </video>
   <div class="hero-blob hero-blob-1" aria-hidden="true"></div>
   <div class="hero-blob hero-blob-2" aria-hidden="true"></div>
   <div class="hero-overlay"></div>
