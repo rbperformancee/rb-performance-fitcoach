@@ -22,9 +22,9 @@ test.describe("Founding Page", () => {
     await expect(page.locator(".price-old")).toContainText("299€");
   });
 
-  test("50 places mentioned", async ({ page }) => {
+  test("30 places mentioned", async ({ page }) => {
     await page.goto("/founding.html");
-    await expect(page.locator(".places")).toContainText("50");
+    await expect(page.locator(".places")).toContainText("30");
   });
 
   test("countdown timer is running", async ({ page }) => {

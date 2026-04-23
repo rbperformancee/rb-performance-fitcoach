@@ -23,7 +23,7 @@ Les inscrits auront un accès prioritaire + une offre réservée.
 
 Lien en bio → rbperform.app/waitlist
 
-50 places de Founding Coach.
+30 places de Founding Coach.
 Le prix d'aujourd'hui sera ton prix à vie.
 
 #coachsportif #coachenligne #fitnessbusiness #rbperform #saas #entrepreneursport

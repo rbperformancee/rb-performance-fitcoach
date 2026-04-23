@@ -8,7 +8,7 @@
 
 Salut [Prénom],
 
-Tu viens de rejoindre les Founding Coachs de RB Perform. Tu es le coach n°[X] sur 50. Ton prix est verrouillé — 199€/mois, à vie.
+Tu viens de rejoindre les Founding Coachs de RB Perform. Tu es le coach n°[X] sur 30. Ton prix est verrouillé — 199€/mois, à vie.
 
 **Voici ce que tu peux faire maintenant :**
 

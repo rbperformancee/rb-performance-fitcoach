@@ -140,8 +140,8 @@ if (fs.existsSync(foundingPath)) {
   if (founding.includes('299')) pass('Crossed-out price 299€ present');
   else fail('Crossed-out price 299€ MISSING');
 
-  if (founding.includes('50')) pass('50 places mentioned');
-  else fail('50 places MISSING');
+  if (founding.includes('30')) pass('30 places mentioned');
+  else fail('30 places MISSING');
 
   if (founding.includes('Stripe') || founding.includes('stripe'))
     pass('Stripe mention present');

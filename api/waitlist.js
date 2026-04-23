@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
     <div style="text-align:center;margin-bottom:24px">
       <a href="https://rbperform.app/demo" style="display:inline-block;background:${G};color:#000;font-size:13px;font-weight:800;text-decoration:none;padding:14px 28px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase">Tester la demo coach</a>
     </div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.25);text-align:center">50 places Founding Coach a 199EUR/mois verrouille a vie.</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.25);text-align:center">30 places Founding Coach a 199EUR/mois verrouille a vie.</div>
   </td></tr>
   <tr><td style="padding:24px 0 0;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.15)">RB Perform — rayan@rbperform.app</div></td></tr>
 </table></td></tr></table></body></html>`,

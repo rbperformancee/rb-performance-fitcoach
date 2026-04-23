@@ -166,7 +166,7 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
               href="/founding"
               style={demoCta}
             >
-              Rejoindre les 50 Founding Coachs →
+              Rejoindre les 30 Founding Coachs →
             </a>
           </div>
         )}

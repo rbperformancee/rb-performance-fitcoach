@@ -46,7 +46,7 @@ function getSubject(step, name) {
   const first = (name || '').split(' ')[0] || 'Coach';
   if (step === 1) return `${first}, tu perds de l\'argent sans le savoir`;
   if (step === 2) return `Re: ${first}, j\'ai oublie de te dire un truc`;
-  return `Derniere chance ${first} — 50 places`;
+  return `Derniere chance ${first} — 30 places`;
 }
 
 function getBody(step, prospect) {
@@ -62,7 +62,7 @@ J\'ai construit un outil qui fait un truc simple : il empeche tes clients de par
 
 Les coachs qui l\'utilisent recuperent en moyenne 1 200EUR/mois de revenus qu\'ils perdaient sans le savoir.
 
-On lance en mai avec 50 places fondateurs a 199EUR/mois verrouille a vie (au lieu de 299EUR). Le lien est sur rbperform.app si tu veux voir la demo.
+On lance en mai avec 30 places fondateurs a 199EUR/mois verrouille a vie (au lieu de 299EUR). Le lien est sur rbperform.app si tu veux voir la demo.
 
 A bientot,
 Rayan
@@ -80,7 +80,7 @@ En gros tu passes de 4 outils differents a 1 seul. Et toi tu as un dashboard CEO
 
 Tu peux tester la demo en 2 min sur rbperform.app/demo (cote coach) et rbperform.app/demo-client (cote athlete).
 
-50 places fondateurs, il en reste encore.
+30 places fondateurs, il en reste encore.
 
 Rayan
 rbperform.app`;
@@ -90,7 +90,7 @@ rbperform.app`;
 
 Dernier message de ma part — je veux pas etre lourd.
 
-On lance dans quelques jours. Les 50 places fondateurs a 199EUR/mois verrouille a vie partent vite. Apres ca le prix passe a 299EUR.
+On lance dans quelques jours. Les 30 places fondateurs a 199EUR/mois verrouille a vie partent vite. Apres ca le prix passe a 299EUR.
 
 Si c\'est pas pour toi, pas de souci. Mais si tu coaches en ligne et que tu veux un outil qui fait le taf, jette un oeil a rbperform.app avant que ce soit complet.
 

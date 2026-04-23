@@ -134,7 +134,7 @@ export default function SignupPage() {
 
       <div className="auth-form-panel">
         <h1 className="auth-title">Creer mon compte</h1>
-        <p className="auth-subtitle accent">Rejoins les 50 Founding Coachs. 199€/mois verrouillé à vie.</p>
+        <p className="auth-subtitle accent">Rejoins les 30 Founding Coachs. 199€/mois verrouillé à vie.</p>
 
         <form onSubmit={onSubmit} noValidate>
           <div style={{ display: "flex", gap: 10 }}>
