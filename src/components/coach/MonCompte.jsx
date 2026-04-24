@@ -14,8 +14,8 @@ const RED = "#ff6b6b";
  *   MonCompte = QUI je suis (identité, abo, facture, sécurité)
  *   Settings  = COMMENT je bosse (plans coaching, branding, notifs)
  */
-export default function MonCompte({ coachData, isDemo = false, onClose }) {
-  const [tab, setTab] = useState("profil");
+export default function MonCompte({ coachData, isDemo = false, initialTab, onClose }) {
+  const [tab, setTab] = useState(initialTab || "profil");
 
   // Profil
   const [firstName, setFirstName] = useState(coachData?.full_name?.split(" ")[0] || "");
@@ -34,6 +34,9 @@ export default function MonCompte({ coachData, isDemo = false, onClose }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Abonnement
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   const TABS = [
     { id: "profil", label: "Profil" },
@@ -76,6 +79,45 @@ export default function MonCompte({ coachData, isDemo = false, onClose }) {
     setSavingPassword(false);
     if (error) toast.error(error.message);
     else { toast.success("Mot de passe changé"); setNewPassword(""); setConfirmPassword(""); }
+  };
+
+  const handleBillingPortal = async () => {
+    if (isDemo) { toast.success("Disponible en version complète"); return; }
+    setLoadingPortal(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        toast.error("Session expirée, reconnecte-toi.");
+        return;
+      }
+
+      const res = await fetch("/api/billing-portal", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+      }
+
+      if (res.status === 404) {
+        toast.error("Aucun abonnement actif trouvé. Contacte-nous si tu penses que c'est une erreur.");
+      } else {
+        toast.error("Erreur technique, réessaie dans un instant");
+      }
+    } catch {
+      toast.error("Erreur technique, réessaie dans un instant");
+    } finally {
+      setLoadingPortal(false);
+    }
   };
 
   const logout = async () => {
@@ -154,7 +196,13 @@ export default function MonCompte({ coachData, isDemo = false, onClose }) {
                 <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Actif</span>
               </div>
             </div>
-            <button style={outlineBtn}>Gérer mon abonnement (Stripe) →</button>
+            <button
+              onClick={handleBillingPortal}
+              disabled={loadingPortal}
+              style={{ ...outlineBtn, opacity: loadingPortal ? 0.5 : 1, cursor: loadingPortal ? "wait" : "pointer" }}
+            >
+              {loadingPortal ? "Ouverture…" : "Gérer mon abonnement (Stripe) →"}
+            </button>
           </div>
         )}
 

@@ -2101,6 +2101,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showPipeline, setShowPipeline] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showMonCompte, setShowMonCompte] = useState(false);
+  const [monCompteInitialTab, setMonCompteInitialTab] = useState(null);
   const [showSentinel, setShowSentinel] = useState(false);
   const [showSentinelTeaser, setShowSentinelTeaser] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -2114,6 +2115,20 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showCoachHome, setShowCoachHome] = useState(true);
   const homeScreenDismissed = useRef(false);
   const { plans: coachPlans } = useCoachPlans(coachId);
+
+  // Deep-link: /dashboard/mon-compte?tab=abonnement (retour Stripe Customer Portal)
+  // ou /app.html?view=mon-compte&tab=... → ouvre MonCompte sur l'onglet demandé.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const wantsMonCompte =
+      window.location.pathname === "/dashboard/mon-compte" ||
+      params.get("view") === "mon-compte";
+    if (wantsMonCompte) {
+      const tab = params.get("tab");
+      if (tab) setMonCompteInitialTab(tab);
+      setShowMonCompte(true);
+    }
+  }, []);
 
   // Scroll listener sur <main> pour hide/show floating pill mobile
   const mainScrollRef = useRef(null);
@@ -2976,6 +2991,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         <MonCompte
           coachData={coachData}
           isDemo={isDemo}
+          initialTab={monCompteInitialTab}
           onClose={() => setShowMonCompte(false)}
         />
       )}
