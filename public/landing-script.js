@@ -104,7 +104,6 @@ initLangToggle();
 initQuiz();
 return;
 }
-initStaticCursor();
 initNavScroll();
 initHeroSplit(true);
 initReveals();
