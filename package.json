@@ -1,7 +1,21 @@
 {
   "name": "fitcoach",
   "version": "1.0.0",
+  "description": "RB Perform — SaaS premium de coaching sportif : dashboard coach, anti-churn IA, programme builder, app client PWA, 0% commission.",
   "private": true,
+  "license": "UNLICENSED",
+  "author": "Rayan Bonte <rb.performancee@gmail.com> (https://rbperform.app)",
+  "homepage": "https://rbperform.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rbperformancee/rb-performance-fitcoach.git"
+  },
+  "bugs": {
+    "email": "rb.performancee@gmail.com"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
     "@capacitor/cli": "^8.3.1",

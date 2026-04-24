@@ -1,0 +1,22 @@
+Copyright © 2026 Rayan Bonte (RB Perform) — All Rights Reserved
+
+This software and associated assets in this repository are the proprietary
+intellectual property of Rayan Bonte, édités sous le statut de micro-
+entrepreneur enregistré au RCS d'Avignon, France (SIRET 990 637 803 00018).
+
+No part of this codebase, configuration, content, or documentation may be
+copied, modified, distributed, sublicensed, sold, reused in another product
+(commercial or otherwise), or used to train machine-learning models without
+explicit prior written permission from the copyright holder.
+
+Running the hosted service at https://rbperform.app is governed by the
+Conditions Générales d'Utilisation et de Vente ("CGV") published at
+https://rbperform.app/legal.html#cgu — not by this file.
+
+Contributions: this repository is not currently accepting external pull
+requests. Security disclosures must follow the policy described in
+.github/SECURITY.md and the RFC 9116 contact file at
+https://rbperform.app/.well-known/security.txt.
+
+For licensing enquiries (partnerships, white-label, acquisition):
+rb.performancee@gmail.com.
