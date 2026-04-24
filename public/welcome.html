@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#080C14" />
+<meta name="color-scheme" content="dark" />
+<meta name="robots" content="noindex, follow" />
+<title>Bienvenue · RB Perform</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+.page{max-width:600px;margin:0 auto;padding:56px 24px 40px}
+
+.brand{font-family:'Syne',sans-serif;font-size:14px;font-weight:900;letter-spacing:.12em;color:#fff;text-align:center;margin-bottom:32px;display:block;text-decoration:none}
+.brand span{color:#00C9A7}
+
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.25);border-radius:100px;padding:6px 16px;font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:20px}
+.badge.gold{background:rgba(245,200,66,0.08);border-color:rgba(245,200,66,0.3);color:#f5c842}
+.dot{width:6px;height:6px;border-radius:50%;background:#00C9A7;animation:pulse 2s ease infinite}
+.badge.gold .dot{background:#f5c842}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+h1{font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,38px);font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1.12;margin-bottom:14px}
+.sub{font-size:15px;color:rgba(255,255,255,0.55);line-height:1.65;margin-bottom:36px}
+
+.step{margin-bottom:14px;padding:18px 22px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;transition:border-color .2s,background .2s}
+.step:hover{border-color:rgba(0,201,167,0.2);background:rgba(255,255,255,0.04)}
+.step .label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#00C9A7;font-weight:700;margin-bottom:6px}
+.step h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.3px;margin-bottom:8px}
+.step p{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.7}
+.step p strong{color:rgba(255,255,255,0.8);font-weight:600}
+
+.cta{display:inline-block;margin-top:14px;padding:13px 26px;background:#00C9A7;color:#080C14;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;border-radius:100px;text-decoration:none;transition:transform .15s,box-shadow .15s}
+.cta:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,201,167,0.3)}
+.cta.subtle{background:transparent;border:1px solid rgba(0,201,167,0.3);color:#00C9A7}
+.cta.subtle:hover{background:rgba(0,201,167,0.06)}
+
+.lock{margin:28px 0 20px;padding:16px 20px;background:linear-gradient(135deg,rgba(0,201,167,0.08),rgba(0,201,167,0.02));border:1px solid rgba(0,201,167,0.22);border-radius:12px}
+.lock .label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#00C9A7;font-weight:700;margin-bottom:4px}
+.lock p{font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6}
+.lock strong{color:#00C9A7}
+
+.signature{margin:36px 0 16px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:flex-start;gap:14px}
+.signature .avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#00C9A7,rgba(0,201,167,0.6));color:#000;font-family:'Syne',sans-serif;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-.5px}
+.signature .who{font-size:13px;color:#fff;font-weight:700;margin-bottom:2px}
+.signature .role{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px}
+.signature .msg{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.65}
+
+.foot{text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;color:rgba(255,255,255,0.2);line-height:1.7}
+.foot a{color:rgba(0,201,167,0.55);text-decoration:none;margin:0 6px}
+.foot a:hover{color:#00C9A7}
+
+/* iOS-specific install hint shown only on iOS Safari (detected in JS) */
+.install-ios,.install-android{display:none;padding:14px 18px;background:rgba(0,201,167,0.05);border:1px solid rgba(0,201,167,0.18);border-radius:12px;margin-top:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7}
+.install-ios b,.install-android b{color:#00C9A7;font-weight:700}
+body.is-ios .install-ios{display:block}
+body.is-android .install-android{display:block}
+
+@media(max-width:480px){
+  .page{padding:44px 20px 32px}
+  .step{padding:16px 18px}
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+  <a href="/" class="brand">RB<span>PERFORM</span></a>
+
+  <div id="welcomeBlock">
+    <div class="badge" id="badge"><span class="dot"></span><span id="badgeText">Accès créé</span></div>
+    <h1 id="title">Bienvenue. Ton accès est prêt.</h1>
+    <p class="sub" id="sub">
+      Ton mot de passe est défini. Avant d'entrer dans l'app, voici les <strong style="color:rgba(255,255,255,0.8)">3 gestes essentiels</strong> qui font la différence entre « j'essaie » et « c'est mon outil ».
+    </p>
+  </div>
+
+  <!-- STEP 1 — ENTER APP -->
+  <div class="step">
+    <div class="label">Étape 1 · 10 secondes</div>
+    <h3>Entre dans ton dashboard</h3>
+    <p>Connecte-toi avec ton email + ton nouveau mot de passe. La première ouverture est la plus longue (~2s) — après c'est instantané.</p>
+    <a href="/login" class="cta">Ouvrir mon dashboard →</a>
+  </div>
+
+  <!-- STEP 2 — INSTALL PWA -->
+  <div class="step">
+    <div class="label">Étape 2 · 30 secondes</div>
+    <h3>Installe RB Perform sur ton téléphone</h3>
+    <p>Pas besoin d'App Store — RB Perform s'installe en 1 clic depuis ton navigateur. L'app apparaît sur ton écran d'accueil, fonctionne hors-ligne, et envoie les notifications push comme une vraie app native.</p>
+    <div class="install-ios">
+      <b>iPhone (Safari) :</b> appuie sur <b>Partager</b> en bas → <b>Sur l'écran d'accueil</b> → <b>Ajouter</b>.
+    </div>
+    <div class="install-android">
+      <b>Android (Chrome) :</b> menu <b>⋮</b> en haut à droite → <b>Installer l'application</b>.
+    </div>
+    <p style="margin-top:10px;color:rgba(255,255,255,0.4);font-size:11px">
+      Sur desktop ? L'install est optionnelle — RB Perform fonctionne pareil en onglet navigateur.
+    </p>
+  </div>
+
+  <!-- STEP 3 — ADD FIRST CLIENT / BOOK ONBOARDING (Founder-aware) -->
+  <div class="step" id="step3">
+    <div class="label" id="step3Label">Étape 3 · 20 minutes</div>
+    <h3 id="step3Title">Réserve ton onboarding 1:1</h3>
+    <p id="step3Text">
+      Réponds à mon email de bienvenue avec <strong>3 créneaux</strong> où tu es dispo cette semaine. On cale ensemble ton branding, on importe ton premier client, tu repars opérationnel en 20 min.
+    </p>
+    <a href="mailto:rayan@rbperform.com?subject=Onboarding%201%3A1%20Founder&body=Salut%20Rayan%2C%20voici%203%20creneaux%20ou%20je%20suis%20dispo%20cette%20semaine%20%3A%0A-%20...%0A-%20...%0A-%20..." class="cta subtle" id="step3Cta">
+      Envoyer mes créneaux →
+    </a>
+  </div>
+
+  <!-- FOUNDER PRICE LOCK (shown only if ?plan=founding) -->
+  <div class="lock" id="lockBlock" style="display:none">
+    <div class="label">🔒 Prix verrouillé à vie</div>
+    <p>Ton tarif de <strong id="lockPrice">199€/mois</strong> ne bougera plus — même quand le Pro public passera à 299€ puis 499€. C'est la seule promesse que je te fais par écrit.</p>
+  </div>
+
+  <!-- SIGNATURE -->
+  <div class="signature" id="signatureBlock" style="display:none">
+    <div class="avatar">RB</div>
+    <div>
+      <div class="who">Rayan Bonte</div>
+      <div class="role">Fondateur — RB Perform</div>
+      <div class="msg">Réponds à n'importe lequel de mes emails — je lis tout, je réponds dans les 24h (souvent dans l'heure en semaine).</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <a href="/">Accueil</a> ·
+    <a href="/legal.html#cgu">CGV</a> ·
+    <a href="/legal.html#rgpd">RGPD</a> ·
+    <a href="/status">Statut plateforme</a>
+    <div style="margin-top:10px">© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France</div>
+  </div>
+
+</main>
+
+<script>
+(function(){
+  // Detect platform for PWA install hints
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  var isAndroid = /Android/.test(ua);
+  if (isIOS) document.body.classList.add('is-ios');
+  if (isAndroid) document.body.classList.add('is-android');
+
+  // Parameterize by ?plan=
+  var params = new URLSearchParams(location.search);
+  var plan = (params.get('plan') || '').toLowerCase();
+  var isFounder = plan === 'founding' || plan === 'founder';
+
+  if (isFounder) {
+    document.getElementById('badge').className = 'badge gold';
+    document.getElementById('badgeText').textContent = 'Founding Member #' + (params.get('n') || '—');
+    document.getElementById('title').innerHTML = 'Tu es fondateur. Voici ce qu\'on fait maintenant.';
+    document.getElementById('sub').innerHTML = 'Ton mot de passe est défini. Avant d\'entrer dans l\'app, voici les <strong style="color:rgba(255,255,255,0.8)">3 étapes qui rendent ton passage Founder fluide</strong>.';
+    document.getElementById('lockBlock').style.display = 'block';
+    document.getElementById('signatureBlock').style.display = 'flex';
+    var lockPrice = params.get('price');
+    if (lockPrice) document.getElementById('lockPrice').textContent = lockPrice + '€/mois';
+  } else if (plan === 'starter' || plan === 'pro' || plan === 'elite') {
+    document.getElementById('badgeText').textContent = 'Accès ' + plan.charAt(0).toUpperCase() + plan.slice(1) + ' créé';
+    document.getElementById('step3Label').textContent = 'Étape 3 · 5 minutes';
+    document.getElementById('step3Title').textContent = 'Ajoute ton premier client';
+    document.getElementById('step3Text').innerHTML = 'Dashboard → <strong>Clients</strong> → <strong>Inviter</strong>. Tu génères un code, tu l\'envoies à ton client, il s\'inscrit avec. Ses données remontent automatiquement dans ton dashboard.';
+    document.getElementById('step3Cta').href = '/login?page=clients';
+    document.getElementById('step3Cta').textContent = 'Aller à la liste clients →';
+  }
+})();
+</script>
+</body>
+</html>

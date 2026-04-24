@@ -388,12 +388,17 @@ module.exports = async (req, res) => {
         });
       }
 
-      // 4. Générer le lien de récupération (= créer mot de passe)
+      // 4. Générer le lien de récupération (= créer mot de passe).
+      // Redirect target depends on plan: Founders land on the plan-aware
+      // /welcome page (Founder-specific copy + price lock + signature);
+      // Starter/Pro/Elite get the generic welcome with their plan param.
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://rbperform.app';
+      const welcomeQuery = `plan=${encodeURIComponent(plan)}${lockedPrice ? `&price=${encodeURIComponent(lockedPrice)}` : ''}`;
       const { data: linkData, error: linkError } = await getSupabase().auth.admin.generateLink({
         type: 'recovery',
         email: email.toLowerCase(),
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://rbperform.app'}/login?welcome=true`,
+          redirectTo: `${siteUrl}/welcome?${welcomeQuery}`,
         },
       });
 

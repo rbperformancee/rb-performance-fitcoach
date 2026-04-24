@@ -30,6 +30,10 @@
     {
       "path": "/api/cron/cold-outreach",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron-founder-checkin",
+      "schedule": "0 9 * * *"
     }
   ],
   "rewrites": [
@@ -44,6 +48,7 @@
     { "source": "/join",        "destination": "/app.html" },
     { "source": "/dashboard/mon-compte", "destination": "/app.html?view=mon-compte&tab=abonnement" },
     { "source": "/status", "destination": "/status.html" },
+    { "source": "/welcome", "destination": "/welcome.html" },
     { "source": "/coach/:slug", "destination": "/coach.html" }
   ],
   "headers": [
