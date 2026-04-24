@@ -5,6 +5,7 @@
  */
 
 const nodemailer = require('nodemailer');
+const { secureRequest } = require('./_security');
 
 const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
 const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
@@ -98,6 +99,8 @@ module.exports = async (req, res) => {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  // Browser-originated (coach dashboard + programme builder) — enforce origin + rate-limit
+  if (!secureRequest(req, res, { max: 60, windowMs: 3600000 })) return;
 
   if (!SMTP_PASS) return res.status(500).json({ error: 'ZOHO_SMTP_PASS missing' });
 

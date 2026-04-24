@@ -17,6 +17,7 @@
  */
 
 const { createClient } = require("@supabase/supabase-js");
+const { isOriginAllowed } = require("./_security");
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -30,6 +31,12 @@ module.exports = async (req, res) => {
 
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Origin check — demo-client is invoked from the React app (/demo route).
+  // Block server-to-server / bot callers that could burn Supabase admin quota.
+  if (!isOriginAllowed(req)) {
+    return res.status(403).json({ error: "Origin not allowed" });
   }
 
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {

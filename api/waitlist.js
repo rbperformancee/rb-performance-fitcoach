@@ -6,6 +6,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const nodemailer = require('nodemailer');
 const { rateLimit } = require('./_security');
+const { captureException } = require('./_sentry');
 
 const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
 const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
@@ -43,13 +44,24 @@ module.exports = async (req, res) => {
     // Save to Supabase
     const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
+    let dbOk = false;
     if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      await supabase.from('waitlist').upsert({
-        name: (name || '').trim(), email: cleanEmail,
-        clients: clients || null, problem: problem || null,
-        source: source || 'waitlist', created_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
+      try {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { error: dbErr } = await supabase.from('waitlist').upsert({
+          name: (name || '').trim(), email: cleanEmail,
+          clients: clients || null, problem: problem || null,
+          source: source || 'waitlist', created_at: new Date().toISOString(),
+        }, { onConflict: 'email' });
+        if (dbErr) throw dbErr;
+        dbOk = true;
+      } catch (dbEx) {
+        console.error(`[WAITLIST_LOST] db_write_failed email=${cleanEmail} reason="${dbEx.message}"`);
+        await captureException(dbEx, { tags: { endpoint: 'waitlist', stage: 'db' }, extra: { email: cleanEmail, source: source || 'waitlist' } });
+      }
+    } else {
+      console.error(`[WAITLIST_LOST] supabase_env_missing email=${cleanEmail}`);
+      await captureException(new Error('Supabase env vars missing on /api/waitlist'), { tags: { endpoint: 'waitlist', stage: 'env' }, extra: { email: cleanEmail } });
     }
 
     // Send emails via Zoho SMTP
@@ -82,7 +94,10 @@ module.exports = async (req, res) => {
   <tr><td style="padding:24px 0 0;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.15)">RB Perform — rayan@rbperform.app</div></td></tr>
 </table></td></tr></table></body></html>`,
         });
-      } catch (e) { console.error('[waitlist] email prospect:', e.message); }
+      } catch (e) {
+        console.error(`[WAITLIST_EMAIL_FAILED] prospect email=${cleanEmail} reason="${e.message}" db_ok=${dbOk}`);
+        await captureException(e, { tags: { endpoint: 'waitlist', stage: 'email_prospect' }, extra: { email: cleanEmail, db_ok: dbOk } });
+      }
 
       // 2. Notification a Rayan
       try {
@@ -106,12 +121,19 @@ module.exports = async (req, res) => {
   </td></tr>
 </table></td></tr></table></body></html>`,
         });
-      } catch (e) { console.error('[waitlist] notify:', e.message); }
+      } catch (e) {
+        console.error(`[WAITLIST_NOTIFY_FAILED] ops email=${cleanEmail} reason="${e.message}"`);
+        await captureException(e, { tags: { endpoint: 'waitlist', stage: 'notify_ops' }, extra: { email: cleanEmail } });
+      }
+    } else {
+      console.error(`[WAITLIST_NO_TRANSPORT] email=${cleanEmail} — ZOHO_SMTP_PASS missing, prospect not notified by email`);
+      await captureException(new Error('ZOHO_SMTP_PASS missing on /api/waitlist'), { tags: { endpoint: 'waitlist', stage: 'env' }, extra: { email: cleanEmail, db_ok: dbOk } });
     }
 
     return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('[waitlist] Error:', err.message);
+    console.error(`[WAITLIST_UNCAUGHT] reason="${err.message}"`);
+    await captureException(err, { tags: { endpoint: 'waitlist', stage: 'uncaught' } });
     return res.status(200).json({ ok: true });
   }
 };
