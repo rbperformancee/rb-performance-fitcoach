@@ -48,7 +48,16 @@ export async function initSentry() {
   // Lazy import : Sentry n'est telecharge QUE si DSN est set
   // → bundle initial reste fin pour les visiteurs sans tracking
   try {
-    SentryRef = await import("@sentry/react");
+    // @sentry/browser over @sentry/react: we don't use any React-specific
+    // helpers (ErrorBoundary, profiler, router instrumentation), and this
+    // drops those ~26 KB of raw code from the lazy chunk.
+    //
+    // NOTE: Replay / Feedback / Canvas SDKs are still transitively bundled
+    // by @sentry/browser's default integrations. CRA webpack cannot tree-
+    // shake them through a dynamic `import("@sentry/browser")`. Disabling
+    // them via `defaultIntegrations: false` only gates them at runtime,
+    // not build time — keeping as-is with replay sample rates at 0.
+    SentryRef = await import("@sentry/browser");
     SentryRef.init({
       dsn: DSN,
       environment: ENV,
