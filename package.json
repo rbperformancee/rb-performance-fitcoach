@@ -56,7 +56,8 @@
     "logs:vitals": "vercel logs --prod --follow | grep '\\[VITALS\\]'",
     "deploy:preview": "vercel",
     "deploy:prod": "vercel --prod",
-    "deploy:force": "vercel --prod --force --yes"
+    "deploy:force": "vercel --prod --force --yes",
+    "check:deploy": "node scripts/check-deploy.js"
   },
   "browserslist": {
     "production": [

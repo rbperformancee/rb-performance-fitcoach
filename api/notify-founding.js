@@ -8,7 +8,7 @@
  */
 
 const { createClient } = require('@supabase/supabase-js');
-const { rateLimit } = require('./_security');
+const { rateLimit, attachRequestId } = require('./_security');
 const { captureException } = require('./_sentry');
 
 module.exports = async (req, res) => {
@@ -17,6 +17,7 @@ module.exports = async (req, res) => {
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  attachRequestId(req, res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
