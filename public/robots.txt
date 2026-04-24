@@ -1,10 +1,15 @@
 User-agent: *
 Allow: /
 Allow: /founding
+Allow: /waitlist
 Allow: /demo
 Allow: /legal.html
 Disallow: /api/
 Disallow: /static/
 Disallow: /demo-client
+Disallow: /dashboard/
+Disallow: /rejoindre/
+Disallow: /coach/
+Disallow: /link
 
 Sitemap: https://rbperform.app/sitemap.xml

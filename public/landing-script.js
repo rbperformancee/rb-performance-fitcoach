@@ -40,39 +40,6 @@ if (m.attributeName === 'class' && section.classList.contains('active')) revealA
 });
 mo.observe(section, { attributes: true });
 })();
-var FOUNDING_MODE = true;
-function startPlanCheckout(plan, btn) {
-if (FOUNDING_MODE) {
-window.location.href = '/founding';
-return;
-}
-var originalText = btn.textContent;
-btn.textContent = 'Redirection...';
-btn.disabled = true;
-btn.style.opacity = '0.7';
-fetch('/api/checkout', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ plan: plan })
-})
-.then(function(r) { return r.json(); })
-.then(function(data) {
-if (data.url) {
-window.location.href = data.url;
-} else {
-alert(data.error || 'Erreur. Contacte rb.performancee@gmail.com');
-btn.textContent = originalText;
-btn.disabled = false;
-btn.style.opacity = '1';
-}
-})
-.catch(function() {
-alert('Erreur réseau. Réessaie.');
-btn.textContent = originalText;
-btn.disabled = false;
-btn.style.opacity = '1';
-});
-}
 if (!window.toggleFaq) {
 window.toggleFaq = function(btn) {
 var item = btn.closest('.faq-item');
