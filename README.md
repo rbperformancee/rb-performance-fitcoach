@@ -234,6 +234,7 @@ npm run test:e2e:headed # Playwright avec UI
 
 ## 📚 Documentation supplementaire
 
+- [`docs/openapi.yml`](./docs/openapi.yml) — OpenAPI 3.1 spec pour tous les endpoints `/api/*` (copiable dans Postman, Insomnia, Bruno)
 - [`CHANGELOG.md`](./CHANGELOG.md) — historique des releases (Keep a Changelog format)
 - [`LAUNCH_CHECKLIST.md`](./LAUNCH_CHECKLIST.md) — audit pre-launch (perf, UX, PWA, SEO, a11y)
 - [`SECURITY_AUDIT.md`](./SECURITY_AUDIT.md) — 14 failles fix + actions manuelles

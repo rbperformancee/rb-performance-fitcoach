@@ -1,0 +1,352 @@
+openapi: 3.1.0
+info:
+  title: RB Perform — Platform API
+  version: "1.0.0"
+  description: |
+    Serverless HTTP endpoints backing the RB Perform platform. Most are internal
+    (consumed by the React app shell at `/app.html`) and a few are public-facing
+    (monitoring, vitals, Stripe webhook).
+
+    **Authentication** — unless noted otherwise, endpoints are protected by
+    `_security.secureRequest`:
+      - Origin check against an allow-list (`rbperform.app`, `*.vercel.app`
+        preview URLs, localhost in dev)
+      - Rate limiting per IP (default 20/hour, tuned per endpoint)
+
+    Privileged endpoints (`/api/billing-portal`) additionally require a
+    Supabase JWT in the `Authorization: Bearer <token>` header.
+
+    **Observability** — every failure path emits a structured log prefix
+    (`[ENDPOINT_STAGE_KIND]`) and forwards an event to Sentry via
+    `api/_sentry.js`.
+
+  contact:
+    name: RB Perform support
+    email: rb.performancee@gmail.com
+    url: https://rbperform.app
+  license:
+    name: Proprietary — All Rights Reserved
+    url: https://rbperform.app/legal.html
+
+servers:
+  - url: https://rbperform.app
+    description: Production
+
+tags:
+  - name: Monitoring
+  - name: Capture
+  - name: Billing
+  - name: AI
+  - name: Cron
+  - name: Webhook
+
+paths:
+
+  /api/health:
+    get:
+      tags: [Monitoring]
+      summary: Liveness probe
+      description: |
+        Always 200 when the process is alive. Cheap enough to hit every 30 s
+        from a monitor. Pass `?deep=1` to additionally check Supabase + Stripe
+        reachability (adds ~500 ms).
+      parameters:
+        - in: query
+          name: deep
+          schema: { type: string, enum: ["1"] }
+          description: If "1", perform the readiness probe.
+      responses:
+        "200":
+          description: Liveness (shallow) or readiness with all deps healthy.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthShallow" }
+        "503":
+          description: Critical dependency down (deep probe only).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthDeep" }
+
+  /api/waitlist:
+    post:
+      tags: [Capture]
+      summary: Register an email for the mai 2026 waitlist
+      description: |
+        Upserts into the `waitlist` table, sends a confirmation email to the
+        prospect via Zoho SMTP, notifies the operator. Returns 200 even on
+        partial failure (DB or SMTP); lost leads surface via
+        `[WAITLIST_*]` structured logs + Sentry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WaitlistSignup" }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/notify-founding:
+    post:
+      tags: [Capture]
+      summary: Register an email for the Founding Coach notify list
+      description: Upserts into `founding_waitlist`. UX-tolerant like /api/waitlist.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/checkout:
+    post:
+      tags: [Billing]
+      summary: Create a Stripe Checkout Session (standard plans)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan]
+              properties:
+                plan: { type: string, enum: [starter, pro, elite] }
+      responses:
+        "200":
+          description: Checkout session URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { url: { type: string, format: uri } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/checkout-founding:
+    post:
+      tags: [Billing]
+      summary: Create a Stripe Checkout Session for the Founding Coach plan
+      responses:
+        "200":
+          description: Checkout session URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { url: { type: string, format: uri } }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/billing-portal:
+    post:
+      tags: [Billing]
+      summary: Create a Stripe Customer Portal session for the authenticated coach
+      description: |
+        Requires a valid Supabase JWT. Looks up the coach's
+        `stripe_customer_id` and returns a one-off URL for self-service
+        (cancel, update CB, invoices). Return URL = `/dashboard/mon-compte?tab=abonnement`.
+      security:
+        - supabaseJwt: []
+      responses:
+        "200":
+          description: Portal session URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { url: { type: string, format: uri } }
+        "401":
+          description: Missing or invalid Authorization header
+        "404":
+          description: No `stripe_customer_id` on the authenticated coach
+
+  /api/vitals:
+    post:
+      tags: [Monitoring]
+      summary: Real-User Monitoring beacon
+      description: |
+        Frontend sends Web Vitals via `navigator.sendBeacon` on `pagehide`.
+        Logs a structured `[VITALS]` line. Anonymous — no user ID / cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Vital" }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/faq-assistant:
+    post:
+      tags: [AI]
+      summary: Mistral-backed FAQ assistant
+      description: Proxies a user question to Mistral, returns a short reply.
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/food-search:
+    post:
+      tags: [AI]
+      summary: OpenFoodFacts proxy for barcode + text search
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/voice-analyze:
+    post:
+      tags: [AI]
+      summary: Analyse nutrition from a voice dictation via Mistral
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/send-welcome:
+    post:
+      tags: [Capture]
+      summary: Send a welcome email (client onboarding)
+      description: Called by the React app (CoachDashboard, ProgrammeBuilder) via Zoho SMTP.
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/demo-client:
+    get:
+      tags: [Monitoring]
+      summary: Generate an ephemeral Supabase session for the demo client
+      description: Exchanges an admin-generated OTP for a session pair. Used by the `/demo-client` auto-login.
+      responses:
+        "200":
+          description: Session tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  refresh_token: { type: string }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/webhook-stripe:
+    post:
+      tags: [Webhook]
+      summary: Stripe webhook — coach provisioning + lifecycle
+      description: |
+        Handles `checkout.session.completed`, `customer.subscription.deleted`,
+        `invoice.payment_failed`, `customer.subscription.updated`. Signature
+        verified via `stripe.webhooks.constructEvent` with an explicit 300 s
+        timestamp tolerance (anti-replay).
+      security:
+        - stripeSignature: []
+      responses:
+        "200":
+          description: Event acknowledged (whether handled or not)
+        "400":
+          description: Invalid signature or malformed body
+        "405":
+          description: Method not allowed (only POST accepted)
+
+components:
+
+  securitySchemes:
+    supabaseJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    stripeSignature:
+      type: apiKey
+      in: header
+      name: Stripe-Signature
+
+  responses:
+    Ok:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: { ok: { type: boolean, example: true } }
+    BadRequest:
+      description: Invalid request body
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: { error: { type: string } }
+    Forbidden:
+      description: Origin not allowed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: { error: { type: string } }
+    RateLimited:
+      description: Too many requests from this IP
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+              retry_after_seconds: { type: integer }
+    ServerError:
+      description: Internal error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: { error: { type: string } }
+
+  schemas:
+    HealthShallow:
+      type: object
+      required: [status, uptime_s, commit, region, env]
+      properties:
+        status: { type: string, enum: [ok, degraded, down] }
+        uptime_s: { type: integer }
+        commit: { type: string, example: "8dd1f0c" }
+        region: { type: string, example: "cdg1" }
+        env: { type: string, example: "production" }
+
+    HealthDeep:
+      allOf:
+        - $ref: "#/components/schemas/HealthShallow"
+        - type: object
+          properties:
+            checks:
+              type: object
+              properties:
+                supabase: { type: string, example: ok }
+                stripe: { type: string, example: ok }
+
+    WaitlistSignup:
+      type: object
+      required: [email]
+      properties:
+        name: { type: string, maxLength: 80 }
+        email: { type: string, format: email }
+        clients: { type: string, enum: ["0-5", "5-15", "15-30", "30+"] }
+        problem: { type: string, enum: [visibility, churn, admin, tools, scale] }
+        source: { type: string, example: waitlist }
+
+    Vital:
+      type: object
+      required: [name, value]
+      properties:
+        name: { type: string, enum: [LCP, CLS, INP, FCP, TTFB, FID] }
+        value: { type: number, minimum: 0, maximum: 600000 }
+        rating: { type: string, enum: [good, needs-improvement, poor] }
+        navigationType: { type: string }
+        url: { type: string, maxLength: 500 }
