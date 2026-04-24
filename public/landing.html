@@ -2584,14 +2584,14 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
             <span>Nombre de clients</span>
             <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-clients-val">2</span> clients</span>
           </div>
-          <input type="range" id="roi-clients" min="0" max="100" value="0" style="width:100%;accent-color:#00C9A7" />
+          <input type="range" id="roi-clients" aria-label="Nombre de clients actuels" min="0" max="100" value="0" style="width:100%;accent-color:#00C9A7" />
         </div>
         <div style="margin-bottom:32px">
           <div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">
             <span>Tarif mensuel</span>
             <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-tarif-val">100</span>€ / mois</span>
           </div>
-          <input type="range" id="roi-tarif" min="50" max="500" value="100" step="10" style="width:100%;accent-color:#00C9A7" />
+          <input type="range" id="roi-tarif" aria-label="Tarif mensuel par client en euros" min="50" max="500" value="100" step="10" style="width:100%;accent-color:#00C9A7" />
         </div>
 
         <div style="display:flex;flex-direction:column;gap:12px">
