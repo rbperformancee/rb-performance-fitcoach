@@ -188,6 +188,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json(parsed);
   } catch (e) {
+    const { captureException } = require("./_sentry");
+    console.error(`[VOICE_ANALYZE_FAILED] reason="${e.message || e}"`);
+    await captureException(e, { tags: { endpoint: "voice-analyze" } });
     return res.status(500).json({ error: "Proxy failure", message: String(e) });
   }
 }

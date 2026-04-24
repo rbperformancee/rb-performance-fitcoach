@@ -91,6 +91,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ foods });
   } catch (e) {
+    const { captureException } = require("./_sentry");
+    console.error(`[FOOD_SEARCH_FAILED] reason="${e.message || e}"`);
+    await captureException(e, { tags: { endpoint: "food-search" } });
     return res.status(500).json({ error: "Proxy failure", message: String(e) });
   }
 }

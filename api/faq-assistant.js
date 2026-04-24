@@ -90,6 +90,9 @@ export default async function handler(req, res) {
     const reply = data?.choices?.[0]?.message?.content || "Desole, je n'ai pas compris. Reformule ta question.";
     return res.status(200).json({ reply });
   } catch (e) {
+    const { captureException } = require("./_sentry");
+    console.error(`[FAQ_ASSISTANT_FAILED] reason="${e.message || e}"`);
+    await captureException(e, { tags: { endpoint: "faq-assistant" } });
     return res.status(500).json({ error: "Proxy failure", message: String(e) });
   }
 }
