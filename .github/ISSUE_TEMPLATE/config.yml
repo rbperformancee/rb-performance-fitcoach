@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔐 Security vulnerability
+    url: https://rbperform.app/.well-known/security.txt
+    about: Never open a public issue for a security issue. Email rb.performancee@gmail.com per our disclosure policy.
+  - name: 📡 Service status
+    url: https://rbperform.app/status
+    about: Before filing a "down" issue, check the status page.
+  - name: 💬 Support client
+    url: mailto:rb.performancee@gmail.com
+    about: Question utilisateur / facturation / support ? Un email est plus rapide qu'un issue.
