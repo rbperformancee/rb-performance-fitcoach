@@ -47,7 +47,16 @@
     "audit": "node scripts/landing-audit.js",
     "cap:build": "CI=false npm run build && npx cap sync",
     "cap:ios": "npx cap open ios",
-    "cap:android": "npx cap open android"
+    "cap:android": "npx cap open android",
+    "status": "curl -s https://rbperform.app/api/health?deep=1 | python3 -m json.tool 2>/dev/null || curl -s https://rbperform.app/api/health?deep=1",
+    "logs": "vercel logs --prod --follow",
+    "logs:webhook": "vercel logs --prod --follow | grep -E 'WEBHOOK_|Welcome email|Coach'",
+    "logs:waitlist": "vercel logs --prod --follow | grep -E 'WAITLIST_|FOUNDING_WAITLIST_'",
+    "logs:crons": "vercel logs --prod --follow | grep -E 'CRON_|sentinel|cold-outreach'",
+    "logs:vitals": "vercel logs --prod --follow | grep '\\[VITALS\\]'",
+    "deploy:preview": "vercel",
+    "deploy:prod": "vercel --prod",
+    "deploy:force": "vercel --prod --force --yes"
   },
   "browserslist": {
     "production": [
