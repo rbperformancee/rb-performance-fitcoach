@@ -112,3 +112,29 @@ jobs:
         with:
           node-version-file: ".nvmrc"
       - run: node scripts/landing-audit.js
+
+  smoke-prod:
+    name: Post-deploy smoke (prod)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only on push to main — PRs don't touch prod yet
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Wait for Vercel deployment to promote
+        run: sleep 90
+
+      - name: Run post-deploy smoke against rbperform.app
+        run: node scripts/check-deploy.js
+
+      - name: Fail job summary on red
+        if: failure()
+        run: |
+          echo "❌ Post-deploy smoke failed — see step above for the failing check."
+          echo "Likely causes: Vercel build error, env var drift, third-party outage."
+          echo "See docs/RUNBOOK.md for scenario-by-scenario triage."
