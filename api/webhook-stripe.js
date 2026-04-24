@@ -17,6 +17,7 @@
 
 const getStripe = require('./_stripe');
 const { createClient } = require('@supabase/supabase-js');
+const { captureException } = require('./_sentry');
 
 let _supabase;
 function getSupabase() {
@@ -115,14 +116,22 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink }) {
     });
     if (!res.ok) {
       const txt = await res.text();
-      console.error('[webhook] Resend failed', res.status, txt.slice(0, 300));
+      console.error(`[WEBHOOK_RESEND_FAILED] to=${to} status=${res.status} body="${txt.slice(0, 200)}"`);
+      await captureException(new Error(`Resend HTTP ${res.status}: ${txt.slice(0, 200)}`), {
+        tags: { endpoint: 'webhook-stripe', stage: 'resend', plan },
+        extra: { to, status: res.status, body: txt.slice(0, 500) },
+      });
       return { ok: false, reason: `http_${res.status}` };
     }
     const body = await res.json().catch(() => ({}));
     console.log('[webhook] Welcome email sent to', to, 'id:', body.id);
     return { ok: true, id: body.id };
   } catch (e) {
-    console.error('[webhook] Resend exception:', e.message);
+    console.error(`[WEBHOOK_RESEND_EXCEPTION] to=${to} reason="${e.message}"`);
+    await captureException(e, {
+      tags: { endpoint: 'webhook-stripe', stage: 'resend_exception', plan },
+      extra: { to },
+    });
     return { ok: false, reason: 'exception' };
   }
 }
@@ -153,7 +162,8 @@ module.exports = async (req, res) => {
     try {
       event = getStripe().webhooks.constructEvent(rawBody, sig, webhookSecret);
     } catch (err) {
-      console.error('[webhook] Signature verification failed:', err.message);
+      console.error('[WEBHOOK_SIG_INVALID] reason="' + err.message + '"');
+      await captureException(err, { tags: { endpoint: 'webhook-stripe', stage: 'signature' } });
       return res.status(400).json({ error: 'Invalid signature' });
     }
 
@@ -195,7 +205,11 @@ module.exports = async (req, res) => {
         });
 
         if (authError) {
-          console.error('[webhook] Auth create error:', authError.message);
+          console.error(`[WEBHOOK_AUTH_FAILED] email=${email} reason="${authError.message}"`);
+          await captureException(authError, {
+            tags: { endpoint: 'webhook-stripe', stage: 'auth_create', plan },
+            extra: { email, customerId, subscriptionId },
+          });
           return res.status(500).json({ error: authError.message });
         }
 
@@ -216,7 +230,11 @@ module.exports = async (req, res) => {
       }, { onConflict: 'id' });
 
       if (coachError) {
-        console.error('[webhook] Coach upsert error:', coachError.message);
+        console.error(`[WEBHOOK_COACH_UPSERT_FAILED] email=${email} userId=${userId} reason="${coachError.message}"`);
+        await captureException(coachError, {
+          tags: { endpoint: 'webhook-stripe', stage: 'coach_upsert', plan },
+          extra: { email, userId, customerId, subscriptionId, plan, lockedPrice },
+        });
       }
 
       // 4. Générer le lien de récupération (= créer mot de passe)
@@ -229,7 +247,11 @@ module.exports = async (req, res) => {
       });
 
       if (linkError) {
-        console.error('[webhook] Generate link error:', linkError.message);
+        console.error(`[WEBHOOK_MAGIC_LINK_FAILED] email=${email} reason="${linkError.message}"`);
+        await captureException(linkError, {
+          tags: { endpoint: 'webhook-stripe', stage: 'generate_link', plan },
+          extra: { email, userId, plan },
+        });
       }
 
       // 5. Send welcome email via Resend with the password setup link.
@@ -243,7 +265,11 @@ module.exports = async (req, res) => {
           actionLink: linkData.properties.action_link,
         });
       } else {
-        console.error('[webhook] No action_link — cannot send welcome email for', email);
+        console.error(`[WEBHOOK_NO_ACTION_LINK] email=${email} — cannot send welcome, no magic link available`);
+        await captureException(new Error('No action_link returned from generateLink'), {
+          tags: { endpoint: 'webhook-stripe', stage: 'no_action_link', plan },
+          extra: { email, userId, plan },
+        });
       }
 
       return res.status(200).json({ ok: true, userId, plan });
@@ -259,8 +285,15 @@ module.exports = async (req, res) => {
         .update({ is_active: false })
         .eq('stripe_customer_id', customerId);
 
-      if (error) console.error('[webhook] Deactivate error:', error.message);
-      else console.log(`[webhook] Coach deactivated: ${customerId}`);
+      if (error) {
+        console.error(`[WEBHOOK_DEACTIVATE_FAILED] customerId=${customerId} reason="${error.message}"`);
+        await captureException(error, {
+          tags: { endpoint: 'webhook-stripe', stage: 'deactivate' },
+          extra: { customerId },
+        });
+      } else {
+        console.log(`[webhook] Coach deactivated: ${customerId}`);
+      }
 
       return res.status(200).json({ ok: true });
     }
@@ -269,7 +302,10 @@ module.exports = async (req, res) => {
     return res.status(200).json({ received: true });
 
   } catch (err) {
-    console.error('[webhook] Error:', err);
+    console.error(`[WEBHOOK_UNCAUGHT] reason="${err.message}"`);
+    await captureException(err, {
+      tags: { endpoint: 'webhook-stripe', stage: 'uncaught' },
+    });
     return res.status(500).json({ error: err.message });
   }
 };
