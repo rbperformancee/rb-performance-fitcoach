@@ -23,6 +23,7 @@ const {
   anonymizeClient,
   weekKey,
 } = require("../_sentinel-helpers");
+const { captureException } = require("../_sentry");
 
 const MISTRAL_ENABLED = !!process.env.MISTRAL_API_KEY;
 
@@ -187,7 +188,8 @@ JSON: {title, clients: [{client_ref, reason, suggested_plan, potential_eur, cta_
       duration_seconds: Math.round((Date.now() - startTime) / 1000),
     });
   } catch (e) {
-    console.error("[sentinel-weekly] fatal:", e);
+    console.error(`[CRON_SENTINEL_WEEKLY_FAILED] reason="${e.message}"`);
+    await captureException(e, { tags: { endpoint: "cron-sentinel-weekly", stage: "uncaught" } });
     return res.status(500).json({ error: e.message });
   }
 }

@@ -26,6 +26,7 @@ const {
   anonymizeClient,
   todayKey,
 } = require("../_sentinel-helpers");
+const { captureException } = require("../_sentry");
 
 const MISTRAL_ENABLED = !!process.env.MISTRAL_API_KEY;
 
@@ -252,7 +253,8 @@ Genere JSON: {title, actions: [{text, impact_eur, cta_action: open_message_compo
       duration_seconds: Math.round((Date.now() - startTime) / 1000),
     });
   } catch (e) {
-    console.error("[sentinel-daily] fatal:", e);
+    console.error(`[CRON_SENTINEL_DAILY_FAILED] reason="${e.message}"`);
+    await captureException(e, { tags: { endpoint: "cron-sentinel-daily", stage: "uncaught" } });
     return res.status(500).json({ error: e.message });
   }
 }

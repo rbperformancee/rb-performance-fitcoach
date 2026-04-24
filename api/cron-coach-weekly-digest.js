@@ -3,6 +3,8 @@
  * Email avec resume semaine + actions prioritaires.
  */
 
+const { captureException } = require("./_sentry");
+
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_KEY = process.env.RESEND_API_KEY;
@@ -269,6 +271,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ ok: true, sent });
   } catch (e) {
+    console.error(`[CRON_WEEKLY_DIGEST_FAILED] reason="${e.message || e}"`);
+    await captureException(e, { tags: { endpoint: "cron-coach-weekly-digest", stage: "uncaught" } });
     return res.status(500).json({ error: String(e) });
   }
 }

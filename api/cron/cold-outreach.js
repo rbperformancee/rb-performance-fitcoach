@@ -11,6 +11,7 @@
  */
 
 const nodemailer = require('nodemailer');
+const { captureException } = require('../_sentry');
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -202,7 +203,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ status: 'ok', sent, errors, total: prospects.length });
   } catch (e) {
-    console.error('[cold-outreach] fatal:', e);
+    console.error(`[CRON_COLD_OUTREACH_FAILED] reason="${e.message}"`);
+    await captureException(e, { tags: { endpoint: 'cron-cold-outreach', stage: 'uncaught' } });
     return res.status(500).json({ error: e.message });
   }
 }

@@ -21,6 +21,7 @@ const {
   expireOldCards,
   todayKey,
 } = require("../_sentinel-helpers");
+const { captureException } = require("../_sentry");
 
 function percentile(arr, p) {
   if (!arr.length) return 0;
@@ -208,7 +209,8 @@ export default async function handler(req, res) {
       cards_created: cardsCreated,
     });
   } catch (e) {
-    console.error("[sentinel-benchmarks] fatal:", e);
+    console.error(`[CRON_SENTINEL_BENCHMARKS_FAILED] reason="${e.message}"`);
+    await captureException(e, { tags: { endpoint: "cron-sentinel-benchmarks", stage: "uncaught" } });
     return res.status(500).json({ error: e.message });
   }
 }

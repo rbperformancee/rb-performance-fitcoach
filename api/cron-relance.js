@@ -11,6 +11,8 @@
  * Rate limit : table notification_logs en DB (remplace localStorage)
  */
 
+const { captureException } = require("./_sentry");
+
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -197,6 +199,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ ok: true, sent: results.length, details: results });
   } catch (e) {
+    console.error(`[CRON_RELANCE_FAILED] reason="${e.message}" results_so_far=${results.length}`);
+    await captureException(e, { tags: { endpoint: "cron-relance", stage: "uncaught" }, extra: { results_so_far: results.length } });
     return res.status(500).json({ error: e.message });
   }
 }
