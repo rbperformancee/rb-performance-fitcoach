@@ -27,6 +27,19 @@ jobs:
       - name: Install
         run: npm ci --no-audit --prefer-offline
 
+      - name: npm audit — fail on critical CVEs, warn on high
+        run: |
+          # CRITICAL in any prod dep fails the build.
+          # HIGH is logged for awareness but doesn't block — the current
+          # 15 "high" are all react-scripts transitive build-tools (svgo,
+          # workbox-build, serialize-javascript, …) with no runtime
+          # exposure. Replacing react-scripts with Vite clears them; until
+          # then, don't let noise block merges.
+          set +e
+          npm audit --omit=dev --audit-level=high 2>&1 | tail -20
+          set -e
+          npm audit --omit=dev --audit-level=critical
+
       - name: Syntax check all /api/*.js
         run: |
           set -e

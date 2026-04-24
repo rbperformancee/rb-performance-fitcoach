@@ -236,6 +236,31 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+  /api/gdpr-export:
+    post:
+      tags: [Capture]
+      summary: RGPD art. 20 — download the authenticated coach's full data
+      description: |
+        Returns a single JSON blob containing the coach profile, all rows
+        keyed by `coach_id` across `clients`, `programmes`, `notification_logs`,
+        `invoices`, `coach_plans`, plus auth metadata (email, last sign-in).
+
+        Scope is strictly the caller's own `user.id` — a coach cannot export
+        another coach's data. Rate-limited 5/hour.
+
+        Response is served with `Content-Disposition: attachment` so the
+        browser offers a save dialog.
+      security:
+        - supabaseJwt: []
+      responses:
+        "200":
+          description: JSON attachment
+          content:
+            application/json:
+              schema: { type: object }
+        "401": { description: Missing or invalid Authorization }
+        "404": { description: No coach profile matches the JWT }
+
   /api/webhook-stripe:
     post:
       tags: [Webhook]
