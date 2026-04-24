@@ -12,7 +12,7 @@
  *   STRIPE_PRICE_ELITE    — price_... (499€/mois)
  */
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const getStripe = require('./_stripe');
 
 const PLANS = {
   starter: {
@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
 
     const baseUrl = 'https://rbperform.app';
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{

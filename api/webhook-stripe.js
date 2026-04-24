@@ -15,13 +15,19 @@
  *   SUPABASE_SERVICE_ROLE_KEY
  */
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const getStripe = require('./_stripe');
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+let _supabase;
+function getSupabase() {
+  if (!_supabase) {
+    const url = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Supabase env vars not configured');
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
 
 // Vercel envoie le body brut si on désactive le bodyParser
 module.exports.config = { api: { bodyParser: false } };
@@ -47,7 +53,7 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'Webhook secret not configured' });
     }
     try {
-      event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+      event = getStripe().webhooks.constructEvent(rawBody, sig, webhookSecret);
     } catch (err) {
       console.error('[webhook] Signature verification failed:', err.message);
       return res.status(400).json({ error: 'Invalid signature' });
@@ -62,7 +68,8 @@ module.exports = async (req, res) => {
       const customerId = session.customer;
       const subscriptionId = session.subscription;
       const metadata = session.subscription_data?.metadata || session.metadata || {};
-      const plan = metadata.plan || metadata.founding_coach === 'true' ? 'founding' : 'pro';
+      // Without parens, `||` + `===` + ternary misgrouped → every paid coach becomes 'founding'.
+      const plan = metadata.plan || (metadata.founding_coach === 'true' ? 'founding' : 'pro');
       const lockedPrice = metadata.locked_price || null;
 
       if (!email) {
@@ -73,7 +80,7 @@ module.exports = async (req, res) => {
       console.log(`[webhook] New coach: ${email}, plan: ${plan}`);
 
       // 1. Vérifier si le user existe déjà dans Supabase Auth
-      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const { data: existingUsers } = await getSupabase().auth.admin.listUsers();
       const existingUser = existingUsers?.users?.find(u => u.email === email.toLowerCase());
 
       let userId;
@@ -83,7 +90,7 @@ module.exports = async (req, res) => {
         console.log(`[webhook] User exists: ${userId}`);
       } else {
         // 2. Créer le user dans Supabase Auth (sans mot de passe — il le définira)
-        const { data: newUser, error: authError } = await supabase.auth.admin.createUser({
+        const { data: newUser, error: authError } = await getSupabase().auth.admin.createUser({
           email: email.toLowerCase(),
           email_confirm: true, // Email déjà confirmé (il a payé)
           user_metadata: { role: 'coach', plan },
@@ -99,7 +106,7 @@ module.exports = async (req, res) => {
       }
 
       // 3. Créer/updater l'entrée dans la table coaches
-      const { error: coachError } = await supabase.from('coaches').upsert({
+      const { error: coachError } = await getSupabase().from('coaches').upsert({
         id: userId,
         email: email.toLowerCase(),
         plan: plan,
@@ -115,7 +122,7 @@ module.exports = async (req, res) => {
       }
 
       // 4. Générer le lien de récupération (= créer mot de passe)
-      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      const { data: linkData, error: linkError } = await getSupabase().auth.admin.generateLink({
         type: 'recovery',
         email: email.toLowerCase(),
         options: {
@@ -142,7 +149,7 @@ module.exports = async (req, res) => {
       const subscription = event.data.object;
       const customerId = subscription.customer;
 
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('coaches')
         .update({ is_active: false })
         .eq('stripe_customer_id', customerId);

@@ -7,6 +7,10 @@ build/
 .env.local
 .env.production
 
+# Claude Code local state
+.claude/scheduled_tasks.lock
+.claude/projects/
+
 # Playwright
 test-results/
 playwright-report/

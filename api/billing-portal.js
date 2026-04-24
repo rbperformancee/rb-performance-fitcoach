@@ -13,7 +13,7 @@
  *   SUPABASE_SERVICE_ROLE_KEY
  */
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const getStripe = require('./_stripe');
 const { createClient } = require('@supabase/supabase-js');
 const { secureRequest } = require('./_security');
 
@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
 
     // 4. Create Customer Portal session
     const baseUrl = origin || 'https://rbperform.app';
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: coach.stripe_customer_id,
       return_url: `${baseUrl}/dashboard/mon-compte?tab=abonnement`,
     });
