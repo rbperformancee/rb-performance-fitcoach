@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Statut · RB Perform</title>
+<meta name="description" content="État en temps réel des services RB Perform : app, paiements, base de données." />
+<meta name="robots" content="index, follow" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:#080808;
+    color:rgba(255,255,255,.75);
+    font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    min-height:100vh;
+    padding:60px 24px;
+  }
+  .wrap{max-width:680px;margin:0 auto}
+  .eyebrow{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:12px}
+  h1{font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,44px);font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1;margin-bottom:16px}
+  .sub{font-size:14px;color:rgba(255,255,255,.4);margin-bottom:40px}
+
+  .overall{display:flex;align-items:center;gap:14px;padding:22px 24px;border-radius:16px;border:.5px solid rgba(255,255,255,.08);margin-bottom:32px;background:rgba(255,255,255,.02)}
+  .overall .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .overall .txt{flex:1;min-width:0}
+  .overall .title{font-size:16px;font-weight:600;color:#fff;letter-spacing:-.3px;margin-bottom:2px}
+  .overall .detail{font-size:12px;color:rgba(255,255,255,.35);letter-spacing:.02em}
+  .overall[data-status="ok"] .dot{background:#02d1ba;box-shadow:0 0 12px rgba(2,209,186,.5)}
+  .overall[data-status="degraded"] .dot{background:#f5c842;box-shadow:0 0 12px rgba(245,200,66,.5)}
+  .overall[data-status="down"] .dot{background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,.5)}
+  .overall[data-status="loading"] .dot{background:rgba(255,255,255,.2);animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+  .label{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);margin:32px 0 12px}
+  .check{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:12px;border:.5px solid rgba(255,255,255,.05);background:rgba(255,255,255,.015);margin-bottom:8px}
+  .check .name{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,.8);font-weight:500}
+  .check .name::before{content:'';width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+  .check[data-status="ok"] .name::before{background:#02d1ba}
+  .check[data-status="degraded"] .name::before{background:#f5c842}
+  .check[data-status="down"] .name::before{background:#ff6b6b;box-shadow:0 0 8px rgba(255,107,107,.6)}
+  .check .state{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.04em}
+
+  .meta{margin-top:40px;padding-top:24px;border-top:.5px solid rgba(255,255,255,.06);display:flex;flex-wrap:wrap;gap:20px;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.25)}
+  .meta span{display:inline-flex;gap:6px}
+  .meta b{color:rgba(255,255,255,.5);font-weight:400}
+
+  .foot{margin-top:48px;padding-top:20px;border-top:.5px solid rgba(255,255,255,.04);font-size:11px;color:rgba(255,255,255,.2);text-align:center}
+  .foot a{color:rgba(2,209,186,.7);text-decoration:none}
+  .foot a:hover{color:#02d1ba}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Statut système</div>
+  <h1>Tout tourne.</h1>
+  <p class="sub">État en temps réel des services RB Perform. Mis à jour automatiquement toutes les 30 secondes.</p>
+
+  <div class="overall" id="overall" data-status="loading">
+    <div class="dot"></div>
+    <div class="txt">
+      <div class="title" id="overallTitle">Vérification en cours…</div>
+      <div class="detail" id="overallDetail">Ping de /api/health</div>
+    </div>
+  </div>
+
+  <div class="label">Composants</div>
+  <div class="check" id="chk-app" data-status="loading"><div class="name">Plateforme applicative</div><div class="state">—</div></div>
+  <div class="check" id="chk-supabase" data-status="loading"><div class="name">Base de données (Supabase)</div><div class="state">—</div></div>
+  <div class="check" id="chk-stripe" data-status="loading"><div class="name">Paiements (Stripe)</div><div class="state">—</div></div>
+
+  <div class="meta">
+    <span>Région <b id="m-region">—</b></span>
+    <span>Environnement <b id="m-env">—</b></span>
+    <span>Uptime <b id="m-uptime">—</b></span>
+    <span>Build <b id="m-commit">—</b></span>
+  </div>
+
+  <div class="foot">
+    En cas d'incident, contacte <a href="mailto:rb.performancee@gmail.com">rb.performancee@gmail.com</a> · <a href="/legal.html">Mentions légales</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  const TITLES = {
+    ok: 'Tous les services opérationnels',
+    degraded: 'Service dégradé',
+    down: 'Incident en cours',
+    loading: 'Vérification en cours…'
+  };
+  const DETAILS = {
+    ok: 'Plateforme nominale.',
+    degraded: 'Une ou plusieurs dépendances répondent mais signalent un problème.',
+    down: 'Une dépendance critique est injoignable. Support notifié.',
+    loading: 'Ping de /api/health'
+  };
+  const CHECK_STATE = { ok:'OK', degraded:'DEGRADED', down:'DOWN', fail:'DOWN', not_configured:'—' };
+
+  function setOverall(status, detail) {
+    const el = document.getElementById('overall');
+    el.dataset.status = status;
+    document.getElementById('overallTitle').textContent = TITLES[status] || status;
+    document.getElementById('overallDetail').textContent = detail || DETAILS[status] || '';
+  }
+
+  function setCheck(id, status, stateText) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.dataset.status = status;
+    el.querySelector('.state').textContent = stateText || (CHECK_STATE[status] || status);
+  }
+
+  function mapCheck(value) {
+    if (value === 'ok') return 'ok';
+    if (value === 'fail') return 'down';
+    if (typeof value === 'string' && value.startsWith('http_5')) return 'down';
+    if (typeof value === 'string' && value.startsWith('http_')) return 'degraded';
+    return 'loading';
+  }
+
+  function formatUptime(seconds) {
+    if (!seconds || seconds < 60) return (seconds || 0) + 's';
+    if (seconds < 3600) return Math.floor(seconds/60) + 'm';
+    if (seconds < 86400) return Math.floor(seconds/3600) + 'h ' + Math.floor((seconds%3600)/60) + 'm';
+    return Math.floor(seconds/86400) + 'j ' + Math.floor((seconds%86400)/3600) + 'h';
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch('/api/health?deep=1', { cache: 'no-store' });
+      const data = await res.json();
+
+      setOverall(data.status || 'ok', DETAILS[data.status]);
+      setCheck('chk-app', res.ok && data.status !== 'down' ? 'ok' : 'down', res.ok ? 'OK' : 'HTTP ' + res.status);
+      setCheck('chk-supabase', mapCheck(data.checks?.supabase), (data.checks?.supabase || '—').toUpperCase());
+      setCheck('chk-stripe', mapCheck(data.checks?.stripe), (data.checks?.stripe || '—').toUpperCase());
+
+      document.getElementById('m-region').textContent = data.region || '—';
+      document.getElementById('m-env').textContent = data.env || '—';
+      document.getElementById('m-uptime').textContent = formatUptime(data.uptime_s);
+      document.getElementById('m-commit').textContent = data.commit || '—';
+    } catch (e) {
+      setOverall('down', 'La page de statut elle-même est injoignable. Probable incident réseau.');
+      setCheck('chk-app', 'down', 'UNREACHABLE');
+      setCheck('chk-supabase', 'loading', '—');
+      setCheck('chk-stripe', 'loading', '—');
+    }
+  }
+
+  poll();
+  setInterval(poll, 30000);
+})();
+</script>
+</body>
+</html>

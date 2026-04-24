@@ -43,6 +43,7 @@
     { "source": "/signup",      "destination": "/app.html" },
     { "source": "/join",        "destination": "/app.html" },
     { "source": "/dashboard/mon-compte", "destination": "/app.html?view=mon-compte&tab=abonnement" },
+    { "source": "/status", "destination": "/status.html" },
     { "source": "/coach/:slug", "destination": "/coach.html" }
   ],
   "headers": [

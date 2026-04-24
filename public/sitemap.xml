@@ -30,4 +30,10 @@
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>https://rbperform.app/status</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.4</priority>
+  </url>
 </urlset>
