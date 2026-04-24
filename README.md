@@ -1,6 +1,14 @@
 # RB Perform — Coaching Premium SaaS
 
+[![CI](https://github.com/rbperformancee/rb-performance-fitcoach/actions/workflows/ci.yml/badge.svg)](https://github.com/rbperformancee/rb-performance-fitcoach/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/rbperformancee/rb-performance-fitcoach/actions/workflows/codeql.yml/badge.svg)](https://github.com/rbperformancee/rb-performance-fitcoach/actions/workflows/codeql.yml)
+[![Status](https://img.shields.io/website?url=https%3A%2F%2Frbperform.app%2Fapi%2Fhealth&label=status&up_message=online&up_color=brightgreen&down_message=down&down_color=red)](https://rbperform.app/status)
+[![Security policy](https://img.shields.io/badge/security-policy-blue)](./.github/SECURITY.md)
+[![License: Proprietary](https://img.shields.io/badge/license-proprietary-lightgrey)](./LICENSE)
+
 Application PWA de coaching sportif premium. Multi-tenant, white label, Mistral AI, Supabase.
+
+> 🔴 **Prod** : https://rbperform.app — status en temps réel : https://rbperform.app/status
 
 ---
 
