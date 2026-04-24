@@ -160,7 +160,11 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'Webhook secret not configured' });
     }
     try {
-      event = getStripe().webhooks.constructEvent(rawBody, sig, webhookSecret);
+      // Explicit 300 s tolerance (Stripe default): events older than this
+      // are rejected as replay attempts. Stripe's own signature generator
+      // embeds a Unix timestamp in the `t=` field of the Stripe-Signature
+      // header; constructEvent() compares it to Date.now() and throws.
+      event = getStripe().webhooks.constructEvent(rawBody, sig, webhookSecret, 300);
     } catch (err) {
       console.error('[WEBHOOK_SIG_INVALID] reason="' + err.message + '"');
       await captureException(err, { tags: { endpoint: 'webhook-stripe', stage: 'signature' } });

@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # npm dependencies — weekly security + version updates
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    labels:
+      - "dependencies"
+    # Group all non-breaking updates into one PR to reduce review noise
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    # Keep security updates as separate PRs so they jump the queue
+    ignore:
+      # react-scripts is semi-abandoned; let us pin it manually
+      - dependency-name: "react-scripts"
+
+  # GitHub Actions (if ever added)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore(ci)"
+    labels:
+      - "dependencies"
+      - "ci"
