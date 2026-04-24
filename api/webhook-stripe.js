@@ -298,7 +298,76 @@ module.exports = async (req, res) => {
       return res.status(200).json({ ok: true });
     }
 
-    // Event non géré — acknowledge quand même
+    // ===== INVOICE PAYMENT FAILED — CHURN SIGNAL =====
+    if (event.type === 'invoice.payment_failed') {
+      const invoice = event.data.object;
+      const customerId = invoice.customer;
+      const attemptCount = invoice.attempt_count || 1;
+      const nextAttempt = invoice.next_payment_attempt
+        ? new Date(invoice.next_payment_attempt * 1000).toISOString()
+        : null;
+      const amountDue = (invoice.amount_due || 0) / 100;
+
+      console.error(
+        `[WEBHOOK_PAYMENT_FAILED] customerId=${customerId} ` +
+          `attempt=${attemptCount} amount=${amountDue}EUR next=${nextAttempt || 'none'}`
+      );
+
+      // Flag coach as at-risk but keep is_active true for now — Stripe
+      // retries automatically (Smart Retries). Only deactivate on the
+      // final subscription.deleted event.
+      try {
+        await getSupabase()
+          .from('coaches')
+          .update({ payment_issue: true, payment_issue_at: new Date().toISOString() })
+          .eq('stripe_customer_id', customerId);
+      } catch (dbErr) {
+        // Column may not exist yet — tolerate, the Sentry capture is the signal.
+        console.error(`[WEBHOOK_PAYMENT_FAILED_DB_WARN] ${dbErr.message}`);
+      }
+
+      await captureException(new Error(`Payment failed for ${customerId} (attempt ${attemptCount})`), {
+        tags: { endpoint: 'webhook-stripe', stage: 'payment_failed', severity: attemptCount >= 3 ? 'critical' : 'warning' },
+        extra: { customerId, attemptCount, amountDue, nextAttempt, invoiceId: invoice.id },
+      });
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // ===== SUBSCRIPTION UPDATED — PLAN CHANGE / STATUS TRANSITION =====
+    if (event.type === 'customer.subscription.updated') {
+      const subscription = event.data.object;
+      const customerId = subscription.customer;
+      const status = subscription.status;
+      const prevAttrs = event.data.previous_attributes || {};
+
+      console.log(`[webhook] Subscription updated: ${customerId} status=${status} changed=${Object.keys(prevAttrs).join(',')}`);
+
+      // Sync status + plan metadata best-effort. If new metadata carries
+      // a plan, update it; otherwise leave coach row untouched.
+      const updates = { stripe_subscription_status: status };
+      const md = subscription.metadata || {};
+      if (md.plan) updates.plan = md.plan;
+      if (md.locked_price) updates.locked_price = md.locked_price;
+
+      try {
+        const { error } = await getSupabase()
+          .from('coaches')
+          .update(updates)
+          .eq('stripe_customer_id', customerId);
+        if (error) throw error;
+      } catch (dbErr) {
+        console.error(`[WEBHOOK_SUB_UPDATE_DB_WARN] customerId=${customerId} ${dbErr.message}`);
+        // Don't capture — the stripe_subscription_status column may not
+        // exist yet; it's a best-effort sync. subscription.deleted and
+        // payment_failed are the hard signals.
+      }
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // Event non géré — acknowledge quand même pour que Stripe n'insiste pas
+    console.log(`[webhook] Unhandled event type: ${event.type}`);
     return res.status(200).json({ received: true });
 
   } catch (err) {
