@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, follow" />
+  <meta name="theme-color" content="#0d0d0d" />
   <title>RB PERFORM — Page introuvable</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -29,7 +31,7 @@
     }
     h1 { font-size: 64px; font-weight: 900; color: #02d1ba; margin-bottom: 8px; letter-spacing: -2px; }
     p { font-size: 16px; color: #6b7280; margin-bottom: 32px; }
-    a {
+    a.primary {
       background: #02d1ba;
       color: #0d0d0d;
       padding: 14px 32px;
@@ -39,6 +41,9 @@
       font-size: 15px;
       letter-spacing: 0.5px;
     }
+    .links { display:flex; flex-direction:column; gap:12px; align-items:center }
+    .secondary { font-size: 12px; color: rgba(255,255,255,0.25); text-decoration: none; letter-spacing: 0.04em; margin-top: 4px }
+    .secondary:hover { color: #02d1ba }
   </style>
 </head>
 <body>
@@ -49,6 +54,9 @@
   </div>
   <h1>404</h1>
   <p>Cette page n'existe pas.<br/>Retourne à l'app RB PERFORM.</p>
-  <a href="/">Retour à l'app</a>
+  <div class="links">
+    <a href="/" class="primary">Retour à l'accueil</a>
+    <a href="/status" class="secondary">Tout va bien côté serveurs →</a>
+  </div>
 </body>
 </html>
