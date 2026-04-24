@@ -91,6 +91,13 @@ function rateLimit(req, { max = 20, windowMs = 3600000 } = {}) {
  * Envoie la reponse d'erreur si echec, retourne true si OK.
  */
 function secureRequest(req, res, opts = {}) {
+  // Always echo / mint a request ID so clients can quote it when reporting issues
+  const reqId =
+    req.headers["x-request-id"] ||
+    req.headers["x-vercel-id"] ||
+    Math.random().toString(36).slice(2, 10);
+  res.setHeader("X-Request-ID", String(reqId).slice(0, 48));
+
   // Verifier origin (sauf OPTIONS CORS preflight)
   if (req.method !== "OPTIONS" && !isOriginAllowed(req)) {
     res.status(403).json({ error: "Origin not allowed" });
@@ -111,4 +118,37 @@ function secureRequest(req, res, opts = {}) {
   return true;
 }
 
-module.exports = { isOriginAllowed, rateLimit, secureRequest, getIP };
+/**
+ * Request ID correlation — mints or echoes a short request ID, sets it on
+ * the response header, and returns it for use in structured logs.
+ *
+ * Vercel already generates an `x-vercel-id` header internally; we surface
+ * it as `x-request-id` (industry-standard name) + fallback to our own
+ * 8-char random so callers can quote it back to us when reporting issues.
+ */
+function attachRequestId(req, res) {
+  const incoming =
+    req.headers["x-request-id"] ||
+    req.headers["x-vercel-id"] ||
+    Math.random().toString(36).slice(2, 10);
+  const reqId = String(incoming).slice(0, 48);
+  res.setHeader("X-Request-ID", reqId);
+  return reqId;
+}
+
+/**
+ * Cache CORS preflight for a day — browsers won't resend the OPTIONS on every
+ * fetch from the same origin. Call inside the OPTIONS branch before returning.
+ */
+function setPreflightCache(res, maxAgeSeconds = 86400) {
+  res.setHeader("Access-Control-Max-Age", String(maxAgeSeconds));
+}
+
+module.exports = {
+  isOriginAllowed,
+  rateLimit,
+  secureRequest,
+  getIP,
+  attachRequestId,
+  setPreflightCache,
+};
