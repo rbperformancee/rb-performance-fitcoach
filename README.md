@@ -8,13 +8,14 @@ Application PWA de coaching sportif premium. Multi-tenant, white label, Mistral 
 
 - **Frontend** : React 18 (CRA) + lazy loading + Suspense
 - **Backend** : Supabase (Postgres + Auth + Edge Functions + Storage)
-- **Paiements** : hors-app (traites sur le site de vente rbperform.app uniquement)
+- **Paiements** : Stripe (Checkout, Payment Links, Customer Portal, webhooks avec signature verification + 300s tolerance)
 - **AI** : Mistral La Plateforme (voice nutrition + FAQ chatbot)
 - **Food DB** : Edamam Nutrition API
-- **Hosting** : Vercel (frontend + Edge serverless)
+- **Hosting** : Vercel (frontend + serverless — `@sentry/browser` lazy-loaded, three.js lazy + skipped on `prefers-reduced-motion`)
 - **Notifications** : Web Push + VAPID + Service Worker
-- **Monitoring** : Sentry (lazy-loaded)
-- **Tests** : Playwright E2E + custom health-check
+- **Email** : Resend (transactionnel webhook welcome) + Zoho SMTP (waitlist + client notifications)
+- **Monitoring** : Sentry frontend + backend (fetch-based envelope, zero dep), structured logs, `/api/health` + `/status` page
+- **Tests** : Playwright E2E (59 pass, 3 test.fixme) + custom health-check
 - **i18n** : FR (default) + EN (toggle in profile)
 
 ---
@@ -225,10 +226,22 @@ npm run test:e2e:headed # Playwright avec UI
 
 ## 📚 Documentation supplementaire
 
-- `LAUNCH_CHECKLIST.md` — audit pre-launch (perf, UX, PWA, SEO, a11y)
-- `SECURITY_AUDIT.md` — 14 failles fix + actions manuelles
+- [`CHANGELOG.md`](./CHANGELOG.md) — historique des releases (Keep a Changelog format)
+- [`LAUNCH_CHECKLIST.md`](./LAUNCH_CHECKLIST.md) — audit pre-launch (perf, UX, PWA, SEO, a11y)
+- [`SECURITY_AUDIT.md`](./SECURITY_AUDIT.md) — 14 failles fix + actions manuelles
+- [`docs/RUNBOOK.md`](./docs/RUNBOOK.md) — incident response playbook (7 scenarios)
+- [`.github/SECURITY.md`](./.github/SECURITY.md) — disclosure policy + scope
+- [`public/.well-known/security.txt`](./public/.well-known/security.txt) — RFC 9116 contact file
 - `scripts/README-tests.md` — guide health-check
 - `supabase/migrations/*.sql` — schemas + RLS + triggers (lire dans l'ordre 001 → 009)
+
+## 🩺 Operations
+
+- **Status public** : [rbperform.app/status](https://rbperform.app/status) (auto-refresh 30s)
+- **Health endpoint** : `GET /api/health` (liveness) ou `?deep=1` (readiness — checke Supabase + Stripe)
+- **Observabilite** : Sentry frontend + 16 endpoints `/api/*` + 7 crons (tags: `endpoint`, `stage`, `plan`)
+- **Logs structures** : `[WAITLIST_*]`, `[FOUNDING_WAITLIST_*]`, `[WEBHOOK_*]`, `[CRON_*_FAILED]` — grep dans `vercel logs --prod`
+- **Incident response** : suivre `docs/RUNBOOK.md`
 
 ---
 
