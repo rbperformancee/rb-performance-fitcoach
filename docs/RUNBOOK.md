@@ -152,6 +152,35 @@ curl -s "https://rbperform.app/api/cron-relance" \
 
 ---
 
+## 🚨 Symptôme 7bis — CI red on main (post-deploy smoke failed)
+
+La CI GitHub `smoke-prod` a détecté un endpoint cassé après un deploy.
+
+### Diagnostic
+
+```bash
+# Rejouer localement pour voir quel check est red
+npm run check:deploy
+```
+
+### Causes fréquentes
+
+| Symptôme dans check:deploy | Cause | Action |
+|---|---|---|
+| `/api/health?deep=1` → not ok | Supabase ou Stripe injoignable | Voir symptôme 4 |
+| `/api/billing-portal no auth` got 500 (attendu 401) | env var `STRIPE_SECRET_KEY` ou `SUPABASE_SERVICE_ROLE_KEY` manquante | `vercel env ls production \| grep -i stripe` |
+| `/api/webhook bad sig` got 500 (attendu 400) | `stripe` package non installé ou `STRIPE_WEBHOOK_SECRET` manquant | Voir historique `b25e69fd` (lazy-init fix) |
+| CSP header missing | Mauvaise config `vercel.json` | Re-check `vercel.json` headers section |
+
+### Rollback d'urgence
+
+```bash
+# Revenir au dernier deploy Ready précédent
+vercel rollback <url-of-previous-good-deploy>
+```
+
+---
+
 ## 🚨 Symptôme 7 — Alertes Sentry volumétriques (spam d'événements)
 
 ### Diagnostic
