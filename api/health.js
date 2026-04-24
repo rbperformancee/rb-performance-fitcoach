@@ -46,39 +46,29 @@ module.exports = async (req, res) => {
   body.checks = {};
   const supaUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
 
-  // Supabase check — the auth health endpoint doesn't require a key
-  if (supaUrl) {
+  // Reachability probe: treat 2xx, 401, 404 as "reachable" — we only want
+  // to know the network path + TLS handshake work, not that we can auth.
+  async function ping(url, opts = {}) {
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 3000);
-      const r = await fetch(`${supaUrl}/auth/v1/health`, { signal: ctrl.signal });
+      const r = await fetch(url, { signal: ctrl.signal, ...opts });
       clearTimeout(t);
-      body.checks.supabase = r.ok ? 'ok' : `http_${r.status}`;
-    } catch (e) {
-      body.checks.supabase = 'fail';
+      if (r.ok || r.status === 401 || r.status === 404) return 'ok';
+      if (r.status >= 500) return `http_${r.status}`;
+      return `http_${r.status}`;
+    } catch {
+      return 'fail';
     }
-  } else {
-    body.checks.supabase = 'not_configured';
   }
 
-  // Stripe check — GET /v1/balance needs auth, but a raw GET on /v1/ returns 404
-  // from their CDN which still proves the network path works. Use a small
-  // public endpoint that 200s without auth.
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 3000);
-    const r = await fetch('https://api.stripe.com/v1/', { signal: ctrl.signal, method: 'HEAD' });
-    clearTimeout(t);
-    // Stripe returns 401 for HEAD without auth — treat as "reachable".
-    body.checks.stripe = r.status === 401 || r.ok ? 'ok' : `http_${r.status}`;
-  } catch (e) {
-    body.checks.stripe = 'fail';
-  }
+  body.checks.supabase = supaUrl ? await ping(`${supaUrl}/auth/v1/settings`) : 'not_configured';
+  body.checks.stripe = await ping('https://api.stripe.com/v1/', { method: 'HEAD' });
 
-  // Global status based on critical deps
+  // Global status based on critical deps (Supabase only — Stripe is a nice-to-have)
   const critical = [body.checks.supabase];
   const anyDown = critical.some((c) => c === 'fail' || (typeof c === 'string' && c.startsWith('http_5')));
-  const anyDegraded = critical.some((c) => typeof c === 'string' && c.startsWith('http_'));
+  const anyDegraded = critical.some((c) => typeof c === 'string' && c !== 'ok' && c !== 'not_configured' && !c.startsWith('http_5') && c !== 'fail');
 
   if (anyDown) {
     body.status = 'down';
