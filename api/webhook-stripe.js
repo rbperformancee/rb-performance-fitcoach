@@ -39,67 +39,212 @@ const PLAN_LABEL = {
   elite: 'Elite',
 };
 
-function buildWelcomeSubject(plan) {
-  const label = PLAN_LABEL[plan] || 'RB Perform';
-  if (plan === 'founding' || plan === 'founder') {
-    return `Bienvenue parmi les Founders — finalise ton acces`;
-  }
-  return `Bienvenue sur RB Perform ${label} — finalise ton acces`;
+function firstNameFrom(nameOrEmail) {
+  if (!nameOrEmail) return '';
+  // Prefer the Stripe-provided full name. Fall back to email local-part.
+  const raw = nameOrEmail.includes('@') ? nameOrEmail.split('@')[0] : nameOrEmail;
+  const first = raw.replace(/[._-]/g, ' ').split(' ')[0];
+  return first ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() : '';
 }
 
-function buildWelcomeHtml({ plan, lockedPrice, actionLink }) {
+function buildWelcomeSubject(plan, firstName) {
+  const isFounder = plan === 'founding' || plan === 'founder';
+  const label = PLAN_LABEL[plan] || 'RB Perform';
+  const prefix = firstName ? `${firstName}, ` : '';
+  return isFounder
+    ? `${prefix}bienvenue parmi les 30 Founders`
+    : `${prefix}bienvenue sur RB Perform ${label}`;
+}
+
+function buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }) {
   const label = PLAN_LABEL[plan] || 'RB Perform';
   const isFounder = plan === 'founding' || plan === 'founder';
-  const lockNote = isFounder && lockedPrice
-    ? `<div style="margin-top:18px;padding:12px 16px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.2);border-radius:10px;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5">
-         <strong style="color:#02d1ba">Ton prix est verrouille a vie : ${lockedPrice}EUR/mois.</strong><br>
-         Meme si RB Perform passe a 299EUR puis 499EUR, ton tarif ne bougera pas.
-       </div>`
-    : '';
+  const hi = firstName ? `Salut ${firstName},` : 'Salut,';
 
-  const heroLine = isFounder
-    ? `Tu fais partie des <span style="color:#02d1ba">30 fondateurs</span>.`
-    : `Ton acces <span style="color:#02d1ba">${label}</span> est pret.`;
-
-  return `<!DOCTYPE html>
+  // ---------- FOUNDER VARIANT ----------
+  if (isFounder) {
+    const priceStr = lockedPrice ? `${lockedPrice}€/mois` : '199€/mois';
+    return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif">
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#e5e5e5">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px">
 <tr><td align="center">
-<table width="500" cellpadding="0" cellspacing="0" style="max-width:500px;width:100%">
+<table width="540" cellpadding="0" cellspacing="0" style="max-width:540px;width:100%">
+
+  <!-- Header -->
+  <tr><td align="center" style="padding-bottom:28px">
+    <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.55);margin-bottom:8px">Founding Member</div>
+    <div style="font-size:26px;font-weight:900;color:#f0f0f0;letter-spacing:-1.2px">RB<span style="color:#02d1ba">.</span>Perform</div>
+  </td></tr>
+
+  <!-- Hero card -->
+  <tr><td style="background:#111;border-radius:22px;border:1px solid rgba(2,209,186,0.15);padding:40px 34px">
+    <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:16px">${hi}</div>
+    <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-.8px;line-height:1.2;margin-bottom:16px">
+      Tu es <span style="color:#02d1ba">fondateur</span>.<br>
+      Voici ce que ça change.
+    </div>
+    <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.7;margin:0 0 28px">
+      Ton paiement est confirmé. Tu fais officiellement partie des 30 coachs qui ont posé les fondations de RB Perform — avec un prix verrouillé et un accès direct à moi pendant 90 jours.
+    </p>
+
+    <!-- Unlock list -->
+    <div style="background:rgba(2,209,186,0.04);border:1px solid rgba(2,209,186,0.15);border-radius:14px;padding:20px 22px;margin-bottom:28px">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#02d1ba;font-weight:700;margin-bottom:12px">Ce que tu débloques</div>
+      <table cellpadding="0" cellspacing="0" style="width:100%">
+        <tr><td style="padding:6px 0;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5">✓ &nbsp;Accès complet au plan Pro (clients illimités)</td></tr>
+        <tr><td style="padding:6px 0;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5">✓ &nbsp;Anti-churn IA — 7 signaux par client en continu</td></tr>
+        <tr><td style="padding:6px 0;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5">✓ &nbsp;WhatsApp direct avec moi (Rayan) pendant 90 jours</td></tr>
+        <tr><td style="padding:6px 0;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5">✓ &nbsp;Groupe privé Founders + vote sur la roadmap</td></tr>
+        <tr><td style="padding:6px 0;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5">✓ &nbsp;Badge « Founding Member » visible par tes clients</td></tr>
+      </table>
+    </div>
+
+    <!-- 3 Steps -->
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4);font-weight:700;margin-bottom:14px">Tes 3 prochaines étapes</div>
+
+    <div style="margin-bottom:12px;padding:16px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px">
+      <div style="font-size:11px;color:#02d1ba;font-weight:700;margin-bottom:6px">ÉTAPE 1 — 30 SECONDES</div>
+      <div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:4px">Définis ton mot de passe</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:12px">Le lien ci-dessous est valable 24h. Au-delà, demande un nouveau lien sur rbperform.app/login.</div>
+      <a href="${actionLink}" style="display:inline-block;background:#02d1ba;color:#000;font-size:12px;font-weight:800;text-decoration:none;padding:12px 26px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase">Créer mon accès</a>
+    </div>
+
+    <div style="margin-bottom:12px;padding:16px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px">
+      <div style="font-size:11px;color:#02d1ba;font-weight:700;margin-bottom:6px">ÉTAPE 2 — 1 MINUTE</div>
+      <div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:6px">Installe l'app sur ton iPhone / Android</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7">
+        <strong style="color:rgba(255,255,255,0.7)">iPhone :</strong> Safari → rbperform.app/login → Partager → Sur l'écran d'accueil<br>
+        <strong style="color:rgba(255,255,255,0.7)">Android :</strong> Chrome → rbperform.app/login → Menu → Installer l'application
+      </div>
+    </div>
+
+    <div style="margin-bottom:8px;padding:16px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px">
+      <div style="font-size:11px;color:#02d1ba;font-weight:700;margin-bottom:6px">ÉTAPE 3 — 20 MINUTES</div>
+      <div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:6px">Réserve ton onboarding 1:1</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7">
+        Réponds simplement à cet email avec 3 créneaux où tu es dispo cette semaine. Je te rappelle, on configure ton branding, on importe ton premier client, tu repars opérationnel.
+      </div>
+    </div>
+
+    <!-- Price lock -->
+    <div style="margin-top:24px;padding:16px 20px;background:linear-gradient(135deg,rgba(2,209,186,0.08),rgba(2,209,186,0.02));border:1px solid rgba(2,209,186,0.25);border-radius:12px">
+      <div style="font-size:11px;color:#02d1ba;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">🔒 Prix verrouillé à vie</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);line-height:1.6">
+        Ton tarif reste à <strong style="color:#02d1ba">${priceStr}</strong> tant que ton abonnement est actif — même quand le Pro public passera à 299€ puis 499€. C'est la seule promesse que je te fais par écrit.
+      </div>
+    </div>
+  </td></tr>
+
+  <!-- Signature -->
+  <tr><td style="padding:32px 0 0">
+    <table cellpadding="0" cellspacing="0" style="width:100%">
+      <tr>
+        <td style="width:56px;vertical-align:top;padding-right:14px">
+          <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#02d1ba,#02d1baaa);color:#000;font-size:20px;font-weight:900;text-align:center;line-height:56px;letter-spacing:-.5px">RB</div>
+        </td>
+        <td style="vertical-align:top">
+          <div style="font-size:14px;color:#fff;font-weight:700;margin-bottom:2px">Rayan Bonte</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:6px">Fondateur — RB Perform</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6">Ce mail arrive de ma boîte perso. Réponds directement — je lis tout, je réponds dans les 24h (souvent dans l'heure en semaine).</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding:32px 0 0;text-align:center">
+    <div style="font-size:10px;color:rgba(255,255,255,0.18);line-height:1.7">
+      RB Perform · SIRET 990 637 803 00018 · 10 Rue Cardinale, 84000 Avignon<br>
+      <a href="https://rbperform.app/legal.html#cgu-founder" style="color:rgba(2,209,186,0.45);text-decoration:none">CGV Founder (12 mois)</a>
+      &nbsp;·&nbsp;
+      <a href="https://rbperform.app/legal.html#rgpd" style="color:rgba(2,209,186,0.45);text-decoration:none">RGPD</a>
+      &nbsp;·&nbsp;
+      <a href="https://rbperform.app/status" style="color:rgba(2,209,186,0.45);text-decoration:none">Statut plateforme</a>
+    </div>
+  </td></tr>
+
+</table>
+</td></tr></table></body></html>`;
+  }
+
+  // ---------- STANDARD VARIANT (Starter / Pro / Elite) ----------
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#e5e5e5">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px">
+<tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%">
+
   <tr><td align="center" style="padding-bottom:24px">
-    <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.5);margin-bottom:6px">Acces ${label}</div>
+    <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.5);margin-bottom:6px">Accès ${label}</div>
     <div style="font-size:24px;font-weight:900;color:#f0f0f0;letter-spacing:-1px">RB<span style="color:#02d1ba">.</span>Perform</div>
   </td></tr>
-  <tr><td style="background:#111;border-radius:20px;border:1px solid rgba(255,255,255,0.06);padding:40px 32px">
-    <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:16px;line-height:1.3">${heroLine}</div>
-    <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.7;margin:0 0 24px">
-      Ton paiement est confirme. Il ne te reste plus qu'a definir ton mot de passe pour acceder a ton dashboard coach.
-    </p>
-    <div style="text-align:center;margin:28px 0">
-      <a href="${actionLink}" style="display:inline-block;background:#02d1ba;color:#000;font-size:13px;font-weight:800;text-decoration:none;padding:16px 32px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase">Finaliser mon acces</a>
+
+  <tr><td style="background:#111;border-radius:20px;border:1px solid rgba(255,255,255,0.06);padding:38px 32px">
+    <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:14px">${hi}</div>
+    <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.25;margin-bottom:16px">
+      Ton accès <span style="color:#02d1ba">${label}</span> est prêt.
     </div>
-    <p style="font-size:12px;color:rgba(255,255,255,0.3);line-height:1.6;margin:0 0 8px;text-align:center">
-      Ce lien est valable 24 heures. Au-dela, demande un nouveau lien sur <a href="https://rbperform.app/login" style="color:#02d1ba;text-decoration:none">rbperform.app/login</a>.
+    <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.7;margin:0 0 24px">
+      Paiement confirmé. Voici comment démarrer en moins de 5 minutes.
     </p>
-    ${lockNote}
+
+    <div style="margin-bottom:10px;padding:14px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px">
+      <div style="font-size:11px;color:#02d1ba;font-weight:700;margin-bottom:4px">1 — Définis ton mot de passe</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:10px">Lien valable 24h.</div>
+      <a href="${actionLink}" style="display:inline-block;background:#02d1ba;color:#000;font-size:12px;font-weight:800;text-decoration:none;padding:11px 24px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase">Créer mon accès</a>
+    </div>
+
+    <div style="margin-bottom:10px;padding:14px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px">
+      <div style="font-size:11px;color:#02d1ba;font-weight:700;margin-bottom:4px">2 — Installe l'app</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.7">
+        iPhone (Safari) → Partager → Sur l'écran d'accueil<br>
+        Android (Chrome) → Menu → Installer l'application
+      </div>
+    </div>
+
+    <div style="margin-bottom:0;padding:14px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px">
+      <div style="font-size:11px;color:#02d1ba;font-weight:700;margin-bottom:4px">3 — Ajoute ton premier client</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.7">Dashboard → Clients → Inviter — tu envoies un code, il s'inscrit, tu vois tout remonter automatiquement.</div>
+    </div>
   </td></tr>
-  <tr><td style="padding:24px 0 0;text-align:center">
-    <div style="font-size:11px;color:rgba(255,255,255,0.2);line-height:1.6">
-      Une question ? Reponds a cet email ou ecris-nous a<br>
+
+  <tr><td style="padding:28px 0 0;text-align:center">
+    <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7">
+      Une question ? Réponds à ce mail, on te répond dans les 24h.<br>
       <a href="mailto:rb.performancee@gmail.com" style="color:rgba(2,209,186,0.6);text-decoration:none">rb.performancee@gmail.com</a>
     </div>
   </td></tr>
+
+  <tr><td style="padding:24px 0 0;text-align:center">
+    <div style="font-size:10px;color:rgba(255,255,255,0.18);line-height:1.7">
+      RB Perform · SIRET 990 637 803 00018 · 10 Rue Cardinale, 84000 Avignon<br>
+      <a href="https://rbperform.app/legal.html#cgu" style="color:rgba(2,209,186,0.45);text-decoration:none">CGV</a>
+      &nbsp;·&nbsp;
+      <a href="https://rbperform.app/legal.html#rgpd" style="color:rgba(2,209,186,0.45);text-decoration:none">RGPD</a>
+      &nbsp;·&nbsp;
+      <a href="https://rbperform.app/status" style="color:rgba(2,209,186,0.45);text-decoration:none">Statut</a>
+    </div>
+  </td></tr>
+
 </table>
 </td></tr></table></body></html>`;
 }
 
-async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink }) {
+async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerName }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.error('[webhook] RESEND_API_KEY missing, cannot send welcome email');
     return { ok: false, reason: 'no_key' };
   }
+  const isFounder = plan === 'founding' || plan === 'founder';
+  const firstName = firstNameFrom(customerName || to);
+  // Founders get the email from my personal address (replies route back to me).
+  // Standard gets noreply + Reply-To set so replies still land.
+  const from = isFounder
+    ? 'Rayan Bonte <rayan@rbperform.com>'
+    : 'RB Perform <noreply@rbperform.com>';
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -108,10 +253,11 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'RB Perform <noreply@rbperform.com>',
+        from,
         to: [to],
-        subject: buildWelcomeSubject(plan),
-        html: buildWelcomeHtml({ plan, lockedPrice, actionLink }),
+        reply_to: 'rayan@rbperform.com',
+        subject: buildWelcomeSubject(plan, firstName),
+        html: buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }),
       }),
     });
     if (!res.ok) {
@@ -177,6 +323,7 @@ module.exports = async (req, res) => {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       const email = session.customer_email || session.customer_details?.email;
+      const customerName = session.customer_details?.name || null;
       const customerId = session.customer;
       const subscriptionId = session.subscription;
       const metadata = session.subscription_data?.metadata || session.metadata || {};
@@ -267,6 +414,7 @@ module.exports = async (req, res) => {
           plan,
           lockedPrice,
           actionLink: linkData.properties.action_link,
+          customerName,
         });
       } else {
         console.error(`[WEBHOOK_NO_ACTION_LINK] email=${email} — cannot send welcome, no magic link available`);
