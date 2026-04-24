@@ -38,9 +38,12 @@ test.describe("Founding Page", () => {
 
   test("CTA button exists and is clickable", async ({ page }) => {
     await page.goto("/founding.html");
-    const cta = page.locator("#checkoutBtn");
+    // Main CTA currently routes to waitlist (Payment Link shared in DM only
+    // until app stabilises — see chore commit 4001c20c).
+    const cta = page.locator("a.cta").first();
     await expect(cta).toBeVisible();
-    await expect(cta).toContainText("Founding Coachs");
+    await expect(cta).toHaveAttribute("href", "/waitlist");
+    await expect(cta).toContainText("Waitlist Founding");
   });
 
   test("9 feature checkmarks present", async ({ page }) => {

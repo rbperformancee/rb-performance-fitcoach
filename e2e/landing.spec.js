@@ -94,18 +94,18 @@ test.describe("Landing — CTAs", () => {
     expect(count).toBe(3);
   });
 
-  test("menu CTA links to /founding", async ({ page }) => {
+  test("menu CTA links to /waitlist", async ({ page }) => {
     await page.goto(LANDING);
     await page.locator("#burgerBtn").click();
     await page.waitForTimeout(300);
     const cta = page.locator(".menu-cta-btn");
-    await expect(cta).toHaveAttribute("href", "/founding");
+    await expect(cta).toHaveAttribute("href", "/waitlist");
   });
 
-  test("sticky CTA links to /founding", async ({ page }) => {
+  test("sticky CTA links to /waitlist", async ({ page }) => {
     await page.goto(LANDING);
     const sticky = page.locator(".sticky-cta .btn");
-    await expect(sticky).toHaveAttribute("href", "/founding");
+    await expect(sticky).toHaveAttribute("href", "/waitlist");
   });
 });
 
