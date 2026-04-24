@@ -2,8 +2,16 @@ import React, { useState, lazy, Suspense } from "react";
 import { LOGO_B64 } from "../utils/logo";
 
 // HeroBackground charge en lazy pour eviter d'alourdir le bundle principal
-// avec three.js (~150kb). Fallback : rien, la hero reste lisible sans WebGL.
+// avec three.js (~130KB gzipped). Fallback : rien, la hero reste lisible sans WebGL.
 const HeroBackground = lazy(() => import("./HeroBackground"));
+
+// Users with prefers-reduced-motion set (vestibular disorders, battery saver,
+// Low Power Mode iOS) should never pay the three.js download — skip the whole
+// chunk and let the hero fall back to its static gradient overlay.
+const REDUCE_MOTION =
+  typeof window !== "undefined" &&
+  window.matchMedia &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const G = "#02d1ba";
 const GOLD = "#f5c842";
@@ -77,10 +85,13 @@ export default function SaasLandingPage({ onSignup, onBack }) {
 
         {/* ===== HERO avec fond WebGL ===== */}
         <section style={{ position: "relative", minHeight: "100vh", background: "#080C14", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 60 }}>
-          {/* Fond WebGL anime (lazy-load, fallback invisible) */}
-          <Suspense fallback={null}>
-            <HeroBackground />
-          </Suspense>
+          {/* Fond WebGL anime (lazy-load, fallback invisible). Skipped entirely
+              when prefers-reduced-motion is set — three.js chunk never downloads. */}
+          {!REDUCE_MOTION && (
+            <Suspense fallback={null}>
+              <HeroBackground />
+            </Suspense>
+          )}
 
           {/* Overlay gradient doux pour lisibilite du texte */}
           <div style={{
