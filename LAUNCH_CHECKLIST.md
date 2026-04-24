@@ -1,7 +1,66 @@
 # RB Perform — Launch Checklist
 
-**Date :** 2026-04-12
-**Statut global :** 🟢 Pret au lancement (apres actions manuelles residuelles)
+**Date initiale :** 2026-04-12
+**Dernière révision :** 2026-04-25
+**Statut global :** 🟢 Prêt au lancement — webhook + welcome email + observabilité bout-en-bout
+
+---
+
+## 🔄 UPDATES DEPUIS 2026-04-12 (à lire en premier)
+
+### Stripe / Paiements
+- ✅ **`stripe` package** ajouté aux deps (était absent → tous les endpoints Stripe crashaient `FUNCTION_INVOCATION_FAILED`)
+- ✅ **Env vars prod** : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, 4× `STRIPE_PRICE_*` configurées
+- ✅ **`/api/billing-portal`** créé — coach self-service (annulation, CB, factures) via Stripe Customer Portal
+- ✅ **`/api/webhook-stripe`** — fix critique précédence operator sur `plan` resolution (tout coach était classé `'founding'` ou `'pro'` à tort) + envoi welcome email via Resend après `checkout.session.completed`
+- ✅ **Lazy-init Stripe client** sur les 4 endpoints (plus de crash module-load sur env manquante, 401/400 propres)
+- ✅ **URL webhook Live fixée** : Stripe Dashboard pointait vers `/api/webhook-strip` (typo sans "e") — corrigé
+- ⚠️ **Payment Links Starter/Pro/Elite/Founder** créés et vérifiés (Founder partagé DM-only, Starter/Pro/Elite inactifs côté UI)
+- ⚠️ **Metadata Founder Payment Link** : `plan=founding` + `locked_price=199` configurés côté Stripe
+
+### UI / Conversions
+- ✅ **Public CTAs → `/waitlist`** (landing Starter/Pro/Elite, founding main CTA). Stripe Payment Links partagés en DM uniquement jusqu'à stabilisation app (voir commit `4001c20c`)
+- ✅ **Ancres CGV** `#cgu-standards`, `#cgu-founder`, `#cgu-communes` pour référence depuis Stripe
+- ✅ **Rewrite `/dashboard/mon-compte?tab=abonnement`** pour return URL post-Stripe Portal, auto-ouvre la modale MonCompte sur l'onglet Abonnement
+
+### Legal
+- ✅ **Refactor CGV dual B2C/B2B** (03.A Standards, 03.B Founder, 03.C Communes) + section 04 DPA complète (10 articles)
+- ✅ **Adresse postale complète** (10 Rue Cardinale, 84000 Avignon) dans éditeur + responsable traitement + 3 footers
+- ✅ **JSON-LD fix** : Starter `149 → 199` (legacy pre-harmonisation)
+- ✅ **Obsidian `Legal-source.md`** créé comme source de vérité unique
+
+### Observabilité (frontend + backend)
+- ✅ **CSP fix** : `https://*.ingest.sentry.io` → `https://*.sentry.io` — le DSN est sur `*.ingest.de.sentry.io` (EU), CSP bloquait silencieusement toutes les captures frontend depuis 11 jours
+- ✅ **Sentry server-side** via helper `api/_sentry.js` (fetch-based, 0 dépendances) sur `waitlist`, `notify-founding`, `webhook-stripe` (8 stages taggés)
+- ✅ **Structured logs** `[WAITLIST_LOST]`, `[FOUNDING_WAITLIST_*]`, `[WEBHOOK_*]` pour grep/alert
+- ✅ **Sentry frontend** : `@sentry/react` → `@sentry/browser` (−26 KB raw)
+
+### Sécurité
+- ✅ **Rate-limits + origin check** ajoutés sur `send-welcome.js` et `demo-client.js`
+- ✅ **Bundle deps** : `stripe`, `browserslist-db` rafraîchis
+- ✅ **`.gitignore`** : untrack `.claude/scheduled_tasks.lock`
+
+### A11y / Perf / SEO
+- ✅ **Lighthouse Landing** : A11y 94 → **100** (aria-labels ROI sliders + fix console error `initStaticCursor` undefined)
+- ✅ **Founding** : ajout `<main>` landmark (A11y 89 → 92)
+- ✅ **Color-contrast critiques** : 3 violations ratio < 3.0 fixées (founding `.back`, `.cd-label`, legal `.legal-hero-date`)
+- ✅ **Sitemap/robots** : ajout `/waitlist`, Disallow `/dashboard/`, `/rejoindre/`, `/coach/`, `/link`
+- ⚠️ **Bundle size** : 172 → **228 KB gzipped** (+56 KB sur 2 semaines = nouvelles features). Budget 1000 KB raw respecté.
+- 🗑️ **Cleanup** : −2.9 MB vidéos orphelines, −63 KB images orphelines
+
+### Tests E2E
+- ✅ **Playwright suite** : 9 échecs → 0 (58 passed + 3 intentionally skipped via `test.fixme`)
+- Tests alignés avec routing `/waitlist` + `/login` pour app React
+
+### Actions toujours ouvertes (non-bloquantes pour Kevin lundi)
+- SPF DNS `rbperform.com` côté OVH : ajouter `include:_spf.resend.com` pour éliminer le spam risk des welcome emails
+- Webhook `customer.subscription.updated` (si plan change supporté un jour)
+- Stripe API version upgrade `clover → dahlia` (après 10 Founders onboardés)
+- Refacto tests e2e `test.fixme` (custom section switcher pointer events)
+
+---
+
+## CHECKLIST INITIALE (2026-04-12, snapshot historique)
 
 ---
 
