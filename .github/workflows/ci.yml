@@ -1,4 +1,4 @@
-name: CI — Build + Landing Audit + Health Check
+name: CI
 
 on:
   push:
@@ -6,37 +6,96 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    name: Build React App
+    name: Build + static checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci --no-audit --prefer-offline
+
+      - name: Syntax check all /api/*.js
+        run: |
+          set -e
+          for f in api/*.js api/cron/*.js; do
+            [ -f "$f" ] && node --check "$f" && echo "  ✓ $f"
+          done
+
+      - name: Validate vercel.json
+        run: node -e "JSON.parse(require('fs').readFileSync('vercel.json'))"
+
+      - name: Validate sitemap.xml well-formed
+        run: |
+          node -e "const x=require('fs').readFileSync('public/sitemap.xml','utf8'); if(!/^<\?xml/.test(x))throw new Error('not xml')"
+
+      - name: Validate security.txt (RFC 9116) present + Expires not lapsed
+        run: |
+          test -f public/.well-known/security.txt
+          grep -q "^Contact:" public/.well-known/security.txt
+          EXP=$(grep -oE "^Expires: [0-9TZ:.\-]+" public/.well-known/security.txt | cut -d' ' -f2)
+          node -e "const d=new Date('$EXP'); if(d<new Date())process.exit(1)" \
+            || (echo "::error::security.txt Expires has lapsed — bump it" && exit 1)
+
+      - name: Build (CRA)
         env:
-          CI: false
+          CI: "true"
+        run: npm run build
+
+      - name: Bundle budget — main.js gzipped < 250 KB
+        run: |
+          set -e
+          MAIN=$(ls build/static/js/main.*.js | head -1)
+          SIZE=$(gzip -9 -c "$MAIN" | wc -c)
+          KB=$((SIZE / 1024))
+          echo "main.js gzipped: ${KB} KB"
+          if [ "$KB" -ge 250 ]; then
+            echo "::error::main.js is ${KB} KB gzipped — budget is 250 KB"
+            exit 1
+          fi
+
+      - name: JSON-LD valid on landing
+        run: |
+          node -e "
+            const html = require('fs').readFileSync('public/landing.html','utf8');
+            const m = html.match(/<script type=\"application\\/ld\\+json\">\s*(\{[\s\S]+?\})\s*<\/script>/);
+            if (!m) throw new Error('no JSON-LD on landing');
+            JSON.parse(m[1]);
+          "
+
+      - name: No dangerouslySetInnerHTML in src/
+        run: |
+          if grep -rn "dangerouslySetInnerHTML" src/; then
+            echo "::error::dangerouslySetInnerHTML is forbidden in src/"
+            exit 1
+          fi
+
+      - name: No eval or new Function in src/ or api/
+        run: |
+          if grep -rnE "\beval\(|\bnew Function\(" src/ api/ 2>/dev/null; then
+            echo "::error::eval/new Function forbidden"
+            exit 1
+          fi
 
   landing-audit:
-    name: Landing Page Audit
+    name: Landing audit
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: ".nvmrc"
       - run: node scripts/landing-audit.js
-
-  health-check:
-    name: Health Check (static)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - run: node scripts/landing-audit.js --strict

@@ -247,5 +247,31 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
   tick(); setInterval(tick,1000);
 })();
 </script>
+
+<!-- Real-User Monitoring — see landing.html for the full pattern -->
+<script>
+(function(){
+  if (!('PerformanceObserver' in window) || !('sendBeacon' in navigator)) return;
+  var sent = {};
+  function report(name, value, rating) {
+    if (sent[name]) return; sent[name] = 1;
+    try {
+      var body = JSON.stringify({ name: name, value: Math.round(value*1000)/1000, rating: rating,
+        navigationType: (performance.getEntriesByType('navigation')[0] || {}).type || 'navigate',
+        url: location.pathname });
+      navigator.sendBeacon('/api/vitals', new Blob([body], { type: 'application/json' }));
+    } catch (e) {}
+  }
+  var lcpValue = 0, clsValue = 0;
+  try { new PerformanceObserver(function(list) { var e = list.getEntries(); lcpValue = e[e.length-1].renderTime || e[e.length-1].loadTime || 0; }).observe({ type: 'largest-contentful-paint', buffered: true }); } catch(e){}
+  try { new PerformanceObserver(function(list) { list.getEntries().forEach(function(e) { if(!e.hadRecentInput) clsValue += e.value; }); }).observe({ type: 'layout-shift', buffered: true }); } catch(e){}
+  try { new PerformanceObserver(function(list) { var e = list.getEntries().find(function(x){return x.name==='first-contentful-paint';}); if(e) report('FCP', e.startTime, e.startTime<1800?'good':e.startTime<3000?'needs-improvement':'poor'); }).observe({ type: 'paint', buffered: true }); } catch(e){}
+  try { var nav = performance.getEntriesByType('navigation')[0]; if (nav && nav.responseStart) { var t = nav.responseStart - nav.requestStart; report('TTFB', t, t<800?'good':t<1800?'needs-improvement':'poor'); } } catch(e){}
+  addEventListener('pagehide', function() {
+    if (lcpValue > 0) report('LCP', lcpValue, lcpValue<2500?'good':lcpValue<4000?'needs-improvement':'poor');
+    report('CLS', clsValue, clsValue<0.1?'good':clsValue<0.25?'needs-improvement':'poor');
+  }, { capture: true });
+})();
+</script>
 </body>
 </html>
