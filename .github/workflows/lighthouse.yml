@@ -1,0 +1,94 @@
+name: Lighthouse
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily audit at 05:00 UTC (07:00 Paris) — before peak traffic
+    - cron: "0 5 * * *"
+  # Run after deployment finishes on main push. Vercel auto-deploys
+  # take ~1 minute; we wait 90 s before auditing.
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    name: Lighthouse — prod budget gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Wait for Vercel deployment
+        if: github.event_name == 'push'
+        run: sleep 90
+
+      - name: Install lighthouse + chrome-launcher
+        run: npm i --no-save lighthouse@latest chrome-launcher@latest
+
+      - name: Audit landing.html (mobile)
+        run: |
+          cat > /tmp/lh.js <<'EOF'
+          const lighthouse = require('lighthouse').default;
+          const chromeLauncher = require('chrome-launcher');
+          const fs = require('fs');
+          (async () => {
+            const chrome = await chromeLauncher.launch({ chromeFlags: ['--headless=new', '--no-sandbox'] });
+            const targets = [
+              { name: 'landing',  url: 'https://rbperform.app/landing.html', mins: { perf: 85, a11y: 95, bp: 95, seo: 80 } },
+              { name: 'founding', url: 'https://rbperform.app/founding.html', mins: { perf: 85, a11y: 90, bp: 95, seo: 95 } },
+              { name: 'legal',    url: 'https://rbperform.app/legal.html',   mins: { perf: 75, a11y: 90, bp: 95, seo: 95 } },
+              { name: 'status',   url: 'https://rbperform.app/status',       mins: { perf: 85, a11y: 90, bp: 90, seo: 90 } },
+            ];
+            let failed = 0;
+            const summary = {};
+            for (const t of targets) {
+              try {
+                const res = await lighthouse(t.url, {
+                  logLevel: 'error',
+                  output: 'json',
+                  onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
+                  port: chrome.port,
+                  formFactor: 'mobile',
+                  screenEmulation: { mobile: true, width: 390, height: 844, deviceScaleFactor: 2, disabled: false },
+                  throttling: { rttMs: 150, throughputKbps: 1638.4, cpuSlowdownMultiplier: 4 },
+                });
+                const c = res.lhr.categories;
+                const scores = {
+                  perf: Math.round((c.performance.score || 0) * 100),
+                  a11y: Math.round((c.accessibility.score || 0) * 100),
+                  bp:   Math.round((c['best-practices'].score || 0) * 100),
+                  seo:  Math.round((c.seo.score || 0) * 100),
+                };
+                summary[t.name] = scores;
+                console.log(`${t.name}: perf=${scores.perf} a11y=${scores.a11y} bp=${scores.bp} seo=${scores.seo}`);
+                for (const key of ['perf','a11y','bp','seo']) {
+                  if (scores[key] < t.mins[key]) {
+                    console.error(`::error::${t.name} ${key} is ${scores[key]}, budget is ${t.mins[key]}`);
+                    failed++;
+                  }
+                }
+              } catch (e) {
+                console.error(`${t.name} audit crashed: ${e.message}`);
+                failed++;
+              }
+            }
+            await chrome.kill();
+            fs.writeFileSync('lighthouse-scores.json', JSON.stringify(summary, null, 2));
+            process.exit(failed ? 1 : 0);
+          })();
+          EOF
+          node /tmp/lh.js
+
+      - name: Upload scores as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-scores
+          path: lighthouse-scores.json
+          retention-days: 30
