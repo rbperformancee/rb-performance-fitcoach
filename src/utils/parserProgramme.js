@@ -30,7 +30,7 @@ function getVal(doc, id) {
  * Parse "8-10"   → { sets: null, reps: "8-10", rawReps: "8-10" }
  * Parse ""        → { sets: null, reps: null, rawReps: null }
  */
-function parseReps(raw) {
+export function parseReps(raw) {
   if (!raw || raw === "—" || raw === "") return { sets: null, reps: null, rawReps: null };
   const m = raw.match(/^(\d+)\s*[xX×]\s*(.+)$/);
   if (m) return { sets: parseInt(m[1], 10), reps: m[2].trim(), rawReps: raw };

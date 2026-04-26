@@ -41,6 +41,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "health": "node scripts/health-check.js",
+    "test": "react-scripts test --watchAll=false",
+    "test:watch": "react-scripts test",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:mobile": "playwright test --project=mobile-safari",
     "test:e2e:headed": "playwright test --headed --project=chromium",
