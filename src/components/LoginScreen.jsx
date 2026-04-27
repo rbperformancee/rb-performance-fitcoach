@@ -56,8 +56,14 @@ export function LoginScreen({ onBack }) {
   };
 
   // ===== CLIENT : verifier OTP =====
+  const verifyingRef = useRef(false);
+  const verifiedRef = useRef(false);
   const verifyOTP = async (code) => {
     if (code.length < 6) return;
+    // Bloque les appels concurrents (auto-verify au 6e chiffre + click bouton)
+    // et les retries apres succes (le 1er appel consomme le token).
+    if (verifyingRef.current || verifiedRef.current) return;
+    verifyingRef.current = true;
     setLoading(true);
     setError('');
     try {
@@ -67,24 +73,19 @@ export function LoginScreen({ onBack }) {
         type: 'email',
       });
       if (error) {
-        console.error('[OTP-DEBUG] verifyOtp error:', {
-          name: error.name,
-          message: error.message,
-          status: error.status,
-          code: error.code,
-          full: error,
-        });
-        setError('Code incorrect ou expire. Reessaie. (' + (error.code || error.status || error.message || 'unknown') + ')');
+        setError('Code incorrect ou expire. Reessaie.');
         setOtp('');
         setTimeout(() => otpRef.current?.focus(), 100);
       } else {
-        console.log('[OTP-DEBUG] verifyOtp success:', data);
+        // Succes → Supabase met a jour la session, App.jsx detecte et redirige.
+        // On lock la verification pour empecher tout retry qui ferait 403 sur
+        // le token deja consomme.
+        verifiedRef.current = true;
       }
-      // Succes → Supabase met a jour la session, App.jsx detecte et redirige
-    } catch (e) {
-      console.error('[OTP-DEBUG] verifyOtp exception:', e);
-      setError('Erreur de verification : ' + (e?.message || 'unknown'));
+    } catch (_) {
+      setError('Erreur de verification');
     }
+    verifyingRef.current = false;
     setLoading(false);
   };
 
