@@ -1311,6 +1311,18 @@ const MESSAGES = {
     "cd.cmd_exit": "Quitter le dashboard coach",
     "cd.cmd_group_navigation": "Navigation",
     "cd.cmd_group_actions": "Actions",
+    // CoachSupplementsPanel
+    "csp.loading": "Chargement...",
+    "csp.section_title": "Complements du client",
+    "csp.prescribed_by_coach": "Prescrit par toi",
+    "csp.added_by_client": "Ajoute par le client",
+    "csp.taken_count": "{n}/7j pris",
+    "csp.empty": "Aucun complement. Ajoute-en pour ton client.",
+    "csp.placeholder_name": "Nom (ex: Creatine)",
+    "csp.placeholder_dose": "Dose (ex: 5g)",
+    "csp.btn_cancel": "Annuler",
+    "csp.btn_add": "Ajouter",
+    "csp.btn_prescribe": "+ Prescrire un complement",
   },
   en: {
     // Navigation
@@ -2600,6 +2612,18 @@ const MESSAGES = {
     "cd.cmd_exit": "Exit coach dashboard",
     "cd.cmd_group_navigation": "Navigation",
     "cd.cmd_group_actions": "Actions",
+    // CoachSupplementsPanel
+    "csp.loading": "Loading...",
+    "csp.section_title": "Client supplements",
+    "csp.prescribed_by_coach": "Prescribed by you",
+    "csp.added_by_client": "Added by the client",
+    "csp.taken_count": "{n}/7d taken",
+    "csp.empty": "No supplement. Add some for your client.",
+    "csp.placeholder_name": "Name (e.g. Creatine)",
+    "csp.placeholder_dose": "Dose (e.g. 5g)",
+    "csp.btn_cancel": "Cancel",
+    "csp.btn_add": "Add",
+    "csp.btn_prescribe": "+ Prescribe a supplement",
   },
 };
 

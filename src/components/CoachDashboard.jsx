@@ -403,6 +403,7 @@ function CreneauxManager() {
 
 /* ── Panel supplements cote coach ── */
 function CoachSupplementsPanel({ clientId }) {
+  const t = useT();
   const [supplements, setSupplements] = React.useState([]);
   const [logs7d, setLogs7d] = React.useState({});
   const [loading, setLoading] = React.useState(true);
@@ -435,18 +436,18 @@ function CoachSupplementsPanel({ clientId }) {
     load();
   };
 
-  if (loading) return <div style={{ padding: 20, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 20, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>{t("csp.loading")}</div>;
 
   return (
     <div style={{ animation: "cpFadeUp 0.3s ease both" }}>
-      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 16 }}>Complements du client</div>
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 16 }}>{t("csp.section_title")}</div>
 
       {supplements.map(sup => (
         <div key={sup.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, marginBottom: 6 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{sup.name}</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-              {sup.dose || "—"} · {sup.added_by === "coach" ? "Prescrit par toi" : "Ajoute par le client"} · <span style={{ color: (logs7d[sup.id] || 0) >= 5 ? "#02d1ba" : "rgba(255,255,255,0.3)" }}>{logs7d[sup.id] || 0}/7j pris</span>
+              {sup.dose || "—"} · {sup.added_by === "coach" ? t("csp.prescribed_by_coach") : t("csp.added_by_client")} · <span style={{ color: (logs7d[sup.id] || 0) >= 5 ? "#02d1ba" : "rgba(255,255,255,0.3)" }}>{fillTpl(t("csp.taken_count"), { n: logs7d[sup.id] || 0 })}</span>
             </div>
           </div>
           <button onClick={() => removeSupplement(sup.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.15)", cursor: "pointer", fontSize: 16 }}>×</button>
@@ -454,20 +455,20 @@ function CoachSupplementsPanel({ clientId }) {
       ))}
 
       {supplements.length === 0 && !showAdd && (
-        <div style={{ padding: "24px 16px", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Aucun complement. Ajoute-en pour ton client.</div>
+        <div style={{ padding: "24px 16px", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>{t("csp.empty")}</div>
       )}
 
       {showAdd ? (
         <div style={{ marginTop: 8, padding: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
-          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom (ex: Creatine)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 6, fontFamily: "inherit" }} />
-          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder="Dose (ex: 5g)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 10, fontFamily: "inherit" }} />
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t("csp.placeholder_name")} style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 6, fontFamily: "inherit" }} />
+          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder={t("csp.placeholder_dose")} style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 10, fontFamily: "inherit" }} />
           <div style={{ display: "flex", gap: 6 }}>
-            <button onClick={() => { setShowAdd(false); setNewName(""); setNewDose(""); }} style={{ flex: 1, padding: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
-            <button onClick={addSupplement} disabled={!newName.trim()} style={{ flex: 1, padding: 10, background: newName.trim() ? "#02d1ba" : "rgba(255,255,255,0.04)", border: "none", borderRadius: 8, color: newName.trim() ? "#000" : "rgba(255,255,255,0.2)", fontSize: 11, fontWeight: 800, cursor: newName.trim() ? "pointer" : "not-allowed", fontFamily: "inherit" }}>Ajouter</button>
+            <button onClick={() => { setShowAdd(false); setNewName(""); setNewDose(""); }} style={{ flex: 1, padding: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{t("csp.btn_cancel")}</button>
+            <button onClick={addSupplement} disabled={!newName.trim()} style={{ flex: 1, padding: 10, background: newName.trim() ? "#02d1ba" : "rgba(255,255,255,0.04)", border: "none", borderRadius: 8, color: newName.trim() ? "#000" : "rgba(255,255,255,0.2)", fontSize: 11, fontWeight: 800, cursor: newName.trim() ? "pointer" : "not-allowed", fontFamily: "inherit" }}>{t("csp.btn_add")}</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => setShowAdd(true)} style={{ width: "100%", marginTop: 8, padding: 12, background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 12, color: "#02d1ba", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Prescrire un complement</button>
+        <button onClick={() => setShowAdd(true)} style={{ width: "100%", marginTop: 8, padding: 12, background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 12, color: "#02d1ba", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{t("csp.btn_prescribe")}</button>
       )}
     </div>
   );
