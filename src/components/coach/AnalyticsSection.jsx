@@ -11,12 +11,19 @@ import {
 } from "../../lib/coachAnalytics";
 import AppIcon from "../AppIcon";
 import Spinner from "../Spinner";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 const ORANGE = "#00C9A7";
 const VIOLET = "#00C9A7";
 const RED = "#ff6b6b";
-const JOURS = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
+const DAY_KEYS = ["an.day_dim", "an.day_lun", "an.day_mar", "an.day_mer", "an.day_jeu", "an.day_ven", "an.day_sam"];
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * AnalyticsSection — vue dediee analytics avancees du coach.
@@ -24,6 +31,7 @@ const JOURS = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
  * evolution globale clientele.
  */
 export default function AnalyticsSection({ coachId, clients = [], onClose }) {
+  const t = useT();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({});
   const [period, setPeriod] = useState(90); // 30/90/180/365
@@ -105,12 +113,12 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
       {/* Header sticky */}
       <div className="an-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-          <button onClick={onClose} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={onClose} aria-label={t("an.aria_close")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,0.6)" />
           </button>
           <div>
-            <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Analytics</div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-2px", lineHeight: 0.92 }}>Tes chiffres<span style={{ color: "#00C9A7" }}>.</span></div>
+            <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>{t("an.eyebrow")}</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-2px", lineHeight: 0.92 }}>{t("an.title")}<span style={{ color: "#00C9A7" }}>.</span></div>
           </div>
         </div>
         {/* Period selector */}
@@ -126,7 +134,7 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
                 border: "none", fontSize: 10, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.5px",
               }}
             >
-              {p === 365 ? "1 AN" : `${p}J`}
+              {p === 365 ? t("an.period_year") : fillTpl(t("an.period_days"), { n: p })}
             </button>
           ))}
         </div>
@@ -135,32 +143,32 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
       <div className="an-content" style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 24px 100px" }}>
         {loading ? (
           <div style={{ padding: 60, display: "flex", justifyContent: "center" }}>
-            <Spinner variant="dots" size={32} color={VIOLET} label="Calcul des analytics" />
+            <Spinner variant="dots" size={32} color={VIOLET} label={t("an.spinner_label")} />
           </div>
         ) : (
           <>
             {/* ===== EVOLUTION GLOBALE ===== */}
-            <Card title="Evolution clientele" subtitle={`${period === 365 ? "12 derniers mois" : `${period} derniers jours`}`} accent={G}>
+            <Card title={t("an.evolution_title")} subtitle={period === 365 ? t("an.evolution_sub_year") : fillTpl(t("an.evolution_sub_days"), { n: period })} accent={G}>
               {data.evolution?.count > 0 ? (
                 <div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 14 }}>
-                    <Metric label="Delta poids moyen" value={`${data.evolution.avg > 0 ? "+" : ""}${data.evolution.avg} kg`} color={data.evolution.avg < 0 ? G : data.evolution.avg > 0 ? ORANGE : "rgba(255,255,255,0.5)"} />
-                    <Metric label="Sur" value={`${data.evolution.count} clients`} color="rgba(255,255,255,0.6)" />
-                    <Metric label="Progression" value={`${data.progression}%`} color={data.progression >= 70 ? G : data.progression >= 40 ? ORANGE : RED} />
+                    <Metric label={t("an.metric_avg_delta")} value={`${data.evolution.avg > 0 ? "+" : ""}${data.evolution.avg} kg`} color={data.evolution.avg < 0 ? G : data.evolution.avg > 0 ? ORANGE : "rgba(255,255,255,0.5)"} />
+                    <Metric label={t("an.metric_on")} value={fillTpl(t("an.metric_clients_count"), { n: data.evolution.count })} color="rgba(255,255,255,0.6)" />
+                    <Metric label={t("an.metric_progression")} value={`${data.progression}%`} color={data.progression >= 70 ? G : data.progression >= 40 ? ORANGE : RED} />
                   </div>
                   <div style={{ display: "flex", gap: 10, fontSize: 11 }}>
-                    <Tag color={G}>{data.evolution.losers} en perte de poids</Tag>
-                    <Tag color="rgba(255,255,255,0.4)">{data.evolution.stable} stables</Tag>
-                    <Tag color={ORANGE}>{data.evolution.gainers} en prise</Tag>
+                    <Tag color={G}>{fillTpl(t("an.tag_losers"), { n: data.evolution.losers })}</Tag>
+                    <Tag color="rgba(255,255,255,0.4)">{fillTpl(data.evolution.stable > 1 ? t("an.tag_stable_many") : t("an.tag_stable_one"), { n: data.evolution.stable })}</Tag>
+                    <Tag color={ORANGE}>{fillTpl(t("an.tag_gainers"), { n: data.evolution.gainers })}</Tag>
                   </div>
                 </div>
               ) : (
-                <Empty text="Pas assez de pesees sur la periode pour calculer l'evolution." />
+                <Empty text={t("an.empty_evolution")} />
               )}
             </Card>
 
             {/* ===== PERFORMANCE PROGRAMMES ===== */}
-            <Card title="Performance programmes" subtitle="Adherence moyenne par programme" accent={VIOLET}>
+            <Card title={t("an.programmes_title")} subtitle={t("an.programmes_sub")} accent={VIOLET}>
               {data.programmes && data.programmes.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {data.programmes.slice(0, 6).map((p, i) => (
@@ -175,41 +183,41 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
                         <div style={{ height: "100%", width: `${p.avgAdherence}%`, background: p.avgAdherence >= 70 ? G : p.avgAdherence >= 40 ? ORANGE : RED, borderRadius: 2 }} />
                       </div>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
-                        {p.totalSessions} seances · {p.clientsCount} client{p.clientsCount > 1 ? "s" : ""}
+                        {fillTpl(p.totalSessions > 1 ? t("an.sessions_many") : t("an.sessions_one"), { n: p.totalSessions })} · {fillTpl(p.clientsCount > 1 ? t("an.client_many") : t("an.client_one"), { n: p.clientsCount })}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <Empty text="Aucun programme actif a analyser." />
+                <Empty text={t("an.empty_programmes")} />
               )}
             </Card>
 
             {/* ===== HEATMAP ===== */}
-            <Card title="Heatmap activite 30j" subtitle="Quand tes clients s'entrainent le plus" accent={ORANGE}>
+            <Card title={t("an.heatmap_title")} subtitle={t("an.heatmap_sub")} accent={ORANGE}>
               {data.heatmap && data.heatmapMax > 0 ? (
                 <>
                   <Heatmap grid={data.heatmap} max={data.heatmapMax} />
                   {data.peak.count > 0 && (
                     <div style={{ marginTop: 12, padding: "10px 12px", background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 10, fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
-                      <strong style={{ color: ORANGE }}>Pic d'activite :</strong> {JOURS[data.peak.day].toLowerCase()} a {String(data.peak.hour).padStart(2, "0")}h ({data.peak.count} seance{data.peak.count > 1 ? "s" : ""}). Reserve tes creneaux disponibles autour de ce moment.
+                      <strong style={{ color: ORANGE }}>{t("an.peak_label")}</strong>{fillTpl(data.peak.count > 1 ? t("an.peak_text_many") : t("an.peak_text_one"), { day: t(DAY_KEYS[data.peak.day]).toLowerCase(), hour: String(data.peak.hour).padStart(2, "0"), n: data.peak.count })}
                     </div>
                   )}
                 </>
               ) : (
-                <Empty text="Pas encore assez de seances loguees." />
+                <Empty text={t("an.empty_heatmap")} />
               )}
             </Card>
 
             {/* ===== CORRELATIONS ===== */}
-            <Card title="Correlation sommeil ↔ RPE" subtitle="Impact du sommeil sur la perception d'effort" accent={G}>
+            <Card title={t("an.correlation_title")} subtitle={t("an.correlation_sub")} accent={G}>
               {!isNaN(data.sleepRpeCorr) ? (
                 <CorrelationCard
                   r={data.sleepRpeCorr}
-                  hint={data.sleepRpeCorr < -0.3 ? "Tes clients qui dorment mieux ressentent moins l'effort. Continue d'insister sur le sommeil." : data.sleepRpeCorr > 0.3 ? "Pattern inverse — verifie les donnees." : "Pas de correlation claire — chaque client est different."}
+                  hint={data.sleepRpeCorr < -0.3 ? t("an.correlation_hint_negative") : data.sleepRpeCorr > 0.3 ? t("an.correlation_hint_positive") : t("an.correlation_hint_none")}
                 />
               ) : (
-                <Empty text="Pas assez de donnees sommeil + RPE croisees." />
+                <Empty text={t("an.empty_correlation")} />
               )}
             </Card>
           </>
@@ -255,6 +263,7 @@ function Empty({ text }) {
 }
 
 function Heatmap({ grid, max }) {
+  const t = useT();
   const [cellSize, setCellSize] = React.useState(typeof window !== 'undefined' && window.innerWidth < 480 ? 10 : 14);
   React.useEffect(() => {
     const onResize = () => setCellSize(window.innerWidth < 480 ? 10 : 14);
@@ -275,14 +284,14 @@ function Heatmap({ grid, max }) {
       {/* Grille jours */}
       {grid.map((row, day) => (
         <div key={day} style={{ display: "flex", gap, marginBottom: gap, alignItems: "center" }}>
-          <div style={{ width: 26, fontSize: 8, color: "rgba(255,255,255,0.3)", fontWeight: 700, letterSpacing: "0.5px" }}>{JOURS[day]}</div>
+          <div style={{ width: 26, fontSize: 8, color: "rgba(255,255,255,0.3)", fontWeight: 700, letterSpacing: "0.5px" }}>{t(DAY_KEYS[day])}</div>
           {row.map((count, hour) => {
             const intensity = count / max;
             const bg = count === 0 ? "rgba(255,255,255,0.03)" : `rgba(0,201,167,${0.2 + intensity * 0.8})`;
             return (
               <div
                 key={hour}
-                title={`${JOURS[day]} ${hour}h : ${count} seance${count > 1 ? "s" : ""}`}
+                title={fillTpl(count > 1 ? t("an.heatmap_cell_many") : t("an.heatmap_cell_one"), { day: t(DAY_KEYS[day]), hour, n: count })}
                 style={{
                   width: cellSize, height: cellSize,
                   background: bg, borderRadius: 3,
@@ -298,6 +307,7 @@ function Heatmap({ grid, max }) {
 }
 
 function CorrelationCard({ r, hint }) {
+  const t = useT();
   const interp = interpretCorrelation(r);
   const pct = Math.round(Math.abs(r) * 100);
   return (
@@ -311,7 +321,7 @@ function CorrelationCard({ r, hint }) {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: interp.color, marginBottom: 4 }}>{interp.label}</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{pct}% de force statistique</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{fillTpl(t("an.correlation_strength"), { n: pct })}</div>
         </div>
       </div>
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, padding: "10px 12px", background: "rgba(255,255,255,0.025)", borderRadius: 10 }}>
