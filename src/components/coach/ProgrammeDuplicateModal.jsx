@@ -25,6 +25,8 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [search, setSearch] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [notifyClients, setNotifyClients] = useState(true);
 
   const sourceClientId = programme?.client_id;
   const eligibleClients = useMemo(
@@ -75,12 +77,16 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
       return;
     }
 
+    const finalName = customName.trim() || srcProg.programme_name;
     let successCount = 0;
     const errors = [];
     const targets = [...selectedIds];
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const anonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
     for (let i = 0; i < targets.length; i++) {
       const clientId = targets[i];
+      const clientObj = clients.find(c => c.id === clientId);
       try {
         // archive l'actif
         await supabase.from("programmes")
@@ -92,12 +98,43 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
         const { error: insErr } = await supabase.from("programmes").insert({
           client_id: clientId,
           html_content: srcProg.html_content,
-          programme_name: srcProg.programme_name,
+          programme_name: finalName,
           is_active: true,
           uploaded_by: "duplication",
         });
-        if (insErr) errors.push({ clientId, message: insErr.message });
-        else successCount++;
+        if (insErr) {
+          errors.push({ clientId, message: insErr.message });
+        } else {
+          successCount++;
+          // notifications best-effort (n'echoue pas la duplication si KO)
+          if (notifyClients && clientObj) {
+            // push
+            if (supabaseUrl && anonKey) {
+              fetch(`${supabaseUrl}/functions/v1/send-push`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", apikey: anonKey },
+                body: JSON.stringify({
+                  client_id: clientId,
+                  title: "RB PERFORM",
+                  body: "Ton programme est pret. C'est parti !",
+                }),
+              }).catch(() => {});
+            }
+            // email
+            if (clientObj.email) {
+              fetch("/api/send-welcome", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  email: clientObj.email,
+                  full_name: clientObj.full_name,
+                  type: "programme_ready",
+                  programme_name: finalName,
+                }),
+              }).catch(() => {});
+            }
+          }
+        }
       } catch (e) {
         errors.push({ clientId, message: e?.message || "erreur inconnue" });
       }
@@ -151,6 +188,49 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginTop: 4 }}>
             Selectionne les clients qui recevront une copie active de ce programme.
+          </div>
+        </div>
+
+        {/* Renommer (optionnel) */}
+        <div style={{ padding: "14px 20px 0" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>Renommer la copie (optionnel)</div>
+          <input
+            type="text"
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            placeholder={programme?.programme_name || "Nom du programme"}
+            disabled={running}
+            style={{
+              width: "100%", padding: "10px 14px",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 10, color: "#fff", fontSize: 13, outline: "none",
+              fontFamily: "inherit", boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Toggle notifier les clients */}
+        <div style={{ padding: "12px 20px 0", display: "flex", alignItems: "center", gap: 10 }}>
+          <button
+            onClick={() => !running && setNotifyClients(v => !v)}
+            disabled={running}
+            style={{
+              width: 36, height: 20, borderRadius: 100,
+              background: notifyClients ? G : "rgba(255,255,255,0.1)",
+              border: "none", cursor: running ? "wait" : "pointer", position: "relative",
+              transition: "background 0.2s", flexShrink: 0,
+            }}
+          >
+            <div style={{
+              position: "absolute", top: 2, left: notifyClients ? 18 : 2,
+              width: 16, height: 16, background: "#fff", borderRadius: "50%",
+              transition: "left 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+            }} />
+          </button>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>Prevenir les clients</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Push + email "programme pret"</div>
           </div>
         </div>
 
