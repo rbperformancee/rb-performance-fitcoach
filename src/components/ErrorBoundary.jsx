@@ -24,6 +24,35 @@ export default class ErrorBoundary extends React.Component {
     this.setState({ info });
     // eslint-disable-next-line no-console
     console.error(`[ErrorBoundary:${this.props.name || "unnamed"}]`, error, info);
+
+    // Auto-reload sur ChunkLoadError (cause : nouveau deploy Vercel a invalide
+    // les anciens chunks que le client a en cache). On reload une seule fois
+    // par session pour ne pas boucler si le serveur est vraiment cassé.
+    const isChunkError =
+      error?.name === "ChunkLoadError" ||
+      /Loading chunk \d+ failed|Failed to fetch dynamically imported module/i.test(error?.message || "");
+    if (isChunkError) {
+      try {
+        const KEY = "rb_chunk_reload_ts";
+        const last = parseInt(sessionStorage.getItem(KEY) || "0", 10);
+        if (Date.now() - last > 30000) {
+          sessionStorage.setItem(KEY, String(Date.now()));
+          // Unregister SW pour invalider son cache aussi
+          if (navigator.serviceWorker?.getRegistrations) {
+            navigator.serviceWorker.getRegistrations().then(rs => {
+              Promise.all(rs.map(r => r.unregister())).then(() => window.location.reload());
+            }).catch(() => window.location.reload());
+          } else {
+            window.location.reload();
+          }
+          return;
+        }
+      } catch (_) {
+        window.location.reload();
+        return;
+      }
+    }
+
     // Forward a Sentry avec le contexte (boundary name + composant React stack)
     captureError(error, {
       boundary: this.props.name || "unnamed",
