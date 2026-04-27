@@ -1964,6 +1964,7 @@ function CoachSkeleton() {
 }
 
 function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
+  const t = useT();
   const [text, setText] = React.useState("");
   const [sending, setSending] = React.useState(false);
   const [sent, setSent] = React.useState(false);
@@ -2081,10 +2082,10 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, padding: "10px 14px", background: isLive ? "rgba(2,209,186,0.08)" : "rgba(255,255,255,0.03)", border: `1px solid ${isLive ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.07)"}`, borderRadius: 12 }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: isLive ? "#02d1ba" : "#444", animation: isLive ? "pulse 2s infinite" : "none" }} />
         <div style={{ fontSize: 13, color: isLive ? "#02d1ba" : "rgba(255,255,255,0.3)", fontWeight: 600 }}>
-          {isLive ? `${clientName?.split(" ")[0]} est en seance !` : "Pas en seance actuellement"}
+          {isLive ? fillTpl(t("sv.in_session"), { name: clientName?.split(" ")[0] || "" }) : t("sv.not_in_session")}
         </div>
         {demoLive && (
-          <div style={{ marginLeft: "auto", fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "#02d1ba", fontWeight: 500 }}>23 min</div>
+          <div style={{ marginLeft: "auto", fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "#02d1ba", fontWeight: 500 }}>{fillTpl(t("sv.duration_min"), { n: 23 })}</div>
         )}
       </div>
 
@@ -2092,18 +2093,18 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
       {demoLive && (
         <div style={{ marginBottom: 16, padding: "14px 16px", background: "rgba(2,209,186,.03)", border: ".5px solid rgba(2,209,186,.15)", borderRadius: 12 }}>
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(2,209,186,.65)", marginBottom: 10 }}>
-            Exercice en cours
+            {t("sv.exercise_in_progress")}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
             <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: "-.5px" }}>{demoLive.current_exercise}</div>
             <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "rgba(255,255,255,.55)" }}>
-              Serie {demoLive.current_set}/{demoLive.total_sets} · <span style={{ color: "#02d1ba" }}>{demoLive.current_weight}kg</span>
+              {fillTpl(t("sv.set_of"), { set: demoLive.current_set, total: demoLive.total_sets })} · <span style={{ color: "#02d1ba" }}>{demoLive.current_weight}kg</span>
             </div>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,.06)", borderRadius: 100, overflow: "hidden", marginBottom: 14 }}>
             <div style={{ height: "100%", width: `${Math.round(((demoLive.current_set - 1) / demoLive.total_sets) * 100)}%`, background: "#02d1ba", boxShadow: "0 0 8px rgba(2,209,186,.5)" }} />
           </div>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginBottom: 8 }}>Feed en direct</div>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginBottom: 8 }}>{t("sv.live_feed")}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {demoLive.feed.map((f, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -2116,20 +2117,20 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
         </div>
       )}
 
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Message flash — apparait en plein ecran pendant sa seance</div>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>{t("sv.flash_msg_hint")}</div>
 
-      <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Ex: Dernier set. Donne tout." maxLength={80}
+      <textarea value={text} onChange={e => setText(e.target.value)} placeholder={t("sv.flash_placeholder")} maxLength={80}
         style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif", resize: "none", height: 80, boxSizing: "border-box", marginBottom: 12 }} />
 
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
         <button onClick={recording ? stopRecording : startRecording} style={{ flex: 1, padding: 12, background: recording ? "rgba(255,107,107,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${recording ? "rgba(255,107,107,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12, color: recording ? "#ff6b6b" : "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-          {recording ? "⏹ Stop (10s max)" : "🎙 Vocal"}
+          {recording ? t("sv.btn_recording") : t("sv.btn_record")}
         </button>
-        {audioBlob && <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "#02d1ba" }}>✓ Audio pret</div>}
+        {audioBlob && <div style={{ padding: "12px 14px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "#02d1ba" }}>{t("sv.audio_ready")}</div>}
       </div>
 
       <button onClick={sendMessage} disabled={sending || (!text.trim() && !audioBlob)} style={{ width: "100%", padding: 14, background: sent ? "rgba(2,209,186,0.1)" : "#02d1ba", color: sent ? "#02d1ba" : "#000", border: sent ? "1px solid rgba(2,209,186,0.3)" : "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-        {sent ? "✓ Message envoye !" : sending ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={16} color="#000" />Envoi</span>) : "Envoyer le message flash"}
+        {sent ? t("sv.msg_sent") : sending ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={16} color="#000" />{t("sv.btn_sending")}</span>) : t("sv.btn_send_flash")}
       </button>
     </div>
   );
@@ -2329,7 +2330,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const { sent: relanceSent, sendManualPush } = useClientRelance(clients, true);
 
   const addClient = async () => {
-    if (isDemo) { toast.error("Désactivé en mode démo"); return; }
+    if (isDemo) { toast.error(t("cd.toast_demo_disabled")); return; }
     if (!newEmail) return;
     const email = newEmail.trim().toLowerCase();
     const fullName = newName.trim() || null;
@@ -2337,7 +2338,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     const insertData = { email, full_name: fullName };
     if (coachId) insertData.coach_id = coachId;
     const { error } = await supabase.from("clients").insert(insertData);
-    if (error) { showToast(error.code === "23505" ? "Email déjà utilisé" : error.message, "err"); return; }
+    if (error) { showToast(error.code === "23505" ? t("cd.toast_email_used") : error.message, "err"); return; }
     // Envoyer l'email de bienvenue via Vercel API (Zoho SMTP)
     try {
       await fetch("/api/send-welcome", {
@@ -2348,41 +2349,41 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     } catch (e) {
       console.warn("Email de bienvenue non envoye:", e);
     }
-    showToast(`${email} ajoute — email de bienvenue envoye`);
+    showToast(fillTpl(t("cd.toast_added_email"), { email }));
     setNewEmail(""); setNewName(""); setShowAdd(false);
     loadClients();
   };
 
   const deleteClient = async (id, email) => {
-    if (isDemo) { toast.error("Désactivé en mode démo"); return; }
+    if (isDemo) { toast.error(t("cd.toast_demo_disabled")); return; }
     // confirmation supprimee
     // Multi-tenant : verifie que le coach possede ce client
     let del = supabase.from("clients").delete().eq("id", id);
     if (coachId) del = del.eq("coach_id", coachId);
     await del;
-    setSelected(null); showToast("Client supprime"); loadClients();
+    setSelected(null); showToast(t("cd.toast_client_deleted")); loadClients();
   };
 
   const deleteProg = async (progId) => {
     const { error } = await supabase.from("programmes").update({ is_active: false }).eq("id", progId);
-    if (error) { console.error("deleteProg error:", error); showToast("Erreur: " + error.message); return; }
-    showToast("Programme supprimé.");
+    if (error) { console.error("deleteProg error:", error); showToast(t("cd.toast_error_prefix") + error.message); return; }
+    showToast(t("cd.toast_programme_deleted"));
     onClose();
   };
 
   const uploadProg = async (client, file, planId, progWeeks) => {
-    if (isDemo) { toast.info("Upload desactive en mode demo"); return; }
+    if (isDemo) { toast.info(t("cd.toast_demo_upload_disabled")); return; }
     // ===== VALIDATION FICHIER =====
     // 1. Taille max 5MB
     const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      toast.error(`Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 5MB.`);
+      toast.error(fillTpl(t("cd.toast_file_too_large"), { size: (file.size / 1024 / 1024).toFixed(1) }));
       return;
     }
     // 2. Type verifie (HTML uniquement)
     const isHtml = file.type === "text/html" || file.name.toLowerCase().endsWith(".html") || file.name.toLowerCase().endsWith(".htm");
     if (!isHtml) {
-      toast.error("Seuls les fichiers HTML sont autorises.");
+      toast.error(t("cd.toast_only_html"));
       return;
     }
 
@@ -2449,7 +2450,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         }
       }
 
-      showToast(`Programme uploade pour ${client.full_name || client.email}`);
+      showToast(fillTpl(t("cd.toast_programme_uploaded"), { who: client.full_name || client.email }));
       loadClients();
     } catch (e) { showToast(e.message, "err"); }
     finally { setUploading(false); setSelected(null); }
@@ -2498,7 +2499,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const _noAlert = withProg > 0 ? Math.max(0, 1 - inactiveAlerts / withProg) : 1;
   const businessScore = total > 0 ? Math.round((_coverage * 20) + (_act7d * 30) + (_actDay * 25) + (_noAlert * 25)) : 0;
   const scoreColor = businessScore >= 80 ? G : businessScore >= 50 ? ORANGE : RED;
-  const scoreLabel = businessScore >= 75 ? "Excellent" : businessScore >= 50 ? "Bien" : businessScore >= 25 ? "A ameliorer" : "Critique";
+  const scoreLabel = businessScore >= 75 ? t("cd.score_excellent") : businessScore >= 50 ? t("cd.score_good") : businessScore >= 25 ? t("cd.score_to_improve") : t("cd.score_critical");
 
   // ===== METRIQUES BUSINESS =====
   // MRR : somme des prix mensuels de tous les clients avec un abonnement actif
@@ -2565,9 +2566,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   // ===== COACH SIDEBAR INLINE (desktop) =====
-  const coachName = coachData?.full_name || "Coach";
+  const coachName = coachData?.full_name || t("cd.coach_fallback");
   const coachInitials = (coachName.split(" ").map(w => w[0]).join("").slice(0, 2) || "RB").toUpperCase();
-  const coachPlan = coachData?.subscription_plan || "Founder";
+  const coachPlan = coachData?.subscription_plan || t("cd.plan_founder");
 
   // Sparkline MRR 30 jours (reconstruit depuis snapshots ou fallback)
   const sparkPoints = (() => {
@@ -2687,7 +2688,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           }}>{coachInitials}</div>
           <div style={{ overflow: "hidden" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coachName}</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", fontWeight: 600 }}>⚙ Paramètres</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", fontWeight: 600 }}>⚙ {t("cd.settings_label")}</div>
           </div>
         </button>
       </div>
@@ -2713,7 +2714,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { id: "clients",     icon: "users",       label: t("coach.nav_clients"),    shortLabel: "CLIENTS", onClick: () => { setSelected(null); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
     { id: "programmes",  icon: "document",    label: t("coach.nav_prog"),       shortLabel: "PROG",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
     { id: "business",    icon: "trending",    label: t("coach.nav_business"),   shortLabel: "BIZ",     onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
-    { id: "more",        icon: "plus",        label: "Plus",      shortLabel: "PLUS",    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
+    { id: "more",        icon: "plus",        label: t("cd.pill_more"),      shortLabel: t("cd.pill_more_short"),    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   // Swipe gesture sur la pill
   const pillSwipeRef = useRef({ startX: 0 });
@@ -2791,7 +2792,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   // ===== MORE MENU (popup above pill) =====
   const moreMenuItems = [
     ...(sentinelEnabled ? [{
-      icon: "lightning", label: "Sentinel", color: "#818cf8",
+      icon: "lightning", label: t("cd.menu_sentinel"), color: "#818cf8",
       locked: !hasSentinelAccess,
       onClick: () => {
         setShowMoreMenu(false);
@@ -2802,15 +2803,15 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         }
       },
     }] : []),
-    { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
-    { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); } },
+    { icon: "activity", label: t("cd.menu_analytics"), onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
+    { icon: "view",     label: t("cd.menu_pipeline"),  onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); } },
     { type: "separator" },
-    { icon: "document", label: "Facture", onClick: () => { setShowMoreMenu(false); setShowInvoice(true); } },
-    { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
-    { icon: "users",    label: "Mon compte", onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
+    { icon: "document", label: t("cd.menu_invoice"), onClick: () => { setShowMoreMenu(false); setShowInvoice(true); } },
+    { icon: "flame",    label: t("cd.menu_settings"), onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
+    { icon: "users",    label: t("cd.menu_my_account"), onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
     { type: "separator" },
-    { icon: "message",  label: "Aide", color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); toast.success("Support : rb.performancee@gmail.com"); } },
-    { icon: "arrow-right", label: "Déconnexion", color: RED, onClick: () => { setShowMoreMenu(false); if (isDemo) { toast.info("Desactive en mode demo"); return; } supabase.auth.signOut().then(() => { window.location.href = "/login"; }); } },
+    { icon: "message",  label: t("cd.menu_help"), color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); toast.success(t("cd.toast_help")); } },
+    { icon: "arrow-right", label: t("cd.menu_logout"), color: RED, onClick: () => { setShowMoreMenu(false); if (isDemo) { toast.info(t("cd.toast_demo_logout")); return; } supabase.auth.signOut().then(() => { window.location.href = "/login"; }); } },
   ];
   const MoreMenu = showMoreMenu ? (
     <div style={{
@@ -2841,7 +2842,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           >
             <Icon name={item.icon} size={18} color={item.color || G} />
             {item.label}
-            {item.locked && <span style={{ fontSize: 10, marginLeft: "auto", opacity: 0.4 }}>Pro</span>}
+            {item.locked && <span style={{ fontSize: 10, marginLeft: "auto", opacity: 0.4 }}>{t("cd.menu_pro_lock")}</span>}
           </button>
         )
       )}
@@ -3090,14 +3091,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         clients={clients}
         commands={[
           { id: "open_client", run: (c) => setSelected(c) },
-          { id: "tab_overview", label: "Vue d'ensemble", group: "Navigation", icon: "chart", run: () => setActiveTab("overview") },
-          { id: "tab_business", label: "Business", desc: "MRR, churn, retention", group: "Navigation", icon: "trending-up", run: () => setActiveTab("business") },
-          { id: "tab_clients", label: "Liste des clients", group: "Navigation", icon: "users", run: () => { setShowClientList(true); setActiveTab("clients"); } },
-          { id: "tab_analytics", label: "Analytics", desc: "Heatmap, correlations", group: "Navigation", icon: "activity", run: () => setShowAnalytics(true) },
-          { id: "tab_achievements", label: "Achievements", desc: "Badges & streak", group: "Navigation", icon: "trophy", run: () => setActiveTab("achievements") },
-          { id: "open_pipeline", label: "Pipeline CRM", desc: "Kanban des clients", group: "Actions", icon: "view", run: () => setShowPipeline(true) },
-          { id: "action_add_client", label: "Ajouter un client", group: "Actions", icon: "plus", run: () => { setShowClientList(true); setShowAdd(true); } },
-          { id: "action_copy_invite", label: "Copier le lien d'invitation", desc: coachData?.coach_slug ? `rbperform.com/rejoindre/${coachData.coach_slug}` : "Lien en cours de generation", group: "Actions", icon: "link", keywords: ["invitation", "lien", "invite", "copier", "partager"], run: async () => {
+          { id: "tab_overview", label: t("cd.cmd_overview"), group: t("cd.cmd_group_navigation"), icon: "chart", run: () => setActiveTab("overview") },
+          { id: "tab_business", label: t("cd.cmd_business"), desc: t("cd.cmd_business_desc"), group: t("cd.cmd_group_navigation"), icon: "trending-up", run: () => setActiveTab("business") },
+          { id: "tab_clients", label: t("cd.cmd_clients_list"), group: t("cd.cmd_group_navigation"), icon: "users", run: () => { setShowClientList(true); setActiveTab("clients"); } },
+          { id: "tab_analytics", label: t("cd.cmd_analytics"), desc: t("cd.cmd_analytics_desc"), group: t("cd.cmd_group_navigation"), icon: "activity", run: () => setShowAnalytics(true) },
+          { id: "tab_achievements", label: t("cd.cmd_achievements"), desc: t("cd.cmd_achievements_desc"), group: t("cd.cmd_group_navigation"), icon: "trophy", run: () => setActiveTab("achievements") },
+          { id: "open_pipeline", label: t("cd.cmd_pipeline"), desc: t("cd.cmd_pipeline_desc"), group: t("cd.cmd_group_actions"), icon: "view", run: () => setShowPipeline(true) },
+          { id: "action_add_client", label: t("cd.cmd_add_client"), group: t("cd.cmd_group_actions"), icon: "plus", run: () => { setShowClientList(true); setShowAdd(true); } },
+          { id: "action_copy_invite", label: t("cd.cmd_copy_invite"), desc: coachData?.coach_slug ? `rbperform.com/rejoindre/${coachData.coach_slug}` : t("cd.cmd_invite_pending"), group: t("cd.cmd_group_actions"), icon: "link", keywords: t("cd.cmd_kw_invite").split(", "), run: async () => {
             const slug = coachData?.coach_slug;
             if (!slug) { showToast("Lien pas encore pret"); return; }
             try {
@@ -3105,9 +3106,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               showToast("Lien copie");
             } catch { showToast("Impossible de copier"); }
           }},
-          { id: "action_refresh", label: "Rafraichir les donnees", group: "Actions", icon: "refresh", run: () => loadClients() },
-          ...(onSwitchToSuperAdmin ? [{ id: "nav_superadmin", label: "Super Admin (CEO)", group: "Navigation", icon: "chart", run: () => onSwitchToSuperAdmin() }] : []),
-          { id: "action_exit", label: "Quitter le dashboard coach", group: "Actions", icon: "arrow-left", run: () => onExit?.() },
+          { id: "action_refresh", label: t("cd.cmd_refresh"), group: t("cd.cmd_group_actions"), icon: "refresh", run: () => loadClients() },
+          ...(onSwitchToSuperAdmin ? [{ id: "nav_superadmin", label: t("cd.cmd_superadmin"), group: t("cd.cmd_group_navigation"), icon: "chart", run: () => onSwitchToSuperAdmin() }] : []),
+          { id: "action_exit", label: t("cd.cmd_exit"), group: t("cd.cmd_group_actions"), icon: "arrow-left", run: () => onExit?.() },
         ]}
       />
 
