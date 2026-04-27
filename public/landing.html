@@ -1633,7 +1633,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 </style>
 </head>
 <body>
-<a href="#main" class="skip-link">Aller au contenu</a>
+<a href="#main" class="skip-link" data-i18n="a11y.skip">Aller au contenu</a>
 
 <!-- ========== LOADER ========== -->
 <div id="loader" aria-hidden="true">
@@ -1665,7 +1665,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <span></span>
   </button>
 
-  <a href="/waitlist" class="nav-link">
+  <a href="/waitlist" class="nav-link" data-i18n="nav.waitlist">
     Waitlist
   </a>
 </nav>
@@ -1678,7 +1678,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <nav class="menu-chapters">
       <a class="menu-chapter" data-target="how">
         <span class="ch-num">01</span>
-        <span class="ch-name">Le Système</span>
+        <span class="ch-name" data-i18n="menu.ch0">Le Système</span>
       </a>
       <a class="menu-chapter" data-target="business">
         <span class="ch-num">02</span>
@@ -1795,23 +1795,23 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   <!-- Header -->
   <div style="text-align:center;padding:100px 24px 48px">
-    <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px">Le Système</div>
-    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6.5vw,92px);letter-spacing:-1.5px;line-height:1.02;color:#fff;margin:0 0 40px;max-width:1000px;display:inline-block">Certains coachs ont du talent.<br>Les meilleurs ont un système.</h2>
+    <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px" data-i18n="how.header_tag">Le Système</div>
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6.5vw,92px);letter-spacing:-1.5px;line-height:1.02;color:#fff;margin:0 0 40px;max-width:1000px;display:inline-block" data-i18n="how.header_title">Certains coachs ont du talent.<br>Les meilleurs ont un système.</h2>
     <!-- Stats 3 colonnes -->
     <div class="sys-stats-grid" style="display:grid;grid-template-columns:repeat(3,1fr);max-width:900px;margin:0 auto;position:relative">
       <div class="sys-stats-divider" style="position:absolute;top:25%;bottom:25%;left:33.33%;width:1px;background:rgba(255,255,255,0.06)"></div>
       <div class="sys-stats-divider" style="position:absolute;top:25%;bottom:25%;right:33.33%;width:1px;background:rgba(255,255,255,0.06)"></div>
       <div style="text-align:center;padding:20px">
         <div class="sys-stats-num" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">0%</div>
-        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Commission</div>
+        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700" data-i18n="how.stat1_label">Commission</div>
       </div>
       <div style="text-align:center;padding:20px">
         <div class="sys-stats-num" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">100</div>
-        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Clients / 1 coach</div>
+        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700" data-i18n="how.stat2_label">Clients / 1 coach</div>
       </div>
       <div style="text-align:center;padding:20px">
         <div class="sys-stats-num" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,90px);color:#00C9A7;letter-spacing:-1.5px;line-height:0.9;text-shadow:0 0 50px rgba(0,201,167,0.25)">5min</div>
-        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700">Pour démarrer</div>
+        <div class="sys-stats-label" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:14px;font-weight:700" data-i18n="how.stat3_label">Pour démarrer</div>
       </div>
     </div>
   </div>
@@ -1820,21 +1820,21 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="sys-block">
     <div class="sys-left">
       <svg class="sys-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      <div class="sys-num">01 — Dashboard CEO</div>
-      <h3 class="sys-title">Tu sais exactement<br>où en est ton business.</h3>
-      <p class="sys-sub">MRR, ARR, score business live. Le cockpit que Trainerize cache derrière 3 onglets.</p>
-      <div class="sys-stat">Score moyen de nos coachs après 30 jours : 84/100</div>
-      <div class="sys-badge sys-badge-starter">Inclus dès le Starter</div>
+      <div class="sys-num" data-i18n="how.b1_num">01 — Dashboard CEO</div>
+      <h3 class="sys-title" data-i18n="how.b1_title">Tu sais exactement<br>où en est ton business.</h3>
+      <p class="sys-sub" data-i18n="how.b1_sub">MRR, ARR, score business live. Le cockpit que Trainerize cache derrière 3 onglets.</p>
+      <div class="sys-stat" data-i18n="how.b1_stat">Score moyen de nos coachs après 30 jours : 84/100</div>
+      <div class="sys-badge sys-badge-starter" data-i18n="how.badge_starter">Inclus dès le Starter</div>
       <div class="sys-bullets">
-        <span>Score 0–100 en temps réel</span>
-        <span>MRR · ARR · Rétention</span>
-        <span>Alertes expiration auto</span>
+        <span data-i18n="how.b1_bul1">Score 0–100 en temps réel</span>
+        <span data-i18n="how.b1_bul2">MRR · ARR · Rétention</span>
+        <span data-i18n="how.b1_bul3">Alertes expiration auto</span>
       </div>
     </div>
     <div class="sys-right">
       <div class="sys-ghost">87</div>
       <div class="sys-glow"></div>
-      <div style="text-align:center"><div class="sys-big" data-count="87">0</div><div class="sys-unit">Score Live</div></div>
+      <div style="text-align:center"><div class="sys-big" data-count="87">0</div><div class="sys-unit" data-i18n="how.b1_unit">Score Live</div></div>
     </div>
   </div>
 
@@ -1842,21 +1842,21 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="sys-block">
     <div class="sys-left">
       <svg class="sys-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <div class="sys-num">02 — Anti-Churn IA</div>
-      <h3 class="sys-title">Tu sauves les clients<br>avant qu'ils partent.</h3>
-      <p class="sys-sub">7 signaux par client. Tu interviens 7 jours avant qu'il décide.</p>
-      <div class="sys-stat">Rétention moyenne avec anti-churn actif : 94%</div>
-      <div class="sys-badge sys-badge-starter">Inclus dès le Starter</div>
+      <div class="sys-num" data-i18n="how.b2_num">02 — Anti-Churn IA</div>
+      <h3 class="sys-title" data-i18n="how.b2_title">Tu sauves les clients<br>avant qu'ils partent.</h3>
+      <p class="sys-sub" data-i18n="how.b2_sub">7 signaux par client. Tu interviens 7 jours avant qu'il décide.</p>
+      <div class="sys-stat" data-i18n="how.b2_stat">Rétention moyenne avec anti-churn actif : 94%</div>
+      <div class="sys-badge sys-badge-starter" data-i18n="how.badge_starter">Inclus dès le Starter</div>
       <div class="sys-bullets">
-        <span>7 signaux comportementaux</span>
-        <span>Score churn 0–100</span>
-        <span>Action recommandée auto</span>
+        <span data-i18n="how.b2_bul1">7 signaux comportementaux</span>
+        <span data-i18n="how.b2_bul2">Score churn 0–100</span>
+        <span data-i18n="how.b2_bul3">Action recommandée auto</span>
       </div>
     </div>
     <div class="sys-right">
       <div class="sys-ghost">68</div>
       <div class="sys-glow"></div>
-      <div style="text-align:center"><div class="sys-big" data-count="-68" data-suffix="%">0</div><div class="sys-unit">De Churn</div></div>
+      <div style="text-align:center"><div class="sys-big" data-count="-68" data-suffix="%">0</div><div class="sys-unit" data-i18n="how.b2_unit">De Churn</div></div>
     </div>
   </div>
 
@@ -1864,21 +1864,21 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="sys-block">
     <div class="sys-left">
       <svg class="sys-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06z"/><path d="M10 2c1 .5 2 2 2 5"/></svg>
-      <div class="sys-num">03 — Suivi Client Total</div>
-      <h3 class="sys-title">Tu vois tout.<br>Ton client ne fait rien.</h3>
-      <p class="sys-sub">Nutrition IA vocale, scanner code-barre, poids, sommeil, pas. Tout se logue automatiquement.</p>
-      <div class="sys-stat">Temps moyen pour logger un repas : 2 secondes</div>
-      <div class="sys-badge sys-badge-starter">Inclus dès le Starter</div>
+      <div class="sys-num" data-i18n="how.b3_num">03 — Suivi Client Total</div>
+      <h3 class="sys-title" data-i18n="how.b3_title">Tu vois tout.<br>Ton client ne fait rien.</h3>
+      <p class="sys-sub" data-i18n="how.b3_sub">Nutrition IA vocale, scanner code-barre, poids, sommeil, pas. Tout se logue automatiquement.</p>
+      <div class="sys-stat" data-i18n="how.b3_stat">Temps moyen pour logger un repas : 2 secondes</div>
+      <div class="sys-badge sys-badge-starter" data-i18n="how.badge_starter">Inclus dès le Starter</div>
       <div class="sys-bullets">
-        <span>IA vocale : "un bol de pâtes au saumon" → macros en 2s</span>
-        <span>Scanner code-barre : 3M+ produits</span>
-        <span>Poids · sommeil · pas · eau — tracking auto</span>
+        <span data-i18n="how.b3_bul1">IA vocale : "un bol de pâtes au saumon" → macros en 2s</span>
+        <span data-i18n="how.b3_bul2">Scanner code-barre : 3M+ produits</span>
+        <span data-i18n="how.b3_bul3">Poids · sommeil · pas · eau — tracking auto</span>
       </div>
     </div>
     <div class="sys-right">
       <div class="sys-ghost">2s</div>
       <div class="sys-glow"></div>
-      <div style="text-align:center"><div class="sys-big" data-count="2" data-suffix="s">0</div><div class="sys-unit">Pour Logger</div></div>
+      <div style="text-align:center"><div class="sys-big" data-count="2" data-suffix="s">0</div><div class="sys-unit" data-i18n="how.b3_unit">Pour Logger</div></div>
     </div>
   </div>
 
@@ -1886,21 +1886,21 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="sys-block">
     <div class="sys-left">
       <svg class="sys-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      <div class="sys-num">04 — Programme Builder</div>
-      <h3 class="sys-title">Tes programmes<br>en minutes pas en heures.</h3>
-      <p class="sys-sub">Drag & drop. PDF signé. Vidéos YouTube. Zéro Excel.</p>
-      <div class="sys-stat">Temps moyen de création d'un programme 12 semaines : 4 min</div>
-      <div class="sys-badge sys-badge-starter">Inclus dès le Starter</div>
+      <div class="sys-num" data-i18n="how.b4_num">04 — Programme Builder</div>
+      <h3 class="sys-title" data-i18n="how.b4_title">Tes programmes<br>en minutes pas en heures.</h3>
+      <p class="sys-sub" data-i18n="how.b4_sub">Drag & drop. PDF signé. Vidéos YouTube. Zéro Excel.</p>
+      <div class="sys-stat" data-i18n="how.b4_stat">Temps moyen de création d'un programme 12 semaines : 4 min</div>
+      <div class="sys-badge sys-badge-starter" data-i18n="how.badge_starter">Inclus dès le Starter</div>
       <div class="sys-bullets">
-        <span>Drag & drop multi-semaines</span>
-        <span>Export PDF signé</span>
-        <span>Preview live</span>
+        <span data-i18n="how.b4_bul1">Drag & drop multi-semaines</span>
+        <span data-i18n="how.b4_bul2">Export PDF signé</span>
+        <span data-i18n="how.b4_bul3">Preview live</span>
       </div>
     </div>
     <div class="sys-right">
       <div class="sys-ghost">5</div>
       <div class="sys-glow"></div>
-      <div style="text-align:center"><div class="sys-big" data-count="5">0</div><div class="sys-unit">Min Pour Créer</div></div>
+      <div style="text-align:center"><div class="sys-big" data-count="5">0</div><div class="sys-unit" data-i18n="how.b4_unit">Min Pour Créer</div></div>
     </div>
   </div>
 
@@ -1908,21 +1908,21 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="sys-block">
     <div class="sys-left">
       <svg class="sys-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      <div class="sys-num">05 — Automatisations</div>
-      <h3 class="sys-title">Tu travailles moins.<br>Tes clients avancent plus.</h3>
-      <p class="sys-sub">Rapports auto. Relances auto. Renouvellements auto.</p>
-      <div class="sys-stat">Temps admin économisé en moyenne par coach : 12h/mois</div>
-      <div class="sys-badge sys-badge-starter">Inclus dès le Starter</div>
+      <div class="sys-num" data-i18n="how.b5_num">05 — Automatisations</div>
+      <h3 class="sys-title" data-i18n="how.b5_title">Tu travailles moins.<br>Tes clients avancent plus.</h3>
+      <p class="sys-sub" data-i18n="how.b5_sub">Rapports auto. Relances auto. Renouvellements auto.</p>
+      <div class="sys-stat" data-i18n="how.b5_stat">Temps admin économisé en moyenne par coach : 12h/mois</div>
+      <div class="sys-badge sys-badge-starter" data-i18n="how.badge_starter">Inclus dès le Starter</div>
       <div class="sys-bullets">
-        <span>Rapports hebdo auto-envoyés</span>
-        <span>Relance si inactif 3j</span>
-        <span>Renouvellement auto</span>
+        <span data-i18n="how.b5_bul1">Rapports hebdo auto-envoyés</span>
+        <span data-i18n="how.b5_bul2">Relance si inactif 3j</span>
+        <span data-i18n="how.b5_bul3">Renouvellement auto</span>
       </div>
     </div>
     <div class="sys-right">
       <div class="sys-ghost">3h</div>
       <div class="sys-glow"></div>
-      <div style="text-align:center"><div class="sys-big" data-count="3" data-suffix="h">0</div><div class="sys-unit">Gagnées / Semaine</div></div>
+      <div style="text-align:center"><div class="sys-big" data-count="3" data-suffix="h">0</div><div class="sys-unit" data-i18n="how.b5_unit">Gagnées / Semaine</div></div>
     </div>
   </div>
 
@@ -1930,21 +1930,21 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="sys-block">
     <div class="sys-left">
       <svg class="sys-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      <div class="sys-num">06 — Zéro Commission</div>
-      <h3 class="sys-title">Ce que tu gagnes,<br>tu le gardes.</h3>
-      <p class="sys-sub">Trainerize prend jusqu'à 30%. Nous : zéro. À vie.</p>
-      <div class="sys-stat">Économie moyenne vs plateformes concurrentes : 5 400€/an</div>
-      <div class="sys-badge sys-badge-starter">Garanti à vie</div>
+      <div class="sys-num" data-i18n="how.b6_num">06 — Zéro Commission</div>
+      <h3 class="sys-title" data-i18n="how.b6_title">Ce que tu gagnes,<br>tu le gardes.</h3>
+      <p class="sys-sub" data-i18n="how.b6_sub">Trainerize prend jusqu'à 30%. Nous : zéro. À vie.</p>
+      <div class="sys-stat" data-i18n="how.b6_stat">Économie moyenne vs plateformes concurrentes : 5 400€/an</div>
+      <div class="sys-badge sys-badge-starter" data-i18n="how.badge_lifetime">Garanti à vie</div>
       <div class="sys-bullets">
-        <span>0% commission prélevée</span>
-        <span>Ton CA reste intégralement le tien</span>
-        <span>+450€/mois récupérés vs concurrents</span>
+        <span data-i18n="how.b6_bul1">0% commission prélevée</span>
+        <span data-i18n="how.b6_bul2">Ton CA reste intégralement le tien</span>
+        <span data-i18n="how.b6_bul3">+450€/mois récupérés vs concurrents</span>
       </div>
     </div>
     <div class="sys-right">
       <div class="sys-ghost">0%</div>
       <div class="sys-glow"></div>
-      <div style="text-align:center"><div class="sys-big" data-count="0" data-suffix="%">0</div><div class="sys-unit">Commission</div></div>
+      <div style="text-align:center"><div class="sys-big" data-count="0" data-suffix="%">0</div><div class="sys-unit" data-i18n="how.b6_unit">Commission</div></div>
     </div>
   </div>
 
@@ -2011,36 +2011,36 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <section class="bento">
   <div class="bento-inner">
     <div class="intro">
-      <div class="section-tag">Une plateforme. Tout l'arsenal.</div>
-      <h2 class="section-title gradient-text">Construit pour les coachs<br/>qui ne s'arrêtent jamais.</h2>
+      <div class="section-tag" data-i18n="bento.tag">Une plateforme. Tout l'arsenal.</div>
+      <h2 class="section-title gradient-text" data-i18n="bento.title">Construit pour les coachs<br/>qui ne s'arrêtent jamais.</h2>
     </div>
     <div class="bento-grid">
 
       <!-- Big card 2x2 : Mission statement -->
       <div class="bento-card span2 row2 reveal" style="display:flex;flex-direction:column;justify-content:space-between">
         <div>
-          <div class="b-tag">Notre mission</div>
-          <div class="b-title" style="font-size:42px">Faire de chaque<br/>coach sportif<br/>un<span style="color:var(--orange)"> entrepreneur</span><br/>indépendant.</div>
+          <div class="b-tag" data-i18n="bento.mission_tag">Notre mission</div>
+          <div class="b-title" data-i18n="bento.mission_title" style="font-size:42px">Faire de chaque<br/>coach sportif<br/>un<span style="color:var(--orange)"> entrepreneur</span><br/>indépendant.</div>
         </div>
-        <p class="b-desc" style="font-size:14px;max-width:380px">Plateformes US comme Trainerize prennent jusqu'à 30% sur tes revenus. Nous : zéro. Tu paies pour la techno, pas pour ton succès. Ton chiffre d'affaires reste à toi, intégralement.</p>
+        <p class="b-desc" data-i18n="bento.mission_desc" style="font-size:14px;max-width:380px">Plateformes US comme Trainerize prennent jusqu'à 30% sur tes revenus. Nous : zéro. Tu paies pour la techno, pas pour ton succès. Ton chiffre d'affaires reste à toi, intégralement.</p>
       </div>
 
       <!-- Stat card -->
       <div class="bento-card b-stat reveal stagger-1">
         <div class="b-num">0%</div>
-        <div class="b-lbl">Commission prélevée</div>
+        <div class="b-lbl" data-i18n="bento.stat1_label">Commission prélevée</div>
       </div>
 
       <!-- Feature card -->
       <div class="bento-card b-feature reveal stagger-2">
         <div class="b-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
-        <div class="b-title">Anti-churn IA</div>
-        <div class="b-desc">7 signaux analysés en temps réel pour prédire qui va décrocher.</div>
+        <div class="b-title" data-i18n="bento.feat1_title">Anti-churn IA</div>
+        <div class="b-desc" data-i18n="bento.feat1_desc">7 signaux analysés en temps réel pour prédire qui va décrocher.</div>
       </div>
 
       <!-- Mini app preview card -->
       <div class="bento-card b-app span2 reveal">
-        <div class="b-tag">Live dashboard</div>
+        <div class="b-tag" data-i18n="bento.live_dashboard">Live dashboard</div>
         <div class="app-mock">
           <div class="app-row">
             <div class="dot" style="background:var(--teal)"></div>
@@ -2061,7 +2061,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
             <span class="val" style="color:var(--orange)">76</span>
           </div>
           <div style="margin-top:auto;padding-top:8px">
-            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dimmer);font-weight:700;margin-bottom:8px">Score Business</div>
+            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dimmer);font-weight:700;margin-bottom:8px" data-i18n="bento.score_business">Score Business</div>
             <div class="app-bar"><div class="fill"></div></div>
           </div>
         </div>
@@ -2070,27 +2070,27 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <!-- Stat card -->
       <div class="bento-card b-stat reveal stagger-1">
         <div class="b-num">7</div>
-        <div class="b-lbl">Signaux IA analysés par client</div>
+        <div class="b-lbl" data-i18n="bento.stat2_label">Signaux IA analysés par client</div>
       </div>
 
       <!-- Stat card -->
       <div class="bento-card b-stat reveal stagger-2">
         <div class="b-num">5min</div>
-        <div class="b-lbl">Pour onboarder un client</div>
+        <div class="b-lbl" data-i18n="bento.stat3_label">Pour onboarder un client</div>
       </div>
 
       <!-- Feature card large -->
       <div class="bento-card b-feature span2 reveal">
         <div class="b-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 17l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></svg></div>
-        <div class="b-title">Automatisations intelligentes</div>
-        <div class="b-desc">Rapports hebdo, alertes churn, relances — tout part automatiquement. Tu gères ton business, pas ta paperasse.</div>
+        <div class="b-title" data-i18n="bento.feat2_title">Automatisations intelligentes</div>
+        <div class="b-desc" data-i18n="bento.feat2_desc">Rapports hebdo, alertes churn, relances — tout part automatiquement. Tu gères ton business, pas ta paperasse.</div>
       </div>
 
       <!-- CTA card -->
       <div class="bento-card b-cta span2 reveal stagger-1">
-        <div class="b-cta-title">30 places. Prix verrouillé à vie.</div>
+        <div class="b-cta-title" data-i18n="bento.cta_title">30 places. Prix verrouillé à vie.</div>
         <a href="/waitlist" class="btn btn-orange magnetic">
-          Rejoindre les Founding Coachs →
+          <span data-i18n="bento.cta_btn">Rejoindre les Founding Coachs →</span>
           <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>
       </div>
@@ -2106,10 +2106,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
     <!-- Header — padding-top genereux pour ne pas coller au burger -->
     <div style="text-align:center;margin-bottom:64px">
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,64px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0 0 18px">
+      <h2 data-i18n="demo.title" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,64px);letter-spacing:-1px;line-height:0.95;color:#fff;margin:0 0 18px">
         Teste. Juge. Décide.
       </h2>
-      <p style="font-size:clamp(15px,1.6vw,18px);color:rgba(255,255,255,0.4);max-width:520px;margin:0 auto;line-height:1.6">
+      <p data-i18n="demo.sub" style="font-size:clamp(15px,1.6vw,18px);color:rgba(255,255,255,0.4);max-width:520px;margin:0 auto;line-height:1.6">
         15 minutes d'accès complet. Sans créer de compte.<br>
         <span style="color:rgba(255,255,255,0.55)">Tu verras pourquoi les coachs qui passent sur RB Perform ne reviennent jamais en arrière.</span>
       </p>
@@ -2122,16 +2122,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <div style="background:#080C14;border:1px solid rgba(2,209,186,0.18);border-radius:24px;overflow:hidden;position:relative;display:flex;flex-direction:column">
         <div style="position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:400px;height:250px;background:radial-gradient(circle,rgba(2,209,186,0.1),transparent 65%);pointer-events:none"></div>
         <div style="position:relative;z-index:1;padding:40px 36px 0">
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px">Vue Coach · Dashboard CEO</div>
-          <h3 style="font-size:clamp(22px,2.5vw,28px);font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1;margin:0 0 12px">
+          <div data-i18n="demo.coach_tag" style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px">Vue Coach · Dashboard CEO</div>
+          <h3 data-i18n="demo.coach_title" style="font-size:clamp(22px,2.5vw,28px);font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1;margin:0 0 12px">
             Tu pilotes ton business<br>en temps réel.
           </h3>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-            <span style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">MRR Live</span>
-            <span style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Anti-Churn IA</span>
-            <span style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Pipeline CRM</span>
+            <span data-i18n="demo.coach_chip1" style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">MRR Live</span>
+            <span data-i18n="demo.coach_chip2" style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Anti-Churn IA</span>
+            <span data-i18n="demo.coach_chip3" style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Pipeline CRM</span>
           </div>
-          <a href="/demo" style="display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:#02d1ba;color:#080C14;font-size:13px;font-weight:800;border-radius:12px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 8px 24px rgba(2,209,186,0.3);transition:transform 0.15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <a href="/demo" data-i18n="demo.coach_cta" style="display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:#02d1ba;color:#080C14;font-size:13px;font-weight:800;border-radius:12px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 8px 24px rgba(2,209,186,0.3);transition:transform 0.15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
             Explorer la démo coach →
           </a>
         </div>
@@ -2145,16 +2145,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <div style="background:#080C14;border:1px solid rgba(2,209,186,0.12);border-radius:24px;overflow:hidden;position:relative;display:flex;flex-direction:column">
         <div style="position:absolute;top:-60px;right:15%;width:300px;height:200px;background:radial-gradient(circle,rgba(2,209,186,0.08),transparent 65%);pointer-events:none"></div>
         <div style="position:relative;z-index:1;padding:40px 36px 0">
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px">Vue Client · App Premium</div>
-          <h3 style="font-size:clamp(22px,2.5vw,28px);font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1;margin:0 0 12px">
+          <div data-i18n="demo.client_tag" style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px">Vue Client · App Premium</div>
+          <h3 data-i18n="demo.client_title" style="font-size:clamp(22px,2.5vw,28px);font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1;margin:0 0 12px">
             Ton client vit une<br>expérience premium.
           </h3>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-            <span style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Programme Interactif</span>
-            <span style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Nutrition IA</span>
-            <span style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Tracking Complet</span>
+            <span data-i18n="demo.client_chip1" style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Programme Interactif</span>
+            <span data-i18n="demo.client_chip2" style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Nutrition IA</span>
+            <span data-i18n="demo.client_chip3" style="padding:5px 12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.15);border-radius:100px;font-size:11px;font-weight:600;color:rgba(2,209,186,0.7)">Tracking Complet</span>
           </div>
-          <a href="/demo-client" style="display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:rgba(2,209,186,0.08);color:#02d1ba;font-size:13px;font-weight:800;border:1px solid rgba(2,209,186,0.25);border-radius:12px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:transform 0.15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <a href="/demo-client" data-i18n="demo.client_cta" style="display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:rgba(2,209,186,0.08);color:#02d1ba;font-size:13px;font-weight:800;border:1px solid rgba(2,209,186,0.25);border-radius:12px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:transform 0.15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
             Explorer la démo client →
           </a>
         </div>
@@ -2167,7 +2167,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </div>
 
     <!-- Micro-copy -->
-    <div style="text-align:center;margin-top:28px;font-size:11px;color:rgba(255,255,255,0.2)">
+    <div data-i18n="demo.microcopy" style="text-align:center;margin-top:28px;font-size:11px;color:rgba(255,255,255,0.2)">
       8 clients fictifs · Toutes les features actives · Aucune carte requise · 15 min d'accès
     </div>
 
@@ -2180,9 +2180,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
     <!-- Intro perso -->
     <div class="intro" style="margin-bottom:80px">
-      <div class="section-tag">Pourquoi c'est différent</div>
-      <h2 class="section-title" style="color:#fff;font-family:'Syne',sans-serif;font-weight:900;letter-spacing:-0.03em">J'ai construit ce que<br/>j'aurais voulu avoir.</h2>
-      <p style="font-size:16px;color:rgba(255,255,255,0.35);max-width:580px;margin:20px auto 0;line-height:1.75;text-align:center">
+      <div class="section-tag" data-i18n="features.tag">Pourquoi c'est différent</div>
+      <h2 class="section-title" data-i18n="features.title" style="color:#fff;font-family:'Syne',sans-serif;font-weight:900;letter-spacing:-0.03em">J'ai construit ce que<br/>j'aurais voulu avoir.</h2>
+      <p data-i18n="features.intro" style="font-size:16px;color:rgba(255,255,255,0.35);max-width:580px;margin:20px auto 0;line-height:1.75;text-align:center">
         Athlète de haut niveau. Des années à conseiller des sportifs autour de moi. Je connais chaque problème du métier — parce que je les ai vécus. Alors j'ai construit l'outil qui les règle.
       </p>
     </div>
@@ -2217,36 +2217,36 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- Header -->
     <div class="sl-header">
       <div class="sl-dot"></div>
-      <span class="sl-badge">Sentinel actif</span>
+      <span class="sl-badge" data-i18n="sentinel.badge">Sentinel actif</span>
     </div>
-    <div class="sl-title">J'ai integre un Sentinel dans ton app<span>.</span></div>
-    <div class="sl-sub" style="max-width:520px;line-height:1.7;margin-bottom:20px">Pour sauver ton argent. Une IA qui tourne chaque matin a 7h — elle scanne tes clients, tes prix, tes opportunites et te dit exactement quoi faire. Voila ce qu'elle fait pendant que tu dors :</div>
+    <div class="sl-title" data-i18n="sentinel.title">J'ai integre un Sentinel dans ton app<span>.</span></div>
+    <div class="sl-sub" data-i18n="sentinel.sub" style="max-width:520px;line-height:1.7;margin-bottom:20px">Pour sauver ton argent. Une IA qui tourne chaque matin a 7h — elle scanne tes clients, tes prix, tes opportunites et te dit exactement quoi faire. Voila ce qu'elle fait pendant que tu dors :</div>
     <!-- Feed -->
     <div class="sl-feed" id="slFeed">
       <div class="sl-notif" data-sl="0">
         <div class="sl-icon" style="background:rgba(255,107,107,.1);color:#ff6b6b">!</div>
-        <div class="sl-text">
+        <div class="sl-text" data-i18n="sentinel.notif1">
           <div class="sl-time">07:31</div>
           <span class="sl-warn">ALERTE CHURN</span> — Client M.D. inactif depuis 6 jours<br>→ Message de relance automatique envoye <span class="sl-val">(+120EUR sauve)</span>
         </div>
       </div>
       <div class="sl-notif" data-sl="1">
         <div class="sl-icon" style="background:rgba(251,191,36,.1);color:#fbbf24">↑</div>
-        <div class="sl-text">
+        <div class="sl-text" data-i18n="sentinel.notif2">
           <div class="sl-time">07:32</div>
           <span class="sl-warn">UPSELL DETECTE</span> — Client S.R. fin de pack dans 5 jours<br>→ Proposition pack 6 mois generee <span class="sl-val">(+660EUR potentiel)</span>
         </div>
       </div>
       <div class="sl-notif" data-sl="2">
         <div class="sl-icon" style="background:rgba(129,140,248,.1);color:#818cf8">$</div>
-        <div class="sl-text">
+        <div class="sl-text" data-i18n="sentinel.notif3">
           <div class="sl-time">07:33</div>
           <span style="color:#818cf8;font-weight:700">PRIX MARCHE</span> — Tes tarifs sont 18% sous la mediane<br>→ Recommandation : +15EUR/mois/client <span class="sl-val">(+225EUR/mois)</span>
         </div>
       </div>
       <div class="sl-notif" data-sl="3">
         <div class="sl-icon" style="background:rgba(2,209,186,.1);color:#02d1ba">✓</div>
-        <div class="sl-text">
+        <div class="sl-text" data-i18n="sentinel.notif4">
           <div class="sl-time">07:34</div>
           <span class="sl-ok">PLAYBOOK DU JOUR</span> — 3 actions generees pour ce matin<br>→ Impact estime : <span class="sl-val">+340EUR ce mois</span>
         </div>
@@ -2254,7 +2254,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </div>
     <!-- Total -->
     <div class="sl-total" id="slTotal">
-      <div class="sl-total-label">Recupere ce mois grace a Sentinel</div>
+      <div class="sl-total-label" data-i18n="sentinel.total_label">Recupere ce mois grace a Sentinel</div>
       <div class="sl-total-val" id="slTotalVal">+1 345EUR</div>
     </div>
     <script>
@@ -2361,16 +2361,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- 01 — Dashboard MRR (BUSINESS) -->
     <div class="ft-block ft-reveal">
       <div class="ft-text">
-        <div class="ft-eyebrow">Dashboard MRR + Prévision</div>
-        <h3 class="ft-title">Tu sais ce que tu vas gagner le mois prochain. Pas approximativement.</h3>
-        <div class="ft-built">Un dashboard qui calcule ton MRR en temps réel, prédit tes revenus à 90 jours, et te montre exactement qui renouvelle, qui expire, qui est en retard. Comme un tableau de bord de startup — mais pour un coach.</div>
-        <div class="ft-result">Tu ouvres RB Perform le matin. En <strong>3 secondes</strong> tu sais : combien tu gagnes ce mois, combien tu gagneras le prochain, et quel client tu dois appeler aujourd'hui.</div>
+        <div class="ft-eyebrow" data-i18n="ft.f1_eyebrow">Dashboard MRR + Prévision</div>
+        <h3 class="ft-title" data-i18n="ft.f1_title">Tu sais ce que tu vas gagner le mois prochain. Pas approximativement.</h3>
+        <div class="ft-built" data-i18n="ft.f1_built">Un dashboard qui calcule ton MRR en temps réel, prédit tes revenus à 90 jours, et te montre exactement qui renouvelle, qui expire, qui est en retard. Comme un tableau de bord de startup — mais pour un coach.</div>
+        <div class="ft-result" data-i18n="ft.f1_result">Tu ouvres RB Perform le matin. En <strong>3 secondes</strong> tu sais : combien tu gagnes ce mois, combien tu gagneras le prochain, et quel client tu dois appeler aujourd'hui.</div>
       </div>
       <div class="ft-visual">
         <div class="ft-num">01</div>
         <div style="text-align:center;position:relative;z-index:1">
           <div class="ft-stat">90j</div>
-          <div class="ft-stat-label">Prévision</div>
+          <div class="ft-stat-label" data-i18n="ft.f1_stat_label">Prévision</div>
         </div>
       </div>
     </div>
@@ -2378,16 +2378,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- 02 — Anti-Churn IA (BUSINESS) -->
     <div class="ft-block ft-reveal">
       <div class="ft-text">
-        <div class="ft-eyebrow">Alertes Anti-Churn IA</div>
-        <h3 class="ft-title">L'IA voit que ton client va partir. 7 jours avant lui.</h3>
-        <div class="ft-built">Un algorithme qui analyse 7 signaux par client en continu : fréquence des séances, RPE, poids, connexions app, réponses messages, régularité nutrition, streak. Quand le score dépasse 60, tu reçois une alerte avec l'action recommandée.</div>
-        <div class="ft-result">Un coach perd en moyenne <strong>25% de ses clients par an</strong> sans le voir. Avec les alertes, tu récupères 80% de ces départs. Sur 20 clients à 150€, ça fait <strong>3 600€/an récupérés</strong>.</div>
+        <div class="ft-eyebrow" data-i18n="ft.f2_eyebrow">Alertes Anti-Churn IA</div>
+        <h3 class="ft-title" data-i18n="ft.f2_title">L'IA voit que ton client va partir. 7 jours avant lui.</h3>
+        <div class="ft-built" data-i18n="ft.f2_built">Un algorithme qui analyse 7 signaux par client en continu : fréquence des séances, RPE, poids, connexions app, réponses messages, régularité nutrition, streak. Quand le score dépasse 60, tu reçois une alerte avec l'action recommandée.</div>
+        <div class="ft-result" data-i18n="ft.f2_result">Un coach perd en moyenne <strong>25% de ses clients par an</strong> sans le voir. Avec les alertes, tu récupères 80% de ces départs. Sur 20 clients à 150€, ça fait <strong>3 600€/an récupérés</strong>.</div>
       </div>
       <div class="ft-visual">
         <div class="ft-num">02</div>
         <div style="text-align:center;position:relative;z-index:1">
           <div class="ft-stat">7</div>
-          <div class="ft-stat-label">Signaux analysés / client</div>
+          <div class="ft-stat-label" data-i18n="ft.f2_stat_label">Signaux analysés / client</div>
         </div>
       </div>
     </div>
@@ -2395,16 +2395,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- 03 — Programme Builder (COACHING) — Mini mockup -->
     <div class="ft-block ft-reveal">
       <div class="ft-text">
-        <div class="ft-eyebrow">Programme Builder</div>
-        <h3 class="ft-title">Tes programmes se créent en minutes. Pas en heures sur Excel.</h3>
-        <div class="ft-built">Multi-semaines, drag-and-drop, vidéos YouTube intégrées, notes de motivation, preview live. Tu construis un programme une fois — ton client le suit en direct dans son app avec les démos vidéo de chaque exercice.</div>
-        <div class="ft-result">Fini les PDF envoyés sur WhatsApp. Ton client ouvre son app, voit sa séance du jour, <strong>lance la vidéo, log ses charges</strong>. Toi tu vois sa progression — sans lui demander.</div>
+        <div class="ft-eyebrow" data-i18n="ft.f3_eyebrow">Programme Builder</div>
+        <h3 class="ft-title" data-i18n="ft.f3_title">Tes programmes se créent en minutes. Pas en heures sur Excel.</h3>
+        <div class="ft-built" data-i18n="ft.f3_built">Multi-semaines, drag-and-drop, vidéos YouTube intégrées, notes de motivation, preview live. Tu construis un programme une fois — ton client le suit en direct dans son app avec les démos vidéo de chaque exercice.</div>
+        <div class="ft-result" data-i18n="ft.f3_result">Fini les PDF envoyés sur WhatsApp. Ton client ouvre son app, voit sa séance du jour, <strong>lance la vidéo, log ses charges</strong>. Toi tu vois sa progression — sans lui demander.</div>
       </div>
       <div class="ft-visual">
         <div class="ft-num">03</div>
         <!-- Mini programme mockup -->
         <div class="ft-mockup" style="position:relative;z-index:1;width:100%;max-width:280px;background:#0a0c10;border:1px solid rgba(0,201,167,0.12);border-radius:16px;padding:20px;font-size:11px">
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:14px">Semaine 1 · Push</div>
+          <div data-i18n="ft.f3_mock_label" style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:14px">Semaine 1 · Push</div>
           <div class="ft-mock-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid rgba(255,255,255,0.04)">
             <div style="width:6px;height:20px;border-radius:3px;background:rgba(0,201,167,0.3);cursor:grab"></div>
             <div style="flex:1;color:rgba(255,255,255,0.7)">Bench Press</div>
@@ -2422,7 +2422,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           </div>
           <div class="ft-mock-row" style="display:flex;align-items:center;gap:10px;padding:10px 0">
             <div style="width:6px;height:20px;border-radius:3px;background:rgba(0,201,167,0.15);cursor:grab"></div>
-            <div style="flex:1;color:rgba(255,255,255,0.35);font-style:italic">+ Ajouter un exercice</div>
+            <div data-i18n="ft.f3_add_exercise" style="flex:1;color:rgba(255,255,255,0.35);font-style:italic">+ Ajouter un exercice</div>
           </div>
           <div style="margin-top:12px;display:flex;gap:6px">
             <div style="padding:4px 10px;border-radius:100px;background:rgba(0,201,167,0.08);border:.5px solid rgba(0,201,167,0.2);font-size:9px;color:#00C9A7;font-weight:700">S1</div>
@@ -2437,10 +2437,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- 04 — Score Business (BUSINESS) — Cercle animé -->
     <div class="ft-block ft-reveal">
       <div class="ft-text">
-        <div class="ft-eyebrow">Score Business</div>
-        <h3 class="ft-title">Un seul chiffre. Toute la santé de ton business.</h3>
-        <div class="ft-built">Un score de 0 à 100 calculé en temps réel à partir de ta rétention, ton MRR, l'activité de tes clients, et le momentum. Au-dessus de 70, tout va bien. En dessous de 50, il faut agir. Avec des recommandations concrètes à chaque palier.</div>
-        <div class="ft-result">Tu ne te fies plus à ton instinct pour savoir si ton business est solide. Tu as <strong>un chiffre. Comme un CEO.</strong></div>
+        <div class="ft-eyebrow" data-i18n="ft.f4_eyebrow">Score Business</div>
+        <h3 class="ft-title" data-i18n="ft.f4_title">Un seul chiffre. Toute la santé de ton business.</h3>
+        <div class="ft-built" data-i18n="ft.f4_built">Un score de 0 à 100 calculé en temps réel à partir de ta rétention, ton MRR, l'activité de tes clients, et le momentum. Au-dessus de 70, tout va bien. En dessous de 50, il faut agir. Avec des recommandations concrètes à chaque palier.</div>
+        <div class="ft-result" data-i18n="ft.f4_result">Tu ne te fies plus à ton instinct pour savoir si ton business est solide. Tu as <strong>un chiffre. Comme un CEO.</strong></div>
       </div>
       <div class="ft-visual">
         <div class="ft-num">04</div>
@@ -2451,7 +2451,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           </svg>
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
             <div class="ft-score-num" style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:#fff;line-height:1">0</div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(0,201,167,0.6);margin-top:2px">Score</div>
+            <div data-i18n="ft.f4_score_label" style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(0,201,167,0.6);margin-top:2px">Score</div>
           </div>
         </div>
       </div>
@@ -2460,16 +2460,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- === STAT BREAK BANNER === -->
     <div style="margin:40px 0;padding:48px 24px;text-align:center;border-top:.5px solid rgba(0,201,167,0.08);border-bottom:.5px solid rgba(0,201,167,0.08)">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,64px);color:rgba(255,255,255,0.06);line-height:1;margin-bottom:12px">4.7</div>
-      <div style="font-size:15px;color:rgba(255,255,255,0.4);max-width:480px;margin:0 auto;line-height:1.7">Un coach utilise en moyenne <strong style="color:rgba(255,255,255,0.7)">4,7 outils différents</strong> pour gérer son activité. RB Perform les remplace. <strong style="color:#00C9A7">Tous.</strong></div>
+      <div data-i18n="ft.stat_break" style="font-size:15px;color:rgba(255,255,255,0.4);max-width:480px;margin:0 auto;line-height:1.7">Un coach utilise en moyenne <strong style="color:rgba(255,255,255,0.7)">4,7 outils différents</strong> pour gérer son activité. RB Perform les remplace. <strong style="color:#00C9A7">Tous.</strong></div>
     </div>
 
     <!-- 05 — Nutrition IA (COACHING) — Bulle vocale -->
     <div class="ft-block ft-reveal">
       <div class="ft-text">
-        <div class="ft-eyebrow">Nutrition IA vocale</div>
-        <h3 class="ft-title">Ton client dit ce qu'il mange. L'IA fait le reste.</h3>
-        <div class="ft-built">"Un bol de pâtes au saumon" — 2 secondes, les macros tombent. Pas de scan, pas de recherche manuelle. Ton client parle, l'IA analyse avec la précision CIQUAL. Scanner code-barre inclus pour les produits industriels. 3 millions de produits référencés.</div>
-        <div class="ft-result">Tu vois <strong>ce que ton client mange réellement</strong> — sans lui demander. Macros, calories, tendances, écarts. Le suivi nutritionnel qui se fait tout seul.</div>
+        <div class="ft-eyebrow" data-i18n="ft.f5_eyebrow">Nutrition IA vocale</div>
+        <h3 class="ft-title" data-i18n="ft.f5_title">Ton client dit ce qu'il mange. L'IA fait le reste.</h3>
+        <div class="ft-built" data-i18n="ft.f5_built">"Un bol de pâtes au saumon" — 2 secondes, les macros tombent. Pas de scan, pas de recherche manuelle. Ton client parle, l'IA analyse avec la précision CIQUAL. Scanner code-barre inclus pour les produits industriels. 3 millions de produits référencés.</div>
+        <div class="ft-result" data-i18n="ft.f5_result">Tu vois <strong>ce que ton client mange réellement</strong> — sans lui demander. Macros, calories, tendances, écarts. Le suivi nutritionnel qui se fait tout seul.</div>
       </div>
       <div class="ft-visual">
         <div class="ft-num">05</div>
@@ -2478,26 +2478,26 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <div class="ft-bubble" style="background:rgba(0,201,167,0.06);border:.5px solid rgba(0,201,167,0.2);border-radius:16px 16px 16px 4px;padding:16px 20px;margin-bottom:16px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
               <div style="width:8px;height:8px;border-radius:50%;background:#00C9A7;animation:ftPulse 2s ease infinite"></div>
-              <span style="font-size:10px;font-weight:700;color:#00C9A7;letter-spacing:0.1em;text-transform:uppercase">Vocal IA</span>
+              <span data-i18n="ft.f5_vocal_label" style="font-size:10px;font-weight:700;color:#00C9A7;letter-spacing:0.1em;text-transform:uppercase">Vocal IA</span>
             </div>
-            <div style="font-size:14px;color:rgba(255,255,255,0.7);font-style:italic">"Un bol de pâtes au saumon"</div>
+            <div data-i18n="ft.f5_vocal_quote" style="font-size:14px;color:rgba(255,255,255,0.7);font-style:italic">"Un bol de pâtes au saumon"</div>
           </div>
           <div class="ft-macros" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <div class="ft-macro-card" style="background:rgba(255,255,255,0.02);border:.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;text-align:center;opacity:0;transform:translateY(8px)">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#00C9A7;line-height:1">542</div>
-              <div style="font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">Calories</div>
+              <div data-i18n="ft.f5_macro_kcal" style="font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">Calories</div>
             </div>
             <div class="ft-macro-card" style="background:rgba(255,255,255,0.02);border:.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;text-align:center;opacity:0;transform:translateY(8px)">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;line-height:1">38g</div>
-              <div style="font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">Protéines</div>
+              <div data-i18n="ft.f5_macro_protein" style="font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">Protéines</div>
             </div>
             <div class="ft-macro-card" style="background:rgba(255,255,255,0.02);border:.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;text-align:center;opacity:0;transform:translateY(8px)">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;line-height:1">62g</div>
-              <div style="font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">Glucides</div>
+              <div data-i18n="ft.f5_macro_carbs" style="font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">Glucides</div>
             </div>
             <div class="ft-macro-card" style="background:rgba(255,255,255,0.02);border:.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;text-align:center;opacity:0;transform:translateY(8px)">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;line-height:1">18g</div>
-              <div style="font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">Lipides</div>
+              <div data-i18n="ft.f5_macro_fat" style="font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px">Lipides</div>
             </div>
           </div>
         </div>
@@ -2507,10 +2507,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- 06 — IA Analyser (BUSINESS) — Terminal typewriter -->
     <div class="ft-block ft-reveal">
       <div class="ft-text">
-        <div class="ft-eyebrow">IA Analyser · Mistral</div>
-        <h3 class="ft-title">Demande à l'IA ce que ton client ne te dit pas.</h3>
-        <div class="ft-built">Un bouton. Tu cliques, l'IA analyse tout : séances, nutrition, poids, RPE, fréquence, tendances. En 3 secondes elle te sort un résumé + 3 actions concrètes. Pas du blabla — de l'analyse basée sur les vraies données de ton client.</div>
-        <div class="ft-result">Tu passes de <strong>"je pense que Thomas va bien"</strong> à <strong>"Thomas montre 3 signaux de décrochage, voici quoi faire"</strong>. En 3 secondes, pas en 30 minutes.</div>
+        <div class="ft-eyebrow" data-i18n="ft.f6_eyebrow">IA Analyser · Mistral</div>
+        <h3 class="ft-title" data-i18n="ft.f6_title">Demande à l'IA ce que ton client ne te dit pas.</h3>
+        <div class="ft-built" data-i18n="ft.f6_built">Un bouton. Tu cliques, l'IA analyse tout : séances, nutrition, poids, RPE, fréquence, tendances. En 3 secondes elle te sort un résumé + 3 actions concrètes. Pas du blabla — de l'analyse basée sur les vraies données de ton client.</div>
+        <div class="ft-result" data-i18n="ft.f6_result">Tu passes de <strong>"je pense que Thomas va bien"</strong> à <strong>"Thomas montre 3 signaux de décrochage, voici quoi faire"</strong>. En 3 secondes, pas en 30 minutes.</div>
       </div>
       <div class="ft-visual">
         <div class="ft-num">06</div>
@@ -2533,10 +2533,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- 07 — App Client (COACHING) — iPhone mockup -->
     <div class="ft-block ft-reveal">
       <div class="ft-text">
-        <div class="ft-eyebrow">App Client · iOS & Android</div>
-        <h3 class="ft-title">Ton client ouvre son app. Il vit une expérience premium.</h3>
-        <div class="ft-built">Installable en 1 clic depuis Safari (iPhone) ou Chrome (Android) — l'app apparaît sur l'écran d'accueil comme n'importe quelle app native. Programmes interactifs avec vidéos, log des séances en temps réel, messagerie directe, push notifications, suivi poids · sommeil · pas. Tout remonte dans ton dashboard automatiquement.</div>
-        <div class="ft-result">Ton client ne te dit plus "j'ai fait ma séance". <strong>Tu le vois. En direct.</strong> Charges, RPE, nutrition, poids, sommeil. Et lui, il a une vraie app — pas un PDF sur WhatsApp.</div>
+        <div class="ft-eyebrow" data-i18n="ft.f7_eyebrow">App Client · iOS & Android</div>
+        <h3 class="ft-title" data-i18n="ft.f7_title">Ton client ouvre son app. Il vit une expérience premium.</h3>
+        <div class="ft-built" data-i18n="ft.f7_built">Installable en 1 clic depuis Safari (iPhone) ou Chrome (Android) — l'app apparaît sur l'écran d'accueil comme n'importe quelle app native. Programmes interactifs avec vidéos, log des séances en temps réel, messagerie directe, push notifications, suivi poids · sommeil · pas. Tout remonte dans ton dashboard automatiquement.</div>
+        <div class="ft-result" data-i18n="ft.f7_result">Ton client ne te dit plus "j'ai fait ma séance". <strong>Tu le vois. En direct.</strong> Charges, RPE, nutrition, poids, sommeil. Et lui, il a une vraie app — pas un PDF sur WhatsApp.</div>
       </div>
       <div class="ft-visual">
         <div class="ft-num">07</div>
@@ -2546,16 +2546,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <div style="width:80px;height:22px;background:#0a0c10;border-radius:0 0 16px 16px;margin:0 auto;position:relative;z-index:2"></div>
           <!-- Screen content -->
           <div style="flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:8px">
-            <div style="font-size:8px;font-weight:800;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase">Séance du jour</div>
-            <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:900;color:#fff;line-height:1.2">Push · Semaine 1</div>
+            <div data-i18n="ft.f7_session_today" style="font-size:8px;font-weight:800;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase">Séance du jour</div>
+            <div data-i18n="ft.f7_session_title" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:900;color:#fff;line-height:1.2">Push · Semaine 1</div>
             <div style="display:flex;gap:6px;margin-top:4px">
               <div style="flex:1;background:rgba(0,201,167,0.06);border:.5px solid rgba(0,201,167,0.15);border-radius:8px;padding:6px;text-align:center">
                 <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#00C9A7">4</div>
-                <div style="font-size:6px;color:rgba(255,255,255,0.3);text-transform:uppercase">Exos</div>
+                <div data-i18n="ft.f7_exos" style="font-size:6px;color:rgba(255,255,255,0.3);text-transform:uppercase">Exos</div>
               </div>
               <div style="flex:1;background:rgba(255,255,255,0.02);border:.5px solid rgba(255,255,255,0.06);border-radius:8px;padding:6px;text-align:center">
                 <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#fff">45'</div>
-                <div style="font-size:6px;color:rgba(255,255,255,0.3);text-transform:uppercase">Durée</div>
+                <div data-i18n="ft.f7_duration" style="font-size:6px;color:rgba(255,255,255,0.3);text-transform:uppercase">Durée</div>
               </div>
             </div>
             <div style="margin-top:auto;display:flex;flex-direction:column;gap:4px">
@@ -2563,7 +2563,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
               <div style="display:flex;justify-content:space-between;font-size:7px;color:rgba(255,255,255,0.3)"><span>Incline DB</span><span style="color:rgba(0,201,167,0.5)">3×12</span></div>
               <div style="display:flex;justify-content:space-between;font-size:7px;color:rgba(255,255,255,0.3)"><span>Lat. Raises</span><span style="color:rgba(0,201,167,0.5)">4×15</span></div>
             </div>
-            <div style="padding:8px;background:#00C9A7;border-radius:10px;text-align:center;font-size:9px;font-weight:800;color:#080C14;letter-spacing:0.08em;text-transform:uppercase;margin-top:8px">Commencer</div>
+            <div data-i18n="ft.f7_start" style="padding:8px;background:#00C9A7;border-radius:10px;text-align:center;font-size:9px;font-weight:800;color:#080C14;letter-spacing:0.08em;text-transform:uppercase;margin-top:8px">Commencer</div>
           </div>
           <!-- Home bar -->
           <div style="width:40%;height:4px;background:rgba(255,255,255,0.15);border-radius:100px;margin:6px auto 8px"></div>
@@ -2579,28 +2579,28 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div style="max-width:1200px;margin:0 auto;padding:80px 5% 120px">
 
     <div style="text-align:center;margin-bottom:56px">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:#00C9A7;margin-bottom:14px">Ton business en chiffres</div>
-      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin:0 0 14px">Ce que RB Perform<br>change. Concrètement.</h2>
-      <p style="font-size:16px;color:#8A8A9A;font-style:italic;margin:0">Calcule. Visualise. Décide.</p>
+      <div data-i18n="business.tag" style="font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:#00C9A7;margin-bottom:14px">Ton business en chiffres</div>
+      <h2 data-i18n="business.title" style="font-family:'Syne',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin:0 0 14px">Ce que RB Perform<br>change. Concrètement.</h2>
+      <p data-i18n="business.intro" style="font-size:16px;color:#8A8A9A;font-style:italic;margin:0">Calcule. Visualise. Décide.</p>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start" class="biz-grid">
 
       <div>
-        <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px">Calcule ton potentiel.</div>
-        <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:28px;line-height:1.5">Règle tes chiffres. Vois ce que tu encaisses ce mois-ci.</div>
+        <div data-i18n="business.roi_title" style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px">Calcule ton potentiel.</div>
+        <div data-i18n="business.roi_sub" style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:28px;line-height:1.5">Règle tes chiffres. Vois ce que tu encaisses ce mois-ci.</div>
 
         <div style="margin-bottom:24px">
           <div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">
-            <span>Nombre de clients</span>
-            <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-clients-val">2</span> clients</span>
+            <span data-i18n="business.roi_slider1">Nombre de clients</span>
+            <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-clients-val">2</span> <span data-i18n="business.roi_clients_unit">clients</span></span>
           </div>
           <input type="range" id="roi-clients" aria-label="Nombre de clients actuels" min="0" max="100" value="0" style="width:100%;accent-color:#00C9A7" />
         </div>
         <div style="margin-bottom:32px">
           <div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">
-            <span>Tarif mensuel</span>
-            <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-tarif-val">100</span>€ / mois</span>
+            <span data-i18n="business.roi_slider2">Tarif mensuel</span>
+            <span style="color:#00C9A7;font-weight:700;font-family:'JetBrains Mono',monospace"><span id="roi-tarif-val">100</span><span data-i18n="business.roi_tarif_unit">€ / mois</span></span>
           </div>
           <input type="range" id="roi-tarif" aria-label="Tarif mensuel par client en euros" min="50" max="500" value="100" step="10" style="width:100%;accent-color:#00C9A7" />
         </div>
@@ -2608,17 +2608,17 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         <div style="display:flex;flex-direction:column;gap:12px">
           <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(0,201,167,0.15);border-radius:16px;padding:28px;text-align:center">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,64px);color:#00C9A7;letter-spacing:-1px;line-height:1" id="roi-mrr">—</div>
-            <div style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:8px">Ton MRR potentiel</div>
+            <div data-i18n="business.roi_mrr_label" style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:8px">Ton MRR potentiel</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:4px" id="roi-mrr-sub"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#00C9A7;line-height:1" id="roi-gain">—</div>
-              <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Argent récupéré / an</div>
+              <div data-i18n="business.roi_gain_label" style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Argent récupéré / an</div>
             </div>
             <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#fff;line-height:1" id="roi-hours">—</div>
-              <div style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Heures gagnées / mois</div>
+              <div data-i18n="business.roi_hours_label" style="font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:6px">Heures gagnées / mois</div>
             </div>
           </div>
           <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5;padding:8px 0" id="roi-conclusion">
@@ -2704,43 +2704,43 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </style>
     <div id="tlSection" style="margin-top:80px;padding-top:60px;border-top:1px solid rgba(0,201,167,0.1)">
       <div style="text-align:center;margin-bottom:56px" class="tl-title-wrap">
-        <h3 style="font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,48px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.1;margin:0">Une journée.<br>Deux réalités.</h3>
+        <h3 data-i18n="biz.tl_title" style="font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,48px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.1;margin:0">Une journée.<br>Deux réalités.</h3>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 2px 1fr;gap:0" class="biz-versus">
 
         <!-- SANS RB -->
         <div class="tl-col" style="border-radius:16px 0 0 16px" data-tl-side="left">
-          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#ff6b6b;margin-bottom:28px">Sans RB Perform</div>
+          <div data-i18n="biz.tl_without" style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#ff6b6b;margin-bottom:28px">Sans RB Perform</div>
           <div class="tl-line"><div class="tl-line-inner" style="background:linear-gradient(180deg,rgba(255,107,107,0.1),rgba(255,107,107,0.5))"></div></div>
 
           <div class="tl-item" data-tl-delay="300">
             <div class="tl-hour" style="color:rgba(255,107,107,0.12)">8h</div>
-            <div><div class="tl-text" style="color:rgba(255,255,255,0.45);font-style:italic">Tu ouvres Excel. Tu cherches qui a payé. Tu ne sais pas.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_w1" style="color:rgba(255,255,255,0.45);font-style:italic">Tu ouvres Excel. Tu cherches qui a payé. Tu ne sais pas.</div></div>
             <div class="tl-ghost" style="color:rgba(255,255,255,0.04)">0€</div>
           </div>
 
           <div class="tl-item" data-tl-delay="800">
             <div class="tl-hour" style="color:rgba(255,107,107,0.15)">10h</div>
-            <div><div class="tl-text" style="color:rgba(255,107,107,0.7)">Thomas n'a pas ouvert son app depuis 8 jours. Tu l'apprends trop tard.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_w2" style="color:rgba(255,107,107,0.7)">Thomas n'a pas ouvert son app depuis 8 jours. Tu l'apprends trop tard.</div></div>
             <div class="tl-ghost" style="color:rgba(255,107,107,0.08)">-150€</div>
           </div>
 
           <div class="tl-item" data-tl-delay="1300">
             <div class="tl-hour" style="color:rgba(255,107,107,0.18)">14h</div>
-            <div><div class="tl-text" style="color:rgba(255,107,107,0.7)">Marie veut arrêter. Tu ne l'avais pas vu venir.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_w3" style="color:rgba(255,107,107,0.7)">Marie veut arrêter. Tu ne l'avais pas vu venir.</div></div>
             <div class="tl-ghost" style="color:rgba(255,107,107,0.08)">-300€</div>
           </div>
 
           <div class="tl-item" data-tl-delay="1800">
             <div class="tl-hour" style="color:rgba(255,107,107,0.22)">17h</div>
-            <div><div class="tl-text" style="color:rgba(255,255,255,0.45);font-style:italic">2h de rapports manuels. 2h perdues.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_w4" style="color:rgba(255,255,255,0.45);font-style:italic">2h de rapports manuels. 2h perdues.</div></div>
             <div class="tl-ghost" style="color:rgba(255,255,255,0.04)">-2h</div>
           </div>
 
           <div class="tl-item" data-tl-delay="2400" data-tl-impact="true">
             <div class="tl-hour" style="color:rgba(255,107,107,0.3)">20h</div>
-            <div><div class="tl-text" style="color:#ff6b6b;font-weight:700;font-family:'Syne',sans-serif;font-size:15px">2 clients en moins. Sans comprendre pourquoi.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_w5" style="color:#ff6b6b;font-weight:700;font-family:'Syne',sans-serif;font-size:15px">2 clients en moins. Sans comprendre pourquoi.</div></div>
             <div class="tl-ghost" style="color:rgba(255,107,107,0.1);font-size:clamp(32px,5vw,48px)">-1800€</div>
           </div>
         </div>
@@ -2750,36 +2750,36 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
         <!-- AVEC RB -->
         <div class="tl-col" style="border-radius:0 16px 16px 0" data-tl-side="right">
-          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:28px">Avec RB Perform</div>
+          <div data-i18n="biz.tl_with" style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:28px">Avec RB Perform</div>
           <div class="tl-line"><div class="tl-line-inner" style="background:linear-gradient(180deg,rgba(0,201,167,0.1),rgba(0,201,167,0.5))"></div></div>
 
           <div class="tl-item" data-tl-delay="500">
             <div class="tl-hour" style="color:rgba(0,201,167,0.12)">8h</div>
-            <div><div class="tl-text" style="color:rgba(255,255,255,0.7)">Dashboard ouvert. MRR, rétention, score : tout est là en 3 secondes.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_a1" style="color:rgba(255,255,255,0.7)">Dashboard ouvert. MRR, rétention, score : tout est là en 3 secondes.</div></div>
             <div class="tl-ghost" style="color:rgba(0,201,167,0.06)">3s</div>
           </div>
 
           <div class="tl-item" data-tl-delay="1000">
             <div class="tl-hour" style="color:rgba(0,201,167,0.15)">10h</div>
-            <div><div class="tl-text" style="color:#00C9A7">Alerte RB : Thomas à risque depuis 3 jours. Message en 1 clic. Il reste.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_a2" style="color:#00C9A7">Alerte RB : Thomas à risque depuis 3 jours. Message en 1 clic. Il reste.</div></div>
             <div class="tl-ghost" style="color:rgba(0,201,167,0.08)">+150€</div>
           </div>
 
           <div class="tl-item" data-tl-delay="1500">
             <div class="tl-hour" style="color:rgba(0,201,167,0.18)">14h</div>
-            <div><div class="tl-text" style="color:#00C9A7">Marie reçoit son rapport auto. Elle voit ses progrès. Elle renouvelle.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_a3" style="color:#00C9A7">Marie reçoit son rapport auto. Elle voit ses progrès. Elle renouvelle.</div></div>
             <div class="tl-ghost" style="color:rgba(0,201,167,0.08)">+150€</div>
           </div>
 
           <div class="tl-item" data-tl-delay="2000">
             <div class="tl-hour" style="color:rgba(0,201,167,0.22)">17h</div>
-            <div><div class="tl-text" style="color:rgba(255,255,255,0.7)">Les rapports sont partis automatiquement. Tu n'as rien fait.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_a4" style="color:rgba(255,255,255,0.7)">Les rapports sont partis automatiquement. Tu n'as rien fait.</div></div>
             <div class="tl-ghost" style="color:rgba(0,201,167,0.06)">+3h</div>
           </div>
 
           <div class="tl-item" data-tl-delay="2600" data-tl-impact="true">
             <div class="tl-hour" style="color:rgba(0,201,167,0.3)">20h</div>
-            <div><div class="tl-text" style="color:#00C9A7;font-weight:700;font-family:'Syne',sans-serif;font-size:15px">0 clients perdus. +150€ récupérés. Tu es CEO.</div></div>
+            <div><div class="tl-text" data-i18n="biz.tl_a5" style="color:#00C9A7;font-weight:700;font-family:'Syne',sans-serif;font-size:15px">0 clients perdus. +150€ récupérés. Tu es CEO.</div></div>
             <div class="tl-ghost" style="color:rgba(0,201,167,0.1);font-size:clamp(32px,5vw,48px)">+1800€</div>
           </div>
         </div>
@@ -2812,10 +2812,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 <section class="pricing" id="pricing">
   <div class="pricing-inner">
     <div class="intro">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px;text-align:center">Tarifs Coach</div>
-      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin:0 0 12px;text-align:center">Combien tu perds<br>en ne sachant pas ?</h2>
-      <p style="font-size:16px;color:#8A8A9A;font-style:italic;margin:0 auto 16px;text-align:center;max-width:500px">Chaque mois sans visibilité, c'est un client qui part en silence.</p>
-      <p style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center">Support 7j/7</p>
+      <div data-i18n="pricing.tag" style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:16px;text-align:center">Tarifs Coach</div>
+      <h2 data-i18n="pricing.title" style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1.05;margin:0 0 12px;text-align:center">Combien tu perds<br>en ne sachant pas ?</h2>
+      <p data-i18n="pricing.sub" style="font-size:16px;color:#8A8A9A;font-style:italic;margin:0 auto 16px;text-align:center;max-width:500px">Chaque mois sans visibilité, c'est un client qui part en silence.</p>
+      <p data-i18n="pricing.support" style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center">Support 7j/7</p>
     </div>
     <!-- ===== BANNIERE FOUNDING COACH — ULTRA PREMIUM ===== -->
     <style>
@@ -2835,7 +2835,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap">
             <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,201,167,0.12);border:1px solid rgba(0,201,167,0.25);border-radius:100px;padding:5px 14px">
               <div style="width:5px;height:5px;border-radius:50%;background:#00C9A7;box-shadow:0 0 6px #00C9A7;animation:rbPulse 2s ease-in-out infinite"></div>
-              <span style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#00C9A7">Offre Fondateur</span>
+              <span data-i18n="pricing.fc_badge" style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#00C9A7">Offre Fondateur</span>
             </div>
             <div id="foundingCountdown" style="display:flex;gap:6px;align-items:center">
               <div id="fc-days" class="fc-timer-digit">--</div><span style="color:rgba(255,255,255,0.15);font-size:18px;font-weight:200">:</span>
@@ -2846,19 +2846,19 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           </div>
 
           <!-- Titre compact 2 lignes -->
-          <h3 style="font-family:'Syne',sans-serif;font-size:clamp(24px,3vw,34px);font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.15;margin:0 0 10px">
+          <h3 data-i18n="pricing.fc_title" style="font-family:'Syne',sans-serif;font-size:clamp(24px,3vw,34px);font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1.15;margin:0 0 10px">
             Le prix d'aujourd'hui est ton prix <span style="color:#00C9A7">à vie</span>.
           </h3>
-          <p style="font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 20px">Après cette offre, le prix passe à 299€. Pas de retour en arrière.</p>
+          <p data-i18n="pricing.fc_sub" style="font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 20px">Après cette offre, le prix passe à 299€. Pas de retour en arrière.</p>
 
           <!-- Prix + CTA sur la meme ligne -->
           <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
             <div>
               <span style="font-family:'Syne',sans-serif;font-size:clamp(40px,5vw,52px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1">199€</span>
-              <span style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.3)">/mois</span>
-              <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px">12 mois · Verrouillé à vie</div>
+              <span data-i18n="pricing.fc_per_month" style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.3)">/mois</span>
+              <div data-i18n="pricing.fc_lock" style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px">12 mois · Verrouillé à vie</div>
             </div>
-            <a id="foundingCTA" href="/waitlist" style="display:inline-block;padding:14px 28px;background:#00C9A7;color:#080C14;font-size:13px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:10px;text-decoration:none;box-shadow:0 10px 32px rgba(0,201,167,0.3);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+            <a id="foundingCTA" href="/waitlist" data-i18n="pricing.fc_cta" style="display:inline-block;padding:14px 28px;background:#00C9A7;color:#080C14;font-size:13px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:10px;text-decoration:none;box-shadow:0 10px 32px rgba(0,201,167,0.3);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
               Rejoindre →
             </a>
           </div>
@@ -2866,14 +2866,14 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         <!-- Ligne 4 : avantages plein largeur -->
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(0,201,167,0.1)">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px 16px">
-            <div class="fc-check">Clients illimités</div>
-            <div class="fc-check">Features Pro incluses</div>
-            <div class="fc-check">Anti-churn IA</div>
-            <div class="fc-check">Prix verrouillé à vie</div>
-            <div class="fc-check">Groupe privé Founders</div>
-            <div class="fc-check">Vote roadmap</div>
-            <div class="fc-check">Accès anticipé</div>
-            <div class="fc-check">Badge Founding</div>
+            <div class="fc-check" data-i18n="pricing.fc_check1">Clients illimités</div>
+            <div class="fc-check" data-i18n="pricing.fc_check2">Features Pro incluses</div>
+            <div class="fc-check" data-i18n="pricing.fc_check3">Anti-churn IA</div>
+            <div class="fc-check" data-i18n="pricing.fc_check4">Prix verrouillé à vie</div>
+            <div class="fc-check" data-i18n="pricing.fc_check5">Groupe privé Founders</div>
+            <div class="fc-check" data-i18n="pricing.fc_check6">Vote roadmap</div>
+            <div class="fc-check" data-i18n="pricing.fc_check7">Accès anticipé</div>
+            <div class="fc-check" data-i18n="pricing.fc_check8">Badge Founding</div>
           </div>
         </div>
       </div>
@@ -2882,48 +2882,48 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- ===== 3 PLANS ===== -->
     <div class="plans">
       <div class="plan reveal">
-        <div class="name">Starter</div>
-        <div class="desc">Pour les coachs qui démarrent leur activité.</div>
+        <div class="name" data-i18n="pricing.starter_name">Starter</div>
+        <div class="desc" data-i18n="pricing.starter_desc">Pour les coachs qui démarrent leur activité.</div>
         <div class="price"><span class="currency">€</span>199</div>
-        <div class="period">Par mois</div>
+        <div class="period" data-i18n="pricing.per_month">Par mois</div>
         <ul class="f-list">
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Jusqu'à 5 clients</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Dashboard coach complet</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Programme builder illimité</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Anti-churn IA</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Messagerie + push notifs</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>0% commission sur tes revenus</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.starter_f1">Jusqu'à 5 clients</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.starter_f2">Dashboard coach complet</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.starter_f3">Programme builder illimité</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.starter_f4">Anti-churn IA</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.starter_f5">Messagerie + push notifs</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.starter_f6">0% commission sur tes revenus</span></li>
         </ul>
-        <a href="/waitlist" class="cta-plan magnetic">Rejoindre →</a>
+        <a href="/waitlist" class="cta-plan magnetic" data-i18n="pricing.cta_join">Rejoindre →</a>
       </div>
       <div class="plan featured reveal stagger-1">
-        <div class="badge">Recommandé</div>
-        <div class="name">Pro</div>
-        <div class="desc">Pour les coachs établis qui passent à l'échelle.</div>
+        <div class="badge" data-i18n="pricing.pro_badge">Recommandé</div>
+        <div class="name" data-i18n="pricing.pro_name">Pro</div>
+        <div class="desc" data-i18n="pricing.pro_desc">Pour les coachs établis qui passent à l'échelle.</div>
         <div class="price"><span class="currency">€</span>299</div>
-        <div class="period">Par mois</div>
+        <div class="period" data-i18n="pricing.per_month">Par mois</div>
         <ul class="f-list">
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Jusqu'à 30 clients</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Tout Starter +</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Analytics + corrélations</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automatisations avancées</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Rapports hebdo auto</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.pro_f1">Jusqu'à 30 clients</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.pro_f2">Tout Starter +</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.pro_f3">Analytics + corrélations</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.pro_f4">Automatisations avancées</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.pro_f5">Rapports hebdo auto</span></li>
         </ul>
-        <a href="/waitlist" class="cta-plan magnetic">Rejoindre →</a>
+        <a href="/waitlist" class="cta-plan magnetic" data-i18n="pricing.cta_join">Rejoindre →</a>
       </div>
       <div class="plan reveal stagger-2">
-        <div class="name">Elite</div>
-        <div class="desc">Pour les coachs qui veulent tout — et plus encore.</div>
+        <div class="name" data-i18n="pricing.elite_name">Elite</div>
+        <div class="desc" data-i18n="pricing.elite_desc">Pour les coachs qui veulent tout — et plus encore.</div>
         <div class="price"><span class="currency">€</span>499</div>
-        <div class="period">Par mois</div>
+        <div class="period" data-i18n="pricing.per_month">Par mois</div>
         <ul class="f-list">
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Clients illimités</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Tout Pro +</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Support prioritaire < 24h</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Onboarding 1:1 à l'entrée</li>
-          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Groupe privé Elite</li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.elite_f1">Clients illimités</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.elite_f2">Tout Pro +</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.elite_f3">Support prioritaire < 24h</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.elite_f4">Onboarding 1:1 à l'entrée</span></li>
+          <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.elite_f5">Groupe privé Elite</span></li>
         </ul>
-        <a href="/waitlist" class="cta-plan magnetic">Rejoindre →</a>
+        <a href="/waitlist" class="cta-plan magnetic" data-i18n="pricing.cta_join">Rejoindre →</a>
       </div>
     </div>
 
@@ -2948,66 +2948,66 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <!-- ========== FAQ PREMIUM ========== -->
     <div style="max-width:680px;margin:64px auto 48px;padding:0 8px">
       <div style="text-align:center;margin-bottom:36px">
-        <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:12px">Questions fréquentes</div>
-        <div style="font-size:clamp(22px,3vw,32px);font-weight:900;color:#fff;letter-spacing:-0.02em;font-family:'Syne',sans-serif">Tout ce que tu veux savoir.</div>
+        <div data-i18n="faq.tag" style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:12px">Questions fréquentes</div>
+        <div data-i18n="faq.title" style="font-size:clamp(22px,3vw,32px);font-weight:900;color:#fff;letter-spacing:-0.02em;font-family:'Syne',sans-serif">Tout ce que tu veux savoir.</div>
       </div>
 
       <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
         <button class="faq-q" aria-expanded="false" onclick="toggleFaq(this)" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
-          Mes clients paient des frais ?
+          <span data-i18n="faq.q1">Mes clients paient des frais ?</span>
           <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
+        <div class="faq-a" data-i18n="faq.a1" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
           Jamais. Tes clients accèdent à leur espace gratuitement. Tu paies ton abonnement, c'est tout. Zéro frais cachés, zéro surprise.
         </div>
       </div>
 
       <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
         <button class="faq-q" aria-expanded="false" onclick="toggleFaq(this)" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
-          C'est vraiment 0% de commission ?
+          <span data-i18n="faq.q2">C'est vraiment 0% de commission ?</span>
           <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
+        <div class="faq-a" data-i18n="faq.a2" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
           Vraiment. Ce que tu encaisses, tu le gardes — intégralement. Trainerize prend jusqu'à 30%. Nous : zéro. Aujourd'hui, demain, toujours.
         </div>
       </div>
 
       <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
         <button class="faq-q" aria-expanded="false" onclick="toggleFaq(this)" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
-          Je peux annuler quand je veux ?
+          <span data-i18n="faq.q3">Je peux annuler quand je veux ?</span>
           <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
+        <div class="faq-a" data-i18n="faq.a3" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
           Oui. En un clic depuis ton dashboard. Pas de justification, pas de préavis, pas d'appel de rétention. Tu es libre.
         </div>
       </div>
 
       <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
         <button class="faq-q" aria-expanded="false" onclick="toggleFaq(this)" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
-          Mes clients doivent télécharger une app ?
+          <span data-i18n="faq.q4">Mes clients doivent télécharger une app ?</span>
           <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
+        <div class="faq-a" data-i18n="faq.a4" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
           Pas de passage par l'App Store ou Google Play — ton client ouvre rbperform.app dans son navigateur, clique « Ajouter à l'écran d'accueil » et l'app s'installe en 3 secondes. Fonctionne hors-ligne, push notifications actives, identique à une app native.
         </div>
       </div>
 
       <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
         <button class="faq-q" aria-expanded="false" onclick="toggleFaq(this)" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
-          Comment l'anti-churn IA fonctionne ?
+          <span data-i18n="faq.q5">Comment l'anti-churn IA fonctionne ?</span>
           <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
+        <div class="faq-a" data-i18n="faq.a5" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
           7 signaux comportementaux analysés en continu par client. Score de risque 0–100. Tu reçois une alerte avec l'action recommandée <strong style="color:rgba(255,255,255,0.7)">7 jours avant</strong> qu'il décide de partir. Tu interviens au bon moment, tu gardes ton client.
         </div>
       </div>
 
       <div class="faq-item" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.3s">
         <button class="faq-q" aria-expanded="false" onclick="toggleFaq(this)" style="width:100%;background:none;border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:600;text-align:left;padding:22px 24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:color 0.2s">
-          C'est quoi l'offre Founding Coach ?
+          <span data-i18n="faq.q6">C'est quoi l'offre Founding Coach ?</span>
           <span class="faq-icon" style="font-size:20px;font-weight:300;color:rgba(255,255,255,0.25);flex-shrink:0;transition:transform 0.3s,color 0.2s">+</span>
         </button>
-        <div class="faq-a" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
+        <div class="faq-a" data-i18n="faq.a6" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;padding:0 24px;max-width:580px">
           Les 30 premiers coachs paient <strong style="color:#00C9A7">199€/mois verrouillé à vie</strong>. Clients illimités, toutes les features Pro, accès au groupe privé, vote sur la roadmap. Le prix passera à 299€ après. Une fois verrouillé, ton prix ne bouge plus — jamais.
         </div>
       </div>
@@ -3022,10 +3022,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <div class="footer-inner">
       <div class="footer-brand">
         <div class="footer-logo" aria-label="RB Perform">RB<span>PERFORM</span></div>
-        <div class="footer-tagline">
+        <div class="footer-tagline" data-i18n="footer.tagline">
           Le système qui transforme<br>chaque coach en CEO.
         </div>
-        <div class="footer-legal-note">
+        <div class="footer-legal-note" data-i18n="footer.legal_note">
           © 2026 Rayan Bonte — Micro-entrepreneur<br>
           SIRET 990 637 803 00018<br>
           10 Rue Cardinale, 84000 Avignon, France<br>
@@ -3034,7 +3034,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
 
       <div class="footer-col">
-        <div class="footer-col-label">Suivre</div>
+        <div class="footer-col-label" data-i18n="footer.col_follow">Suivre</div>
         <a href="https://www.instagram.com/rb_perform/" target="_blank" rel="noopener" class="footer-link">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
             <rect x="2" y="2" width="20" height="20" rx="5"/>
@@ -3046,16 +3046,16 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
 
       <div class="footer-col">
-        <div class="footer-col-label">Légal</div>
-        <a href="/legal.html" class="footer-link">Mentions légales</a>
-        <a href="/legal.html#rgpd" class="footer-link">Confidentialité &amp; RGPD</a>
-        <a href="/legal.html#cgu" class="footer-link">CGU / CGV</a>
+        <div class="footer-col-label" data-i18n="footer.col_legal">Légal</div>
+        <a href="/legal.html" class="footer-link" data-i18n="footer.legal_mentions">Mentions légales</a>
+        <a href="/legal.html#rgpd" class="footer-link" data-i18n="footer.legal_rgpd">Confidentialité &amp; RGPD</a>
+        <a href="/legal.html#cgu" class="footer-link" data-i18n="footer.legal_cgu">CGU / CGV</a>
       </div>
 
       <div class="footer-col">
-        <div class="footer-col-label">Contact</div>
+        <div class="footer-col-label" data-i18n="footer.col_contact">Contact</div>
         <a href="mailto:rb.performancee@gmail.com" class="footer-link">rb.performancee@gmail.com</a>
-        <a href="/waitlist" class="footer-link">Devenir Founding Coach →</a>
+        <a href="/waitlist" class="footer-link" data-i18n="footer.become_founder">Devenir Founding Coach →</a>
       </div>
     </div>
   </footer>
@@ -3066,8 +3066,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
 <!-- ========== STICKY CTA ========== -->
 <div class="sticky-cta" id="stickyCta" aria-hidden="true">
-  <div class="label">Founding Coach Program — <b>30 fondateurs</b></div>
-  <a href="/waitlist" class="btn btn-orange magnetic">Rejoindre les 30 Founding Coachs →
+  <div class="label" data-i18n="sticky.label">Founding Coach Program — <b>30 fondateurs</b></div>
+  <a href="/waitlist" class="btn btn-orange magnetic"><span data-i18n="sticky.cta">Rejoindre les 30 Founding Coachs →</span>
     <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
   </a>
   <button class="close" id="stickyCtaClose" aria-label="Fermer">×</button>
@@ -3461,7 +3461,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   // ===== Lang toggle FR/EN =====
   var I18N = {
     fr: {
-      'nav.features':'Features','nav.pricing':'Tarifs','nav.login':'Connexion',
+      'nav.features':'Features','nav.pricing':'Tarifs','nav.login':'Connexion','nav.waitlist':'Waitlist',
+      'a11y.skip':'Aller au contenu',
       'hero.eyebrow':'SaaS de coaching premium','hero.countdown_label':'Lancement officiel dans','hero.countdown_unit':'jours',
       'how.tag':'Comment ça marche','how.title':'3 étapes.<br/>Pas une de plus.',
       'how.s1_title':'Crée ton compte','how.s1_desc':"Configure ton branding (logo, couleurs), ton lien de paiement et ton premier code d'invitation. 2 minutes chrono.",
@@ -3473,13 +3474,83 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'stack.c3_tag':'Suivi','stack.c3_title':'Tu vois tout.<br/>Ton client ne fait rien.','stack.c3_desc':'Nutrition IA vocale, scanner code-barre, poids, sommeil, pas — tout se logue automatiquement. Ton client dit "un bol de pâtes au saumon" et les macros tombent en 2 secondes.',
       'founder.role':'Mot du fondateur','founder.message':'J\'ai construit RB Perform parce que les outils existants <strong>volaient les coachs</strong> — 30% de commission, interfaces décennales, support inexistant. J\'ai voulu un système qui te donne <strong>les armes des CEO</strong>, sans te prendre un centime sur tes revenus. Tu paies pour la techno, point. Le reste, c\'est à toi.',
       'quiz.tag':'Trouve ton plan en 5 secondes','quiz.q':'Tu coaches combien de clients&nbsp;?','quiz.opt1':'Je démarre','quiz.opt2':'J\'établis','quiz.opt3':'Je scale',
-      'menu.ch1':'Ton Business','menu.ch3':'Features','menu.ch4':'Explorer','menu.ch5':'Ton Offre',
+      'menu.ch0':'Le Système','menu.ch1':'Ton Business','menu.ch3':'Features','menu.ch4':'Explorer','menu.ch5':'Ton Offre',
       'menu.cta':'Rejoindre les 30 Founding Coachs →',
       'hero.sub':'Le système qui transforme<br/>chaque coach en CEO.',
-      'hero.enter':'Entrer'
+      'hero.enter':'Entrer',
+      // ===== HOW (système 6 blocks) =====
+      'how.header_tag':'Le Système',
+      'how.header_title':'Certains coachs ont du talent.<br>Les meilleurs ont un système.',
+      'how.stat1_label':'Commission','how.stat2_label':'Clients / 1 coach','how.stat3_label':'Pour démarrer',
+      'how.badge_starter':'Inclus dès le Starter','how.badge_lifetime':'Garanti à vie',
+      'how.b1_num':'01 — Dashboard CEO','how.b1_title':'Tu sais exactement<br>où en est ton business.','how.b1_sub':'MRR, ARR, score business live. Le cockpit que Trainerize cache derrière 3 onglets.','how.b1_stat':'Score moyen de nos coachs après 30 jours : 84/100','how.b1_bul1':'Score 0–100 en temps réel','how.b1_bul2':'MRR · ARR · Rétention','how.b1_bul3':'Alertes expiration auto','how.b1_unit':'Score Live',
+      'how.b2_num':'02 — Anti-Churn IA','how.b2_title':'Tu sauves les clients<br>avant qu\'ils partent.','how.b2_sub':'7 signaux par client. Tu interviens 7 jours avant qu\'il décide.','how.b2_stat':'Rétention moyenne avec anti-churn actif : 94%','how.b2_bul1':'7 signaux comportementaux','how.b2_bul2':'Score churn 0–100','how.b2_bul3':'Action recommandée auto','how.b2_unit':'De Churn',
+      'how.b3_num':'03 — Suivi Client Total','how.b3_title':'Tu vois tout.<br>Ton client ne fait rien.','how.b3_sub':'Nutrition IA vocale, scanner code-barre, poids, sommeil, pas. Tout se logue automatiquement.','how.b3_stat':'Temps moyen pour logger un repas : 2 secondes','how.b3_bul1':'IA vocale : "un bol de pâtes au saumon" → macros en 2s','how.b3_bul2':'Scanner code-barre : 3M+ produits','how.b3_bul3':'Poids · sommeil · pas · eau — tracking auto','how.b3_unit':'Pour Logger',
+      'how.b4_num':'04 — Programme Builder','how.b4_title':'Tes programmes<br>en minutes pas en heures.','how.b4_sub':'Drag & drop. PDF signé. Vidéos YouTube. Zéro Excel.','how.b4_stat':'Temps moyen de création d\'un programme 12 semaines : 4 min','how.b4_bul1':'Drag & drop multi-semaines','how.b4_bul2':'Export PDF signé','how.b4_bul3':'Preview live','how.b4_unit':'Min Pour Créer',
+      'how.b5_num':'05 — Automatisations','how.b5_title':'Tu travailles moins.<br>Tes clients avancent plus.','how.b5_sub':'Rapports auto. Relances auto. Renouvellements auto.','how.b5_stat':'Temps admin économisé en moyenne par coach : 12h/mois','how.b5_bul1':'Rapports hebdo auto-envoyés','how.b5_bul2':'Relance si inactif 3j','how.b5_bul3':'Renouvellement auto','how.b5_unit':'Gagnées / Semaine',
+      'how.b6_num':'06 — Zéro Commission','how.b6_title':'Ce que tu gagnes,<br>tu le gardes.','how.b6_sub':'Trainerize prend jusqu\'à 30%. Nous : zéro. À vie.','how.b6_stat':'Économie moyenne vs plateformes concurrentes : 5 400€/an','how.b6_bul1':'0% commission prélevée','how.b6_bul2':'Ton CA reste intégralement le tien','how.b6_bul3':'+450€/mois récupérés vs concurrents','how.b6_unit':'Commission',
+      // ===== BENTO =====
+      'bento.tag':'Une plateforme. Tout l\'arsenal.','bento.title':'Construit pour les coachs<br/>qui ne s\'arrêtent jamais.',
+      'bento.mission_tag':'Notre mission','bento.mission_title':'Faire de chaque<br/>coach sportif<br/>un<span style="color:var(--orange)"> entrepreneur</span><br/>indépendant.','bento.mission_desc':'Plateformes US comme Trainerize prennent jusqu\'à 30% sur tes revenus. Nous : zéro. Tu paies pour la techno, pas pour ton succès. Ton chiffre d\'affaires reste à toi, intégralement.',
+      'bento.stat1_label':'Commission prélevée','bento.stat2_label':'Signaux IA analysés par client','bento.stat3_label':'Pour onboarder un client',
+      'bento.feat1_title':'Anti-churn IA','bento.feat1_desc':'7 signaux analysés en temps réel pour prédire qui va décrocher.',
+      'bento.feat2_title':'Automatisations intelligentes','bento.feat2_desc':'Rapports hebdo, alertes churn, relances — tout part automatiquement. Tu gères ton business, pas ta paperasse.',
+      'bento.live_dashboard':'Live dashboard','bento.score_business':'Score Business',
+      'bento.cta_title':'30 places. Prix verrouillé à vie.','bento.cta_btn':'Rejoindre les Founding Coachs →',
+      // ===== DEMO =====
+      'demo.title':'Teste. Juge. Décide.',
+      'demo.sub':'15 minutes d\'accès complet. Sans créer de compte.<br><span style="color:rgba(255,255,255,0.55)">Tu verras pourquoi les coachs qui passent sur RB Perform ne reviennent jamais en arrière.</span>',
+      'demo.coach_tag':'Vue Coach · Dashboard CEO','demo.coach_title':'Tu pilotes ton business<br>en temps réel.','demo.coach_chip1':'MRR Live','demo.coach_chip2':'Anti-Churn IA','demo.coach_chip3':'Pipeline CRM','demo.coach_cta':'Explorer la démo coach →',
+      'demo.client_tag':'Vue Client · App Premium','demo.client_title':'Ton client vit une<br>expérience premium.','demo.client_chip1':'Programme Interactif','demo.client_chip2':'Nutrition IA','demo.client_chip3':'Tracking Complet','demo.client_cta':'Explorer la démo client →',
+      'demo.microcopy':'8 clients fictifs · Toutes les features actives · Aucune carte requise · 15 min d\'accès',
+      // ===== FEATURES =====
+      'features.tag':'Pourquoi c\'est différent','features.title':'J\'ai construit ce que<br/>j\'aurais voulu avoir.','features.intro':'Athlète de haut niveau. Des années à conseiller des sportifs autour de moi. Je connais chaque problème du métier — parce que je les ai vécus. Alors j\'ai construit l\'outil qui les règle.',
+      'sentinel.badge':'Sentinel actif','sentinel.title':'J\'ai integre un Sentinel dans ton app<span>.</span>','sentinel.sub':'Pour sauver ton argent. Une IA qui tourne chaque matin a 7h — elle scanne tes clients, tes prix, tes opportunites et te dit exactement quoi faire. Voila ce qu\'elle fait pendant que tu dors :',
+      'sentinel.notif1':'<div class="sl-time">07:31</div><span class="sl-warn">ALERTE CHURN</span> — Client M.D. inactif depuis 6 jours<br>→ Message de relance automatique envoye <span class="sl-val">(+120EUR sauve)</span>',
+      'sentinel.notif2':'<div class="sl-time">07:32</div><span class="sl-warn">UPSELL DETECTE</span> — Client S.R. fin de pack dans 5 jours<br>→ Proposition pack 6 mois generee <span class="sl-val">(+660EUR potentiel)</span>',
+      'sentinel.notif3':'<div class="sl-time">07:33</div><span style="color:#818cf8;font-weight:700">PRIX MARCHE</span> — Tes tarifs sont 18% sous la mediane<br>→ Recommandation : +15EUR/mois/client <span class="sl-val">(+225EUR/mois)</span>',
+      'sentinel.notif4':'<div class="sl-time">07:34</div><span class="sl-ok">PLAYBOOK DU JOUR</span> — 3 actions generees pour ce matin<br>→ Impact estime : <span class="sl-val">+340EUR ce mois</span>',
+      'sentinel.total_label':'Recupere ce mois grace a Sentinel',
+      'ft.f1_eyebrow':'Dashboard MRR + Prévision','ft.f1_title':'Tu sais ce que tu vas gagner le mois prochain. Pas approximativement.','ft.f1_built':'Un dashboard qui calcule ton MRR en temps réel, prédit tes revenus à 90 jours, et te montre exactement qui renouvelle, qui expire, qui est en retard. Comme un tableau de bord de startup — mais pour un coach.','ft.f1_result':'Tu ouvres RB Perform le matin. En <strong>3 secondes</strong> tu sais : combien tu gagnes ce mois, combien tu gagneras le prochain, et quel client tu dois appeler aujourd\'hui.','ft.f1_stat_label':'Prévision',
+      'ft.f2_eyebrow':'Alertes Anti-Churn IA','ft.f2_title':'L\'IA voit que ton client va partir. 7 jours avant lui.','ft.f2_built':'Un algorithme qui analyse 7 signaux par client en continu : fréquence des séances, RPE, poids, connexions app, réponses messages, régularité nutrition, streak. Quand le score dépasse 60, tu reçois une alerte avec l\'action recommandée.','ft.f2_result':'Un coach perd en moyenne <strong>25% de ses clients par an</strong> sans le voir. Avec les alertes, tu récupères 80% de ces départs. Sur 20 clients à 150€, ça fait <strong>3 600€/an récupérés</strong>.','ft.f2_stat_label':'Signaux analysés / client',
+      'ft.f3_eyebrow':'Programme Builder','ft.f3_title':'Tes programmes se créent en minutes. Pas en heures sur Excel.','ft.f3_built':'Multi-semaines, drag-and-drop, vidéos YouTube intégrées, notes de motivation, preview live. Tu construis un programme une fois — ton client le suit en direct dans son app avec les démos vidéo de chaque exercice.','ft.f3_result':'Fini les PDF envoyés sur WhatsApp. Ton client ouvre son app, voit sa séance du jour, <strong>lance la vidéo, log ses charges</strong>. Toi tu vois sa progression — sans lui demander.','ft.f3_mock_label':'Semaine 1 · Push','ft.f3_add_exercise':'+ Ajouter un exercice',
+      'ft.f4_eyebrow':'Score Business','ft.f4_title':'Un seul chiffre. Toute la santé de ton business.','ft.f4_built':'Un score de 0 à 100 calculé en temps réel à partir de ta rétention, ton MRR, l\'activité de tes clients, et le momentum. Au-dessus de 70, tout va bien. En dessous de 50, il faut agir. Avec des recommandations concrètes à chaque palier.','ft.f4_result':'Tu ne te fies plus à ton instinct pour savoir si ton business est solide. Tu as <strong>un chiffre. Comme un CEO.</strong>','ft.f4_score_label':'Score',
+      'ft.stat_break':'Un coach utilise en moyenne <strong style="color:rgba(255,255,255,0.7)">4,7 outils différents</strong> pour gérer son activité. RB Perform les remplace. <strong style="color:#00C9A7">Tous.</strong>',
+      'ft.f5_eyebrow':'Nutrition IA vocale','ft.f5_title':'Ton client dit ce qu\'il mange. L\'IA fait le reste.','ft.f5_built':'"Un bol de pâtes au saumon" — 2 secondes, les macros tombent. Pas de scan, pas de recherche manuelle. Ton client parle, l\'IA analyse avec la précision CIQUAL. Scanner code-barre inclus pour les produits industriels. 3 millions de produits référencés.','ft.f5_result':'Tu vois <strong>ce que ton client mange réellement</strong> — sans lui demander. Macros, calories, tendances, écarts. Le suivi nutritionnel qui se fait tout seul.','ft.f5_vocal_label':'Vocal IA','ft.f5_vocal_quote':'"Un bol de pâtes au saumon"','ft.f5_macro_kcal':'Calories','ft.f5_macro_protein':'Protéines','ft.f5_macro_carbs':'Glucides','ft.f5_macro_fat':'Lipides',
+      'ft.f6_eyebrow':'IA Analyser · Mistral','ft.f6_title':'Demande à l\'IA ce que ton client ne te dit pas.','ft.f6_built':'Un bouton. Tu cliques, l\'IA analyse tout : séances, nutrition, poids, RPE, fréquence, tendances. En 3 secondes elle te sort un résumé + 3 actions concrètes. Pas du blabla — de l\'analyse basée sur les vraies données de ton client.','ft.f6_result':'Tu passes de <strong>"je pense que Thomas va bien"</strong> à <strong>"Thomas montre 3 signaux de décrochage, voici quoi faire"</strong>. En 3 secondes, pas en 30 minutes.',
+      'ft.f7_eyebrow':'App Client · iOS & Android','ft.f7_title':'Ton client ouvre son app. Il vit une expérience premium.','ft.f7_built':'Installable en 1 clic depuis Safari (iPhone) ou Chrome (Android) — l\'app apparaît sur l\'écran d\'accueil comme n\'importe quelle app native. Programmes interactifs avec vidéos, log des séances en temps réel, messagerie directe, push notifications, suivi poids · sommeil · pas. Tout remonte dans ton dashboard automatiquement.','ft.f7_result':'Ton client ne te dit plus "j\'ai fait ma séance". <strong>Tu le vois. En direct.</strong> Charges, RPE, nutrition, poids, sommeil. Et lui, il a une vraie app — pas un PDF sur WhatsApp.','ft.f7_session_today':'Séance du jour','ft.f7_session_title':'Push · Semaine 1','ft.f7_exos':'Exos','ft.f7_duration':'Durée','ft.f7_start':'Commencer',
+      // ===== BUSINESS =====
+      'business.tag':'Ton business en chiffres','business.title':'Ce que RB Perform<br>change. Concrètement.','business.intro':'Calcule. Visualise. Décide.',
+      'business.roi_title':'Calcule ton potentiel.','business.roi_sub':'Règle tes chiffres. Vois ce que tu encaisses ce mois-ci.','business.roi_slider1':'Nombre de clients','business.roi_slider2':'Tarif mensuel','business.roi_clients_unit':'clients','business.roi_tarif_unit':'€ / mois','business.roi_mrr_label':'Ton MRR potentiel','business.roi_gain_label':'Argent récupéré / an','business.roi_hours_label':'Heures gagnées / mois',
+      'biz.tl_title':'Une journée.<br>Deux réalités.','biz.tl_without':'Sans RB Perform','biz.tl_with':'Avec RB Perform',
+      'biz.tl_w1':'Tu ouvres Excel. Tu cherches qui a payé. Tu ne sais pas.','biz.tl_w2':'Thomas n\'a pas ouvert son app depuis 8 jours. Tu l\'apprends trop tard.','biz.tl_w3':'Marie veut arrêter. Tu ne l\'avais pas vu venir.','biz.tl_w4':'2h de rapports manuels. 2h perdues.','biz.tl_w5':'2 clients en moins. Sans comprendre pourquoi.',
+      'biz.tl_a1':'Dashboard ouvert. MRR, rétention, score : tout est là en 3 secondes.','biz.tl_a2':'Alerte RB : Thomas à risque depuis 3 jours. Message en 1 clic. Il reste.','biz.tl_a3':'Marie reçoit son rapport auto. Elle voit ses progrès. Elle renouvelle.','biz.tl_a4':'Les rapports sont partis automatiquement. Tu n\'as rien fait.','biz.tl_a5':'0 clients perdus. +150€ récupérés. Tu es CEO.',
+      // ===== PRICING =====
+      'pricing.tag':'Tarifs Coach','pricing.title':'Combien tu perds<br>en ne sachant pas ?','pricing.sub':'Chaque mois sans visibilité, c\'est un client qui part en silence.','pricing.support':'Support 7j/7',
+      'pricing.fc_badge':'Offre Fondateur','pricing.fc_title':'Le prix d\'aujourd\'hui est ton prix <span style="color:#00C9A7">à vie</span>.','pricing.fc_sub':'Après cette offre, le prix passe à 299€. Pas de retour en arrière.','pricing.fc_per_month':'/mois','pricing.fc_lock':'12 mois · Verrouillé à vie','pricing.fc_cta':'Rejoindre →',
+      'pricing.fc_check1':'Clients illimités','pricing.fc_check2':'Features Pro incluses','pricing.fc_check3':'Anti-churn IA','pricing.fc_check4':'Prix verrouillé à vie','pricing.fc_check5':'Groupe privé Founders','pricing.fc_check6':'Vote roadmap','pricing.fc_check7':'Accès anticipé','pricing.fc_check8':'Badge Founding',
+      'pricing.per_month':'Par mois','pricing.cta_join':'Rejoindre →',
+      'pricing.starter_name':'Starter','pricing.starter_desc':'Pour les coachs qui démarrent leur activité.','pricing.starter_f1':'Jusqu\'à 5 clients','pricing.starter_f2':'Dashboard coach complet','pricing.starter_f3':'Programme builder illimité','pricing.starter_f4':'Anti-churn IA','pricing.starter_f5':'Messagerie + push notifs','pricing.starter_f6':'0% commission sur tes revenus',
+      'pricing.pro_badge':'Recommandé','pricing.pro_name':'Pro','pricing.pro_desc':'Pour les coachs établis qui passent à l\'échelle.','pricing.pro_f1':'Jusqu\'à 30 clients','pricing.pro_f2':'Tout Starter +','pricing.pro_f3':'Analytics + corrélations','pricing.pro_f4':'Automatisations avancées','pricing.pro_f5':'Rapports hebdo auto',
+      'pricing.elite_name':'Elite','pricing.elite_desc':'Pour les coachs qui veulent tout — et plus encore.','pricing.elite_f1':'Clients illimités','pricing.elite_f2':'Tout Pro +','pricing.elite_f3':'Support prioritaire < 24h','pricing.elite_f4':'Onboarding 1:1 à l\'entrée','pricing.elite_f5':'Groupe privé Elite',
+      // ===== FAQ =====
+      'faq.tag':'Questions fréquentes','faq.title':'Tout ce que tu veux savoir.',
+      'faq.q1':'Mes clients paient des frais ?','faq.a1':'Jamais. Tes clients accèdent à leur espace gratuitement. Tu paies ton abonnement, c\'est tout. Zéro frais cachés, zéro surprise.',
+      'faq.q2':'C\'est vraiment 0% de commission ?','faq.a2':'Vraiment. Ce que tu encaisses, tu le gardes — intégralement. Trainerize prend jusqu\'à 30%. Nous : zéro. Aujourd\'hui, demain, toujours.',
+      'faq.q3':'Je peux annuler quand je veux ?','faq.a3':'Oui. En un clic depuis ton dashboard. Pas de justification, pas de préavis, pas d\'appel de rétention. Tu es libre.',
+      'faq.q4':'Mes clients doivent télécharger une app ?','faq.a4':'Pas de passage par l\'App Store ou Google Play — ton client ouvre rbperform.app dans son navigateur, clique « Ajouter à l\'écran d\'accueil » et l\'app s\'installe en 3 secondes. Fonctionne hors-ligne, push notifications actives, identique à une app native.',
+      'faq.q5':'Comment l\'anti-churn IA fonctionne ?','faq.a5':'7 signaux comportementaux analysés en continu par client. Score de risque 0–100. Tu reçois une alerte avec l\'action recommandée <strong style="color:rgba(255,255,255,0.7)">7 jours avant</strong> qu\'il décide de partir. Tu interviens au bon moment, tu gardes ton client.',
+      'faq.q6':'C\'est quoi l\'offre Founding Coach ?','faq.a6':'Les 30 premiers coachs paient <strong style="color:#00C9A7">199€/mois verrouillé à vie</strong>. Clients illimités, toutes les features Pro, accès au groupe privé, vote sur la roadmap. Le prix passera à 299€ après. Une fois verrouillé, ton prix ne bouge plus — jamais.',
+      // ===== FOOTER + STICKY =====
+      'footer.tagline':'Le système qui transforme<br>chaque coach en CEO.',
+      'footer.legal_note':'© 2026 Rayan Bonte — Micro-entrepreneur<br>SIRET 990 637 803 00018<br>10 Rue Cardinale, 84000 Avignon, France<br>Hébergé par Vercel Inc. — San Francisco, CA',
+      'footer.col_follow':'Suivre','footer.col_legal':'Légal','footer.col_contact':'Contact',
+      'footer.legal_mentions':'Mentions légales','footer.legal_rgpd':'Confidentialité &amp; RGPD','footer.legal_cgu':'CGU / CGV','footer.become_founder':'Devenir Founding Coach →',
+      'sticky.label':'Founding Coach Program — <b>30 fondateurs</b>','sticky.cta':'Rejoindre les 30 Founding Coachs →'
     },
     en: {
-      'nav.features':'Features','nav.pricing':'Pricing','nav.login':'Sign in',
+      'nav.features':'Features','nav.pricing':'Pricing','nav.login':'Sign in','nav.waitlist':'Waitlist',
+      'a11y.skip':'Skip to content',
       'hero.eyebrow':'Premium coaching SaaS','hero.countdown_label':'Official launch in','hero.countdown_unit':'days',
       'how.tag':'How it works','how.title':'3 steps.<br/>Not one more.',
       'how.s1_title':'Create your account','how.s1_desc':'Set up your branding (logo, colors), your payment link and your first invitation code. 2 minutes flat.',
@@ -3491,10 +3562,79 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'stack.c3_tag':'Tracking','stack.c3_title':'You see everything.<br/>Your client does nothing.','stack.c3_desc':'Voice AI nutrition, barcode scanner, weight, sleep, steps — everything logs automatically. Your client says "a bowl of salmon pasta" and macros drop in 2 seconds.',
       'founder.role':'Founder note','founder.message':'I built RB Perform because the existing tools were <strong>robbing coaches</strong> — 30% commission, dated interfaces, non-existent support. I wanted a system that gives you <strong>CEO-level weapons</strong>, without taking a cent of your revenue. You pay for the tech, period. The rest is yours.',
       'quiz.tag':'Find your plan in 5 seconds','quiz.q':'How many clients do you coach?','quiz.opt1':'Starting out','quiz.opt2':'Established','quiz.opt3':'Scaling',
-      'menu.ch1':'Your Business','menu.ch3':'Features','menu.ch4':'Explore','menu.ch5':'Your Plan',
+      'menu.ch0':'The System','menu.ch1':'Your Business','menu.ch3':'Features','menu.ch4':'Explore','menu.ch5':'Your Plan',
       'menu.cta':'Join the 30 Founding Coaches →',
       'hero.sub':'The system that turns<br/>every coach into a CEO.',
-      'hero.enter':'Enter'
+      'hero.enter':'Enter',
+      // ===== HOW =====
+      'how.header_tag':'The System',
+      'how.header_title':'Some coaches have talent.<br>The best have a system.',
+      'how.stat1_label':'Commission','how.stat2_label':'Clients per coach','how.stat3_label':'To get started',
+      'how.badge_starter':'Included from Starter','how.badge_lifetime':'Locked for life',
+      'how.b1_num':'01 — CEO Dashboard','how.b1_title':'Know exactly<br>where your business stands.','how.b1_sub':'MRR, ARR, live business score. The cockpit Trainerize buries three tabs deep.','how.b1_stat':'Average score of our coaches after 30 days: 84/100','how.b1_bul1':'Live 0–100 score','how.b1_bul2':'MRR · ARR · Retention','how.b1_bul3':'Auto expiration alerts','how.b1_unit':'Live Score',
+      'how.b2_num':'02 — Anti-Churn AI','how.b2_title':'Save clients<br>before they leave.','how.b2_sub':'7 signals per client. You step in 7 days before they decide to quit.','how.b2_stat':'Average retention with anti-churn enabled: 94%','how.b2_bul1':'7 behavioral signals','how.b2_bul2':'Churn score 0–100','how.b2_bul3':'Auto recommended action','how.b2_unit':'Less Churn',
+      'how.b3_num':'03 — Total Client Tracking','how.b3_title':'You see everything.<br>Your client does nothing.','how.b3_sub':'Voice AI nutrition, barcode scanner, weight, sleep, steps. Everything logs itself.','how.b3_stat':'Average time to log a meal: 2 seconds','how.b3_bul1':'Voice AI: "a bowl of salmon pasta" → macros in 2s','how.b3_bul2':'Barcode scanner: 3M+ products','how.b3_bul3':'Weight · sleep · steps · water — auto tracking','how.b3_unit':'To Log',
+      'how.b4_num':'04 — Programme Builder','how.b4_title':'Build programs<br>in minutes, not hours.','how.b4_sub':'Drag & drop. Signed PDF. YouTube videos. Zero spreadsheets.','how.b4_stat':'Average build time for a 12-week program: 4 min','how.b4_bul1':'Multi-week drag & drop','how.b4_bul2':'Signed PDF export','how.b4_bul3':'Live preview','how.b4_unit':'Min To Build',
+      'how.b5_num':'05 — Automations','how.b5_title':'Work less.<br>Your clients move faster.','how.b5_sub':'Auto reports. Auto follow-ups. Auto renewals.','how.b5_stat':'Admin time saved per coach on average: 12h/month','how.b5_bul1':'Weekly reports auto-sent','how.b5_bul2':'Auto nudge if inactive 3d','how.b5_bul3':'Auto renewals','how.b5_unit':'Saved / Week',
+      'how.b6_num':'06 — Zero Commission','how.b6_title':'What you earn,<br>you keep.','how.b6_sub':'Trainerize takes up to 30%. We take zero. For life.','how.b6_stat':'Average savings vs. competitor platforms: €5,400/year','how.b6_bul1':'0% commission taken','how.b6_bul2':'Your revenue stays 100% yours','how.b6_bul3':'+€450/month recovered vs. competitors','how.b6_unit':'Commission',
+      // ===== BENTO =====
+      'bento.tag':'One platform. The whole arsenal.','bento.title':'Built for coaches<br/>who never stop.',
+      'bento.mission_tag':'Our mission','bento.mission_title':'Turn every<br/>fitness coach<br/>into an<span style="color:var(--orange)"> independent</span><br/>entrepreneur.','bento.mission_desc':'US platforms like Trainerize take up to 30% of your revenue. We take zero. You pay for the tech, not for your success. Your topline stays yours — every cent.',
+      'bento.stat1_label':'Commission taken','bento.stat2_label':'AI signals per client','bento.stat3_label':'To onboard a client',
+      'bento.feat1_title':'Anti-churn AI','bento.feat1_desc':'7 signals analyzed in real time to predict who is about to drop off.',
+      'bento.feat2_title':'Smart automations','bento.feat2_desc':'Weekly reports, churn alerts, follow-ups — everything fires on its own. You run your business, not your paperwork.',
+      'bento.live_dashboard':'Live dashboard','bento.score_business':'Business Score',
+      'bento.cta_title':'30 seats. Price locked for life.','bento.cta_btn':'Join the Founding Coaches →',
+      // ===== DEMO =====
+      'demo.title':'Test it. Judge it. Decide.',
+      'demo.sub':'15 minutes of full access. No account required.<br><span style="color:rgba(255,255,255,0.55)">You\'ll see why the coaches who switch to RB Perform never look back.</span>',
+      'demo.coach_tag':'Coach view · CEO dashboard','demo.coach_title':'Run your business<br>in real time.','demo.coach_chip1':'Live MRR','demo.coach_chip2':'Anti-churn AI','demo.coach_chip3':'CRM Pipeline','demo.coach_cta':'Explore the coach demo →',
+      'demo.client_tag':'Client view · Premium app','demo.client_title':'Your client gets a<br>premium experience.','demo.client_chip1':'Interactive program','demo.client_chip2':'AI nutrition','demo.client_chip3':'Full tracking','demo.client_cta':'Explore the client demo →',
+      'demo.microcopy':'8 fictional clients · All features live · No card needed · 15 min access',
+      // ===== FEATURES =====
+      'features.tag':'Why it\'s different','features.title':'I built what<br/>I wished existed.','features.intro':'High-level athlete. Years coaching the athletes around me. I know every problem of the trade — because I lived them. So I built the tool that fixes them.',
+      'sentinel.badge':'Sentinel active','sentinel.title':'I built a Sentinel into your app<span>.</span>','sentinel.sub':'To save your money. An AI that runs every morning at 7am — it scans your clients, your prices, your opportunities and tells you exactly what to do. Here\'s what it does while you sleep:',
+      'sentinel.notif1':'<div class="sl-time">07:31</div><span class="sl-warn">CHURN ALERT</span> — Client M.D. inactive for 6 days<br>→ Auto follow-up message sent <span class="sl-val">(+€120 saved)</span>',
+      'sentinel.notif2':'<div class="sl-time">07:32</div><span class="sl-warn">UPSELL DETECTED</span> — Client S.R. pack ends in 5 days<br>→ 6-month pack offer generated <span class="sl-val">(+€660 potential)</span>',
+      'sentinel.notif3':'<div class="sl-time">07:33</div><span style="color:#818cf8;font-weight:700">MARKET PRICE</span> — Your rates are 18% below median<br>→ Recommendation: +€15/month/client <span class="sl-val">(+€225/month)</span>',
+      'sentinel.notif4':'<div class="sl-time">07:34</div><span class="sl-ok">PLAYBOOK OF THE DAY</span> — 3 actions generated for this morning<br>→ Estimated impact: <span class="sl-val">+€340 this month</span>',
+      'sentinel.total_label':'Recovered this month thanks to Sentinel',
+      'ft.f1_eyebrow':'MRR Dashboard + Forecast','ft.f1_title':'Know what you\'ll make next month. Not roughly.','ft.f1_built':'A dashboard that computes your MRR live, forecasts revenue 90 days out, and shows exactly who renews, who expires, who is late. Like a startup cockpit — but for a coach.','ft.f1_result':'You open RB Perform in the morning. In <strong>3 seconds</strong> you know: how much you\'re making this month, how much next month, and which client to call today.','ft.f1_stat_label':'Forecast',
+      'ft.f2_eyebrow':'Anti-Churn AI Alerts','ft.f2_title':'AI sees your client leaving. 7 days before they do.','ft.f2_built':'An algorithm that analyzes 7 signals per client continuously: session frequency, RPE, weight, app logins, message replies, nutrition consistency, streak. When the score crosses 60, you get an alert with the recommended action.','ft.f2_result':'A coach loses on average <strong>25% of their clients per year</strong> without seeing it. With alerts, you save 80% of those exits. On 20 clients at €150, that\'s <strong>€3,600/year recovered</strong>.','ft.f2_stat_label':'Signals analyzed / client',
+      'ft.f3_eyebrow':'Programme Builder','ft.f3_title':'Programs built in minutes. Not hours in Excel.','ft.f3_built':'Multi-week, drag-and-drop, embedded YouTube videos, motivation notes, live preview. Build a program once — your client follows it live in their app with video demos for every exercise.','ft.f3_result':'No more PDFs in WhatsApp. Your client opens the app, sees today\'s session, <strong>plays the video, logs the load</strong>. You see progress — without asking.','ft.f3_mock_label':'Week 1 · Push','ft.f3_add_exercise':'+ Add an exercise',
+      'ft.f4_eyebrow':'Business Score','ft.f4_title':'One number. The full health of your business.','ft.f4_built':'A 0-to-100 score computed live from your retention, your MRR, your client activity and your momentum. Above 70, you\'re solid. Below 50, time to act. With concrete recommendations at every threshold.','ft.f4_result':'You stop guessing whether your business is solid. You have <strong>a number. Like a CEO.</strong>','ft.f4_score_label':'Score',
+      'ft.stat_break':'A coach uses on average <strong style="color:rgba(255,255,255,0.7)">4.7 different tools</strong> to run their business. RB Perform replaces them. <strong style="color:#00C9A7">All of them.</strong>',
+      'ft.f5_eyebrow':'Voice AI nutrition','ft.f5_title':'Your client says what they ate. AI does the rest.','ft.f5_built':'"A bowl of salmon pasta" — 2 seconds, macros land. No scanning, no manual lookup. Your client speaks, the AI parses with CIQUAL precision. Barcode scanner included for packaged foods. 3 million products indexed.','ft.f5_result':'You see <strong>what your client actually eats</strong> — without asking. Macros, calories, trends, gaps. The nutrition tracking that runs itself.','ft.f5_vocal_label':'Voice AI','ft.f5_vocal_quote':'"A bowl of salmon pasta"','ft.f5_macro_kcal':'Calories','ft.f5_macro_protein':'Protein','ft.f5_macro_carbs':'Carbs','ft.f5_macro_fat':'Fat',
+      'ft.f6_eyebrow':'AI Analyser · Mistral','ft.f6_title':'Ask the AI what your client won\'t tell you.','ft.f6_built':'One button. You click, the AI analyzes everything: sessions, nutrition, weight, RPE, frequency, trends. In 3 seconds it ships a summary + 3 concrete actions. No fluff — analysis based on your client\'s real data.','ft.f6_result':'You go from <strong>"I think Thomas is doing fine"</strong> to <strong>"Thomas shows 3 drop-off signals, here\'s what to do"</strong>. In 3 seconds, not 30 minutes.',
+      'ft.f7_eyebrow':'Client App · iOS & Android','ft.f7_title':'Your client opens their app. They live a premium experience.','ft.f7_built':'Installable in 1 click from Safari (iPhone) or Chrome (Android) — the app appears on the home screen like any native app. Interactive programs with video, real-time session logging, direct messaging, push notifications, weight · sleep · steps tracking. Everything flows back into your dashboard automatically.','ft.f7_result':'Your client no longer says "I did my session". <strong>You see it. Live.</strong> Loads, RPE, nutrition, weight, sleep. And they get a real app — not a PDF on WhatsApp.','ft.f7_session_today':'Today\'s session','ft.f7_session_title':'Push · Week 1','ft.f7_exos':'Exos','ft.f7_duration':'Length','ft.f7_start':'Start',
+      // ===== BUSINESS =====
+      'business.tag':'Your business in numbers','business.title':'What RB Perform<br>changes. Concretely.','business.intro':'Calculate. Visualize. Decide.',
+      'business.roi_title':'Calculate your potential.','business.roi_sub':'Set your numbers. See what lands this month.','business.roi_slider1':'Number of clients','business.roi_slider2':'Monthly rate','business.roi_clients_unit':'clients','business.roi_tarif_unit':'€ / month','business.roi_mrr_label':'Your potential MRR','business.roi_gain_label':'Money recovered / year','business.roi_hours_label':'Hours saved / month',
+      'biz.tl_title':'One day.<br>Two realities.','biz.tl_without':'Without RB Perform','biz.tl_with':'With RB Perform',
+      'biz.tl_w1':'You open Excel. Hunting who paid. You don\'t know.','biz.tl_w2':'Thomas hasn\'t opened his app in 8 days. You find out too late.','biz.tl_w3':'Marie wants to quit. You never saw it coming.','biz.tl_w4':'2h of manual reports. 2h gone.','biz.tl_w5':'2 clients lost. With no clue why.',
+      'biz.tl_a1':'Dashboard open. MRR, retention, score: all there in 3 seconds.','biz.tl_a2':'RB alert: Thomas at risk for 3 days. One-click message. He stays.','biz.tl_a3':'Marie gets her auto report. She sees her progress. She renews.','biz.tl_a4':'Reports went out automatically. You did nothing.','biz.tl_a5':'0 clients lost. +€150 recovered. You\'re a CEO.',
+      // ===== PRICING =====
+      'pricing.tag':'Coach pricing','pricing.title':'How much do you lose<br>by not knowing?','pricing.sub':'Every month without visibility is a client leaving in silence.','pricing.support':'Support 7 days a week',
+      'pricing.fc_badge':'Founder Offer','pricing.fc_title':'Today\'s price is your price <span style="color:#00C9A7">for life</span>.','pricing.fc_sub':'After this offer, the price moves to €299. No going back.','pricing.fc_per_month':'/month','pricing.fc_lock':'12 months · Locked for life','pricing.fc_cta':'Join →',
+      'pricing.fc_check1':'Unlimited clients','pricing.fc_check2':'Pro features included','pricing.fc_check3':'Anti-churn AI','pricing.fc_check4':'Price locked for life','pricing.fc_check5':'Private Founders group','pricing.fc_check6':'Roadmap voting','pricing.fc_check7':'Early access','pricing.fc_check8':'Founding badge',
+      'pricing.per_month':'Per month','pricing.cta_join':'Join →',
+      'pricing.starter_name':'Starter','pricing.starter_desc':'For coaches starting their business.','pricing.starter_f1':'Up to 5 clients','pricing.starter_f2':'Full coach dashboard','pricing.starter_f3':'Unlimited program builder','pricing.starter_f4':'Anti-churn AI','pricing.starter_f5':'Messaging + push notifs','pricing.starter_f6':'0% commission on your revenue',
+      'pricing.pro_badge':'Recommended','pricing.pro_name':'Pro','pricing.pro_desc':'For established coaches scaling up.','pricing.pro_f1':'Up to 30 clients','pricing.pro_f2':'Everything in Starter +','pricing.pro_f3':'Analytics + correlations','pricing.pro_f4':'Advanced automations','pricing.pro_f5':'Auto weekly reports',
+      'pricing.elite_name':'Elite','pricing.elite_desc':'For coaches who want it all — and then some.','pricing.elite_f1':'Unlimited clients','pricing.elite_f2':'Everything in Pro +','pricing.elite_f3':'Priority support < 24h','pricing.elite_f4':'1:1 onboarding at signup','pricing.elite_f5':'Private Elite group',
+      // ===== FAQ =====
+      'faq.tag':'Frequently asked','faq.title':'Everything you want to know.',
+      'faq.q1':'Do my clients pay any fees?','faq.a1':'Never. Your clients access their space for free. You pay your subscription, that\'s it. Zero hidden fees, zero surprises.',
+      'faq.q2':'Is it really 0% commission?','faq.a2':'Really. What you collect, you keep — every cent. Trainerize takes up to 30%. We take zero. Today, tomorrow, always.',
+      'faq.q3':'Can I cancel anytime?','faq.a3':'Yes. One click from your dashboard. No justification, no notice, no retention call. You\'re free.',
+      'faq.q4':'Do my clients have to download an app?','faq.a4':'No App Store or Google Play detour — your client opens rbperform.app in their browser, taps "Add to home screen" and the app installs in 3 seconds. Works offline, push notifications active, indistinguishable from a native app.',
+      'faq.q5':'How does the anti-churn AI work?','faq.a5':'7 behavioral signals analyzed continuously per client. Risk score 0–100. You get an alert with the recommended action <strong style="color:rgba(255,255,255,0.7)">7 days before</strong> they decide to leave. You step in at the right moment, you keep your client.',
+      'faq.q6':'What\'s the Founding Coach offer?','faq.a6':'The first 30 coaches pay <strong style="color:#00C9A7">€199/month locked for life</strong>. Unlimited clients, all Pro features, access to the private group, vote on the roadmap. Price moves to €299 after. Once locked, your price never moves — ever.',
+      // ===== FOOTER + STICKY =====
+      'footer.tagline':'The system that turns<br>every coach into a CEO.',
+      'footer.legal_note':'© 2026 Rayan Bonte — Sole proprietorship<br>SIRET 990 637 803 00018<br>10 Rue Cardinale, 84000 Avignon, France<br>Hosted by Vercel Inc. — San Francisco, CA',
+      'footer.col_follow':'Follow','footer.col_legal':'Legal','footer.col_contact':'Contact',
+      'footer.legal_mentions':'Legal notice','footer.legal_rgpd':'Privacy &amp; GDPR','footer.legal_cgu':'Terms of service','footer.become_founder':'Become a Founding Coach →',
+      'sticky.label':'Founding Coach Program — <b>30 founders</b>','sticky.cta':'Join the 30 Founding Coaches →'
     }
   };
   function initLangToggle() {
