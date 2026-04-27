@@ -398,6 +398,14 @@ function ObjectifsTab({ goals, onSave }) {
 export default function FuelPage({ client, appData }) {
   const t = useT();
   const dateSel = useSelectedDate();
+  // Mappe les keys DB (FR canonique) vers les labels traduits.
+  // Les keys ne doivent PAS changer (cohérence avec nutrition_logs.repas).
+  const repasLabel = (r) => ({
+    "Petit-dejeuner": t("fuel.meal_breakfast"),
+    "Dejeuner": t("fuel.meal_lunch"),
+    "Collation": t("fuel.meal_snack"),
+    "Diner": t("fuel.meal_dinner"),
+  })[r] || r;
   const fuelData = useFuel(client?.id, dateSel.isToday ? undefined : dateSel.date);
   const goals = appData?.nutritionGoals || fuelData.goals;
   const logs = fuelData.logs;
@@ -867,9 +875,9 @@ export default function FuelPage({ client, appData }) {
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <MacroBar value={totals.proteines} goal={goals?.proteines || 150} color={GREEN} label="Proteines" />
-            <MacroBar value={totals.glucides} goal={goals?.glucides || 250} color={ORANGE} label="Glucides" />
-            <MacroBar value={totals.lipides} goal={goals?.lipides || 70} color={BLUE} label="Lipides" />
+            <MacroBar value={totals.proteines} goal={goals?.proteines || 150} color={GREEN} label={t("fuel.proteines")} />
+            <MacroBar value={totals.glucides} goal={goals?.glucides || 250} color={ORANGE} label={t("fuel.glucides")} />
+            <MacroBar value={totals.lipides} goal={goals?.lipides || 70} color={BLUE} label={t("fuel.lipides")} />
           </div>
         </div>
 
@@ -932,7 +940,7 @@ export default function FuelPage({ client, appData }) {
                   <path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14" />
                 </svg>
               </button>
-              <button onClick={() => { setShowAdd(true); setSelectedRepas("Dejeuner"); }} style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 14, padding: "10px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px" }}>+ Ajouter</button>
+              <button onClick={() => { setShowAdd(true); setSelectedRepas("Dejeuner"); }} style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 14, padding: "10px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px" }}>{t("fuel.add_food")}</button>
             </div>
           </div>
 
@@ -956,7 +964,7 @@ export default function FuelPage({ client, appData }) {
                 {/* Contenu repas */}
                 <div style={{ flex: 1, paddingTop: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: repasLogs.length > 0 ? "#fff" : "rgba(255,255,255,0.3)", letterSpacing: "0.3px" }}>{repas}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: repasLogs.length > 0 ? "#fff" : "rgba(255,255,255,0.3)", letterSpacing: "0.3px" }}>{repasLabel(repas)}</div>
                     {repasKcal > 0 && <div style={{ fontSize: 12, fontWeight: 600, color: col, background: `${col}12`, border: `1px solid ${col}25`, borderRadius: 100, padding: "3px 10px" }}>{repasKcal} kcal</div>}
                   </div>
 
