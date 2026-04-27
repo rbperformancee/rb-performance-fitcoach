@@ -43,6 +43,7 @@ import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
 import usePullToRefresh from "../hooks/usePullToRefresh";
+import { useT } from "../lib/i18n";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { calculateChurnRisk } from "../lib/coachIntelligence";
 
@@ -468,6 +469,7 @@ function CoachSupplementsPanel({ clientId }) {
 
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
 function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [], onWantInvoice }) {
+  const t = useT();
   const [showTransformation, setShowTransformation] = React.useState(false);
   const [showAIAnalyze, setShowAIAnalyze] = React.useState(false);
   const [msgText,    setMsgText]    = useState("");
@@ -732,31 +734,31 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         >
           <style>{`.cp-tabbar::-webkit-scrollbar{display:none}`}</style>
           {[
-            { id: "resume", label: "Résumé" },
-            { id: "programme", label: "Programme" },
-            { id: "nutrition", label: "Nutrition" },
-            { id: "supplements", label: "Compléments" },
-            { id: "suivi", label: "Suivi" },
-          ].map(t => (
+            { id: "resume", label: t("coach.tab_resume") },
+            { id: "programme", label: t("coach.tab_programme") },
+            { id: "nutrition", label: t("coach.tab_nutrition") },
+            { id: "supplements", label: t("coach.tab_supplements") },
+            { id: "suivi", label: t("coach.tab_followup") },
+          ].map(tab => (
             <button
-              key={t.id}
+              key={tab.id}
               onClick={(e) => {
-                setPanelTab(t.id);
+                setPanelTab(tab.id);
                 try { e.currentTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" }); } catch(_) {}
               }}
               style={{
                 padding: "12px 18px",
-                fontSize: 12, fontWeight: panelTab === t.id ? 700 : 500,
-                color: panelTab === t.id ? "#fff" : "rgba(255,255,255,0.3)",
+                fontSize: 12, fontWeight: panelTab === tab.id ? 700 : 500,
+                color: panelTab === tab.id ? "#fff" : "rgba(255,255,255,0.3)",
                 background: "none", border: "none", cursor: "pointer",
-                borderBottom: panelTab === t.id ? "2px solid #00C9A7" : "2px solid transparent",
+                borderBottom: panelTab === tab.id ? "2px solid #00C9A7" : "2px solid transparent",
                 fontFamily: "inherit", letterSpacing: ".02em",
                 transition: "color .2s, border-color .2s",
                 flexShrink: 0,
                 whiteSpace: "nowrap",
                 scrollSnapAlign: "center",
               }}
-            >{t.label}</button>
+            >{tab.label}</button>
           ))}
         </div>
 
@@ -2120,6 +2122,7 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
 }
 
 export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmin, isDemo = false }) {
+  const t = useT();
   const [clients,   setClients]   = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -2565,11 +2568,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   })();
 
   const navItems = [
-    { id: "overview",    label: "Dashboard",  icon: "chart",       group: "principal" },
-    { id: "clients",     label: "Clients",    icon: "users",       group: "principal", badge: urgentCount },
-    { id: "programmes",  label: "Programmes", icon: "document",    group: "principal" },
-    { id: "business",    label: "Business",   icon: "trending",    group: "principal" },
-    { id: "analytics",   label: "Analytics",  icon: "activity",    group: "outils" },
+    { id: "overview",    label: t("coach.nav_dashboard"),  icon: "chart",       group: "principal" },
+    { id: "clients",     label: t("coach.nav_clients"),    icon: "users",       group: "principal", badge: urgentCount },
+    { id: "programmes",  label: t("coach.nav_programmes"), icon: "document",    group: "principal" },
+    { id: "business",    label: t("coach.nav_business"),   icon: "trending",    group: "principal" },
+    { id: "analytics",   label: t("coach.nav_analytics"),  icon: "activity",    group: "outils" },
   ];
   const sidebarOnNav = (id) => {
     haptic.light();
@@ -2614,7 +2617,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {/* NAV ITEMS */}
       <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, position: "relative", zIndex: 1 }}>
-        {[...navItems, { id: "pipeline", label: "Pipeline", icon: "view", group: "outils" }].map(n => {
+        {[...navItems, { id: "pipeline", label: t("coach.nav_pipeline"), icon: "view", group: "outils" }].map(n => {
           const isActive = activeTab === n.id;
           return (
             <button
@@ -2692,10 +2695,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const pillTabs = ["overview", "clients", "programmes", "business"];
   const pillItems = [
-    { id: "overview",    icon: "chart",       label: "Home",      shortLabel: "HOME",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
-    { id: "clients",     icon: "users",       label: "Clients",   shortLabel: "CLIENTS", onClick: () => { setSelected(null); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
-    { id: "programmes",  icon: "document",    label: "Prog",      shortLabel: "PROG",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
-    { id: "business",    icon: "trending",    label: "Business",  shortLabel: "BIZ",     onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
+    { id: "overview",    icon: "chart",       label: t("coach.nav_home"),       shortLabel: "HOME",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
+    { id: "clients",     icon: "users",       label: t("coach.nav_clients"),    shortLabel: "CLIENTS", onClick: () => { setSelected(null); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
+    { id: "programmes",  icon: "document",    label: t("coach.nav_prog"),       shortLabel: "PROG",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
+    { id: "business",    icon: "trending",    label: t("coach.nav_business"),   shortLabel: "BIZ",     onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
     { id: "more",        icon: "plus",        label: "Plus",      shortLabel: "PLUS",    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   // Swipe gesture sur la pill
@@ -3327,7 +3330,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Clients</div>
                   <h1 style={{ fontSize: "clamp(32px, 8vw, 52px)", fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, margin: 0 }}>
-                    Tes athletes<span style={{ color: "#02d1ba" }}>.</span>
+                    {t("coach.athletes_title")}<span style={{ color: "#02d1ba" }}>.</span>
                   </h1>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>

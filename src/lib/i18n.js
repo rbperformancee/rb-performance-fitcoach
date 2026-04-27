@@ -341,6 +341,34 @@ const MESSAGES = {
     "fuel.supplements_empty_title": "Aucun complement ajoute",
     "fuel.supplements_empty_hint": "Ajoute tes complements pour suivre ta prise quotidienne.",
     "fuel.prescribed_by_coach": "Prescrit par ton coach",
+    // Coach dashboard — sidebar + nav
+    "coach.nav_dashboard": "Dashboard",
+    "coach.nav_clients": "Clients",
+    "coach.nav_programmes": "Programmes",
+    "coach.nav_business": "Business",
+    "coach.nav_analytics": "Analytics",
+    "coach.nav_pipeline": "Pipeline",
+    "coach.nav_home": "Home",
+    "coach.nav_prog": "Prog",
+    // Client panel tabs (visible when coach views a client)
+    "coach.tab_resume": "Résumé",
+    "coach.tab_programme": "Programme",
+    "coach.tab_nutrition": "Nutrition",
+    "coach.tab_supplements": "Compléments",
+    "coach.tab_followup": "Suivi",
+    // Top page titles
+    "coach.athletes_title": "Tes athletes",
+    "coach.programmes_title": "Programmes",
+    "coach.business_title": "Business",
+    "coach.analytics_title": "Analytics",
+    "coach.dashboard_title": "Dashboard",
+    // Macros (deja dans fuel mais aussi utilises cote coach panneau client)
+    "coach.macro_calories": "Calories",
+    "coach.macro_proteines": "Proteines",
+    "coach.macro_glucides": "Glucides",
+    "coach.macro_lipides": "Lipides",
+    "coach.macro_water": "Eau",
+    "coach.macro_steps": "Pas / jour",
   },
   en: {
     // Navigation
@@ -660,6 +688,34 @@ const MESSAGES = {
     "fuel.supplements_empty_title": "No supplements yet",
     "fuel.supplements_empty_hint": "Add your supplements to track your daily intake.",
     "fuel.prescribed_by_coach": "Prescribed by your coach",
+    // Coach dashboard — sidebar + nav
+    "coach.nav_dashboard": "Dashboard",
+    "coach.nav_clients": "Clients",
+    "coach.nav_programmes": "Programmes",
+    "coach.nav_business": "Business",
+    "coach.nav_analytics": "Analytics",
+    "coach.nav_pipeline": "Pipeline",
+    "coach.nav_home": "Home",
+    "coach.nav_prog": "Plan",
+    // Client panel tabs
+    "coach.tab_resume": "Summary",
+    "coach.tab_programme": "Programme",
+    "coach.tab_nutrition": "Nutrition",
+    "coach.tab_supplements": "Supplements",
+    "coach.tab_followup": "Follow-up",
+    // Top page titles
+    "coach.athletes_title": "Your athletes",
+    "coach.programmes_title": "Programmes",
+    "coach.business_title": "Business",
+    "coach.analytics_title": "Analytics",
+    "coach.dashboard_title": "Dashboard",
+    // Macros
+    "coach.macro_calories": "Calories",
+    "coach.macro_proteines": "Protein",
+    "coach.macro_glucides": "Carbs",
+    "coach.macro_lipides": "Fats",
+    "coach.macro_water": "Water",
+    "coach.macro_steps": "Steps / day",
   },
 };
 
