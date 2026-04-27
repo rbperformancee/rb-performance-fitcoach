@@ -566,6 +566,20 @@ const MESSAGES = {
     "home.quote_5": "TU N ES PAS JUSTE UN COACH. TU ES UN CEO.",
     "home.quote_6": "LES MEILLEURS NE COACHENT PAS PLUS. ILS COACHENT MIEUX.",
     "home.quote_7": "TON SCORE BUSINESS EST TON REFLET.",
+    // Coach onboarding wizard
+    "ow.welcome": "Bienvenue",
+    "ow.title": "Lance ton activité",
+    "ow.subtitle": "3 étapes. 5 minutes. Ton premier client actif.",
+    "ow.step1_title": "Complete ton profil",
+    "ow.step1_desc": "Ton logo, tes infos visibles par les clients, ton lien de paiement.",
+    "ow.step2_title": "Invite ton premier client",
+    "ow.step2_desc_with": "Partage ton code 6 chiffres ({code}) ou ton lien d'invitation.",
+    "ow.step2_desc_no_code": "Partage ton code 6 chiffres ou ton lien d'invitation.",
+    "ow.step2_progress": "0 client",
+    "ow.step2_action": "Voir mon code",
+    "ow.step3_title": "Cree un programme",
+    "ow.step3_desc": "Apres avoir ajoute ton premier client, uploade un programme HTML pour lui.",
+    "ow.step3_progress": "Pas encore",
   },
   en: {
     // Navigation
@@ -1110,6 +1124,20 @@ const MESSAGES = {
     "home.quote_5": "YOU'RE NOT JUST A COACH. YOU'RE A CEO.",
     "home.quote_6": "THE BEST DON'T COACH MORE. THEY COACH BETTER.",
     "home.quote_7": "YOUR BUSINESS SCORE IS YOUR REFLECTION.",
+    // Coach onboarding wizard
+    "ow.welcome": "Welcome",
+    "ow.title": "Launch your business",
+    "ow.subtitle": "3 steps. 5 minutes. Your first active client.",
+    "ow.step1_title": "Complete your profile",
+    "ow.step1_desc": "Your logo, your client-facing info, your payment link.",
+    "ow.step2_title": "Invite your first client",
+    "ow.step2_desc_with": "Share your 6-digit code ({code}) or your invite link.",
+    "ow.step2_desc_no_code": "Share your 6-digit code or your invite link.",
+    "ow.step2_progress": "0 client",
+    "ow.step2_action": "See my code",
+    "ow.step3_title": "Create a program",
+    "ow.step3_desc": "Once your first client is added, upload an HTML program for them.",
+    "ow.step3_progress": "Not yet",
   },
 };
 

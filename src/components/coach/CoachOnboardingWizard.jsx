@@ -1,8 +1,15 @@
 import React from "react";
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * CoachOnboardingWizard — affiche aux nouveaux coachs sans clients
@@ -14,6 +21,7 @@ const G = "#02d1ba";
  *   3. Uploader un programme
  */
 export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
+  const t = useT();
   const profileComplete = !!(coach?.brand_name && coach?.full_name);
   const hasLogo = !!coach?.logo_url;
   const hasPayment = !!coach?.payment_link;
@@ -22,8 +30,8 @@ export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
   const steps = [
     {
       id: "profile",
-      title: "Complete ton profil",
-      desc: "Ton logo, tes infos visibles par les clients, ton lien de paiement.",
+      title: t("ow.step1_title"),
+      desc: t("ow.step1_desc"),
       icon: "edit",
       done: profileScore >= 2,
       progress: `${profileScore}/3`,
@@ -31,21 +39,21 @@ export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
     },
     {
       id: "invite",
-      title: "Invite ton premier client",
-      desc: `Partage ton code 6 chiffres ${coach?.coach_code ? `(${coach.coach_code})` : ""} ou ton lien d'invitation.`,
+      title: t("ow.step2_title"),
+      desc: coach?.coach_code ? fillTpl(t("ow.step2_desc_with"), { code: coach.coach_code }) : t("ow.step2_desc_no_code"),
       icon: "users",
       done: false,
-      progress: "0 client",
+      progress: t("ow.step2_progress"),
       color: "#a78bfa",
-      action: { label: "Voir mon code", onClick: onScrollToInvitation },
+      action: { label: t("ow.step2_action"), onClick: onScrollToInvitation },
     },
     {
       id: "programme",
-      title: "Cree un programme",
-      desc: "Apres avoir ajoute ton premier client, uploade un programme HTML pour lui.",
+      title: t("ow.step3_title"),
+      desc: t("ow.step3_desc"),
       icon: "document",
       done: false,
-      progress: "Pas encore",
+      progress: t("ow.step3_progress"),
       color: "#fbbf24",
     },
   ];
@@ -55,13 +63,13 @@ export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
       {/* Hero accueil — premium */}
       <div style={{ padding: "40px 28px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, marginBottom: 20, textAlign: "center" }}>
         <div style={{ fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", fontWeight: 700, marginBottom: 12 }}>
-          Bienvenue
+          {t("ow.welcome")}
         </div>
         <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 900, color: "#fff", margin: "0 0 12px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-          Lance ton activité<span style={{ color: G }}>.</span>
+          {t("ow.title")}<span style={{ color: G }}>.</span>
         </h2>
         <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: "0 auto", maxWidth: 380 }}>
-          3 étapes. 5 minutes. Ton premier client actif.
+          {t("ow.subtitle")}
         </p>
       </div>
 
