@@ -3,8 +3,14 @@ import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
 import haptic from "../lib/haptic";
 import { SkeletonBox } from "./Skeleton";
+import { useT, t as tStatic, getLocale } from "../lib/i18n";
 
 const GREEN = "#02d1ba";
+
+// Locale BCP47 a utiliser pour Intl/toLocaleString selon la locale i18n
+function intlLocale() {
+  return getLocale() === "en" ? "en-US" : "fr-FR";
+}
 
 // Formatage horaire premium : heure si aujourd'hui, "Hier" si hier, date sinon
 function formatTime(iso) {
@@ -12,15 +18,16 @@ function formatTime(iso) {
   const d = new Date(iso);
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
+  const lang = intlLocale();
   if (sameDay) {
-    return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
   }
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   if (d.toDateString() === yesterday.toDateString()) {
-    return "Hier " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    return tStatic("chat.yesterday_prefix") + " " + d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
   }
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleDateString(lang, { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
 }
 
 // Groupement des messages par jour pour afficher un separateur
@@ -36,9 +43,9 @@ function groupByDay(messages) {
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
       let label;
-      if (key === now.toDateString()) label = "AUJOURD'HUI";
-      else if (key === yesterday.toDateString()) label = "HIER";
-      else label = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase();
+      if (key === now.toDateString()) label = tStatic("chat.today");
+      else if (key === yesterday.toDateString()) label = tStatic("chat.yesterday");
+      else label = d.toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" }).toUpperCase();
       groups.push({ type: "sep", key: "sep-" + key, label });
     }
     groups.push({ type: "msg", key: m.id || "m-" + m.created_at, msg: m });
@@ -46,7 +53,9 @@ function groupByDay(messages) {
   return groups;
 }
 
-export default function ChatCoach({ clientId, coachEmail, isCoach, coachName = "Ton coach" }) {
+export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) {
+  const t = useT();
+  const resolvedCoachName = coachName || t("chat.default_coach_name");
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
   const [sending, setSending] = useState(false);
@@ -205,14 +214,14 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName = "
               </svg>
             </div>
             <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 10, fontWeight: 700 }}>
-              Messagerie directe
+              {t("chat.empty_label")}
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px", marginBottom: 10 }}>
-              Ton echange avec<br />
-              <span style={{ color: GREEN }}>{coachName}.</span>
+              {t("chat.empty_title_prefix")}<br />
+              <span style={{ color: GREEN }}>{resolvedCoachName}.</span>
             </div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, maxWidth: 260 }}>
-              Pose tes questions, envoie une video, partage tes sensations. {coachName} te repond directement ici.
+              {t("chat.empty_help")} {resolvedCoachName} {t("chat.empty_help_suffix")}
             </div>
           </div>
         )}
@@ -313,7 +322,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName = "
               e.target.parentElement.style.borderColor = "rgba(255,255,255,0.08)";
               e.target.parentElement.style.background = "rgba(255,255,255,0.04)";
             }}
-            placeholder={isCoach ? "Message a ton client..." : `Message a ${coachName}...`}
+            placeholder={isCoach ? t("chat.placeholder_coach") : `${t("chat.placeholder_client_prefix")} ${resolvedCoachName}...`}
             rows={1}
             style={{
               width: "100%",
@@ -358,7 +367,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName = "
             WebkitTapHighlightColor: "transparent",
             WebkitAppearance: "none",
           }}
-          aria-label="Envoyer le message"
+          aria-label={t("chat.send_aria")}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="22" y1="2" x2="11" y2="13" />

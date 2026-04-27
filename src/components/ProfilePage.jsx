@@ -12,10 +12,12 @@ import haptic from "../lib/haptic";
 import LanguageToggle from "./LanguageToggle";
 import HelpPage from "./HelpPage";
 import AppIcon from "./AppIcon";
+import { useT } from "../lib/i18n";
 
 const GREEN = "#02d1ba";
 
 export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
+  const t = useT();
   const [showHelp, setShowHelp] = useState(false);
   const streakData = useStreak(appData ? null : client?.id);
   const streak = appData?.streak ?? streakData.streak;
@@ -45,16 +47,16 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
           dayCount[d.getDay()]++;
           if (s.session_name) sessionNames[s.session_name] = (sessionNames[s.session_name] || 0) + 1;
         });
-        const days = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+        const days = [t("profile.day_sun"), t("profile.day_mon"), t("profile.day_tue"), t("profile.day_wed"), t("profile.day_thu"), t("profile.day_fri"), t("profile.day_sat")];
         const topDays = dayCount.map((c,i) => ({day: days[i], count: c})).filter(d => d.count > 0).sort((a,b) => b.count - a.count).slice(0,3);
         const topSession = Object.entries(sessionNames).sort((a,b) => b[1]-a[1])[0];
-        const freq = count >= 12 ? "3x / semaine" : count >= 6 ? "2x / semaine" : "1x / semaine";
+        const freq = count >= 12 ? t("profile.freq_3x") : count >= 6 ? t("profile.freq_2x") : t("profile.freq_1x");
         setAdnData({ topDays, topSession: topSession?.[0], freq, total: count });
       }
     };
     fetchSessionData();
   }, [client?.id]);
-  const name = client?.full_name || client?.email?.split("@")[0] || "Athlete";
+  const name = client?.full_name || client?.email?.split("@")[0] || t("profile.athlete_fallback");
   const firstName = name.split(" ")[0];
   const email = client?.email || "";
   const streakPct = bestStreak ? Math.min(Math.round((streak / bestStreak) * 100), 100) : 100;
@@ -72,10 +74,10 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         <div style={{ padding: "0px 24px 0" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Mon profil</div>
+              <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t("profile.my_profile")}</div>
               <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>{firstName}<span style={{ color: GREEN }}>.</span></div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", fontStyle: "italic" }}>
-                " Tu n'es pas la pour survivre. Tu es la pour dominer. "
+                {t("profile.quote")}
               </div>
             </div>
             <AvatarPicker clientId={client?.id} name={name} size={68} />
@@ -98,7 +100,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 10 }}>
             <div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Niveau athlete</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>{t("profile.athlete_level")}</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 38, fontWeight: 100, color: lvl.color, letterSpacing: "-2px" }}>0{lvl.level}</span>
                 <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>{lvl.name}</span>
@@ -106,9 +108,9 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
             </div>
             {nextLvl && (
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginBottom: 2 }}>Prochain</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginBottom: 2 }}>{t("profile.next_level")}</div>
                 <div style={{ fontSize: 13, color: nextLvl.color, fontWeight: 600 }}>{nextLvl.name}</div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>{nextLvl.min - xp} XP restants</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>{nextLvl.min - xp} {t("profile.xp_remaining")}</div>
               </div>
             )}
           </div>
@@ -124,9 +126,9 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         {/* STATS TESLA */}
         <div style={{ padding: "0 24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 4 }}>
           {[
-            { label: "Streak", value: streak || 0, unit: "j", color: "#f97316", hot: true },
-            { label: "Record", value: bestStreak || 0, unit: "j", color: "#fbbf24", hot: false },
-            { label: "Poids", value: latest?.weight || "--", unit: "kg", color: GREEN, hot: false },
+            { label: t("profile.streak"), value: streak || 0, unit: "j", color: "#f97316", hot: true },
+            { label: t("profile.streak_record"), value: bestStreak || 0, unit: "j", color: "#fbbf24", hot: false },
+            { label: t("profile.weight"), value: latest?.weight || "--", unit: "kg", color: GREEN, hot: false },
           ].map((s, i) => (
             <div key={i} style={{ borderTop: `${s.hot ? 2 : 1}px solid ${s.hot ? s.color : "rgba(255,255,255,0.06)"}`, paddingTop: 14, paddingRight: i < 2 ? 8 : 0 }}>
               <div style={{ fontSize: 30, fontWeight: 200, color: s.color, letterSpacing: "-1.5px", lineHeight: 1 }}>
@@ -141,7 +143,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         {streak > 0 && (
           <div style={{ padding: "0px 24px 0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Progression streak</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>{t("profile.streak_progress")}</div>
               <div style={{ fontSize: 10, color: "#f97316", fontWeight: 600 }}>{streak} / {bestStreak || streak} j</div>
             </div>
             <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
@@ -171,7 +173,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         {/* ACTIVITE TIMELINE */}
         {recentActivity.length > 0 && (
           <div style={{ padding: "0 24px", marginBottom: 4 }}>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 14 }}>Activite recente</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 14 }}>{t("profile.recent_activity")}</div>
             {recentActivity.map((a, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 0", borderBottom: i < recentActivity.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", background: a.color, flexShrink: 0 }} />
@@ -191,7 +193,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         {/* ADN ATHLETE */}
         {adnData && (
           <div style={{ padding: "0 24px", marginBottom: 20 }}>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 14 }}>Ton ADN Athlete</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 14 }}>{t("profile.athlete_dna")}</div>
             <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: 18, position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: -40, right: -40, width: 120, height: 120, background: `radial-gradient(circle, ${GREEN}08 0%, transparent 70%)`, pointerEvents: "none" }} />
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
@@ -204,7 +206,9 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
                 )}
               </div>
               <div style={{ paddingLeft: 12, borderLeft: `2px solid rgba(2,209,186,0.3)`, fontSize: 12, color: "rgba(255,255,255,0.35)", lineHeight: 1.6, fontStyle: "italic" }}>
-                {adnData.topDays[0] ? `Tu t entraînes le plus le ${adnData.topDays[0].day}. ${adnData.total >= 10 ? "Tu es consistant — continue." : "Construis ta regularite."}` : "Continue tes seances pour voir ton ADN se former."}
+                {adnData.topDays[0]
+                  ? `${t("profile.dna_train_most")} ${adnData.topDays[0].day}. ${adnData.total >= 10 ? t("profile.dna_consistent") : t("profile.dna_keep_building")}`
+                  : t("profile.dna_continue")}
               </div>
             </div>
           </div>
@@ -216,16 +220,16 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         {/* CITATION */}
         <div style={{ padding: "0 24px", marginBottom: 28 }}>
           <div style={{ fontSize: 17, fontWeight: 900, lineHeight: 1.35, textTransform: "uppercase", letterSpacing: "-0.3px" }}>
-            <span style={{ color: GREEN }}>LA </span>
-            <span style={{ color: "rgba(255,255,255,0.1)" }}>DISCIPLINE </span>
-            <span style={{ color: "rgba(255,255,255,0.06)" }}>C EST </span>
-            <span style={{ color: "rgba(255,255,255,0.3)" }}>LA LIBERTE.</span>
+            <span style={{ color: GREEN }}>{t("profile.discipline_word_1")} </span>
+            <span style={{ color: "rgba(255,255,255,0.1)" }}>{t("profile.discipline_word_2")} </span>
+            <span style={{ color: "rgba(255,255,255,0.06)" }}>{t("profile.discipline_word_3")} </span>
+            <span style={{ color: "rgba(255,255,255,0.3)" }}>{t("profile.discipline_word_4")}</span>
           </div>
         </div>
 
         {/* MESSAGERIE COACH */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
-          <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>Messagerie</div>
+          <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>{t("profile.messages")}</div>
           <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, overflow: "hidden", height: 360 }}>
             {client?.id && <ChatCoach clientId={client.id} coachEmail="" isCoach={false} />}
           </div>
@@ -233,7 +237,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
 
         {/* LANGUE */}
         <div style={{ padding: "0 24px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 600 }}>Langue / Language</span>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 600 }}>{t("profile.language_label")}</span>
           <LanguageToggle compact />
         </div>
 
@@ -241,7 +245,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         <div style={{ padding: "0 24px", marginBottom: 14 }}>
           <button onClick={() => { haptic.light(); setShowHelp(true); }} style={{ width: "100%", padding: "13px 18px", borderRadius: 14, border: "1px solid rgba(2,209,186,0.18)", background: "rgba(2,209,186,0.04)", color: "#02d1ba", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
             <AppIcon name="alert" size={14} color="#02d1ba" />
-            Centre d'aide
+            {t("profile.help_center")}
           </button>
         </div>
 
@@ -250,7 +254,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         {/* LOGOUT */}
         <div style={{ padding: "0 24px" }}>
           <button onClick={() => { haptic.medium(); onLogout?.(); }} style={{ width: "100%", padding: "15px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.07)", background: "transparent", color: "rgba(255,255,255,0.18)", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px" }}>
-            Se deconnecter
+            {t("profile.logout")}
           </button>
         </div>
 
