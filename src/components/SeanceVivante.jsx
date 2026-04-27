@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import AppIcon from "./AppIcon";
+import { useT } from "../lib/i18n";
 
 const G = "#02d1ba";
 
 export function SeanceVivante({ clientId, sessionName }) {
+  const t = useT();
   const [message, setMessage] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -17,7 +19,7 @@ export function SeanceVivante({ clientId, sessionName }) {
     if (!clientId) return;
     supabase.from("session_live").upsert({
       client_id: clientId,
-      session_name: sessionName || "Seance",
+      session_name: sessionName || t("svc.session_fallback"),
       started_at: new Date().toISOString(),
       active: true,
     }, { onConflict: "client_id" });
@@ -106,7 +108,7 @@ export function SeanceVivante({ clientId, sessionName }) {
     if (!message?.text_message) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(message.text_message);
-    utt.lang = "fr-FR";
+    utt.lang = t("svc.tts_lang");
     utt.rate = 1.0;
     utt.onstart = () => setPlaying(true);
     utt.onend = () => setPlaying(false);
@@ -127,7 +129,7 @@ export function SeanceVivante({ clientId, sessionName }) {
       <style>{`@keyframes svFadeIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } } @keyframes svWave { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(1.8)} }`}</style>
 
       {/* Badge coach */}
-      <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "4px", textTransform: "uppercase", marginBottom: 24 }}>Message de ton coach</div>
+      <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "4px", textTransform: "uppercase", marginBottom: 24 }}>{t("svc.eyebrow")}</div>
 
       {/* Avatar */}
       <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(2,209,186,0.08)", border: "2px solid rgba(2,209,186,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, color: G, boxShadow: "0 0 40px rgba(2,209,186,0.15)" }}>
@@ -160,7 +162,7 @@ export function SeanceVivante({ clientId, sessionName }) {
 
       {/* Bouton fermer */}
       <button onClick={dismiss} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 100, padding: "12px 28px", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", letterSpacing: "0.5px" }}>
-        Continuer la seance
+        {t("svc.btn_continue")}
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import AppIcon from "./AppIcon";
 import haptic from "../lib/haptic";
+import { useT } from "../lib/i18n";
 
 const G = "#02d1ba";
 const ORANGE = "#f97316";
@@ -20,6 +21,7 @@ const SALES_URL = "https://rbperform.app";
  *   onLogin?     - callback pour ouvrir l'ecran de login
  */
 export default function SubscribePage({ client = null, onClose, onLogin }) {
+  const t = useT();
   const email = client?.email || "";
 
   const openSalesSite = () => {
@@ -69,7 +71,7 @@ export default function SubscribePage({ client = null, onClose, onLogin }) {
         {onClose && (
           <button
             onClick={() => { haptic.light(); onClose(); }}
-            aria-label="Retour"
+            aria-label={t("sp.aria_back")}
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               background: "none", border: "none",
@@ -80,7 +82,7 @@ export default function SubscribePage({ client = null, onClose, onLogin }) {
             }}
           >
             <AppIcon name="arrow-left" size={12} color="rgba(255,255,255,0.5)" />
-            Retour
+            {t("sp.btn_back")}
           </button>
         )}
 
@@ -107,7 +109,7 @@ export default function SubscribePage({ client = null, onClose, onLogin }) {
           </div>
 
           <div style={{ fontSize: 11, letterSpacing: "4px", textTransform: "uppercase", color: `${G}cc`, fontWeight: 700, marginBottom: 12 }}>
-            RB Perform · Premium
+            {t("sp.eyebrow")}
           </div>
 
           <h1
@@ -121,23 +123,22 @@ export default function SubscribePage({ client = null, onClose, onLogin }) {
               margin: "0 0 16px",
             }}
           >
-            Transforme-toi<br />
-            <span style={{ color: G }}>avec un vrai coach.</span>
+            {t("sp.title_p1")}<br />
+            <span style={{ color: G }}>{t("sp.title_p2")}</span>
           </h1>
 
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.55, margin: "0 auto", maxWidth: 400 }}>
-            Programmes sur-mesure, suivi nutrition et messagerie directe
-            avec ton coach. Rejoins le programme depuis notre site.
+            {t("sp.subtitle")}
           </p>
         </div>
 
         {/* Valeur proposee */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32, animation: "subscribeFade 0.5s ease 0.1s both" }}>
           {[
-            { icon: "dumbbell", title: "Programme personnalise", desc: "Construit par ton coach selon tes objectifs, ton niveau, ton equipement." },
-            { icon: "activity", title: "Suivi temps reel", desc: "Ton coach voit tes seances, ton poids, ton effort et ajuste en continu." },
-            { icon: "message", title: "Messagerie illimitee", desc: "Pose tes questions, envoie tes videos, recois des conseils au quotidien." },
-            { icon: "trophy", title: "Resultats garantis", desc: "Methode eprouvee. Plus de 500 transformations suivies depuis 2023." },
+            { icon: "dumbbell", title: t("sp.feat1_title"), desc: t("sp.feat1_desc") },
+            { icon: "activity", title: t("sp.feat2_title"), desc: t("sp.feat2_desc") },
+            { icon: "message", title: t("sp.feat3_title"), desc: t("sp.feat3_desc") },
+            { icon: "trophy", title: t("sp.feat4_title"), desc: t("sp.feat4_desc") },
           ].map((item, i) => (
             <div
               key={i}
@@ -192,14 +193,14 @@ export default function SubscribePage({ client = null, onClose, onLogin }) {
               minHeight: 56,
             }}
           >
-            S'abonner sur rbperform.app
+            {t("sp.btn_subscribe")}
             <AppIcon name="arrow-right" size={16} color="#000" strokeWidth={2.5} />
           </button>
 
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center", marginTop: 14, lineHeight: 1.5 }}>
-            Le paiement se fait sur notre site securise.
+            {t("sp.payment_secure_p1")}
             <br />
-            Tu seras redirige dans un nouvel onglet.
+            {t("sp.payment_secure_p2")}
           </div>
         </div>
 
@@ -207,7 +208,7 @@ export default function SubscribePage({ client = null, onClose, onLogin }) {
         {onLogin && !client && (
           <div style={{ textAlign: "center", marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.05)", animation: "subscribeFade 0.5s ease 0.3s both" }}>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>
-              Deja abonne ?
+              {t("sp.already_subscribed")}
             </div>
             <button
               onClick={() => { haptic.light(); onLogin(); }}
@@ -225,14 +226,14 @@ export default function SubscribePage({ client = null, onClose, onLogin }) {
                 minHeight: 44,
               }}
             >
-              Se connecter →
+              {t("sp.btn_login")}
             </button>
           </div>
         )}
 
         {/* Footer legal */}
         <div style={{ marginTop: 32, fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "center", lineHeight: 1.7 }}>
-          <div>RB Perform · Paris, France</div>
+          <div>{t("sp.footer_address")}</div>
           <div style={{ marginTop: 2 }}>
             <a href={SALES_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>
               rbperform.app
