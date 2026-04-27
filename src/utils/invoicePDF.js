@@ -103,13 +103,14 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
 
   doc.setFontSize(9);
   doc.setTextColor(...gray);
-  if (client.email) doc.text(client.email, M, 84);
-  if (client.address) doc.text(client.address, M, 89);
+  let cy = 84;
+  if (client.email)   { doc.text(client.email,   M, cy); cy += 5; }
+  if (client.address) { doc.text(client.address, M, cy); cy += 5; }
 
   // Periode
   if (client.subscription_start_date && client.subscription_end_date) {
     const fmt = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-    doc.text("Periode : " + fmt(client.subscription_start_date) + " - " + fmt(client.subscription_end_date), M, 90);
+    doc.text("Periode : " + fmt(client.subscription_start_date) + " - " + fmt(client.subscription_end_date), M, cy);
   }
 
   // ===== TABLE =====
@@ -186,8 +187,20 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   doc.text(coach?.brand_name || coach?.coaching_name || "RB Perform", W / 2, H - 15, { align: "center" });
   doc.text("Facture generee automatiquement", W / 2, H - 10, { align: "center" });
 
-  // Telecharger
+  // Telecharger via blob + anchor (force download sur desktop ;
+  // sur iOS Safari le PDF s'ouvre quand meme en preview — limitation OS).
   const safeName = (client.full_name || "client").replace(/[^a-zA-Z0-9]/g, "_");
   const fileName = "Facture_" + safeName + "_" + now.toISOString().split("T")[0] + ".pdf";
-  doc.save(fileName);
+  const blob = doc.output("blob");
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 200);
 }
