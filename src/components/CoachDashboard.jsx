@@ -43,7 +43,7 @@ import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
 import usePullToRefresh from "../hooks/usePullToRefresh";
-import { useT, getLocale } from "../lib/i18n";
+import { useT, getLocale, t as tStatic } from "../lib/i18n";
 
 const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
 import ThemeSwitcher from "./ThemeSwitcher";
@@ -106,23 +106,22 @@ function daysAgo(dateStr) {
   const diffMs = now - then;
   const diffH = Math.floor(diffMs / 3600000);
   const diffD = Math.floor(diffMs / 86400000);
-  if (diffH < 1) return "A l'instant";
-  if (diffH < 24) return `Il y a ${diffH}h`;
-  if (diffD === 1) return "Hier";
-  return `Il y a ${diffD}j`;
+  if (diffH < 1) return tStatic("coach.activity_just_now");
+  if (diffH < 24) return tStatic("coach.activity_hours_ago").replace("{n}", diffH);
+  if (diffD === 1) return tStatic("coach.activity_yesterday");
+  return tStatic("coach.activity_days_ago").replace("{n}", diffD);
 }
 function activityLabel(dateStr) {
-  if (!dateStr) return { text: "Jamais connecte", precise: true };
+  if (!dateStr) return { text: tStatic("coach.activity_never"), precise: true };
   const now = Date.now();
   const then = new Date(dateStr).getTime();
   const diffH = Math.floor((now - then) / 3600000);
   const diffD = Math.floor((now - then) / 86400000);
-  if (diffH < 1) return { text: "En ligne", precise: true };
-  if (diffH < 24) return { text: `Actif il y a ${diffH}h`, precise: true };
-  if (diffD === 1) return { text: "Vu hier", precise: true };
-  if (diffD <= 3) return { text: `Vu il y a ${diffD}j`, precise: true };
-  if (diffD <= 7) return { text: `Vu il y a ${diffD}j`, precise: true };
-  return { text: `Inactif ${diffD}j`, precise: true };
+  if (diffH < 1) return { text: tStatic("coach.activity_online"), precise: true };
+  if (diffH < 24) return { text: tStatic("coach.activity_active_hours_ago").replace("{n}", diffH), precise: true };
+  if (diffD === 1) return { text: tStatic("coach.activity_seen_yesterday"), precise: true };
+  if (diffD <= 7) return { text: tStatic("coach.activity_seen_days_ago").replace("{n}", diffD), precise: true };
+  return { text: tStatic("coach.activity_inactive_days").replace("{n}", diffD), precise: true };
 }
 function activityColor(lastSeen) {
   if (!lastSeen) return "rgba(255,255,255,0.2)";
@@ -3295,8 +3294,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   <Icon name="chart" size={20} color="#a78bfa" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 3 }}>Ouvrir Analytics avancees</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Heatmap, correlations, performance programmes</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 3 }}>{t("coach.open_advanced_analytics")}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{t("coach.open_advanced_analytics_sub")}</div>
                 </div>
                 <Icon name="arrow-right" size={14} color="rgba(255,255,255,0.4)" />
               </button>
@@ -3322,7 +3321,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
               >
                 <Icon name="users" size={16} />
-                Voir tous les clients ({total})
+                {t("coach.see_all_clients").replace("{n}", total)}
               </button>
             </div>
           )}
@@ -3361,9 +3360,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             {showAdd && (
               <div style={{ background: "rgba(2,209,186,0.04)", border: `1px solid ${G_BORDER}`, borderRadius: 16, padding: 18, marginBottom: 16, animation: "fadeUp 0.2s ease" }}>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <input className="inp-focus" type="email" placeholder="Email *" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 180, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-                  <input className="inp-focus" type="text" placeholder="Prenom Nom" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 140, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-                  <button onClick={addClient} disabled={!newEmail} style={{ padding: "12px 20px", background: newEmail ? G : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: newEmail ? "#000" : "rgba(255,255,255,0.25)", fontSize: 12, fontWeight: 800, cursor: newEmail ? "pointer" : "not-allowed", fontFamily: "inherit" }}>Creer</button>
+                  <input className="inp-focus" type="email" placeholder={t("coach.input_email_placeholder")} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 180, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                  <input className="inp-focus" type="text" placeholder={t("coach.input_name_placeholder")} value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 140, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                  <button onClick={addClient} disabled={!newEmail} style={{ padding: "12px 20px", background: newEmail ? G : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: newEmail ? "#000" : "rgba(255,255,255,0.25)", fontSize: 12, fontWeight: 800, cursor: newEmail ? "pointer" : "not-allowed", fontFamily: "inherit" }}>{t("coach.btn_create_client")}</button>
                 </div>
               </div>
             )}
@@ -3372,10 +3371,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             <div style={{ marginBottom: 18 }}>
               <div style={{ position: "relative", marginBottom: 12 }}>
                 <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}><Icon name="search" size={14} /></div>
-                <input className="inp-focus" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: "100%", padding: "12px 14px 12px 38px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                <input className="inp-focus" placeholder={t("coach.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: "100%", padding: "12px 14px 12px 38px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
               </div>
               <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
-                {[["all", "Tous", total], ["active", "Actifs", activeWeek], ["noprog", "Sans prog.", total - withProg], ["inactive", "Alertes", inactiveAlerts]].map(([k, l, n]) => {
+                {[["all", t("coach.filter_all"), total], ["active", t("coach.filter_active"), activeWeek], ["noprog", t("coach.filter_noprog"), total - withProg], ["inactive", t("coach.filter_alerts"), inactiveAlerts]].map(([k, l, n]) => {
                   const on = filter === k;
                   return <button key={k} onClick={() => setFilter(k)} style={{ padding: "7px 12px", fontSize: 11, fontWeight: 700, background: on ? G_DIM : "transparent", border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.06)"}`, borderRadius: 100, color: on ? G : "rgba(255,255,255,0.4)", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit", flexShrink: 0 }}>{l} <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, opacity: 0.7 }}>{n}</span></button>;
                 })}
@@ -3389,17 +3388,17 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               search || filter !== "all" ? (
                 <EmptyState
                   icon="search"
-                  title="Aucun resultat"
-                  subtitle={`Aucun client ne correspond ${search ? `a "${search}"` : "au filtre"}.`}
-                  action={{ label: "Reinitialiser", onClick: () => { setSearch(""); setFilter("all"); } }}
+                  title={t("coach.empty_search_title")}
+                  subtitle={search ? t("coach.empty_search_subtitle_query").replace("{q}", search) : t("coach.empty_search_subtitle_filter")}
+                  action={{ label: t("coach.empty_search_reset"), onClick: () => { setSearch(""); setFilter("all"); } }}
                   size="md"
                 />
               ) : (
                 <EmptyState
                   icon="users"
-                  title="Ton premier client t'attend."
-                  subtitle="Partage ton code d'invitation pour qu'ils rejoignent ton espace, ou ajoute-les manuellement."
-                  action={{ label: "Ajouter un client", onClick: () => setShowAdd(true) }}
+                  title={t("coach.no_clients_yet")}
+                  subtitle={t("coach.empty_clients_subtitle")}
+                  action={{ label: t("coach.empty_clients_action"), onClick: () => setShowAdd(true) }}
                   size="lg"
                 />
               )
@@ -3438,7 +3437,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                         {/* Nom + email */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {c.full_name || <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Sans nom</span>}
+                            {c.full_name || <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{t("coach.client_no_name")}</span>}
                           </div>
                           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>{c.email}</div>
                         </div>
@@ -3465,23 +3464,23 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                         {c._sessionsLast7d !== undefined && <BehavioralBadge client={c} compact />}
                         {prog ? (
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 100, padding: "3px 10px" }}>
-                            {prog.programme_name || "Programme actif"}
+                            {prog.programme_name || t("coach.client_default_prog_name")}
                           </span>
                         ) : (
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, padding: "3px 10px" }}>
-                            Sans programme
+                            {t("coach.client_no_prog")}
                           </span>
                         )}
                         {logsCount > 0 && (
-                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{logsCount} seances</span>
+                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{(logsCount > 1 ? t("coach.client_sessions_many") : t("coach.client_sessions_one")).replace("{n}", logsCount)}</span>
                         )}
                         {dStr && (
-                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Vu {dStr.toLowerCase()}</span>
+                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{t("coach.client_seen").replace("{when}", dStr.toLowerCase())}</span>
                         )}
                         {/* Badge abonnement avec jours restants */}
                         {c.subscription_end_date && (() => {
                           const dl = Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000);
-                          if (dl <= 0) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 100, padding: "2px 8px" }}>Expire</span>;
+                          if (dl <= 0) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 100, padding: "2px 8px" }}>{t("coach.client_expired")}</span>;
                           if (dl <= 7) return <span style={{ fontSize: 9, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 100, padding: "2px 8px" }}>{dl}j</span>;
                           if (dl <= 14) return <span style={{ fontSize: 9, fontWeight: 700, color: ORANGE, background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 100, padding: "2px 8px" }}>{dl}j</span>;
                           return <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{dl}j</span>;
