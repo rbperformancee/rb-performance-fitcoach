@@ -550,8 +550,8 @@ export default function FuelPage({ client, appData }) {
 
     let added = 0;
     let failed = 0;
+    let lastError = null;
 
-    // Si on a un breakdown ingredients, on les ajoute SEPAREMENT.
     if (Array.isArray(voiceResult.ingredients) && voiceResult.ingredients.length > 0) {
       for (const ing of voiceResult.ingredients) {
         const r = await addFood({
@@ -563,7 +563,7 @@ export default function FuelPage({ client, appData }) {
           lipides: parseFloat((ing.lipides || 0).toFixed(1)),
           quantite_g: ing.quantite_g || 0,
         });
-        if (r) added++; else failed++;
+        if (r?.ok) added++; else { failed++; lastError = r?.error; }
       }
     } else {
       const r = await addFood({
@@ -575,15 +575,15 @@ export default function FuelPage({ client, appData }) {
         lipides: voiceResult.lipides,
         quantite_g: voiceResult.quantite_g,
       });
-      if (r) added++; else failed++;
+      if (r?.ok) added++; else { failed++; lastError = r?.error; }
     }
 
     if (failed > 0 && added === 0) {
-      toast.error(`Echec d'ajout (${failed} aliment${failed > 1 ? "s" : ""}). Verifie ta connexion.`);
+      toast.error(`Echec : ${lastError || "erreur inconnue"}`);
       return; // Garde la modale ouverte pour retry
     }
     if (added > 0 && failed > 0) {
-      toast.error(`${added} ajoute${added > 1 ? "s" : ""}, ${failed} echec${failed > 1 ? "s" : ""}.`);
+      toast.error(`${added} ajoute(s), ${failed} echec(s) : ${lastError || "?"}`);
     } else if (added > 0) {
       toast.success(`${added} aliment${added > 1 ? "s" : ""} ajoute${added > 1 ? "s" : ""} a ${selectedRepas}`);
     }

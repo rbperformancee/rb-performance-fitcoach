@@ -26,8 +26,8 @@ export function useFuel(clientId) {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const addFood = async (item) => {
-    if (!clientId) return null;
-    const { data, error } = await supabase.from("nutrition_logs").insert({
+    if (!clientId) return { ok: false, error: "Pas connecté" };
+    const payload = {
       client_id: clientId,
       date: today,
       repas: item.repas,
@@ -37,13 +37,14 @@ export function useFuel(clientId) {
       glucides: item.glucides,
       lipides: item.lipides,
       quantite_g: item.quantite_g,
-    }).select().single();
+    };
+    const { data, error } = await supabase.from("nutrition_logs").insert(payload).select().single();
     if (error) {
-      console.error("[addFood] insert failed", error, item);
-      return null;
+      console.error("[addFood] insert failed", error, payload);
+      return { ok: false, error: error.message || error.code || "Erreur inconnue" };
     }
     if (data) setLogs(prev => [...prev, data]);
-    return data;
+    return { ok: true, data };
   };
 
   const removeFood = async (id) => {
