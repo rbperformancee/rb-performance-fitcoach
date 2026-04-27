@@ -3,6 +3,13 @@ import { supabase } from "../../lib/supabase";
 import AppIcon from "../AppIcon";
 import { calculateChurnRisk } from "../../lib/coachIntelligence";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const RED = "#ff6b6b";
 const ORANGE = "#00C9A7";
@@ -13,23 +20,26 @@ const G = "#02d1ba";
  * Click → drawer avec liste des notifs (messages non lus + clients a risque + abos expirants).
  */
 export default function NotificationBell({ clients = [], coachId, onOpenClient }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [messages, setMessages] = useState([]);
 
-  // Compute alerts dynamiquement
+  // Compute alerts dynamiquement (titles/descs translated at render via i18nKey)
   const alerts = useMemo(() => {
     const list = [];
     for (const c of clients) {
       const risk = calculateChurnRisk(c);
+      const fn = c.full_name?.split(" ")[0] || "__client_fallback__";
       if (risk >= 60) {
         list.push({
           id: `risk_${c.id}`,
           type: "churn",
           severity: "high",
           color: RED,
-          title: `${c.full_name?.split(" ")[0] || "Client"} a risque eleve`,
-          desc: `Score churn ${risk}/100 — appelle-le aujourd'hui`,
+          titleKey: "nb.alert_title_high_risk",
+          descKey: "nb.alert_desc_high_risk",
+          vars: { name: fn, score: risk },
           client: c,
         });
       } else if (c.subscription_end_date) {
@@ -40,8 +50,9 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
             type: "expire",
             severity: "medium",
             color: ORANGE,
-            title: `${c.full_name?.split(" ")[0] || "Client"} expire dans ${daysLeft}j`,
-            desc: "Programme renouvellement",
+            titleKey: "nb.alert_title_expiring",
+            descKey: "nb.alert_desc_expiring",
+            vars: { name: fn, n: daysLeft },
             client: c,
           });
         } else if (daysLeft <= 0) {
@@ -50,8 +61,9 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
             type: "expired",
             severity: "high",
             color: RED,
-            title: `${c.full_name?.split(" ")[0] || "Client"} : abonnement expire`,
-            desc: "Action urgente",
+            titleKey: "nb.alert_title_expired",
+            descKey: "nb.alert_desc_expired",
+            vars: { name: fn },
             client: c,
           });
         }
@@ -59,6 +71,9 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
     }
     return list.sort((a, b) => (a.severity === "high" ? -1 : 1));
   }, [clients]);
+
+  // Resolve labels at render so locale changes refresh them
+  const resolveName = (n) => (n === "__client_fallback__" ? t("nb.client_fallback") : n);
 
   // Compter messages non lus envoyes par les clients (from_coach=false, read=false)
   useEffect(() => {
@@ -86,7 +101,7 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
     <>
       <button
         onClick={() => { haptic.light(); setOpen(true); }}
-        aria-label={`Notifications (${totalCount})`}
+        aria-label={fillTpl(t("nb.aria_count"), { n: totalCount })}
         style={{
           position: "relative",
           background: "rgba(255,255,255,0.04)",
@@ -124,17 +139,17 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Notifications"
+            aria-label={t("nb.aria_dialog")}
             style={{ width: "100%", maxWidth: 380, background: "#080C14", borderLeft: "1px solid rgba(255,255,255,0.08)", height: "100%", overflowY: "auto", WebkitOverflowScrolling: "touch", animation: "nbSlide 0.25s cubic-bezier(0.22,1,0.36,1) both" }}
           >
             <style>{`@keyframes nbSlide { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
             {/* Header */}
             <div style={{ position: "sticky", top: 0, background: "#080C14", padding: "calc(env(safe-area-inset-top, 16px) + 16px) 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 2 }}>Notifications</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>{totalCount} alerte{totalCount > 1 ? "s" : ""}</div>
+                <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 2 }}>{t("nb.eyebrow")}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>{fillTpl(totalCount > 1 ? t("nb.alert_many") : t("nb.alert_one"), { n: totalCount })}</div>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, width: 44, height: 44, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button onClick={() => setOpen(false)} aria-label={t("nb.aria_close")} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, width: 44, height: 44, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <AppIcon name="x" size={18} color="rgba(255,255,255,0.85)" />
               </button>
             </div>
@@ -145,18 +160,18 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
                   <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(2,209,186,0.08)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: G, marginBottom: 14 }}>
                     <AppIcon name="check-circle" size={28} color={G} />
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>Tout est calme.</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Aucune action urgente.</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{t("nb.empty_title")}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{t("nb.empty_sub")}</div>
                 </div>
               ) : (
                 <>
                   {/* Messages non lus */}
                   {messages.length > 0 && (
                     <div style={{ marginBottom: 14 }}>
-                      <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", fontWeight: 700, marginBottom: 8 }}>Messages</div>
+                      <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", fontWeight: 700, marginBottom: 8 }}>{t("nb.section_messages")}</div>
                       {messages.map((m) => {
                         const c = clients.find((x) => x.id === m.client_id);
-                        const fn = c?.full_name?.split(" ")[0] || "Client";
+                        const fn = c?.full_name?.split(" ")[0] || t("nb.client_fallback");
                         return (
                           <button
                             key={m.id}
@@ -177,7 +192,7 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
                   {/* Alertes clients */}
                   {alerts.length > 0 && (
                     <div>
-                      <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,107,107,0.7)", fontWeight: 700, marginBottom: 8 }}>Actions urgentes</div>
+                      <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,107,107,0.7)", fontWeight: 700, marginBottom: 8 }}>{t("nb.section_urgent")}</div>
                       {alerts.map((a) => (
                         <button
                           key={a.id}
@@ -188,8 +203,8 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
                             <AppIcon name={a.type === "churn" ? "alert" : "calendar"} size={13} color={a.color} />
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>{a.title}</div>
-                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{a.desc}</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>{fillTpl(t(a.titleKey), { ...a.vars, name: resolveName(a.vars.name) })}</div>
+                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{fillTpl(t(a.descKey), { ...a.vars, name: resolveName(a.vars.name) })}</div>
                           </div>
                         </button>
                       ))}
