@@ -466,7 +466,7 @@ function CoachSupplementsPanel({ clientId }) {
 }
 
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
-function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [] }) {
+function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [], onWantInvoice }) {
   const [showTransformation, setShowTransformation] = React.useState(false);
   const [showAIAnalyze, setShowAIAnalyze] = React.useState(false);
   const [msgText,    setMsgText]    = useState("");
@@ -605,7 +605,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           coachData={null}
           onClose={() => setShowBuilder(false)}
           onSaved={() => { setShowBuilder(false); onClose(); }}
-          onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }}
+          onWantInvoice={onWantInvoice}
         />
       </div>
     )}
@@ -806,14 +806,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   </div>
                 )}
 
-                {/* Bouton facture PDF */}
+                {/* Bouton facture (ouvre la modale, pas de PDF direct) */}
                 {subStart && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); generateInvoicePDF(client, coachData || { full_name: "Coach", brand_name: "Coaching", email: "" }); }}
+                    onClick={(e) => { e.stopPropagation(); onWantInvoice?.(client); }}
                     style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
                   >
                     <Icon name="document" size={12} />
-                    Generer facture PDF
+                    Generer facture
                   </button>
                 )}
 
@@ -886,14 +886,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setShowBuilder(true)} style={{ flex: 1, padding: 12, background: "linear-gradient(135deg, #c0392b, #a93226)", border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(192,57,43,0.3)" }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button onClick={() => setShowBuilder(true)} style={{ flex: "1 1 140px", padding: 12, background: "linear-gradient(135deg, #c0392b, #a93226)", border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(192,57,43,0.3)" }}>
                   <Icon name="document" size={14} />
                   Creer un programme
                 </button>
-                <button onClick={() => fileRef.current?.click()} style={{ flex: 1, padding: 12, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(2,209,186,0.25)" }}>
+                <button onClick={() => fileRef.current?.click()} style={{ flex: "1 1 140px", padding: 12, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(2,209,186,0.25)" }}>
                   <Icon name="upload" size={14} />
                   Uploader HTML
+                </button>
+                <button onClick={() => onWantInvoice?.(client)} style={{ flex: "1 1 140px", padding: 12, background: "linear-gradient(135deg, #a78bfa, #7c3aed)", border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(167,139,250,0.3)" }}>
+                  <Icon name="document" size={14} />
+                  Generer facture
                 </button>
               </div>
             </div>
@@ -2951,7 +2955,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {selected && (
         <ErrorBoundary name="ClientPanel">
-          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} />
+          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }} />
         </ErrorBoundary>
       )}
       {showPipeline && (
