@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 
@@ -21,6 +22,7 @@ const G = "#02d1ba";
  *   onInvited: (invitation) => void  // appele apres envoi OK
  */
 export default function InviteClient({ open, onClose, coachId, onInvited }) {
+  const t = useT();
   const [email, setEmail]   = useState("");
   const [prenom, setPrenom] = useState("");
   const [programmeId, setProgrammeId] = useState("");
@@ -64,7 +66,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
   async function handleInvite() {
     const mail = email.trim().toLowerCase();
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(mail)) {
-      setError("Email invalide."); return;
+      setError(t("iv.error_invalid_email")); return;
     }
     setError("");
     haptic.selection();
@@ -87,7 +89,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
       // Call edge function send-invite
       const { data: { session } } = await supabase.auth.getSession();
       const jwt = session?.access_token;
-      if (!jwt) throw new Error("Session expiree, reconnecte-toi");
+      if (!jwt) throw new Error(t("iv.error_session_expired"));
 
       const fnRes = await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-invite`, {
         method: "POST",
@@ -98,15 +100,15 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
       if (!fnRes.ok || !fnJson.success) {
         console.warn("[send-invite] non-critique:", fnJson);
         // On ne throw pas — l'invitation est creee, le coach peut resend plus tard
-        toast.info("Invitation creee — email non envoye (relance plus tard)");
+        toast.info(t("iv.toast_email_not_sent"));
       } else {
-        toast.success(`Invitation envoyee a ${mail}`);
+        toast.success(t("iv.toast_sent").replace("{email}", mail));
       }
 
       if (onInvited) onInvited(inv);
       onClose?.();
     } catch (e) {
-      setError(e.message || "Erreur, reessaie");
+      setError(e.message || t("iv.error_generic"));
       setSending(false);
     }
   }
@@ -135,7 +137,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Inviter un client"
+        aria-label={t("iv.aria_title")}
         style={{
           width: "100%", maxWidth: 440,
           background: "#0f0f0f",
@@ -151,11 +153,11 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(2,209,186,.7)" }}>
-            Nouvel athlete
+            {t("iv.eyebrow")}
           </div>
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("iv.aria_close")}
             style={{
               background: "rgba(255,255,255,.04)",
               border: "none",
@@ -175,21 +177,21 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
           fontSize: 22, fontWeight: 900, letterSpacing: "-.5px",
           color: "#fff", margin: "0 0 8px", lineHeight: 1.2,
         }}>
-          Invite ton client<span style={{ color: G }}>.</span>
+          {t("iv.title")}<span style={{ color: G }}>.</span>
         </h2>
         <p style={{ fontSize: 13, color: "rgba(255,255,255,.4)", margin: "0 0 22px", lineHeight: 1.5 }}>
-          Il recevra un email avec un lien d'acces securise. Valable 7 jours.
+          {t("iv.subtitle")}
         </p>
 
         {/* Email */}
         <div style={{ marginBottom: 12 }}>
-          <label style={fieldLabel}>Email du client</label>
+          <label style={fieldLabel}>{t("iv.label_email")}</label>
           <input
             type="email"
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="client@email.com"
+            placeholder={t("iv.placeholder_email")}
             className="inv-input"
             style={fieldInput}
             onKeyDown={(e) => e.key === "Enter" && handleInvite()}
@@ -200,12 +202,12 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
 
         {/* Prenom */}
         <div style={{ marginBottom: 12 }}>
-          <label style={fieldLabel}>Prenom (optionnel)</label>
+          <label style={fieldLabel}>{t("iv.label_first_name")}</label>
           <input
             type="text"
             value={prenom}
             onChange={(e) => setPrenom(e.target.value)}
-            placeholder="Marie"
+            placeholder={t("iv.placeholder_first_name")}
             className="inv-input"
             style={fieldInput}
             onKeyDown={(e) => e.key === "Enter" && handleInvite()}
@@ -215,16 +217,16 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
         {/* Programme selector */}
         {programmes.length > 0 && (
           <div style={{ marginBottom: 12 }}>
-            <label style={fieldLabel}>Programme a assigner (optionnel)</label>
+            <label style={fieldLabel}>{t("iv.label_program")}</label>
             <select
               value={programmeId}
               onChange={(e) => setProgrammeId(e.target.value)}
               className="inv-input"
               style={{ ...fieldInput, cursor: "pointer", appearance: "none", WebkitAppearance: "none", backgroundImage: "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><polyline fill=%22none%22 stroke=%22%23666%22 stroke-width=%221.5%22 points=%221 1 5 5 9 1%22/></svg>')", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", paddingRight: 36 }}
             >
-              <option value="">Aucun — invitation seule</option>
+              <option value="">{t("iv.option_no_program")}</option>
               {programmes.map((p) => (
-                <option key={p.id} value={p.id}>{p.programme_name || "Sans nom"}</option>
+                <option key={p.id} value={p.id}>{p.programme_name || t("iv.no_name")}</option>
               ))}
             </select>
           </div>
@@ -258,7 +260,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
             transition: "opacity .15s, transform .15s",
           }}
         >
-          {sending ? "Envoi..." : "Envoyer l'invitation"}
+          {sending ? t("iv.btn_sending") : t("iv.btn_send")}
         </button>
 
         <div style={{
@@ -268,7 +270,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
           textAlign: "center",
           letterSpacing: ".04em",
         }}>
-          Gratuit pour le client · Toujours
+          {t("iv.footer_free")}
         </div>
       </div>
     </div>
