@@ -98,9 +98,10 @@ export function useFuel(clientId) {
   };
 
   const updateGoals = async (newGoals) => {
-    if (!clientId) return;
+    if (!clientId) return false;
+    const previous = goals;
     setGoals(newGoals);
-    await supabase.from("nutrition_goals").upsert({
+    const { error } = await supabase.from("nutrition_goals").upsert({
       client_id: clientId,
       calories: newGoals.calories,
       proteines: newGoals.proteines,
@@ -109,6 +110,43 @@ export function useFuel(clientId) {
       eau_ml: newGoals.eau_ml,
       pas: newGoals.pas,
     }, { onConflict: "client_id" });
+
+    if (error) {
+      console.error("[updateGoals] save failed", error);
+      setGoals(previous); // rollback optimiste
+      return false;
+    }
+
+    // Alerte coach : log l'event dans coach_activity_log si le client change
+    // significativement (pas du bruit a chaque tweak). Best-effort, ignore RLS.
+    try {
+      const significantChange =
+        previous && (
+          Math.abs((newGoals.calories || 0) - (previous.calories || 0)) >= 100 ||
+          Math.abs((newGoals.proteines || 0) - (previous.proteines || 0)) >= 10 ||
+          Math.abs((newGoals.eau_ml || 0) - (previous.eau_ml || 0)) >= 250 ||
+          Math.abs((newGoals.pas || 0) - (previous.pas || 0)) >= 1000
+        );
+      if (significantChange) {
+        const { data: client } = await supabase.from("clients")
+          .select("id, coach_id, full_name").eq("id", clientId).maybeSingle();
+        if (client?.coach_id) {
+          const summary = `${client.full_name || "Client"} a modifie ses objectifs : `
+            + `kcal ${previous.calories || 0}→${newGoals.calories || 0}, `
+            + `prot ${previous.proteines || 0}→${newGoals.proteines || 0}g, `
+            + `eau ${previous.eau_ml || 0}→${newGoals.eau_ml || 0}ml, `
+            + `pas ${previous.pas || 0}→${newGoals.pas || 0}`;
+          supabase.from("coach_activity_log").insert({
+            coach_id: client.coach_id,
+            client_id: clientId,
+            activity_type: "client_goals_changed",
+            details: summary,
+          }).then(() => {}, () => {});
+        }
+      }
+    } catch (_) {}
+
+    return true;
   };
 
   return { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score: calcScore(), fetchAll };

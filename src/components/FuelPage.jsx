@@ -264,24 +264,59 @@ function SupplementsTab({ clientId }) {
 
 // ===== OBJECTIFS TAB =====
 function ObjectifsTab({ goals, onSave }) {
-  const [cal, setCal] = useState(goals?.calories || 2000);
-  const [prot, setProt] = useState(goals?.proteines || 150);
-  const [gluc, setGluc] = useState(goals?.glucides || 250);
-  const [lip, setLip] = useState(goals?.lipides || 70);
-  const [eau, setEau] = useState(goals?.eau_ml || 2500);
-  const [pas, setPas] = useState(goals?.pas || 8000);
+  // Stocke en STRING pour permettre le champ vide pendant l'edition
+  // (sinon le 0 reste collé au début quand on tape).
+  const [cal, setCal] = useState(String(goals?.calories ?? 2000));
+  const [prot, setProt] = useState(String(goals?.proteines ?? 150));
+  const [gluc, setGluc] = useState(String(goals?.glucides ?? 250));
+  const [lip, setLip] = useState(String(goals?.lipides ?? 70));
+  const [eau, setEau] = useState(String(goals?.eau_ml ?? 2500));
+  const [pas, setPas] = useState(String(goals?.pas ?? 8000));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  // Re-sync depuis props quand le coach change les goals en DB en arriere-plan
+  useEffect(() => {
+    setCal(String(goals?.calories ?? 2000));
+    setProt(String(goals?.proteines ?? 150));
+    setGluc(String(goals?.glucides ?? 250));
+    setLip(String(goals?.lipides ?? 70));
+    setEau(String(goals?.eau_ml ?? 2500));
+    setPas(String(goals?.pas ?? 8000));
+  }, [goals?.calories, goals?.proteines, goals?.glucides, goals?.lipides, goals?.eau_ml, goals?.pas]);
+
+  const num = (s) => {
+    const n = parseInt(s, 10);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  };
 
   const handleSave = async () => {
+    setError("");
     setSaving(true);
-    await onSave({ calories: cal, proteines: prot, glucides: gluc, lipides: lip, eau_ml: eau, pas });
+    try {
+      const result = await onSave({
+        calories: num(cal), proteines: num(prot), glucides: num(gluc),
+        lipides: num(lip), eau_ml: num(eau), pas: num(pas),
+      });
+      // updateGoals retourne false si erreur
+      if (result === false) throw new Error("Sauvegarde refusee");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      setError(e?.message || "Erreur d'enregistrement");
+    }
     setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   const fieldStyle = { width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "inherit", textAlign: "center" };
+
+  // Sanitise input : que des chiffres, supprime les zeros leading sauf "0"
+  const onNumChange = (set) => (e) => {
+    let v = e.target.value.replace(/[^0-9]/g, "");
+    if (v.length > 1) v = v.replace(/^0+/, "") || "0";
+    set(v);
+  };
 
   return (
     <div style={{ padding: "20px 24px" }}>
@@ -296,9 +331,22 @@ function ObjectifsTab({ goals, onSave }) {
       ].map((f, i) => (
         <div key={i} style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>{f.label}</div>
-          <input type="number" value={f.value} onChange={e => f.set(parseInt(e.target.value) || 0)} inputMode="numeric" style={fieldStyle} />
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={f.value}
+            onChange={onNumChange(f.set)}
+            onFocus={(e) => e.target.select()}
+            style={fieldStyle}
+          />
         </div>
       ))}
+      {error && (
+        <div style={{ marginBottom: 10, padding: "10px 14px", background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 10, fontSize: 12, color: "#ff6b6b" }}>
+          {error}
+        </div>
+      )}
       <button onClick={handleSave} disabled={saving} style={{
         width: "100%", padding: 16, marginTop: 8,
         background: saved ? "rgba(2,209,186,0.15)" : "linear-gradient(135deg, #f97316, #ea580c)",
@@ -335,6 +383,7 @@ export default function FuelPage({ client, appData }) {
   const recognitionRef = useRef(null);
   const [showSleep, setShowSleep] = useState(false);
   const [tempWater, setTempWater] = useState(null);
+  const [waterMode, setWaterMode] = useState("add"); // "add" | "sub"
   const [tempSleep, setTempSleep] = useState(null);
   const [scanError, setScanError] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
@@ -1372,16 +1421,66 @@ export default function FuelPage({ client, appData }) {
       {showWater && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowWater(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ background: "#111", borderRadius: 24, padding: 24, width: "100%", maxWidth: 360 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Hydratation</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>Hydratation</div>
+              {/* Toggle Ajouter / Corriger — subtil, deux pills mini */}
+              <div style={{ display: "inline-flex", padding: 3, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100 }}>
+                <button
+                  onClick={() => setWaterMode && setWaterMode("add")}
+                  style={{
+                    padding: "5px 12px",
+                    background: waterMode !== "sub" ? "rgba(96,165,250,0.15)" : "transparent",
+                    border: "none", borderRadius: 100,
+                    color: waterMode !== "sub" ? BLUE : "rgba(255,255,255,0.4)",
+                    fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >Ajouter</button>
+                <button
+                  onClick={() => setWaterMode && setWaterMode("sub")}
+                  style={{
+                    padding: "5px 12px",
+                    background: waterMode === "sub" ? "rgba(255,107,107,0.12)" : "transparent",
+                    border: "none", borderRadius: 100,
+                    color: waterMode === "sub" ? "#ff6b6b" : "rgba(255,255,255,0.4)",
+                    fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >Corriger</button>
+              </div>
+            </div>
             <div style={{ fontSize: 44, fontWeight: 100, color: BLUE, textAlign: "center", marginBottom: 20, letterSpacing: "-2px" }}>
               {((tempWater || dailyTracking?.eau_ml || 0) / 1000).toFixed(1)} L
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-              {[150, 250, 330, 500].map(ml => (
-                <button key={ml} onClick={() => { const base = tempWater !== null ? tempWater : (dailyTracking?.eau_ml || 0); const newVal = base + ml; setTempWater(newVal); updateTracking("eau_ml", newVal); }} style={{ flex: 1, padding: "10px 0", background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", borderRadius: 12, color: BLUE, fontSize: 13, fontWeight: 600, cursor: "pointer", minWidth: 60 }}>
-                  +{ml}ml
-                </button>
-              ))}
+              {[150, 250, 330, 500].map(ml => {
+                const isSub = waterMode === "sub";
+                const accent = isSub ? "255,107,107" : "96,165,250";
+                const accentColor = isSub ? "#ff6b6b" : BLUE;
+                return (
+                  <button
+                    key={ml}
+                    onClick={() => {
+                      const base = tempWater !== null ? tempWater : (dailyTracking?.eau_ml || 0);
+                      const delta = isSub ? -ml : ml;
+                      const newVal = Math.max(0, base + delta);
+                      setTempWater(newVal);
+                      updateTracking("eau_ml", newVal);
+                    }}
+                    style={{
+                      flex: 1, padding: "10px 0",
+                      background: `rgba(${accent},0.1)`,
+                      border: `1px solid rgba(${accent},0.2)`,
+                      borderRadius: 12, color: accentColor,
+                      fontSize: 13, fontWeight: 600, cursor: "pointer", minWidth: 60,
+                      fontFamily: "inherit",
+                      transition: "background .15s, border-color .15s",
+                    }}
+                  >
+                    {isSub ? "−" : "+"}{ml}ml
+                  </button>
+                );
+              })}
             </div>
             <button onClick={() => setShowWater(false)} style={{ width: "100%", padding: 14, background: BLUE, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>OK</button>
           </div>
