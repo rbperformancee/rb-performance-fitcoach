@@ -18,6 +18,7 @@ import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
 import { toast } from "../Toast";
 import Confetti from "../Confetti";
+import { useT, t as tStatic } from "../../lib/i18n";
 
 const G = "#02d1ba";
 const VIOLET = "#a78bfa";
@@ -29,6 +30,7 @@ const GOLD = "#fbbf24";
  * Integre en bas du dashboard ou via un bouton "Achievements".
  */
 export default function AchievementsSection({ coachData, clients = [] }) {
+  const t = useT();
   const [earnedBadges, setEarnedBadges] = useState([]);
   const [streak, setStreak] = useState({ current: 0, best: 0 });
   const [platformRank, setPlatformRank] = useState(null);
@@ -99,7 +101,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
         // Toast pour chaque badge debloque (max 3 affiches)
         toUnlock.slice(0, 3).forEach((bid, i) => {
           const badge = BADGES.find((b) => b.id === bid);
-          if (badge) setTimeout(() => toast.success(`Badge debloque : ${badge.label}`), i * 600);
+          if (badge) setTimeout(() => toast.success(tStatic("ach.toast_badge_unlocked").replace("{label}", badge.label)), i * 600);
         });
       } else {
         setEarnedBadges(existing || []);
@@ -127,7 +129,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <AppIcon name="trophy" size={16} color={GOLD} />
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: GOLD }}>
-          Achievements
+          {t("ach.title")}
         </div>
         <div style={{ marginLeft: "auto", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
           {unlockedCount}/{totalBadges}
@@ -140,14 +142,14 @@ export default function AchievementsSection({ coachData, clients = [] }) {
         <div style={{ background: "rgba(0,201,167,0.05)", border: "1px solid rgba(0,201,167,0.18)", borderRadius: 16, padding: "16px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <AppIcon name="flame" size={14} color={ORANGE} />
-            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: `${ORANGE}d0`, fontWeight: 700 }}>Streak coach</div>
+            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: `${ORANGE}d0`, fontWeight: 700 }}>{t("ach.streak_label")}</div>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
             <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: ORANGE, lineHeight: 1 }}>{streak.current}</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>jour{streak.current > 1 ? "s" : ""}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{streak.current > 1 ? t("ach.day_many") : t("ach.day_one")}</div>
           </div>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
-            Record : {streak.best} · 80%+ clients actifs
+            {t("ach.streak_record").replace("{n}", streak.best)}
           </div>
         </div>
 
@@ -155,7 +157,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
         <div style={{ background: "rgba(129,140,248,0.05)", border: "1px solid rgba(129,140,248,0.18)", borderRadius: 16, padding: "16px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <AppIcon name="chart" size={14} color="#818cf8" />
-            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(129,140,248,0.85)", fontWeight: 700 }}>Classement</div>
+            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(129,140,248,0.85)", fontWeight: 700 }}>{t("ach.rank_label")}</div>
           </div>
           {platformRank ? (
             <>
@@ -166,7 +168,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 4, lineHeight: 1.4 }}>{rankPhrase(platformRank.percentile)}</div>
             </>
           ) : (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>Pas assez de donnees plateforme.</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{t("ach.rank_no_data")}</div>
           )}
         </div>
       </div>

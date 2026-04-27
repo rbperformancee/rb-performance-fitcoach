@@ -482,6 +482,15 @@ const MESSAGES = {
     "biz.score_evolution_30d": "Evolution score 30j",
     "biz.toast_goal_save_error": "Objectif non enregistre",
     "biz.toast_goal_saved": "Objectif mis a jour",
+    // Achievements
+    "ach.title": "Achievements",
+    "ach.streak_label": "Streak coach",
+    "ach.day_one": "jour",
+    "ach.day_many": "jours",
+    "ach.streak_record": "Record : {n} · 80%+ clients actifs",
+    "ach.rank_label": "Classement",
+    "ach.rank_no_data": "Pas assez de donnees plateforme.",
+    "ach.toast_badge_unlocked": "Badge debloque : {label}",
   },
   en: {
     // Navigation
@@ -942,6 +951,15 @@ const MESSAGES = {
     "biz.score_evolution_30d": "30d score evolution",
     "biz.toast_goal_save_error": "Goal not saved",
     "biz.toast_goal_saved": "Goal updated",
+    // Achievements
+    "ach.title": "Achievements",
+    "ach.streak_label": "Coach streak",
+    "ach.day_one": "day",
+    "ach.day_many": "days",
+    "ach.streak_record": "Best: {n} · 80%+ active clients",
+    "ach.rank_label": "Ranking",
+    "ach.rank_no_data": "Not enough platform data.",
+    "ach.toast_badge_unlocked": "Badge unlocked: {label}",
   },
 };
 
