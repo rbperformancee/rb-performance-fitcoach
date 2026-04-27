@@ -85,10 +85,11 @@ export function LoginScreen({ onBack }) {
         verifiedRef.current = true;
         setSuccess('Connexion reussie, redirection...');
         // Filet de securite : si onAuthStateChange ne redirige pas en 1.5s,
-        // on force un reload pour relire la session.
+        // on reload la page actuelle pour que React relise la session
+        // (et reste sur /app.html, pas sur la landing).
         setTimeout(() => {
-          if (window.location.pathname.includes('login') || document.body.contains(otpRef.current)) {
-            window.location.href = '/';
+          if (document.body.contains(otpRef.current)) {
+            window.location.reload();
           }
         }, 1500);
       }
