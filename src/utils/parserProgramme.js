@@ -26,15 +26,39 @@ function getVal(doc, id) {
 }
 
 /**
- * Parse "4X8-10" → { sets: 4, reps: "8-10", rawReps: "4X8-10" }
- * Parse "8-10"   → { sets: null, reps: "8-10", rawReps: "8-10" }
- * Parse ""        → { sets: null, reps: null, rawReps: null }
+ * Parse "4X8-10"          → { sets: 4, reps: "8-10", rawReps: "4X8-10" }
+ * Parse "2X4-6  2X8-10"   → { sets: 4, reps: "4-6 puis 8-10", rawReps: "2X4-6  2X8-10" }
+ *                            (multi-bloc : somme des series, reps concatenees)
+ * Parse "8-10"             → { sets: null, reps: "8-10", rawReps: "8-10" }
+ * Parse ""                  → { sets: null, reps: null, rawReps: null }
  */
 export function parseReps(raw) {
   if (!raw || raw === "—" || raw === "") return { sets: null, reps: null, rawReps: null };
-  const m = raw.match(/^(\d+)\s*[xX×]\s*(.+)$/);
-  if (m) return { sets: parseInt(m[1], 10), reps: m[2].trim(), rawReps: raw };
-  return { sets: null, reps: raw, rawReps: raw };
+  const trimmed = raw.trim();
+
+  // Tokenise les blocs "NxR" successifs separes par 2+ espaces.
+  // 2+ espaces = volonte explicite du coach (un seul espace est ambigu :
+  // "3X45 secondes" a un espace dans les reps, pas un separateur).
+  const tokenRe = /(\d+)\s*[xX×]\s*([^]+?)(?=\s{2,}\d+\s*[xX×]|$)/g;
+  const blocks = [];
+  let m;
+  while ((m = tokenRe.exec(trimmed)) !== null) {
+    blocks.push({ sets: parseInt(m[1], 10), reps: m[2].trim() });
+    if (m.index === tokenRe.lastIndex) tokenRe.lastIndex++; // safety
+  }
+
+  if (blocks.length === 0) {
+    return { sets: null, reps: trimmed, rawReps: raw };
+  }
+
+  if (blocks.length === 1) {
+    return { sets: blocks[0].sets, reps: blocks[0].reps, rawReps: raw };
+  }
+
+  // Multi-bloc : somme des series, reps en sequence
+  const totalSets = blocks.reduce((s, b) => s + b.sets, 0);
+  const reps = blocks.map(b => b.reps).join(" puis ");
+  return { sets: totalSets, reps, rawReps: raw };
 }
 
 export function parseProgrammeHTML(htmlString) {
@@ -159,8 +183,52 @@ export function parseProgrammeHTML(htmlString) {
         });
       });
 
-      if (exercises.length > 0 || sessionName !== `Séance ${si + 1}`) {
-        sessions.push({ name: sessionName, description, finisher, exercises });
+      /* ── Runs / cardio prescrits (.run-item) ── */
+      const runs = [];
+      seanceEl.querySelectorAll(".run-item").forEach((runEl) => {
+        const rid = runEl.id.replace("run-", "");
+        const rName = (
+          doc.getElementById(`rn-${rid}`)?.value ||
+          doc.getElementById(`rn-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        if (!rName) return; // skip vides
+
+        const distance = (
+          doc.getElementById(`rd-${rid}`)?.value ||
+          doc.getElementById(`rd-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+
+        const duration = (
+          doc.getElementById(`rdu-${rid}`)?.value ||
+          doc.getElementById(`rdu-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+
+        const bpm = (
+          doc.getElementById(`rbpm-${rid}`)?.value ||
+          doc.getElementById(`rbpm-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+
+        const rRest = (
+          doc.getElementById(`rrs-${rid}`)?.value ||
+          doc.getElementById(`rrs-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+
+        runs.push({
+          name: rName,
+          distance,
+          duration,
+          bpm,
+          rest: rRest,
+        });
+      });
+
+      if (exercises.length > 0 || runs.length > 0 || (finisher && finisher.length > 0) || sessionName !== `Séance ${si + 1}`) {
+        sessions.push({ name: sessionName, description, finisher, exercises, runs });
       }
     });
 

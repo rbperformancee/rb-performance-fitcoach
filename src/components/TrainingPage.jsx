@@ -379,6 +379,56 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         })}
       </div>
 
+      {/* FINISHER */}
+      {currentSession.finisher && currentSession.finisher.trim().length > 0 && (
+        <div style={{ padding: "0 20px", marginTop: 18 }}>
+          <div style={{
+            background: "rgba(239,68,68,0.04)",
+            border: "1px solid rgba(239,68,68,0.18)",
+            borderLeft: "3px solid rgba(239,68,68,0.6)",
+            borderRadius: 14,
+            padding: "14px 16px",
+          }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(239,68,68,0.85)", marginBottom: 8 }}>
+              🔥 Finisher
+            </div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+              {currentSession.finisher}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RUNS PRESCRITS DE LA SEANCE */}
+      {Array.isArray(currentSession.runs) && currentSession.runs.length > 0 && (
+        <div style={{ padding: "0 20px", marginTop: 18 }}>
+          <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 800, marginBottom: 10 }}>
+            🏃 Cardio prescrit
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {currentSession.runs.map((r, ri) => (
+              <div key={ri} style={{
+                background: "rgba(2,209,186,0.03)",
+                border: "1px solid rgba(2,209,186,0.15)",
+                borderRadius: 12,
+                padding: "12px 14px",
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{r.name}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                  {r.distance && <span>📏 {r.distance}</span>}
+                  {r.duration && <span>⏱ {r.duration}</span>}
+                  {r.bpm && <span>❤️ {r.bpm} bpm</span>}
+                  {r.rest && <span>⏸ {r.rest}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
+            Tu peux logger ces runs dans l'onglet <strong style={{ color: "rgba(2,209,186,0.7)" }}>Run</strong>.
+          </div>
+        </div>
+      )}
+
       {/* BOUTON TERMINER */}
       <div style={{ padding: "20px 20px 0" }}>
         <div onClick={() => !sessionValidee && setShowConfirm(true)} style={{ padding: "16px 20px", background: sessionValidee ? "rgba(2,209,186,0.05)" : G_DIM, border: `1px solid ${sessionValidee ? "rgba(2,209,186,0.15)" : G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: sessionValidee ? "default" : "pointer", opacity: sessionValidee ? 0.7 : 1, transition: "all 0.5s ease" }}>

@@ -48,6 +48,37 @@ describe("parseReps", () => {
   test("reps en plage longue '5X12-15'", () => {
     expect(parseReps("5X12-15")).toEqual({ sets: 5, reps: "12-15", rawReps: "5X12-15" });
   });
+
+  // ===== Multi-bloc (vrai cas usage block-1-2026.html) =====
+  test("multi-bloc 2X4-6 + 2X8-10 (espaces doubles)", () => {
+    expect(parseReps("2X4-6  2X8-10")).toEqual({
+      sets: 4, reps: "4-6 puis 8-10", rawReps: "2X4-6  2X8-10",
+    });
+  });
+
+  test("multi-bloc 2X6-8 + 2X10-12 (espaces triples)", () => {
+    expect(parseReps("2X6-8   2X10-12")).toEqual({
+      sets: 4, reps: "6-8 puis 10-12", rawReps: "2X6-8   2X10-12",
+    });
+  });
+
+  test("multi-bloc 3 blocs 2X4 + 2X6 + 2X8", () => {
+    expect(parseReps("2X4  2X6  2X8")).toEqual({
+      sets: 6, reps: "4 puis 6 puis 8", rawReps: "2X4  2X6  2X8",
+    });
+  });
+
+  test("drop set '3X6+6+6' reste single block", () => {
+    expect(parseReps("3X6+6+6")).toEqual({ sets: 3, reps: "6+6+6", rawReps: "3X6+6+6" });
+  });
+
+  test("'3X45 secondes' (durée) reste single block", () => {
+    expect(parseReps("3X45 secondes")).toEqual({ sets: 3, reps: "45 secondes", rawReps: "3X45 secondes" });
+  });
+
+  test("'3X10/jambes' (par jambe) reste single block", () => {
+    expect(parseReps("3X10/jambes")).toEqual({ sets: 3, reps: "10/jambes", rawReps: "3X10/jambes" });
+  });
 });
 
 describe("parseProgrammeHTML — smoke test", () => {

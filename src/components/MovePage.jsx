@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import EmptyState from "./EmptyState";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
+import { useScheduledRuns } from "../hooks/useScheduledRuns";
 
 const GREEN = "#34d399";
 const RED = "#ef4444";
@@ -18,6 +19,11 @@ export default function MovePage({ client, appData }) {
   const [saving, setSaving] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
   const [tempSteps, setTempSteps] = useState(appData?.dailyTracking?.pas || 0);
+  // Run prescrit en cours de log (pre-remplit le form + tag programme)
+  const [pendingPrescribed, setPendingPrescribed] = useState(null);
+
+  // Runs prescrits par le coach pour la semaine en cours
+  const scheduled = useScheduledRuns(client?.id);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -61,6 +67,18 @@ export default function MovePage({ client, appData }) {
     const allureSec = allureTotalSec % 60;
     const allure = `${allureMin}:${String(allureSec).padStart(2, "0")}`;
 
+    // Si on log un run prescrit, on tag avec le programme + cibles
+    const prescribedFields = pendingPrescribed ? {
+      programme_id: scheduled.programmeId,
+      programme_week: scheduled.currentWeek,
+      programme_session: pendingPrescribed.sessionIndex,
+      programme_run_index: pendingPrescribed.runIndex,
+      target_label: pendingPrescribed.name,
+      target_distance: pendingPrescribed.distance,
+      target_duration: pendingPrescribed.duration,
+      target_bpm: pendingPrescribed.bpm,
+    } : {};
+
     const { data } = await supabase.from("run_logs").insert({
       client_id: client.id,
       date: today,
@@ -68,13 +86,19 @@ export default function MovePage({ client, appData }) {
       duree_min: totalMin,
       allure_min_km: allure,
       note: form.note || "",
+      ...prescribedFields,
     }).select().single();
 
     if (data) setRuns(prev => [data, ...prev]);
     setForm({ distance: "", heures: "0", minutes: "", note: "" });
     setShowAdd(false);
+    setPendingPrescribed(null);
     setSaving(false);
     haptic.success();
+
+    // Si run prescrit : refresh le hook pour marquer "fait"
+    if (pendingPrescribed) scheduled.refresh();
+
     // Log XP dans session_logs pour que useXP le compte
     await supabase.from("session_logs").insert({
       client_id: client.id,
@@ -82,6 +106,27 @@ export default function MovePage({ client, appData }) {
       programme_name: "Move",
       logged_at: new Date().toISOString(),
     }).then(() => {});
+  };
+
+  // Ouvre le formulaire pre-rempli avec un run prescrit
+  const startPrescribed = (run) => {
+    haptic.selection();
+    // Tente de pre-remplir distance + duree depuis les cibles
+    const distMatch = run.distance?.match(/(\d+(?:[.,]\d+)?)/);
+    const durMatch = run.duration?.match(/(\d+)\s*h\s*(\d+)?|(\d+)\s*min/i);
+    let h = "0", m = "";
+    if (durMatch) {
+      if (durMatch[1]) { h = durMatch[1]; m = durMatch[2] || "0"; }
+      else if (durMatch[3]) { m = durMatch[3]; }
+    }
+    setForm({
+      distance: distMatch ? distMatch[1].replace(",", ".") : "",
+      heures: h,
+      minutes: m,
+      note: "",
+    });
+    setPendingPrescribed(run);
+    setShowAdd(true);
   };
 
   const stepsPct = Math.min(Math.round((dailySteps / stepsGoal) * 100), 100);
@@ -162,6 +207,72 @@ export default function MovePage({ client, appData }) {
 
         {/* DIVIDER */}
         <div style={{ height: 1, background: "linear-gradient(90deg, rgba(239,68,68,0.3) 0%, rgba(255,255,255,0.04) 100%)", margin: "20px 24px" }} />
+
+        {/* PRESCRITS PAR LE COACH (semaine courante) */}
+        {scheduled.runs.length > 0 && (
+          <div style={{ padding: "0 24px", marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 10, color: "rgba(2,209,186,0.7)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>Prevus par ton coach</div>
+                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Semaine {scheduled.currentWeek}</div>
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "'JetBrains Mono', monospace" }}>
+                {scheduled.runs.filter(r => r.done).length}/{scheduled.runs.length} fait
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {scheduled.runs.map((r, i) => (
+                <button
+                  key={i}
+                  onClick={() => !r.done && startPrescribed(r)}
+                  disabled={r.done}
+                  style={{
+                    width: "100%", textAlign: "left",
+                    background: r.done ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${r.done ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.08)"}`,
+                    borderRadius: 14,
+                    padding: "14px 16px",
+                    cursor: r.done ? "default" : "pointer",
+                    fontFamily: "inherit",
+                    color: "#fff",
+                    transition: "border-color .15s, background .15s",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                      <span style={{ fontSize: 14 }}>🏃</span>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: r.done ? "rgba(255,255,255,0.5)" : "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {r.name}
+                      </div>
+                    </div>
+                    <div style={{
+                      flexShrink: 0,
+                      fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase",
+                      padding: "3px 9px", borderRadius: 100,
+                      background: r.done ? "rgba(2,209,186,0.15)" : "rgba(239,68,68,0.1)",
+                      color: r.done ? "#02d1ba" : RED,
+                      border: `1px solid ${r.done ? "rgba(2,209,186,0.3)" : "rgba(239,68,68,0.25)"}`,
+                    }}>
+                      {r.done ? "Fait" : "A faire"}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
+                    {r.distance && <span>📏 {r.distance}</span>}
+                    {r.duration && <span>⏱ {r.duration}</span>}
+                    {r.bpm && <span>❤️ {r.bpm} bpm</span>}
+                    {r.rest && <span>⏸ {r.rest} repos</span>}
+                  </div>
+                  {r.sessionName && (
+                    <div style={{ marginTop: 6, fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+                      {r.sessionName}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* RECORD PERSONNEL */}
         {(() => {
