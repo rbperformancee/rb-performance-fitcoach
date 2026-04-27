@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
-export function useFuel(clientId) {
+export function useFuel(clientId, dateOverride) {
   const [goals, setGoals] = useState(null);
   const [logs, setLogs] = useState([]);
   const [dailyTracking, setDailyTracking] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const today = new Date().toISOString().split("T")[0];
+  // Si on consulte une date passee, on utilise dateOverride. Sinon today.
+  const today = dateOverride || new Date().toISOString().split("T")[0];
 
   const fetchAll = useCallback(async () => {
     if (!clientId) return;

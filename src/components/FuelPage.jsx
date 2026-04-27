@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useFuel } from "../hooks/useFuel";
+import { useSelectedDate } from "../hooks/useSelectedDate";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
 import EmptyState from "./EmptyState";
 import Spinner from "./Spinner";
@@ -391,10 +392,12 @@ function ObjectifsTab({ goals, onSave }) {
 }
 
 export default function FuelPage({ client, appData }) {
-  const fuelData = useFuel(client?.id);
+  const dateSel = useSelectedDate();
+  const fuelData = useFuel(client?.id, dateSel.isToday ? undefined : dateSel.date);
   const goals = appData?.nutritionGoals || fuelData.goals;
   const logs = fuelData.logs;
-  const dailyTracking = fuelData.dailyTracking || appData?.dailyTracking;
+  // Si on consulte la veille, n'utilise PAS appData (qui est toujours today)
+  const dailyTracking = dateSel.isToday ? (fuelData.dailyTracking || appData?.dailyTracking) : fuelData.dailyTracking;
   const loading = appData ? appData.loading : fuelData.loading;
   const { totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score } = fuelData;
   const { results, loading: searching, search, scanBarcode } = useOpenFoodFacts();
@@ -777,8 +780,36 @@ export default function FuelPage({ client, appData }) {
         <div style={{ padding: "8px 24px 0" }}>
           <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Nutrition</div>
           <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Fuel<span style={{ color: ORANGE }}>.</span></div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
-            {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 12, color: dateSel.isToday ? "rgba(255,255,255,0.2)" : ORANGE, fontStyle: "italic" }}>
+              {new Date(dateSel.date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+              {!dateSel.isToday && " (consultation)"}
+            </div>
+            {/* Toggle Hier / Aujourd'hui */}
+            <div style={{ display: "inline-flex", padding: 3, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100 }}>
+              <button
+                onClick={dateSel.goToYesterday}
+                style={{
+                  padding: "4px 10px",
+                  background: dateSel.isYesterday ? "rgba(249,115,22,0.15)" : "transparent",
+                  border: "none", borderRadius: 100,
+                  color: dateSel.isYesterday ? ORANGE : "rgba(255,255,255,0.4)",
+                  fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >Hier</button>
+              <button
+                onClick={dateSel.goToToday}
+                style={{
+                  padding: "4px 10px",
+                  background: dateSel.isToday ? "rgba(2,209,186,0.15)" : "transparent",
+                  border: "none", borderRadius: 100,
+                  color: dateSel.isToday ? "#02d1ba" : "rgba(255,255,255,0.4)",
+                  fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >Aujourd'hui</button>
+            </div>
           </div>
         </div>
 
