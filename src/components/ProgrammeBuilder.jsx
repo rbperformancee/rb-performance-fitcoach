@@ -299,7 +299,7 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }) {
+export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, onWantInvoice }) {
   const draftKey = "pb_draft_" + (client?.id || "new");
 
   // Load draft from localStorage
@@ -487,8 +487,16 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved }
       toast.success("Programme enregistre pour " + (client.full_name || client.email));
       setLastSavedAt(Date.now());
       try { localStorage.removeItem(draftKey); } catch (_) {}
+
+      // Proposer de generer la facture immediatement
+      const wantInvoice = onWantInvoice && window.confirm(
+        "Programme enregistre. Generer la facture pour " +
+        (client.full_name || client.email) + " maintenant ?"
+      );
+
       if (onSaved) onSaved();
       if (onClose) onClose();
+      if (wantInvoice) onWantInvoice(client);
     } catch (e) {
       toast.error("Erreur : " + e.message);
     }

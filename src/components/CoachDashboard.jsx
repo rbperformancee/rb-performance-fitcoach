@@ -605,6 +605,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           coachData={null}
           onClose={() => setShowBuilder(false)}
           onSaved={() => { setShowBuilder(false); onClose(); }}
+          onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }}
         />
       </div>
     )}
@@ -2105,6 +2106,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showSentinel, setShowSentinel] = useState(false);
   const [showSentinelTeaser, setShowSentinelTeaser] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [invoicePreselect, setInvoicePreselect] = useState(null);
   const [showCmdK, setShowCmdK] = useState(false);
 
   // Sentinel gating: Pro/Elite/Founding only, behind feature flag
@@ -3018,7 +3020,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         <InvoiceModal
           coachData={coachData}
           clients={clients}
-          onClose={() => setShowInvoice(false)}
+          preselectedClient={invoicePreselect}
+          onClose={() => { setShowInvoice(false); setInvoicePreselect(null); }}
         />
       )}
 

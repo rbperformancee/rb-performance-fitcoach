@@ -31,8 +31,9 @@ const PLAN_MONTHS_LEGACY = { "3m": 3, "6m": 6, "12m": 12 };
  * @param {Object} client — row clients (full_name, email, subscription_*, _plan_price, _plan_name, _plan_duration)
  * @param {Object} coach — row coaches (full_name, brand_name, email, siret, business_name, business_address, tva_status)
  * @param {string} [invoiceNumber] — ex: "INV-2026-001" (auto-genere si absent)
+ * @param {Object} [opts] — { installments_count, installment_amount, due_date }
  */
-export async function generateInvoicePDF(client, coach, invoiceNumber) {
+export async function generateInvoicePDF(client, coach, invoiceNumber, opts = {}) {
   const JsPDF = await loadJsPDF();
   const doc = new JsPDF({ unit: "mm", format: "a4" });
   const W = 210;
@@ -64,13 +65,32 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
 
   doc.setFontSize(9);
   doc.setTextColor(...gray);
+  const legalFormLabel = (() => {
+    const lf = coach?.legal_form;
+    if (!lf) return "";
+    if (lf === "auto-entrepreneur") return "Auto-entrepreneur (EI)";
+    if (lf === "EI") return "Entreprise individuelle (EI)";
+    return lf; // EURL, SASU, SAS, SARL, autre
+  })();
+  const rcsLine = (coach?.rcs_city && coach?.rcs_number)
+    ? `RCS ${coach.rcs_city} ${coach.rcs_number}`
+    : "";
+  const capitalLine = coach?.capital_social
+    ? `Capital social : ${Number(coach.capital_social).toLocaleString("fr-FR")} EUR`
+    : "";
   const coachLines = [
     coach?.business_name || coach?.full_name || "",
-    coach?.email || "",
+    legalFormLabel,
     coach?.business_address || "",
     coach?.siret ? "SIRET : " + coach.siret : "",
+    rcsLine,
+    capitalLine,
+    coach?.vat_number ? "TVA intracom. : " + coach.vat_number : "",
+    coach?.email || "",
   ].filter(Boolean);
-  coachLines.forEach((line, i) => doc.text(line, M, 37 + i * 5));
+  const lineH = 4.2;
+  coachLines.forEach((line, i) => doc.text(line, M, 37 + i * lineH));
+  const coachBottomY = 37 + coachLines.length * lineH;
 
   // Badge FACTURE
   doc.setFillColor(teal[0], teal[1], teal[2]);
@@ -87,34 +107,38 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   doc.text("N\u00b0 " + (invoiceNumber || autoNum), W - M - 50, 42);
   doc.text("Date : " + now.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }), W - M - 50, 47);
 
-  // Separateur
+  // Separateur — positionne sous le bloc coach
+  const sepY = Math.max(60, coachBottomY + 4);
   doc.setDrawColor(40, 40, 40);
   doc.setLineWidth(0.3);
-  doc.line(M, 60, W - M, 60);
+  doc.line(M, sepY, W - M, sepY);
 
   // ===== CLIENT INFO =====
+  let clientY = sepY + 10;
   doc.setFontSize(9);
   doc.setTextColor(teal[0], teal[1], teal[2]);
-  doc.text("FACTURE A", M, 70);
+  doc.text("FACTURE A", M, clientY);
+  clientY += 8;
 
   doc.setFontSize(12);
   doc.setTextColor(...white);
-  doc.text(client.full_name || client.email || "Client", M, 78);
+  doc.text(client.full_name || client.email || "Client", M, clientY);
+  clientY += 6;
 
   doc.setFontSize(9);
   doc.setTextColor(...gray);
-  let cy = 84;
-  if (client.email)   { doc.text(client.email,   M, cy); cy += 5; }
-  if (client.address) { doc.text(client.address, M, cy); cy += 5; }
+  if (client.email)   { doc.text(client.email,   M, clientY); clientY += 5; }
+  if (client.address) { doc.text(client.address, M, clientY); clientY += 5; }
 
-  // Periode
+  // Periode (date de prestation)
   if (client.subscription_start_date && client.subscription_end_date) {
     const fmt = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-    doc.text("Periode : " + fmt(client.subscription_start_date) + " - " + fmt(client.subscription_end_date), M, cy);
+    doc.text("Periode : " + fmt(client.subscription_start_date) + " - " + fmt(client.subscription_end_date), M, clientY);
+    clientY += 5;
   }
 
   // ===== TABLE =====
-  const tableY = 105;
+  const tableY = Math.max(105, clientY + 8);
 
   // Header table
   doc.setFillColor(20, 20, 20);
@@ -168,18 +192,47 @@ export async function generateInvoicePDF(client, coach, invoiceNumber) {
   doc.text("TOTAL TTC", W - M - 65, totalY + 32);
   doc.text(fmtEur(total), W - M - 10, totalY + 32, { align: "right" });
 
+  // ===== ECHEANCIER (paiement en X fois) =====
+  let mentionsStartY = totalY + 55;
+  const installmentsCount = Number(opts?.installments_count) || 1;
+  const installmentAmount = Number(opts?.installment_amount) || 0;
+  if (installmentsCount > 1 && installmentAmount > 0) {
+    const schedY = totalY + 45;
+    doc.setFontSize(8);
+    doc.setTextColor(teal[0], teal[1], teal[2]);
+    doc.text("ECHEANCIER DE PAIEMENT", M, schedY);
+    doc.setFontSize(8);
+    doc.setTextColor(...gray);
+    const baseDate = new Date();
+    for (let i = 0; i < installmentsCount; i++) {
+      const d = new Date(baseDate);
+      d.setMonth(d.getMonth() + i);
+      const label = `${i + 1}/${installmentsCount}  ·  ${d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`;
+      doc.text(label, M, schedY + 6 + i * 4.5);
+      doc.text(fmtEur(installmentAmount), W - M - 5, schedY + 6 + i * 4.5, { align: "right" });
+    }
+    mentionsStartY = schedY + 10 + installmentsCount * 4.5;
+  }
+
   // ===== MENTIONS LEGALES =====
-  const legalY = totalY + 55;
+  const legalY = mentionsStartY;
   doc.setFontSize(7);
   doc.setTextColor(80, 80, 80);
   const tvaText = coach?.tva_status === "applicable" ? "TVA applicable" : "TVA non applicable - art. 293 B du CGI";
-  doc.text(tvaText, M, legalY);
-  if (coach?.siret) doc.text("SIRET : " + coach.siret, M, legalY + 5);
-  if (coach?.business_name) doc.text(coach.business_name, M, legalY + 10);
-  if (coach?.business_address) doc.text(coach.business_address, M, legalY + 15);
-  doc.text("Conditions de paiement : a reception", M, legalY + 22);
-  doc.text("Penalites de retard : 3 fois le taux d'interet legal", M, legalY + 27);
-  doc.text("Indemnite forfaitaire de recouvrement : 40 EUR", M, legalY + 32);
+  let ly = legalY;
+  doc.text(tvaText, M, ly); ly += 4;
+
+  // Date d'echeance (a reception par defaut, ou date specifique)
+  const dueDateText = opts?.due_date
+    ? "Echeance : " + new Date(opts.due_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+    : (installmentsCount > 1
+       ? "Echeances : voir echeancier ci-dessus"
+       : "Echeance : a reception de la facture");
+  doc.text(dueDateText, M, ly); ly += 4;
+
+  doc.text("Penalites de retard : 3 fois le taux d'interet legal en vigueur", M, ly); ly += 4;
+  doc.text("Indemnite forfaitaire de recouvrement : 40 EUR (art. L.441-10 C. com.)", M, ly); ly += 4;
+  doc.text("Pas d'escompte en cas de paiement anticipe", M, ly);
 
   // ===== FOOTER =====
   doc.setFontSize(8);

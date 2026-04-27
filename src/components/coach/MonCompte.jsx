@@ -28,6 +28,11 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
   const [siret, setSiret] = useState(coachData?.siret || "");
   const [businessName, setBusinessName] = useState(coachData?.business_name || "");
   const [businessAddress, setBusinessAddress] = useState(coachData?.business_address || "");
+  const [legalForm, setLegalForm] = useState(coachData?.legal_form || "");
+  const [rcsCity, setRcsCity] = useState(coachData?.rcs_city || "");
+  const [rcsNumber, setRcsNumber] = useState(coachData?.rcs_number || "");
+  const [vatNumber, setVatNumber] = useState(coachData?.vat_number || "");
+  const [capitalSocial, setCapitalSocial] = useState(coachData?.capital_social ?? "");
   const [savingBilling, setSavingBilling] = useState(false);
 
   // Sécurité
@@ -61,13 +66,19 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
   const saveBilling = async () => {
     if (isDemo) { toast.success("Disponible en version complète"); return; }
     setSavingBilling(true);
+    const capNum = capitalSocial === "" ? null : parseFloat(capitalSocial);
     const { error } = await supabase.from("coaches").update({
       siret: siret.trim() || null,
       business_name: businessName.trim() || null,
       business_address: businessAddress.trim() || null,
+      legal_form: legalForm || null,
+      rcs_city: rcsCity.trim() || null,
+      rcs_number: rcsNumber.trim() || null,
+      vat_number: vatNumber.trim().toUpperCase() || null,
+      capital_social: Number.isFinite(capNum) ? capNum : null,
     }).eq("id", coachData.id);
     setSavingBilling(false);
-    if (error) toast.error("Erreur");
+    if (error) toast.error("Erreur : " + error.message);
     else toast.success("Facturation mise à jour");
   };
 
@@ -213,6 +224,46 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
             <Field label="SIRET" value={siret} onChange={v => setSiret(v.replace(/[^0-9]/g, '').slice(0, 14))} placeholder="14 chiffres" inputMode="numeric" />
             <Field label="Raison sociale" value={businessName} onChange={setBusinessName} placeholder="Nom sur la facture" />
             <Field label="Adresse de facturation" value={businessAddress} onChange={setBusinessAddress} placeholder="12 rue de la Paix, 75002 Paris" />
+
+            <div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 6, fontWeight: 600 }}>Forme juridique</div>
+              <select
+                value={legalForm}
+                onChange={e => setLegalForm(e.target.value)}
+                style={{
+                  width: "100%", padding: "12px 14px",
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 10, color: "#fff", fontSize: 14, outline: "none",
+                  fontFamily: "inherit",
+                }}
+              >
+                <option value="">— Selectionner —</option>
+                <option value="auto-entrepreneur">Auto-entrepreneur (micro-entreprise)</option>
+                <option value="EI">Entreprise individuelle (EI)</option>
+                <option value="EURL">EURL</option>
+                <option value="SASU">SASU</option>
+                <option value="SAS">SAS</option>
+                <option value="SARL">SARL</option>
+                <option value="autre">Autre</option>
+              </select>
+            </div>
+
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: -8, lineHeight: 1.5 }}>
+              Les champs ci-dessous ne sont obligatoires que pour les sociétés (SAS, SARL, EURL, SASU). Auto-entrepreneurs : laisser vide.
+            </div>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <Field label="RCS — Ville" value={rcsCity} onChange={setRcsCity} placeholder="Paris" />
+              </div>
+              <div style={{ flex: 1.2 }}>
+                <Field label="RCS — Numéro" value={rcsNumber} onChange={setRcsNumber} placeholder="123 456 789" />
+              </div>
+            </div>
+
+            <Field label="N° TVA intracommunautaire" value={vatNumber} onChange={setVatNumber} placeholder="FR12345678901" />
+            <Field label="Capital social (EUR)" value={capitalSocial} onChange={setCapitalSocial} placeholder="1000" inputMode="numeric" />
+
             <SaveButton onClick={saveBilling} loading={savingBilling} />
             <div style={{ marginTop: 16 }}>
               <div style={sectionTitle}>Historique des factures</div>

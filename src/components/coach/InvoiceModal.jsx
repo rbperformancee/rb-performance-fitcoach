@@ -10,7 +10,7 @@ const G = "#02d1ba";
  * Le coach choisit le client, le montant, la description, la TVA.
  * Genere un PDF telecharge + sauvegarde en DB.
  */
-export default function InvoiceModal({ coachData, clients = [], onClose }) {
+export default function InvoiceModal({ coachData, clients = [], onClose, preselectedClient = null }) {
   const [clientId, setClientId] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -50,6 +50,12 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
       }
     }
   };
+
+  // Pre-fill if a client was passed (e.g., after programme upload)
+  useEffect(() => {
+    if (preselectedClient?.id) handleClientChange(preselectedClient.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectedClient?.id]);
 
   const amountNum = parseFloat(amount) || 0;
   const tvaAmount = tvaApplicable ? Math.round(amountNum * (tvaRate / 100) * 100) / 100 : 0;
@@ -105,7 +111,15 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
     };
 
     try {
-      await generateInvoicePDF(fakeClient, { ...coachData, tva_status: tvaApplicable ? "applicable" : "non_applicable" }, invoiceNumber);
+      await generateInvoicePDF(
+        fakeClient,
+        { ...coachData, tva_status: tvaApplicable ? "applicable" : "non_applicable" },
+        invoiceNumber,
+        {
+          installments_count: installments,
+          installment_amount: installments > 1 ? Math.round((totalTTC / installments) * 100) / 100 : null,
+        }
+      );
       toast.success("Facture " + invoiceNumber + " generee");
       onClose();
     } catch (e) {
