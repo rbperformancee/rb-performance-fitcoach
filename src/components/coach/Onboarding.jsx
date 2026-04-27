@@ -2,8 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 // 10 specialites (selon brief)
 const SPECIALITIES = [
@@ -30,6 +37,7 @@ const SPECIALITIES = [
  *   onComplete: () => void   // apres PATCH onboarding_done=true
  */
 export default function Onboarding({ coach, onComplete }) {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState("forward"); // pour animation slide
   const initFirst = coach?.full_name?.split(" ")[0] || "";
@@ -67,8 +75,8 @@ export default function Onboarding({ coach, onComplete }) {
 
   async function saveIdentity() {
     setError("");
-    if (!firstName.trim()) { setError("Prenom requis."); return; }
-    if (specialties.length === 0) { setError("Choisis au moins une specialite."); return; }
+    if (!firstName.trim()) { setError(t("onb.error_first_required")); return; }
+    if (specialties.length === 0) { setError(t("onb.error_specialty_required")); return; }
     haptic.selection();
     setSaving(true);
     try {
@@ -86,7 +94,7 @@ export default function Onboarding({ coach, onComplete }) {
       setDirection("forward");
       setStep(2);
     } catch (e) {
-      setError(e.message || "Erreur lors de l'enregistrement.");
+      setError(e.message || t("onb.error_save"));
     }
     setSaving(false);
   }
@@ -95,7 +103,7 @@ export default function Onboarding({ coach, onComplete }) {
     const mail = clientEmail.trim().toLowerCase();
     setError("");
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(mail)) {
-      setError("Email invalide."); return;
+      setError(t("onb.error_email_invalid")); return;
     }
     haptic.selection();
     setInviteLoading(true);
@@ -125,12 +133,12 @@ export default function Onboarding({ coach, onComplete }) {
         } catch (_) {}  // non-critique
       }
 
-      toast.success(`Invitation envoyee a ${mail}`);
+      toast.success(fillTpl(t("onb.toast_invite_sent"), { email: mail }));
       setInviteSent(true);
       setDirection("forward");
       setTimeout(() => setStep(3), 400); // transition naturelle apres succes
     } catch (e) {
-      setError(e.message || "Erreur d'envoi.");
+      setError(e.message || t("onb.error_invite_send"));
     }
     setInviteLoading(false);
   }
@@ -156,7 +164,7 @@ export default function Onboarding({ coach, onComplete }) {
       if (error) throw error;
       if (onComplete) onComplete();
     } catch (e) {
-      setError(e.message || "Erreur lors de la sauvegarde.");
+      setError(e.message || t("onb.error_finalize"));
       setSaving(false);
     }
   }
@@ -412,7 +420,7 @@ export default function Onboarding({ coach, onComplete }) {
               fontSize: "clamp(32px, 6vw, 52px)",
               letterSpacing: "-2.5px",
             }}>
-              Bienvenue sur<br />RB Perform<span style={{ color: G }}>.</span>
+              {t("onb.intro_title_part1")}<br />{t("onb.intro_title_part2")}<span style={{ color: G }}>.</span>
             </div>
           </div>
         )}
@@ -420,10 +428,10 @@ export default function Onboarding({ coach, onComplete }) {
         {/* ========== ETAPE 1 — IDENTITE ========== */}
         {step === 1 && (
           <div className="onb-step">
-            <div className="onboarding-eyebrow">01 / 03</div>
-            <h1 className="onboarding-title">Comment tu t'appelles ?</h1>
+            <div className="onboarding-eyebrow">{t("onb.step1_eyebrow")}</div>
+            <h1 className="onboarding-title">{t("onb.step1_title")}</h1>
             <p className="onboarding-sub">
-              Ce nom apparaitra sur ton dashboard et chez tes clients.
+              {t("onb.step1_sub")}
             </p>
 
             <div style={{ display: "flex", gap: 10, width: "100%" }}>
@@ -432,7 +440,7 @@ export default function Onboarding({ coach, onComplete }) {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Prenom"
+                  placeholder={t("onb.placeholder_first")}
                   className="onboarding-input"
                   autoFocus
                 />
@@ -442,13 +450,13 @@ export default function Onboarding({ coach, onComplete }) {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Nom"
+                  placeholder={t("onb.placeholder_last")}
                   className="onboarding-input"
                 />
               </div>
             </div>
 
-            <div className="onboarding-sep">Et ta specialite ?</div>
+            <div className="onboarding-sep">{t("onb.specialty_separator")}</div>
 
             <div className="onboarding-pills">
               {SPECIALITIES.map((s) => (
@@ -471,7 +479,7 @@ export default function Onboarding({ coach, onComplete }) {
               className="onboarding-btn"
               style={{ textTransform: "uppercase" }}
             >
-              {saving ? "..." : "Continuer →"}
+              {saving ? "..." : t("onb.btn_continue")}
             </button>
           </div>
         )}
@@ -479,10 +487,10 @@ export default function Onboarding({ coach, onComplete }) {
         {/* ========== ETAPE 2 — PREMIER CLIENT ========== */}
         {step === 2 && (
           <div className="onb-step">
-            <div className="onboarding-eyebrow">02 / 03</div>
-            <h1 className="onboarding-title">Invite ton premier athlete.</h1>
+            <div className="onboarding-eyebrow">{t("onb.step2_eyebrow")}</div>
+            <h1 className="onboarding-title">{t("onb.step2_title")}</h1>
             <p className="onboarding-sub">
-              Il recevra un email avec son acces a ton espace.<br />Gratuit pour lui.
+              {t("onb.step2_sub_p1")}<br />{t("onb.step2_sub_p2")}
             </p>
 
             <div className="onboarding-field">
@@ -490,7 +498,7 @@ export default function Onboarding({ coach, onComplete }) {
                 type="email"
                 value={clientEmail}
                 onChange={(e) => setClientEmail(e.target.value)}
-                placeholder="Email du client *"
+                placeholder={t("onb.placeholder_client_email")}
                 className="onboarding-input"
                 autoFocus
                 autoCapitalize="none"
@@ -503,7 +511,7 @@ export default function Onboarding({ coach, onComplete }) {
                 type="text"
                 value={clientPrenom}
                 onChange={(e) => setClientPrenom(e.target.value)}
-                placeholder="Pour personnaliser son acces"
+                placeholder={t("onb.placeholder_client_first")}
                 className="onboarding-input"
               />
             </div>
@@ -516,11 +524,11 @@ export default function Onboarding({ coach, onComplete }) {
               className="onboarding-btn"
               style={{ textTransform: "uppercase" }}
             >
-              {inviteLoading ? "Envoi en cours..." : inviteSent ? "✓ Invitation envoyee" : "Envoyer l'invitation"}
+              {inviteLoading ? t("onb.btn_invite_sending") : inviteSent ? t("onb.btn_invite_sent") : t("onb.btn_invite_send")}
             </button>
 
             <button onClick={skipInvite} className="onboarding-skip">
-              Passer cette etape →
+              {t("onb.btn_skip")}
             </button>
           </div>
         )}
@@ -534,35 +542,35 @@ export default function Onboarding({ coach, onComplete }) {
               <path d="M18 33 L28 43 L46 24" />
             </svg>
 
-            <div className="onboarding-eyebrow">03 / 03</div>
-            <h1 className="onboarding-title">Ton systeme est en place.</h1>
+            <div className="onboarding-eyebrow">{t("onb.step3_eyebrow")}</div>
+            <h1 className="onboarding-title">{t("onb.step3_title")}</h1>
 
             <div className="onboarding-recap">
               <div className="onboarding-recap-item">
                 <span className="onboarding-recap-icon done">✓</span>
-                <span>Profil cree</span>
+                <span>{t("onb.recap_profile")}</span>
               </div>
               <div className="onboarding-recap-item">
                 {inviteSent ? (
                   <>
                     <span className="onboarding-recap-icon done">✓</span>
-                    <span>Invitation envoyee a <strong style={{ color: G }}>{clientEmail}</strong></span>
+                    <span>{t("onb.recap_invite_sent")} <strong style={{ color: G }}>{clientEmail}</strong></span>
                   </>
                 ) : (
                   <>
                     <span className="onboarding-recap-icon skip">⏭</span>
-                    <span>Invitation ignoree pour le moment</span>
+                    <span>{t("onb.recap_invite_skipped")}</span>
                   </>
                 )}
               </div>
               <div className="onboarding-recap-item">
                 <span className="onboarding-recap-icon todo">○</span>
-                <span>Dashboard pret</span>
+                <span>{t("onb.recap_dashboard")}</span>
               </div>
             </div>
 
             <p className="onboarding-sub" style={{ marginBottom: 28 }}>
-              Des que ton client accepte, il apparait ici automatiquement.
+              {t("onb.step3_sub")}
             </p>
 
             {error && <div className="onboarding-error">{error}</div>}
@@ -573,7 +581,7 @@ export default function Onboarding({ coach, onComplete }) {
               className="onboarding-btn"
               style={{ textTransform: "uppercase" }}
             >
-              {saving ? "..." : "Acceder a mon dashboard →"}
+              {saving ? "..." : t("onb.btn_access_dashboard")}
             </button>
           </div>
         )}
