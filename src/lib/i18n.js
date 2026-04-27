@@ -1323,6 +1323,10 @@ const MESSAGES = {
     "csp.btn_cancel": "Annuler",
     "csp.btn_add": "Ajouter",
     "csp.btn_prescribe": "+ Prescrire un complement",
+    "cd.toast_waitlist": "Disponible au lancement — inscris-toi sur la waitlist",
+    "cd.toast_link_not_ready": "Lien pas encore pret",
+    "cd.toast_link_copied": "Lien copie",
+    "cd.toast_copy_failed": "Impossible de copier",
   },
   en: {
     // Navigation
@@ -2624,6 +2628,10 @@ const MESSAGES = {
     "csp.btn_cancel": "Cancel",
     "csp.btn_add": "Add",
     "csp.btn_prescribe": "+ Prescribe a supplement",
+    "cd.toast_waitlist": "Available at launch — join the waitlist",
+    "cd.toast_link_not_ready": "Link not ready yet",
+    "cd.toast_link_copied": "Link copied",
+    "cd.toast_copy_failed": "Could not copy",
   },
 };
 

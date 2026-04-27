@@ -3066,7 +3066,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       {showSentinelTeaser && (
         <SentinelTeaser
           onClose={() => setShowSentinelTeaser(false)}
-          onUpgrade={() => { setShowSentinelTeaser(false); toast.info("Disponible au lancement — inscris-toi sur la waitlist"); }}
+          onUpgrade={() => { setShowSentinelTeaser(false); toast.info(t("cd.toast_waitlist")); }}
         />
       )}
       {showInvoice && (
@@ -3101,11 +3101,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           { id: "action_add_client", label: t("cd.cmd_add_client"), group: t("cd.cmd_group_actions"), icon: "plus", run: () => { setShowClientList(true); setShowAdd(true); } },
           { id: "action_copy_invite", label: t("cd.cmd_copy_invite"), desc: coachData?.coach_slug ? `rbperform.com/rejoindre/${coachData.coach_slug}` : t("cd.cmd_invite_pending"), group: t("cd.cmd_group_actions"), icon: "link", keywords: t("cd.cmd_kw_invite").split(", "), run: async () => {
             const slug = coachData?.coach_slug;
-            if (!slug) { showToast("Lien pas encore pret"); return; }
+            if (!slug) { showToast(t("cd.toast_link_not_ready")); return; }
             try {
               await navigator.clipboard.writeText(`https://rbperform.com/rejoindre/${slug}`);
-              showToast("Lien copie");
-            } catch { showToast("Impossible de copier"); }
+              showToast(t("cd.toast_link_copied"));
+            } catch { showToast(t("cd.toast_copy_failed")); }
           }},
           { id: "action_refresh", label: t("cd.cmd_refresh"), group: t("cd.cmd_group_actions"), icon: "refresh", run: () => loadClients() },
           ...(onSwitchToSuperAdmin ? [{ id: "nav_superadmin", label: t("cd.cmd_superadmin"), group: t("cd.cmd_group_navigation"), icon: "chart", run: () => onSwitchToSuperAdmin() }] : []),
