@@ -5,6 +5,13 @@ import AppIcon from "../AppIcon";
 import Spinner from "../Spinner";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const G = "#02d1ba";
 const ORANGE = "#f97316";
@@ -43,6 +50,7 @@ const DEMO_DATA = {
 };
 
 export default function TransformationView({ client, coach, onClose, isDemo = false }) {
+  const t = useT();
   const [data, setData] = useState(isDemo ? DEMO_DATA : null);
   const [loading, setLoading] = useState(!isDemo);
   const [generating, setGenerating] = useState(false);
@@ -78,7 +86,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
       .catch((e) => {
         clearTimeout(timeoutId);
         console.error("[TransformationView] fetch error", e);
-        if (mounted) { toast.error("Donnees non chargees"); setLoading(false); }
+        if (mounted) { toast.error(t("tv.toast_data_error")); setLoading(false); }
       });
     return () => { mounted = false; clearTimeout(timeoutId); };
   }, [client?.id, client?.subscription_start_date, isDemo]);
@@ -87,35 +95,35 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
     if (!data) return;
     if (isDemo) {
       haptic.light();
-      toast.info("Disponible en version complete →");
+      toast.info(t("tv.toast_demo_unavailable"));
       return;
     }
     setGenerating(true);
     haptic.success();
     try {
       await generateTransformationPDF(client, coach || {}, data);
-      toast.success("PDF genere");
+      toast.success(t("tv.toast_pdf_generated"));
     } catch (e) {
       console.error(e);
-      toast.error("Erreur generation PDF");
+      toast.error(t("tv.toast_pdf_error"));
     }
     setGenerating(false);
   };
 
   const share = async () => {
     if (!data) return;
-    const brand = coach?.brand_name || coach?.full_name || "RB Perform";
+    const brand = coach?.brand_name || coach?.full_name || t("tv.brand_default");
     const deltaStr = data.deltas.weight !== null && Math.abs(data.deltas.weight) > 0.1
       ? `${data.deltas.weight > 0 ? "+" : ""}${data.deltas.weight.toFixed(1)} kg`
-      : "Transformation";
-    const text = `${deltaStr} en ${data.weeksSinceStart} semaines — coaching par ${brand} 💪 #RBPerform`;
+      : t("tv.share_text_no_delta");
+    const text = fillTpl(t("tv.share_text_with_delta"), { delta: deltaStr, weeks: data.weeksSinceStart, brand });
     haptic.light();
     if (navigator.share) {
-      try { await navigator.share({ title: "Transformation", text }); return; } catch {}
+      try { await navigator.share({ title: t("tv.share_title"), text }); return; } catch {}
     }
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Texte copie");
+      toast.success(t("tv.toast_text_copied"));
     } catch {
       // Fallback textarea hack pour iOS Safari / PWA
       try {
@@ -126,7 +134,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
         ta.select();
         document.execCommand("copy");
         document.body.removeChild(ta);
-        toast.success("Texte copie");
+        toast.success(t("tv.toast_text_copied"));
       } catch {
         toast.info(text);
       }
@@ -140,11 +148,11 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
       {/* Header */}
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(5,5,5,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 12px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={onClose} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={onClose} aria-label={t("tv.aria_close")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,0.6)" />
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: GOLD, fontWeight: 700, opacity: 0.85 }}>Transformation</div>
+            <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: GOLD, fontWeight: 700, opacity: 0.85 }}>{t("tv.eyebrow")}</div>
             <div style={{ fontSize: 17, fontWeight: 900, color: "#fff", letterSpacing: "-0.3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {client.full_name || client.email?.split("@")[0]}
             </div>
@@ -155,19 +163,19 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 24px 100px" }}>
         {loading ? (
           <div style={{ padding: 80, display: "flex", justifyContent: "center" }}>
-            <Spinner variant="dots" size={32} color={GOLD} label="Calcul de la transformation" />
+            <Spinner variant="dots" size={32} color={GOLD} label={t("tv.spinner_label")} />
           </div>
         ) : !data || !data.dayOne ? (
           <div style={{ padding: 60, textAlign: "center", color: "rgba(255,255,255,0.4)" }}>
             <AppIcon name="alert" size={32} color="rgba(255,255,255,0.3)" />
-            <div style={{ marginTop: 12, fontSize: 13 }}>Ce client n'a pas encore assez de donnees pour generer une transformation.</div>
+            <div style={{ marginTop: 12, fontSize: 13 }}>{t("tv.empty_data")}</div>
           </div>
         ) : (
           <>
             {/* HERO BIG NUMBER */}
             <div style={{ textAlign: "center", padding: "30px 20px 36px", animation: "tvFade 0.5s ease both" }}>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 700, marginBottom: 12 }}>
-                {data.weeksSinceStart} semaines de travail
+                {fillTpl(t("tv.weeks_of_work"), { n: data.weeksSinceStart })}
               </div>
               {data.deltas.weight !== null && Math.abs(data.deltas.weight) > 0.1 ? (
                 <>
@@ -182,7 +190,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
                     <span style={{ fontSize: 32, color: "rgba(255,255,255,0.4)", marginLeft: 8 }}>kg</span>
                   </div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 12, letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700 }}>
-                    {data.deltas.weight < 0 ? "de perte" : "de prise"}
+                    {data.deltas.weight < 0 ? t("tv.delta_loss") : t("tv.delta_gain")}
                   </div>
                 </>
               ) : (
@@ -191,7 +199,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
                     {data.totalSessions}
                   </div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 6, letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700 }}>
-                    seances totales
+                    {t("tv.total_sessions_label")}
                   </div>
                 </>
               )}
@@ -201,7 +209,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
             {data.weights.length >= 2 && (
               <div style={{ marginBottom: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "18px 20px", animation: "tvFade 0.5s ease 0.1s both" }}>
                 <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", fontWeight: 700, marginBottom: 12 }}>
-                  Courbe de poids · {data.weights.length} pesees
+                  {fillTpl(t("tv.weight_curve_label"), { n: data.weights.length })}
                 </div>
                 <WeightCurve weights={data.weights} />
               </div>
@@ -210,25 +218,25 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
             {/* Comparison table S1 vs maintenant */}
             <div style={{ marginBottom: 18, animation: "tvFade 0.5s ease 0.15s both" }}>
               <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: VIOLET, fontWeight: 700, marginBottom: 12 }}>
-                Semaine 1 → Aujourd'hui
+                {t("tv.compare_section")}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <CompareCard
-                  label="Seances / semaine"
+                  label={t("tv.cmp_sessions_week")}
                   before={data.before.sessionsWeek}
                   after={data.after.sessionsWeek}
                   unit=""
                   good={(delta) => delta >= 0}
                 />
                 <CompareCard
-                  label="Jours nutrition loguee"
+                  label={t("tv.cmp_nutrition_days")}
                   before={data.before.nutriDays}
                   after={data.after.nutriDays}
                   unit="/ 7"
                   good={(delta) => delta >= 0}
                 />
                 <CompareCard
-                  label="RPE moyen"
+                  label={t("tv.cmp_avg_rpe")}
                   before={data.before.rpe?.toFixed(1)}
                   after={data.after.rpe?.toFixed(1)}
                   unit=""
@@ -236,7 +244,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
                   deltaText={(d) => `${d > 0 ? "+" : ""}${d.toFixed(1)}`}
                 />
                 <CompareCard
-                  label="Charge moyenne"
+                  label={t("tv.cmp_avg_charge")}
                   before={data.before.avgCharge?.toFixed(0)}
                   after={data.after.avgCharge?.toFixed(0)}
                   unit="kg"
@@ -248,9 +256,9 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
 
             {/* Totaux */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 18, animation: "tvFade 0.5s ease 0.2s both" }}>
-              <BigStat value={data.totalSessions} label="seances" color={G} />
-              <BigStat value={data.totalWeightLogs} label="pesees" color={VIOLET} />
-              <BigStat value={data.daysSinceStart} label="jours" color={ORANGE} />
+              <BigStat value={data.totalSessions} label={t("tv.stat_sessions")} color={G} />
+              <BigStat value={data.totalWeightLogs} label={t("tv.stat_weight_logs")} color={VIOLET} />
+              <BigStat value={data.daysSinceStart} label={t("tv.stat_days")} color={ORANGE} />
             </div>
 
             {/* Actions */}
@@ -261,21 +269,21 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
                 style={{ flex: 1, padding: 16, background: GOLD, color: "#000", border: "none", borderRadius: 14, fontSize: 13, fontWeight: 800, letterSpacing: "0.5px", textTransform: "uppercase", cursor: generating ? "default" : "pointer", fontFamily: "inherit", boxShadow: `0 8px 28px ${GOLD}30`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10 }}
               >
                 {generating ? (
-                  <><Spinner variant="dots" size={14} color="#000" /> Generation</>
+                  <><Spinner variant="dots" size={14} color="#000" /> {t("tv.btn_generating")}</>
                 ) : (
-                  <><AppIcon name="document" size={14} color="#000" strokeWidth={2.2} /> Generer PDF</>
+                  <><AppIcon name="document" size={14} color="#000" strokeWidth={2.2} /> {t("tv.btn_generate_pdf")}</>
                 )}
               </button>
               <button
                 onClick={share}
                 style={{ flex: 1, padding: 16, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, fontSize: 13, fontWeight: 800, letterSpacing: "0.5px", textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10 }}
               >
-                <AppIcon name="sparkles" size={14} color="rgba(255,255,255,0.8)" /> Partager
+                <AppIcon name="sparkles" size={14} color="rgba(255,255,255,0.8)" /> {t("tv.btn_share")}
               </button>
             </div>
 
             <div style={{ marginTop: 20, padding: 14, background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.12)", borderRadius: 12, fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-              <strong style={{ color: "#02d1ba" }}>Astuce :</strong> Telecharge le PDF et partage-le sur Instagram / LinkedIn comme preuve de transformation. Format A4 premium, optimise pour capture d'ecran.
+              <strong style={{ color: "#02d1ba" }}>{t("tv.tip_label")}</strong>{t("tv.tip_text")}
             </div>
           </>
         )}
