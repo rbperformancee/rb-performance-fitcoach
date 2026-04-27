@@ -5,6 +5,7 @@ import AppIcon from "../AppIcon";
 import PushNotifModal from "./PushNotifModal";
 import CoachPlansSettings from "./CoachPlansSettings";
 import { useCoachPlans } from "../../hooks/useCoachPlans";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 
@@ -22,6 +23,7 @@ const G = "#02d1ba";
  *   onClose: () => void
  */
 export default function Settings({ coachData, isDemo = false, onClose }) {
+  const t = useT();
   const [tab, setTab] = useState("plans");
   const [showPushModal, setShowPushModal] = useState(false);
 
@@ -35,7 +37,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
 
   async function saveProfile() {
     if (isDemo) {
-      toast.info("Disponible en version complete →");
+      toast.info(t("set.toast_demo_unavailable"));
       return;
     }
     setSaving(true);
@@ -46,9 +48,9 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
         .update({ full_name, coaching_name: coachingName.trim() || null, accent_color: accentColor })
         .eq("id", coachData.id);
       if (error) throw error;
-      toast.success("Profil sauvegarde");
+      toast.success(t("set.toast_profile_saved"));
     } catch (e) {
-      toast.error(e.message || "Erreur");
+      toast.error(e.message || t("set.toast_error"));
     }
     setSaving(false);
   }
@@ -56,10 +58,10 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
   const { plans: coachPlans, reload: reloadPlans } = useCoachPlans(coachData?.id);
 
   const TABS = [
-    { id: "plans", label: "Mes plans" },
-    { id: "branding", label: "Coaching" },
-    { id: "notifications", label: "Notifs" },
-    { id: "paiements", label: "Paiements" },
+    { id: "plans", label: t("set.tab_plans") },
+    { id: "branding", label: t("set.tab_branding") },
+    { id: "notifications", label: t("set.tab_notifications") },
+    { id: "paiements", label: t("set.tab_paiements") },
   ];
 
   return (
@@ -78,10 +80,10 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
         >
           <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,.6)" />
-          <span>Retour</span>
+          <span>{t("set.back")}</span>
         </button>
         <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px" }}>
-          Paramètres<span style={{ color: "#00C9A7" }}>.</span>
+          {t("set.title")}<span style={{ color: "#00C9A7" }}>.</span>
         </div>
         <div style={{ width: 80 }} />
       </div>
@@ -91,25 +93,25 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
         <div style={demoBanner}>
           <AppIcon name="bell" size={12} color={G} />
           <span>
-            <strong style={{ color: G, fontWeight: 700 }}>MODE DEMO</strong>
-            {" "}· En vrai, tes donnees sont sauvegardees automatiquement.
+            <strong style={{ color: G, fontWeight: 700 }}>{t("set.demo_label")}</strong>
+            {t("set.demo_sub")}
           </span>
         </div>
       )}
 
       {/* Tabs */}
       <div style={tabBar}>
-        {TABS.map((t) => (
+        {TABS.map((tb) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            onClick={() => setTab(tb.id)}
             className="set-tab"
             style={{
               ...tabBtn,
-              ...(tab === t.id ? tabBtnActive : {}),
+              ...(tab === tb.id ? tabBtnActive : {}),
             }}
           >
-            {t.label}
+            {tb.label}
           </button>
         ))}
       </div>
@@ -117,11 +119,11 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
       {/* Content */}
       <div className="set-content" style={content}>
         {tab === "branding" && (
-          <Section title="Mon coaching" sub="Personnalise l'experience vue par tes clients.">
-            <Field label="Nom du coaching" sub="Affiche a la place de 'RB Perform' dans l'app client">
-              <input type="text" value={coachingName} onChange={(e) => setCoachingName(e.target.value)} placeholder="RB Perform" style={input} className="set-input" />
+          <Section title={t("set.coaching_title")} sub={t("set.coaching_sub")}>
+            <Field label={t("set.coaching_name_label")} sub={t("set.coaching_name_sub")}>
+              <input type="text" value={coachingName} onChange={(e) => setCoachingName(e.target.value)} placeholder={t("set.coaching_name_placeholder")} style={input} className="set-input" />
             </Field>
-            <Field label="Couleur principale">
+            <Field label={t("set.color_label")}>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {[G, "#00C9A7", "#00C9A7", "#ff6b6b", "#60a5fa", "#34d399", "#ec4899", "#eab308"].map((c) => (
                   <button
@@ -142,7 +144,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
               </div>
             </Field>
             <button onClick={saveProfile} disabled={saving} style={{ ...btnPrimary, marginTop: 16 }}>
-              {saving ? "..." : "Sauvegarder"}
+              {saving ? "..." : t("set.btn_save")}
             </button>
 
             {/* ===== VITRINE PUBLIQUE ===== */}
@@ -160,49 +162,49 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
         )}
 
         {tab === "notifications" && (
-          <Section title="Notifications" sub="Choisis ce que tu veux recevoir par email et push.">
+          <Section title={t("set.notif_title")} sub={t("set.notif_sub")}>
             <div style={{ marginBottom: 24 }}>
-              <div style={sectionSubtitle}>Par email</div>
+              <div style={sectionSubtitle}>{t("set.notif_email_section")}</div>
               {[
-                { id: "notif_weekly_report", label: "Rapport hebdomadaire", sub: "Chaque lundi 8h · score business + alertes" },
-                { id: "notif_churn_alert", label: "Alerte client inactif", sub: "Quand un client est inactif > 5 jours" },
-                { id: "notif_new_client", label: "Nouveau client inscrit" },
-                { id: "notif_expiring_sub", label: "Abonnement client expirant" },
+                { id: "notif_weekly_report", label: t("set.notif_weekly"), sub: t("set.notif_weekly_sub") },
+                { id: "notif_churn_alert", label: t("set.notif_churn"), sub: t("set.notif_churn_sub") },
+                { id: "notif_new_client", label: t("set.notif_new_client") },
+                { id: "notif_expiring_sub", label: t("set.notif_expiring") },
               ].map((n) => (
                 <Toggle key={n.id} label={n.label} sub={n.sub} defaultChecked />
               ))}
             </div>
 
             <div>
-              <div style={sectionSubtitle}>Par push (navigateur)</div>
+              <div style={sectionSubtitle}>{t("set.notif_push_section")}</div>
               <button
                 onClick={() => setShowPushModal(true)}
                 style={btnGhost}
               >
                 <AppIcon name="bell" size={14} color={G} />
-                Activer les notifications push
+                {t("set.notif_enable_push_btn")}
               </button>
             </div>
           </Section>
         )}
 
         {tab === "paiements" && (
-          <Section title="Paiements clients" sub="Encaisse tes clients directement via Stripe Connect.">
+          <Section title={t("set.payments_title")} sub={t("set.payments_sub")}>
             <div style={{ ...planCard, background: "rgba(2,209,186,.04)", border: `.5px solid rgba(2,209,186,.2)` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(2,209,186,.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <AppIcon name="zap" size={16} color={G} />
                 </div>
-                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 900, color: "#fff" }}>Encaisse tes clients directement</div>
+                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 900, color: "#fff" }}>{t("set.payments_card_title")}</div>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.6, marginBottom: 14 }}>
-                Genere un lien de paiement en 2 taps, partage-le par message — ton client paie dans son navigateur, l'argent arrive sur ton compte.
+                {t("set.payments_card_desc")}
               </div>
               <button
-                onClick={() => { if (isDemo) { toast.info("Disponible en version complete →"); return; } toast.info("Stripe Connect setup - a venir"); }}
+                onClick={() => { if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; } toast.info(t("set.toast_stripe_soon")); }}
                 style={btnPrimary}
               >
-                Activer les paiements
+                {t("set.payments_btn")}
               </button>
             </div>
           </Section>
@@ -221,18 +223,19 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
 
 // ===== VITRINE PUBLIQUE =====
 function PublicProfileSection({ coachData, isDemo }) {
+  const t = useT();
   const slug = coachData?.public_slug;
   const enabled = coachData?.public_profile_enabled === true;
   const baseUrl = (typeof window !== "undefined" ? window.location.origin : "");
   const url = slug ? `${baseUrl}/coach/${slug}` : null;
 
   async function copy(text) {
-    try { await navigator.clipboard.writeText(text); toast.success("Copie"); }
-    catch { toast.error("Impossible de copier"); }
+    try { await navigator.clipboard.writeText(text); toast.success(t("set.toast_copied")); }
+    catch { toast.error(t("set.toast_copy_error")); }
   }
 
   async function toggleEnabled() {
-    if (isDemo) { toast.info("Disponible en version complete →"); return; }
+    if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; }
     if (!coachData?.id) return;
     try {
       const { error } = await supabase
@@ -240,7 +243,7 @@ function PublicProfileSection({ coachData, isDemo }) {
         .update({ public_profile_enabled: !enabled })
         .eq("id", coachData.id);
       if (error) throw error;
-      toast.success(enabled ? "Vitrine masquee" : "Vitrine activee");
+      toast.success(enabled ? t("set.toast_vitrine_hidden") : t("set.toast_vitrine_enabled"));
       setTimeout(() => window.location.reload(), 600);
     } catch (e) { toast.error(e.message); }
   }
@@ -248,13 +251,13 @@ function PublicProfileSection({ coachData, isDemo }) {
   return (
     <div style={{ marginTop: 32, padding: "20px 22px", background: "rgba(255,255,255,.025)", border: ".5px solid rgba(255,255,255,.07)", borderRadius: 14 }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: enabled ? G : "rgba(255,255,255,.3)", marginBottom: 10 }}>
-        Vitrine publique {enabled && "· active"}
+        {t("set.public_eyebrow")} {enabled && t("set.public_active_suffix")}
       </div>
       <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
-        {coachData?.full_name || "Ton profil"}<span style={{ color: G }}>.</span>
+        {coachData?.full_name || t("set.public_default_name")}<span style={{ color: G }}>.</span>
       </div>
       <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 16, lineHeight: 1.5 }}>
-        Une page publique partageable a tes prospects. Les visiteurs peuvent demander a te rejoindre.
+        {t("set.public_desc")}
       </div>
 
       {url && (
@@ -265,7 +268,7 @@ function PublicProfileSection({ coachData, isDemo }) {
             style={{ ...input, fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}
             onClick={(e) => e.target.select()}
           />
-          <button onClick={() => copy(url)} style={{ ...btnGhost, flexShrink: 0 }} title="Copier">
+          <button onClick={() => copy(url)} style={{ ...btnGhost, flexShrink: 0 }} title={t("set.public_tooltip_copy")}>
             <AppIcon name="check" size={14} color={G} />
           </button>
         </div>
@@ -284,7 +287,7 @@ function PublicProfileSection({ coachData, isDemo }) {
           cursor: "pointer", fontFamily: "'Syne', sans-serif",
         }}
       >
-        {enabled ? "Masquer ma vitrine" : "Activer ma vitrine publique"}
+        {enabled ? t("set.public_btn_hide") : t("set.public_btn_show")}
       </button>
     </div>
   );
@@ -292,6 +295,7 @@ function PublicProfileSection({ coachData, isDemo }) {
 
 // ===== PARRAINAGE COACH =====
 function ReferralSection({ coachData, isDemo }) {
+  const t = useT();
   const code = coachData?.referral_code || "";
   const baseUrl = (typeof window !== "undefined" ? window.location.origin : "");
   const link = code ? `${baseUrl}/signup?ref=${code}` : null;
@@ -320,40 +324,40 @@ function ReferralSection({ coachData, isDemo }) {
   const displayStats = isDemo ? { total: 3, active: 2, rewarded: 1 } : stats;
 
   async function copy(text) {
-    try { await navigator.clipboard.writeText(text); toast.success("Lien copie"); }
-    catch { toast.error("Impossible de copier"); }
+    try { await navigator.clipboard.writeText(text); toast.success(t("set.toast_link_copied")); }
+    catch { toast.error(t("set.toast_copy_error")); }
   }
 
   return (
     <div style={{ marginTop: 16, padding: "20px 22px", background: "rgba(0,201,167,.04)", border: ".5px solid rgba(0,201,167,.2)", borderRadius: 14 }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "#00C9A7", marginBottom: 10 }}>
-        Parrainage coach
+        {t("set.referral_eyebrow")}
       </div>
       <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
-        Invite un collegue<span style={{ color: "#00C9A7" }}>.</span>
+        {t("set.referral_title")}<span style={{ color: "#00C9A7" }}>.</span>
       </div>
       <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 16, lineHeight: 1.5 }}>
-        Pour chaque coach qui souscrit avec ton lien, tu gagnes <strong style={{ color: "#00C9A7" }}>1 mois offert</strong> sur ton plan.
+        {t("set.referral_desc_prefix")}<strong style={{ color: "#00C9A7" }}>{t("set.referral_reward")}</strong>{t("set.referral_desc_suffix")}
       </div>
 
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
-        <ReferralStat label="Invites" value={displayStats.total} />
-        <ReferralStat label="Actifs"  value={displayStats.active} accent="#00C9A7" />
-        <ReferralStat label="Mois offerts" value={displayStats.rewarded} accent={G} />
+        <ReferralStat label={t("set.referral_stat_invited")} value={displayStats.total} />
+        <ReferralStat label={t("set.referral_stat_active")}  value={displayStats.active} accent="#00C9A7" />
+        <ReferralStat label={t("set.referral_stat_rewarded")} value={displayStats.rewarded} accent={G} />
       </div>
 
       {/* Code */}
       {code && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)" }}>
-            Ton code
+            {t("set.referral_your_code")}
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <div style={{ flex: 1, padding: "11px 14px", background: "rgba(0,201,167,.06)", border: ".5px solid rgba(0,201,167,.2)", borderRadius: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: "#00C9A7", letterSpacing: ".05em", textAlign: "center" }}>
               {code}
             </div>
-            <button onClick={() => copy(code)} style={{ ...btnGhost, flexShrink: 0 }} title="Copier le code">
+            <button onClick={() => copy(code)} style={{ ...btnGhost, flexShrink: 0 }} title={t("set.referral_tooltip_copy_code")}>
               <AppIcon name="check" size={14} color={G} />
             </button>
           </div>
@@ -368,7 +372,7 @@ function ReferralSection({ coachData, isDemo }) {
             style={{ ...input, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
             onClick={(e) => e.target.select()}
           />
-          <button onClick={() => copy(link)} style={{ ...btnGhost, flexShrink: 0 }} title="Copier">
+          <button onClick={() => copy(link)} style={{ ...btnGhost, flexShrink: 0 }} title={t("set.referral_tooltip_copy")}>
             <AppIcon name="arrow-right" size={14} color={G} />
           </button>
         </div>
@@ -376,7 +380,7 @@ function ReferralSection({ coachData, isDemo }) {
 
       {!code && !isDemo && (
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", textAlign: "center", padding: 14 }}>
-          Code de parrainage en cours de generation. Recharge la page dans quelques secondes.
+          {t("set.referral_code_pending")}
         </div>
       )}
     </div>
