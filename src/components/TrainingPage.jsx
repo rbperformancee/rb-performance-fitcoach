@@ -1,6 +1,8 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
+import SessionOptionsModal from "./SessionOptionsModal";
+import { useProgrammeOverrides } from "../hooks/useProgrammeOverrides";
 
 const G = "#02d1ba";
 const G_DIM = "rgba(2,209,186,0.1)";
@@ -121,7 +123,17 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const fmt = (s) => String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
 
   const currentWeek = programme?.weeks?.[activeWeek];
-  const currentSession = currentWeek?.sessions?.[activeSession];
+  const rawCurrentSession = currentWeek?.sessions?.[activeSession];
+
+  // Overrides client (substitutions / reordering)
+  const ovApi = useProgrammeOverrides({
+    clientId: client?.id,
+    programmeId: programme?.id || programme?.programme_id,
+  });
+  const currentSession = useMemo(
+    () => ovApi.applyToSession(rawCurrentSession, activeWeek, activeSession),
+    [ovApi, rawCurrentSession, activeWeek, activeSession]
+  );
   const totalSessions = programme?.weeks?.reduce((a, w) => a + (w.sessions?.length || 0), 0) || 0;
   const doneSessions = programme?.weeks?.slice(0, activeWeek).reduce((a, w) => a + (w.sessions?.length || 0), 0) + activeSession || 0;
   const globalPct = totalSessions > 0 ? Math.min(Math.round((doneSessions / totalSessions) * 100), 100) : 0;
@@ -453,27 +465,16 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       </div>
 
       {/* MODAL OPTIONS */}
-      {showOptions && (
-        <div onClick={() => setShowOptions(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "24px 20px calc(env(safe-area-inset-bottom,0px) + 24px)", width: "100%", maxWidth: 420 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Options de seance</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-              {[
-                { label: "Reporter", sub: "Au lendemain" },
-                { label: "Repos", sub: "Journee de repos" },
-                { label: "Remplacer", sub: "Un exercice" },
-                { label: "Reordonner", sub: "Les exercices" },
-              ].map(({ label, sub }) => (
-                <div key={label} onClick={() => setShowOptions(false)} style={{ padding: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, cursor: "pointer" }}>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 600, marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{sub}</div>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setShowOptions(false)} style={{ width: "100%", padding: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.4)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
-          </div>
-        </div>
-      )}
+      <SessionOptionsModal
+        open={showOptions}
+        onClose={() => setShowOptions(false)}
+        sessionName={currentSession?.name}
+        exercises={currentSession?.exercises || []}
+        weekIndex={activeWeek}
+        sessionIndex={activeSession}
+        ovApi={ovApi}
+        onProgrammeMutated={() => { window.location.reload(); }}
+      />
 
       {/* MODAL CONFIRMATION */}
       {showConfirm && (
