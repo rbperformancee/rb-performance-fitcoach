@@ -54,7 +54,6 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
   // Pre-fill if a client was passed (e.g., after programme upload)
   useEffect(() => {
     if (preselectedClient?.id) handleClientChange(preselectedClient.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preselectedClient?.id]);
 
   const amountNum = parseFloat(amount) || 0;
