@@ -10,6 +10,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { toast } from "./Toast";
 import haptic from "../lib/haptic";
+import { useT } from "../lib/i18n";
 
 const G = "#02d1ba";
 const ORANGE = "#f97316";
@@ -38,6 +39,7 @@ export default function SessionOptionsModal({
   weekIndex, sessionIndex,
   ovApi, onProgrammeMutated,
 }) {
+  const t = useT();
   const [view, setView] = useState("home"); // home | replace | reorder
   const [confirmRest, setConfirmRest] = useState(false);
   const [confirmReport, setConfirmReport] = useState(false);
@@ -50,11 +52,11 @@ export default function SessionOptionsModal({
     haptic.selection();
     const ok = await ovApi.bumpStartDate({ logRest: false });
     if (ok) {
-      toast.success("Seance reportee a demain");
+      toast.success(t("som.toast_reported"));
       onProgrammeMutated?.();
       close();
     } else {
-      toast.error("Erreur lors du report");
+      toast.error(t("som.toast_report_error"));
     }
   };
 
@@ -62,11 +64,11 @@ export default function SessionOptionsModal({
     haptic.selection();
     const ok = await ovApi.bumpStartDate({ logRest: true });
     if (ok) {
-      toast.success("Journee de repos enregistree");
+      toast.success(t("som.toast_rest_logged"));
       onProgrammeMutated?.();
       close();
     } else {
-      toast.error("Erreur lors de l'enregistrement");
+      toast.error(t("som.toast_rest_error"));
     }
   };
 
@@ -111,39 +113,40 @@ export default function SessionOptionsModal({
 
 // ===== HOME (4 boutons) =====
 function Home({ sessionName, confirmReport, setConfirmReport, confirmRest, setConfirmRest, onReport, onRest, onReplace, onReorder, onClose }) {
+  const t = useT();
   return (
     <>
-      <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", marginBottom: 4 }}>Options</div>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginBottom: 18 }}>{sessionName || "Seance courante"}</div>
+      <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", marginBottom: 4 }}>{t("som.title")}</div>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginBottom: 18 }}>{sessionName || t("som.session_fallback")}</div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         <ActionCard
-          title={confirmReport ? "Confirmer ?" : "Reporter"}
-          sub={confirmReport ? "Tap pour valider" : "Au lendemain"}
+          title={confirmReport ? t("som.btn_report_confirm") : t("som.btn_report")}
+          sub={confirmReport ? t("som.btn_confirm_sub") : t("som.btn_report_sub")}
           accent={ORANGE}
           onClick={() => confirmReport ? onReport() : setConfirmReport(true)}
         />
         <ActionCard
-          title={confirmRest ? "Confirmer ?" : "Jour de repos"}
-          sub={confirmRest ? "Tap pour valider" : "Decale d'un jour"}
+          title={confirmRest ? t("som.btn_report_confirm") : t("som.btn_rest")}
+          sub={confirmRest ? t("som.btn_confirm_sub") : t("som.btn_rest_sub")}
           accent={"#a78bfa"}
           onClick={() => confirmRest ? onRest() : setConfirmRest(true)}
         />
         <ActionCard
-          title="Remplacer"
-          sub="Un exercice"
+          title={t("som.btn_replace")}
+          sub={t("som.btn_replace_sub")}
           accent={G}
           onClick={onReplace}
         />
         <ActionCard
-          title="Reordonner"
-          sub="Glisser-deposer"
+          title={t("som.btn_reorder")}
+          sub={t("som.btn_reorder_sub")}
           accent={"#fbbf24"}
           onClick={onReorder}
         />
       </div>
 
-      <button onClick={onClose} style={ghostBtn}>Annuler</button>
+      <button onClick={onClose} style={ghostBtn}>{t("som.btn_cancel")}</button>
     </>
   );
 }
@@ -169,6 +172,7 @@ function ActionCard({ title, sub, accent, onClick }) {
 
 // ===== REPLACE VIEW =====
 function ReplaceView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone }) {
+  const t = useT();
   const [step, setStep] = useState("pick"); // pick | edit
   const [pickedIdx, setPickedIdx] = useState(null);
   const [name, setName] = useState("");
@@ -189,7 +193,7 @@ function ReplaceView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
 
   const save = async () => {
     if (pickedIdx === null) return;
-    if (!name.trim()) { toast.error("Donne un nom a l'exercice"); return; }
+    if (!name.trim()) { toast.error(t("som.toast_no_name")); return; }
     setSaving(true);
     const ok = await ovApi.substituteExercise({
       weekIndex, sessionIndex, originalIndex: pickedIdx,
@@ -202,9 +206,9 @@ function ReplaceView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
     });
     setSaving(false);
     if (ok) {
-      toast.success("Exercice remplace");
+      toast.success(t("som.toast_substituted"));
       onDone?.();
-    } else toast.error("Echec du remplacement");
+    } else toast.error(t("som.toast_substitute_error"));
   };
 
   const removeOverride = async () => {
@@ -213,12 +217,12 @@ function ReplaceView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
       weekIndex, sessionIndex, originalIndex: pickedIdx, substitute: null,
     });
     setSaving(false);
-    if (ok) { toast.success("Original restaure"); onDone?.(); }
+    if (ok) { toast.success(t("som.toast_restored")); onDone?.(); }
   };
 
   return (
     <>
-      <ViewHeader title={step === "pick" ? "Quel exercice ?" : "Substitut"} onBack={step === "pick" ? onBack : () => setStep("pick")} />
+      <ViewHeader title={step === "pick" ? t("som.replace_pick_title") : t("som.replace_substitute_title")} onBack={step === "pick" ? onBack : () => setStep("pick")} />
 
       {step === "pick" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14, maxHeight: "50vh", overflowY: "auto" }}>
@@ -230,15 +234,15 @@ function ReplaceView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {ex.name || "Exercice"}
+                  {ex.name || t("som.exercise_fallback")}
                 </div>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", marginTop: 2 }}>
-                  {[ex.rawReps, ex.tempo, ex.rest].filter(Boolean).join(" · ") || "Pas de details"}
+                  {[ex.rawReps, ex.tempo, ex.rest].filter(Boolean).join(" · ") || t("som.no_details")}
                 </div>
               </div>
               {ex._substituted && (
                 <span style={{ fontSize: 9, color: G, background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 100, padding: "3px 8px", letterSpacing: "1px", textTransform: "uppercase", fontWeight: 700 }}>
-                  Modifie
+                  {t("som.tag_modified")}
                 </span>
               )}
             </button>
@@ -248,20 +252,20 @@ function ReplaceView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
 
       {step === "edit" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
-          <FormField label="Nom de l'exercice" value={name} onChange={setName} placeholder="ex: Bench haltere" />
+          <FormField label={t("som.field_name")} value={name} onChange={setName} placeholder={t("som.field_name_placeholder")} />
           <div style={{ display: "flex", gap: 8 }}>
-            <div style={{ flex: 1 }}><FormField label="Reps (ex: 4X8-10)" value={reps} onChange={setReps} placeholder="4X8-10" /></div>
-            <div style={{ flex: 1 }}><FormField label="Tempo" value={tempo} onChange={setTempo} placeholder="3010" /></div>
+            <div style={{ flex: 1 }}><FormField label={t("som.field_reps")} value={reps} onChange={setReps} placeholder="4X8-10" /></div>
+            <div style={{ flex: 1 }}><FormField label={t("som.field_tempo")} value={tempo} onChange={setTempo} placeholder="3010" /></div>
           </div>
-          <FormField label="Repos" value={rest} onChange={setRest} placeholder="2 min" />
+          <FormField label={t("som.field_rest")} value={rest} onChange={setRest} placeholder={t("som.field_rest_placeholder")} />
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
             {exercises[pickedIdx]?._substituted && (
               <button onClick={removeOverride} disabled={saving} style={{ ...ghostBtn, color: RED, borderColor: "rgba(239,68,68,0.2)", flex: "0 0 auto" }}>
-                Restaurer
+                {t("som.btn_restore")}
               </button>
             )}
             <button onClick={save} disabled={saving} style={primaryBtn}>
-              {saving ? "Enregistrement..." : "Remplacer"}
+              {saving ? t("som.btn_saving") : t("som.btn_replace_save")}
             </button>
           </div>
         </div>
@@ -293,6 +297,7 @@ function FormField({ label, value, onChange, placeholder, inputMode }) {
 
 // ===== REORDER VIEW (drag-drop dnd-kit) =====
 function ReorderView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone }) {
+  const t = useT();
   // On garde un mapping {originalIndex, ex}
   const [items, setItems] = useState(
     exercises.map((ex, i) => ({ id: `ex-${i}`, originalIndex: i, ex }))
@@ -321,23 +326,23 @@ function ReorderView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
     const newOrder = items.map(it => it.originalIndex);
     const ok = await ovApi.reorderExercises({ weekIndex, sessionIndex, newOrder });
     setSaving(false);
-    if (ok) { toast.success("Ordre enregistre"); onDone?.(); }
-    else toast.error("Echec");
+    if (ok) { toast.success(t("som.toast_order_saved")); onDone?.(); }
+    else toast.error(t("som.toast_order_error"));
   };
 
   const reset = async () => {
     setSaving(true);
     const ok = await ovApi.reorderExercises({ weekIndex, sessionIndex, newOrder: null });
     setSaving(false);
-    if (ok) { toast.success("Ordre par defaut restaure"); onDone?.(); }
+    if (ok) { toast.success(t("som.toast_default_restored")); onDone?.(); }
   };
 
   return (
     <>
-      <ViewHeader title="Reordonner" onBack={onBack} />
+      <ViewHeader title={t("som.reorder_title")} onBack={onBack} />
 
       <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginBottom: 12, lineHeight: 1.5 }}>
-        Glisse les blocs pour changer l'ordre. Maintenir 0.2s sur mobile pour activer.
+        {t("som.reorder_hint")}
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -352,10 +357,10 @@ function ReorderView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
 
       <div style={{ display: "flex", gap: 8 }}>
         <button onClick={reset} disabled={saving} style={{ ...ghostBtn, flex: "0 0 auto" }}>
-          Defaut
+          {t("som.btn_default")}
         </button>
         <button onClick={save} disabled={saving} style={primaryBtn}>
-          {saving ? "Enregistrement..." : "Enregistrer"}
+          {saving ? t("som.btn_saving") : t("som.btn_save")}
         </button>
       </div>
     </>
@@ -363,6 +368,7 @@ function ReorderView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
 }
 
 function SortableExerciseRow({ item }) {
+  const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -384,7 +390,7 @@ function SortableExerciseRow({ item }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {item.ex.name || "Exercice"}
+          {item.ex.name || t("som.exercise_fallback")}
         </div>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
           {[item.ex.rawReps, item.ex.tempo].filter(Boolean).join(" · ")}
