@@ -73,15 +73,30 @@
       ]
     },
     {
+      "source": "/app.html",
+      "headers": [
+        { "key": "Content-Disposition", "value": "inline" },
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
+      ]
+    },
+    {
       "source": "/landing.html",
       "headers": [
+        { "key": "Content-Disposition", "value": "inline" },
         { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
       ]
     },
     {
       "source": "/founding.html",
       "headers": [
+        { "key": "Content-Disposition", "value": "inline" },
         { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        { "key": "Content-Disposition", "value": "inline" }
       ]
     },
     {
