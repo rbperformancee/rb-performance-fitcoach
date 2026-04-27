@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
+import { useT } from "../../lib/i18n";
 import ClientHome from "./ClientHome";
 import ClientProgramme from "./ClientProgramme";
 import ClientMessages from "./ClientMessages";
@@ -13,6 +14,7 @@ const G_DEFAULT = "#02d1ba";
  * Couleur accent dynamique depuis coaches.accent_color du coach du client.
  */
 export default function ClientApp({ user }) {
+  const t = useT();
   const [tab, setTab] = useState("home");
   const [client, setClient] = useState(null);
   const [coach, setCoach]   = useState(null);
@@ -64,7 +66,7 @@ export default function ClientApp({ user }) {
     return (
       <div style={wrap}>
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,.3)", fontSize: 12, letterSpacing: ".2em", textTransform: "uppercase" }}>
-          Chargement...
+          {t("ca.loading")}
         </div>
       </div>
     );
@@ -75,16 +77,16 @@ export default function ClientApp({ user }) {
       <div style={wrap}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, textAlign: "center", gap: 14 }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "-.5px" }}>
-            Compte non associe<span style={{ color: accent }}>.</span>
+            {t("ca.no_account_title")}<span style={{ color: accent }}>.</span>
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.5, maxWidth: 320 }}>
-            Tu n'es pas encore lie a un coach. Demande un lien d'invitation a ton coach.
+            {t("ca.no_account_desc")}
           </div>
           <button
             onClick={() => supabase.auth.signOut().then(() => { window.location.href = "/"; })}
             style={{ marginTop: 10, background: "transparent", border: ".5px solid rgba(255,255,255,.15)", color: "rgba(255,255,255,.6)", padding: "10px 18px", borderRadius: 100, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
-            Se deconnecter
+            {t("ca.logout")}
           </button>
         </div>
       </div>
@@ -114,26 +116,26 @@ export default function ClientApp({ user }) {
           target="_blank" rel="noopener"
           style={rbBadge}
         >
-          ⚡ Propulse par RB Perform
+          {t("ca.powered_by")}
         </a>
       )}
 
       {/* Bottom nav */}
-      <nav style={nav} aria-label="Navigation principale">
-        {TABS.map((t) => {
-          const on = tab === t.id;
+      <nav style={nav} aria-label={t("ca.main_nav")}>
+        {TABS.map((tab_) => {
+          const on = tab === tab_.id;
           return (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={tab_.id}
+              onClick={() => setTab(tab_.id)}
               style={{
                 ...navBtn,
                 background: on ? accent : "transparent",
                 color: on ? "#000" : "rgba(255,255,255,.3)",
               }}
-              aria-label={t.label}
+              aria-label={t(tab_.labelKey)}
             >
-              <NavIcon name={t.icon} on={on} />
+              <NavIcon name={tab_.icon} on={on} />
             </button>
           );
         })}
@@ -155,10 +157,10 @@ function NavIcon({ name, on }) {
 }
 
 const TABS = [
-  { id: "home",  label: "Accueil",   icon: "home" },
-  { id: "prog",  label: "Programme", icon: "dumbbell" },
-  { id: "msg",   label: "Messages",  icon: "msg" },
-  { id: "suivi", label: "Suivi",     icon: "chart" },
+  { id: "home",  labelKey: "ca.tab_home",  icon: "home" },
+  { id: "prog",  labelKey: "ca.tab_prog",  icon: "dumbbell" },
+  { id: "msg",   labelKey: "ca.tab_msg",   icon: "msg" },
+  { id: "suivi", labelKey: "ca.tab_suivi", icon: "chart" },
 ];
 
 // ===== STYLES =====

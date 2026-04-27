@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
+import { useT, getLocale } from "../../lib/i18n";
+
+const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
 /**
  * ClientMessages — chat client ↔ coach via la table `messages` existante.
  * Bulles teal (du coach) et grey (du client).
  */
 export default function ClientMessages({ client, coach, accent, user }) {
+  const t = useT();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -69,15 +73,15 @@ export default function ClientMessages({ client, coach, accent, user }) {
     setSending(false);
   }
 
-  const coachName = coach?.coaching_name || coach?.full_name || "Ton coach";
-  const firstName = (client?.full_name || "").split(" ")[0] || "Toi";
+  const coachName = coach?.coaching_name || coach?.full_name || t("cm.your_coach");
+  const firstName = (client?.full_name || "").split(" ")[0] || t("cm.you");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100svh - 88px)" }}>
       {/* Header */}
       <div style={{ padding: "32px 20px 14px", borderBottom: ".5px solid rgba(255,255,255,.05)" }}>
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 8 }}>
-          Conversation
+          {t("cm.conversation")}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${accent}15`, border: `.5px solid ${accent}30`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne', sans-serif", fontSize: 13, fontWeight: 900, color: accent, flexShrink: 0 }}>
@@ -85,7 +89,7 @@ export default function ClientMessages({ client, coach, accent, user }) {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-.3px" }}>{coachName}</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginTop: 1 }}>Repond habituellement dans la journee</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginTop: 1 }}>{t("cm.usual_reply")}</div>
           </div>
         </div>
       </div>
@@ -96,10 +100,10 @@ export default function ClientMessages({ client, coach, accent, user }) {
         style={{ flex: 1, overflowY: "auto", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 8 }}
       >
         {loading ? (
-          <div style={{ textAlign: "center", padding: 30, color: "rgba(255,255,255,.3)", fontSize: 12 }}>Chargement...</div>
+          <div style={{ textAlign: "center", padding: 30, color: "rgba(255,255,255,.3)", fontSize: 12 }}>{t("cm.loading")}</div>
         ) : messages.length === 0 ? (
           <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,.3)", fontSize: 12 }}>
-            Aucun message pour le moment.<br />Envoie le premier !
+            {t("cm.no_messages")}<br />{t("cm.send_first")}
           </div>
         ) : (
           messages.map((m) => (
@@ -133,7 +137,7 @@ export default function ClientMessages({ client, coach, accent, user }) {
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Ecris un message..."
+          placeholder={t("cm.input_placeholder")}
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
           style={{
             flex: 1, height: 42,
@@ -159,7 +163,7 @@ export default function ClientMessages({ client, coach, accent, user }) {
             display: "flex", alignItems: "center", justifyContent: "center",
             flexShrink: 0,
           }}
-          aria-label="Envoyer"
+          aria-label={t("cm.send")}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <line x1="22" y1="2" x2="11" y2="13" />
@@ -174,5 +178,5 @@ export default function ClientMessages({ client, coach, accent, user }) {
 function fmtTime(iso) {
   if (!iso) return "";
   const d = new Date(iso);
-  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" });
 }

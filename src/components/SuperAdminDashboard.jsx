@@ -2,6 +2,15 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
+import { useT, getLocale } from "../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
+
+const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
 // ===== CHARTE CEO : noir absolu + blanc ivoire + accents sobres =====
 const BLUE = "#818cf8"; // indigo clair — plus raffine que le bleu electrique
@@ -72,6 +81,7 @@ function Ring({ score, size = 48 }) {
 }
 
 export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
+  const t = useT();
   const [coaches, setCoaches] = useState([]);
   const [allClients, setAllClients] = useState([]);
   const [programmes, setProgrammes] = useState([]);
@@ -132,7 +142,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const bestCoach = enriched.length > 0 ? enriched.reduce((b, c) => c._health > b._health ? c : b, enriched[0]) : null;
 
   const card = { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" };
-  const secTitle = (t, ic) => (<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}><Ic name={ic} size={14} color={BLUE} /><span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(59,130,246,0.6)" }}>{t}</span></div>);
+  const secTitle = (label, ic) => (<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}><Ic name={ic} size={14} color={BLUE} /><span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(59,130,246,0.6)" }}>{label}</span></div>);
 
   if (loading) return <div style={{ minHeight: "100vh", background: "#030303", display: "flex", alignItems: "center", justifyContent: "center" }}><Spinner variant="dots" size={40} color={BLUE} /></div>;
 
@@ -153,8 +163,8 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                 <div style={{ position: "absolute", inset: -3, borderRadius: "50%", background: BLUE, opacity: 0.3, animation: "ceoPulse 2s ease-in-out infinite" }} />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <div style={{ fontSize: 8, letterSpacing: "4px", color: "rgba(129,140,248,0.7)", fontWeight: 700, textTransform: "uppercase", fontFamily: BODY_FONT }}>Live Cockpit</div>
-                <div style={{ fontFamily: CEO_FONT, fontSize: 15, letterSpacing: "3px", color: IVORY, textTransform: "uppercase" }}>CEO Dashboard</div>
+                <div style={{ fontSize: 8, letterSpacing: "4px", color: "rgba(129,140,248,0.7)", fontWeight: 700, textTransform: "uppercase", fontFamily: BODY_FONT }}>{t("sad.live_cockpit")}</div>
+                <div style={{ fontFamily: CEO_FONT, fontSize: 15, letterSpacing: "3px", color: IVORY, textTransform: "uppercase" }}>{t("sad.ceo_dashboard")}</div>
               </div>
             </div>
 
@@ -166,7 +176,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
               <div style={{ width: 1, height: 20, background: "rgba(240,236,228,0.08)" }} />
               <button
                 onClick={() => { haptic.medium(); onSwitchToCoach?.(); }}
-                title="Passer en mode Coach"
+                title={t("sad.switch_coach_title")}
                 style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(2,209,186,0.04)", border: `1px solid rgba(2,209,186,0.15)`, color: G, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.1)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.35)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.04)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.15)"; }}
@@ -182,14 +192,14 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           <div style={{ fontFamily: CEO_FONT, fontSize: 72, color: IVORY, letterSpacing: "2px", lineHeight: 0.9 }}>
             <AnimNum value={mrr} suffix=" €" />
           </div>
-          <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: "rgba(240,236,228,0.4)", marginTop: 10, fontWeight: 500 }}>Monthly Recurring Revenue · {subs.length} abonnements · {active.length} coachs</div>
-          <div style={{ fontFamily: CEO_FONT, fontSize: 22, color: "rgba(240,236,228,0.25)", letterSpacing: "2px", marginTop: 4 }}>ARR {arr.toLocaleString()} €</div>
+          <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: "rgba(240,236,228,0.4)", marginTop: 10, fontWeight: 500 }}>{fillTpl(t("sad.mrr_subtitle"), { subs: subs.length, coachs: active.length })}</div>
+          <div style={{ fontFamily: CEO_FONT, fontSize: 22, color: "rgba(240,236,228,0.25)", letterSpacing: "2px", marginTop: 4 }}>{t("sad.arr")} {arr.toLocaleString()} €</div>
           <div style={{ display: "flex", gap: 14, marginTop: 14, flexWrap: "wrap" }}>
             {[
-              { v: total, l: "clients" },
-              { v: ret + "%", l: "retention", c: ret >= 80 ? G : ret >= 60 ? ORANGE : RED },
-              { v: "+" + newCl30, l: "30 jours", c: newCl30 > 0 ? G : "rgba(255,255,255,0.35)" },
-              { v: newToday, l: "aujourd'hui", c: newToday > 0 ? BLUE : "rgba(255,255,255,0.35)" },
+              { v: total, l: t("sad.lbl_clients") },
+              { v: ret + "%", l: t("sad.lbl_retention"), c: ret >= 80 ? G : ret >= 60 ? ORANGE : RED },
+              { v: "+" + newCl30, l: t("sad.lbl_30days"), c: newCl30 > 0 ? G : "rgba(255,255,255,0.35)" },
+              { v: newToday, l: t("sad.lbl_today"), c: newToday > 0 ? BLUE : "rgba(255,255,255,0.35)" },
             ].map((s, i) => (
               <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: s.c || "#fff" }}>{s.v}</span>
@@ -198,24 +208,24 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             ))}
           </div>
           {/* Objectif */}
-          <div onClick={() => { const v = window.prompt("Objectif MRR :", String(mrrGoal)); if (v && !isNaN(parseInt(v))) { setMrrGoal(parseInt(v)); localStorage.setItem("ceo_mrr_goal", v); } }} style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+          <div onClick={() => { const v = window.prompt(t("sad.prompt_mrr_goal"), String(mrrGoal)); if (v && !isNaN(parseInt(v))) { setMrrGoal(parseInt(v)); localStorage.setItem("ceo_mrr_goal", v); } }} style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
             <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ height: "100%", width: mrrPct + "%", background: BLUE, borderRadius: 2, transition: "width 0.6s ease" }} />
             </div>
             <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: BLUE }}>{mrrPct}%</span>
-            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)" }}>de {mrrGoal.toLocaleString()} €</span>
+            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)" }}>{fillTpl(t("sad.of_goal"), { goal: mrrGoal.toLocaleString() })}</span>
           </div>
         </div>
 
         {/* ===== CARDS METRIQUES — remplies, colorees, comme le CTA "Voir clients" ===== */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 32, animation: "cF 0.4s ease 0.1s both" }}>
           {[
-            { k: "mrr", l: "Revenus", v: mrr.toLocaleString() + " €", ic: "chart", bg: "linear-gradient(135deg, #1e1b4b, #312e81)", ac: "#818cf8", sub: avgPerCoach + " €/coach" },
-            { k: "clients", l: "Clients", v: total, ic: "users", bg: "linear-gradient(135deg, #0c4a6e, #075985)", ac: "#38bdf8", sub: subs.length + " abonnements" },
-            { k: "retention", l: "Retention", v: ret + "%", ic: "check", bg: ret >= 80 ? "linear-gradient(135deg, #064e3b, #065f46)" : "linear-gradient(135deg, #431407, #7c2d12)", ac: ret >= 80 ? "#34d399" : "#fb923c", sub: subs.length + " sur " + onb.length },
-            { k: "coachs", l: "Coachs", v: active.length, ic: "flame", bg: "linear-gradient(135deg, #2e1065, #4c1d95)", ac: "#a78bfa", sub: coaches.length + " inscrits" },
-            { k: "growth", l: "Croissance", v: "+" + newCl30, ic: "trending", bg: newCl30 > 0 ? "linear-gradient(135deg, #052e16, #14532d)" : "linear-gradient(135deg, #171717, #262626)", ac: newCl30 > 0 ? "#4ade80" : "#525252", sub: "30 derniers jours" },
-            { k: "churn", l: "Risque", v: churn.length, ic: "alert", bg: churn.length > 0 ? "linear-gradient(135deg, #450a0a, #7f1d1d)" : "linear-gradient(135deg, #052e16, #14532d)", ac: churn.length > 0 ? "#f87171" : "#4ade80", sub: churn.length > 0 ? "action requise" : "aucun risque" },
+            { k: "mrr", l: t("sad.card_revenue"), v: mrr.toLocaleString() + " €", ic: "chart", bg: "linear-gradient(135deg, #1e1b4b, #312e81)", ac: "#818cf8", sub: fillTpl(t("sad.sub_per_coach"), { v: avgPerCoach }) },
+            { k: "clients", l: t("sad.card_clients"), v: total, ic: "users", bg: "linear-gradient(135deg, #0c4a6e, #075985)", ac: "#38bdf8", sub: fillTpl(t("sad.sub_subs"), { n: subs.length }) },
+            { k: "retention", l: t("sad.card_retention"), v: ret + "%", ic: "check", bg: ret >= 80 ? "linear-gradient(135deg, #064e3b, #065f46)" : "linear-gradient(135deg, #431407, #7c2d12)", ac: ret >= 80 ? "#34d399" : "#fb923c", sub: fillTpl(t("sad.sub_x_of_y"), { x: subs.length, y: onb.length }) },
+            { k: "coachs", l: t("sad.card_coachs"), v: active.length, ic: "flame", bg: "linear-gradient(135deg, #2e1065, #4c1d95)", ac: "#a78bfa", sub: fillTpl(t("sad.sub_registered"), { n: coaches.length }) },
+            { k: "growth", l: t("sad.card_growth"), v: "+" + newCl30, ic: "trending", bg: newCl30 > 0 ? "linear-gradient(135deg, #052e16, #14532d)" : "linear-gradient(135deg, #171717, #262626)", ac: newCl30 > 0 ? "#4ade80" : "#525252", sub: t("sad.sub_last30") },
+            { k: "churn", l: t("sad.card_risk"), v: churn.length, ic: "alert", bg: churn.length > 0 ? "linear-gradient(135deg, #450a0a, #7f1d1d)" : "linear-gradient(135deg, #052e16, #14532d)", ac: churn.length > 0 ? "#f87171" : "#4ade80", sub: churn.length > 0 ? t("sad.sub_action_required") : t("sad.sub_no_risk") },
           ].map((m, i) => (
             <div key={m.k} className="sa-c" onClick={() => { haptic.selection(); setDetailView(m.k); }} style={{
               background: m.bg,
@@ -247,10 +257,10 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             {/* Header */}
             <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 12px)", marginBottom: 28 }}>
               <button onClick={() => setDetailView(null)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(240,236,228,0.3)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: BODY_FONT, padding: 0, marginBottom: 16 }}>
-                <Ic name="arrow-left" size={12} /> Retour
+                <Ic name="arrow-left" size={12} /> {t("sad.back")}
               </button>
               <h1 style={{ fontFamily: CEO_FONT, fontSize: 48, color: IVORY, letterSpacing: "2px", margin: 0, lineHeight: 0.95 }}>
-                {{ mrr: "REVENUS", clients: "CLIENTS", retention: "RETENTION", coachs: "COACHS", growth: "CROISSANCE", churn: "RISQUE" }[detailView]}
+                {{ mrr: t("sad.h_revenue"), clients: t("sad.h_clients"), retention: t("sad.h_retention"), coachs: t("sad.h_coachs"), growth: t("sad.h_growth"), churn: t("sad.h_risk") }[detailView]}
               </h1>
             </div>
 
@@ -258,7 +268,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             {detailView === "mrr" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 8 }}>
-                  {[{ l: "MRR", v: mrr.toLocaleString() + " €", c: BLUE }, { l: "ARR", v: arr.toLocaleString() + " €", c: "#fff" }, { l: "Moy/coach", v: avgPerCoach + " €", c: BLUE }].map((s, i) => (
+                  {[{ l: t("sad.lbl_mrr"), v: mrr.toLocaleString() + " €", c: BLUE }, { l: t("sad.lbl_arr"), v: arr.toLocaleString() + " €", c: "#fff" }, { l: t("sad.lbl_avg_coach"), v: avgPerCoach + " €", c: BLUE }].map((s, i) => (
                     <div key={i} style={{ ...card, textAlign: "center", cursor: "default" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: s.c }}>{s.v}</div><div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 6, fontWeight: 700 }}>{s.l}</div></div>
                   ))}
                 </div>
@@ -268,7 +278,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                       <Ring score={c._health} size={44} />
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{c.full_name}</div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{c.brand_name} · {c._total} clients · Ret. {c._ret}%</div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{c.brand_name} · {fillTpl(t("sad.x_clients_ret"), { n: c._total, r: c._ret })}</div>
                       </div>
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: BLUE }}>{c._mrr}<span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>€</span></div>
                     </div>
@@ -293,7 +303,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                         </div>
                         <div style={{ textAlign: "right", flexShrink: 0 }}>
                           {cl.subscription_plan && <div style={{ fontSize: 10, fontWeight: 700, color: BLUE }}>{cl.subscription_plan}</div>}
-                          {dl !== null && <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.35)", marginTop: 2 }}>{dl <= 0 ? "Expire" : dl + "j"}</div>}
+                          {dl !== null && <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.35)", marginTop: 2 }}>{dl <= 0 ? t("sad.expired") : dl + t("sad.days_short")}</div>}
                         </div>
                       </div>
                     </div>
@@ -306,13 +316,13 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             {detailView === "retention" && (
               <div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
-                  {[{ l: "Actifs", v: subs.length, c: G }, { l: "Inactifs", v: onb.length - subs.length, c: ORANGE }, { l: "Taux", v: ret + "%", c: ret >= 80 ? G : ORANGE }].map((s, i) => (
+                  {[{ l: t("sad.lbl_active"), v: subs.length, c: G }, { l: t("sad.lbl_inactive"), v: onb.length - subs.length, c: ORANGE }, { l: t("sad.lbl_rate"), v: ret + "%", c: ret >= 80 ? G : ORANGE }].map((s, i) => (
                     <div key={i} style={{ ...card, textAlign: "center", cursor: "default", padding: 20 }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: s.c }}>{s.v}</div><div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 8, fontWeight: 700 }}>{s.l}</div></div>
                   ))}
                 </div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>
-                  {subs.length} clients avec un abonnement actif sur {onb.length} clients onboardes.
-                  {onb.length - subs.length > 0 && ` ${onb.length - subs.length} client${onb.length - subs.length > 1 ? "s" : ""} sans abonnement actif.`}
+                  {fillTpl(t("sad.retention_desc"), { active: subs.length, total: onb.length })}
+                  {onb.length - subs.length > 0 && ` ${fillTpl(onb.length - subs.length > 1 ? t("sad.no_sub_plural") : t("sad.no_sub_singular"), { n: onb.length - subs.length })}`}
                 </div>
               </div>
             )}
@@ -328,24 +338,24 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{c.full_name || c.email}</span>
                           {bestCoach?.id === c.id && enriched.length > 1 && <span style={{ fontSize: 7, fontWeight: 800, color: BLUE, background: BLUE_DIM, border: `1px solid ${BLUE_BORDER}`, borderRadius: 100, padding: "2px 8px" }}>TOP</span>}
-                          {!c.is_active && <span style={{ fontSize: 7, color: RED, background: "rgba(239,68,68,0.08)", borderRadius: 100, padding: "2px 7px", fontWeight: 700 }}>Off</span>}
+                          {!c.is_active && <span style={{ fontSize: 7, color: RED, background: "rgba(239,68,68,0.08)", borderRadius: 100, padding: "2px 7px", fontWeight: 700 }}>{t("sad.off")}</span>}
                         </div>
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>{c.brand_name} · {c._total} clients</div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>{c.brand_name} · {fillTpl(t("sad.x_clients"), { n: c._total })}</div>
                       </div>
                       <div style={{ display: "flex", gap: 16, flexShrink: 0 }}>
-                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: BLUE }}>{c._mrr}€</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>MRR</div></div>
-                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: c._ret >= 80 ? G : ORANGE }}>{c._ret}%</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>RET</div></div>
+                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: BLUE }}>{c._mrr}€</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>{t("sad.mrr_short")}</div></div>
+                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: c._ret >= 80 ? G : ORANGE }}>{c._ret}%</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>{t("sad.ret_short")}</div></div>
                       </div>
                     </div>
                     {expandedCoach === c.id && (
                       <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.04)", animation: "cF 0.2s ease" }}>
                         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 12 }}>
-                          <span>Inscrit {new Date(c.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span>
-                          <span>· {c._progs} programmes</span>
-                          <span>· LTV {c._ltv.toLocaleString()} €</span>
+                          <span>{t("sad.registered_on")} {new Date(c.created_at).toLocaleDateString(intlLocale(), { day: "numeric", month: "long", year: "numeric" })}</span>
+                          <span>· {fillTpl(t("sad.x_programs"), { n: c._progs })}</span>
+                          <span>· {t("sad.ltv")} {c._ltv.toLocaleString()} €</span>
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); toggleCoach(c); }} style={{ padding: "7px 14px", borderRadius: 10, fontSize: 10, fontWeight: 700, background: c.is_active ? "rgba(239,68,68,0.06)" : BLUE_DIM, border: `1px solid ${c.is_active ? "rgba(239,68,68,0.2)" : BLUE_BORDER}`, color: c.is_active ? RED : BLUE, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>
-                          {c.is_active ? "Desactiver" : "Activer"}
+                          {c.is_active ? t("sad.deactivate") : t("sad.activate")}
                         </button>
                         {c._cls.length > 0 && (
                           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -354,7 +364,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                               return (
                                 <div key={cl.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.015)", borderRadius: 8, fontSize: 11 }}>
                                   <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>{cl.full_name || cl.email}</span>
-                                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: dl !== null ? (dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.3)") : "rgba(255,255,255,0.2)" }}>{dl !== null ? (dl <= 0 ? "Expire" : dl + "j") : "—"}</span>
+                                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: dl !== null ? (dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.3)") : "rgba(255,255,255,0.2)" }}>{dl !== null ? (dl <= 0 ? t("sad.expired") : dl + t("sad.days_short")) : "—"}</span>
                                 </div>
                               );
                             })}
@@ -371,12 +381,12 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             {detailView === "growth" && (
               <div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
-                  {[{ l: "Prevision 3m", v: (mrr * 3).toLocaleString() + " €" }, { l: "Prevision 6m", v: Math.round(mrr * 6 * ret / 100).toLocaleString() + " €" }, { l: "Prevision 12m", v: Math.round(mrr * 12 * Math.pow(ret / 100, 2)).toLocaleString() + " €" }].map((s, i) => (
+                  {[{ l: t("sad.forecast_3m"), v: (mrr * 3).toLocaleString() + " €" }, { l: t("sad.forecast_6m"), v: Math.round(mrr * 6 * ret / 100).toLocaleString() + " €" }, { l: t("sad.forecast_12m"), v: Math.round(mrr * 12 * Math.pow(ret / 100, 2)).toLocaleString() + " €" }].map((s, i) => (
                     <div key={i} style={{ ...card, textAlign: "center", cursor: "default", padding: 20 }}><div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: "#fff" }}>{s.v}</div><div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 8, fontWeight: 700 }}>{s.l}</div></div>
                   ))}
                 </div>
                 <div style={{ ...card, cursor: "default", marginBottom: 14 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Clients par coach</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>{t("sad.clients_per_coach")}</div>
                   {enriched.filter(c => c._total > 0).map(c => {
                     const mx = Math.max(1, ...enriched.map(e => e._total));
                     return (
@@ -388,7 +398,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                     );
                   })}
                 </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Base : {ret}% retention · {active.length} coachs · {newCl30} nouveaux clients 30j</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{fillTpl(t("sad.growth_base"), { ret, coachs: active.length, n: newCl30 })}</div>
               </div>
             )}
 
@@ -398,8 +408,8 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                 {churn.length === 0 ? (
                   <div style={{ ...card, cursor: "default", textAlign: "center", padding: 40 }}>
                     <Ic name="check" size={32} color={G} />
-                    <div style={{ fontSize: 16, fontWeight: 800, color: G, marginTop: 12 }}>Aucun risque de churn</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>Tous les coachs ont un score sante superieur a 40.</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: G, marginTop: 12 }}>{t("sad.no_churn_risk")}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>{t("sad.no_churn_desc")}</div>
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -409,9 +419,9 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                           <Ring score={c._health} size={48} />
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{c.full_name}</div>
-                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>{c._total} clients · {c._mrr}€ MRR · {c._progs} programmes</div>
+                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>{fillTpl(t("sad.churn_line"), { n: c._total, mrr: c._mrr, p: c._progs })}</div>
                           </div>
-                          <span style={{ fontSize: 9, fontWeight: 800, color: RED, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 100, padding: "4px 12px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Risque</span>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: RED, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 100, padding: "4px 12px", letterSpacing: "0.5px", textTransform: "uppercase" }}>{t("sad.risk_badge")}</span>
                         </div>
                       </div>
                     ))}

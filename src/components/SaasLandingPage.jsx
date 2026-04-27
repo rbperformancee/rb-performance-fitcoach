@@ -1,5 +1,6 @@
 import React, { useState, lazy, Suspense } from "react";
 import { LOGO_B64 } from "../utils/logo";
+import { useT } from "../lib/i18n";
 
 // HeroBackground charge en lazy pour eviter d'alourdir le bundle principal
 // avec three.js (~130KB gzipped). Fallback : rien, la hero reste lisible sans WebGL.
@@ -16,22 +17,22 @@ const REDUCE_MOTION =
 const G = "#02d1ba";
 const GOLD = "#f5c842";
 
-const FEATURES = [
-  { title: "Dashboard coach premium", desc: "Vue d'ensemble de tous tes clients en temps reel. Score business, MRR, retention, alertes — tout sur un ecran.", icon: "chart" },
-  { title: "Fiche client complete", desc: "Poids, nutrition, pas, sommeil, seances, RPE, progression — tu vois TOUT sur chaque athlete sans rien demander.", icon: "users" },
-  { title: "Scanner code-barre", desc: "Tes clients scannent n'importe quel produit et les macros sont loguees automatiquement. Base de 3M+ produits.", icon: "scan" },
-  { title: "IA Vocal nutrition", desc: "Ton client dit 'un bol de pates au saumon' et l'IA analyse les macros en 2 secondes. Precision CIQUAL.", icon: "mic" },
-  { title: "Gestion abonnements", desc: "Dates de debut, duree, expiration, alertes renouvellement. Tu sais exactement ou en est chaque client.", icon: "calendar" },
-  { title: "Messages en temps reel", desc: "Chat integre coach-client. Tes messages arrivent directement dans l'app de ton client.", icon: "message" },
-  { title: "Programmes personnalises", desc: "Upload tes programmes HTML. Chaque client recoit son programme unique avec suivi de progression.", icon: "doc" },
-  { title: "White label", desc: "Ton nom, ta marque, ta couleur. Tes clients voient TON branding, pas le notre.", icon: "brand" },
+const FEATURES_KEYS = [
+  { titleKey: "sls.f1_title", descKey: "sls.f1_desc", icon: "chart" },
+  { titleKey: "sls.f2_title", descKey: "sls.f2_desc", icon: "users" },
+  { titleKey: "sls.f3_title", descKey: "sls.f3_desc", icon: "scan" },
+  { titleKey: "sls.f4_title", descKey: "sls.f4_desc", icon: "mic" },
+  { titleKey: "sls.f5_title", descKey: "sls.f5_desc", icon: "calendar" },
+  { titleKey: "sls.f6_title", descKey: "sls.f6_desc", icon: "message" },
+  { titleKey: "sls.f7_title", descKey: "sls.f7_desc", icon: "doc" },
+  { titleKey: "sls.f8_title", descKey: "sls.f8_desc", icon: "brand" },
 ];
 
-const STATS = [
-  { value: "456", label: "Aliments dans la base locale" },
-  { value: "3M+", label: "Produits scannables" },
-  { value: "21", label: "Tables de donnees client" },
-  { value: "<2s", label: "Analyse IA repas" },
+const STATS_KEYS = [
+  { value: "456", labelKey: "sls.stat1" },
+  { value: "3M+", labelKey: "sls.stat2" },
+  { value: "21", labelKey: "sls.stat3" },
+  { value: "<2s", labelKey: "sls.stat4" },
 ];
 
 function Ic({ name, size = 24 }) {
@@ -52,7 +53,10 @@ function Ic({ name, size = 24 }) {
 }
 
 export default function SaasLandingPage({ onSignup, onBack }) {
+  const t = useT();
   const [tab, setTab] = useState("pro");
+  const PRO_FEATURES = ["sls.pro_f1", "sls.pro_f2", "sls.pro_f3", "sls.pro_f4", "sls.pro_f5", "sls.pro_f6"];
+  const ELITE_FEATURES = ["sls.elite_f1", "sls.elite_f2", "sls.elite_f3", "sls.elite_f4", "sls.elite_f5", "sls.elite_f6"];
 
   return (
     <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", overflowX: "hidden" }}>
@@ -74,12 +78,12 @@ export default function SaasLandingPage({ onSignup, onBack }) {
             <img src={LOGO_B64} alt="" style={{ width: 40, height: 40, borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)" }} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 900, letterSpacing: "-0.3px" }}>RB <span style={{ color: G }}>Perform</span></div>
-              <div style={{ fontSize: 8, letterSpacing: "3px", color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 700 }}>Pour les coachs</div>
+              <div style={{ fontSize: 8, letterSpacing: "3px", color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 700 }}>{t("sls.for_coaches")}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
-            {onBack && <button onClick={onBack} style={{ padding: "9px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Je suis client</button>}
-            <button onClick={onSignup} style={{ padding: "9px 18px", background: G, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.3px" }}>S'inscrire</button>
+            {onBack && <button onClick={onBack} style={{ padding: "9px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{t("sls.iam_client")}</button>}
+            <button onClick={onSignup} style={{ padding: "9px 18px", background: G, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.3px" }}>{t("sls.signup")}</button>
           </div>
         </div>
 
@@ -108,7 +112,7 @@ export default function SaasLandingPage({ onSignup, onBack }) {
               color: "#00C9A7", textTransform: "uppercase",
               marginBottom: 20, margin: "0 0 20px",
             }}>
-              ✦  Alerte churn predictive · 0% commission
+              {t("sls.eyebrow")}
             </p>
 
             <h1 style={{
@@ -129,8 +133,8 @@ export default function SaasLandingPage({ onSignup, onBack }) {
               maxWidth: 480, margin: "0 auto 40px",
               lineHeight: 1.65,
             }}>
-              Tu sais quel client va partir.<br />
-              Avant qu'il parte.
+              {t("sls.hero_l1")}<br />
+              {t("sls.hero_l2")}
             </p>
 
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
@@ -142,7 +146,7 @@ export default function SaasLandingPage({ onSignup, onBack }) {
                 letterSpacing: "0.02em",
                 fontFamily: "inherit",
               }}>
-                Rejoindre les Founding Coachs →
+                {t("sls.cta_founding")}
               </button>
               <button onClick={onSignup} style={{
                 padding: "14px 28px",
@@ -153,7 +157,7 @@ export default function SaasLandingPage({ onSignup, onBack }) {
                 cursor: "pointer",
                 fontFamily: "inherit",
               }}>
-                Voir la demo
+                {t("sls.cta_demo")}
               </button>
             </div>
           </div>
@@ -161,10 +165,10 @@ export default function SaasLandingPage({ onSignup, onBack }) {
 
         {/* ===== STATS BAR ===== */}
         <div style={{ maxWidth: 800, margin: "0 auto 80px", display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap", padding: "0 24px", animation: "slFade 0.6s ease 0.2s both" }}>
-          {STATS.map((s, i) => (
+          {STATS_KEYS.map((s, i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: G, letterSpacing: "-1px" }}>{s.value}</div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600, marginTop: 4 }}>{s.label}</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600, marginTop: 4 }}>{t(s.labelKey)}</div>
             </div>
           ))}
         </div>
@@ -172,11 +176,11 @@ export default function SaasLandingPage({ onSignup, onBack }) {
         {/* ===== FEATURES GRID ===== */}
         <div style={{ maxWidth: 1000, margin: "0 auto 80px", padding: "0 24px" }}>
           <div style={{ textAlign: "center", marginBottom: 48, animation: "slFade 0.6s ease 0.3s both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", fontWeight: 700, marginBottom: 12 }}>Fonctionnalites</div>
-            <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", margin: 0 }}>Tout est inclus<span style={{ color: G }}>.</span></h2>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", fontWeight: 700, marginBottom: 12 }}>{t("sls.features_label")}</div>
+            <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", margin: 0 }}>{t("sls.features_title")}<span style={{ color: G }}>.</span></h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
-            {FEATURES.map((f, i) => (
+            {FEATURES_KEYS.map((f, i) => (
               <div key={i} className="sl-feature" style={{
                 background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "22px 20px",
                 transition: "all 0.2s", cursor: "default", animation: `slFade ${0.3 + i * 0.05}s ease both`,
@@ -184,8 +188,8 @@ export default function SaasLandingPage({ onSignup, onBack }) {
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: G, marginBottom: 14 }}>
                   <Ic name={f.icon} size={20} />
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 6, letterSpacing: "-0.3px" }}>{f.title}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{f.desc}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 6, letterSpacing: "-0.3px" }}>{t(f.titleKey)}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{t(f.descKey)}</div>
               </div>
             ))}
           </div>
@@ -194,8 +198,8 @@ export default function SaasLandingPage({ onSignup, onBack }) {
         {/* ===== PRICING ===== */}
         <div style={{ maxWidth: 800, margin: "0 auto 80px", padding: "0 24px" }}>
           <div style={{ textAlign: "center", marginBottom: 48, animation: "slFade 0.6s ease 0.4s both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", fontWeight: 700, marginBottom: 12 }}>Tarifs</div>
-            <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", margin: 0 }}>Simple et transparent<span style={{ color: G }}>.</span></h2>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", fontWeight: 700, marginBottom: 12 }}>{t("sls.pricing_label")}</div>
+            <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", margin: 0 }}>{t("sls.pricing_title")}<span style={{ color: G }}>.</span></h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             {/* Plan Pro */}
@@ -203,21 +207,21 @@ export default function SaasLandingPage({ onSignup, onBack }) {
               background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 22, padding: "28px 24px",
               position: "relative", overflow: "hidden",
             }}>
-              <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontWeight: 700, marginBottom: 10 }}>Pro</div>
+              <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontWeight: 700, marginBottom: 10 }}>{t("sls.plan_pro")}</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
                 <span style={{ fontSize: 48, fontWeight: 100, color: "#fff", letterSpacing: "-3px" }}>299</span>
-                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}>€ / mois</span>
+                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}>{t("sls.per_month")}</span>
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>Jusqu'a 30 clients</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>{t("sls.up_to_30")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-                {["Dashboard coach complet", "Suivi nutrition + scanner", "IA vocal analyse repas", "Messages temps reel", "Gestion abonnements", "White label"].map((f, i) => (
+                {PRO_FEATURES.map((fkey, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
                     <Ic name="check" size={14} />
-                    {f}
+                    {t(fkey)}
                   </div>
                 ))}
               </div>
-              <button onClick={onSignup} style={{ width: "100%", padding: 15, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Commencer</button>
+              <button onClick={onSignup} style={{ width: "100%", padding: 15, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{t("sls.start")}</button>
             </div>
 
             {/* Plan Elite */}
@@ -227,23 +231,23 @@ export default function SaasLandingPage({ onSignup, onBack }) {
             }}>
               <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, background: "radial-gradient(circle, rgba(2,209,186,0.15), transparent 70%)", pointerEvents: "none" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: G, fontWeight: 700 }}>Elite</div>
-                <div style={{ fontSize: 8, fontWeight: 800, color: G, background: "rgba(2,209,186,0.12)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 100, padding: "3px 10px", letterSpacing: "1px" }}>POPULAIRE</div>
+                <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: G, fontWeight: 700 }}>{t("sls.plan_elite")}</div>
+                <div style={{ fontSize: 8, fontWeight: 800, color: G, background: "rgba(2,209,186,0.12)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 100, padding: "3px 10px", letterSpacing: "1px" }}>{t("sls.popular")}</div>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
                 <span style={{ fontSize: 48, fontWeight: 100, color: G, letterSpacing: "-3px" }}>499</span>
-                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}>€ / mois</span>
+                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}>{t("sls.per_month")}</span>
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>Clients illimites</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>{t("sls.unlimited")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-                {["Tout le plan Pro", "Clients illimites", "Super Admin analytics", "Support prioritaire", "Seance Vivante (coaching live)", "Onboarding personnalise"].map((f, i) => (
+                {ELITE_FEATURES.map((fkey, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
                     <div style={{ color: G }}><Ic name="check" size={14} /></div>
-                    {f}
+                    {t(fkey)}
                   </div>
                 ))}
               </div>
-              <button onClick={onSignup} style={{ width: "100%", padding: 15, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 14, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px", boxShadow: "0 8px 28px rgba(2,209,186,0.3)" }}>Commencer</button>
+              <button onClick={onSignup} style={{ width: "100%", padding: 15, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 14, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px", boxShadow: "0 8px 28px rgba(2,209,186,0.3)" }}>{t("sls.start")}</button>
             </div>
           </div>
         </div>
@@ -251,20 +255,20 @@ export default function SaasLandingPage({ onSignup, onBack }) {
         {/* ===== FINAL CTA ===== */}
         <div style={{ maxWidth: 700, margin: "0 auto 80px", padding: "60px 24px", textAlign: "center", animation: "slFade 0.6s ease 0.5s both" }}>
           <h2 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 16 }}>
-            Pret a scaler<br />ton coaching<span style={{ color: G }}>?</span>
+            {t("sls.final_l1")}<br />{t("sls.final_l2")}<span style={{ color: G }}>?</span>
           </h2>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 32, lineHeight: 1.6 }}>
-            Rejoins les coachs qui utilisent RB Perform pour gerer leurs clients, automatiser leur suivi, et developper leur business.
+            {t("sls.final_desc")}
           </p>
           <button onClick={onSignup} style={{ padding: "18px 40px", background: `linear-gradient(135deg, ${G}, #0891b2)`, color: "#000", border: "none", borderRadius: 16, fontSize: 16, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px", boxShadow: "0 12px 48px rgba(2,209,186,0.35)" }}>
-            Creer mon compte coach →
+            {t("sls.create_account")}
           </button>
         </div>
 
         {/* ===== FOOTER ===== */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", padding: "28px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>
-            RB Perform · SaaS de coaching sportif premium · SSL
+            {t("sls.footer")}
           </div>
         </div>
       </div>

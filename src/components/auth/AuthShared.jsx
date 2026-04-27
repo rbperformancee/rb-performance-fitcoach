@@ -1,20 +1,23 @@
 import React from "react";
+import { useT } from "../../lib/i18n";
 
 export const G = "#02d1ba";
 
-export function AuthVisual({ quote = "Le systeme qui transforme\nchaque coach en CEO." }) {
+export function AuthVisual({ quote }) {
+  const t = useT();
+  const text = quote || t("as.default_quote");
   return (
     <div className="auth-visual">
-      <div className="auth-logo" aria-label="RB Perform">
+      <div className="auth-logo" aria-label={t("as.logo_aria")}>
         <svg viewBox="170 50 180 410" width="20" height="44" aria-hidden="true">
           <polygon points="300,60 180,280 248,280 210,450 340,220 268,220 300,60" fill={G} />
         </svg>
         <span>RB<span style={{ color: G }}>PERFORM</span></span>
       </div>
       <div className="auth-quote">
-        {quote.split("\n").map((l, i) => <React.Fragment key={i}>{l}<br /></React.Fragment>)}
+        {text.split("\n").map((l, i) => <React.Fragment key={i}>{l}<br /></React.Fragment>)}
       </div>
-      <div className="auth-version">Beta · Acces limite</div>
+      <div className="auth-version">{t("as.beta_label")}</div>
     </div>
   );
 }

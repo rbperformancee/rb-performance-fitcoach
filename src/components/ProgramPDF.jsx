@@ -1,15 +1,29 @@
 import React from 'react';
+import { useT, t as tStatic, getLocale } from '../lib/i18n';
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
+
+const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
 export function exportProgramPDF(client, programme) {
-  const name = client?.full_name || client?.email?.split('@')[0] || 'Client';
-  const date = new Date().toLocaleDateString('fr-FR');
+  const name = client?.full_name || client?.email?.split('@')[0] || tStatic('ppdf.client_fallback');
+  const date = new Date().toLocaleDateString(intlLocale());
   const html = programme?.html_content || '';
-  
+  const lang = getLocale() === 'en' ? 'en' : 'fr';
+  const titleTxt = fillTpl(tStatic('ppdf.doc_title'), { name });
+  const subtitle = tStatic('ppdf.subtitle');
+  const generatedOn = fillTpl(tStatic('ppdf.generated_on'), { date });
+  const noProgram = tStatic('ppdf.no_program');
+
   const page = `<!DOCTYPE html>
-<html lang="fr">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8"/>
-<title>Programme ${name} — RB PERFORM</title>
+<title>${titleTxt}</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family: -apple-system, Arial, sans-serif; background: #fff; color: #111; }
@@ -32,15 +46,15 @@ export function exportProgramPDF(client, programme) {
 <div class="header">
   <div class="header-left">
     <h1>RB <span>PERFORM</span></h1>
-    <p>PROGRAMME D'ENTRAÎNEMENT PERSONNALISÉ</p>
+    <p>${subtitle}</p>
   </div>
   <div class="header-right">
     <div class="client-name">${name}</div>
-    <div class="date">Généré le ${date}</div>
+    <div class="date">${generatedOn}</div>
   </div>
 </div>
 <div class="accent-bar"></div>
-<div class="content">${html || '<p style="color:#666;text-align:center;padding:40px">Aucun programme disponible</p>'}</div>
+<div class="content">${html || `<p style="color:#666;text-align:center;padding:40px">${noProgram}</p>`}</div>
 <div class="watermark">RB PERFORM · SIRET 99063780300018 · rb.performancee@gmail.com</div>
 </body>
 </html>`;
@@ -57,6 +71,7 @@ export function exportProgramPDF(client, programme) {
 }
 
 export default function ProgramPDFButton({ client, programme }) {
+  const t = useT();
   if (!programme?.html_content) return null;
   return (
     <button
@@ -72,7 +87,7 @@ export default function ProgramPDFButton({ client, programme }) {
       onMouseEnter={e => e.currentTarget.style.background = 'rgba(2,209,186,0.18)'}
       onMouseLeave={e => e.currentTarget.style.background = 'rgba(2,209,186,0.1)'}
     >
-      📄 Exporter PDF
+      📄 {t('ppdf.btn_export')}
     </button>
   );
 }

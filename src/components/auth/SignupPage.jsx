@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { AuthVisual, AuthStyles, GoogleIcon } from "./AuthShared";
+import { useT } from "../../lib/i18n";
 
 /**
  * SignupPage — inscription coach email/password.
@@ -11,6 +12,7 @@ import { AuthVisual, AuthStyles, GoogleIcon } from "./AuthShared";
  * coach sache qu'il doit verifier sa boite.
  */
 export default function SignupPage() {
+  const t = useT();
   const [firstName, setFirstName] = useState("");
   const [lastName,  setLastName]  = useState("");
   const [email,     setEmail]     = useState("");
@@ -31,25 +33,25 @@ export default function SignupPage() {
     if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) s++;
     return s;
   }, [password]);
-  const strengthLabel = ["", "Faible", "Moyen", "Solide"][strength];
+  const strengthLabel = ["", t("sn.strength_weak"), t("sn.strength_medium"), t("sn.strength_strong")][strength];
 
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
     if (!firstName.trim() || !lastName.trim()) {
-      setError("Prenom et nom requis."); return;
+      setError(t("sn.err_first_last_required")); return;
     }
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email.trim())) {
-      setError("Email invalide."); return;
+      setError(t("sn.err_invalid_email")); return;
     }
     if (password.length < 8) {
-      setError("Mot de passe: minimum 8 caracteres."); return;
+      setError(t("sn.err_pw_min")); return;
     }
     if (password !== confirm) {
-      setError("Les mots de passe ne correspondent pas."); return;
+      setError(t("sn.err_pw_mismatch")); return;
     }
     if (!accepted) {
-      setError("Accepte les CGU pour continuer."); return;
+      setError(t("sn.err_accept_terms")); return;
     }
 
     setLoading(true);
@@ -77,7 +79,7 @@ export default function SignupPage() {
       // Session active immediatement → dashboard
       window.location.href = "/";
     } catch (e) {
-      setError("Erreur d'inscription. Reessaie.");
+      setError(t("sn.err_signup_retry"));
       setLoading(false);
     }
   }
@@ -92,7 +94,7 @@ export default function SignupPage() {
       });
       if (error) { setError(error.message); setGoogleLoading(false); }
     } catch (e) {
-      setError("Google indisponible pour le moment.");
+      setError(t("sn.err_google_unavailable"));
       setGoogleLoading(false);
     }
   }
@@ -111,15 +113,15 @@ export default function SignupPage() {
                 <polyline points="22,6 12,13 2,6" />
               </svg>
             </div>
-            <div className="auth-confirm-title">Verifie ta boite mail.</div>
+            <div className="auth-confirm-title">{t("sn.confirm_title")}</div>
             <div className="auth-confirm-sub">
-              Un lien de confirmation a ete envoye a<br />
+              {t("sn.confirm_line1")}<br />
               <span className="auth-confirm-email">{sentEmail}</span>.
               <br /><br />
-              Clique sur le lien pour activer ton compte — la page d'inscription peut etre fermee.
+              {t("sn.confirm_line2")}
             </div>
             <div className="auth-foot">
-              Deja confirme ? <a href="/login">Se connecter →</a>
+              {t("sn.already_confirmed")} <a href="/login">{t("sn.signin_link")}</a>
             </div>
           </div>
         </div>
@@ -133,57 +135,57 @@ export default function SignupPage() {
       <AuthVisual />
 
       <div className="auth-form-panel">
-        <h1 className="auth-title">Creer mon compte</h1>
-        <p className="auth-subtitle accent">Rejoins les 30 Founding Coachs. 199€/mois verrouillé à vie.</p>
+        <h1 className="auth-title">{t("sn.title")}</h1>
+        <p className="auth-subtitle accent">{t("sn.subtitle")}</p>
 
         <form onSubmit={onSubmit} noValidate>
           <div style={{ display: "flex", gap: 10 }}>
             <div className="auth-field" style={{ flex: 1 }}>
-              <div className="auth-label-row"><label className="auth-label">Prenom</label></div>
+              <div className="auth-label-row"><label className="auth-label">{t("sn.first_name_label")}</label></div>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="auth-input"
-                placeholder="Rayan"
+                placeholder={t("sn.first_name_placeholder")}
                 autoComplete="given-name"
                 autoFocus
               />
             </div>
             <div className="auth-field" style={{ flex: 1 }}>
-              <div className="auth-label-row"><label className="auth-label">Nom</label></div>
+              <div className="auth-label-row"><label className="auth-label">{t("sn.last_name_label")}</label></div>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="auth-input"
-                placeholder="Bonte"
+                placeholder={t("sn.last_name_placeholder")}
                 autoComplete="family-name"
               />
             </div>
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">Email</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("sn.email_label")}</label></div>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="auth-input"
-              placeholder="ton@email.com"
+              placeholder={t("sn.email_placeholder")}
               autoComplete="email"
               required
             />
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">Mot de passe</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("sn.password_label")}</label></div>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="auth-input"
-              placeholder="Au moins 8 caracteres"
+              placeholder={t("sn.password_placeholder")}
               autoComplete="new-password"
               required
             />
@@ -194,19 +196,19 @@ export default function SignupPage() {
                   <div className={`auth-strength-bar ${strength >= 2 ? "on-" + strength : ""}`} />
                   <div className={`auth-strength-bar ${strength >= 3 ? "on-" + strength : ""}`} />
                 </div>
-                <div className="auth-strength-label">Force du mot de passe : {strengthLabel || "…"}</div>
+                <div className="auth-strength-label">{t("sn.strength_prefix")} {strengthLabel || "…"}</div>
               </>
             )}
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">Confirme</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("sn.confirm_label")}</label></div>
             <input
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               className="auth-input"
-              placeholder="Confirme ton mot de passe"
+              placeholder={t("sn.confirm_placeholder")}
               autoComplete="new-password"
               required
             />
@@ -220,26 +222,26 @@ export default function SignupPage() {
               onChange={(e) => setAccepted(e.target.checked)}
             />
             <span>
-              J'accepte les <a href="/legal.html#cgu" target="_blank" rel="noopener">CGU</a> et la <a href="/legal.html#rgpd" target="_blank" rel="noopener">politique de confidentialite</a>.
+              {t("sn.terms_part1")} <a href="/legal.html#cgu" target="_blank" rel="noopener">{t("sn.terms_cgu")}</a> {t("sn.terms_part2")} <a href="/legal.html#rgpd" target="_blank" rel="noopener">{t("sn.terms_privacy")}</a>.
             </span>
           </label>
 
           <button type="submit" className="auth-btn" disabled={loading || googleLoading} style={{ marginTop: 20 }}>
-            {loading ? "Creation du compte..." : "CREER MON COMPTE"}
+            {loading ? t("sn.creating") : t("sn.create_account_btn")}
           </button>
 
           {error && <div className="auth-error">{error}</div>}
         </form>
 
-        <div className="auth-sep">ou</div>
+        <div className="auth-sep">{t("sn.separator_or")}</div>
 
         <button onClick={signupWithGoogle} className="auth-btn-ghost" disabled={loading || googleLoading}>
           <GoogleIcon />
-          {googleLoading ? "Redirection..." : "Continuer avec Google"}
+          {googleLoading ? t("sn.redirecting") : t("sn.continue_with_google")}
         </button>
 
         <div className="auth-foot">
-          Deja un compte ? <a href="/login">Se connecter →</a>
+          {t("sn.already_account")} <a href="/login">{t("sn.signin_link")}</a>
         </div>
       </div>
     </div>

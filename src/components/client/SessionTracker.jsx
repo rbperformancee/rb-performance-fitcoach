@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
+import { useT } from "../../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * SessionTracker — interface plein ecran d'enregistrement de seance.
@@ -18,14 +25,15 @@ import { supabase } from "../../lib/supabase";
  */
 
 const DEFAULT_EXERCISES = [
-  { name: "Developpe couche", sets: 4, reps: "8", target_kg: null },
-  { name: "Dips lestes",       sets: 3, reps: "10", target_kg: null },
-  { name: "Ecarte halteres",   sets: 4, reps: "12", target_kg: null },
-  { name: "Elevations laterales", sets: 4, reps: "15", target_kg: null },
-  { name: "Extensions triceps", sets: 3, reps: "12", target_kg: null },
+  { nameKey: "stk.ex_bench_press",     sets: 4, reps: "8",  target_kg: null },
+  { nameKey: "stk.ex_weighted_dips",   sets: 3, reps: "10", target_kg: null },
+  { nameKey: "stk.ex_dumbbell_fly",    sets: 4, reps: "12", target_kg: null },
+  { nameKey: "stk.ex_lateral_raises",  sets: 4, reps: "15", target_kg: null },
+  { nameKey: "stk.ex_triceps_ext",     sets: 3, reps: "12", target_kg: null },
 ];
 
 export default function SessionTracker({ client, programme, accent, onClose }) {
+  const t = useT();
   const [sessionId, setSessionId] = useState(null);
   const [exercises]   = useState(DEFAULT_EXERCISES);
   const [exIdx, setExIdx] = useState(0);
@@ -48,7 +56,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
           .insert({
             client_id: client.id,
             programme_id: programme?.id || null,
-            seance_nom: programme?.programme_name || "Seance",
+            seance_nom: programme?.programme_name || t("stk.session_default"),
             started_at: new Date().toISOString(),
             status: "active",
             sets_total: exercises.reduce((sum, ex) => sum + ex.sets, 0),
@@ -59,7 +67,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
         if (!cancelled) setSessionId(data.id);
       } catch (e) {
         console.warn("[SessionTracker] init", e);
-        if (!cancelled) setError("Erreur de demarrage");
+        if (!cancelled) setError(t("stk.startup_error"));
       }
     })();
     return () => { cancelled = true; };
@@ -84,7 +92,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
     try {
       await supabase.from("session_sets").insert({
         session_id: sessionId,
-        exercice_nom: ex.name,
+        exercice_nom: t(ex.nameKey),
         exercice_index: exIdx,
         numero_set: setIdx + 1,
         charge_kg: w,
@@ -128,17 +136,17 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
         <div style={{ textAlign: "center", padding: 40, animation: "capFade .4s ease both" }}>
           <div style={{ fontSize: 56, marginBottom: 14 }}>🎉</div>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 900, letterSpacing: "-1px", color: "#fff", marginBottom: 10 }}>
-            Seance terminee<span style={{ color: accent }}>.</span>
+            {t("stk.session_done")}<span style={{ color: accent }}>.</span>
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.6, marginBottom: 28 }}>
-            {Object.keys(setsDone).length} sets en {fmtChrono(chrono)}<br />
-            RPE moyen : <span style={{ color: accent, fontFamily: "'JetBrains Mono', monospace" }}>{rpe}/10</span>
+            {fillTpl(t("stk.sets_in_time"), { n: Object.keys(setsDone).length, time: fmtChrono(chrono) })}<br />
+            {t("stk.avg_rpe")} <span style={{ color: accent, fontFamily: "'JetBrains Mono', monospace" }}>{rpe}/10</span>
           </div>
           <button
             onClick={onClose}
             style={{ background: accent, color: "#000", border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 12, fontWeight: 900, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Syne', sans-serif", cursor: "pointer", boxShadow: `0 16px 40px ${accent}35` }}
           >
-            Retour →
+            {t("stk.back")}
           </button>
         </div>
       </div>
@@ -150,11 +158,11 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
     return (
       <div style={overlay}>
         <div style={{ padding: 32, maxWidth: 380, textAlign: "center" }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 14 }}>RPE final</div>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 14 }}>{t("stk.rpe_final")}</div>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 8 }}>
-            Comment etait ta seance ?
+            {t("stk.how_was_session")}
           </div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", marginBottom: 32 }}>1 = facile · 10 = je donne tout</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", marginBottom: 32 }}>{t("stk.rpe_scale")}</div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, marginBottom: 32 }}>
             {[1,2,3,4,5,6,7,8,9,10].map((n) => (
@@ -179,7 +187,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
             onClick={finishSession}
             style={{ width: "100%", padding: "14px 20px", background: accent, color: "#000", border: "none", borderRadius: 12, fontFamily: "'Syne', sans-serif", fontSize: 13, fontWeight: 900, letterSpacing: ".1em", textTransform: "uppercase", cursor: "pointer", boxShadow: `0 16px 40px ${accent}35` }}
           >
-            Terminer la seance
+            {t("stk.finish_session")}
           </button>
         </div>
       </div>
@@ -191,7 +199,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
     <div style={overlay}>
       {/* Topbar */}
       <div style={topbar}>
-        <button onClick={onClose} style={closeBtn} aria-label="Quitter">×</button>
+        <button onClick={onClose} style={closeBtn} aria-label={t("stk.quit")}>×</button>
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
           {fmtChrono(chrono)}
         </div>
@@ -205,13 +213,13 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
       {/* Exercice */}
       <div style={{ flex: 1, padding: "30px 22px", overflowY: "auto" }}>
         <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 8 }}>
-          Exercice en cours
+          {t("stk.current_exercise")}
         </div>
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 6, lineHeight: 1.1 }}>
-          {ex.name}
+          {t(ex.nameKey)}
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", marginBottom: 28 }}>
-          {ex.sets} series x {ex.reps} reps
+          {fillTpl(t("stk.sets_x_reps"), { sets: ex.sets, reps: ex.reps })}
         </div>
 
         {/* Sets */}
@@ -226,6 +234,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
                 logged={logged}
                 onSubmit={(w, r) => logSet(setIdx, w, r)}
                 accent={accent}
+                t={t}
               />
             );
           })}
@@ -238,14 +247,14 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
           ←
         </button>
         <button onClick={nextExercise} style={{ ...navBtn, flex: 1, background: accent, color: "#000", fontWeight: 800 }}>
-          {exIdx + 1 < exercises.length ? "Exercice suivant →" : "Terminer la seance →"}
+          {exIdx + 1 < exercises.length ? t("stk.next_exercise") : t("stk.finish_session_arrow")}
         </button>
       </div>
     </div>
   );
 }
 
-function SetRow({ setNum, logged, onSubmit, accent }) {
+function SetRow({ setNum, logged, onSubmit, accent, t }) {
   const [w, setW] = useState(logged?.weight ?? "");
   const [r, setR] = useState(logged?.reps ?? "");
 
@@ -261,7 +270,7 @@ function SetRow({ setNum, logged, onSubmit, accent }) {
       </div>
       <input
         type="text" inputMode="decimal"
-        placeholder="kg"
+        placeholder={t ? t("stk.kg_placeholder") : "kg"}
         value={w}
         onChange={(e) => setW(e.target.value)}
         style={cellInput}
@@ -269,7 +278,7 @@ function SetRow({ setNum, logged, onSubmit, accent }) {
       <span style={{ color: "rgba(255,255,255,.2)" }}>×</span>
       <input
         type="text" inputMode="numeric"
-        placeholder="reps"
+        placeholder={t ? t("stk.reps_placeholder") : "reps"}
         value={r}
         onChange={(e) => setR(e.target.value)}
         style={cellInput}

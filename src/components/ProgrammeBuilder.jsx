@@ -1,6 +1,13 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
+import { useT, t as tStatic } from "../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const G      = "#02d1ba";              // accent teal principal (raccord dashboard)
 const G_DIM  = "rgba(2,209,186,0.08)";
@@ -12,9 +19,19 @@ const DESKTOP_MIN = 1024;
 let _uid = Date.now();
 const uid = () => "id_" + (++_uid);
 
-const LEVELS = ["Debutant", "Intermediaire", "Avance", "Elite"];
+const LEVELS = [
+  { v: "Debutant", labelKey: "pb.lvl_beginner" },
+  { v: "Intermediaire", labelKey: "pb.lvl_intermediate" },
+  { v: "Avance", labelKey: "pb.lvl_advanced" },
+  { v: "Elite", labelKey: "pb.lvl_elite" },
+];
 const RIR_OPTS = ["—", "0", "1", "2", "3", "4", "5"];
-const GROUP_TYPES = ["", "Superset", "Bi-set", "Tri-set"];
+const GROUP_TYPE_KEYS = [
+  { v: "", labelKey: "pb.gtype_isolated" },
+  { v: "Superset", labelKey: "pb.gtype_superset" },
+  { v: "Bi-set", labelKey: "pb.gtype_biset" },
+  { v: "Tri-set", labelKey: "pb.gtype_triset" },
+];
 
 const emptyEx = () => ({
   id: uid(), name: "", reps: "", tempo: "", rir: "—", rest: "",
@@ -300,6 +317,7 @@ function useIsDesktop() {
 }
 
 export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, onWantInvoice }) {
+  const t = useT();
   const draftKey = "pb_draft_" + (client?.id || "new");
 
   // Load draft from localStorage
@@ -313,7 +331,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
   const draft = useRef(loadDraft());
 
   const [progName, setProgName] = useState(draft.current?.progName || "");
-  const [tagline, setTagline] = useState(draft.current?.tagline || "LA DISCIPLINE EST LA CLE DU SUCCES");
+  const [tagline, setTagline] = useState(draft.current?.tagline || tStatic("pb.default_tagline"));
   const [duration, setDuration] = useState(draft.current?.duration || "");
   const [objective, setObjective] = useState(draft.current?.objective || "");
   const [level, setLevel] = useState(draft.current?.level || "Intermediaire");
@@ -323,7 +341,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
   const [savedTick, setSavedTick] = useState(0);
   useEffect(() => {
     if (!lastSavedAt) return;
-    const id = setInterval(() => setSavedTick((t) => t + 1), 15000);
+    const id = setInterval(() => setSavedTick((tk) => tk + 1), 15000);
     return () => clearInterval(id);
   }, [lastSavedAt]);
   const [accessMode, setAccessMode] = useState(draft.current?.accessMode || "immediate");
@@ -372,29 +390,46 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
 
   // ===== GENERER HTML du programme =====
   const generateHTML = useCallback(() => {
-    const clientName = client?.full_name || "Athlete";
-    const pName = (progName || "PROGRAMME").toUpperCase();
+    const clientName = client?.full_name || t("pb.html_athlete");
+    const pName = (progName || t("pb.html_program_default")).toUpperCase();
     const totalSeances = weeks.reduce((a, w) => a + w.seances.length, 0);
+    const lblExercise = t("pb.html_exercise");
+    const lblExFallback = t("pb.html_exercise_fallback");
+    const lblReps = t("pb.html_reps");
+    const lblTempo = t("pb.html_tempo");
+    const lblRest = t("pb.html_rest");
+    const lblCharge = t("pb.html_charge");
+    const lblWeeks = t("pb.html_weeks");
+    const lblSessions = t("pb.html_sessions");
+    const lblDuration = t("pb.html_duration");
+    const lblObjective = t("pb.html_objective");
+    const lblWatchVideo = t("pb.html_watch_video");
+    const lblOfficialProg = t("pb.html_official_program");
+    const lblCoachingFallback = t("pb.html_coaching_fallback");
+    const lblWeek = t("pb.html_week");
+    const lblSession = t("pb.html_session");
+    const lblWarmup = t("pb.html_warmup");
+    const lblFinisher = t("pb.html_finisher");
 
     const exCardHTML = (ex, n) => {
       const noteHtml = ex.note ? `<div style="margin-top:6px;font-size:10px;color:#928e89;font-style:italic">${ex.note}</div>` : "";
       const motivHtml = ex.motivNote ? `<div style="margin-top:4px;font-size:10px;color:#c0392b;font-weight:600">${ex.motivNote}</div>` : "";
-      const chargeHtml = ex.charge ? `<div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Charge</span><span style="font-size:13px;font-weight:700;color:#c0392b">${ex.charge} kg</span></div>` : "";
+      const chargeHtml = ex.charge ? `<div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">${lblCharge}</span><span style="font-size:13px;font-weight:700;color:#c0392b">${ex.charge} kg</span></div>` : "";
       const vid = ex.vidUrl
         ? (ex.thumbUrl
           ? `<a href="${ex.vidUrl}" target="_blank" style="display:block;width:120px;height:68px;border-radius:6px;overflow:hidden;position:relative"><img src="${ex.thumbUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/></a>`
-          : `<a href="${ex.vidUrl}" target="_blank" style="color:#c0392b;font-size:10px;font-weight:700">Voir la video</a>`)
+          : `<a href="${ex.vidUrl}" target="_blank" style="color:#c0392b;font-size:10px;font-weight:700">${lblWatchVideo}</a>`)
         : "";
       return `<div style="background:#faf9f7;border-radius:10px;border:1px solid #e8e5e2;padding:14px 16px;margin-bottom:8px;display:flex;gap:14px;align-items:flex-start">
         <div style="flex:1">
-          <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#928e89;text-transform:uppercase;margin-bottom:4px">Exercice ${String(n).padStart(2, "0")}</div>
-          <div style="font-size:14px;font-weight:700;color:#1d1b1b;margin-bottom:8px">${ex.name || "[Exercice]"}</div>
+          <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#928e89;text-transform:uppercase;margin-bottom:4px">${lblExercise} ${String(n).padStart(2, "0")}</div>
+          <div style="font-size:14px;font-weight:700;color:#1d1b1b;margin-bottom:8px">${ex.name || lblExFallback}</div>
           <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Rep.</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.reps || "—"}</span></div>
-            <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Tempo</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.tempo || "—"}</span></div>
+            <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">${lblReps}</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.reps || "—"}</span></div>
+            <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">${lblTempo}</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.tempo || "—"}</span></div>
             <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">RIR</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.rir}</span></div>
             ${chargeHtml}
-            <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">Repos</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.rest || "—"}</span></div>
+            <div><span style="font-size:8px;color:#928e89;text-transform:uppercase;letter-spacing:1px;display:block">${lblRest}</span><span style="font-size:13px;font-weight:700;color:#1d1b1b">${ex.rest || "—"}</span></div>
           </div>
           ${noteHtml}${motivHtml}
         </div>
@@ -402,21 +437,22 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
       </div>`;
     };
 
-    let html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+    const htmlLang = (typeof document !== "undefined" && document.documentElement.lang) || "fr";
+    let html = `<!DOCTYPE html><html lang="${htmlLang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <input type="hidden" id="prog-name" value="${progName}">
 <title>${pName}</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,-apple-system,sans-serif;background:#1a1818;color:#1d1b1b}</style></head><body>`;
 
     // Cover page
     html += `<div style="min-height:100vh;background:#1d1b1b;color:#faf9f7;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center">
-      <div style="font-size:8px;letter-spacing:4px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:24px">Programme Officiel · ${coachData?.brand_name || "Coaching"}</div>
+      <div style="font-size:8px;letter-spacing:4px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:24px">${lblOfficialProg} · ${coachData?.brand_name || lblCoachingFallback}</div>
       <div style="font-size:48px;font-weight:900;letter-spacing:-3px;line-height:0.95;margin-bottom:16px">${pName}</div>
-      ${objective ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px">Objectif : ${objective}</div>` : ""}
+      ${objective ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px">${lblObjective} : ${objective}</div>` : ""}
       <div style="font-size:18px;font-weight:700;margin-bottom:24px">${clientName}</div>
       <div style="display:flex;gap:24px">
-        <div><span style="font-size:24px;font-weight:200;color:#c0392b">${weeks.length}</span><br/><span style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Semaines</span></div>
-        <div><span style="font-size:24px;font-weight:200;color:#c0392b">${totalSeances}</span><br/><span style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Seances</span></div>
-        ${duration ? `<div><span style="font-size:18px;font-weight:200;color:#c0392b">${duration}</span><br/><span style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Duree</span></div>` : ""}
+        <div><span style="font-size:24px;font-weight:200;color:#c0392b">${weeks.length}</span><br/><span style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">${lblWeeks}</span></div>
+        <div><span style="font-size:24px;font-weight:200;color:#c0392b">${totalSeances}</span><br/><span style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">${lblSessions}</span></div>
+        ${duration ? `<div><span style="font-size:18px;font-weight:200;color:#c0392b">${duration}</span><br/><span style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">${lblDuration}</span></div>` : ""}
       </div>
       <div style="margin-top:32px;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.3);text-transform:uppercase">${tagline}</div>
     </div>`;
@@ -424,19 +460,19 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
     weeks.forEach((w, wi) => {
       w.seances.forEach((s, si) => {
         html += `<div style="min-height:100vh;background:#f4f2ef;padding:24px 20px">
-          <div style="font-size:8px;letter-spacing:3px;color:#c0392b;text-transform:uppercase;font-weight:700;margin-bottom:4px">SEMAINE ${wi + 1} · SEANCE ${si + 1}</div>
-          <div style="font-size:22px;font-weight:800;color:#1d1b1b;letter-spacing:-0.5px;margin-bottom:4px">${(s.name || "SEANCE " + (si + 1)).toUpperCase()}</div>
+          <div style="font-size:8px;letter-spacing:3px;color:#c0392b;text-transform:uppercase;font-weight:700;margin-bottom:4px">${lblWeek} ${wi + 1} · ${lblSession} ${si + 1}</div>
+          <div style="font-size:22px;font-weight:800;color:#1d1b1b;letter-spacing:-0.5px;margin-bottom:4px">${(s.name || lblSession + " " + (si + 1)).toUpperCase()}</div>
           ${s.desc ? `<div style="font-size:12px;color:#5a5653;margin-bottom:12px">${s.desc}</div>` : ""}
-          ${s.warmup ? `<div style="background:#fff;border:1px solid #e8e5e2;border-radius:10px;padding:12px 14px;margin-bottom:12px"><div style="font-size:8px;letter-spacing:2px;color:#c0392b;text-transform:uppercase;font-weight:700;margin-bottom:6px">ECHAUFFEMENT</div><div style="font-size:12px;color:#1d1b1b;line-height:1.5;white-space:pre-wrap">${s.warmup}</div></div>` : ""}
+          ${s.warmup ? `<div style="background:#fff;border:1px solid #e8e5e2;border-radius:10px;padding:12px 14px;margin-bottom:12px"><div style="font-size:8px;letter-spacing:2px;color:#c0392b;text-transform:uppercase;font-weight:700;margin-bottom:6px">${lblWarmup}</div><div style="font-size:12px;color:#1d1b1b;line-height:1.5;white-space:pre-wrap">${s.warmup}</div></div>` : ""}
           ${s.exercises.map((ex, ei) => exCardHTML(ex, ei + 1)).join("")}
-          ${s.finisher ? `<div style="background:#fff;border:1px solid #e8e5e2;border-radius:10px;padding:12px 14px;margin-top:12px"><div style="font-size:8px;letter-spacing:2px;color:#c0392b;text-transform:uppercase;font-weight:700;margin-bottom:6px">FINISHER</div><div style="font-size:12px;color:#1d1b1b;line-height:1.5;white-space:pre-wrap">${s.finisher}</div></div>` : ""}
+          ${s.finisher ? `<div style="background:#fff;border:1px solid #e8e5e2;border-radius:10px;padding:12px 14px;margin-top:12px"><div style="font-size:8px;letter-spacing:2px;color:#c0392b;text-transform:uppercase;font-weight:700;margin-bottom:6px">${lblFinisher}</div><div style="font-size:12px;color:#1d1b1b;line-height:1.5;white-space:pre-wrap">${s.finisher}</div></div>` : ""}
         </div>`;
       });
     });
 
     html += "</body></html>";
     return html;
-  }, [client, progName, tagline, duration, objective, weeks, coachData]);
+  }, [client, progName, tagline, duration, objective, weeks, coachData, t]);
 
   // ===== Preview live : debounce 400ms pour pas regenerer a chaque touche =====
   useEffect(() => {
@@ -447,8 +483,8 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
 
   // ===== SAUVEGARDER =====
   const handleSave = async () => {
-    if (!progName.trim()) { toast.error("Donne un nom au programme"); return; }
-    if (weeks.length === 0) { toast.error("Ajoute au moins une semaine"); return; }
+    if (!progName.trim()) { toast.error(t("pb.err_no_name")); return; }
+    if (weeks.length === 0) { toast.error(t("pb.err_no_week")); return; }
     setSaving(true);
     try {
       const html = generateHTML();
@@ -471,7 +507,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
         await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-push`, {
           method: "POST",
           headers: { "Content-Type": "application/json", apikey: process.env.REACT_APP_SUPABASE_ANON_KEY },
-          body: JSON.stringify({ client_id: client.id, title: "RB PERFORM", body: "Ton programme est pret. C'est parti !" }),
+          body: JSON.stringify({ client_id: client.id, title: "RB PERFORM", body: t("pb.push_program_ready") }),
         });
       } catch {}
 
@@ -484,21 +520,20 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
         });
       } catch {}
 
-      toast.success("Programme enregistre pour " + (client.full_name || client.email));
+      toast.success(fillTpl(t("pb.toast_saved"), { name: client.full_name || client.email }));
       setLastSavedAt(Date.now());
       try { localStorage.removeItem(draftKey); } catch (_) {}
 
       // Proposer de generer la facture immediatement
       const wantInvoice = onWantInvoice && window.confirm(
-        "Programme enregistre. Generer la facture pour " +
-        (client.full_name || client.email) + " maintenant ?"
+        fillTpl(t("pb.confirm_invoice"), { name: client.full_name || client.email })
       );
 
       if (onSaved) onSaved();
       if (onClose) onClose();
       if (wantInvoice) onWantInvoice(client);
     } catch (e) {
-      toast.error("Erreur : " + e.message);
+      toast.error(fillTpl(t("pb.err_generic"), { msg: e.message }));
     }
     setSaving(false);
   };
@@ -508,52 +543,52 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
     <div style={S.form}>
       {/* ===== INFOS PROGRAMME ===== */}
       <div style={{ marginBottom: 24 }}>
-        <div style={S.sectionLabel}>Programme</div>
+        <div style={S.sectionLabel}>{t("pb.section_program")}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div><div style={S.label}>Nom du programme</div><input style={S.input} value={progName} onChange={e => setProgName(e.target.value)} placeholder="PUSH PULL LEGS" /></div>
+          <div><div style={S.label}>{t("pb.lbl_program_name")}</div><input style={S.input} value={progName} onChange={e => setProgName(e.target.value)} placeholder={t("pb.ph_program_name")} /></div>
           <div style={S.row2}>
-            <div><div style={S.label}>Objectif</div><input style={S.input} value={objective} onChange={e => setObjective(e.target.value)} placeholder="Prise de masse, seche..." /></div>
-            <div><div style={S.label}>Duree</div><input style={S.input} value={duration} onChange={e => setDuration(e.target.value)} placeholder="6 semaines" /></div>
+            <div><div style={S.label}>{t("pb.lbl_objective")}</div><input style={S.input} value={objective} onChange={e => setObjective(e.target.value)} placeholder={t("pb.ph_objective")} /></div>
+            <div><div style={S.label}>{t("pb.lbl_duration")}</div><input style={S.input} value={duration} onChange={e => setDuration(e.target.value)} placeholder={t("pb.ph_duration")} /></div>
           </div>
           <div style={S.row2}>
-            <div><div style={S.label}>Niveau</div><select style={S.select} value={level} onChange={e => setLevel(e.target.value)}>{LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select></div>
-            <div><div style={S.label}>Tagline</div><input style={S.input} value={tagline} onChange={e => setTagline(e.target.value)} /></div>
+            <div><div style={S.label}>{t("pb.lbl_level")}</div><select style={S.select} value={level} onChange={e => setLevel(e.target.value)}>{LEVELS.map(lv => <option key={lv.v} value={lv.v}>{t(lv.labelKey)}</option>)}</select></div>
+            <div><div style={S.label}>{t("pb.lbl_tagline")}</div><input style={S.input} value={tagline} onChange={e => setTagline(e.target.value)} /></div>
           </div>
         </div>
       </div>
 
       {/* Client (auto) */}
       <div style={{ marginBottom: 24, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
-        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Client</div>
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>{t("pb.lbl_client")}</div>
         <div style={{ fontSize: 14, fontWeight: 700 }}>{client?.full_name || client?.email || "—"}</div>
       </div>
 
       {/* Acces programme */}
       <div style={{ marginBottom: 24 }}>
-        <div style={S.sectionLabel}>Acces au programme</div>
+        <div style={S.sectionLabel}>{t("pb.section_access")}</div>
         <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-          {[{ id: "immediate", label: "Acces immediat" }, { id: "scheduled", label: "Date programmee" }].map(m => (
-            <button key={m.id} onClick={() => setAccessMode(m.id)} style={{ ...S.btnGhost, background: accessMode === m.id ? G_DIM : "rgba(255,255,255,0.03)", borderColor: accessMode === m.id ? G_BDR : "rgba(255,255,255,0.08)", color: accessMode === m.id ? G : "rgba(255,255,255,0.5)" }}>{m.label}</button>
+          {[{ id: "immediate", labelKey: "pb.access_immediate" }, { id: "scheduled", labelKey: "pb.access_scheduled" }].map(m => (
+            <button key={m.id} onClick={() => setAccessMode(m.id)} style={{ ...S.btnGhost, background: accessMode === m.id ? G_DIM : "rgba(255,255,255,0.03)", borderColor: accessMode === m.id ? G_BDR : "rgba(255,255,255,0.08)", color: accessMode === m.id ? G : "rgba(255,255,255,0.5)" }}>{t(m.labelKey)}</button>
           ))}
         </div>
         {accessMode === "scheduled" && (
-          <div><div style={S.label}>Date d'acces</div><input type="datetime-local" style={S.input} value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} /></div>
+          <div><div style={S.label}>{t("pb.lbl_access_date")}</div><input type="datetime-local" style={S.input} value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} /></div>
         )}
       </div>
 
       {/* ===== SEMAINES ===== */}
-      <div style={S.sectionLabel}>Semaines</div>
+      <div style={S.sectionLabel}>{t("pb.section_weeks")}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {weeks.map((w, wi) => (
           <div key={w.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, overflow: "hidden" }}>
             <div style={S.weekHeader} onClick={() => updateWeek(w.id, wk => ({ ...wk, open: !wk.open }))}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ background: "rgba(2,209,186,0.12)", color: "#02d1ba", border: "1px solid rgba(2,209,186,0.25)", fontSize: 8, fontWeight: 700, letterSpacing: "1.5px", padding: "3px 8px", borderRadius: 5, textTransform: "uppercase" }}>S{wi + 1}</span>
-                <span style={{ fontSize: 12, fontWeight: 600 }}>Semaine {wi + 1}</span>
+                <span style={{ fontSize: 12, fontWeight: 600 }}>{t("pb.week")} {wi + 1}</span>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <button onClick={(e) => { e.stopPropagation(); dupWeek(w.id); }} style={S.btnRemove} title="Dupliquer">⧉</button>
-                <button onClick={(e) => { e.stopPropagation(); rmWeek(w.id); }} style={S.btnRemove} title="Supprimer">×</button>
+                <button onClick={(e) => { e.stopPropagation(); dupWeek(w.id); }} style={S.btnRemove} title={t("pb.duplicate")}>⧉</button>
+                <button onClick={(e) => { e.stopPropagation(); rmWeek(w.id); }} style={S.btnRemove} title={t("pb.remove")}>×</button>
                 <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>{w.open ? "▾" : "▸"}</span>
               </div>
             </div>
@@ -564,7 +599,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
                   <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 8, overflow: "hidden" }}>
                     <div style={S.seanceHeader} onClick={() => updateSeance(w.id, s.id, sn => ({ ...sn, open: !sn.open }))}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1 }}>
-                        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "2px", color: G, textTransform: "uppercase", flexShrink: 0 }}>Seance {si + 1}</span>
+                        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "2px", color: G, textTransform: "uppercase", flexShrink: 0 }}>{t("pb.session")} {si + 1}</span>
                         <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name ? "— " + s.name.toUpperCase() : ""}</span>
                       </div>
                       <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
@@ -576,10 +611,10 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
                     {s.open && (
                       <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
                         <div style={S.row2}>
-                          <div><div style={S.label}>Nom</div><input style={S.input} value={s.name} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, name: e.target.value }))} placeholder="PUSH / JAMBES / etc." /></div>
-                          <div><div style={S.label}>Description</div><input style={S.input} value={s.desc} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, desc: e.target.value }))} placeholder="Description..." /></div>
+                          <div><div style={S.label}>{t("pb.lbl_name")}</div><input style={S.input} value={s.name} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, name: e.target.value }))} placeholder={t("pb.ph_session_name")} /></div>
+                          <div><div style={S.label}>{t("pb.lbl_description")}</div><input style={S.input} value={s.desc} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, desc: e.target.value }))} placeholder={t("pb.ph_description")} /></div>
                         </div>
-                        <div><div style={S.label}>Echauffement</div><textarea style={S.textarea} value={s.warmup} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, warmup: e.target.value }))} placeholder="5 min rameur, mobilite epaules..." rows={2} /></div>
+                        <div><div style={S.label}>{t("pb.lbl_warmup")}</div><textarea style={S.textarea} value={s.warmup} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, warmup: e.target.value }))} placeholder={t("pb.ph_warmup")} rows={2} /></div>
 
                         {s.exercises.map((ex, ei) => (
                           <div key={ex.id} style={S.exCard}>
@@ -587,35 +622,35 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
                               <span style={{ background: "#1d1b1b", color: "#fff", fontSize: 8, fontWeight: 700, padding: "2px 8px", borderRadius: 4, letterSpacing: "1px" }}>EX {ei + 1}</span>
                               <button onClick={() => rmEx(w.id, s.id, ex.id)} style={S.btnRemove}>×</button>
                             </div>
-                            <div><div style={S.label}>Exercice</div><input style={S.input} value={ex.name} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, name: e.target.value }))} placeholder="Developpe couche halteres" /></div>
+                            <div><div style={S.label}>{t("pb.lbl_exercise")}</div><input style={S.input} value={ex.name} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, name: e.target.value }))} placeholder={t("pb.ph_exercise")} /></div>
                             <div style={S.row4}>
-                              <div><div style={S.label}>Rep.</div><input style={S.input} value={ex.reps} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, reps: e.target.value }))} placeholder="4x8" /></div>
-                              <div><div style={S.label}>Tempo</div><input style={S.input} value={ex.tempo} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, tempo: e.target.value }))} placeholder="30X0" /></div>
+                              <div><div style={S.label}>{t("pb.lbl_reps")}</div><input style={S.input} value={ex.reps} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, reps: e.target.value }))} placeholder="4x8" /></div>
+                              <div><div style={S.label}>{t("pb.lbl_tempo")}</div><input style={S.input} value={ex.tempo} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, tempo: e.target.value }))} placeholder="30X0" /></div>
                               <div><div style={S.label}>RIR</div><select style={S.select} value={ex.rir} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, rir: e.target.value }))}>{RIR_OPTS.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
-                              <div><div style={S.label}>Repos</div><input style={S.input} value={ex.rest} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, rest: e.target.value }))} placeholder="2 min" /></div>
+                              <div><div style={S.label}>{t("pb.lbl_rest")}</div><input style={S.input} value={ex.rest} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, rest: e.target.value }))} placeholder={t("pb.ph_rest")} /></div>
                             </div>
                             <div style={S.row2}>
-                              <div><div style={S.label}>Charge (kg)</div><input style={S.input} value={ex.charge} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, charge: e.target.value }))} placeholder="80" /></div>
-                              <div><div style={S.label}>Groupe</div><input style={{ ...S.input, textTransform: "uppercase" }} value={ex.group} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, group: e.target.value }))} placeholder="A" maxLength={3} /></div>
-                              <div><div style={S.label}>Type</div><select style={S.select} value={ex.groupType} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, groupType: e.target.value }))}>{GROUP_TYPES.map(t => <option key={t} value={t}>{t || "Isole"}</option>)}</select></div>
+                              <div><div style={S.label}>{t("pb.lbl_charge")}</div><input style={S.input} value={ex.charge} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, charge: e.target.value }))} placeholder="80" /></div>
+                              <div><div style={S.label}>{t("pb.lbl_group")}</div><input style={{ ...S.input, textTransform: "uppercase" }} value={ex.group} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, group: e.target.value }))} placeholder="A" maxLength={3} /></div>
+                              <div><div style={S.label}>{t("pb.lbl_type")}</div><select style={S.select} value={ex.groupType} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, groupType: e.target.value }))}>{GROUP_TYPE_KEYS.map(gt => <option key={gt.v} value={gt.v}>{t(gt.labelKey)}</option>)}</select></div>
                             </div>
-                            <div><div style={S.label}>Lien video YouTube</div><input style={S.input} value={ex.vidUrl} onChange={e => { const url = e.target.value; updateEx(w.id, s.id, ex.id, x => { const id = ytId(url); return { ...x, vidUrl: url, thumbUrl: id && !x.thumbUrl ? "https://img.youtube.com/vi/" + id + "/hqdefault.jpg" : x.thumbUrl }; }); }} placeholder="https://youtube.com/..." /></div>
-                            <div><div style={S.label}>Note technique</div><input style={S.input} value={ex.note} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, note: e.target.value }))} placeholder="Coudes a 45 degres..." /></div>
-                            <div><div style={S.label}>Note motivation</div><input style={{ ...S.input, borderColor: "rgba(192,57,43,0.2)" }} value={ex.motivNote} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, motivNote: e.target.value }))} placeholder="Tu peux faire mieux que la semaine derniere" /></div>
+                            <div><div style={S.label}>{t("pb.lbl_video_link")}</div><input style={S.input} value={ex.vidUrl} onChange={e => { const url = e.target.value; updateEx(w.id, s.id, ex.id, x => { const id = ytId(url); return { ...x, vidUrl: url, thumbUrl: id && !x.thumbUrl ? "https://img.youtube.com/vi/" + id + "/hqdefault.jpg" : x.thumbUrl }; }); }} placeholder="https://youtube.com/..." /></div>
+                            <div><div style={S.label}>{t("pb.lbl_tech_note")}</div><input style={S.input} value={ex.note} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, note: e.target.value }))} placeholder={t("pb.ph_tech_note")} /></div>
+                            <div><div style={S.label}>{t("pb.lbl_motiv_note")}</div><input style={{ ...S.input, borderColor: "rgba(192,57,43,0.2)" }} value={ex.motivNote} onChange={e => updateEx(w.id, s.id, ex.id, x => ({ ...x, motivNote: e.target.value }))} placeholder={t("pb.ph_motiv_note")} /></div>
                           </div>
                         ))}
-                        <button style={S.btnAdd} onClick={() => addEx(w.id, s.id)}>+ Exercice</button>
-                        <div><div style={S.label}>Finisher (optionnel)</div><textarea style={S.textarea} value={s.finisher} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, finisher: e.target.value }))} placeholder="AMRAP 5 min : 10 burpees, 15 KB swings..." rows={2} /></div>
+                        <button style={S.btnAdd} onClick={() => addEx(w.id, s.id)}>+ {t("pb.exercise")}</button>
+                        <div><div style={S.label}>{t("pb.lbl_finisher")}</div><textarea style={S.textarea} value={s.finisher} onChange={e => updateSeance(w.id, s.id, sn => ({ ...sn, finisher: e.target.value }))} placeholder={t("pb.ph_finisher")} rows={2} /></div>
                       </div>
                     )}
                   </div>
                 ))}
-                <button style={S.btnAdd} onClick={() => addSeance(w.id)}>+ Seance</button>
+                <button style={S.btnAdd} onClick={() => addSeance(w.id)}>+ {t("pb.session")}</button>
               </div>
             )}
           </div>
         ))}
-        <button style={{ ...S.btnGhost, width: "100%", padding: 12, marginTop: 8, minHeight: 44 }} onClick={addWeek}>+ Ajouter une semaine</button>
+        <button style={{ ...S.btnGhost, width: "100%", padding: 12, marginTop: 8, minHeight: 44 }} onClick={addWeek}>+ {t("pb.add_week")}</button>
       </div>
     </div>
   );
@@ -624,21 +659,21 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
   const renderPreview = () => (
     <div style={S.rightPane}>
       <div style={S.previewHeader}>
-        <div style={S.previewLabel}>Preview en direct</div>
+        <div style={S.previewLabel}>{t("pb.preview_live")}</div>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
-          {weeks.length} sem · {weeks.reduce((a, w) => a + w.seances.length, 0)} seances
+          {fillTpl(t("pb.summary_w_s"), { w: weeks.length, s: weeks.reduce((a, w) => a + w.seances.length, 0) })}
         </div>
       </div>
       {previewHTML ? (
         <iframe
-          title="Preview du programme"
+          title={t("pb.preview_iframe_title")}
           srcDoc={previewHTML}
           style={S.previewIframe}
           sandbox="allow-same-origin"
         />
       ) : (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
-          Generation de la preview...
+          {t("pb.generating_preview")}
         </div>
       )}
     </div>
@@ -661,7 +696,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
       {/* Topbar */}
       <div style={S.topbar}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <button onClick={onClose} style={{ ...S.btnGhost, padding: "6px 12px" }}>← Retour</button>
+          <button onClick={onClose} style={{ ...S.btnGhost, padding: "6px 12px" }}>← {t("pb.back")}</button>
           <div style={{
             fontFamily: "'Syne', sans-serif",
             fontSize: 15,
@@ -676,7 +711,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {isDesktop && (
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>
-              {weeks.length} sem · {totalSeances} seances
+              {fillTpl(t("pb.summary_w_s"), { w: weeks.length, s: totalSeances })}
             </span>
           )}
           {/* Indicateur de sauvegarde */}
@@ -699,19 +734,19 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
                 animation: saving ? "pulse 1.2s ease-in-out infinite" : "none",
               }} />
               {savedTick >= 0 && (saving
-                ? "En cours..."
+                ? t("pb.in_progress")
                 : (() => {
                     const s = Math.floor((Date.now() - (lastSavedAt || 0)) / 1000);
-                    if (s < 10) return "Sauvegarde";
-                    if (s < 60) return `Sauvegarde il y a ${s}s`;
+                    if (s < 10) return t("pb.saved");
+                    if (s < 60) return fillTpl(t("pb.saved_seconds_ago"), { s });
                     const m = Math.floor(s / 60);
-                    return `Sauvegarde il y a ${m} min`;
+                    return fillTpl(t("pb.saved_minutes_ago"), { m });
                   })()
               )}
             </span>
           )}
           <button onClick={handleSave} disabled={saving} style={{ ...S.btnRed, opacity: saving ? 0.6 : 1 }}>
-            {saving ? "..." : (isDesktop ? "Enregistrer le programme" : "Enregistrer")}
+            {saving ? "..." : (isDesktop ? t("pb.save_program") : t("pb.save"))}
           </button>
         </div>
       </div>
@@ -725,7 +760,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
             onClick={() => setMobileTab("edit")}
             style={{ ...S.tabBtn, ...(mobileTab === "edit" ? S.tabBtnActive : {}) }}
           >
-            Edition
+            {t("pb.tab_edit")}
           </button>
           <button
             role="tab"
@@ -733,7 +768,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
             onClick={() => setMobileTab("preview")}
             style={{ ...S.tabBtn, ...(mobileTab === "preview" ? S.tabBtnActive : {}) }}
           >
-            Preview
+            {t("pb.tab_preview")}
           </button>
         </div>
       )}

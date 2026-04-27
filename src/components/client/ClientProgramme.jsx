@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
+import { useT } from "../../lib/i18n";
 import SessionTracker from "./SessionTracker";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * ClientProgramme — affiche le programme actif. La structure repose sur
@@ -13,6 +20,7 @@ import SessionTracker from "./SessionTracker";
  *   - Quand la session est lancee: SessionTracker en plein ecran
  */
 export default function ClientProgramme({ client, accent }) {
+  const t = useT();
   const [programme, setProgramme] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tracking, setTracking] = useState(false);
@@ -39,7 +47,7 @@ export default function ClientProgramme({ client, accent }) {
   if (loading) {
     return (
       <div style={{ padding: 32, color: "rgba(255,255,255,.3)", textAlign: "center", fontSize: 12 }}>
-        Chargement du programme...
+        {t("cprg.loading")}
       </div>
     );
   }
@@ -49,10 +57,10 @@ export default function ClientProgramme({ client, accent }) {
       <div style={{ padding: "32px 20px" }}>
         <div style={{ padding: "40px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 16, textAlign: "center" }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
-            Aucun programme actif<span style={{ color: accent }}>.</span>
+            {t("cprg.no_programme")}<span style={{ color: accent }}>.</span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", lineHeight: 1.5 }}>
-            Ton coach va bientot t'envoyer ton premier programme. Tu seras notifie ici.
+            {t("cprg.no_programme_desc")}
           </div>
         </div>
       </div>
@@ -75,13 +83,13 @@ export default function ClientProgramme({ client, accent }) {
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 10 }}>
-          Mon programme
+          {t("cprg.my_programme")}
         </div>
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
-          Train<span style={{ color: accent }}>.</span>
+          {t("cprg.train")}<span style={{ color: accent }}>.</span>
         </div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginTop: 8 }}>
-          {programme.programme_name || "Sans nom"} · cree il y a {Math.floor((Date.now() - new Date(programme.uploaded_at).getTime()) / 86400000)}j
+          {programme.programme_name || t("cprg.no_name")} · {fillTpl(t("cprg.created_ago"), { n: Math.floor((Date.now() - new Date(programme.uploaded_at).getTime()) / 86400000) })}
         </div>
       </div>
 
@@ -103,7 +111,7 @@ export default function ClientProgramme({ client, accent }) {
           marginBottom: 20,
         }}
       >
-        ▶ Demarrer la seance
+        {t("cprg.start_session")}
       </button>
 
       {/* Programme HTML rendered (simple) */}
@@ -111,14 +119,14 @@ export default function ClientProgramme({ client, accent }) {
         <div style={{ background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 14, padding: 4, overflow: "hidden" }}>
           <iframe
             srcDoc={programme.html_content}
-            title="Programme"
+            title={t("cprg.iframe_title")}
             style={{ width: "100%", height: 600, border: "none", background: "#0a0a0a", borderRadius: 12 }}
             sandbox=""
           />
         </div>
       ) : (
         <div style={{ padding: "30px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 16, textAlign: "center", color: "rgba(255,255,255,.3)", fontSize: 12 }}>
-          Le contenu du programme arrive bientot.
+          {t("cprg.content_soon")}
         </div>
       )}
     </div>

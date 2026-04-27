@@ -1,11 +1,19 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
+import { useT } from "../../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * ClientHome — accueil client: greeting, card programme, 3 stats,
  * objectifs nutrition, activite recente.
  */
 export default function ClientHome({ client, coach, accent, onTabChange }) {
+  const t = useT();
   const [programme, setProgramme] = useState(null);
   const [sessions, setSessions]   = useState([]);
   const [measurements, setMeasurements] = useState([]);
@@ -47,7 +55,7 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
   }, [client?.id]);
 
   const firstName = (client?.full_name || "").split(" ")[0] || "";
-  const coachName = coach?.coaching_name || coach?.full_name || "Ton coach";
+  const coachName = coach?.coaching_name || coach?.full_name || t("ch.your_coach");
   const coachInitials = (coach?.full_name || coachName || "?").split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
 
   // Stats rapides
@@ -82,13 +90,13 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 28 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 10 }}>
-            Bonjour
+            {t("ch.hello")}
           </div>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
-            {firstName || "Champion"}<span style={{ color: accent }}>.</span>
+            {firstName || t("ch.champion")}<span style={{ color: accent }}>.</span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", marginTop: 6 }}>
-            Suivi par <span style={{ color: "rgba(255,255,255,.6)", fontWeight: 500 }}>{coachName}</span>
+            {t("ch.coached_by")} <span style={{ color: "rgba(255,255,255,.6)", fontWeight: 500 }}>{coachName}</span>
           </div>
         </div>
         <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(2,209,186,.1)", border: `.5px solid ${accent}30`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne', sans-serif", fontSize: 15, fontWeight: 900, color: accent, flexShrink: 0 }}>
@@ -101,47 +109,47 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
         <div style={{ padding: "20px 22px", background: "rgba(2,209,186,.04)", border: `.5px solid ${accent}25`, borderRadius: 16, marginBottom: 16, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${accent}55, transparent)` }} />
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 8 }}>
-            Programme actif
+            {t("ch.active_programme")}
           </div>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 12, letterSpacing: "-.3px" }}>
-            {programme.programme_name || "Sans nom"}
+            {programme.programme_name || t("ch.no_name")}
           </div>
           <button
             onClick={() => onTabChange?.("prog")}
             style={{ width: "100%", padding: "12px 16px", background: accent, color: "#000", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", fontFamily: "'Syne', sans-serif", cursor: "pointer", boxShadow: `0 10px 26px ${accent}30` }}
           >
-            Demarrer la seance →
+            {t("ch.start_session")}
           </button>
         </div>
       )}
 
       {/* ===== STATS RAPIDES ===== */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 20 }}>
-        <Stat label="Seances" value={`${stats.thisWeek}/${stats.goal}`} accent={accent} />
-        <Stat label="Streak" value={`${stats.streak}j`} icon="🔥" accent="#f97316" />
-        <Stat label="Score" value={`${stats.coachScore}`} suffix="/100" accent={accent} />
+        <Stat label={t("ch.stat_sessions")} value={`${stats.thisWeek}/${stats.goal}`} accent={accent} />
+        <Stat label={t("ch.stat_streak")} value={fillTpl(t("ch.streak_days"), { n: stats.streak })} icon="🔥" accent="#f97316" />
+        <Stat label={t("ch.stat_score")} value={`${stats.coachScore}`} suffix="/100" accent={accent} />
       </div>
 
       {/* ===== OBJECTIFS NUTRITION ===== */}
       <div style={{ padding: "18px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 14, marginBottom: 20 }}>
         <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginBottom: 12 }}>
-          Objectifs du jour
+          {t("ch.daily_goals")}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <GoalBar label="Calories" value={1847} target={2200} color={accent} />
-          <GoalBar label="Proteines" value={142} target={150} color={accent} unit="g" />
-          <GoalBar label="Eau" value={1.85} target={3.0} color="#60a5fa" unit="L" />
+          <GoalBar label={t("ch.goal_calories")} value={1847} target={2200} color={accent} />
+          <GoalBar label={t("ch.goal_proteins")} value={142} target={150} color={accent} unit="g" />
+          <GoalBar label={t("ch.goal_water")} value={1.85} target={3.0} color="#60a5fa" unit="L" />
         </div>
       </div>
 
       {/* ===== ACTIVITE RECENTE ===== */}
       <div style={{ padding: "18px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 14 }}>
         <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginBottom: 14 }}>
-          Activite recente
+          {t("ch.recent_activity")}
         </div>
         {sessions.length === 0 ? (
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)", textAlign: "center", padding: 12 }}>
-            Aucune seance pour le moment.
+            {t("ch.no_sessions")}
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -149,10 +157,10 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
               <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: i < 2 ? ".5px solid rgba(255,255,255,.04)" : "none" }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: accent, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,.8)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.seance_nom || "Seance"}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,.8)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.seance_nom || t("ch.session_default")}</div>
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", marginTop: 1 }}>
-                    {relTime(s.started_at)}
-                    {s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}
+                    {relTime(s.started_at, t)}
+                    {s.duration_minutes ? ` · ${s.duration_minutes} ${t("ch.min")}` : ""}
                     {s.rpe_moyen ? ` · RPE ${Number(s.rpe_moyen).toFixed(1)}` : ""}
                   </div>
                 </div>
@@ -197,11 +205,11 @@ function GoalBar({ label, value, target, color, unit = "" }) {
   );
 }
 
-function relTime(iso) {
+function relTime(iso, t) {
   if (!iso) return "";
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60)     return "a l'instant";
-  if (diff < 3600)   return `il y a ${Math.floor(diff / 60)} min`;
-  if (diff < 86400)  return `il y a ${Math.floor(diff / 3600)} h`;
-  return `il y a ${Math.floor(diff / 86400)} j`;
+  if (diff < 60)     return t("ch.just_now");
+  if (diff < 3600)   return fillTpl(t("ch.ago_min"), { n: Math.floor(diff / 60) });
+  if (diff < 86400)  return fillTpl(t("ch.ago_hour"), { n: Math.floor(diff / 3600) });
+  return fillTpl(t("ch.ago_day"), { n: Math.floor(diff / 86400) });
 }

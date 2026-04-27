@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
+import { useT } from "../../lib/i18n";
 import { AuthVisual, AuthStyles, G } from "../auth/AuthShared";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * JoinPage — page d'inscription client accessible via /join?token=XXXXX
@@ -20,6 +27,7 @@ import { AuthVisual, AuthStyles, G } from "../auth/AuthShared";
  *   7. Redirige vers /
  */
 export default function JoinPage() {
+  const t = useT();
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState(null);
   const [coachName, setCoachName]   = useState("");
@@ -37,7 +45,7 @@ export default function JoinPage() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (!token) {
-      setErrorMsg("Lien d'invitation invalide.");
+      setErrorMsg(t("jp.invalid_link"));
       setLoading(false);
       return;
     }
@@ -52,11 +60,11 @@ export default function JoinPage() {
           .maybeSingle();
         if (error) throw error;
         if (!data) {
-          setErrorMsg("Invitation introuvable ou deja utilisee.");
+          setErrorMsg(t("jp.invitation_not_found"));
           setLoading(false); return;
         }
         if (new Date(data.expires_at) < new Date()) {
-          setErrorMsg("Cette invitation a expire. Demande un nouveau lien a ton coach.");
+          setErrorMsg(t("jp.invitation_expired"));
           setLoading(false); return;
         }
 
@@ -71,14 +79,14 @@ export default function JoinPage() {
           .eq("id", data.coach_id)
           .maybeSingle();
         if (coachRows) {
-          setCoachName(coachRows.coaching_name || coachRows.full_name || "Ton coach");
+          setCoachName(coachRows.coaching_name || coachRows.full_name || t("jp.your_coach"));
           setCoachLogo(coachRows.logo_url || null);
         } else {
-          setCoachName("Ton coach");
+          setCoachName(t("jp.your_coach"));
         }
       } catch (e) {
         console.error("[JoinPage] token check", e);
-        setErrorMsg("Impossible de verifier l'invitation. Reessaie.");
+        setErrorMsg(t("jp.unable_verify"));
       } finally {
         setLoading(false);
       }
@@ -88,9 +96,9 @@ export default function JoinPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setFormError("");
-    if (!prenom.trim()) { setFormError("Prenom requis."); return; }
-    if (password.length < 8) { setFormError("Mot de passe: minimum 8 caracteres."); return; }
-    if (password !== confirm) { setFormError("Les mots de passe ne correspondent pas."); return; }
+    if (!prenom.trim()) { setFormError(t("jp.firstname_required")); return; }
+    if (password.length < 8) { setFormError(t("jp.password_min")); return; }
+    if (password !== confirm) { setFormError(t("jp.passwords_mismatch")); return; }
 
     setSubmitting(true);
     try {
@@ -159,7 +167,7 @@ export default function JoinPage() {
         setInvitation({ ...invitation, _sentConfirm: true });
       }
     } catch (e) {
-      setFormError(e.message || "Erreur d'inscription. Reessaie.");
+      setFormError(e.message || t("jp.signup_error"));
       setSubmitting(false);
     }
   }
@@ -173,7 +181,7 @@ export default function JoinPage() {
         <AuthVisual />
         <div className="auth-form-panel">
           <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,.4)" }}>
-            <div style={{ fontSize: 12, letterSpacing: ".2em", textTransform: "uppercase" }}>Verification...</div>
+            <div style={{ fontSize: 12, letterSpacing: ".2em", textTransform: "uppercase" }}>{t("jp.verifying")}</div>
           </div>
         </div>
       </div>
@@ -194,10 +202,10 @@ export default function JoinPage() {
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             </div>
-            <div className="auth-confirm-title">Lien invalide</div>
+            <div className="auth-confirm-title">{t("jp.invalid_link_title")}</div>
             <div className="auth-confirm-sub">{errorMsg}</div>
             <div className="auth-foot" style={{ marginTop: 28 }}>
-              Tu es deja client ? <a href="/login">Se connecter →</a>
+              {t("jp.already_client")} <a href="/login">{t("jp.signin_link")}</a>
             </div>
           </div>
         </div>
@@ -218,11 +226,11 @@ export default function JoinPage() {
                 <polyline points="22,6 12,13 2,6" />
               </svg>
             </div>
-            <div className="auth-confirm-title">Verifie ta boite mail.</div>
+            <div className="auth-confirm-title">{t("jp.check_inbox_title")}</div>
             <div className="auth-confirm-sub">
-              Un lien de confirmation a ete envoye a<br />
+              {t("jp.confirm_sent")}<br />
               <span className="auth-confirm-email">{invitation.email}</span>.<br /><br />
-              Clique sur le lien pour activer ton compte.
+              {t("jp.click_to_activate")}
             </div>
           </div>
         </div>
@@ -233,7 +241,7 @@ export default function JoinPage() {
   return (
     <div className="auth-page">
       <AuthStyles />
-      <AuthVisual quote={`Ton espace premium\nsigne ${coachName}.`} />
+      <AuthVisual quote={fillTpl(t("jp.visual_quote"), { coach: coachName })} />
 
       <div className="auth-form-panel">
         {coachLogo && (
@@ -244,17 +252,17 @@ export default function JoinPage() {
           fontSize: 9, fontWeight: 700, letterSpacing: ".22em",
           textTransform: "uppercase", color: G, marginBottom: 10,
         }}>
-          Invitation
+          {t("jp.invitation")}
         </div>
         <h1 className="auth-title">
-          Bienvenue sur l'espace<br />
-          de <span style={{ color: G }}>{coachName}</span>.
+          {t("jp.welcome_to_space_1")}<br />
+          {t("jp.welcome_to_space_2")} <span style={{ color: G }}>{coachName}</span>.
         </h1>
-        <p className="auth-subtitle accent">Gratuit pour toi. Toujours.</p>
+        <p className="auth-subtitle accent">{t("jp.free_forever")}</p>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">Email</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("jp.email_label")}</label></div>
             <input
               type="email"
               value={invitation?.email || ""}
@@ -265,39 +273,39 @@ export default function JoinPage() {
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">Ton prenom</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("jp.firstname_label")}</label></div>
             <input
               type="text"
               value={prenom}
               onChange={(e) => setPrenom(e.target.value)}
               className="auth-input"
-              placeholder="Comment on t'appelle ?"
+              placeholder={t("jp.firstname_placeholder")}
               autoFocus={!prenom}
               required
             />
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">Choisis ton mot de passe</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("jp.password_label")}</label></div>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="auth-input"
-              placeholder="Au moins 8 caracteres"
+              placeholder={t("jp.password_placeholder")}
               autoComplete="new-password"
               required
             />
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">Confirme</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("jp.confirm_label")}</label></div>
             <input
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               className="auth-input"
-              placeholder="Confirme ton mot de passe"
+              placeholder={t("jp.confirm_placeholder")}
               autoComplete="new-password"
               required
             />
@@ -306,12 +314,12 @@ export default function JoinPage() {
           {formError && <div className="auth-error">{formError}</div>}
 
           <button type="submit" className="auth-btn" disabled={submitting} style={{ marginTop: 16 }}>
-            {submitting ? "Creation..." : "CREER MON COMPTE"}
+            {submitting ? t("jp.creating") : t("jp.create_account")}
           </button>
         </form>
 
         <div className="auth-foot">
-          Deja un compte ? <a href="/login">Se connecter →</a>
+          {t("jp.already_account")} <a href="/login">{t("jp.signin_link")}</a>
         </div>
       </div>
     </div>

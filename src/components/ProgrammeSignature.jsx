@@ -2,10 +2,18 @@ import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import haptic from "../lib/haptic";
 import Spinner from "./Spinner";
+import { useT } from "../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const G = "#02d1ba";
 
 export default function ProgrammeSignature({ programme, client, onSigned }) {
+  const t = useT();
   const [name, setName] = useState("");
   const [checked, setChecked] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -25,7 +33,7 @@ export default function ProgrammeSignature({ programme, client, onSigned }) {
       await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-push`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: process.env.REACT_APP_SUPABASE_ANON_KEY },
-        body: JSON.stringify({ client_id: client.id, title: "RB PERFORM", body: `${firstName || name.trim()} a accepte son programme. La transformation commence.` }),
+        body: JSON.stringify({ client_id: client.id, title: "RB PERFORM", body: fillTpl(t("psig.push_body"), { name: firstName || name.trim() }) }),
       });
     } catch {}
 
@@ -53,24 +61,24 @@ export default function ProgrammeSignature({ programme, client, onSigned }) {
           </svg>
         </div>
 
-        <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 12, fontWeight: 700 }}>Nouveau programme</div>
+        <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 12, fontWeight: 700 }}>{t("psig.label_new")}</div>
 
         <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 14 }}>
-          {programme?.programme_name || "Programme"}
+          {programme?.programme_name || t("psig.fallback_program")}
         </h1>
 
         <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 32, maxWidth: 340, marginLeft: "auto", marginRight: "auto" }}>
-          Ton coach t'a prepare un nouveau programme. Accepte-le pour commencer ta transformation.
+          {t("psig.subtitle")}
         </p>
 
         {/* Input prenom */}
         <div style={{ marginBottom: 16, textAlign: "left" }}>
-          <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8, fontWeight: 600 }}>Tape ton prenom pour signer</div>
+          <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8, fontWeight: 600 }}>{t("psig.label_sign")}</div>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder={firstName || "Prenom"}
+            placeholder={firstName || t("psig.placeholder_firstname")}
             autoFocus
             style={{ width: "100%", padding: "16px 18px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 700, outline: "none", boxSizing: "border-box", fontFamily: "inherit", textAlign: "center", letterSpacing: "1px" }}
           />
@@ -91,7 +99,7 @@ export default function ProgrammeSignature({ programme, client, onSigned }) {
             {checked ? "✓" : ""}
           </div>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
-            J'accepte de suivre ce programme et je m'engage a donner le meilleur de moi-meme.
+            {t("psig.consent")}
           </span>
         </label>
 
@@ -109,7 +117,7 @@ export default function ProgrammeSignature({ programme, client, onSigned }) {
             boxShadow: name.trim() && checked ? "0 10px 36px rgba(2,209,186,0.35)" : "none",
           }}
         >
-          {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Signature</span>) : "Accepter et commencer"}
+          {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />{t("psig.signing")}</span>) : t("psig.cta_accept")}
         </button>
       </div>
     </div>

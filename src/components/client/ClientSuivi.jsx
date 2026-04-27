@@ -1,10 +1,18 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
+import { useT } from "../../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * ClientSuivi — onglet Suivi: pesee + graphe SVG + stats transformation.
  */
 export default function ClientSuivi({ client, accent }) {
+  const t = useT();
   const [weight, setWeight] = useState("");
   const [saving, setSaving] = useState(false);
   const [measurements, setMeasurements] = useState([]);
@@ -30,7 +38,7 @@ export default function ClientSuivi({ client, accent }) {
     const w = parseFloat(weight.replace(",", "."));
     setError("");
     if (isNaN(w) || w < 30 || w > 300) {
-      setError("Entre un poids valide (30-300 kg).");
+      setError(t("csv.invalid_weight"));
       return;
     }
     setSaving(true);
@@ -44,7 +52,7 @@ export default function ClientSuivi({ client, accent }) {
       setTimeout(() => setSuccess(false), 2000);
       await loadMeasurements();
     } catch (e) {
-      setError(e.message || "Erreur");
+      setError(e.message || t("csv.error"));
     }
     setSaving(false);
   }
@@ -86,17 +94,17 @@ export default function ClientSuivi({ client, accent }) {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 10 }}>
-          Mon suivi
+          {t("csv.my_tracking")}
         </div>
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
-          Body<span style={{ color: accent }}>.</span>
+          {t("csv.body")}<span style={{ color: accent }}>.</span>
         </div>
       </div>
 
       {/* ===== FORM PESEE ===== */}
       <div style={{ padding: "18px 20px", background: "rgba(2,209,186,.04)", border: `.5px solid ${accent}25`, borderRadius: 16, marginBottom: 20 }}>
         <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 12 }}>
-          Nouvelle pesee
+          {t("csv.new_weighing")}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <input
@@ -104,7 +112,7 @@ export default function ClientSuivi({ client, accent }) {
             inputMode="decimal"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
-            placeholder="Ex: 80.5"
+            placeholder={t("csv.weight_placeholder")}
             style={{
               flex: 1, height: 46,
               padding: "0 14px",
@@ -131,7 +139,7 @@ export default function ClientSuivi({ client, accent }) {
               textTransform: "uppercase",
             }}
           >
-            {saving ? "..." : success ? "✓" : "Enr."}
+            {saving ? "..." : success ? "✓" : t("csv.save_short")}
           </button>
         </div>
         {error && <div style={{ marginTop: 8, fontSize: 11, color: "#ef4444" }}>{error}</div>}
@@ -141,9 +149,9 @@ export default function ClientSuivi({ client, accent }) {
       {graph ? (
         <div style={{ padding: "18px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 16, marginBottom: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)" }}>Evolution recente</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)" }}>{t("csv.recent_evolution")}</div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(255,255,255,.4)" }}>
-              {measurements.length} pesee{measurements.length > 1 ? "s" : ""}
+              {fillTpl(measurements.length > 1 ? t("csv.weighings_count_plural") : t("csv.weighings_count"), { n: measurements.length })}
             </div>
           </div>
           <svg viewBox={`0 0 ${graph.W} ${graph.H}`} preserveAspectRatio="none" style={{ width: "100%", height: 100, display: "block" }}>
@@ -162,19 +170,19 @@ export default function ClientSuivi({ client, accent }) {
         </div>
       ) : (
         <div style={{ padding: "30px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 16, marginBottom: 16, textAlign: "center", color: "rgba(255,255,255,.3)", fontSize: 12 }}>
-          Enregistre ta premiere pesee pour voir le graphe.
+          {t("csv.record_first")}
         </div>
       )}
 
       {/* ===== STATS TRANSFORMATION ===== */}
       {stats && (
         <div style={{ padding: "18px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 16 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginBottom: 14 }}>Mes resultats</div>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginBottom: 14 }}>{t("csv.my_results")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Block label="Poids initial" value={`${stats.first} kg`} />
-            <Block label="Poids actuel" value={`${stats.last} kg`} accent={accent} />
-            <Block label="Variation" value={`${stats.delta > 0 ? "+" : ""}${stats.delta.toFixed(1)} kg`} accent={stats.delta >= 0 ? "#f97316" : accent} />
-            <Block label="Suivi" value={`${stats.days}j`} />
+            <Block label={t("csv.initial_weight")} value={`${stats.first} kg`} />
+            <Block label={t("csv.current_weight")} value={`${stats.last} kg`} accent={accent} />
+            <Block label={t("csv.variation")} value={`${stats.delta > 0 ? "+" : ""}${stats.delta.toFixed(1)} kg`} accent={stats.delta >= 0 ? "#f97316" : accent} />
+            <Block label={t("csv.tracking_label")} value={fillTpl(t("csv.days_short"), { n: stats.days })} />
           </div>
         </div>
       )}

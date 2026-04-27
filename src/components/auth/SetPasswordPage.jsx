@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useT } from "../../lib/i18n";
 
 /**
  * SetPasswordPage — le coach crée son mot de passe après paiement Stripe.
@@ -14,6 +15,7 @@ import { supabase } from "../../lib/supabase";
  * Supabase gère automatiquement le token dans l'URL via onAuthStateChange.
  */
 export default function SetPasswordPage({ onComplete }) {
+  const t = useT();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,7 +47,7 @@ export default function SetPasswordPage({ onComplete }) {
         onComplete?.();
       }, 2000);
     } catch (err) {
-      setError(err.message || "Erreur. Réessaie.");
+      setError(err.message || t("spp.err_retry"));
       setLoading(false);
     }
   };
@@ -57,8 +59,8 @@ export default function SetPasswordPage({ onComplete }) {
       <div style={container}>
         <div style={{ animation: "spFade 0.5s ease both", textAlign: "center" }}>
           <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg, ${G}, ${G}cc)`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", fontSize: 28, color: "#000", boxShadow: `0 12px 40px ${G}50` }}>✓</div>
-          <h1 style={title}>C'est prêt.</h1>
-          <p style={sub}>Redirection vers ton dashboard...</p>
+          <h1 style={title}>{t("spp.ready_title")}</h1>
+          <p style={sub}>{t("spp.redirecting")}</p>
         </div>
       </div>
     );
@@ -79,38 +81,38 @@ export default function SetPasswordPage({ onComplete }) {
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 14, fontWeight: 900, letterSpacing: ".1em", color: "#fff", marginBottom: 28 }}>
             RB<span style={{ color: G }}>PERFORM</span>
           </div>
-          <h1 style={title}>Crée ton mot de passe.</h1>
-          <p style={sub}>Tu l'utiliseras pour te connecter à ton dashboard.</p>
+          <h1 style={title}>{t("spp.title")}</h1>
+          <p style={sub}>{t("spp.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
-            <div style={label}>Mot de passe</div>
+            <div style={label}>{t("spp.password_label")}</div>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="8 caractères minimum"
+              placeholder={t("spp.password_placeholder")}
               autoFocus
               style={input}
             />
           </div>
           <div>
-            <div style={label}>Confirmer</div>
+            <div style={label}>{t("spp.confirm_label")}</div>
             <input
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              placeholder="Même mot de passe"
+              placeholder={t("spp.confirm_placeholder")}
               style={input}
             />
           </div>
 
           {password && confirm && password !== confirm && (
-            <div style={{ fontSize: 12, color: "#ff6b6b" }}>Les mots de passe ne correspondent pas.</div>
+            <div style={{ fontSize: 12, color: "#ff6b6b" }}>{t("spp.err_mismatch")}</div>
           )}
           {password && password.length < 8 && (
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>8 caractères minimum.</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{t("spp.err_min_chars")}</div>
           )}
           {error && (
             <div style={{ fontSize: 12, color: "#ff6b6b" }}>{error}</div>
@@ -131,7 +133,7 @@ export default function SetPasswordPage({ onComplete }) {
               marginTop: 8,
             }}
           >
-            {loading ? "Création..." : "Créer mon mot de passe →"}
+            {loading ? t("spp.creating") : t("spp.create_password")}
           </button>
         </form>
 

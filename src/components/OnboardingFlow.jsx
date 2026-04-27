@@ -2,6 +2,15 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
+import { useT, getLocale } from "../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
+
+const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
 // ========== CHARTE RB PERFORM ==========
 const GREEN = "#02d1ba";
@@ -121,11 +130,11 @@ const Scale = ({ label, value, onChange }) => (
 );
 
 // Barre de progression premium
-const StepBar = ({ step, total }) => (
+const StepBar = ({ step, total, label = "Etape" }) => (
   <div style={{ marginBottom: 28 }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
       <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", fontWeight: 600 }}>
-        Etape {step} <span style={{ color: "rgba(255,255,255,0.2)" }}>/ {total}</span>
+        {label} {step} <span style={{ color: "rgba(255,255,255,0.2)" }}>/ {total}</span>
       </div>
       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.5px" }}>
         {Math.round((step / total) * 100)}%
@@ -149,6 +158,7 @@ const StepBar = ({ step, total }) => (
 // ========== COMPOSANT PRINCIPAL ==========
 
 export default function OnboardingFlow({ client, onComplete }) {
+  const t = useT();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [slots, setSlots] = useState([]);
@@ -359,21 +369,21 @@ export default function OnboardingFlow({ client, onComplete }) {
         {GLOBAL_STYLES}
         {BG}
         <div key="step1" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={1} total={6} />
-          <div style={S.eyebrow}>01 · Identite</div>
+          <StepBar step={1} total={6} label={t("obf.step")} />
+          <div style={S.eyebrow}>{t("obf.step1_eyebrow")}</div>
           <div style={S.h1}>
-            Ton<br />
-            <span style={{ color: GREEN }}>Profil.</span>
+            {t("obf.step1_title_line1")}<br />
+            <span style={{ color: GREEN }}>{t("obf.step1_title_line2")}</span>
           </div>
-          <Input label="Nom et prenom" placeholder="Ton nom complet" value={form.nom_prenom} onChange={set("nom_prenom")} />
+          <Input label={t("obf.name_label")} placeholder={t("obf.name_placeholder")} value={form.nom_prenom} onChange={set("nom_prenom")} />
           <div style={S.row}>
-            <Input label="Age" placeholder="ans" type="number" value={form.age} onChange={set("age")} half />
-            <Input label="Poids" placeholder="kg" type="number" value={form.poids} onChange={set("poids")} half />
+            <Input label={t("obf.age_label")} placeholder={t("obf.age_placeholder")} type="number" value={form.age} onChange={set("age")} half />
+            <Input label={t("obf.weight_label")} placeholder={t("obf.weight_placeholder")} type="number" value={form.poids} onChange={set("poids")} half />
           </div>
-          <Input label="Taille" placeholder="cm" type="number" value={form.taille} onChange={set("taille")} />
-          <Input label="Telephone" placeholder="+33 6 xx xx xx xx" type="tel" value={form.telephone} onChange={set("telephone")} />
-          <Input label="Passe sportif" placeholder="Sports pratiques, niveau, experience..." value={form.passe_sportif} onChange={set("passe_sportif")} textarea />
-          <button style={S.btn(!!form.nom_prenom)} onClick={nextStep}>Continuer</button>
+          <Input label={t("obf.height_label")} placeholder={t("obf.height_placeholder")} type="number" value={form.taille} onChange={set("taille")} />
+          <Input label={t("obf.phone_label")} placeholder={t("obf.phone_placeholder")} type="tel" value={form.telephone} onChange={set("telephone")} />
+          <Input label={t("obf.sport_history_label")} placeholder={t("obf.sport_history_placeholder")} value={form.passe_sportif} onChange={set("passe_sportif")} textarea />
+          <button style={S.btn(!!form.nom_prenom)} onClick={nextStep}>{t("obf.continue")}</button>
         </div>
       </div>
     );
@@ -385,26 +395,26 @@ export default function OnboardingFlow({ client, onComplete }) {
         {GLOBAL_STYLES}
         {BG}
         <div key="step2" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={2} total={6} />
-          <div style={S.eyebrow}>02 · Quotidien</div>
+          <StepBar step={2} total={6} label={t("obf.step")} />
+          <div style={S.eyebrow}>{t("obf.step2_eyebrow")}</div>
           <div style={S.h1}>
-            Ton mode<br />
-            <span style={{ color: GREEN }}>de vie.</span>
+            {t("obf.step2_title_line1")}<br />
+            <span style={{ color: GREEN }}>{t("obf.step2_title_line2")}</span>
           </div>
-          <Input label="Metier ou etudes" placeholder="Ton activite professionnelle" value={form.metier} onChange={set("metier")} />
+          <Input label={t("obf.job_label")} placeholder={t("obf.job_placeholder")} value={form.metier} onChange={set("metier")} />
           <div style={S.row}>
-            <Input label="Sommeil" placeholder="h / nuit" value={form.sommeil} onChange={set("sommeil")} half />
-            <Input label="Pas / jour" placeholder="~ pas" value={form.pas_jour} onChange={set("pas_jour")} half />
+            <Input label={t("obf.sleep_label")} placeholder={t("obf.sleep_placeholder")} value={form.sommeil} onChange={set("sommeil")} half />
+            <Input label={t("obf.steps_label")} placeholder={t("obf.steps_placeholder")} value={form.pas_jour} onChange={set("pas_jour")} half />
           </div>
-          <Input label="Allergies / restrictions" placeholder="Intolerances, allergies, preferences..." value={form.allergies} onChange={set("allergies")} textarea />
-          <Input label="Repas actuels et flexibilite" placeholder="Combien de repas par jour ? Peux-tu les adapter ?" value={form.repas} onChange={set("repas")} textarea />
+          <Input label={t("obf.allergies_label")} placeholder={t("obf.allergies_placeholder")} value={form.allergies} onChange={set("allergies")} textarea />
+          <Input label={t("obf.meals_label")} placeholder={t("obf.meals_placeholder")} value={form.repas} onChange={set("repas")} textarea />
           <div style={S.row}>
-            <Input label="Jours d'entrainement" placeholder="j / semaine" value={form.jours_entrainement} onChange={set("jours_entrainement")} half />
-            <Input label="Duree par seance" placeholder="h / seance" value={form.heures_seance} onChange={set("heures_seance")} half />
+            <Input label={t("obf.training_days_label")} placeholder={t("obf.training_days_placeholder")} value={form.jours_entrainement} onChange={set("jours_entrainement")} half />
+            <Input label={t("obf.session_duration_label")} placeholder={t("obf.session_duration_placeholder")} value={form.heures_seance} onChange={set("heures_seance")} half />
           </div>
-          <Input label="Diet actuelle" placeholder="Comment tu manges en ce moment ?" value={form.diet_actuelle} onChange={set("diet_actuelle")} textarea />
-          <button style={S.btn()} onClick={nextStep}>Continuer</button>
-          <button style={S.back} onClick={() => setStep(1)}>← Retour</button>
+          <Input label={t("obf.diet_label")} placeholder={t("obf.diet_placeholder")} value={form.diet_actuelle} onChange={set("diet_actuelle")} textarea />
+          <button style={S.btn()} onClick={nextStep}>{t("obf.continue")}</button>
+          <button style={S.back} onClick={() => setStep(1)}>{t("obf.back")}</button>
         </div>
       </div>
     );
@@ -416,18 +426,18 @@ export default function OnboardingFlow({ client, onComplete }) {
         {GLOBAL_STYLES}
         {BG}
         <div key="step3" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={3} total={6} />
-          <div style={S.eyebrow}>03 · Vision</div>
+          <StepBar step={3} total={6} label={t("obf.step")} />
+          <div style={S.eyebrow}>{t("obf.step3_eyebrow")}</div>
           <div style={S.h1}>
-            Objectifs &<br />
-            <span style={{ color: GREEN }}>points faibles.</span>
+            {t("obf.step3_title_line1")}<br />
+            <span style={{ color: GREEN }}>{t("obf.step3_title_line2")}</span>
           </div>
-          <Input label="Points faibles a ameliorer" placeholder="Quelles zones souhaites-tu ameliorer en priorite ?" value={form.points_faibles} onChange={set("points_faibles")} textarea />
-          <Input label="Objectifs a 6 semaines" placeholder="Ou veux-tu etre dans 6 semaines ?" value={form.objectifs_6semaines} onChange={set("objectifs_6semaines")} textarea />
-          <Input label="Objectifs a 3 mois" placeholder="Ou veux-tu etre dans 3 mois ?" value={form.objectifs_3mois} onChange={set("objectifs_3mois")} textarea />
-          <Input label="Objectifs a 6 mois" placeholder="Ou veux-tu etre dans 6 mois ?" value={form.objectifs_6mois} onChange={set("objectifs_6mois")} textarea />
-          <button style={S.btn()} onClick={nextStep}>Continuer</button>
-          <button style={S.back} onClick={() => setStep(2)}>← Retour</button>
+          <Input label={t("obf.weak_points_label")} placeholder={t("obf.weak_points_placeholder")} value={form.points_faibles} onChange={set("points_faibles")} textarea />
+          <Input label={t("obf.goals_6w_label")} placeholder={t("obf.goals_6w_placeholder")} value={form.objectifs_6semaines} onChange={set("objectifs_6semaines")} textarea />
+          <Input label={t("obf.goals_3m_label")} placeholder={t("obf.goals_3m_placeholder")} value={form.objectifs_3mois} onChange={set("objectifs_3mois")} textarea />
+          <Input label={t("obf.goals_6m_label")} placeholder={t("obf.goals_6m_placeholder")} value={form.objectifs_6mois} onChange={set("objectifs_6mois")} textarea />
+          <button style={S.btn()} onClick={nextStep}>{t("obf.continue")}</button>
+          <button style={S.back} onClick={() => setStep(2)}>{t("obf.back")}</button>
         </div>
       </div>
     );
@@ -439,18 +449,18 @@ export default function OnboardingFlow({ client, onComplete }) {
         {GLOBAL_STYLES}
         {BG}
         <div key="step4" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={4} total={6} />
-          <div style={S.eyebrow}>04 · Mental</div>
+          <StepBar step={4} total={6} label={t("obf.step")} />
+          <div style={S.eyebrow}>{t("obf.step4_eyebrow")}</div>
           <div style={S.h1}>
-            Ton<br />
-            <span style={{ color: GREEN }}>mindset.</span>
+            {t("obf.step4_title_line1")}<br />
+            <span style={{ color: GREEN }}>{t("obf.step4_title_line2")}</span>
           </div>
-          <Scale label="Niveau de motivation aujourd'hui (1 → 10)" value={form.motivation_score} onChange={set("motivation_score")} />
-          <Input label="Qu'est-ce qui t'empeche de tenir sur la duree ?" placeholder="Sois honnete avec toi-meme..." value={form.freins} onChange={set("freins")} textarea />
-          <Input label="Qu'es-tu pret(e) a mettre de cote ?" placeholder="Quels sacrifices es-tu pret(e) a faire ?" value={form.sacrifices} onChange={set("sacrifices")} textarea />
-          <Input label="A quoi ressemble le physique que tu veux avoir ?" placeholder="Decris ta vision, mentionne des references..." value={form.vision_physique} onChange={set("vision_physique")} textarea />
-          <button style={S.btn()} onClick={nextStep}>Continuer</button>
-          <button style={S.back} onClick={() => setStep(3)}>← Retour</button>
+          <Scale label={t("obf.motivation_scale_label")} value={form.motivation_score} onChange={set("motivation_score")} />
+          <Input label={t("obf.freins_label")} placeholder={t("obf.freins_placeholder")} value={form.freins} onChange={set("freins")} textarea />
+          <Input label={t("obf.sacrifices_label")} placeholder={t("obf.sacrifices_placeholder")} value={form.sacrifices} onChange={set("sacrifices")} textarea />
+          <Input label={t("obf.vision_label")} placeholder={t("obf.vision_placeholder")} value={form.vision_physique} onChange={set("vision_physique")} textarea />
+          <button style={S.btn()} onClick={nextStep}>{t("obf.continue")}</button>
+          <button style={S.back} onClick={() => setStep(3)}>{t("obf.back")}</button>
         </div>
       </div>
     );
@@ -462,11 +472,11 @@ export default function OnboardingFlow({ client, onComplete }) {
         {GLOBAL_STYLES}
         {BG}
         <div key="step5" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={5} total={6} />
-          <div style={S.eyebrow}>05 · Performance</div>
+          <StepBar step={5} total={6} label={t("obf.step")} />
+          <div style={S.eyebrow}>{t("obf.step5_eyebrow")}</div>
           <div style={S.h1}>
-            Performance &<br />
-            <span style={{ color: GREEN }}>autres.</span>
+            {t("obf.step5_title_line1")}<br />
+            <span style={{ color: GREEN }}>{t("obf.step5_title_line2")}</span>
           </div>
 
           {/* Carte performance actuelle */}
@@ -480,22 +490,22 @@ export default function OnboardingFlow({ client, onComplete }) {
             }}
           >
             <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 14, fontWeight: 700 }}>
-              Performance actuelle
+              {t("obf.current_perf_label")}
             </div>
             <div style={S.row}>
-              <Input label="1RM Developpe couche" placeholder="kg" type="number" value={form.one_rm_bench} onChange={set("one_rm_bench")} half />
-              <Input label="1RM Back squat" placeholder="kg" type="number" value={form.one_rm_squat} onChange={set("one_rm_squat")} half />
+              <Input label={t("obf.bench_label")} placeholder={t("obf.weight_placeholder")} type="number" value={form.one_rm_bench} onChange={set("one_rm_bench")} half />
+              <Input label={t("obf.squat_label")} placeholder={t("obf.weight_placeholder")} type="number" value={form.one_rm_squat} onChange={set("one_rm_squat")} half />
             </div>
-            <Input label="1RM Traction / max reps" placeholder="kg / reps" value={form.one_rm_traction} onChange={set("one_rm_traction")} />
+            <Input label={t("obf.traction_label")} placeholder={t("obf.traction_placeholder")} value={form.one_rm_traction} onChange={set("one_rm_traction")} />
           </div>
 
-          <Input label="Motivation principale" placeholder="Qu'est-ce qui te donne envie d'etre suivi(e) ?" value={form.motivation_principale} onChange={set("motivation_principale")} textarea />
-          <Input label="Risques d'abandon" placeholder="Qu'est-ce qui pourrait faire que tu abandonnes ?" value={form.risques_abandon} onChange={set("risques_abandon")} textarea />
-          <Input label="Autres informations" placeholder="Tout ce que tu juges utile de mentionner..." value={form.autres_infos} onChange={set("autres_infos")} textarea />
+          <Input label={t("obf.main_motivation_label")} placeholder={t("obf.main_motivation_placeholder")} value={form.motivation_principale} onChange={set("motivation_principale")} textarea />
+          <Input label={t("obf.abandon_risks_label")} placeholder={t("obf.abandon_risks_placeholder")} value={form.risques_abandon} onChange={set("risques_abandon")} textarea />
+          <Input label={t("obf.other_info_label")} placeholder={t("obf.other_info_placeholder")} value={form.autres_infos} onChange={set("autres_infos")} textarea />
           <button style={S.btn()} onClick={nextStep} disabled={saving}>
-            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Enregistrement</span>) : "Reserver mon appel"}
+            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />{t("obf.saving")}</span>) : t("obf.book_call_btn")}
           </button>
-          <button style={S.back} onClick={() => setStep(4)}>← Retour</button>
+          <button style={S.back} onClick={() => setStep(4)}>{t("obf.back")}</button>
         </div>
       </div>
     );
@@ -507,14 +517,14 @@ export default function OnboardingFlow({ client, onComplete }) {
         {GLOBAL_STYLES}
         {BG}
         <div key="step6" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={6} total={6} />
-          <div style={S.eyebrow}>06 · Appel decouverte</div>
+          <StepBar step={6} total={6} label={t("obf.step")} />
+          <div style={S.eyebrow}>{t("obf.step6_eyebrow")}</div>
           <div style={S.h1}>
-            Reserve<br />
-            <span style={{ color: GREEN }}>ton appel.</span>
+            {t("obf.step6_title_line1")}<br />
+            <span style={{ color: GREEN }}>{t("obf.step6_title_line2")}</span>
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, marginBottom: 28, maxWidth: 400 }}>
-            Choisis un creneau pour ton appel de demarrage avec ton coach. 30 minutes pour construire ton programme sur mesure.
+            {t("obf.book_subtitle")}
           </div>
 
           {slots.length === 0 ? (
@@ -530,10 +540,10 @@ export default function OnboardingFlow({ client, onComplete }) {
                 lineHeight: 1.7,
               }}
             >
-              Aucun creneau disponible pour le moment.
+              {t("obf.no_slots_main")}
               <br />
               <span style={{ color: GREEN, fontSize: 11, fontWeight: 600, letterSpacing: "0.5px" }}>
-                Ton coach va te contacter directement.
+                {t("obf.no_slots_sub")}
               </span>
             </div>
           ) : (
@@ -566,7 +576,7 @@ export default function OnboardingFlow({ client, onComplete }) {
                   >
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: isSelected ? GREEN : "#fff", marginBottom: 3, textTransform: "capitalize" }}>
-                        {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                        {date.toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
                       </div>
                       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{slot.heure}</div>
                     </div>
@@ -600,9 +610,9 @@ export default function OnboardingFlow({ client, onComplete }) {
             onClick={slots.length === 0 ? () => setStep(7) : bookSlot}
             disabled={saving}
           >
-            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Reservation</span>) : slots.length === 0 ? "Continuer" : "Confirmer ce creneau"}
+            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />{t("obf.booking")}</span>) : slots.length === 0 ? t("obf.continue") : t("obf.confirm_slot")}
           </button>
-          <button style={S.back} onClick={() => setStep(5)}>← Retour</button>
+          <button style={S.back} onClick={() => setStep(5)}>{t("obf.back")}</button>
         </div>
       </div>
     );
@@ -642,7 +652,7 @@ export default function OnboardingFlow({ client, onComplete }) {
             animation: "fadeUp 0.6s ease 0.2s both",
           }}
         >
-          Bienvenue dans la team
+          {t("obf.welcome_team")}
         </div>
         <h1
           style={{
@@ -654,8 +664,8 @@ export default function OnboardingFlow({ client, onComplete }) {
             animation: "fadeUp 0.6s ease 0.3s both",
           }}
         >
-          Tu es<br />
-          <span style={{ animation: "tealPulse 3s ease-in-out infinite" }}>pret(e).</span>
+          {t("obf.ready_line1")}<br />
+          <span style={{ animation: "tealPulse 3s ease-in-out infinite" }}>{t("obf.ready_line2")}</span>
         </h1>
         {bookedSlot && (
           <div
@@ -675,7 +685,10 @@ export default function OnboardingFlow({ client, onComplete }) {
               letterSpacing: "0.3px",
             }}
           >
-            📞 Appel reserve · {new Date(bookedSlot.date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })} a {bookedSlot.heure}
+            {fillTpl(t("obf.call_booked"), {
+              date: new Date(bookedSlot.date + "T12:00:00").toLocaleDateString(intlLocale(), { day: "numeric", month: "long" }),
+              time: bookedSlot.heure,
+            })}
           </div>
         )}
         <p
@@ -690,8 +703,8 @@ export default function OnboardingFlow({ client, onComplete }) {
             marginRight: "auto",
           }}
         >
-          Ton questionnaire a ete envoye a ton coach.<br />
-          Il prepare ton programme sur mesure.
+          {t("obf.sent_line1")}<br />
+          {t("obf.sent_line2")}
         </p>
         <button
           style={{ ...S.btn(), animation: "fadeUp 0.6s ease 0.6s both", opacity: saving ? 0.7 : 1 }}
@@ -714,7 +727,7 @@ export default function OnboardingFlow({ client, onComplete }) {
             }
           }}
         >
-          {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10, justifyContent: "center" }}><Spinner variant="dots" size={18} color="#000" />Finalisation</span>) : "Acceder a mon espace"}
+          {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10, justifyContent: "center" }}><Spinner variant="dots" size={18} color="#000" />{t("obf.finalizing")}</span>) : t("obf.access_space")}
         </button>
       </div>
     </div>
