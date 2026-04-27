@@ -2,6 +2,9 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useFuel } from "../hooks/useFuel";
 import { useSelectedDate } from "../hooks/useSelectedDate";
+import { useT, getLocale } from "../lib/i18n";
+
+const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
 import EmptyState from "./EmptyState";
 import Spinner from "./Spinner";
@@ -295,6 +298,7 @@ function SupplementsTab({ clientId }) {
 
 // ===== OBJECTIFS TAB =====
 function ObjectifsTab({ goals, onSave }) {
+  const t = useT();
   // Stocke en STRING pour permettre le champ vide pendant l'edition
   // (sinon le 0 reste collé au début quand on tape).
   const [cal, setCal] = useState(String(goals?.calories ?? 2000));
@@ -351,14 +355,14 @@ function ObjectifsTab({ goals, onSave }) {
 
   return (
     <div style={{ padding: "20px 24px" }}>
-      <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 20 }}>Mes objectifs quotidiens</div>
+      <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 20 }}>{t("fuel.goals_title")}</div>
       {[
-        { label: "Calories (kcal)", value: cal, set: setCal },
-        { label: "Proteines (g)", value: prot, set: setProt },
-        { label: "Glucides (g)", value: gluc, set: setGluc },
-        { label: "Lipides (g)", value: lip, set: setLip },
-        { label: "Eau (ml)", value: eau, set: setEau },
-        { label: "Pas", value: pas, set: setPas },
+        { label: t("fuel.goals_calories"), value: cal, set: setCal },
+        { label: t("fuel.goals_proteines"), value: prot, set: setProt },
+        { label: t("fuel.goals_glucides"), value: gluc, set: setGluc },
+        { label: t("fuel.goals_lipides"), value: lip, set: setLip },
+        { label: t("fuel.goals_water"), value: eau, set: setEau },
+        { label: t("fuel.goals_steps"), value: pas, set: setPas },
       ].map((f, i) => (
         <div key={i} style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>{f.label}</div>
@@ -385,13 +389,14 @@ function ObjectifsTab({ goals, onSave }) {
         fontSize: 14, fontWeight: 800, cursor: saving ? "not-allowed" : "pointer",
         fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
       }}>
-        {saving ? "Enregistrement..." : saved ? "Enregistre ✓" : "Enregistrer"}
+        {saving ? t("fuel.saving") : saved ? t("fuel.saved") : t("fuel.save")}
       </button>
     </div>
   );
 }
 
 export default function FuelPage({ client, appData }) {
+  const t = useT();
   const dateSel = useSelectedDate();
   const fuelData = useFuel(client?.id, dateSel.isToday ? undefined : dateSel.date);
   const goals = appData?.nutritionGoals || fuelData.goals;
@@ -516,10 +521,10 @@ export default function FuelPage({ client, appData }) {
   };
 
   const getScorePhrase = () => {
-    if (score >= 85) return "Journee parfaite. Tu es en mode champion.";
-    if (score >= 65) return "Bonne journee. Encore un effort sur les proteines.";
-    if (score >= 40) return "Tu peux mieux faire. Hydrate-toi et mange tes macros.";
-    return "Journee difficile. Rattrape-toi sur le reste de la journee.";
+    if (score >= 85) return t("fuel.score_perfect");
+    if (score >= 65) return t("fuel.score_good");
+    if (score >= 40) return t("fuel.score_meh");
+    return t("fuel.score_bad");
   };
 
   const logsByRepas = REPAS.reduce((acc, r) => {
@@ -778,12 +783,12 @@ export default function FuelPage({ client, appData }) {
 
         {/* HERO */}
         <div style={{ padding: "8px 24px 0" }}>
-          <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Nutrition</div>
-          <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Fuel<span style={{ color: ORANGE }}>.</span></div>
+          <div style={{ fontSize: 10, color: "rgba(249,115,22,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t("fuel.title")}</div>
+          <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>{t("fuel.brand")}<span style={{ color: ORANGE }}>.</span></div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <div style={{ fontSize: 12, color: dateSel.isToday ? "rgba(255,255,255,0.2)" : ORANGE, fontStyle: "italic" }}>
-              {new Date(dateSel.date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-              {!dateSel.isToday && " (consultation)"}
+              {new Date(dateSel.date + "T00:00:00").toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
+              {!dateSel.isToday && t("common.consultation_suffix")}
             </div>
             {/* Toggle Hier / Aujourd'hui */}
             <div style={{ display: "inline-flex", padding: 3, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100 }}>
@@ -797,7 +802,7 @@ export default function FuelPage({ client, appData }) {
                   fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
                   cursor: "pointer", fontFamily: "inherit",
                 }}
-              >Hier</button>
+              >{t("common.yesterday")}</button>
               <button
                 onClick={dateSel.goToToday}
                 style={{
@@ -808,7 +813,7 @@ export default function FuelPage({ client, appData }) {
                   fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
                   cursor: "pointer", fontFamily: "inherit",
                 }}
-              >Aujourd'hui</button>
+              >{t("common.today")}</button>
             </div>
           </div>
         </div>
@@ -816,16 +821,16 @@ export default function FuelPage({ client, appData }) {
         {/* TABS */}
         <div style={{ display: "flex", gap: 4, margin: "16px 24px 0", overflow: "hidden" }}>
           {[
-            { id: "nutrition", label: "Nutrition" },
-            { id: "supplements", label: "Complements" },
-            { id: "objectifs", label: "Objectifs" },
-          ].map((t) => (
-            <button key={t.id} onClick={() => setFuelTab(t.id)} style={{
+            { id: "nutrition", label: t("fuel.tab_nutrition") },
+            { id: "supplements", label: t("fuel.tab_supplements") },
+            { id: "objectifs", label: t("fuel.tab_goals") },
+          ].map((tab) => (
+            <button key={tab.id} onClick={() => setFuelTab(tab.id)} style={{
               padding: "8px 18px", borderRadius: 100, border: "none", cursor: "pointer",
-              background: fuelTab === t.id ? "rgba(249,115,22,0.12)" : "transparent",
-              color: fuelTab === t.id ? ORANGE : "rgba(255,255,255,0.35)",
+              background: fuelTab === tab.id ? "rgba(249,115,22,0.12)" : "transparent",
+              color: fuelTab === tab.id ? ORANGE : "rgba(255,255,255,0.35)",
               fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
-            }}>{t.label}</button>
+            }}>{tab.label}</button>
           ))}
         </div>
 
@@ -842,7 +847,7 @@ export default function FuelPage({ client, appData }) {
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
             <ScoreRing score={score} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Score energie</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>{t("fuel.score_label")}</div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, fontStyle: "italic" }}>"{getScorePhrase()}"</div>
             </div>
           </div>
@@ -852,7 +857,7 @@ export default function FuelPage({ client, appData }) {
         <div style={{ margin: "0 24px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 22, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
             <div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>Calories</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>{t("fuel.calories")}</div>
               <div style={{ fontSize: 38, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
                 {totals.calories}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}>/{goals?.calories || 2000} kcal</span>
               </div>
