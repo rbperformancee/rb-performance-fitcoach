@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import haptic from "../lib/haptic";
+import { useT } from "../lib/i18n";
 
 const G = "#02d1ba";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * Panneau "Inviter mes clients" — a afficher dans le CoachDashboard.
@@ -9,12 +16,13 @@ const G = "#02d1ba";
  *   coach : { coach_code, coach_slug, brand_name, full_name }
  */
 export default function InvitationPanel({ coach }) {
+  const t = useT();
   const [copied, setCopied] = useState(null); // "code" | "link" | null
 
   if (!coach?.coach_code) {
     return (
       <div style={{ padding: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
-        Code d'invitation en cours de generation… Recharge la page dans quelques secondes.
+        {t("ip.code_pending")}
       </div>
     );
   }
@@ -22,9 +30,9 @@ export default function InvitationPanel({ coach }) {
   const code = coach.coach_code;
   const slug = coach.coach_slug || "";
   const link = `https://rbperform.com/rejoindre/${slug}`;
-  const displayName = coach.brand_name || coach.full_name || "ton coach";
+  const displayName = coach.brand_name || coach.full_name || t("ip.fallback_coach_name");
 
-  const shareMessage = `Rejoins mon espace coaching ${displayName} !\n\nTelecharge l'app RB Perform et entre le code ${code}\n\nOu clique directement : ${link}`;
+  const shareMessage = fillTpl(t("ip.share_message"), { name: displayName, code, link });
 
   const copy = async (text, tag) => {
     haptic.light();
@@ -49,7 +57,7 @@ export default function InvitationPanel({ coach }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${displayName} sur RB Perform`,
+          title: fillTpl(t("ip.share_title"), { name: displayName }),
           text: shareMessage,
           url: link,
         });
@@ -62,13 +70,13 @@ export default function InvitationPanel({ coach }) {
   return (
     <div style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 18, padding: "20px 22px", fontFamily: "-apple-system,Inter,sans-serif" }}>
       <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", fontWeight: 700, marginBottom: 14 }}>
-        Inviter mes clients
+        {t("ip.section_title")}
       </div>
 
       {/* ===== CODE 6 CHIFFRES ===== */}
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8, fontWeight: 600 }}>
-          Code coach
+          {t("ip.coach_code_label")}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <div
@@ -90,7 +98,7 @@ export default function InvitationPanel({ coach }) {
           </div>
           <button
             onClick={() => copy(code, "code")}
-            aria-label="Copier le code"
+            aria-label={t("ip.aria_copy_code")}
             style={{
               padding: "12px 18px",
               background: copied === "code" ? G : "rgba(2,209,186,0.08)",
@@ -106,7 +114,7 @@ export default function InvitationPanel({ coach }) {
               transition: "all 0.2s",
             }}
           >
-            {copied === "code" ? "✓ Copie" : "Copier"}
+            {copied === "code" ? t("ip.btn_copied") : t("ip.btn_copy")}
           </button>
         </div>
       </div>
@@ -114,7 +122,7 @@ export default function InvitationPanel({ coach }) {
       {/* ===== LIEN D'INVITATION ===== */}
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8, fontWeight: 600 }}>
-          Lien d'invitation
+          {t("ip.invite_link_label")}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <div
@@ -137,7 +145,7 @@ export default function InvitationPanel({ coach }) {
           </div>
           <button
             onClick={() => copy(link, "link")}
-            aria-label="Copier le lien"
+            aria-label={t("ip.aria_copy_link")}
             style={{
               padding: "10px 16px",
               background: copied === "link" ? G : "rgba(255,255,255,0.04)",
@@ -153,7 +161,7 @@ export default function InvitationPanel({ coach }) {
               transition: "all 0.2s",
             }}
           >
-            {copied === "link" ? "✓" : "Copier"}
+            {copied === "link" ? "✓" : t("ip.btn_copy")}
           </button>
         </div>
       </div>
@@ -161,7 +169,7 @@ export default function InvitationPanel({ coach }) {
       {/* ===== PARTAGER ===== */}
       <button
         onClick={share}
-        aria-label="Partager l'invitation"
+        aria-label={t("ip.aria_share")}
         style={{
           width: "100%",
           padding: "14px 20px",
@@ -186,12 +194,12 @@ export default function InvitationPanel({ coach }) {
           <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
         </svg>
-        {copied === "share" ? "Message copie" : "Partager"}
+        {copied === "share" ? t("ip.btn_share_copied") : t("ip.btn_share")}
       </button>
 
       <div style={{ marginTop: 14, fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-        Le client entre le code dans l'app a son inscription, ou clique sur le lien.
-        Il est automatiquement rattache a toi.
+        {t("ip.footer_p1")}
+        {" "}{t("ip.footer_p2")}
       </div>
     </div>
   );
