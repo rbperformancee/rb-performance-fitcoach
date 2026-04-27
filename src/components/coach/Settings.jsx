@@ -459,7 +459,7 @@ function Toggle({ label, sub, defaultChecked = false }) {
 const wrap = {
   position: "fixed", inset: 0, zIndex: 600,
   background: "#050505",
-  fontFamily: "'DM Sans', -apple-system, sans-serif",
+  fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
   color: "#fff",
   overflowY: "auto",
   WebkitOverflowScrolling: "touch",

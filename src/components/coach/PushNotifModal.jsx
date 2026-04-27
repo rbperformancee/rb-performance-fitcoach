@@ -93,7 +93,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
         borderRadius: 20,
         padding: "36px 28px 28px",
         textAlign: "center",
-        fontFamily: "'DM Sans', -apple-system, sans-serif",
+        fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
         color: "#fff",
         boxShadow: "0 30px 90px rgba(0,0,0,.7), 0 0 0 1px rgba(2,209,186,.08)",
         animation: "pushSlide .25s cubic-bezier(.22,1,.36,1) both",
@@ -125,11 +125,11 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
 
         {/* Titre */}
         <h2 style={{
-          fontFamily: "'Syne', sans-serif",
-          fontSize: 24, fontWeight: 900,
-          letterSpacing: "-.5px",
+          fontSize: "clamp(24px, 6vw, 28px)",
+          fontWeight: 800,
+          letterSpacing: "-0.045em",
           color: "#fff", margin: "0 0 10px",
-          lineHeight: 1.2,
+          lineHeight: 0.95,
         }}>
           Sois alerte en temps reel<span style={{ color: G }}>.</span>
         </h2>
