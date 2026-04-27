@@ -1,28 +1,38 @@
 import React from "react";
+import { useT, getLocale } from "../../lib/i18n";
 
 const G = "#02d1ba";
 
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
+
 export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0, clients = [], urgentCount = 0, onDismiss, onNavigate }) {
+  const t = useT();
   const _h = new Date().getHours();
-  const _g = _h < 12 ? "Bonjour" : _h < 18 ? "Bon apres-midi" : "Bonsoir";
-  const _fn = coachData?.full_name?.split(" ")[0] || "Coach";
+  const _g = _h < 12 ? t("home.greet_morning") : _h < 18 ? t("home.greet_afternoon") : t("home.greet_evening");
+  const _fn = coachData?.full_name?.split(" ")[0] || t("coach.coach_fallback");
   const _now = new Date();
   const _time = String(_now.getHours()).padStart(2, "0") + ":" + String(_now.getMinutes()).padStart(2, "0");
-  const _days = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
-  const _months = ["JAN", "FEV", "MAR", "AVR", "MAI", "JUN", "JUL", "AOU", "SEP", "OCT", "NOV", "DEC"];
+  // Day/month abbreviations from Intl, locale-aware
+  const _dayShort = _now.toLocaleDateString(intlLocale(), { weekday: "short" }).toUpperCase().replace(/\.$/, "");
+  const _monthShort = _now.toLocaleDateString(intlLocale(), { month: "short" }).toUpperCase().replace(/\.$/, "");
 
   const total = clients.length;
   const active = clients.filter(c => c.subscription_status === "active").length;
   const retention = total > 0 ? Math.round((active / total) * 100) : 0;
 
   const _quotes = [
-    "LE BUSINESS NE MENT PAS. LES CHIFFRES PARLENT.",
-    "CHAQUE CLIENT SAUVE EST UN CLIENT GAGNE DEUX FOIS.",
-    "LA RETENTION EST LE NOUVEAU GROWTH.",
-    "UN COACH QUI PILOTE SON MRR PILOTE SA VIE.",
-    "TU N ES PAS JUSTE UN COACH. TU ES UN CEO.",
-    "LES MEILLEURS NE COACHENT PAS PLUS. ILS COACHENT MIEUX.",
-    "TON SCORE BUSINESS EST TON REFLET.",
+    t("home.quote_1"),
+    t("home.quote_2"),
+    t("home.quote_3"),
+    t("home.quote_4"),
+    t("home.quote_5"),
+    t("home.quote_6"),
+    t("home.quote_7"),
   ];
   const _q = _quotes[_now.getDay() % _quotes.length];
 
@@ -30,14 +40,14 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
 
   // Message contextuel
   const getCtx = () => {
-    if (urgentCount > 0) return { title: `${urgentCount} client${urgentCount > 1 ? "s" : ""} a risque.`, sub: "Ouvre ton dashboard. Agis maintenant.", color: "#ff6b6b" };
-    if (businessScore >= 80) return { title: "Tout est sous controle.", sub: "Ton business tourne. Continue.", color: G };
-    if (businessScore >= 60) return { title: "Ton business avance.", sub: "Quelques ajustements pour passer au niveau superieur.", color: "#fff" };
-    if (businessScore >= 40) return { title: "Attention requise.", sub: "Ta retention baisse. Il est temps d agir.", color: "#f97316" };
-    if (_h < 6) return { title: "On grind.", sub: "Personne ne bosse a cette heure. Sauf toi.", color: G };
-    if (_h < 12) return { title: "La journee t appartient.", sub: "Ouvre ton dashboard. Pilote.", color: "#fff" };
-    if (_h < 18) return { title: "Check tes chiffres.", sub: "Tu sais exactement ou tu en es ?", color: "#fff" };
-    return { title: "Late session.", sub: "Les meilleurs bossent quand les autres dorment.", color: G };
+    if (urgentCount > 0) return { title: fillTpl(urgentCount > 1 ? t("home.ctx_urgent_title_many") : t("home.ctx_urgent_title_one"), { n: urgentCount }), sub: t("home.ctx_urgent_sub"), color: "#ff6b6b" };
+    if (businessScore >= 80) return { title: t("home.ctx_solid_title"), sub: t("home.ctx_solid_sub"), color: G };
+    if (businessScore >= 60) return { title: t("home.ctx_correct_title"), sub: t("home.ctx_correct_sub"), color: "#fff" };
+    if (businessScore >= 40) return { title: t("home.ctx_attention_title"), sub: t("home.ctx_attention_sub"), color: "#f97316" };
+    if (_h < 6) return { title: t("home.ctx_grind_title"), sub: t("home.ctx_grind_sub"), color: G };
+    if (_h < 12) return { title: t("home.ctx_morning_title"), sub: t("home.ctx_morning_sub"), color: "#fff" };
+    if (_h < 18) return { title: t("home.ctx_afternoon_title"), sub: t("home.ctx_afternoon_sub"), color: "#fff" };
+    return { title: t("home.ctx_late_title"), sub: t("home.ctx_late_sub"), color: G };
   };
   const _ctx = getCtx();
 
@@ -51,7 +61,7 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
       {/* TOP BAR — date + heure Tesla style */}
       <div style={{ padding: "calc(env(safe-area-inset-top, 44px) + 12px) 28px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", zIndex: 2, gap: 8 }}>
         <div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>{_days[_now.getDay()]} · {_now.getDate()} {_months[_now.getMonth()]}</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>{_dayShort} · {_now.getDate()} {_monthShort}</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 400, letterSpacing: "1px", marginBottom: 6 }}>{_g}</div>
           <div style={{ fontSize: 44, fontWeight: 800, color: "#ffffff", letterSpacing: "-2px", lineHeight: 1, wordBreak: "break-word", maxWidth: "54vw" }}>{_fn}<span style={{ color: G }}>.</span></div>
         </div>
@@ -75,7 +85,7 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
 
       {/* CITATION CEO */}
       <div style={{ padding: "36px 28px 0", position: "relative", zIndex: 2 }}>
-        <div style={{ fontSize: 11, color: "rgba(2,209,186,0.5)", fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", marginBottom: 16 }}>Mindset du jour</div>
+        <div style={{ fontSize: 11, color: "rgba(2,209,186,0.5)", fontWeight: 700, letterSpacing: "4px", textTransform: "uppercase", marginBottom: 16 }}>{t("home.mindset_eyebrow")}</div>
         <div style={{ fontSize: 22, fontWeight: 900, color: "rgba(255,255,255,0.92)", lineHeight: 1.35, letterSpacing: "-0.3px" }}>
           {_q.split(" ").map((word, i) => (
             <span key={i} style={{ color: i === 0 ? G : "rgba(255,255,255,0.9)", marginRight: "6px", display: "inline-block" }}>{word}</span>
@@ -89,9 +99,9 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
       {/* MESSAGE CONTEXTUEL */}
       <div style={{ padding: "24px 28px 0", position: "relative", zIndex: 2 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase" }}>Situation</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase" }}>{t("home.situation_eyebrow")}</div>
           {urgentCount > 0 && (
-            <span style={{ fontSize: 10, color: "#ff6b6b", background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 20, padding: "3px 10px", fontWeight: 600 }}>{urgentCount} URGENT{urgentCount > 1 ? "S" : ""}</span>
+            <span style={{ fontSize: 10, color: "#ff6b6b", background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 20, padding: "3px 10px", fontWeight: 600 }}>{urgentCount} {urgentCount > 1 ? t("home.urgent_badge_many") : t("home.urgent_badge_one")}</span>
           )}
         </div>
         <div style={{ fontSize: 30, fontWeight: 800, color: _ctx.color, letterSpacing: "-1px" }}>{_ctx.title}</div>
@@ -101,9 +111,9 @@ export default function CoachHomeScreen({ coachData, businessScore = 0, mrr = 0,
       {/* STATS */}
       <div style={{ padding: "24px 28px 0", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, position: "relative", zIndex: 2 }}>
         {[
-          { label: "Clients", value: total, color: "#fff" },
-          { label: "MRR", value: mrr.toLocaleString("fr-FR") + "€", color: G },
-          { label: "Retention", value: retention + "%", color: retention > 80 ? G : retention > 50 ? "rgba(255,255,255,0.5)" : "#ff6b6b" },
+          { label: t("home.stat_clients"), value: total, color: "#fff" },
+          { label: t("home.stat_mrr"), value: mrr.toLocaleString(intlLocale()) + "€", color: G },
+          { label: t("home.stat_retention"), value: retention + "%", color: retention > 80 ? G : retention > 50 ? "rgba(255,255,255,0.5)" : "#ff6b6b" },
         ].map((s, i) => (
           <div key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14 }}>
             <div style={{ fontSize: 32, fontWeight: 200, color: s.color, letterSpacing: "-1.5px", lineHeight: 1 }}>{s.value}</div>
