@@ -84,7 +84,8 @@ export default function MovePage({ client, appData }) {
       target_bpm: pendingPrescribed.bpm,
     } : {};
 
-    const { data } = await supabase.from("run_logs").insert({
+    const wasPrescribed = !!pendingPrescribed;
+    const insertPayload = {
       client_id: client.id,
       date: today,
       distance_km: dist > 0 ? dist : null,
@@ -92,7 +93,22 @@ export default function MovePage({ client, appData }) {
       allure_min_km: allure,
       note: form.note || "",
       ...prescribedFields,
-    }).select().single();
+    };
+
+    const { data, error } = await supabase.from("run_logs").insert(insertPayload).select().single();
+
+    if (error) {
+      console.error("[run-log] insert failed", error, insertPayload);
+      setSaving(false);
+      // toast d'erreur via window pour eviter import circulaire
+      try {
+        const { toast } = await import("./Toast");
+        toast.error("Erreur enregistrement : " + (error.message || error.code || "inconnue"));
+      } catch (_) {
+        alert("Erreur enregistrement : " + (error.message || "inconnue"));
+      }
+      return;
+    }
 
     if (data) setRuns(prev => [data, ...prev]);
     setForm({ distance: "", heures: "0", minutes: "", note: "" });
@@ -102,7 +118,9 @@ export default function MovePage({ client, appData }) {
     haptic.success();
 
     // Si run prescrit : refresh le hook pour marquer "fait"
-    if (pendingPrescribed) scheduled.refresh();
+    if (wasPrescribed) {
+      await scheduled.refresh();
+    }
 
     // Log XP dans session_logs pour que useXP le compte
     await supabase.from("session_logs").insert({
