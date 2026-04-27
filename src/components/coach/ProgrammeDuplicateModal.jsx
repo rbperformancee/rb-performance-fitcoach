@@ -1,8 +1,15 @@
 import React, { useState, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * ProgrammeDuplicateModal
@@ -21,6 +28,7 @@ const G = "#02d1ba";
  *   onSuccess?: (count) => void
  */
 export default function ProgrammeDuplicateModal({ programme, clients = [], onClose, onSuccess }) {
+  const t = useT();
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -58,7 +66,7 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
 
   const handleConfirm = async () => {
     if (selectedIds.size === 0) {
-      toast.error("Selectionne au moins un client");
+      toast.error(t("pd.toast_select_at_least_one"));
       return;
     }
     setRunning(true);
@@ -72,7 +80,7 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
       .single();
 
     if (fetchErr || !srcProg) {
-      toast.error("Impossible de charger le programme source");
+      toast.error(t("pd.toast_load_source_error"));
       setRunning(false);
       return;
     }
@@ -115,8 +123,8 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
                 headers: { "Content-Type": "application/json", apikey: anonKey },
                 body: JSON.stringify({
                   client_id: clientId,
-                  title: "RB PERFORM",
-                  body: "Ton programme est pret. C'est parti !",
+                  title: t("pd.push_title"),
+                  body: t("pd.push_body"),
                 }),
               }).catch(() => {});
             }
@@ -136,16 +144,16 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
           }
         }
       } catch (e) {
-        errors.push({ clientId, message: e?.message || "erreur inconnue" });
+        errors.push({ clientId, message: e?.message || t("pd.error_unknown") });
       }
       setProgress({ done: i + 1, total: targets.length });
     }
 
     if (successCount > 0) {
-      toast.success(`Programme duplique pour ${successCount} client${successCount > 1 ? "s" : ""}`);
+      toast.success(fillTpl(successCount > 1 ? t("pd.toast_success_many") : t("pd.toast_success_one"), { n: successCount }));
     }
     if (errors.length > 0) {
-      toast.error(`${errors.length} echec(s) — verifie la console`);
+      toast.error(fillTpl(t("pd.toast_partial_errors"), { n: errors.length }));
       console.error("Duplication errors:", errors);
     }
     setRunning(false);
@@ -168,7 +176,7 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
       }}
       role="dialog"
       aria-modal="true"
-      aria-label="Dupliquer le programme"
+      aria-label={t("pd.aria_label")}
     >
       <div style={{
         width: "100%", maxWidth: 500,
@@ -182,23 +190,23 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
       }}>
         {/* Header */}
         <div style={{ padding: "22px 24px 14px", borderBottom: ".5px solid rgba(255,255,255,.05)" }}>
-          <div style={{ fontSize: 10, color: `${G}99`, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>Dupliquer le programme</div>
+          <div style={{ fontSize: 10, color: `${G}99`, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6, fontWeight: 700 }}>{t("pd.eyebrow")}</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.2 }}>
-            {programme?.programme_name || "Programme"}
+            {programme?.programme_name || t("pd.fallback_name")}
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginTop: 4 }}>
-            Selectionne les clients qui recevront une copie active de ce programme.
+            {t("pd.subtitle")}
           </div>
         </div>
 
         {/* Renommer (optionnel) */}
         <div style={{ padding: "14px 20px 0" }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>Renommer la copie (optionnel)</div>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>{t("pd.rename_label")}</div>
           <input
             type="text"
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
-            placeholder={programme?.programme_name || "Nom du programme"}
+            placeholder={programme?.programme_name || t("pd.rename_placeholder")}
             disabled={running}
             style={{
               width: "100%", padding: "10px 14px",
@@ -229,8 +237,8 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
             }} />
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>Prevenir les clients</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Push + email "programme pret"</div>
+            <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>{t("pd.notify_title")}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{t("pd.notify_sub")}</div>
           </div>
         </div>
 
@@ -240,7 +248,7 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un client..."
+            placeholder={t("pd.search_placeholder")}
             disabled={running}
             style={{
               flex: 1, padding: "10px 14px",
@@ -261,7 +269,7 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
               opacity: running || filtered.length === 0 ? 0.4 : 1,
             }}
           >
-            {selectedIds.size === filtered.length && filtered.length > 0 ? "Aucun" : "Tous"}
+            {selectedIds.size === filtered.length && filtered.length > 0 ? t("pd.toggle_none") : t("pd.toggle_all")}
           </button>
         </div>
 
@@ -273,8 +281,8 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
           {filtered.length === 0 && (
             <div style={{ textAlign: "center", padding: "32px 0", color: "rgba(255,255,255,0.35)", fontSize: 13 }}>
               {eligibleClients.length === 0
-                ? "Aucun autre client disponible"
-                : "Aucun client ne correspond"}
+                ? t("pd.empty_no_clients")
+                : t("pd.empty_no_match")}
             </div>
           )}
           {filtered.map(c => {
@@ -335,7 +343,7 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
               fontSize: 13, fontWeight: 600, cursor: running ? "wait" : "pointer",
               fontFamily: "inherit",
             }}
-          >Annuler</button>
+          >{t("pd.btn_cancel")}</button>
           <button
             onClick={handleConfirm}
             disabled={running || selectedIds.size === 0}
@@ -351,8 +359,8 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
             }}
           >
             {running
-              ? `Duplication... ${progress.done}/${progress.total}`
-              : `Dupliquer pour ${selectedIds.size} client${selectedIds.size > 1 ? "s" : ""}`
+              ? fillTpl(t("pd.btn_running"), { done: progress.done, total: progress.total })
+              : fillTpl(selectedIds.size > 1 ? t("pd.btn_confirm_many") : t("pd.btn_confirm_one"), { n: selectedIds.size })
             }
           </button>
         </div>
