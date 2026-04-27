@@ -12,6 +12,13 @@ import {
 import AppIcon from "../AppIcon";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const RED = "#ef4444";
 const ORANGE = "#f97316";
@@ -26,6 +33,7 @@ const G = "#02d1ba";
  *   - Meilleur moment pour contacter (base sur logs)
  */
 export default function ChurnAlertsSection({ clients = [], onOpenClient }) {
+  const t = useT();
   const [showAll, setShowAll] = useState(false);
 
   const atRisk = useMemo(() => {
@@ -58,8 +66,8 @@ export default function ChurnAlertsSection({ clients = [], onOpenClient }) {
             <AppIcon name="check-circle" size={22} color={G} />
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 2 }}>Tout roule.</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Aucun client a risque aujourd'hui. Continue comme ca.</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 2 }}>{t("ca.empty_title")}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{t("ca.empty_sub")}</div>
           </div>
         </div>
       </div>
@@ -83,7 +91,7 @@ export default function ChurnAlertsSection({ clients = [], onOpenClient }) {
           onClick={() => { haptic.light(); setShowAll((s) => !s); }}
           style={{ marginTop: 10, width: "100%", padding: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.5px", textTransform: "uppercase" }}
         >
-          {showAll ? `Voir moins` : `Voir ${atRisk.length - 5} client${atRisk.length - 5 > 1 ? "s" : ""} de plus`}
+          {showAll ? t("ca.see_less") : fillTpl(atRisk.length - 5 > 1 ? t("ca.see_more_many") : t("ca.see_more_one"), { n: atRisk.length - 5 })}
         </button>
       )}
     </div>
@@ -91,15 +99,16 @@ export default function ChurnAlertsSection({ clients = [], onOpenClient }) {
 }
 
 function SectionHeader({ count }) {
+  const t = useT();
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
       <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg,#f97316,transparent)" }} />
       <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", color: "#f97316", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap" }}>
-        Clients à risque
+        {t("ca.section_label")}
       </span>
       {count > 0 && (
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.04)", padding: "3px 10px", borderRadius: 100, fontWeight: 700 }}>
-          {count} a agir
+          {fillTpl(t("ca.count_to_act"), { n: count })}
         </div>
       )}
       <div style={{ flex: 1, height: "1px", background: "linear-gradient(270deg,#f97316,transparent)" }} />
@@ -108,6 +117,7 @@ function SectionHeader({ count }) {
 }
 
 function ClientAlertCard({ client, onOpenClient }) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -123,10 +133,10 @@ function ClientAlertCard({ client, onOpenClient }) {
       await navigator.clipboard.writeText(message);
       haptic.light();
       setCopied(true);
-      toast.success("Message copie");
+      toast.success(t("ca.toast_copied"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Copie impossible");
+      toast.error(t("ca.toast_copy_error"));
     }
   };
 
@@ -157,11 +167,11 @@ function ClientAlertCard({ client, onOpenClient }) {
           </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             {client._subExpired ? (
-              <span style={{ color: RED, fontWeight: 700 }}>Abonnement expire</span>
+              <span style={{ color: RED, fontWeight: 700 }}>{t("ca.subscription_expired")}</span>
             ) : client._expiringSoon ? (
-              <span style={{ color: ORANGE, fontWeight: 700 }}>Expire dans {client._daysLeft}j</span>
+              <span style={{ color: ORANGE, fontWeight: 700 }}>{fillTpl(t("ca.expires_in_days"), { n: client._daysLeft })}</span>
             ) : (
-              <span>{client._inactiveDays ?? 0}j sans activite</span>
+              <span>{fillTpl(t("ca.days_no_activity"), { n: client._inactiveDays ?? 0 })}</span>
             )}
           </div>
         </div>
@@ -187,7 +197,7 @@ function ClientAlertCard({ client, onOpenClient }) {
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <div style={{ fontSize: 10, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>
-                  Proba renouvellement
+                  {t("ca.renewal_proba_label")}
                 </div>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: renewalCol }}>
                   {client._renewalProba}%
@@ -205,7 +215,7 @@ function ClientAlertCard({ client, onOpenClient }) {
           {/* Message pre-redige */}
           <div>
             <div style={{ fontSize: 10, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 6 }}>
-              Message suggere
+              {t("ca.message_suggested_label")}
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.55, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, padding: "10px 12px", fontStyle: "italic" }}>
               {message}
@@ -227,14 +237,14 @@ function ClientAlertCard({ client, onOpenClient }) {
               style={{ flex: 1, padding: "11px", background: copied ? G : "rgba(2,209,186,0.08)", color: copied ? "#000" : G, border: `1px solid ${G}25`, borderRadius: 10, fontSize: 11, fontWeight: 800, letterSpacing: "0.5px", textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit", minHeight: 38, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
             >
               <AppIcon name="message" size={12} color={copied ? "#000" : G} />
-              {copied ? "Copie" : "Copier le message"}
+              {copied ? t("ca.copied") : t("ca.copy_message")}
             </button>
             {onOpenClient && (
               <button
                 onClick={() => { haptic.light(); onOpenClient(client); }}
                 style={{ flex: 1, padding: "11px", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit", minHeight: 38 }}
               >
-                Voir profil
+                {t("ca.see_profile")}
               </button>
             )}
           </div>
