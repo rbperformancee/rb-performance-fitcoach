@@ -4,13 +4,20 @@ import AppIcon from "../AppIcon";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { calculateChurnRisk } from "../../lib/coachIntelligence";
+import { useT } from "../../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const COLUMNS = [
-  { id: "new",       label: "Nouveau",       color: "#818cf8", icon: "sparkles" },
-  { id: "active",    label: "Actif",         color: "#02d1ba", icon: "check-circle" },
-  { id: "at_risk",   label: "A risque",      color: "#00C9A7", icon: "alert" },
-  { id: "to_renew",  label: "A renouveler",  color: "#fbbf24", icon: "calendar" },
-  { id: "completed", label: "Termine",       color: "rgba(255,255,255,0.4)", icon: "check" },
+  { id: "new",       labelKey: "pk.col_new",       color: "#818cf8", icon: "sparkles" },
+  { id: "active",    labelKey: "pk.col_active",    color: "#02d1ba", icon: "check-circle" },
+  { id: "at_risk",   labelKey: "pk.col_at_risk",   color: "#00C9A7", icon: "alert" },
+  { id: "to_renew",  labelKey: "pk.col_to_renew",  color: "#fbbf24", icon: "calendar" },
+  { id: "completed", labelKey: "pk.col_completed", color: "rgba(255,255,255,0.4)", icon: "check" },
 ];
 
 /**
@@ -18,6 +25,7 @@ const COLUMNS = [
  * Drag and drop entre colonnes (supporte aussi tap pour mobile via menu).
  */
 export default function PipelineKanban({ clients = [], onOpenClient, onClose }) {
+  const t = useT();
   const [dragged, setDragged] = useState(null);
   const [hoveredCol, setHoveredCol] = useState(null);
   const [localStatuses, setLocalStatuses] = useState({}); // id -> status (optimistic)
@@ -55,25 +63,26 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
     haptic.success();
     const { error } = await supabase.from("clients").update({ pipeline_status: newStatus }).eq("id", client.id);
     if (error) {
-      toast.error("Deplacement impossible");
+      toast.error(t("pk.toast_move_failed"));
       setLocalStatuses((prev) => { const n = { ...prev }; delete n[client.id]; return n; });
       return;
     }
+    const colLabel = t(COLUMNS.find((c) => c.id === newStatus)?.labelKey || "");
     // Log activity
     await supabase.from("coach_activity_log").insert({
       coach_id: client.coach_id,
       client_id: client.id,
       activity_type: "pipeline",
-      details: `Deplace vers ${COLUMNS.find((c) => c.id === newStatus)?.label}`,
+      details: fillTpl(t("pk.activity_log_moved_to"), { col: colLabel }),
     });
-    toast.success(`${client.full_name?.split(" ")[0] || "Client"} → ${COLUMNS.find((c) => c.id === newStatus)?.label}`);
+    toast.success(fillTpl(t("pk.toast_moved"), { name: client.full_name?.split(" ")[0] || t("pk.client_fallback"), col: colLabel }));
   };
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Pipeline clients"
+      aria-label={t("pk.aria_label")}
       style={{ position: "fixed", inset: 0, zIndex: 600, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
     >
       <style>{`@keyframes kanFade{from{opacity:0}to{opacity:1}} @keyframes kanSlide{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}} @media(max-width:600px){.kan-header{padding-left:16px !important;padding-right:16px !important}}`}</style>
@@ -84,14 +93,14 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("pk.aria_close")}
             style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,0.6)" />
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Pipeline</div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-2px", lineHeight: 0.92 }}>Ton pipeline<span style={{ color: "#00C9A7" }}>.</span></div>
+            <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>{t("pk.eyebrow")}</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-2px", lineHeight: 0.92 }}>{t("pk.title")}<span style={{ color: "#00C9A7" }}>.</span></div>
           </div>
         </div>
         {/* Search input */}
@@ -100,7 +109,7 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un client, email, tag..."
+            placeholder={t("pk.search_placeholder")}
             style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px 10px 38px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }}
           />
           <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}>
@@ -141,7 +150,7 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: `${col.color}15`, display: "flex", alignItems: "center", justifyContent: "center", color: col.color }}>
                     <AppIcon name={col.icon} size={14} color={col.color} />
                   </div>
-                  <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: col.color, fontWeight: 800 }}>{col.label}</div>
+                  <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: col.color, fontWeight: 800 }}>{t(col.labelKey)}</div>
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 800, color: col.color, background: `${col.color}15`, padding: "2px 10px", borderRadius: 100 }}>{items.length}</div>
               </div>
@@ -150,7 +159,7 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {items.length === 0 ? (
                   <div style={{ padding: 20, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 11, border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 10 }}>
-                    Vide
+                    {t("pk.column_empty")}
                   </div>
                 ) : (
                   items.map((c) => <KanbanCard key={c.id} client={c} onOpen={onOpenClient} onMoveTo={(st) => moveClient(c, st)} onDragStart={() => setDragged(c)} onDragEnd={() => setDragged(null)} />)
@@ -165,6 +174,7 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
 }
 
 function KanbanCard({ client, onOpen, onMoveTo, onDragStart, onDragEnd }) {
+  const t = useT();
   const [showMenu, setShowMenu] = useState(false);
   const firstName = client.full_name?.split(" ")[0] || client.email?.split("@")[0] || "—";
   const churn = calculateChurnRisk(client);
@@ -195,11 +205,11 @@ function KanbanCard({ client, onOpen, onMoveTo, onDragStart, onDragEnd }) {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName}</div>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>{activity !== null ? `${activity}j` : "Jamais connecte"}</div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>{activity !== null ? `${activity}j` : t("pk.never_connected")}</div>
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setShowMenu((s) => !s); }}
-          aria-label="Menu actions client"
+          aria-label={t("pk.aria_card_menu")}
           style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", minWidth: 32, minHeight: 32 }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
@@ -209,11 +219,11 @@ function KanbanCard({ client, onOpen, onMoveTo, onDragStart, onDragEnd }) {
       {/* Stats ligne */}
       <div style={{ display: "flex", gap: 6, fontSize: 9, color: "rgba(255,255,255,0.5)", flexWrap: "wrap" }}>
         <span style={{ padding: "2px 6px", background: `${churn >= 40 ? "rgba(255,107,107,0.12)" : "rgba(255,255,255,0.04)"}`, color: churn >= 40 ? "#ff6b6b" : "rgba(255,255,255,0.5)", borderRadius: 6, fontWeight: 700 }}>
-          Risque {churn}
+          {fillTpl(t("pk.risk_label"), { n: churn })}
         </span>
         {daysLeft !== null && (
           <span style={{ padding: "2px 6px", background: daysLeft <= 0 ? "rgba(255,107,107,0.12)" : daysLeft <= 14 ? "rgba(0,201,167,0.12)" : "rgba(255,255,255,0.04)", color: daysLeft <= 0 ? "#ff6b6b" : daysLeft <= 14 ? "#00C9A7" : "rgba(255,255,255,0.5)", borderRadius: 6, fontWeight: 700 }}>
-            {daysLeft <= 0 ? "Expire" : `${daysLeft}j`}
+            {daysLeft <= 0 ? t("pk.expired") : `${daysLeft}j`}
           </span>
         )}
       </div>
@@ -221,7 +231,7 @@ function KanbanCard({ client, onOpen, onMoveTo, onDragStart, onDragEnd }) {
       {/* Menu mobile (deplacer) */}
       {showMenu && (
         <div style={{ position: "absolute", right: 6, top: 36, zIndex: 20, background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: 5, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", minWidth: 150 }} onClick={(e) => e.stopPropagation()}>
-          <div style={{ fontSize: 9, letterSpacing: "1px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, padding: "6px 10px 4px" }}>Deplacer vers</div>
+          <div style={{ fontSize: 9, letterSpacing: "1px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, padding: "6px 10px 4px" }}>{t("pk.menu_move_to")}</div>
           {COLUMNS.map((col) => (
             <button
               key={col.id}
@@ -229,7 +239,7 @@ function KanbanCard({ client, onOpen, onMoveTo, onDragStart, onDragEnd }) {
               style={{ width: "100%", padding: "8px 10px", background: "none", border: "none", color: col.color, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textAlign: "left", display: "flex", alignItems: "center", gap: 7, borderRadius: 6 }}
             >
               <AppIcon name={col.icon} size={11} color={col.color} />
-              {col.label}
+              {t(col.labelKey)}
             </button>
           ))}
         </div>
