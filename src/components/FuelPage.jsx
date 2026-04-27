@@ -226,7 +226,7 @@ function SupplementsTab({ clientId }) {
         const taken = logs[sup.id] || false;
         return (
           <div key={sup.id} style={{
-            display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
+            display: "flex", alignItems: "center", gap: 12, padding: "14px 16px",
             background: taken ? "rgba(2,209,186,0.04)" : "rgba(255,255,255,0.025)",
             border: `1px solid ${taken ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.06)"}`,
             borderRadius: 14, marginBottom: 8, transition: "all 0.2s",
@@ -238,8 +238,21 @@ function SupplementsTab({ clientId }) {
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 16, fontWeight: 800, flexShrink: 0, transition: "all 0.15s",
             }}>{taken ? "✓" : ""}</button>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: taken ? "rgba(255,255,255,0.4)" : "#fff", textDecoration: taken ? "line-through" : "none", transition: "all 0.2s" }}>{sup.name}</div>
+            {/* Icone pilule pour identifier visuellement le complement */}
+            <div style={{
+              width: 30, height: 30, borderRadius: "50%",
+              background: taken ? "rgba(2,209,186,0.08)" : "rgba(249,115,22,0.08)",
+              border: `1px solid ${taken ? "rgba(2,209,186,0.2)" : "rgba(249,115,22,0.18)"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={taken ? "rgba(2,209,186,0.7)" : "#f97316"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.5 20.5 20.5 10.5a4.95 4.95 0 0 0-7-7L3.5 13.5a4.95 4.95 0 0 0 7 7Z" />
+                <path d="m8.5 8.5 7 7" />
+              </svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: taken ? "rgba(255,255,255,0.4)" : "#fff", textDecoration: taken ? "line-through" : "none", transition: "all 0.2s", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sup.name}</div>
               {sup.dose && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{sup.dose}{sup.added_by === "coach" ? " · Prescrit par ton coach" : ""}</div>}
             </div>
             <button onClick={() => removeSupplement(sup.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.15)", cursor: "pointer", fontSize: 16, padding: 4 }}>×</button>
