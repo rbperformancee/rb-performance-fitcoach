@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import AppIcon from "../AppIcon";
+import { useT, getLocale, t as tStatic } from "../../lib/i18n";
+
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * ActivityTimeline — timeline agregee de toutes les interactions
@@ -8,6 +16,7 @@ import AppIcon from "../AppIcon";
  * Se base sur coach_activity_log + messages + programmes + coach_notes.
  */
 export default function ActivityTimeline({ clientId, coachId }) {
+  const t = useT();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,19 +41,19 @@ export default function ActivityTimeline({ clientId, coachId }) {
       (msgRes.data || []).forEach((m) => feed.push({
         id: "msg_" + m.id,
         type: "message",
-        label: (m.from_coach ? "Toi → " : "Client → toi : ") + m.content.slice(0, 60) + (m.content.length > 60 ? "…" : ""),
+        label: (m.from_coach ? tStatic("at.message_from_coach") : tStatic("at.message_from_client")) + m.content.slice(0, 60) + (m.content.length > 60 ? "…" : ""),
         when: m.created_at,
       }));
       (progRes.data || []).forEach((p) => feed.push({
         id: "prog_" + p.id,
         type: "programme",
-        label: `Programme uploade : ${p.programme_name || "Sans nom"}`,
+        label: fillTpl(tStatic("at.programme_uploaded"), { name: p.programme_name || tStatic("at.programme_no_name") }),
         when: p.uploaded_at,
       }));
       (noteRes.data || []).forEach((n) => feed.push({
         id: "note_" + n.id,
         type: "note",
-        label: "Note : " + n.content.slice(0, 60) + (n.content.length > 60 ? "…" : ""),
+        label: tStatic("at.note_prefix") + n.content.slice(0, 60) + (n.content.length > 60 ? "…" : ""),
         when: n.created_at,
       }));
 
@@ -68,11 +77,11 @@ export default function ActivityTimeline({ clientId, coachId }) {
   };
 
   if (loading) {
-    return <div style={{ padding: "16px 0", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Chargement…</div>;
+    return <div style={{ padding: "16px 0", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 11 }}>{t("at.loading")}</div>;
   }
 
   if (items.length === 0) {
-    return <div style={{ padding: "14px 0", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 11, fontStyle: "italic" }}>Pas encore d'historique. Ajoute une note ou envoie un message.</div>;
+    return <div style={{ padding: "14px 0", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 11, fontStyle: "italic" }}>{t("at.empty")}</div>;
   }
 
   return (
@@ -103,9 +112,9 @@ function formatWhen(iso) {
   const diffMs = Date.now() - d.getTime();
   const diffH = Math.floor(diffMs / 3600000);
   const diffD = Math.floor(diffMs / 86400000);
-  if (diffH < 1) return "A l'instant";
-  if (diffH < 24) return `Il y a ${diffH}h`;
-  if (diffD === 1) return "Hier";
-  if (diffD < 7) return `Il y a ${diffD}j`;
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  if (diffH < 1) return tStatic("coach.activity_just_now");
+  if (diffH < 24) return tStatic("coach.activity_hours_ago").replace("{n}", diffH);
+  if (diffD === 1) return tStatic("coach.activity_yesterday");
+  if (diffD < 7) return tStatic("coach.activity_days_ago").replace("{n}", diffD);
+  return d.toLocaleDateString(intlLocale(), { day: "numeric", month: "short" });
 }

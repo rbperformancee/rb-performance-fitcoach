@@ -1067,6 +1067,14 @@ const MESSAGES = {
     "ai.demo_action_1": "Contact proactif cette semaine",
     "ai.demo_action_2": "Revoir le deficit calorique ou RM cibles",
     "ai.demo_action_3": "Planifier un check-in 15 min par telephone",
+    // ActivityTimeline
+    "at.loading": "Chargement…",
+    "at.empty": "Pas encore d'historique. Ajoute une note ou envoie un message.",
+    "at.message_from_coach": "Toi → ",
+    "at.message_from_client": "Client → toi : ",
+    "at.programme_uploaded": "Programme uploade : {name}",
+    "at.programme_no_name": "Sans nom",
+    "at.note_prefix": "Note : ",
   },
   en: {
     // Navigation
@@ -2112,6 +2120,14 @@ const MESSAGES = {
     "ai.demo_action_1": "Proactive contact this week",
     "ai.demo_action_2": "Review caloric deficit or target RMs",
     "ai.demo_action_3": "Schedule a 15-min phone check-in",
+    // ActivityTimeline
+    "at.loading": "Loading…",
+    "at.empty": "No history yet. Add a note or send a message.",
+    "at.message_from_coach": "You → ",
+    "at.message_from_client": "Client → you: ",
+    "at.programme_uploaded": "Program uploaded: {name}",
+    "at.programme_no_name": "Unnamed",
+    "at.note_prefix": "Note: ",
   },
 };
 
