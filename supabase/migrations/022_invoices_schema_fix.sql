@@ -27,24 +27,29 @@ ALTER TABLE invoices ADD COLUMN IF NOT EXISTS total_ttc        NUMERIC(10,2);
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes            TEXT;
 
 -- Si la table avait le schema 008 (number, amount_cents) on backfill
--- les colonnes 018 a partir des valeurs existantes.
-UPDATE invoices
-SET invoice_number = number
-WHERE invoice_number IS NULL
-  AND number IS NOT NULL;
+-- les colonnes 018 a partir des valeurs existantes. Skip si les
+-- colonnes 008 n'existent pas (cas prod actuel).
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema='public' AND table_name='invoices'
+               AND column_name='number') THEN
+    EXECUTE 'UPDATE invoices SET invoice_number = number
+             WHERE invoice_number IS NULL AND number IS NOT NULL';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema='public' AND table_name='invoices'
+               AND column_name='amount_cents') THEN
+    EXECUTE 'UPDATE invoices SET amount = amount_cents / 100.0
+             WHERE amount IS NULL AND amount_cents IS NOT NULL';
+    EXECUTE 'UPDATE invoices SET total_ttc = amount_cents / 100.0
+             WHERE total_ttc IS NULL AND amount_cents IS NOT NULL';
+  END IF;
+END $$;
 
 UPDATE invoices
-SET amount = amount_cents / 100.0
-WHERE amount IS NULL
-  AND amount_cents IS NOT NULL;
-
-UPDATE invoices
-SET total_ttc = amount_cents / 100.0
-WHERE total_ttc IS NULL
-  AND amount_cents IS NOT NULL;
-
-UPDATE invoices
-SET client_name = COALESCE(client_name, '')
+SET client_name = ''
 WHERE client_name IS NULL;
 
 -- next_invoice_number() existait dans 018 ; on garantit qu'elle est presente
