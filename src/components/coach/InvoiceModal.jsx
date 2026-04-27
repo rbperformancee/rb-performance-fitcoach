@@ -18,6 +18,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
   const [description, setDescription] = useState("Programme coaching");
   const [amount, setAmount] = useState("");
   const [durationMonths, setDurationMonths] = useState("");
+  const [installments, setInstallments] = useState(1);
   const [tvaApplicable, setTvaApplicable] = useState(false);
   const [tvaRate, setTvaRate] = useState(20);
   const [notes, setNotes] = useState("");
@@ -77,6 +78,8 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
       tva_rate: tvaApplicable ? tvaRate : 0,
       tva_amount: tvaAmount,
       total_ttc: totalTTC,
+      installments_count: installments,
+      installment_amount: installments > 1 ? Math.round((totalTTC / installments) * 100) / 100 : null,
       notes: notes.trim() || null,
       status: "draft",
     };
@@ -101,11 +104,16 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
       subscription_end_date: new Date(Date.now() + durForPdf * 30 * 86400000).toISOString(),
     };
 
-    await generateInvoicePDF(fakeClient, { ...coachData, tva_status: tvaApplicable ? "applicable" : "non_applicable" }, invoiceNumber);
-
-    toast.success("Facture " + invoiceNumber + " generee");
-    setSaving(false);
-    onClose();
+    try {
+      await generateInvoicePDF(fakeClient, { ...coachData, tva_status: tvaApplicable ? "applicable" : "non_applicable" }, invoiceNumber);
+      toast.success("Facture " + invoiceNumber + " generee");
+      onClose();
+    } catch (e) {
+      console.error("Invoice PDF generation failed", e);
+      toast.error("Erreur generation PDF : " + (e?.message || "inconnue"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -173,6 +181,22 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
           </div>
         </div>
 
+        {/* Paiement en X fois */}
+        <Label text="Paiement en combien de fois" />
+        <select
+          value={installments}
+          onChange={e => setInstallments(parseInt(e.target.value, 10) || 1)}
+          style={selectStyle}
+        >
+          <option value={1}>Paiement comptant (1x)</option>
+          <option value={2}>2 fois</option>
+          <option value={3}>3 fois</option>
+          <option value={4}>4 fois</option>
+          <option value={6}>6 fois</option>
+          <option value={10}>10 fois</option>
+          <option value={12}>12 fois</option>
+        </select>
+
         {/* TVA */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, padding: "12px 16px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12 }}>
           <button onClick={() => setTvaApplicable(!tvaApplicable)} style={{
@@ -214,6 +238,11 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
           {typeof durationMonths === "number" && durationMonths > 1 && (
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 4, textAlign: "right" }}>
               soit {(amountNum / durationMonths).toFixed(2)} EUR/mois x {durationMonths} mois
+            </div>
+          )}
+          {installments > 1 && (
+            <div style={{ fontSize: 11, color: G, marginTop: 6, textAlign: "right", fontWeight: 600 }}>
+              Paiement en {installments}x de {(totalTTC / installments).toFixed(2)} EUR
             </div>
           )}
         </div>
