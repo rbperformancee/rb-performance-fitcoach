@@ -502,7 +502,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const lastWeight = weights[0];
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
   const weekLogs = logs.filter(l => new Date(l.logged_at) >= weekAgo);
-  const firstName = client.full_name?.split(" ")[0] || "Ce client";
+  const firstName = client.full_name?.split(" ")[0] || t("cp.fallback_this_client");
   const actColor = activityColor(client._lastActivity);
   const inactiveDays = client._inactiveDays;
 
@@ -581,7 +581,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     setSending(false);
   };
 
-  const RPE_LABELS = ["", "Facile", "Correct", "Difficile", "Tres dur", "Epuisant"];
+  const RPE_LABELS = ["", t("cp.rpe_easy"), t("cp.rpe_correct"), t("cp.rpe_hard"), t("cp.rpe_very_hard"), t("cp.rpe_exhausting")];
   const RPE_COLORS = ["", "rgba(255,255,255,0.15)", "rgba(255,255,255,0.15)", "rgba(255,255,255,0.15)", "#fff", "#ff6b6b"];
 
   const exMap = {};
@@ -647,7 +647,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
             >
               <Icon name="arrow-left" size={13} />
-              Retour
+              {t("cp.back")}
             </button>
           </div>
 
@@ -656,13 +656,13 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             <Avatar name={client.full_name || client.email} size={60} active={!!prog} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <h1 style={{ fontSize: "clamp(28px, 7vw, 36px)", fontWeight: 800, letterSpacing: "-0.05em", color: "#fff", margin: 0, lineHeight: 0.95, wordBreak: "break-word" }}>
-                {client.full_name || <span style={{ color: "rgba(255,255,255,0.35)" }}>Sans nom</span>}
+                {client.full_name || <span style={{ color: "rgba(255,255,255,0.35)" }}>{t("cp.no_name")}</span>}
               </h1>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{client.email}</div>
             </div>
             <button
               onClick={() => { try { haptic.light(); } catch(_) {} setShowAIAnalyze(true); }}
-              title="Analyser ce client avec l'IA"
+              title={t("cp.tooltip_analyze")}
               style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "8px 14px",
@@ -680,7 +680,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(2,209,186,.06)"; }}
             >
               <Icon name="zap" size={11} color="#02d1ba" />
-              Analyser
+              {t("cp.btn_analyze")}
             </button>
           </div>
 
@@ -698,15 +698,15 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               <button
                 onClick={async (e) => {
                   e.stopPropagation();
-                  const name = client.full_name?.split(" ")[0] || "Champion";
-                  const ok = await sendManualPush(client.id, `${name}, ton coach t'attend. Reviens en force !`);
-                  if (ok) toast.success(`Notification envoyee a ${name}`);
-                  else toast.error(`${name} n'a pas encore active les notifs`);
+                  const name = client.full_name?.split(" ")[0] || t("cp.fallback_champion");
+                  const ok = await sendManualPush(client.id, t("cp.relance_msg").replace("{name}", name));
+                  if (ok) toast.success(t("cp.toast_notif_sent").replace("{name}", name));
+                  else toast.error(t("cp.toast_notif_no_perm").replace("{name}", name));
                 }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: RED, cursor: "pointer", fontFamily: "inherit" }}
               >
                 <Icon name="alert" size={11} />
-                Relancer ({client._inactiveDays}j)
+                {t("cp.btn_relance_one").replace("{n}", client._inactiveDays)}
               </button>
             )}
             {prog && (
