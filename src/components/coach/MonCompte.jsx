@@ -248,21 +248,29 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
               </select>
             </div>
 
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: -8, lineHeight: 1.5 }}>
-              Les champs ci-dessous ne sont obligatoires que pour les sociétés (SAS, SARL, EURL, SASU). Auto-entrepreneurs : laisser vide.
-            </div>
-
-            <div style={{ display: "flex", gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <Field label="RCS — Ville" value={rcsCity} onChange={setRcsCity} placeholder="Paris" />
+            {(legalForm === "auto-entrepreneur" || legalForm === "EI" || legalForm === "") ? (
+              <div style={{ fontSize: 11, color: "rgba(2,209,186,0.7)", padding: "10px 14px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 10, lineHeight: 1.5 }}>
+                {legalForm === "auto-entrepreneur" || legalForm === "EI"
+                  ? "Auto-entrepreneur / EI : SIRET suffit. RCS et capital ne s'appliquent pas."
+                  : "Selectionne ta forme juridique pour voir les champs requis."}
               </div>
-              <div style={{ flex: 1.2 }}>
-                <Field label="RCS — Numéro" value={rcsNumber} onChange={setRcsNumber} placeholder="123 456 789" />
-              </div>
-            </div>
-
-            <Field label="N° TVA intracommunautaire" value={vatNumber} onChange={setVatNumber} placeholder="FR12345678901" />
-            <Field label="Capital social (EUR)" value={capitalSocial} onChange={setCapitalSocial} placeholder="1000" inputMode="numeric" />
+            ) : (
+              <>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
+                  Champs requis pour les societes commercantes (SAS, SARL, EURL, SASU).
+                </div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <Field label="RCS — Ville" value={rcsCity} onChange={setRcsCity} placeholder="Paris" />
+                  </div>
+                  <div style={{ flex: 1.2 }}>
+                    <Field label="RCS — Numéro" value={rcsNumber} onChange={setRcsNumber} placeholder="123 456 789" />
+                  </div>
+                </div>
+                <Field label="N° TVA intracommunautaire (si applicable)" value={vatNumber} onChange={setVatNumber} placeholder="FR12345678901" />
+                <Field label="Capital social (EUR)" value={capitalSocial} onChange={setCapitalSocial} placeholder="1000" inputMode="numeric" />
+              </>
+            )}
 
             <SaveButton onClick={saveBilling} loading={savingBilling} />
             <div style={{ marginTop: 16 }}>

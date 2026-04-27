@@ -2775,18 +2775,18 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       onClick: () => {
         setShowMoreMenu(false);
         if (hasSentinelAccess) {
-          setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowSentinel(true);
+          setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowSentinel(true);
         } else {
           setShowSentinelTeaser(true);
         }
       },
     }] : []),
-    { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
-    { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); } },
+    { icon: "activity", label: "Analytics", onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
+    { icon: "view",     label: "Pipeline",  onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); } },
     { type: "separator" },
     { icon: "document", label: "Facture", onClick: () => { setShowMoreMenu(false); setShowInvoice(true); } },
-    { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
-    { icon: "users",    label: "Mon compte", onClick: () => { setShowMoreMenu(false); setShowClientList(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
+    { icon: "flame",    label: "Paramètres", onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
+    { icon: "users",    label: "Mon compte", onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
     { type: "separator" },
     { icon: "message",  label: "Aide", color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); toast.success("Support : rb.performancee@gmail.com"); } },
     { icon: "arrow-right", label: "Déconnexion", color: RED, onClick: () => { setShowMoreMenu(false); if (isDemo) { toast.info("Desactive en mode demo"); return; } supabase.auth.signOut().then(() => { window.location.href = "/login"; }); } },
