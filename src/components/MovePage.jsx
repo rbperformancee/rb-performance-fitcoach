@@ -52,9 +52,21 @@ export default function MovePage({ client, appData }) {
 
   const saveSteps = async (steps) => {
     setDailySteps(steps);
-    await supabase.from("daily_tracking").upsert({
-      client_id: client.id, date: today, pas: steps
+    // Recupere les autres champs pour ne pas les ecraser a 0
+    const { data: existing } = await supabase
+      .from("daily_tracking")
+      .select("eau_ml, sommeil_h")
+      .eq("client_id", client.id)
+      .eq("date", today)
+      .maybeSingle();
+    const { error } = await supabase.from("daily_tracking").upsert({
+      client_id: client.id,
+      date: today,
+      pas: steps,
+      eau_ml: existing?.eau_ml ?? 0,
+      sommeil_h: existing?.sommeil_h ?? 0,
     }, { onConflict: "client_id,date" });
+    if (error) console.error("[saveSteps] failed", error);
   };
 
   const addRun = async () => {
@@ -231,8 +243,17 @@ export default function MovePage({ client, appData }) {
         {/* DIVIDER */}
         <div style={{ height: 1, background: "linear-gradient(90deg, rgba(239,68,68,0.3) 0%, rgba(255,255,255,0.04) 100%)", margin: "20px 24px" }} />
 
-        {/* PRESCRITS PAR LE COACH (semaine courante avec navigation) */}
-        {scheduled.totalWeeks > 0 && (
+        {/* PRESCRITS PAR LE COACH — skeleton reserve pendant le chargement
+            pour eviter le layout shift d'1s quand les runs apparaissent. */}
+        {scheduled.loading && (
+          <div style={{ padding: "0 24px", marginBottom: 28 }}>
+            <div className="skeleton" style={{ height: 18, width: 180, marginBottom: 10, borderRadius: 6 }} />
+            <div className="skeleton" style={{ height: 32, width: "100%", marginBottom: 16, borderRadius: 8 }} />
+            <div className="skeleton" style={{ height: 80, width: "100%", borderRadius: 14, marginBottom: 10 }} />
+            <div className="skeleton" style={{ height: 80, width: "100%", borderRadius: 14 }} />
+          </div>
+        )}
+        {!scheduled.loading && scheduled.totalWeeks > 0 && (
           <div style={{ padding: "0 24px", marginBottom: 28 }}>
             {/* Header + week selector */}
             <div style={{ marginBottom: 14 }}>

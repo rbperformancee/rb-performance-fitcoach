@@ -66,14 +66,31 @@ export function useFuel(clientId) {
   };
 
   const updateTracking = async (field, value) => {
-    if (!clientId) return;
+    if (!clientId) return false;
+    const previous = dailyTracking;
     const updated = { ...dailyTracking, [field]: value };
     setDailyTracking(updated);
-    await supabase.from("daily_tracking").upsert({
+    // Payload propre : on n'envoie QUE les champs metier (pas id/created_at
+    // qui pollueraient l'upsert et risqueraient de matcher une mauvaise row).
+    const payload = {
       client_id: clientId,
       date: today,
-      ...updated,
-    }, { onConflict: "client_id,date" });
+      eau_ml: updated.eau_ml ?? 0,
+      sommeil_h: updated.sommeil_h ?? 0,
+      pas: updated.pas ?? 0,
+    };
+    const { data, error } = await supabase
+      .from("daily_tracking")
+      .upsert(payload, { onConflict: "client_id,date" })
+      .select()
+      .single();
+    if (error) {
+      console.error("[updateTracking] save failed", error, payload);
+      setDailyTracking(previous); // rollback
+      return false;
+    }
+    if (data) setDailyTracking(data);
+    return true;
   };
 
   // Calculs totaux du jour
