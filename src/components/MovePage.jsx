@@ -4,11 +4,15 @@ import EmptyState from "./EmptyState";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
 import { useScheduledRuns } from "../hooks/useScheduledRuns";
+import { useT, getLocale } from "../lib/i18n";
+
+const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
 const GREEN = "#34d399";
 const RED = "#ef4444";
 
 export default function MovePage({ client, appData }) {
+  const t = useT();
   const [runs, setRuns] = useState(appData?.runs || []);
   const [dailySteps, setDailySteps] = useState(appData?.dailyTracking?.pas || 0);
   const [stepsGoal, setStepsGoal] = useState(appData?.nutritionGoals?.pas || 8000);
@@ -202,7 +206,7 @@ export default function MovePage({ client, appData }) {
 
         {/* HERO */}
         <div style={{ padding: "8px 24px 0" }}>
-          <div style={{ fontSize: 10, color: "rgba(239,68,68,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Activite</div>
+          <div style={{ fontSize: 10, color: "rgba(239,68,68,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t("move.activity")}</div>
           <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Run<span style={{ color: RED }}>.</span></div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
             {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
@@ -211,12 +215,12 @@ export default function MovePage({ client, appData }) {
 
         {/* PAS HERO */}
         <div style={{ padding: "0 24px", marginBottom: 20 }} onClick={() => setShowSteps(true)}>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Pas aujourd hui</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>{t("move.steps_today")}</div>
           <div style={{ fontSize: 72, fontWeight: 100, color: "#fff", letterSpacing: "-4px", lineHeight: 1, marginBottom: 6, cursor: "pointer" }}>
             {dailySteps.toLocaleString()}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>Objectif {stepsGoal.toLocaleString()}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>{t("move.goal")} {stepsGoal.toLocaleString()}</div>
             <div style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{stepsPct}%</div>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
@@ -228,15 +232,15 @@ export default function MovePage({ client, appData }) {
         <div style={{ padding: "0 24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 4 }}>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, paddingRight: 8 }}>
             <div style={{ fontSize: 26, fontWeight: 200, color: RED, letterSpacing: "-1.5px", lineHeight: 1 }}>{weekKm.toFixed(1)}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>km</span></div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>Cette semaine</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>{t("move.this_week")}</div>
           </div>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, paddingRight: 8 }}>
             <div style={{ fontSize: 26, fontWeight: 200, color: "rgba(239,68,68,0.6)", letterSpacing: "-1.5px", lineHeight: 1 }}>{avgAllure}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>/km</span></div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>Allure moy.</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>{t("move.avg_pace")}</div>
           </div>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14 }}>
-            <div style={{ fontSize: 26, fontWeight: 200, color: "rgba(239,68,68,0.4)", letterSpacing: "-1.5px", lineHeight: 1 }}>{weekRuns.length}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}> sorties</span></div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>Ce mois</div>
+            <div style={{ fontSize: 26, fontWeight: 200, color: "rgba(239,68,68,0.4)", letterSpacing: "-1.5px", lineHeight: 1 }}>{weekRuns.length}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}> {t("move.runs_unit")}</span></div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>{t("move.this_month")}</div>
           </div>
         </div>
 
@@ -257,7 +261,7 @@ export default function MovePage({ client, appData }) {
           <div style={{ padding: "0 24px", marginBottom: 28 }}>
             {/* Header + week selector */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 800, marginBottom: 8 }}>Prescrit par ton coach</div>
+              <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 800, marginBottom: 8 }}>{t("move.coach_prescribed")}</div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
                   <button
@@ -275,13 +279,13 @@ export default function MovePage({ client, appData }) {
                   >‹</button>
                   <div style={{ minWidth: 0, flex: 1, textAlign: "center" }}>
                     <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>
-                      Semaine {scheduled.viewWeek}<span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 400 }}> / {scheduled.totalWeeks}</span>
+                      {t("move.week_label")} {scheduled.viewWeek}<span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 400 }}> / {scheduled.totalWeeks}</span>
                     </div>
                     {scheduled.viewWeek !== scheduled.currentWeek && (
                       <button
                         onClick={() => scheduled.setViewWeek(scheduled.currentWeek)}
                         style={{ marginTop: 4, fontSize: 10, color: "rgba(2,209,186,0.7)", background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: "inherit", letterSpacing: "1.5px", textTransform: "uppercase" }}
-                      >Aujourd'hui →</button>
+                      >{t("move.today_link")}</button>
                     )}
                   </div>
                   <button
@@ -303,7 +307,7 @@ export default function MovePage({ client, appData }) {
               {scheduled.runs.length > 0 && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "1px" }}>
-                    <span>{scheduled.runs.filter(r => r.done).length}/{scheduled.runs.length} runs</span>
+                    <span>{scheduled.runs.filter(r => r.done).length}/{scheduled.runs.length} {t("move.runs_count")}</span>
                     <span style={{ color: "rgba(2,209,186,0.7)", fontWeight: 700 }}>
                       {Math.round((scheduled.runs.filter(r => r.done).length / scheduled.runs.length) * 100)}%
                     </span>
@@ -323,7 +327,7 @@ export default function MovePage({ client, appData }) {
             {/* Liste des runs prescrits */}
             {scheduled.runs.length === 0 ? (
               <div style={{ padding: "20px 16px", textAlign: "center", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)", borderRadius: 14, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-                Aucun run prescrit cette semaine
+                {t("move.no_runs_week")}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -371,7 +375,7 @@ export default function MovePage({ client, appData }) {
                           border: `1px solid ${r.done ? "rgba(2,209,186,0.25)" : "rgba(239,68,68,0.2)"}`,
                           display: "inline-flex", alignItems: "center", gap: 4,
                         }}>
-                          {r.done ? "✓" : "●"} {r.done ? "Fait" : "A faire"}
+                          {r.done ? "✓" : "●"} {r.done ? t("move.done") : t("move.todo")}
                         </div>
                       </div>
 
@@ -379,25 +383,25 @@ export default function MovePage({ client, appData }) {
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
                         {r.distance && (
                           <span style={chipStyle}>
-                            <span style={chipLabel}>Distance</span>
+                            <span style={chipLabel}>{t("move.distance")}</span>
                             <span style={chipVal}>{r.distance}</span>
                           </span>
                         )}
                         {r.duration && (
                           <span style={chipStyle}>
-                            <span style={chipLabel}>Duree</span>
+                            <span style={chipLabel}>{t("move.duration")}</span>
                             <span style={chipVal}>{r.duration}</span>
                           </span>
                         )}
                         {r.bpm && (
                           <span style={chipStyle}>
-                            <span style={chipLabel}>BPM</span>
+                            <span style={chipLabel}>{t("move.bpm")}</span>
                             <span style={chipVal}>{r.bpm}</span>
                           </span>
                         )}
                         {r.rest && (
                           <span style={chipStyle}>
-                            <span style={chipLabel}>Repos</span>
+                            <span style={chipLabel}>{t("move.rest")}</span>
                             <span style={chipVal}>{r.rest}</span>
                           </span>
                         )}
@@ -436,7 +440,7 @@ export default function MovePage({ client, appData }) {
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                 }}
               >
-                🎉 Valider la semaine {scheduled.viewWeek}
+                🎉 {t("move.validate_week")} {scheduled.viewWeek}
                 <span style={{ fontSize: 16, lineHeight: 1 }}>→</span>
               </button>
             )}
@@ -444,7 +448,7 @@ export default function MovePage({ client, appData }) {
             {/* Etat "semaine deja validee" — feedback subtil */}
             {scheduled.viewWeek <= scheduled.validatedUntilWeek && (
               <div style={{ marginTop: 14, padding: "10px 14px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "rgba(2,209,186,0.8)", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                ✓ Semaine validee
+                ✓ {t("move.week_validated")}
               </div>
             )}
 
@@ -468,8 +472,8 @@ export default function MovePage({ client, appData }) {
                 }}
               >
                 {scheduled.validatedUntilWeek >= scheduled.totalWeeks
-                  ? "🏆 Programme termine"
-                  : "🏆 Terminer le programme"}
+                  ? `🏆 ${t("move.programme_done")}`
+                  : `🏆 ${t("move.finish_programme")}`}
               </button>
             )}
           </div>
@@ -497,16 +501,16 @@ export default function MovePage({ client, appData }) {
                 <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, background: "radial-gradient(circle, rgba(239,68,68,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                   <div>
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Record personnel</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>{t("move.personal_record")}</div>
                     <div style={{ fontSize: 44, fontWeight: 100, color: RED, letterSpacing: "-2px", lineHeight: 1 }}>{bestMin}:{bestS}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}> min/km</span></div>
                   </div>
                   {isRecord && (
-                    <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 100, padding: "6px 14px", fontSize: 11, color: RED, fontWeight: 700, flexShrink: 0 }}>Nouveau !</div>
+                    <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 100, padding: "6px 14px", fontSize: 11, color: RED, fontWeight: 700, flexShrink: 0 }}>{t("move.new_excl")}</div>
                   )}
                 </div>
                 <div style={{ marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>Derniere sortie vs record</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>{t("move.last_vs_record")}</div>
                     <div style={{ fontSize: 11, color: pct >= 95 ? RED : "rgba(255,255,255,0.3)", fontWeight: 600 }}>{pct}%</div>
                   </div>
                   <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
@@ -540,16 +544,16 @@ export default function MovePage({ client, appData }) {
         {/* HISTORIQUE COURSES */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase" }}>Historique</div>
-            <button onClick={() => setShowAdd(true)} style={{ background: RED, color: "#fff", border: "none", borderRadius: 100, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Sortie</button>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase" }}>{t("move.history")}</div>
+            <button onClick={() => setShowAdd(true)} style={{ background: RED, color: "#fff", border: "none", borderRadius: 100, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t("move.add_short")}</button>
           </div>
 
           {runs.length === 0 ? (
             <EmptyState
               icon="activity"
-              title="Ta premiere sortie."
-              subtitle="Course, trail, footing — trace ton premier kilometre."
-              action={{ label: "Ajouter une sortie", onClick: () => setShowAdd(true) }}
+              title={t("move.first_run_title")}
+              subtitle={t("move.first_run_subtitle")}
+              action={{ label: t("move.add_run_cta"), onClick: () => setShowAdd(true) }}
               accent={RED}
               size="md"
               style={{ padding: "24px 16px" }}
@@ -564,15 +568,15 @@ export default function MovePage({ client, appData }) {
                     <div style={{ width: 3, height: 36, borderRadius: 2, background: color, flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
-                        {run.note || "Sortie course"}
+                        {run.note || t("move.run_default_label")}
                       </div>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>
-                        {new Date(run.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "short" })} · {run.distance_km} km · {run.duree_min} min
+                        {new Date(run.date).toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "short" })} · {run.distance_km} km · {run.duree_min} min
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ fontSize: 18, color, fontWeight: 600 }}>{run.allure_min_km}</div>
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>min/km</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>{t("move.min_per_km")}</div>
                     </div>
                   </div>
                 );
@@ -588,30 +592,30 @@ export default function MovePage({ client, appData }) {
         <div onClick={e => { if (e.target === e.currentTarget) { setShowAdd(false); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>Nouvelle sortie</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>{t("move.new_run")}</div>
               <button onClick={() => setShowAdd(false)} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, width: 44, height: 44, color: "rgba(255,255,255,0.85)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
 
             <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Distance (km)</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>{t("move.distance_km")}</div>
                 <input type="number" inputMode="decimal" step="0.1" value={form.distance} onChange={e => setForm(p => ({ ...p, distance: e.target.value }))} placeholder="6.2" style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
               </div>
               <div style={{ flex: 1, display: "flex", gap: 6 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Heures</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>{t("move.hours")}</div>
                   <input type="number" inputMode="numeric" min="0" max="10" value={form.heures} onChange={e => setForm(p => ({ ...p, heures: e.target.value }))} placeholder="0" style={{ width: "100%", padding: "14px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", textAlign: "center" }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Minutes</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>{t("move.minutes")}</div>
                   <input type="number" inputMode="numeric" min="0" max="59" value={form.minutes} onChange={e => setForm(p => ({ ...p, minutes: e.target.value }))} placeholder="35" style={{ width: "100%", padding: "14px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", textAlign: "center" }} />
                 </div>
               </div>
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Note (optionnel)</div>
-              <input type="text" value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))} placeholder="Footing matin, trail..." style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 16, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>{t("move.note_optional")}</div>
+              <input type="text" value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))} placeholder={t("move.note_placeholder")} style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 16, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
             </div>
 
             {form.distance && form.duree && (() => {
@@ -623,7 +627,7 @@ export default function MovePage({ client, appData }) {
                 const aSec = allureSec % 60;
                 return (
                   <div style={{ padding: "12px 16px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Allure calculee</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{t("move.calc_pace")}</div>
                     <div style={{ fontSize: 20, color: RED, fontWeight: 600 }}>{aMin}:{String(aSec).padStart(2, "0")} <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>min/km</span></div>
                   </div>
                 );
@@ -638,7 +642,7 @@ export default function MovePage({ client, appData }) {
               const canSave = !saving && (hasDist || hasDur);
               return (
                 <button onClick={addRun} disabled={!canSave} style={{ width: "100%", padding: 16, background: canSave ? RED : "rgba(255,255,255,0.06)", color: canSave ? "#fff" : "rgba(255,255,255,0.2)", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: canSave ? "pointer" : "not-allowed" }}>
-                  {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#fff" />Enregistrement</span>) : "Enregistrer la sortie"}
+                  {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#fff" />{t("move.saving")}</span>) : t("move.save_run")}
                 </button>
               );
             })()}
