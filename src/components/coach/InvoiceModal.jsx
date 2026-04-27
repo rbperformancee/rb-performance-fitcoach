@@ -17,7 +17,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
   const [clientAddress, setClientAddress] = useState("");
   const [description, setDescription] = useState("Programme coaching");
   const [amount, setAmount] = useState("");
-  const [durationMonths, setDurationMonths] = useState(1);
+  const [durationMonths, setDurationMonths] = useState("");
   const [tvaApplicable, setTvaApplicable] = useState(false);
   const [tvaRate, setTvaRate] = useState(20);
   const [notes, setNotes] = useState("");
@@ -45,7 +45,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
         setClientEmail(c.email || "");
         if (c._plan_price) setAmount(String(c._plan_price * (c._plan_duration || 1)));
         if (c._plan_name) setDescription(c._plan_name);
-        if (c._plan_duration) setDurationMonths(c._plan_duration);
+        setDurationMonths(c._plan_duration && c._plan_duration > 0 ? c._plan_duration : "");
       }
     }
   };
@@ -62,6 +62,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
     setSaving(true);
 
     // Save to DB
+    const dur = typeof durationMonths === "number" && durationMonths > 0 ? durationMonths : null;
     const invoiceData = {
       coach_id: coachData.id,
       client_id: clientId || null,
@@ -70,8 +71,8 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
       client_email: clientEmail.trim() || null,
       description: description.trim(),
       amount: amountNum,
-      duration_months: durationMonths,
-      price_per_month: durationMonths > 0 ? Math.round(amountNum / durationMonths * 100) / 100 : amountNum,
+      duration_months: dur,
+      price_per_month: dur ? Math.round(amountNum / dur * 100) / 100 : amountNum,
       tva_applicable: tvaApplicable,
       tva_rate: tvaApplicable ? tvaRate : 0,
       tva_amount: tvaAmount,
@@ -88,15 +89,16 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
     }
 
     // Generate PDF
+    const durForPdf = dur || 1;
     const fakeClient = {
       full_name: clientName,
       email: clientEmail,
       address: clientAddress,
       _plan_name: description,
-      _plan_price: durationMonths > 0 ? amountNum / durationMonths : amountNum,
-      _plan_duration: durationMonths,
+      _plan_price: dur ? amountNum / dur : amountNum,
+      _plan_duration: dur,
       subscription_start_date: new Date().toISOString(),
-      subscription_end_date: new Date(Date.now() + durationMonths * 30 * 86400000).toISOString(),
+      subscription_end_date: new Date(Date.now() + durForPdf * 30 * 86400000).toISOString(),
     };
 
     await generateInvoicePDF(fakeClient, { ...coachData, tva_status: tvaApplicable ? "applicable" : "non_applicable" }, invoiceNumber);
@@ -154,8 +156,20 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="360" inputMode="numeric" style={inputStyle} />
           </div>
           <div style={{ flex: 1 }}>
-            <Label text="Duree (mois)" />
-            <input type="number" value={durationMonths} onChange={e => setDurationMonths(parseInt(e.target.value) || 1)} min="1" style={inputStyle} />
+            <Label text="Duree (mois) — optionnel" />
+            <input
+              type="number"
+              value={durationMonths}
+              onChange={e => {
+                const v = e.target.value;
+                if (v === "") { setDurationMonths(""); return; }
+                const n = parseInt(v, 10);
+                setDurationMonths(Number.isFinite(n) && n > 0 ? n : "");
+              }}
+              min="1"
+              placeholder="Laisser vide si one-shot"
+              style={inputStyle}
+            />
           </div>
         </div>
 
@@ -197,7 +211,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose }) {
             <span>Total TTC</span>
             <span>{totalTTC.toFixed(2)} EUR</span>
           </div>
-          {durationMonths > 1 && (
+          {typeof durationMonths === "number" && durationMonths > 1 && (
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 4, textAlign: "right" }}>
               soit {(amountNum / durationMonths).toFixed(2)} EUR/mois x {durationMonths} mois
             </div>

@@ -198,6 +198,10 @@ const overlay = {
 };
 const card = {
   width: "100%", maxWidth: 500,
+  maxHeight: "calc(100dvh - 80px)",
+  overflowY: "auto",
+  WebkitOverflowScrolling: "touch",
+  overscrollBehavior: "contain",
   background: "#0b0d0f",
   border: `.5px solid rgba(2,209,186,.2)`,
   borderRadius: 18,
