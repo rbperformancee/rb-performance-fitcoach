@@ -2,8 +2,16 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import { generateInvoicePDF } from "../../utils/invoicePDF";
+import { useT, getLocale } from "../../lib/i18n";
 
 const G = "#02d1ba";
+
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * InvoiceModal — creation de facture premium.
@@ -11,11 +19,12 @@ const G = "#02d1ba";
  * Genere un PDF telecharge + sauvegarde en DB.
  */
 export default function InvoiceModal({ coachData, clients = [], onClose, preselectedClient = null }) {
+  const t = useT();
   const [clientId, setClientId] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientAddress, setClientAddress] = useState("");
-  const [description, setDescription] = useState("Programme coaching");
+  const [description, setDescription] = useState(t("inv.default_description"));
   const [amount, setAmount] = useState("");
   const [durationMonths, setDurationMonths] = useState("");
   const [installments, setInstallments] = useState(1);
@@ -62,7 +71,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
 
   const handleGenerate = async () => {
     if (!clientName.trim() || amountNum <= 0) {
-      toast.error("Remplis le nom du client et le montant.");
+      toast.error(t("inv.toast_missing_fields"));
       return;
     }
     setSaving(true);
@@ -91,7 +100,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
 
     const { error } = await supabase.from("invoices").insert(invoiceData).select();
     if (error && !error.message?.includes("0 rows") && error.code !== "PGRST116") {
-      toast.error("Erreur sauvegarde : " + error.message);
+      toast.error(t("inv.toast_save_error") + error.message);
       setSaving(false);
       return;
     }
@@ -119,11 +128,11 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
           installment_amount: installments > 1 ? Math.round((totalTTC / installments) * 100) / 100 : null,
         }
       );
-      toast.success("Facture " + invoiceNumber + " generee");
+      toast.success(fillTpl(t("inv.toast_generated"), { num: invoiceNumber }));
       onClose();
     } catch (e) {
       console.error("Invoice PDF generation failed", e);
-      toast.error("Erreur generation PDF : " + (e?.message || "inconnue"));
+      toast.error(t("inv.toast_pdf_error") + (e?.message || t("inv.toast_pdf_unknown")));
     } finally {
       setSaving(false);
     }
@@ -137,47 +146,47 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
         <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 18 }}>×</button>
 
         {/* Header */}
-        <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>Nouvelle facture</div>
+        <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>{t("inv.eyebrow")}</div>
         <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px", marginBottom: 4 }}>
           {invoiceNumber}<span style={{ color: G }}>.</span>
         </div>
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 24 }}>
-          {new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+          {new Date().toLocaleDateString(intlLocale(), { day: "numeric", month: "long", year: "numeric" })}
         </div>
 
         {/* Client */}
-        <Label text="Client" />
+        <Label text={t("inv.label_client")} />
         <select value={clientId} onChange={e => handleClientChange(e.target.value)} style={selectStyle}>
-          <option value="">Choisir un client ou saisir manuellement</option>
+          <option value="">{t("inv.option_choose_client")}</option>
           {clients.map(c => <option key={c.id} value={c.id}>{c.full_name || c.email}</option>)}
         </select>
 
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <div style={{ flex: 1 }}>
-            <Label text="Nom sur la facture" />
-            <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Prenom Nom" style={inputStyle} />
+            <Label text={t("inv.label_invoice_name")} />
+            <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder={t("inv.placeholder_invoice_name")} style={inputStyle} />
           </div>
           <div style={{ flex: 1 }}>
-            <Label text="Email" />
-            <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="email@client.com" style={inputStyle} />
+            <Label text={t("inv.label_email")} />
+            <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder={t("inv.placeholder_email")} style={inputStyle} />
           </div>
         </div>
 
-        <Label text="Adresse du client" />
-        <input type="text" value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder="12 rue de la Paix, 75002 Paris" style={inputStyle} />
+        <Label text={t("inv.label_address")} />
+        <input type="text" value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder={t("inv.placeholder_address")} style={inputStyle} />
 
         {/* Description */}
-        <Label text="Description" />
-        <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Programme coaching 3 mois" style={inputStyle} />
+        <Label text={t("inv.label_description")} />
+        <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder={t("inv.placeholder_description")} style={inputStyle} />
 
         {/* Montant + Duree */}
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ flex: 1 }}>
-            <Label text="Montant HT (EUR)" />
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="360" inputMode="numeric" style={inputStyle} />
+            <Label text={t("inv.label_amount_ht")} />
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={t("inv.placeholder_amount")} inputMode="numeric" style={inputStyle} />
           </div>
           <div style={{ flex: 1 }}>
-            <Label text="Duree (mois) — optionnel" />
+            <Label text={t("inv.label_duration")} />
             <input
               type="number"
               value={durationMonths}
@@ -188,26 +197,26 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
                 setDurationMonths(Number.isFinite(n) && n > 0 ? n : "");
               }}
               min="1"
-              placeholder="Laisser vide si one-shot"
+              placeholder={t("inv.placeholder_duration")}
               style={inputStyle}
             />
           </div>
         </div>
 
         {/* Paiement en X fois */}
-        <Label text="Paiement en combien de fois" />
+        <Label text={t("inv.label_installments")} />
         <select
           value={installments}
           onChange={e => setInstallments(parseInt(e.target.value, 10) || 1)}
           style={selectStyle}
         >
-          <option value={1}>Paiement comptant (1x)</option>
-          <option value={2}>2 fois</option>
-          <option value={3}>3 fois</option>
-          <option value={4}>4 fois</option>
-          <option value={6}>6 fois</option>
-          <option value={10}>10 fois</option>
-          <option value={12}>12 fois</option>
+          <option value={1}>{t("inv.installment_1")}</option>
+          <option value={2}>{t("inv.installment_2")}</option>
+          <option value={3}>{t("inv.installment_3")}</option>
+          <option value={4}>{t("inv.installment_4")}</option>
+          <option value={6}>{t("inv.installment_6")}</option>
+          <option value={10}>{t("inv.installment_10")}</option>
+          <option value={12}>{t("inv.installment_12")}</option>
         </select>
 
         {/* TVA */}
@@ -220,8 +229,8 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
             <div style={{ position: "absolute", top: 2, left: tvaApplicable ? 20 : 2, width: 18, height: 18, background: "#fff", borderRadius: "50%", transition: "left 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.3)" }} />
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>TVA applicable</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{tvaApplicable ? `${tvaRate}% — ${tvaAmount.toFixed(2)} EUR` : "Non applicable (art. 293 B du CGI)"}</div>
+            <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>{t("inv.tva_applicable")}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{tvaApplicable ? fillTpl(t("inv.tva_amount_line"), { rate: tvaRate, amount: tvaAmount.toFixed(2) }) : t("inv.tva_not_applicable")}</div>
           </div>
           {tvaApplicable && (
             <input type="number" value={tvaRate} onChange={e => setTvaRate(parseFloat(e.target.value) || 0)} style={{ ...inputStyle, width: 60, textAlign: "center" }} />
@@ -229,33 +238,33 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
         </div>
 
         {/* Notes */}
-        <Label text="Notes (optionnel)" />
-        <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Paiement par virement..." style={inputStyle} />
+        <Label text={t("inv.label_notes")} />
+        <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder={t("inv.placeholder_notes")} style={inputStyle} />
 
         {/* Recap */}
         <div style={{ marginTop: 20, padding: "16px 18px", background: "rgba(2,209,186,0.04)", border: `1px solid rgba(2,209,186,0.15)`, borderRadius: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>
-            <span>Sous-total HT</span>
+            <span>{t("inv.subtotal_ht")}</span>
             <span>{amountNum.toFixed(2)} EUR</span>
           </div>
           {tvaApplicable && (
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>
-              <span>TVA ({tvaRate}%)</span>
+              <span>{fillTpl(t("inv.tva_line"), { rate: tvaRate })}</span>
               <span>{tvaAmount.toFixed(2)} EUR</span>
             </div>
           )}
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 800, color: G, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            <span>Total TTC</span>
+            <span>{t("inv.total_ttc")}</span>
             <span>{totalTTC.toFixed(2)} EUR</span>
           </div>
           {typeof durationMonths === "number" && durationMonths > 1 && (
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 4, textAlign: "right" }}>
-              soit {(amountNum / durationMonths).toFixed(2)} EUR/mois x {durationMonths} mois
+              {fillTpl(t("inv.per_month_x"), { price: (amountNum / durationMonths).toFixed(2), n: durationMonths })}
             </div>
           )}
           {installments > 1 && (
             <div style={{ fontSize: 11, color: G, marginTop: 6, textAlign: "right", fontWeight: 600 }}>
-              Paiement en {installments}x de {(totalTTC / installments).toFixed(2)} EUR
+              {fillTpl(t("inv.installments_recap"), { n: installments, amount: (totalTTC / installments).toFixed(2) })}
             </div>
           )}
         </div>
@@ -270,7 +279,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
           fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
           boxShadow: (!clientName.trim() || amountNum <= 0 || saving) ? "none" : `0 8px 24px rgba(2,209,186,0.3)`,
         }}>
-          {saving ? "Generation..." : "Generer la facture PDF"}
+          {saving ? t("inv.btn_generating") : t("inv.btn_generate")}
         </button>
       </div>
     </div>
