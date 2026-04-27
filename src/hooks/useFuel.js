@@ -26,8 +26,8 @@ export function useFuel(clientId) {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const addFood = async (item) => {
-    if (!clientId) return;
-    const { data } = await supabase.from("nutrition_logs").insert({
+    if (!clientId) return null;
+    const { data, error } = await supabase.from("nutrition_logs").insert({
       client_id: clientId,
       date: today,
       repas: item.repas,
@@ -38,6 +38,10 @@ export function useFuel(clientId) {
       lipides: item.lipides,
       quantite_g: item.quantite_g,
     }).select().single();
+    if (error) {
+      console.error("[addFood] insert failed", error, item);
+      return null;
+    }
     if (data) setLogs(prev => [...prev, data]);
     return data;
   };

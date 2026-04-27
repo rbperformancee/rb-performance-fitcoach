@@ -548,12 +548,13 @@ export default function FuelPage({ client, appData }) {
   const addVoiceFood = async () => {
     if (!voiceResult) return;
 
+    let added = 0;
+    let failed = 0;
+
     // Si on a un breakdown ingredients, on les ajoute SEPAREMENT.
-    // Comme ca chaque aliment apparait sur sa propre ligne dans le repas
-    // et l'utilisateur peut le supprimer/editer independamment des autres.
     if (Array.isArray(voiceResult.ingredients) && voiceResult.ingredients.length > 0) {
       for (const ing of voiceResult.ingredients) {
-        await addFood({
+        const r = await addFood({
           repas: selectedRepas,
           aliment: ing.nom,
           calories: Math.round(ing.calories || 0),
@@ -562,10 +563,10 @@ export default function FuelPage({ client, appData }) {
           lipides: parseFloat((ing.lipides || 0).toFixed(1)),
           quantite_g: ing.quantite_g || 0,
         });
+        if (r) added++; else failed++;
       }
     } else {
-      // Fallback si pas de breakdown : une seule entree avec le total
-      await addFood({
+      const r = await addFood({
         repas: selectedRepas,
         aliment: voiceResult.aliment,
         calories: voiceResult.calories,
@@ -574,6 +575,17 @@ export default function FuelPage({ client, appData }) {
         lipides: voiceResult.lipides,
         quantite_g: voiceResult.quantite_g,
       });
+      if (r) added++; else failed++;
+    }
+
+    if (failed > 0 && added === 0) {
+      toast.error(`Echec d'ajout (${failed} aliment${failed > 1 ? "s" : ""}). Verifie ta connexion.`);
+      return; // Garde la modale ouverte pour retry
+    }
+    if (added > 0 && failed > 0) {
+      toast.error(`${added} ajoute${added > 1 ? "s" : ""}, ${failed} echec${failed > 1 ? "s" : ""}.`);
+    } else if (added > 0) {
+      toast.success(`${added} aliment${added > 1 ? "s" : ""} ajoute${added > 1 ? "s" : ""} a ${selectedRepas}`);
     }
 
     setShowVoice(false); setVoiceText(""); setVoiceResult(null);
