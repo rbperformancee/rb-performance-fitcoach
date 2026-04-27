@@ -2,6 +2,7 @@ import React from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 
@@ -19,12 +20,13 @@ const G = "#02d1ba";
  *   isDemo: boolean
  */
 export default function PushNotifModal({ open, onClose, coachId, isDemo = false }) {
+  const t = useT();
   if (!open) return null;
 
   async function handleActivate() {
     if (isDemo) {
       haptic.selection();
-      toast.info("Disponible en version complete →");
+      toast.info(t("pn.toast_demo_unavailable"));
       onClose?.();
       return;
     }
@@ -32,7 +34,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
     haptic.selection();
 
     if (!("Notification" in window)) {
-      toast.error("Ton navigateur ne supporte pas les notifications");
+      toast.error(t("pn.toast_unsupported"));
       onClose?.();
       return;
     }
@@ -40,7 +42,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
     try {
       const perm = await Notification.requestPermission();
       if (perm === "granted") {
-        toast.success("Notifications activees ✓");
+        toast.success(t("pn.toast_activated"));
         // Persister l'etat dans Supabase (best-effort)
         if (coachId) {
           try {
@@ -52,10 +54,10 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
         }
         // TODO: register subscription via push API + VAPID (Edge Fn dediee)
       } else if (perm === "denied") {
-        toast.info("Tu peux les activer plus tard dans les Settings");
+        toast.info(t("pn.toast_denied"));
       }
     } catch (_) {
-      toast.error("Erreur lors de l'activation");
+      toast.error(t("pn.toast_error"));
     }
 
     onClose?.();
@@ -75,7 +77,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
       }}
       role="dialog"
       aria-modal="true"
-      aria-label="Activer les notifications"
+      aria-label={t("pn.aria_label")}
     >
       <style>{`
         @keyframes pushFadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -102,7 +104,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
         {/* Close */}
         <button
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t("pn.aria_close")}
           style={{
             position: "absolute", top: 14, right: 14,
             background: "rgba(255,255,255,.04)", border: "none",
@@ -131,7 +133,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
           color: "#fff", margin: "0 0 10px",
           lineHeight: 0.95,
         }}>
-          Sois alerte en temps reel<span style={{ color: G }}>.</span>
+          {t("pn.title")}<span style={{ color: G }}>.</span>
         </h2>
 
         <p style={{
@@ -139,15 +141,15 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
           margin: "0 0 28px", lineHeight: 1.55,
           fontWeight: 300,
         }}>
-          Recois une alerte des qu'il se passe quelque chose d'important sur ton espace.
+          {t("pn.subtitle")}
         </p>
 
         {/* 3 benefices */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28, textAlign: "left" }}>
           {[
-            { emoji: "🔴", title: "Client a risque de churn", desc: "Avant qu'il ne decroche" },
-            { emoji: "💪", title: "Seance completee par un client", desc: "Au moment meme ou ca arrive" },
-            { emoji: "💬", title: "Nouveau message recu", desc: "Reponds sans delai" },
+            { emoji: "🔴", title: t("pn.benefit1_title"), desc: t("pn.benefit1_desc") },
+            { emoji: "💪", title: t("pn.benefit2_title"), desc: t("pn.benefit2_desc") },
+            { emoji: "💬", title: t("pn.benefit3_title"), desc: t("pn.benefit3_desc") },
           ].map((b, i) => (
             <div
               key={i}
@@ -189,7 +191,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
             transition: "opacity .15s, transform .15s",
           }}
         >
-          Activer maintenant
+          {t("pn.btn_activate")}
         </button>
 
         <button
@@ -204,7 +206,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
             textUnderlineOffset: 3,
           }}
         >
-          Plus tard
+          {t("pn.btn_later")}
         </button>
       </div>
     </div>
