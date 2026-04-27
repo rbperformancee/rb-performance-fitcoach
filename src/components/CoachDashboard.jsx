@@ -651,7 +651,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
             <Avatar name={client.full_name || client.email} size={60} active={!!prog} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "clamp(28px, 7vw, 36px)", fontWeight: 800, letterSpacing: "-0.025em", color: "#fff", margin: 0, lineHeight: 1.1, wordBreak: "break-word" }}>
+              <h1 style={{ fontSize: "clamp(28px, 7vw, 36px)", fontWeight: 800, letterSpacing: "-0.05em", color: "#fff", margin: 0, lineHeight: 0.95, wordBreak: "break-word" }}>
                 {client.full_name || <span style={{ color: "rgba(255,255,255,0.35)" }}>Sans nom</span>}
               </h1>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{client.email}</div>
@@ -775,7 +775,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 {/* Programme actif */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: subStart ? 14 : 0 }}>
                   <div>
-                    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>{prog.programme_name}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{prog.programme_name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: G, marginTop: 4, fontWeight: 600 }}>
                       <Icon name="check" size={12} />
                       Actif depuis {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
