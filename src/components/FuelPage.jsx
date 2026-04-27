@@ -168,23 +168,35 @@ function SupplementsTab({ clientId }) {
     }, { onConflict: "supplement_id,date" });
   };
 
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
+
   const addSupplement = async () => {
     if (!newName.trim()) return;
-    await supabase.from("client_supplements").insert({
+    setAdding(true);
+    setAddError("");
+    const { error } = await supabase.from("client_supplements").insert({
       client_id: clientId,
       name: newName.trim(),
       dose: newDose.trim() || null,
       added_by: "client",
     });
+    setAdding(false);
+    if (error) {
+      console.error("[supplements] insert failed", error);
+      setAddError(error.message || error.code || "Erreur d'enregistrement");
+      return;
+    }
     setNewName("");
     setNewDose("");
     setShowAdd(false);
-    loadData();
+    await loadData();
   };
 
   const removeSupplement = async (id) => {
-    await supabase.from("client_supplements").update({ is_active: false }).eq("id", id);
-    loadData();
+    const { error } = await supabase.from("client_supplements").update({ is_active: false }).eq("id", id);
+    if (error) console.error("[supplements] remove failed", error);
+    await loadData();
   };
 
   const takenCount = Object.values(logs).filter(Boolean).length;
@@ -248,9 +260,14 @@ function SupplementsTab({ clientId }) {
         <div style={{ marginTop: 12, padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 }}>
           <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom (ex: Creatine)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }} />
           <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder="Dose (ex: 5g)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit" }} />
+          {addError && (
+            <div style={{ marginBottom: 10, padding: "8px 12px", background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, fontSize: 11, color: "#ff6b6b" }}>
+              {addError}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => { setShowAdd(false); setNewName(""); setNewDose(""); }} style={{ flex: 1, padding: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
-            <button onClick={addSupplement} disabled={!newName.trim()} style={{ flex: 1, padding: 12, background: newName.trim() ? ORANGE : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: newName.trim() ? "#000" : "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 800, cursor: newName.trim() ? "pointer" : "not-allowed", fontFamily: "inherit" }}>Ajouter</button>
+            <button onClick={() => { setShowAdd(false); setNewName(""); setNewDose(""); setAddError(""); }} disabled={adding} style={{ flex: 1, padding: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
+            <button onClick={addSupplement} disabled={!newName.trim() || adding} style={{ flex: 1, padding: 12, background: (newName.trim() && !adding) ? ORANGE : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: (newName.trim() && !adding) ? "#000" : "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 800, cursor: (newName.trim() && !adding) ? "pointer" : "not-allowed", fontFamily: "inherit" }}>{adding ? "..." : "Ajouter"}</button>
           </div>
         </div>
       ) : (
