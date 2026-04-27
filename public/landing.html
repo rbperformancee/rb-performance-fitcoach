@@ -1682,24 +1682,24 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </a>
       <a class="menu-chapter" data-target="business">
         <span class="ch-num">02</span>
-        <span class="ch-name">Ton Business</span>
+        <span class="ch-name" data-i18n="menu.ch1">Ton Business</span>
       </a>
       <a class="menu-chapter" data-target="features">
         <span class="ch-num">03</span>
-        <span class="ch-name">Features</span>
+        <span class="ch-name" data-i18n="menu.ch3">Features</span>
       </a>
       <a class="menu-chapter" data-target="demo-section">
         <span class="ch-num">04</span>
-        <span class="ch-name">Explorer</span>
+        <span class="ch-name" data-i18n="menu.ch4">Explorer</span>
       </a>
       <a class="menu-chapter" data-target="pricing">
         <span class="ch-num">05</span>
-        <span class="ch-name">Ton Offre</span>
+        <span class="ch-name" data-i18n="menu.ch5">Ton Offre</span>
       </a>
     </nav>
 
     <div class="menu-cta">
-      <a href="/waitlist" class="menu-cta-btn">
+      <a href="/waitlist" class="menu-cta-btn" data-i18n="menu.cta">
         Rejoindre les 30 Founding Coachs →
       </a>
     </div>
@@ -1727,8 +1727,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="hero-overlay"></div>
   <div class="hero-content">
     <h1 class="hero-title" id="heroTitle">RB PERFORM</h1>
-    <p class="hero-sub" style="margin-bottom:32px">Le système qui transforme<br/>chaque coach en CEO.</p>
-    <button class="hero-arrow" id="heroEnter"
+    <p class="hero-sub" data-i18n="hero.sub" style="margin-bottom:32px">Le système qui transforme<br/>chaque coach en CEO.</p>
+    <button class="hero-arrow" id="heroEnter" data-i18n="hero.enter"
       style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:10px 28px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;z-index:5">
       Entrer
     </button>
@@ -3472,7 +3472,11 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'stack.c2_tag':'Anticipation','stack.c2_title':'L\'IA voit avant toi.','stack.c2_desc':'7 signaux par client analysés en continu. Quand un score de churn dépasse 60, tu reçois une alerte avec l\'action recommandée. Tu sauves les clients que d\'autres laissent partir.',
       'stack.c3_tag':'Suivi','stack.c3_title':'Tu vois tout.<br/>Ton client ne fait rien.','stack.c3_desc':'Nutrition IA vocale, scanner code-barre, poids, sommeil, pas — tout se logue automatiquement. Ton client dit "un bol de pâtes au saumon" et les macros tombent en 2 secondes.',
       'founder.role':'Mot du fondateur','founder.message':'J\'ai construit RB Perform parce que les outils existants <strong>volaient les coachs</strong> — 30% de commission, interfaces décennales, support inexistant. J\'ai voulu un système qui te donne <strong>les armes des CEO</strong>, sans te prendre un centime sur tes revenus. Tu paies pour la techno, point. Le reste, c\'est à toi.',
-      'quiz.tag':'Trouve ton plan en 5 secondes','quiz.q':'Tu coaches combien de clients&nbsp;?','quiz.opt1':'Je démarre','quiz.opt2':'J\'établis','quiz.opt3':'Je scale'
+      'quiz.tag':'Trouve ton plan en 5 secondes','quiz.q':'Tu coaches combien de clients&nbsp;?','quiz.opt1':'Je démarre','quiz.opt2':'J\'établis','quiz.opt3':'Je scale',
+      'menu.ch1':'Ton Business','menu.ch3':'Features','menu.ch4':'Explorer','menu.ch5':'Ton Offre',
+      'menu.cta':'Rejoindre les 30 Founding Coachs →',
+      'hero.sub':'Le système qui transforme<br/>chaque coach en CEO.',
+      'hero.enter':'Entrer'
     },
     en: {
       'nav.features':'Features','nav.pricing':'Pricing','nav.login':'Sign in',
@@ -3486,7 +3490,11 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'stack.c2_tag':'Anticipation','stack.c2_title':'AI sees before you.','stack.c2_desc':'7 signals per client analyzed continuously. When a churn score exceeds 60, you get an alert with the recommended action. You save clients others let go.',
       'stack.c3_tag':'Tracking','stack.c3_title':'You see everything.<br/>Your client does nothing.','stack.c3_desc':'Voice AI nutrition, barcode scanner, weight, sleep, steps — everything logs automatically. Your client says "a bowl of salmon pasta" and macros drop in 2 seconds.',
       'founder.role':'Founder note','founder.message':'I built RB Perform because the existing tools were <strong>robbing coaches</strong> — 30% commission, dated interfaces, non-existent support. I wanted a system that gives you <strong>CEO-level weapons</strong>, without taking a cent of your revenue. You pay for the tech, period. The rest is yours.',
-      'quiz.tag':'Find your plan in 5 seconds','quiz.q':'How many clients do you coach?','quiz.opt1':'Starting out','quiz.opt2':'Established','quiz.opt3':'Scaling'
+      'quiz.tag':'Find your plan in 5 seconds','quiz.q':'How many clients do you coach?','quiz.opt1':'Starting out','quiz.opt2':'Established','quiz.opt3':'Scaling',
+      'menu.ch1':'Your Business','menu.ch3':'Features','menu.ch4':'Explore','menu.ch5':'Your Plan',
+      'menu.cta':'Join the 30 Founding Coaches →',
+      'hero.sub':'The system that turns<br/>every coach into a CEO.',
+      'hero.enter':'Enter'
     }
   };
   function initLangToggle() {
