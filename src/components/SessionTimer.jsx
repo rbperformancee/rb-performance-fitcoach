@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import AppIcon from './AppIcon';
+import { useT } from '../lib/i18n';
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 function formatTime(secs) {
   const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -29,6 +36,7 @@ function CircleTimer({ value, max, size = 120, color = '#02d1ba', children }) {
 }
 
 export default function SessionTimer({ clientId, onClose }) {
+  const t = useT();
   const [phase, setPhase] = useState('idle'); // idle | active | rest | done
   const [sessionSecs, setSessionSecs] = useState(0);
   const [restSecs, setRestSecs] = useState(0);
@@ -170,12 +178,16 @@ export default function SessionTimer({ clientId, onClose }) {
       {/* Header */}
       <div style={{ width: '100%', maxWidth: 360, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
         <div>
-          <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5 }}>SÉANCE EN COURS</div>
-          <div style={{ fontSize: 14, color: '#02d1ba', fontWeight: 700 }}>{exercises} exercice{exercises !== 1 ? 's' : ''} · {sets} série{sets !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5 }}>{t("st.eyebrow")}</div>
+          <div style={{ fontSize: 14, color: '#02d1ba', fontWeight: 700 }}>{(() => {
+            const exMany = exercises !== 1, setMany = sets !== 1;
+            const key = exMany ? (setMany ? "st.summary_many_many" : "st.summary_many_one") : (setMany ? "st.summary_one_many" : "st.summary_one_one");
+            return fillTpl(t(key), { ex: exercises, set: sets });
+          })()}</div>
         </div>
         {phase === 'active' && (
           <button onClick={endSession} style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '8px 14px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-            Terminer
+            {t("st.btn_finish")}
           </button>
         )}
       </div>
@@ -186,14 +198,14 @@ export default function SessionTimer({ clientId, onClose }) {
             <AppIcon name="lightning" size={44} color="#02d1ba" strokeWidth={1.6} />
           </div>
           <div style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#f5f5f5', margin: '0 0 8px' }}>Pret a performer ?</h2>
-            <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Lance le timer pour demarrer ta seance</p>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#f5f5f5', margin: '0 0 8px' }}>{t("st.idle_title")}</h2>
+            <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>{t("st.idle_sub")}</p>
           </div>
           <button onClick={startSession} style={{ background: '#02d1ba', color: '#0d0d0d', border: 'none', borderRadius: 16, padding: '18px 56px', fontSize: 17, fontWeight: 900, cursor: 'pointer', boxShadow: '0 4px 24px rgba(2,209,186,0.35)', letterSpacing: 0.5, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            Demarrer
+            {t("st.btn_start")}
             <AppIcon name="lightning" size={18} color="#0d0d0d" strokeWidth={2.5} />
           </button>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#4b5563', fontSize: 13, cursor: 'pointer' }}>Annuler</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#4b5563', fontSize: 13, cursor: 'pointer' }}>{t("st.btn_cancel")}</button>
         </div>
       )}
 
@@ -203,21 +215,21 @@ export default function SessionTimer({ clientId, onClose }) {
             <div style={{ fontSize: 32, fontWeight: 900, color: '#f5f5f5', fontVariantNumeric: 'tabular-nums', filter: pulse ? 'none' : 'brightness(0.8)', transition: 'filter 0.5s' }}>
               {formatTime(sessionSecs)}
             </div>
-            <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, letterSpacing: 1 }}>EN COURS</div>
+            <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, letterSpacing: 1 }}>{t("st.active_label")}</div>
           </CircleTimer>
 
           <div style={{ display: 'flex', gap: 10, width: '100%' }}>
             <button onClick={logSet} style={{ flex: 1, background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 14, padding: '14px', color: '#a78bfa', fontWeight: 800, fontSize: 14, cursor: 'pointer', transition: 'all 0.15s' }}>
-              ✓ Série validée
+              {t("st.btn_set_done")}
             </button>
             <button onClick={logExercise} style={{ flex: 1, background: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.25)', borderRadius: 14, padding: '14px', color: '#fb923c', fontWeight: 800, fontSize: 14, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <AppIcon name="dumbbell" size={14} color="#fb923c" />
-              Exercice suivant
+              {t("st.btn_next_exercise")}
             </button>
           </div>
 
           <div style={{ width: '100%' }}>
-            <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5, marginBottom: 10, textAlign: 'center' }}>TEMPS DE REPOS</div>
+            <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5, marginBottom: 10, textAlign: 'center' }}>{t("st.rest_label")}</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[30, 60, 90, 120].map(d => (
                 <button key={d} onClick={() => startRest(d)} style={{ flex: 1, background: 'rgba(2,209,186,0.08)', border: '1px solid rgba(2,209,186,0.15)', borderRadius: 12, padding: '12px 4px', color: '#02d1ba', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
@@ -231,19 +243,19 @@ export default function SessionTimer({ clientId, onClose }) {
 
       {phase === 'rest' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28 }}>
-          <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 700, letterSpacing: 2 }}>REPOS</div>
+          <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 700, letterSpacing: 2 }}>{t("st.rest_eyebrow")}</div>
           <CircleTimer value={restSecs} max={restTotal} size={180} color={restSecs <= 5 ? '#ef4444' : restSecs <= 15 ? '#fb923c' : '#02d1ba'}>
             <div style={{ fontSize: 44, fontWeight: 900, color: restSecs <= 5 ? '#ef4444' : '#f5f5f5', fontVariantNumeric: 'tabular-nums', transition: 'color 0.3s' }}>
               {restSecs}
             </div>
-            <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, letterSpacing: 1 }}>secondes</div>
+            <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, letterSpacing: 1 }}>{t("st.seconds")}</div>
           </CircleTimer>
           <p style={{ color: '#4b5563', fontSize: 13, textAlign: 'center', display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             <AppIcon name={restSecs <= 5 ? 'flame' : restSecs <= 15 ? 'lightning' : 'zzz'} size={14} color={restSecs <= 5 ? '#ef4444' : restSecs <= 15 ? '#fb923c' : '#4b5563'} />
-            {restSecs <= 5 ? 'Prepare-toi !' : restSecs <= 15 ? 'Bientot !' : 'Recupere bien'}
+            {restSecs <= 5 ? t("st.rest_prepare") : restSecs <= 15 ? t("st.rest_soon") : t("st.rest_recover")}
           </p>
           <button onClick={() => { setPhase('active'); setRestSecs(0); }} style={{ background: 'rgba(2,209,186,0.12)', border: '1px solid rgba(2,209,186,0.25)', borderRadius: 12, padding: '12px 28px', color: '#02d1ba', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-            Passer le repos →
+            {t("st.btn_skip_rest")}
           </button>
         </div>
       )}

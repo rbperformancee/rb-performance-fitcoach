@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useT } from "../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
@@ -124,6 +131,7 @@ function unlockAudio() {
 }
 
 export function RestTimer({ restSeconds, onDismiss, exName }) {
+  const t = useT();
   const [timeLeft, setTimeLeft] = useState(restSeconds);
   
   // Enregistrer SW et demander permission
@@ -202,8 +210,8 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
           reg.active.postMessage({
             type: 'SCHEDULE_TIMER',
             delay: totalRef.current,
-            title: 'RB PERFORM — Repos terminé ! 💪',
-            body: exName ? 'Prochain : ' + exName : "C'est reparti !",
+            title: t("rt.notif_title"),
+            body: exName ? fillTpl(t("rt.notif_next"), { name: exName }) : t("rt.notif_lets_go"),
           });
         }
       });
@@ -290,7 +298,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
         textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
         marginBottom: 6,
       }}>
-        Récupération
+        {t("rt.section_title")}
       </div>
 
       {/* Nom exercice suivant */}
@@ -300,7 +308,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
           marginBottom: 32, maxWidth: 260, textAlign: "center",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
-          Prochain : {exName}
+          {fillTpl(t("rt.next"), { name: exName })}
         </div>
       )}
 
@@ -331,7 +339,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
               <div style={{
                 fontSize: 12, fontWeight: 700, color: GREEN,
                 letterSpacing: "2px", textTransform: "uppercase",
-              }}>Prêt !</div>
+              }}>{t("rt.ready")}</div>
             </>
           ) : (
             <>
@@ -347,7 +355,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
                 {timeStr}
               </div>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "'JetBrains Mono',monospace" }}>
-                {running ? "en cours" : "en pause"}
+                {running ? t("rt.running") : t("rt.paused")}
               </div>
             </>
           )}
@@ -403,14 +411,14 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
                   <rect x="5" y="4" width="3.5" height="12" rx="1.5"/>
                   <rect x="11.5" y="4" width="3.5" height="12" rx="1.5"/>
                 </svg>
-                Pause
+                {t("rt.btn_pause")}
               </>
             ) : (
               <>
                 <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 14, height: 14 }}>
                   <polygon points="5,3 17,10 5,17"/>
                 </svg>
-                Reprendre
+                {t("rt.btn_resume")}
               </>
             )}
           </button>
@@ -437,10 +445,10 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
               <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 14, height: 14 }}>
                 <polygon points="5,3 17,10 5,17"/>
               </svg>
-              C'est parti !
+              {t("rt.btn_lets_go")}
             </>
           ) : (
-            "Passer"
+            t("rt.btn_skip")
           )}
         </button>
       </div>
