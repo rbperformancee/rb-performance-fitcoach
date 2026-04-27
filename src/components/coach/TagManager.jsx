@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import AppIcon from "../AppIcon";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 // Palette de couleurs assignees automatiquement selon le hash du tag
 const COLORS = [
@@ -23,6 +24,7 @@ export function tagColor(tag) {
  * TagBadge — simple pill colore pour afficher un tag.
  */
 export function TagBadge({ tag, onRemove, compact = false }) {
+  const t = useT();
   const color = tagColor(tag);
   return (
     <span style={{
@@ -42,7 +44,7 @@ export function TagBadge({ tag, onRemove, compact = false }) {
       {onRemove && (
         <button
           onClick={(e) => { e.stopPropagation(); haptic.light(); onRemove(tag); }}
-          aria-label={`Retirer ${tag}`}
+          aria-label={t("tg.aria_remove").replace("{tag}", tag)}
           style={{ background: "none", border: "none", color, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", opacity: 0.7 }}
         >
           <AppIcon name="x" size={10} color={color} strokeWidth={2.5} />
@@ -58,16 +60,17 @@ export function TagBadge({ tag, onRemove, compact = false }) {
  * Sauvegarde directement dans clients.tags.
  */
 export default function TagManager({ client, onUpdate }) {
+  const t = useT();
   const [tags, setTags] = useState(client.tags || []);
   const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Direct add (sans dependre du state input — evite race avec setTimeout)
   const addTagDirect = async (rawTag) => {
-    const t = (rawTag || "").trim();
-    if (!t || tags.includes(t) || saving) return;
-    if (t.length > 30) { toast.error("Tag trop long (max 30)"); return; }
-    const next = [...tags, t];
+    const tag = (rawTag || "").trim();
+    if (!tag || tags.includes(tag) || saving) return;
+    if (tag.length > 30) { toast.error(t("tg.toast_too_long")); return; }
+    const next = [...tags, tag];
     setTags(next);
     setInput("");
     haptic.light();
@@ -75,7 +78,7 @@ export default function TagManager({ client, onUpdate }) {
     const { error } = await supabase.from("clients").update({ tags: next }).eq("id", client.id);
     setSaving(false);
     if (error) {
-      toast.error("Tag non enregistre");
+      toast.error(t("tg.toast_save_error"));
       setTags(tags); // rollback
       return;
     }
@@ -85,10 +88,10 @@ export default function TagManager({ client, onUpdate }) {
   const addTag = () => addTagDirect(input);
 
   const removeTag = async (tag) => {
-    const next = tags.filter((t) => t !== tag);
+    const next = tags.filter((x) => x !== tag);
     setTags(next);
     const { error } = await supabase.from("clients").update({ tags: next }).eq("id", client.id);
-    if (error) { toast.error("Erreur"); return; }
+    if (error) { toast.error(t("tg.toast_error")); return; }
     onUpdate?.(next);
   };
 
@@ -101,9 +104,9 @@ export default function TagManager({ client, onUpdate }) {
       {/* Tags existants */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
         {tags.length > 0 ? (
-          tags.map((t) => <TagBadge key={t} tag={t} onRemove={removeTag} />)
+          tags.map((tag) => <TagBadge key={tag} tag={tag} onRemove={removeTag} />)
         ) : (
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Aucun tag — ajoute-en pour filtrer</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>{t("tg.empty")}</div>
         )}
       </div>
 
@@ -115,7 +118,7 @@ export default function TagManager({ client, onUpdate }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
-          placeholder="Nouveau tag (ex: Perte de poids)"
+          placeholder={t("tg.input_placeholder")}
           style={{
             flex: 1, padding: "10px 14px",
             background: "rgba(255,255,255,0.04)",
@@ -145,13 +148,13 @@ export default function TagManager({ client, onUpdate }) {
       {/* Suggestions */}
       {unusedSuggestions.length > 0 && (
         <div style={{ marginTop: 10 }}>
-          <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 6 }}>Suggestions</div>
+          <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 6 }}>{t("tg.suggestions_label")}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {unusedSuggestions.slice(0, 5).map((s) => (
               <button
                 key={s}
                 onClick={() => addTagDirect(s)}
-                aria-label={`Ajouter le tag ${s}`}
+                aria-label={t("tg.aria_add_suggestion").replace("{s}", s)}
                 style={{
                   padding: "6px 12px",
                   background: "rgba(255,255,255,0.03)",

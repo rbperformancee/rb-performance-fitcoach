@@ -1007,6 +1007,15 @@ const MESSAGES = {
     "cps.toast_archive_min": "Crée au moins un autre plan avant d'archiver celui-ci.",
     "cps.toast_error": "Erreur",
     "cps.toast_archived": "Plan archivé",
+    // TagManager
+    "tg.aria_remove": "Retirer {tag}",
+    "tg.aria_add_suggestion": "Ajouter le tag {s}",
+    "tg.empty": "Aucun tag — ajoute-en pour filtrer",
+    "tg.input_placeholder": "Nouveau tag (ex: Perte de poids)",
+    "tg.suggestions_label": "Suggestions",
+    "tg.toast_too_long": "Tag trop long (max 30)",
+    "tg.toast_save_error": "Tag non enregistre",
+    "tg.toast_error": "Erreur",
   },
   en: {
     // Navigation
@@ -1992,6 +2001,15 @@ const MESSAGES = {
     "cps.toast_archive_min": "Create at least one other plan before archiving this one.",
     "cps.toast_error": "Error",
     "cps.toast_archived": "Plan archived",
+    // TagManager
+    "tg.aria_remove": "Remove {tag}",
+    "tg.aria_add_suggestion": "Add tag {s}",
+    "tg.empty": "No tag — add some to filter",
+    "tg.input_placeholder": "New tag (e.g. Weight loss)",
+    "tg.suggestions_label": "Suggestions",
+    "tg.toast_too_long": "Tag too long (max 30)",
+    "tg.toast_save_error": "Tag not saved",
+    "tg.toast_error": "Error",
   },
 };
 
