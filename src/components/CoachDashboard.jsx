@@ -46,6 +46,11 @@ import usePullToRefresh from "../hooks/usePullToRefresh";
 import { useT, getLocale, t as tStatic } from "../lib/i18n";
 
 const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 import ThemeSwitcher from "./ThemeSwitcher";
 import { calculateChurnRisk } from "../lib/coachIntelligence";
 
@@ -769,9 +774,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         {/* ===== STATS RAPIDES (une ligne — sans pesees ni pas, deja dans leurs cards) ===== */}
         <div style={{ ...section, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, animation: "cpFadeUp 0.4s ease 0.08s both" }}>
           {[
-            { l: "Seances", v: Math.ceil(logs.length / 3) || 0, ic: "activity", c: G },
-            { l: "Cette sem.", v: weekLogs.length, ic: "flame", c: weekLogs.length > 0 ? G : "rgba(255,255,255,0.4)" },
-            { l: "RPE moy.", v: rpeData.length ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "--", ic: "trending", c: "rgba(255,255,255,0.5)" },
+            { l: t("cp.stat_sessions"), v: Math.ceil(logs.length / 3) || 0, ic: "activity", c: G },
+            { l: t("cp.stat_this_week"), v: weekLogs.length, ic: "flame", c: weekLogs.length > 0 ? G : "rgba(255,255,255,0.4)" },
+            { l: t("cp.stat_avg_rpe"), v: rpeData.length ? (rpeData.reduce((a, r) => a + r.rpe, 0) / rpeData.length).toFixed(1) : "--", ic: "trending", c: "rgba(255,255,255,0.5)" },
           ].map((s, i) => (
             <div key={i} style={{ ...card, textAlign: "center", padding: "14px 8px 12px" }}>
               <div style={{ color: s.c, display: "flex", justifyContent: "center", marginBottom: 8, opacity: 0.9 }}>
@@ -787,7 +792,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.12s both" }}>
           <div style={sectionTitle}>
             <Icon name="document" size={14} color={G} />
-            Programme et abonnement
+            {t("cp.programme_section_title")}
           </div>
           {prog ? (() => {
             const subStart = client.subscription_start_date ? new Date(client.subscription_start_date) : null;
@@ -796,7 +801,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             const isExpiring = daysLeft !== null && daysLeft <= 14 && daysLeft > 0;
             const isExpired = daysLeft !== null && daysLeft <= 0;
             const subColor = isExpired ? RED : isExpiring ? (daysLeft <= 7 ? RED : ORANGE) : G;
-            const planLabel = client._plan_name || { "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan || "Plan non défini";
+            const planLabel = client._plan_name || { "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan || t("cp.plan_undefined");
 
             return (
               <div style={card}>
@@ -806,12 +811,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{prog.programme_name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: G, marginTop: 4, fontWeight: 600 }}>
                       <Icon name="check" size={12} />
-                      Actif depuis {new Date(prog.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                      {fillTpl(t("cp.active_since"), { date: new Date(prog.uploaded_at).toLocaleDateString(intlLocale(), { day: "numeric", month: "long" }) })}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
-                    <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Maj</button>
-                    <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);toast.error('Erreur: '+error.message);return;} toast.success('Programme archive'); onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>Suppr</button>
+                    <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>{t("cp.btn_maj")}</button>
+                    <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);toast.error(t("cp.toast_error_prefix")+error.message);return;} toast.success(t("cp.toast_programme_archived")); onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>{t("cp.btn_suppr")}</button>
                   </div>
                 </div>
 
@@ -824,11 +829,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       </div>
                     )}
                     <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
-                      {subStart.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} → {subEnd?.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                      {subStart.toLocaleDateString(intlLocale(), { day: "numeric", month: "short" })} → {subEnd?.toLocaleDateString(intlLocale(), { day: "numeric", month: "short", year: "numeric" })}
                     </div>
                     {daysLeft !== null && (
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: subColor }}>
-                        {isExpired ? "Expire" : `${daysLeft}j restants`}
+                        {isExpired ? t("cp.expired_short") : fillTpl(t("cp.days_remaining"), { n: daysLeft })}
                       </div>
                     )}
                   </div>
@@ -841,7 +846,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
                   >
                     <Icon name="document" size={12} />
-                    Generer facture
+                    {t("cp.btn_generate_invoice")}
                   </button>
                 )}
 
@@ -849,13 +854,13 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 {isExpiring && !isExpired && (
                   <div style={{ marginTop: 10, padding: "8px 12px", background: daysLeft <= 7 ? "rgba(255,107,107,0.08)" : "rgba(0,201,167,0.06)", border: `1px solid ${daysLeft <= 7 ? "rgba(255,107,107,0.2)" : "rgba(0,201,167,0.2)"}`, borderRadius: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: daysLeft <= 7 ? RED : ORANGE }}>
                     <Icon name="alert" size={12} />
-                    {daysLeft <= 7 ? "Abonnement expire dans " + daysLeft + " jours !" : "Abonnement expire dans " + daysLeft + " jours"}
+                    {fillTpl(daysLeft <= 7 ? t("cp.expiring_warn_strong") : t("cp.expiring_warn"), { n: daysLeft })}
                   </div>
                 )}
                 {isExpired && (
                   <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.25)", borderRadius: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: RED }}>
                     <Icon name="alert" size={12} />
-                    Abonnement expire — renouvellement necessaire
+                    {t("cp.expired_warn")}
                   </div>
                 )}
               </div>
@@ -864,13 +869,13 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             <div style={{ ...card, background: "rgba(0,201,167,0.04)", border: "1px solid rgba(0,201,167,0.2)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: ORANGE, fontWeight: 700, marginBottom: 14 }}>
                 <Icon name="alert" size={14} />
-                Aucun programme assigne
+                {t("cp.no_programme_assigned")}
               </div>
 
               {/* Abonnement : seulement si pas encore defini (premier upload) */}
               {!client.subscription_start_date && (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>Abonnement</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>{t("cp.subscription_label")}</div>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {(coachPlans.length > 0 ? coachPlans : SUB_PLANS_LEGACY).map(p => {
                       const planId = p.id;
@@ -891,7 +896,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
               {/* Duree du programme en semaines (toujours visible) */}
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>Duree du programme</div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>{t("cp.programme_duration")}</div>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   {[4, 6, 8, 10, 12].map(w => {
                     const on = uploadProgWeeks === w;
@@ -901,7 +906,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                         background: on ? "rgba(0,201,167,0.12)" : "rgba(255,255,255,0.03)",
                         border: `1px solid ${on ? "rgba(0,201,167,0.3)" : "rgba(255,255,255,0.08)"}`,
                         color: on ? VIOLET : "rgba(255,255,255,0.4)",
-                      }}>{w} sem</button>
+                      }}>{fillTpl(t("cp.weeks_short"), { n: w })}</button>
                     );
                   })}
                   <input
@@ -910,22 +915,22 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     onChange={e => setUploadProgWeeks(Math.max(1, parseInt(e.target.value) || 6))}
                     style={{ width: 50, padding: "7px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, textAlign: "center", outline: "none" }}
                   />
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>sem</span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{t("cp.weeks_unit")}</span>
                 </div>
               </div>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <button onClick={() => setShowBuilder(true)} style={{ flex: "1 1 140px", padding: 12, background: "linear-gradient(135deg, #c0392b, #a93226)", border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(192,57,43,0.3)" }}>
                   <Icon name="document" size={14} />
-                  Creer un programme
+                  {t("cp.btn_create_programme")}
                 </button>
                 <button onClick={() => fileRef.current?.click()} style={{ flex: "1 1 140px", padding: 12, background: `linear-gradient(135deg, ${G}, #0891b2)`, border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(2,209,186,0.25)" }}>
                   <Icon name="upload" size={14} />
-                  Uploader HTML
+                  {t("cp.btn_upload_html")}
                 </button>
                 <button onClick={() => onWantInvoice?.(client)} style={{ flex: "1 1 140px", padding: 12, background: "linear-gradient(135deg, #a78bfa, #7c3aed)", border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 20px rgba(167,139,250,0.3)" }}>
                   <Icon name="document" size={14} />
-                  Generer facture
+                  {t("cp.btn_generate_invoice")}
                 </button>
               </div>
             </div>
@@ -936,7 +941,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.16s both" }}>
           <div style={sectionTitle}>
             <Icon name="trending" size={14} color={G} />
-            Poids
+            {t("cp.weight_section_title")}
           </div>
           {lastWeight ? (
             <div onClick={() => setDrawer("poids")} style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", transition: "border-color 0.2s" }}>
@@ -945,19 +950,23 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   {lastWeight.weight}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginLeft: 4 }}>kg</span>
                 </div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
-                  {new Date(lastWeight.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                  {new Date(lastWeight.date).toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
                 </div>
-                {weights.length >= 2 && (
-                  <div style={{ fontSize: 11, color: weights[weights.length-1].weight > lastWeight.weight ? RED : G, fontWeight: 700, marginTop: 4 }}>
-                    {(lastWeight.weight - weights[weights.length-1].weight) > 0 ? "+" : ""}{(lastWeight.weight - weights[weights.length-1].weight).toFixed(1)} kg depuis le debut
-                  </div>
-                )}
+                {weights.length >= 2 && (() => {
+                  const d = lastWeight.weight - weights[weights.length-1].weight;
+                  const sign = d > 0 ? "+" : "";
+                  return (
+                    <div style={{ fontSize: 11, color: weights[weights.length-1].weight > lastWeight.weight ? RED : G, fontWeight: 700, marginTop: 4 }}>
+                      {fillTpl(t("cp.weight_delta_since_start"), { delta: `${sign}${d.toFixed(1)}` })}
+                    </div>
+                  );
+                })()}
               </div>
               {weights.length >= 2 && <MiniSparkline data={[...weights].reverse()} color={G} w={120} h={40} />}
             </div>
           ) : (
             <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
-              Aucune pesee enregistree — ton client peut en ajouter depuis son app.
+              {t("cp.no_weights")}
             </div>
           )}
         </div>
@@ -971,11 +980,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.18s both" }}>
           <div style={sectionTitle}>
             <Icon name="apple" size={14} color={G} />
-            Alimentation — 7 derniers jours
+            {t("cp.nutrition_7d_title")}
           </div>
           {nutDays.length === 0 ? (
             <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
-              Aucune alimentation loggee cette semaine.
+              {t("cp.no_nutrition_week")}
             </div>
           ) : (
             <div style={card}>
@@ -987,7 +996,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   const overGoal = d.kcal > goalKcal * 1.1;
                   const underGoal = d.kcal < goalKcal * 0.7;
                   const barColor = overGoal ? ORANGE : underGoal ? RED : G;
-                  const dayLabel = new Date(date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short" }).slice(0, 3);
+                  const dayLabel = new Date(date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "short" }).slice(0, 3);
                   return (
                     <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                       <div style={{ fontSize: 9, fontWeight: 700, color: barColor, fontFamily: "'JetBrains Mono',monospace" }}>{d.kcal}</div>
@@ -1005,10 +1014,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 return (
                   <div style={{ display: "flex", gap: 12, justifyContent: "center", paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                     {[
-                      { l: "Moy/j", v: Math.round(avg.kcal / n), u: "kcal", c: ORANGE },
-                      { l: "Prot", v: Math.round(avg.prot / n), u: "g", c: G },
-                      { l: "Gluc", v: Math.round(avg.gluc / n), u: "g", c: "#60a5fa" },
-                      { l: "Lip", v: Math.round(avg.lip / n), u: "g", c: VIOLET },
+                      { l: t("cp.macro_avg_day"), v: Math.round(avg.kcal / n), u: t("cp.unit_kcal"), c: ORANGE },
+                      { l: t("cp.macro_prot"), v: Math.round(avg.prot / n), u: t("cp.unit_g"), c: G },
+                      { l: t("cp.macro_gluc"), v: Math.round(avg.gluc / n), u: t("cp.unit_g"), c: "#60a5fa" },
+                      { l: t("cp.macro_lip"), v: Math.round(avg.lip / n), u: t("cp.unit_g"), c: VIOLET },
                     ].map((m, i) => (
                       <div key={i} style={{ textAlign: "center" }}>
                         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: m.c }}>{m.v}<span style={{ fontSize: 9, fontWeight: 500, color: "rgba(255,255,255,0.3)" }}>{m.u}</span></div>
@@ -1026,11 +1035,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.2s both" }}>
           <div style={sectionTitle}>
             <Icon name="activity" size={14} color={G} />
-            Activite quotidienne — 7 jours
+            {t("cp.activity_7d_title")}
           </div>
           {daily7d.length === 0 ? (
             <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
-              Aucune donnee d'activite cette semaine.
+              {t("cp.no_activity_week")}
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
@@ -1038,11 +1047,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               <div onClick={() => setDrawer("pas")} style={{ ...card, cursor: "pointer", transition: "border-color 0.2s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: G }}>Pas quotidiens</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: G }}>{t("cp.daily_steps")}</div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const v = window.prompt("Objectif de pas par jour :", String(nutGoals?.pas || 8000));
+                        const v = window.prompt(t("cp.prompt_steps_goal"), String(nutGoals?.pas || 8000));
                         if (v && !isNaN(parseInt(v))) {
                           const newGoal = parseInt(v);
                           setNutGoals(prev => ({ ...prev, pas: newGoal }));
@@ -1051,7 +1060,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       }}
                       style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }}
                     >
-                      Objectif : {(nutGoals?.pas || 8000).toLocaleString()} pas
+                      {fillTpl(t("cp.steps_goal_label"), { n: (nutGoals?.pas || 8000).toLocaleString(intlLocale()) })}
                       <Icon name="view" size={9} color="rgba(255,255,255,0.25)" />
                     </button>
                   </div>
@@ -1061,14 +1070,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   {daily7d.slice(-7).map((d, i) => {
                     const stepsGoal = nutGoals?.pas || 8000;
                     const pct = Math.min(100, Math.round(((d.pas || 0) / stepsGoal) * 100));
-                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric" });
                     return (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", width: 50, flexShrink: 0, textTransform: "capitalize" }}>{dayLabel}</div>
                         <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
                           <div style={{ height: "100%", width: pct + "%", background: pct >= 100 ? G : ORANGE, borderRadius: 3, transition: "width 0.3s" }} />
                         </div>
-                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: pct >= 100 ? G : "rgba(255,255,255,0.5)", width: 45, textAlign: "right" }}>{(d.pas || 0).toLocaleString()}</div>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700, color: pct >= 100 ? G : "rgba(255,255,255,0.5)", width: 45, textAlign: "right" }}>{(d.pas || 0).toLocaleString(intlLocale())}</div>
                       </div>
                     );
                   })}
@@ -1077,12 +1086,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               {/* Card Eau — cliquable, ouvre drawer complet */}
               <div onClick={() => setDrawer("eau")} style={{ ...card, cursor: "pointer", transition: "border-color 0.2s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#38bdf8" }}>Hydratation</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#38bdf8" }}>{t("cp.hydration")}</div>
                   <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.2)" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {daily7d.slice(-7).map((d, i) => {
-                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric" });
                     const waterL = ((d.eau_ml || 0) / 1000).toFixed(1);
                     const goal = (nutGoals?.eau_ml || 2500) / 1000;
                     const ok = parseFloat(waterL) >= goal;
@@ -1102,12 +1111,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               {/* Card Sommeil — cliquable, ouvre drawer complet */}
               <div onClick={() => setDrawer("sommeil")} style={{ ...card, cursor: "pointer", transition: "border-color 0.2s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: VIOLET }}>Sommeil</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: VIOLET }}>{t("cp.sleep")}</div>
                   <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.2)" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {daily7d.slice(-7).map((d, i) => {
-                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+                    const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric" });
                     const sh = d.sommeil_h || 0;
                     const under = sh < 7;
                     return (
@@ -1135,11 +1144,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.22s both" }}>
           <div style={sectionTitle}>
             <Icon name="flame" size={14} color={G} />
-            Historique seances{sessions.length > 0 ? ` (${sessions.length})` : ""}
+            {t("cp.session_history_title")}{sessions.length > 0 ? ` (${sessions.length})` : ""}
           </div>
           {sessions.length === 0 ? (
             <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
-              Aucune seance enregistree pour le moment.
+              {t("cp.no_sessions")}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1167,12 +1176,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {s.session_name || s.programme_name || "Seance"}
+                          {s.session_name || s.programme_name || t("cp.session_fallback")}
                         </div>
                         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
-                          {date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
-                          {durationMin != null && <span> · {durationMin} min</span>}
-                          {s.exercises_count > 0 && <span> · {s.exercises_count} exos</span>}
+                          {date.toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
+                          {durationMin != null && <span> · {fillTpl(t("cp.minutes_short"), { n: durationMin })}</span>}
+                          {s.exercises_count > 0 && <span> · {fillTpl(t("cp.exos_count"), { n: s.exercises_count })}</span>}
                         </div>
                       </div>
                       {durationMin != null && (
@@ -1213,7 +1222,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.2s both" }}>
           <div style={sectionTitle}>
             <Icon name="chart" size={14} color={G} />
-            Progression
+            {t("cp.progression_title")}
           </div>
 
           {/* Streak + stats headline */}
@@ -1234,15 +1243,15 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 20 }}>
                 <div style={{ ...card, textAlign: "center", padding: "14px 8px" }}>
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: G, lineHeight: 1 }}>{streak}</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>Jours de streak</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>{t("cp.streak_days")}</div>
                 </div>
                 <div style={{ ...card, textAlign: "center", padding: "14px 8px" }}>
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: "#fff", lineHeight: 1 }}>{totalSessions}</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>Seances total</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>{t("cp.total_sessions")}</div>
                 </div>
                 <div style={{ ...card, textAlign: "center", padding: "14px 8px" }}>
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: ORANGE, lineHeight: 1 }}>{avgRpe}</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>RPE moyen</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1.5px", marginTop: 6, fontWeight: 700 }}>{t("cp.avg_rpe")}</div>
                 </div>
               </div>
             );
@@ -1251,7 +1260,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           {/* Timeline seances + RPE combine */}
           {sessions.length > 0 && (
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Timeline seances</div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>{t("cp.timeline_sessions")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {sessions.slice(0, 10).map((s, i) => {
                   const date = new Date(s.logged_at);
@@ -1269,11 +1278,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       {/* Content */}
                       <div style={{ flex: 1, padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{s.session_name || "Seance"}</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{s.session_name || t("cp.session_fallback")}</div>
                           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
-                            {date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
-                            {durationMin != null && <span> · {durationMin} min</span>}
-                            {s.exercises_count > 0 && <span> · {s.exercises_count} exos</span>}
+                            {date.toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
+                            {durationMin != null && <span> · {fillTpl(t("cp.minutes_short"), { n: durationMin })}</span>}
+                            {s.exercises_count > 0 && <span> · {fillTpl(t("cp.exos_count"), { n: s.exercises_count })}</span>}
                           </div>
                         </div>
                         {dayRpe && (
@@ -1298,7 +1307,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           {/* RPE evolution en barres */}
           {rpeData.length > 2 && (
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Evolution du RPE</div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>{t("cp.rpe_evolution")}</div>
               <div style={{ ...card, padding: "14px 16px" }}>
                 <div style={{ display: "flex", gap: 4, alignItems: "flex-end", height: 60 }}>
                   {[...rpeData].reverse().slice(-15).map((r, i) => {
@@ -1321,7 +1330,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           {/* Top exercices avec sparkline */}
           {topEx.length > 0 && (
             <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Top exercices</div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>{t("cp.top_exercises")}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 10 }}>
                 {topEx.map(([key, data], i) => {
                   const name = key.split("_").slice(-1)[0] || key;
@@ -1334,7 +1343,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2, textTransform: "capitalize" }}>{name}</div>
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{data.length} seances · max {max} kg</div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{fillTpl(t("cp.exercise_summary"), { n: data.length, max })}</div>
                         </div>
                         <div style={{ fontSize: 12, fontWeight: 800, color: delta >= 0 ? G : RED }}>
                           {delta >= 0 ? "+" : ""}{delta.toFixed(1)} kg
@@ -1350,7 +1359,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
           {sessions.length === 0 && topEx.length === 0 && (
             <div style={{ ...card, textAlign: "center", padding: 28, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
-              Pas encore de donnees de progression
+              {t("cp.no_progression")}
             </div>
           )}
         </div>
@@ -1363,30 +1372,30 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.28s both" }}>
           <div style={sectionTitle}>
             <Icon name="apple" size={14} color={G} />
-            Objectifs nutritionnels
+            {t("cp.nutrition_goals_title")}
           </div>
           {!nutGoals ? (
             <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
-              Chargement des objectifs...
+              {t("cp.loading_goals")}
             </div>
           ) : (
           <div style={card}>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 14 }}>
-                Definir les objectifs de {firstName}
+                {fillTpl(t("cp.define_goals_for"), { name: firstName })}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {[
-                  { key: "calories", label: "Calories", unit: "kcal", min: 500, max: 5000, step: 50, color: ORANGE },
-                  { key: "proteines", label: "Proteines", unit: "g", min: 50, max: 400, step: 5, color: G },
-                  { key: "glucides", label: "Glucides", unit: "g", min: 50, max: 600, step: 10, color: "#60a5fa" },
-                  { key: "lipides", label: "Lipides", unit: "g", min: 20, max: 200, step: 5, color: VIOLET },
-                  { key: "eau_ml", label: "Eau", unit: "mL", min: 500, max: 5000, step: 250, color: "#38bdf8" },
-                  { key: "pas", label: "Pas / jour", unit: "pas", min: 2000, max: 20000, step: 500, color: "#34d399" },
+                  { key: "calories", label: t("cp.goal_calories"), unit: t("cp.unit_kcal"), min: 500, max: 5000, step: 50, color: ORANGE },
+                  { key: "proteines", label: t("cp.goal_proteines"), unit: t("cp.unit_g"), min: 50, max: 400, step: 5, color: G },
+                  { key: "glucides", label: t("cp.goal_glucides"), unit: t("cp.unit_g"), min: 50, max: 600, step: 10, color: "#60a5fa" },
+                  { key: "lipides", label: t("cp.goal_lipides"), unit: t("cp.unit_g"), min: 20, max: 200, step: 5, color: VIOLET },
+                  { key: "eau_ml", label: t("cp.goal_eau"), unit: t("cp.unit_ml"), min: 500, max: 5000, step: 250, color: "#38bdf8" },
+                  { key: "pas", label: t("cp.goal_pas"), unit: t("cp.unit_pas"), min: 2000, max: 20000, step: 500, color: "#34d399" },
                 ].map(({ key, label, unit, min, max, step, color }) => (
                   <div key={key}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>{label}</div>
-                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, color, fontWeight: 700 }}>{nutGoals[key]?.toLocaleString()} {unit}</div>
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, color, fontWeight: 700 }}>{nutGoals[key]?.toLocaleString(intlLocale())} {unit}</div>
                     </div>
                     <input type="range" min={min} max={max} step={step} value={nutGoals[key] || 0}
                       onChange={e => setNutGoals(prev => ({ ...prev, [key]: parseInt(e.target.value) }))}
@@ -1399,12 +1408,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   setNutSaving(true);
                   const { error } = await supabase.from("nutrition_goals").upsert({ client_id: client.id, ...nutGoals }, { onConflict: "client_id" });
                   setNutSaving(false);
-                  if (error) toast.error("Objectifs non enregistres");
-                  else { haptic.success(); toast.success("Objectifs mis a jour"); }
+                  if (error) toast.error(t("cp.toast_goals_save_error"));
+                  else { haptic.success(); toast.success(t("cp.toast_goals_saved")); }
                 }}
                 style={{ width: "100%", padding: 14, background: `linear-gradient(135deg, ${G}, #0891b2)`, color: "#000", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", marginTop: 16, textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", boxShadow: "0 8px 24px rgba(2,209,186,0.25)" }}
               >
-                {nutSaving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={16} color="#000" />Enregistrement</span>) : "Sauvegarder les objectifs"}
+                {nutSaving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={16} color="#000" />{t("cp.btn_saving")}</span>) : t("cp.btn_save_goals")}
               </button>
             </div>
           )}
@@ -1424,14 +1433,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         {(() => {
           const sessCount = sessions.length;
           const avgWeight = logs.length > 0 ? logs.reduce((s, l) => s + (l.weight || 0), 0) / logs.length : 0;
-          const level = sessCount >= 50 || avgWeight >= 80 ? { name: "Avance", color: G, icon: "trending" }
-            : sessCount >= 15 || avgWeight >= 40 ? { name: "Intermediaire", color: ORANGE, icon: "flame" }
-            : { name: "Debutant", color: VIOLET, icon: "activity" };
+          const level = sessCount >= 50 || avgWeight >= 80 ? { name: t("cp.level_advanced"), color: G, icon: "trending" }
+            : sessCount >= 15 || avgWeight >= 40 ? { name: t("cp.level_intermediate"), color: ORANGE, icon: "flame" }
+            : { name: t("cp.level_beginner"), color: VIOLET, icon: "activity" };
           return (
             <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.3s both" }}>
               <div style={sectionTitle}>
                 <Icon name="users" size={14} color={G} />
-                Profil athlete
+                {t("cp.athlete_profile")}
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <div style={{ ...card, flex: 1, minWidth: 140, display: "flex", alignItems: "center", gap: 12 }}>
@@ -1440,12 +1449,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   </div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: level.color }}>{level.name}</div>
-                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{sessCount} seances · moy {Math.round(avgWeight)}kg</div>
+                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{fillTpl(t("cp.athlete_summary"), { sessions: sessCount, weight: Math.round(avgWeight) })}</div>
                   </div>
                 </div>
                 <div style={{ ...card, flex: 1, minWidth: 140, textAlign: "center" }}>
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: "#fff" }}>{sessCount}</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Seances depuis le debut</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.sessions_since_start")}</div>
                 </div>
               </div>
             </div>
@@ -1472,8 +1481,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               <Icon name="trending" size={18} color="#00C9A7" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 2 }}>Voir la transformation</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>Timeline complete depuis le jour 1 + PDF partageable</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 2 }}>{t("cp.see_transformation")}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>{t("cp.see_transformation_sub")}</div>
             </div>
             <Icon name="arrow-right" size={14} color="rgba(255,255,255,0.4)" />
           </button>
@@ -1483,8 +1492,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.28s both" }}>
           <div style={sectionTitle}>
             <Icon name="lightning" size={14} color={G} />
-            Tags
-            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "1px", marginLeft: "auto" }}>POUR FILTRER TES CLIENTS</span>
+            {t("cp.tags_title")}
+            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "1px", marginLeft: "auto" }}>{t("cp.tags_filter_hint")}</span>
           </div>
           <div style={card}>
             <TagManager client={client} onUpdate={(newTags) => { client.tags = newTags; }} />
@@ -1495,7 +1504,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.30s both" }}>
           <div style={sectionTitle}>
             <Icon name="activity" size={14} color={G} />
-            Timeline
+            {t("cp.timeline_title")}
           </div>
           <div style={{ ...card, padding: "18px 18px 14px" }}>
             <ActivityTimeline clientId={client.id} coachId={coachId} />
@@ -1506,8 +1515,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.32s both" }}>
           <div style={sectionTitle}>
             <Icon name="document" size={14} color={G} />
-            Notes internes
-            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "1px", marginLeft: "auto" }}>INVISIBLE PAR LE CLIENT</span>
+            {t("cp.notes_title")}
+            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "1px", marginLeft: "auto" }}>{t("cp.notes_invisible_hint")}</span>
           </div>
           <div style={card}>
             {/* Input nouvelle note */}
@@ -1515,7 +1524,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               <textarea
                 value={newNote}
                 onChange={e => setNewNote(e.target.value)}
-                placeholder={"Note sur " + firstName + "..."}
+                placeholder={fillTpl(t("cp.note_placeholder"), { name: firstName })}
                 rows={2}
                 style={{
                   flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
@@ -1535,7 +1544,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     client_id: client.id, coach_id: coachId, content,
                   }).select().single();
                   setNoteSaving(false);
-                  if (error) { toast.error("Note non enregistree"); return; }
+                  if (error) { toast.error(t("cp.toast_note_save_error")); return; }
                   if (data) setCoachNotes(prev => [data, ...prev]);
                   setNewNote("");
                   haptic.light();
@@ -1575,7 +1584,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{n.content}</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
                       <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)" }}>
-                        {new Date(n.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        {new Date(n.created_at).toLocaleDateString(intlLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </div>
                       <button
                         onClick={async () => {
@@ -1584,7 +1593,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                         }}
                         style={{ background: "none", border: "none", color: "rgba(255,255,255,0.15)", fontSize: 10, cursor: "pointer", padding: 0, fontFamily: "inherit" }}
                       >
-                        supprimer
+                        {t("cp.note_delete")}
                       </button>
                     </div>
                   </div>
@@ -1593,7 +1602,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             )}
             {coachNotes.length === 0 && !newNote && (
               <div style={{ textAlign: "center", padding: 16, color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
-                Aucune note — ecris tes observations ici
+                {t("cp.notes_empty")}
               </div>
             )}
           </div>
@@ -1603,14 +1612,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.32s both" }}>
           <div style={sectionTitle}>
             <Icon name="message" size={14} color={G} />
-            Messages
+            {t("cp.messages_title")}
           </div>
           <div style={card}>
             <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
               <textarea
                 value={msgText}
                 onChange={e => setMsgText(e.target.value)}
-                placeholder={"Message a " + firstName + "..."}
+                placeholder={fillTpl(t("cp.message_placeholder"), { name: firstName })}
                 rows={2}
                 style={{
                   flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
@@ -1648,8 +1657,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   }}>
                     <div style={{ fontSize: 13, color: "#fff", lineHeight: 1.5 }}>{m.content}</div>
                     <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 4, display: "flex", justifyContent: "space-between", gap: 12 }}>
-                      <span>{m.from_coach ? "Toi" : firstName}</span>
-                      <span>{m.read ? "Lu" : "Non lu"} · {new Date(m.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
+                      <span>{m.from_coach ? t("cp.you") : firstName}</span>
+                      <span>{m.read ? t("cp.read") : t("cp.unread")} · {new Date(m.created_at).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" })}</span>
                     </div>
                   </div>
                 ))}
@@ -1657,7 +1666,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             )}
             {messages.length === 0 && (
               <div style={{ textAlign: "center", padding: 20, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
-                Aucun message pour le moment — envoie le premier
+                {t("cp.messages_empty")}
               </div>
             )}
           </div>
@@ -1667,7 +1676,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.36s both" }}>
           <div style={sectionTitle}>
             <Icon name="lightning" size={14} color={G} />
-            Seance Vivante
+            {t("cp.live_session_title")}
           </div>
           <div style={card}>
             <SeanceVivanteCoach clientId={client.id} clientName={client.full_name} isDemo={isDemo} />
@@ -1677,11 +1686,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         {/* ===== ZONE DANGEREUSE ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.4s both", paddingTop: 20, borderTop: "1px solid rgba(255,107,107,0.1)" }}>
           <button
-            onClick={() => { if (window.confirm("Supprimer definitivement " + (client.full_name || client.email) + " ?")) onDelete(client.id, client.email); }}
+            onClick={() => { if (window.confirm(fillTpl(t("cp.confirm_delete_client"), { name: client.full_name || client.email }))) onDelete(client.id, client.email); }}
             style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,107,107,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
           >
             <Icon name="trash" size={12} />
-            Supprimer ce client
+            {t("cp.btn_delete_client")}
           </button>
         </div>
 
@@ -1723,7 +1732,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 22px 12px" }}>
               <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
-                {drawer === "poids" ? "Historique poids" : drawer === "eau" ? "Hydratation 30j" : drawer === "pas" ? "Pas quotidiens 30j" : "Sommeil 30j"}
+                {drawer === "poids" ? t("cp.drawer_weight_title") : drawer === "eau" ? t("cp.drawer_water_title") : drawer === "pas" ? t("cp.drawer_steps_title") : t("cp.drawer_sleep_title")}
               </div>
               <button onClick={() => setDrawer(null)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
@@ -1743,21 +1752,21 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 20 }}>
                         <div style={{ textAlign: "center" }}>
                           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: "#fff" }}>{last.weight}</div>
-                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Actuel</div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.drawer_current")}</div>
                         </div>
                         <div style={{ textAlign: "center" }}>
                           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: delta > 0 ? ORANGE : delta < 0 ? G : "rgba(255,255,255,0.5)" }}>
                             {delta > 0 ? "+" : ""}{delta.toFixed(1)}
                           </div>
-                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Delta</div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.drawer_delta")}</div>
                         </div>
                         <div style={{ textAlign: "center" }}>
                           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: G }}>{minW}</div>
-                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Min</div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.drawer_min")}</div>
                         </div>
                         <div style={{ textAlign: "center" }}>
                           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 200, color: ORANGE }}>{maxW}</div>
-                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Max</div>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.drawer_max")}</div>
                         </div>
                       </div>
                     );
@@ -1771,12 +1780,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   {/* Periode couverte */}
                   {allWeights.length >= 2 && (
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center", marginBottom: 16 }}>
-                      {allWeights.length} pesees · du {new Date(allWeights[allWeights.length - 1].date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} au {new Date(allWeights[0].date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                      {fillTpl(t("cp.drawer_period_range"), {
+                        n: allWeights.length,
+                        from: new Date(allWeights[allWeights.length - 1].date).toLocaleDateString(intlLocale(), { day: "numeric", month: "long", year: "numeric" }),
+                        to: new Date(allWeights[0].date).toLocaleDateString(intlLocale(), { day: "numeric", month: "long", year: "numeric" }),
+                      })}
                     </div>
                   )}
 
                   {/* Liste des pesees */}
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Toutes les pesees</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>{t("cp.drawer_all_weighins")}</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     {allWeights.map((w, i) => {
                       const prev = allWeights[i + 1];
@@ -1784,7 +1797,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       return (
                         <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.03)", borderRadius: 8 }}>
                           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
-                            {new Date(w.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
+                            {new Date(w.date).toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             {diff !== null && (
@@ -1814,12 +1827,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   <div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
                       <div style={{ textAlign: "center", padding: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, borderRadius: 12 }}>
-                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: G }}>{avg.toLocaleString()}</div>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Moy / jour</div>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: G }}>{avg.toLocaleString(intlLocale())}</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.drawer_avg_per_day")}</div>
                       </div>
                       <div style={{ textAlign: "center", padding: 12, background: daysAtGoal > 0 ? G_DIM : "rgba(255,255,255,0.02)", border: `1px solid ${daysAtGoal > 0 ? G_BORDER : "rgba(255,255,255,0.05)"}`, borderRadius: 12 }}>
                         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 200, color: daysAtGoal > 0 ? G : "rgba(255,255,255,0.4)" }}>{daysAtGoal}</div>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Jours objectif</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.drawer_days_at_goal")}</div>
                       </div>
                     </div>
                     {graphData.length >= 2 && (
@@ -1832,8 +1845,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                         const atGoal = d.pas >= goal;
                         return (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: atGoal ? G_DIM : "rgba(255,255,255,0.02)", border: atGoal ? `1px solid ${G_BORDER}` : "none", borderRadius: 8, fontSize: 12 }}>
-                            <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
-                            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: atGoal ? G : "rgba(255,255,255,0.5)" }}>{d.pas.toLocaleString()}</span>
+                            <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: atGoal ? G : "rgba(255,255,255,0.5)" }}>{d.pas.toLocaleString(intlLocale())}</span>
                           </div>
                         );
                       })}
@@ -1851,8 +1864,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   <div>
                     <div style={{ textAlign: "center", marginBottom: 20 }}>
                       <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 36, fontWeight: 200, color: "#38bdf8" }}>{(avg / 1000).toFixed(1)}</span>
-                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>L / jour</span>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>Moyenne sur {data.length} jours</div>
+                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginLeft: 4 }}>{t("cp.drawer_water_avg_unit")}</span>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>{fillTpl(t("cp.drawer_water_avg_sub"), { n: data.length })}</div>
                     </div>
                     {graphData.length >= 2 && (
                       <div style={{ marginBottom: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 8px 8px" }}>
@@ -1862,7 +1875,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       {data.slice(-14).reverse().map((d, i) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, fontSize: 12 }}>
-                          <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
+                          <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}</span>
                           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: "#38bdf8" }}>{(d.eau_ml / 1000).toFixed(1)} L</span>
                         </div>
                       ))}
@@ -1882,11 +1895,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
                       <div style={{ textAlign: "center", padding: 12, background: "rgba(0,201,167,0.06)", border: "1px solid rgba(0,201,167,0.15)", borderRadius: 12 }}>
                         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: VIOLET }}>{avg}</div>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>h / nuit</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.drawer_sleep_h")}</div>
                       </div>
                       <div style={{ textAlign: "center", padding: 12, background: under7 > 0 ? "rgba(255,107,107,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${under7 > 0 ? "rgba(255,107,107,0.15)" : "rgba(255,255,255,0.05)"}`, borderRadius: 12 }}>
                         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: under7 > 0 ? RED : G }}>{under7}</div>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>Nuits &lt; 7h</div>
+                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4, fontWeight: 700 }}>{t("cp.drawer_sleep_under")}</div>
                       </div>
                     </div>
                     {graphData.length >= 2 && (
@@ -1899,7 +1912,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                         const under = d.sommeil_h < 7;
                         return (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: under ? "rgba(255,107,107,0.06)" : "rgba(255,255,255,0.02)", border: under ? "1px solid rgba(255,107,107,0.15)" : "none", borderRadius: 8, fontSize: 12 }}>
-                            <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
+                            <span style={{ color: "rgba(255,255,255,0.4)" }}>{new Date(d.date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}</span>
                             <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: under ? RED : VIOLET }}>{d.sommeil_h}h</span>
                           </div>
                         );
@@ -2022,7 +2035,7 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
       setRecording(true);
       setTimeout(() => stopRecording(), 10000);
     } catch(e) {
-      toast.error("Micro non disponible");
+      toast.error(tStatic("cp.toast_mic_unavailable"));
     }
   };
 
