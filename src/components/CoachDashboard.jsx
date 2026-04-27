@@ -43,7 +43,9 @@ import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
 import usePullToRefresh from "../hooks/usePullToRefresh";
-import { useT } from "../lib/i18n";
+import { useT, getLocale } from "../lib/i18n";
+
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
 import ThemeSwitcher from "./ThemeSwitcher";
 import { calculateChurnRisk } from "../lib/coachIntelligence";
 
@@ -3125,12 +3127,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           {/* ========== HERO (identique au format FuelPage / client panel) ========== */}
           <div style={{ padding: "8px 24px 0", position: "relative", zIndex: 2 }}>
-            <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Dashboard</div>
+            <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t("coach.dashboard_title")}</div>
             <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>
-              {coachData?.full_name?.split(" ")[0] || "Coach"}<span style={{ color: G }}>.</span>
+              {coachData?.full_name?.split(" ")[0] || t("coach.coach_fallback")}<span style={{ color: G }}>.</span>
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
-              {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+              {new Date().toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
             </div>
           </div>
 
@@ -3148,9 +3150,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: G }}>{businessScore}</div>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>Score business</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>{t("coach.score_business")}</div>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, fontStyle: "italic" }}>
-                  "{businessScore >= 80 ? "Ton business est solide." : businessScore >= 60 ? "Correctement. Quelques ajustements." : businessScore >= 40 ? "Attention. Rétention à surveiller." : "Action requise. Interviens."}"
+                  "{businessScore >= 80 ? t("coach.score_solid") : businessScore >= 60 ? t("coach.score_correct") : businessScore >= 40 ? t("coach.score_attention") : t("coach.score_critical")}"
                 </div>
               </div>
             </div>
@@ -3160,20 +3162,20 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ margin: "0 24px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 22, padding: 20, position: "relative", zIndex: 2 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>MRR</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>{t("coach.mrr")}</div>
                 <div style={{ fontSize: 38, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
-                  {mrr.toLocaleString("fr-FR")}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}>€/mois</span>
+                  {mrr.toLocaleString(intlLocale())}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.2)" }}>{t("coach.per_month_eur")}</span>
                 </div>
               </div>
               <div style={{ background: `${G}18`, border: `1px solid ${G}33`, borderRadius: 100, padding: "4px 12px", fontSize: 11, color: G, fontWeight: 600 }}>
-                {Math.round(mrr * 12).toLocaleString("fr-FR")}€/an
+                {Math.round(mrr * 12).toLocaleString(intlLocale())}{t("coach.per_year_eur")}
               </div>
             </div>
             <div style={{ display: "flex", gap: 0 }}>
               {[
-                { v: total, l: "Clients", color: "#fff" },
-                { v: activeWeek, l: "Actifs 7j", color: G },
-                { v: (total > 0 ? Math.round((activeWeek / total) * 100) : 0) + "%", l: "Rétention", color: "rgba(255,255,255,0.5)" },
+                { v: total, l: t("coach.stat_clients"), color: "#fff" },
+                { v: activeWeek, l: t("coach.stat_active_7d"), color: G },
+                { v: (total > 0 ? Math.round((activeWeek / total) * 100) : 0) + "%", l: t("coach.stat_retention"), color: "rgba(255,255,255,0.5)" },
               ].map((s, i) => (
                 <div key={i} style={{ flex: 1, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, textAlign: i === 0 ? "left" : i === 2 ? "right" : "center" }}>
                   <div style={{ fontSize: 24, fontWeight: 200, color: s.color, letterSpacing: "-1px", lineHeight: 1 }}>{s.v}</div>
@@ -3186,15 +3188,26 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== ANALYSE CONTEXTUELLE (comme panel client) ========== */}
           {clients.length > 0 && (
             <div className="dash-card" style={{ padding: "20px 24px", marginBottom: 24, cursor: "default" }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88`, marginBottom: 10 }}>Situation</div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88`, marginBottom: 10 }}>{t("coach.situation_header")}</div>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
                 {(() => {
                   const retPct = total > 0 ? Math.round((activeWeek / total) * 100) : 0;
                   const arrEst = Math.round(mrr * 12);
-                  if (businessScore >= 80) return `Ton business est solide. ${total} clients actifs, ${retPct}% de rétention, ${arrEst.toLocaleString()}€ d'ARR estimé. Continue de maintenir cette dynamique.`;
-                  if (businessScore >= 60) return `Ton business tourne correctement. ${urgentCount > 0 ? `${urgentCount} client${urgentCount > 1 ? 's' : ''} mérite${urgentCount > 1 ? 'nt' : ''} ton attention — un message proactif peut tout changer.` : `Ta rétention est à ${retPct}%, regarde si tu peux passer au-dessus de 90%.`}`;
-                  if (businessScore >= 40) return `Attention : ton score business est à ${businessScore}/100. ${urgentCount > 0 ? `${urgentCount} client${urgentCount > 1 ? 's sont' : ' est'} à risque.` : ''} Concentre-toi sur la rétention avant d'acquérir de nouveaux clients.`;
-                  return `Score critique : ${businessScore}/100. ${urgentCount} client${urgentCount > 1 ? 's' : ''} en décrochage. Action immédiate nécessaire — ouvre la liste clients et contacte les profils à risque.`;
+                  const fillTpl = (key, vars) => {
+                    let s = t(key);
+                    Object.entries(vars).forEach(([k, v]) => { s = s.split(`{${k}}`).join(String(v)); });
+                    return s;
+                  };
+                  if (businessScore >= 80) return fillTpl("coach.situation_solid", { n: total, pct: retPct, arr: arrEst.toLocaleString(intlLocale()) });
+                  if (businessScore >= 60) {
+                    if (urgentCount > 0) return fillTpl(urgentCount > 1 ? "coach.situation_correct_with_urgent_many" : "coach.situation_correct_with_urgent_one", { n: urgentCount });
+                    return fillTpl("coach.situation_correct_no_urgent", { pct: retPct });
+                  }
+                  if (businessScore >= 40) {
+                    if (urgentCount > 0) return fillTpl(urgentCount > 1 ? "coach.situation_attention_with_urgent_many" : "coach.situation_attention_with_urgent_one", { score: businessScore, n: urgentCount });
+                    return fillTpl("coach.situation_attention_no_urgent", { score: businessScore });
+                  }
+                  return fillTpl(urgentCount > 1 ? "coach.situation_critical_many" : "coach.situation_critical_one", { score: businessScore, n: urgentCount });
                 })()}
               </div>
             </div>
@@ -3217,7 +3230,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               onMouseLeave={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.06)"}
             >
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff6b6b", flexShrink: 0, animation: "rbPulse 2s ease-in-out infinite" }} />
-              <span style={{ fontSize: 14, color: "#fff", fontWeight: 500, flex: 1 }}>{urgentCount} client{urgentCount > 1 ? "s" : ""} à contacter</span>
+              <span style={{ fontSize: 14, color: "#fff", fontWeight: 500, flex: 1 }}>{urgentCount} {urgentCount > 1 ? t("coach.urgent_to_contact_many") : t("coach.urgent_to_contact_one")}</span>
               <Icon name="arrow-right" size={14} color="rgba(255,255,255,.25)" />
             </div>
           )}
