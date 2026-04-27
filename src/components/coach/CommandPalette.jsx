@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 
@@ -17,6 +18,7 @@ const G = "#02d1ba";
  *   commands: { id, label, desc?, icon?, group?, run: () => void, keywords?: string[] }[]
  */
 export default function CommandPalette({ open, onClose, clients = [], commands = [] }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef(null);
@@ -26,10 +28,10 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
   const items = useMemo(() => {
     const clientItems = clients.map((c) => ({
       id: `client_${c.id}`,
-      label: c.full_name || c.email || "Client",
+      label: c.full_name || c.email || "__client_fallback__",
       desc: c.email || "",
       icon: "user",
-      group: "Clients",
+      group: "__group_clients__",
       keywords: [c.full_name, c.email, ...(c.tags || [])].filter(Boolean),
       run: () => {
         const cmd = commands.find((x) => x.id === "open_client");
@@ -52,7 +54,7 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
   const grouped = useMemo(() => {
     const map = new Map();
     filtered.forEach((it) => {
-      const g = it.group || "Actions";
+      const g = it.group || "__group_actions__";
       if (!map.has(g)) map.set(g, []);
       map.get(g).push(it);
     });
@@ -109,7 +111,7 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Palette de commandes"
+        aria-label={t("cp.aria_label")}
         style={{
           width: "100%", maxWidth: 560,
           background: "#0f0f0f",
@@ -129,7 +131,7 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Rechercher un client, une action..."
+            placeholder={t("cp.placeholder")}
             style={{
               flex: 1,
               background: "transparent",
@@ -141,7 +143,7 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
               fontWeight: 500,
             }}
           />
-          <button onClick={onClose} aria-label="Fermer" style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, cursor: "pointer", color: "rgba(255,255,255,0.6)", flexShrink: 0, fontFamily: "inherit" }}>
+          <button onClick={onClose} aria-label={t("cp.aria_close")} style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, cursor: "pointer", color: "rgba(255,255,255,0.6)", flexShrink: 0, fontFamily: "inherit" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -150,13 +152,13 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
         <div ref={listRef} style={{ maxHeight: "60vh", overflowY: "auto", padding: "6px 6px 10px" }}>
           {filtered.length === 0 ? (
             <div style={{ padding: "40px 20px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-              Aucun resultat pour "{query}"
+              {t("cp.empty_for_query").replace("{q}", query)}
             </div>
           ) : (
             grouped.map(([groupName, groupItems]) => (
               <div key={groupName} style={{ marginBottom: 6 }}>
                 <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontWeight: 700, padding: "8px 14px 4px" }}>
-                  {groupName}
+                  {groupName === "__group_clients__" ? t("cp.group_clients") : groupName === "__group_actions__" ? t("cp.group_actions") : groupName}
                 </div>
                 {groupItems.map((it) => {
                   flatIdx++;
@@ -186,7 +188,7 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
                         <AppIcon name={it.icon || "zap"} size={14} color={isActive ? G : "rgba(255,255,255,0.55)"} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label === "__client_fallback__" ? t("cp.client_fallback") : it.label}</div>
                         {it.desc && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.desc}</div>}
                       </div>
                       {isActive && <AppIcon name="arrow-right" size={12} color={G} />}
@@ -201,10 +203,10 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
         {/* Footer */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "8px 14px", borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <kbd style={kbdStyle}>↑</kbd><kbd style={kbdStyle}>↓</kbd> naviguer
+            <kbd style={kbdStyle}>↑</kbd><kbd style={kbdStyle}>↓</kbd> {t("cp.kbd_navigate")}
           </span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <kbd style={kbdStyle}>↵</kbd> ouvrir
+            <kbd style={kbdStyle}>↵</kbd> {t("cp.kbd_open")}
           </span>
           <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4 }}>
             <kbd style={kbdStyle}>⌘K</kbd>

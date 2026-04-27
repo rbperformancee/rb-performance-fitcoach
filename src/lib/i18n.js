@@ -785,6 +785,16 @@ const MESSAGES = {
     "inv.toast_generated": "Facture {num} generee",
     "inv.toast_pdf_error": "Erreur generation PDF : ",
     "inv.toast_pdf_unknown": "inconnue",
+    // Command palette
+    "cp.aria_label": "Palette de commandes",
+    "cp.aria_close": "Fermer",
+    "cp.placeholder": "Rechercher un client, une action...",
+    "cp.empty_for_query": "Aucun resultat pour \"{q}\"",
+    "cp.client_fallback": "Client",
+    "cp.group_clients": "Clients",
+    "cp.group_actions": "Actions",
+    "cp.kbd_navigate": "naviguer",
+    "cp.kbd_open": "ouvrir",
   },
   en: {
     // Navigation
@@ -1548,6 +1558,16 @@ const MESSAGES = {
     "inv.toast_generated": "Invoice {num} generated",
     "inv.toast_pdf_error": "PDF generation error: ",
     "inv.toast_pdf_unknown": "unknown",
+    // Command palette
+    "cp.aria_label": "Command palette",
+    "cp.aria_close": "Close",
+    "cp.placeholder": "Search a client, an action...",
+    "cp.empty_for_query": "No results for \"{q}\"",
+    "cp.client_fallback": "Client",
+    "cp.group_clients": "Clients",
+    "cp.group_actions": "Actions",
+    "cp.kbd_navigate": "navigate",
+    "cp.kbd_open": "open",
   },
 };
 
