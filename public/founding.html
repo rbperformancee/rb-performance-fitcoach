@@ -82,9 +82,13 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
 .places-text{font-size:11px;color:rgba(255,255,255,0.3);font-weight:600}
 .places-text strong{color:#00C9A7}
 
-/* Guarantee */
-.guarantee{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:40px}
-.guarantee svg{width:16px;height:16px;color:#00C9A7;flex-shrink:0}
+/* Engagement Founder */
+.engagements{margin-bottom:40px}
+.engagement{padding:18px 20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;text-align:left}
+.engagement-body{flex:1;min-width:0}
+.engagement-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-0.01em}
+.engagement-desc{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.55}
+.engagement-desc strong{color:#00C9A7;font-weight:700}
 
 /* Footer */
 .foot{text-align:center;padding:32px 0;border-top:.5px solid rgba(255,255,255,0.04)}
@@ -187,10 +191,14 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
     </a>
     <div class="cta-sub">Lancement mai 2026 · Inscris-toi pour bloquer ton prix a vie</div>
 
-    <!-- Guarantee -->
-    <div class="guarantee">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Garantie 30 jours — Si RB Perform n'identifie pas au moins 1 client à risque, remboursement intégral.
+    <!-- Engagement Founder — Prix bloqué à vie -->
+    <div class="engagements">
+      <div class="engagement">
+        <div class="engagement-body">
+          <div class="engagement-title">Engagement Prix — à vie</div>
+          <div class="engagement-desc">Tu paies <strong>199€/mois</strong> pour la vie. Quand l'offre passera à <strong>299€/mois</strong> après le lancement, tu économiseras <strong>100€/mois</strong> — soit <strong>1 200€/an</strong> à vie.</div>
+        </div>
+      </div>
     </div>
 
     <!-- Email capture fallback -->
