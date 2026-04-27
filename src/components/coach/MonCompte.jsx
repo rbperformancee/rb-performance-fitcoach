@@ -2,9 +2,16 @@ import React, { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 const RED = "#ff6b6b";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 /**
  * MonCompte — page "Qui je suis" du coach.
@@ -15,6 +22,7 @@ const RED = "#ff6b6b";
  *   Settings  = COMMENT je bosse (plans coaching, branding, notifs)
  */
 export default function MonCompte({ coachData, isDemo = false, initialTab, onClose }) {
+  const t = useT();
   const [tab, setTab] = useState(initialTab || "profil");
 
   // Profil
@@ -44,14 +52,14 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
   const [loadingPortal, setLoadingPortal] = useState(false);
 
   const TABS = [
-    { id: "profil", label: "Profil" },
-    { id: "abonnement", label: "Abonnement" },
-    { id: "facturation", label: "Facturation" },
-    { id: "securite", label: "Sécurité" },
+    { id: "profil", label: t("mc.tab_profil") },
+    { id: "abonnement", label: t("mc.tab_abonnement") },
+    { id: "facturation", label: t("mc.tab_facturation") },
+    { id: "securite", label: t("mc.tab_securite") },
   ];
 
   const saveProfile = async () => {
-    if (isDemo) { toast.success("Disponible en version complète"); return; }
+    if (isDemo) { toast.success(t("mc.toast_demo_unavailable")); return; }
     setSavingProfile(true);
     const { error } = await supabase.from("coaches").update({
       full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
@@ -59,12 +67,12 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
       city: city.trim() || null,
     }).eq("id", coachData.id);
     setSavingProfile(false);
-    if (error) toast.error("Erreur");
-    else toast.success("Profil mis à jour");
+    if (error) toast.error(t("mc.toast_error"));
+    else toast.success(t("mc.toast_profile_saved"));
   };
 
   const saveBilling = async () => {
-    if (isDemo) { toast.success("Disponible en version complète"); return; }
+    if (isDemo) { toast.success(t("mc.toast_demo_unavailable")); return; }
     setSavingBilling(true);
     const capNum = capitalSocial === "" ? null : parseFloat(capitalSocial);
     const { error } = await supabase.from("coaches").update({
@@ -78,28 +86,28 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
       capital_social: Number.isFinite(capNum) ? capNum : null,
     }).eq("id", coachData.id);
     setSavingBilling(false);
-    if (error) toast.error("Erreur : " + error.message);
-    else toast.success("Facturation mise à jour");
+    if (error) toast.error(t("mc.toast_error_prefix") + error.message);
+    else toast.success(t("mc.toast_billing_saved"));
   };
 
   const changePassword = async () => {
-    if (newPassword.length < 8) { toast.error("8 caractères minimum"); return; }
-    if (newPassword !== confirmPassword) { toast.error("Les mots de passe ne correspondent pas"); return; }
+    if (newPassword.length < 8) { toast.error(t("mc.toast_password_min")); return; }
+    if (newPassword !== confirmPassword) { toast.error(t("mc.toast_password_mismatch")); return; }
     setSavingPassword(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSavingPassword(false);
     if (error) toast.error(error.message);
-    else { toast.success("Mot de passe changé"); setNewPassword(""); setConfirmPassword(""); }
+    else { toast.success(t("mc.toast_password_changed")); setNewPassword(""); setConfirmPassword(""); }
   };
 
   const handleBillingPortal = async () => {
-    if (isDemo) { toast.success("Disponible en version complète"); return; }
+    if (isDemo) { toast.success(t("mc.toast_demo_unavailable")); return; }
     setLoadingPortal(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        toast.error("Session expirée, reconnecte-toi.");
+        toast.error(t("mc.toast_session_expired"));
         return;
       }
 
@@ -120,19 +128,19 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
       }
 
       if (res.status === 404) {
-        toast.error("Aucun abonnement actif trouvé. Contacte-nous si tu penses que c'est une erreur.");
+        toast.error(t("mc.toast_no_subscription"));
       } else {
-        toast.error("Erreur technique, réessaie dans un instant");
+        toast.error(t("mc.toast_tech_error"));
       }
     } catch {
-      toast.error("Erreur technique, réessaie dans un instant");
+      toast.error(t("mc.toast_tech_error"));
     } finally {
       setLoadingPortal(false);
     }
   };
 
   const logout = async () => {
-    if (isDemo) { toast.success("Desactive en mode demo"); return; }
+    if (isDemo) { toast.success(t("mc.toast_demo_logout_disabled")); return; }
     await supabase.auth.signOut();
     window.location.href = "/login";
   };
@@ -147,13 +155,13 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
       {/* Header */}
       <div className="mc-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(5,5,5,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={onClose} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 44, height: 44, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={onClose} aria-label={t("mc.aria_close")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 44, height: 44, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           </button>
           <div>
-            <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>Mon compte</div>
+            <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>{t("mc.eyebrow")}</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px" }}>
-              {firstName || "Coach"}<span style={{ color: G }}>.</span>
+              {firstName || t("coach.coach_fallback")}<span style={{ color: G }}>.</span>
             </div>
           </div>
           <div style={{ marginLeft: "auto", width: 44, height: 44, borderRadius: "50%", background: `${G}15`, border: `1px solid ${G}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: G }}>
@@ -163,14 +171,14 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginTop: 16, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
+          {TABS.map(tb => (
+            <button key={tb.id} onClick={() => setTab(tb.id)} style={{
               padding: "8px 14px", borderRadius: 100, border: "none", cursor: "pointer",
-              background: tab === t.id ? `${G}15` : "transparent",
-              color: tab === t.id ? G : "rgba(255,255,255,0.4)",
+              background: tab === tb.id ? `${G}15` : "transparent",
+              color: tab === tb.id ? G : "rgba(255,255,255,0.4)",
               fontSize: 12, fontWeight: 600, fontFamily: "inherit", whiteSpace: "nowrap",
               transition: "all 0.15s",
-            }}>{t.label}</button>
+            }}>{tb.label}</button>
           ))}
         </div>
       </div>
@@ -180,12 +188,12 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
         {/* ===== PROFIL ===== */}
         {tab === "profil" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={sectionTitle}>Profil personnel</div>
-            <Field label="Prénom" value={firstName} onChange={setFirstName} />
-            <Field label="Nom" value={lastName} onChange={setLastName} />
-            <Field label="Email" value={coachData?.email || ""} disabled note="Pour changer ton email, contacte le support." />
-            <Field label="Téléphone" value={phone} onChange={setPhone} placeholder="+33 6 12 34 56 78" />
-            <Field label="Ville" value={city} onChange={setCity} placeholder="Paris, Lyon..." />
+            <div style={sectionTitle}>{t("mc.profile_title")}</div>
+            <Field label={t("mc.field_first_name")} value={firstName} onChange={setFirstName} />
+            <Field label={t("mc.field_last_name")} value={lastName} onChange={setLastName} />
+            <Field label={t("mc.field_email")} value={coachData?.email || ""} disabled note={t("mc.field_email_note")} />
+            <Field label={t("mc.field_phone")} value={phone} onChange={setPhone} placeholder={t("mc.field_phone_placeholder")} />
+            <Field label={t("mc.field_city")} value={city} onChange={setCity} placeholder={t("mc.field_city_placeholder")} />
             <SaveButton onClick={saveProfile} loading={savingProfile} />
           </div>
         )}
@@ -193,18 +201,18 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
         {/* ===== ABONNEMENT ===== */}
         {tab === "abonnement" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={sectionTitle}>Mon abonnement RB Perform</div>
+            <div style={sectionTitle}>{t("mc.subscription_title")}</div>
             <div style={card}>
-              <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>Plan actuel</div>
+              <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>{t("mc.subscription_current")}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-1px" }}>
-                {coachData?.plan === "founding" ? "Founding Coach" : coachData?.plan === "starter" ? "Starter" : coachData?.plan === "elite" ? "Elite" : "Pro"}
+                {coachData?.plan === "founding" ? t("mc.plan_founding") : coachData?.plan === "starter" ? t("mc.plan_starter") : coachData?.plan === "elite" ? t("mc.plan_elite") : t("mc.plan_pro")}
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
-                {coachData?.locked_price ? `${coachData.locked_price}€/mois verrouillé à vie` : ""}
+                {coachData?.locked_price ? fillTpl(t("mc.locked_price"), { price: coachData.locked_price }) : ""}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: G }} />
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Actif</span>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{t("mc.status_active")}</span>
               </div>
             </div>
             <button
@@ -212,7 +220,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
               disabled={loadingPortal}
               style={{ ...outlineBtn, opacity: loadingPortal ? 0.5 : 1, cursor: loadingPortal ? "wait" : "pointer" }}
             >
-              {loadingPortal ? "Ouverture…" : "Gérer mon abonnement (Stripe) →"}
+              {loadingPortal ? t("mc.btn_portal_loading") : t("mc.btn_portal")}
             </button>
           </div>
         )}
@@ -220,13 +228,13 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
         {/* ===== FACTURATION ===== */}
         {tab === "facturation" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={sectionTitle}>Informations de facturation</div>
-            <Field label="SIRET" value={siret} onChange={v => setSiret(v.replace(/[^0-9]/g, '').slice(0, 14))} placeholder="14 chiffres" inputMode="numeric" />
-            <Field label="Raison sociale" value={businessName} onChange={setBusinessName} placeholder="Nom sur la facture" />
-            <Field label="Adresse de facturation" value={businessAddress} onChange={setBusinessAddress} placeholder="12 rue de la Paix, 75002 Paris" />
+            <div style={sectionTitle}>{t("mc.billing_title")}</div>
+            <Field label={t("mc.field_siret")} value={siret} onChange={v => setSiret(v.replace(/[^0-9]/g, '').slice(0, 14))} placeholder={t("mc.field_siret_placeholder")} inputMode="numeric" />
+            <Field label={t("mc.field_business_name")} value={businessName} onChange={setBusinessName} placeholder={t("mc.field_business_name_placeholder")} />
+            <Field label={t("mc.field_business_address")} value={businessAddress} onChange={setBusinessAddress} placeholder={t("mc.field_business_address_placeholder")} />
 
             <div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 6, fontWeight: 600 }}>Forme juridique</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 6, fontWeight: 600 }}>{t("mc.field_legal_form")}</div>
               <select
                 value={legalForm}
                 onChange={e => setLegalForm(e.target.value)}
@@ -237,45 +245,45 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
                   fontFamily: "inherit",
                 }}
               >
-                <option value="">— Selectionner —</option>
-                <option value="auto-entrepreneur">Auto-entrepreneur (micro-entreprise)</option>
-                <option value="EI">Entreprise individuelle (EI)</option>
-                <option value="EURL">EURL</option>
-                <option value="SASU">SASU</option>
-                <option value="SAS">SAS</option>
-                <option value="SARL">SARL</option>
-                <option value="autre">Autre</option>
+                <option value="">{t("mc.legal_form_placeholder")}</option>
+                <option value="auto-entrepreneur">{t("mc.legal_auto")}</option>
+                <option value="EI">{t("mc.legal_ei")}</option>
+                <option value="EURL">{t("mc.legal_eurl")}</option>
+                <option value="SASU">{t("mc.legal_sasu")}</option>
+                <option value="SAS">{t("mc.legal_sas")}</option>
+                <option value="SARL">{t("mc.legal_sarl")}</option>
+                <option value="autre">{t("mc.legal_other")}</option>
               </select>
             </div>
 
             {(legalForm === "auto-entrepreneur" || legalForm === "EI" || legalForm === "") ? (
               <div style={{ fontSize: 11, color: "rgba(2,209,186,0.7)", padding: "10px 14px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 10, lineHeight: 1.5 }}>
                 {legalForm === "auto-entrepreneur" || legalForm === "EI"
-                  ? "Auto-entrepreneur / EI : SIRET suffit. RCS et capital ne s'appliquent pas."
-                  : "Selectionne ta forme juridique pour voir les champs requis."}
+                  ? t("mc.legal_hint_auto")
+                  : t("mc.legal_hint_select")}
               </div>
             ) : (
               <>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
-                  Champs requis pour les societes commercantes (SAS, SARL, EURL, SASU).
+                  {t("mc.fields_required_for_companies")}
                 </div>
                 <div style={{ display: "flex", gap: 12 }}>
                   <div style={{ flex: 1 }}>
-                    <Field label="RCS — Ville" value={rcsCity} onChange={setRcsCity} placeholder="Paris" />
+                    <Field label={t("mc.field_rcs_city")} value={rcsCity} onChange={setRcsCity} placeholder={t("mc.field_rcs_city_placeholder")} />
                   </div>
                   <div style={{ flex: 1.2 }}>
-                    <Field label="RCS — Numéro" value={rcsNumber} onChange={setRcsNumber} placeholder="123 456 789" />
+                    <Field label={t("mc.field_rcs_number")} value={rcsNumber} onChange={setRcsNumber} placeholder={t("mc.field_rcs_number_placeholder")} />
                   </div>
                 </div>
-                <Field label="N° TVA intracommunautaire (si applicable)" value={vatNumber} onChange={setVatNumber} placeholder="FR12345678901" />
-                <Field label="Capital social (EUR)" value={capitalSocial} onChange={setCapitalSocial} placeholder="1000" inputMode="numeric" />
+                <Field label={t("mc.field_vat")} value={vatNumber} onChange={setVatNumber} placeholder={t("mc.field_vat_placeholder")} />
+                <Field label={t("mc.field_capital")} value={capitalSocial} onChange={setCapitalSocial} placeholder={t("mc.field_capital_placeholder")} inputMode="numeric" />
               </>
             )}
 
             <SaveButton onClick={saveBilling} loading={savingBilling} />
             <div style={{ marginTop: 16 }}>
-              <div style={sectionTitle}>Historique des factures</div>
-              <button style={outlineBtn}>Voir mes factures (Stripe) →</button>
+              <div style={sectionTitle}>{t("mc.invoices_title")}</div>
+              <button style={outlineBtn}>{t("mc.btn_invoices")}</button>
             </div>
           </div>
         )}
@@ -283,19 +291,19 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
         {/* ===== SÉCURITÉ ===== */}
         {tab === "securite" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={sectionTitle}>Changer le mot de passe</div>
-            <Field label="Nouveau mot de passe" value={newPassword} onChange={setNewPassword} type="password" placeholder="8 caractères minimum" />
-            <Field label="Confirmer" value={confirmPassword} onChange={setConfirmPassword} type="password" placeholder="Même mot de passe" />
+            <div style={sectionTitle}>{t("mc.password_title")}</div>
+            <Field label={t("mc.field_new_password")} value={newPassword} onChange={setNewPassword} type="password" placeholder={t("mc.field_new_password_placeholder")} />
+            <Field label={t("mc.field_confirm_password")} value={confirmPassword} onChange={setConfirmPassword} type="password" placeholder={t("mc.field_confirm_password_placeholder")} />
             {newPassword && confirmPassword && newPassword !== confirmPassword && (
-              <div style={{ fontSize: 12, color: RED }}>Les mots de passe ne correspondent pas.</div>
+              <div style={{ fontSize: 12, color: RED }}>{t("mc.password_mismatch_inline")}</div>
             )}
-            <SaveButton onClick={changePassword} loading={savingPassword} label="Changer le mot de passe" disabled={newPassword.length < 8 || newPassword !== confirmPassword} />
+            <SaveButton onClick={changePassword} loading={savingPassword} label={t("mc.btn_change_password")} disabled={newPassword.length < 8 || newPassword !== confirmPassword} />
 
             {/* Zone danger */}
             <div style={{ marginTop: 40, padding: "20px", background: "rgba(255,107,107,0.04)", border: "1px solid rgba(255,107,107,0.12)", borderRadius: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: RED, marginBottom: 16 }}>Zone danger</div>
-              <button style={{ ...outlineBtn, borderColor: "rgba(255,107,107,0.2)", color: RED }} onClick={() => toast.success("Contacte rb.performancee@gmail.com")}>Exporter mes données (RGPD)</button>
-              <button style={{ ...outlineBtn, borderColor: "rgba(255,107,107,0.2)", color: RED, marginTop: 8 }} onClick={() => toast.error("Contacte rb.performancee@gmail.com pour supprimer ton compte")}>Supprimer mon compte</button>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: RED, marginBottom: 16 }}>{t("mc.danger_zone")}</div>
+              <button style={{ ...outlineBtn, borderColor: "rgba(255,107,107,0.2)", color: RED }} onClick={() => toast.success(t("mc.toast_export_contact"))}>{t("mc.btn_export_data")}</button>
+              <button style={{ ...outlineBtn, borderColor: "rgba(255,107,107,0.2)", color: RED, marginTop: 8 }} onClick={() => toast.error(t("mc.toast_delete_contact"))}>{t("mc.btn_delete_account")}</button>
             </div>
 
             {/* Déconnexion */}
@@ -304,7 +312,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
               background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 14, color: RED, fontSize: 14, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
-            }}>Se déconnecter</button>
+            }}>{t("mc.btn_logout")}</button>
           </div>
         )}
 
@@ -340,7 +348,9 @@ function Field({ label, value, onChange, type = "text", placeholder = "", disabl
 }
 
 // ===== SAVE BUTTON =====
-function SaveButton({ onClick, loading, label = "Enregistrer", disabled = false }) {
+function SaveButton({ onClick, loading, label, disabled = false }) {
+  const t = useT();
+  const lbl = label || t("mc.btn_save_default");
   return (
     <button onClick={onClick} disabled={loading || disabled} style={{
       width: "100%", padding: 16,
@@ -350,7 +360,7 @@ function SaveButton({ onClick, loading, label = "Enregistrer", disabled = false 
       cursor: (loading || disabled) ? "not-allowed" : "pointer",
       fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
       boxShadow: (loading || disabled) ? "none" : "0 8px 24px rgba(2,209,186,0.3)",
-    }}>{loading ? "Enregistrement..." : label}</button>
+    }}>{loading ? t("mc.btn_saving") : lbl}</button>
   );
 }
 
