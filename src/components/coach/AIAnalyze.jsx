@@ -2,16 +2,23 @@ import React, { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 
-// Reponse simulee pour la demo (sandbox)
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
+
+// Sentinel demo response — labels resolved at render time via i18n keys.
 const DEMO_RESPONSE = {
-  summary: "Ce client montre des signes de desengagement progressif. RPE en baisse (-1.2 sur 3 semaines), seances moins regulieres (2/3 manquees). La derniere pesee confirme une stagnation du poids malgre un volume de travail eleve — possible plateau metabolique ou deficit d'intensite. L'adherence au programme reste bonne sur le papier, mais la qualite des seances semble se degrader.",
+  summaryKey: "ai.demo_summary",
   actions: [
-    { label: "Contact proactif cette semaine", type: "message" },
-    { label: "Revoir le deficit calorique ou RM cibles", type: "programme" },
-    { label: "Planifier un check-in 15 min par telephone", type: "other" },
+    { labelKey: "ai.demo_action_1", type: "message" },
+    { labelKey: "ai.demo_action_2", type: "programme" },
+    { labelKey: "ai.demo_action_3", type: "other" },
   ],
 };
 
@@ -27,6 +34,7 @@ const DEMO_RESPONSE = {
  *   onClose: () => void
  */
 export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) {
+  const t = useT();
   const [loading, setLoading] = useState(!isDemo);
   const [data, setData] = useState(isDemo ? DEMO_RESPONSE : null);
   const [error, setError] = useState("");
@@ -57,18 +65,18 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
 
         if (cancelled) return;
         if (fnError) {
-          setError(fnError.message || "Erreur appel IA");
+          setError(fnError.message || t("ai.error_call"));
           setLoading(false);
           return;
         }
         if (!json?.success) {
-          setError(json?.error || "Analyse indisponible");
+          setError(json?.error || t("ai.error_unavailable"));
           setLoading(false);
           return;
         }
         setData({ summary: json.summary, actions: json.actions || [] });
       } catch (e) {
-        if (!cancelled) setError(e.message || "Erreur reseau");
+        if (!cancelled) setError(e.message || t("ai.error_network"));
       }
       if (!cancelled) setLoading(false);
     })();
@@ -82,7 +90,7 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
       style={overlay}
-      role="dialog" aria-modal="true" aria-label="Analyse IA"
+      role="dialog" aria-modal="true" aria-label={t("ai.aria_label")}
     >
       <style>{`
         @keyframes aiFadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -94,7 +102,7 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
 
       <div style={card}>
         {/* Close */}
-        <button onClick={onClose} aria-label="Fermer" style={closeBtn}>×</button>
+        <button onClick={onClose} aria-label={t("ai.aria_close")} style={closeBtn}>×</button>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
@@ -105,14 +113,14 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: G }}>
-              Analyse IA
+              {t("ai.eyebrow")}
             </div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {client?.full_name || client?.email || "Client"}
+              {client?.full_name || client?.email || t("ai.client_fallback")}
             </div>
           </div>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,.3)", flexShrink: 0 }}>
-            {loading ? "..." : `il y a ${elapsed === 0 ? "quelques secondes" : elapsed + " min"}`}
+            {loading ? "..." : (elapsed === 0 ? t("ai.elapsed_seconds") : fillTpl(t("ai.elapsed_minutes"), { n: elapsed }))}
           </div>
         </div>
 
@@ -120,8 +128,8 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
         <div style={legalBanner}>
           <AppIconLite />
           <span>
-            <strong style={{ color: "rgba(255,255,255,.6)", fontWeight: 600 }}>Suggestions a valider par toi</strong>
-            {" · "}non contraignantes
+            <strong style={{ color: "rgba(255,255,255,.6)", fontWeight: 600 }}>{t("ai.legal_banner_label")}</strong>
+            {t("ai.legal_banner_suffix")}
           </span>
         </div>
 
@@ -138,15 +146,15 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
             <div style={errBox}>{error}</div>
           ) : (
             <>
-              <p style={summary}>{data?.summary}</p>
+              <p style={summary}>{data?.summaryKey ? t(data.summaryKey) : data?.summary}</p>
               {Array.isArray(data?.actions) && data.actions.length > 0 && (
                 <>
-                  <div style={actionsLabel}>Actions suggerees</div>
+                  <div style={actionsLabel}>{t("ai.actions_label")}</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {data.actions.map((a, i) => (
                       <div key={i} style={actionRow}>
                         <span style={{ color: G, fontSize: 12, width: 16 }}>→</span>
-                        <span style={{ flex: 1, fontSize: 13, color: "rgba(255,255,255,.75)" }}>{a.label}</span>
+                        <span style={{ flex: 1, fontSize: 13, color: "rgba(255,255,255,.75)" }}>{a.labelKey ? t(a.labelKey) : a.label}</span>
                       </div>
                     ))}
                   </div>
@@ -160,13 +168,13 @@ export default function AIAnalyze({ client, coachId, isDemo = false, onClose }) 
         {isDemo && !loading && !error && (
           <div style={{ marginTop: 24, padding: "16px 20px", background: "rgba(2,209,186,.04)", border: `.5px solid rgba(2,209,186,.2)`, borderRadius: 14 }}>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginBottom: 12, textAlign: "center", lineHeight: 1.55 }}>
-              L'IA analyse automatiquement tous tes clients en temps réel.
+              {t("ai.demo_text")}
             </div>
             <a
               href="/founding"
               style={demoCta}
             >
-              Rejoindre les 30 Founding Coachs →
+              {t("ai.demo_cta")}
             </a>
           </div>
         )}
