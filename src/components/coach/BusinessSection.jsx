@@ -22,6 +22,14 @@ import AppIcon from "../AppIcon";
 import Spinner from "../Spinner";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { useT, getLocale } from "../../lib/i18n";
+
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const G = "#02d1ba";
 const ORANGE = "#00C9A7";
@@ -38,6 +46,7 @@ const RED = "#ff6b6b";
  *   - Prochain palier
  */
 export default function BusinessSection({ coachData, clients = [], hasSentinelAccess = false, onOpenSentinel }) {
+  const t = useT();
   const [goal, setGoal] = useState(coachData?.monthly_revenue_goal || 0);
   const [editingGoal, setEditingGoal] = useState(false);
   const [newGoal, setNewGoal] = useState("");
@@ -158,32 +167,32 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
       .eq("id", coachData.id);
     setSavingGoal(false);
     if (error) {
-      toast.error("Objectif non enregistre");
+      toast.error(t("biz.toast_goal_save_error"));
       return;
     }
     setGoal(g);
     setEditingGoal(false);
     setNewGoal("");
-    toast.success("Objectif mis a jour");
+    toast.success(t("biz.toast_goal_saved"));
   };
 
   return (
     <div style={{ marginBottom: 40, animation: "fadeUp 0.4s ease both" }}>
       {/* ===== HERO (format FuelPage) ===== */}
       <div style={{ padding: "8px 0 20px" }}>
-        <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Business</div>
-        <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Ton business<span style={{ color: G }}>.</span></div>
+        <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t("biz.eyebrow")}</div>
+        <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>{t("biz.title")}<span style={{ color: G }}>.</span></div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
-          {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          {new Date().toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
         </div>
       </div>
 
       {/* ===== BANNER APERÇU (0 clients) ===== */}
       {previewMode && (
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 12, marginBottom: 18, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", flex: 1 }}>Aperçu — données fictives à titre d'exemple. Ajoute ton premier client pour voir ta vraie data.</span>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", flex: 1 }}>{t("biz.preview_banner")}</span>
           <button onClick={() => setPreviewMode(!previewMode)} style={{ padding: "6px 14px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-            {previewMode ? "Mes vraies données" : "Aperçu démo"}
+            {previewMode ? t("biz.preview_btn_real") : t("biz.preview_btn_demo")}
           </button>
         </div>
       )}
@@ -197,12 +206,12 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(129,140,248,0.7)" }}>Sentinel · Playbook du jour</span>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(129,140,248,0.7)" }}>{t("biz.sentinel_playbook_label")}</span>
           </div>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(16px, 4vw, 20px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8 }}>{sentinelCard.title}</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{sentinelCard.body}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "#818cf8" }}>
-            Voir mes 3 actions
+            {t("biz.sentinel_see_actions")}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </div>
         </div>
@@ -211,17 +220,17 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
         <div style={{ borderRadius: 18, padding: "20px 22px", marginBottom: 18, background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)", position: "relative" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(129,140,248,0.5)" }}>Sentinel</span>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(129,140,248,0.5)" }}>{t("biz.sentinel_eyebrow")}</span>
           </div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>Sentinel prepare ta journee — reviens demain a 7h.</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{t("biz.sentinel_empty")}</div>
         </div>
       ) : (
         /* Starter: original Next Move widget (teaser) */
         <div style={{ borderRadius: 18, padding: "20px 22px", marginBottom: 18, background: nextMove ? "linear-gradient(135deg, rgba(2,209,186,0.06), rgba(139,92,246,0.04))" : "rgba(255,255,255,0.02)", border: `1px solid ${nextMove ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.06)"}`, position: "relative", overflow: "hidden" }}>
-          {previewMode && nextMove && <div style={{ position: "absolute", top: 10, right: 14, fontSize: 9, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>Exemple fictif</div>}
+          {previewMode && nextMove && <div style={{ position: "absolute", top: 10, right: 14, fontSize: 9, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>{t("biz.example_tag")}</div>}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill={G}/></svg>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88` }}>Ta prochaine action</span>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88` }}>{t("biz.next_action_label")}</span>
           </div>
           {nextMove ? (
             <>
@@ -235,7 +244,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>Aucune action critique cette semaine. Continue comme ca.</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>{t("biz.no_action_this_week")}</div>
           )}
         </div>
       )}
@@ -244,9 +253,9 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 18 }}>
         {/* MRR card */}
         <div style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 18, padding: "20px 22px", position: "relative", overflow: "hidden" }}>
-          <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", fontWeight: 700, marginBottom: 8 }}>MRR du mois</div>
+          <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", fontWeight: 700, marginBottom: 8 }}>{t("biz.mrr_month")}</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 38, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>
-            {mrr.toLocaleString("fr-FR")}<span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)", marginLeft: 4 }}>€</span>
+            {mrr.toLocaleString(intlLocale())}<span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)", marginLeft: 4 }}>€</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
             {variation.direction !== "flat" && lastMonthMrr != null && (
@@ -261,11 +270,11 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
               </span>
             )}
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
-              vs mois dernier
+              {t("biz.vs_last_month")}
             </span>
           </div>
           <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
-            Annualise : <strong style={{ color: "#fff" }}>{annualizedRevenue(mrr).toLocaleString("fr-FR")} €</strong>
+            {t("biz.annualized")} <strong style={{ color: "#fff" }}>{annualizedRevenue(mrr).toLocaleString(intlLocale())} €</strong>
           </div>
         </div>
 
@@ -273,11 +282,11 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "20px 22px", display: "flex", alignItems: "center", gap: 14 }}>
           <ScoreRing score={score} color={scoreColor} size={80} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 4 }}>Score business</div>
+            <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 4 }}>{t("biz.score_business")}</div>
             <div style={{ fontSize: 12, color: scoreColor, fontWeight: 700, lineHeight: 1.4 }}>{scoreMsg}</div>
             {platformBenchmark && (
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>
-                Plateforme : {platformBenchmark.score}/100
+                {fillTpl(t("biz.platform_score"), { n: platformBenchmark.score })}
               </div>
             )}
           </div>
@@ -288,7 +297,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "20px 22px", marginBottom: 18 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="2" strokeLinecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88` }}>Forecast 90 jours</span>
+          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88` }}>{t("biz.forecast_90d")}</span>
         </div>
 
         {forecast ? (
@@ -327,7 +336,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
                   return <circle key={i} cx={cx} cy={cy} r="4" fill="#080C14" stroke={G} strokeWidth="2" />;
                 })}
                 {/* X labels */}
-                {["Auj.", "J+30", "J+60", "J+90"].map((l, i) => (
+                {[t("biz.forecast_today_short"), t("biz.forecast_d30"), t("biz.forecast_d60"), t("biz.forecast_d90")].map((l, i) => (
                   <text key={i} x={(i / 3) * 380 + 10} y="200" fill="rgba(255,255,255,0.2)" fontSize="9" textAnchor="middle" fontFamily="Inter">{l}</text>
                 ))}
               </svg>
@@ -336,8 +345,8 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginBottom: 14 }}>
               {forecast.points.filter(p => p.day > 0).map((p, i) => (
                 <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 12px", textAlign: "center" }}>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: G }}>{p.p50.toLocaleString("fr-FR")} €</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2 }}>J+{p.day} ({p.p10.toLocaleString("fr-FR")} - {p.p90.toLocaleString("fr-FR")})</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: G }}>{p.p50.toLocaleString(intlLocale())} €</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2 }}>{fillTpl(t("biz.forecast_d_prefix"), { n: p.day })} ({p.p10.toLocaleString(intlLocale())} - {p.p90.toLocaleString(intlLocale())})</div>
                 </div>
               ))}
             </div>
@@ -348,11 +357,11 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
           </>
         ) : (
           <div style={{ textAlign: "center", padding: "20px 0" }}>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>Prédiction disponible à partir de 60 jours de data.</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>{t("biz.forecast_unavailable")}</div>
             <div style={{ width: "100%", height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ width: `${Math.min(100, Math.round((history30d.length / 60) * 100))}%`, height: "100%", background: G, borderRadius: 2, transition: "width 0.5s" }} />
             </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 6 }}>{history30d.length}/60 jours collectés</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 6 }}>{fillTpl(t("biz.forecast_progress"), { n: history30d.length })}</div>
           </div>
         )}
       </div>
@@ -362,14 +371,14 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
             <AppIcon name="target" size={12} color={ORANGE} />
-            Objectif mensuel
+            {t("biz.goal_label")}
           </div>
           {!editingGoal && (
             <button
               onClick={() => { haptic.light(); setEditingGoal(true); setNewGoal(String(goal || "")); }}
               style={{ background: `${ORANGE}15`, border: `1px solid ${ORANGE}30`, borderRadius: 10, padding: "6px 12px", color: ORANGE, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", minHeight: 32 }}
             >
-              {goal > 0 ? "Modifier" : "Definir"}
+              {goal > 0 ? t("biz.goal_modify") : t("biz.goal_define")}
             </button>
           )}
         </div>
@@ -382,16 +391,16 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
               autoFocus
               value={newGoal}
               onChange={(e) => setNewGoal(e.target.value)}
-              placeholder="Ex: 3000"
+              placeholder={t("biz.goal_input_placeholder")}
               style={{ flex: 1, padding: "12px 16px", background: "rgba(255,255,255,0.05)", border: `1px solid ${ORANGE}40`, borderRadius: 12, color: "#fff", fontSize: 16, outline: "none", fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}
             />
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>€/mois</span>
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>{t("biz.goal_per_month")}</span>
             <button
               onClick={saveGoal}
               disabled={savingGoal}
               style={{ padding: "12px 18px", background: ORANGE, color: "#000", border: "none", borderRadius: 12, fontWeight: 800, fontSize: 12, cursor: savingGoal ? "default" : "pointer", minWidth: 60, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
             >
-              {savingGoal ? <Spinner variant="dots" size={14} color="#000" /> : "OK"}
+              {savingGoal ? <Spinner variant="dots" size={14} color="#000" /> : t("biz.goal_save")}
             </button>
             <button
               onClick={() => { setEditingGoal(false); setNewGoal(""); }}
@@ -404,7 +413,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: "#fff" }}>
-                {mrr.toLocaleString("fr-FR")} <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>/ {goal.toLocaleString("fr-FR")} €</span>
+                {mrr.toLocaleString(intlLocale())} <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>/ {goal.toLocaleString(intlLocale())} €</span>
               </div>
               <div style={{ fontSize: 13, color: goalPct >= 100 ? G : ORANGE, fontWeight: 800 }}>{goalPct}%</div>
             </div>
@@ -413,20 +422,20 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
             </div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
               {goalPct >= 100 ? (
-                <span style={{ color: G, fontWeight: 700 }}>Objectif atteint. On vise plus haut ?</span>
+                <span style={{ color: G, fontWeight: 700 }}>{t("biz.goal_reached")}</span>
               ) : (
-                <>Il te manque <strong style={{ color: "#fff" }}>{clientsToGoal}</strong> client{clientsToGoal > 1 ? "s" : ""} pour atteindre ton objectif.</>
+                fillTpl(clientsToGoal > 1 ? t("biz.goal_clients_to_many") : t("biz.goal_clients_to_one"), { n: clientsToGoal })
               )}
             </div>
           </>
         ) : (
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-            Fixe-toi un objectif de revenus pour mesurer ta progression chaque mois.
+            {t("biz.goal_intro")}
             <button
               onClick={() => { haptic.light(); setEditingGoal(true); setNewGoal(""); }}
               style={{ display: "block", marginTop: 10, background: `${ORANGE}15`, border: `1px solid ${ORANGE}30`, borderRadius: 10, padding: "8px 16px", color: ORANGE, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", minHeight: 32 }}
             >
-              + Definir mon objectif
+              {t("biz.goal_define_btn")}
             </button>
           </div>
         )}
@@ -435,23 +444,23 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
       {/* ===== RETENTION + DUREE MOYENNE + PROCHAIN PALIER ===== */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
         <StatCard
-          label="Retention 30j+"
+          label={t("biz.retention_30d")}
           value={`${retention}%`}
-          sub={platformBenchmark ? `plateforme ${platformBenchmark.retention}%` : `${active} actifs`}
+          sub={platformBenchmark ? fillTpl(t("biz.platform_pct"), { n: platformBenchmark.retention }) : fillTpl(t("biz.actives"), { n: active })}
           icon="trending-up"
           color={retention >= 70 ? G : retention >= 40 ? ORANGE : RED}
         />
         <StatCard
-          label="Duree moyenne"
+          label={t("biz.avg_duration")}
           value={avgDuration > 0 ? `${Math.round(avgDuration / 30)}m` : "—"}
-          sub={avgDuration > 0 ? `${avgDuration}j` : "en cours"}
+          sub={avgDuration > 0 ? fillTpl(t("biz.duration_days"), { n: avgDuration }) : t("biz.duration_running")}
           icon="clock"
           color={VIOLET}
         />
         <StatCard
-          label="Prochain palier"
-          value={`${milestone.toLocaleString("fr-FR")}€`}
-          sub={clientsToMilestone > 0 ? `+${clientsToMilestone} client${clientsToMilestone > 1 ? "s" : ""}` : "atteint"}
+          label={t("biz.next_milestone")}
+          value={`${milestone.toLocaleString(intlLocale())}€`}
+          sub={clientsToMilestone > 0 ? fillTpl(clientsToMilestone > 1 ? t("biz.add_clients_many") : t("biz.add_clients_one"), { n: clientsToMilestone }) : t("biz.milestone_reached")}
           icon="target"
           color={G}
         />
@@ -461,7 +470,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
       {history30d.length >= 2 && (
         <div style={{ marginTop: 18, padding: "14px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 4 }}>Evolution score 30j</div>
+            <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 4 }}>{t("biz.score_evolution_30d")}</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
               {history30d[0].business_score} → {history30d[history30d.length - 1].business_score}
             </div>
