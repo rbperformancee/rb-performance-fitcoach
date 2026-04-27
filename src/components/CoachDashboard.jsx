@@ -714,8 +714,22 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           </div>
         </div>
 
-        {/* ===== TAB BAR INTERNE ===== */}
-        <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.06)", animation: "cpFadeUp 0.3s ease 0.05s both" }}>
+        {/* ===== TAB BAR INTERNE — scroll horizontal sur mobile ===== */}
+        <div
+          className="cp-tabbar"
+          style={{
+            display: "flex", gap: 0, marginBottom: 24,
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            animation: "cpFadeUp 0.3s ease 0.05s both",
+            overflowX: "auto",
+            overflowY: "hidden",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+            scrollSnapType: "x proximity",
+          }}
+        >
+          <style>{`.cp-tabbar::-webkit-scrollbar{display:none}`}</style>
           {[
             { id: "resume", label: "Résumé" },
             { id: "programme", label: "Programme" },
@@ -723,15 +737,25 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             { id: "supplements", label: "Compléments" },
             { id: "suivi", label: "Suivi" },
           ].map(t => (
-            <button key={t.id} onClick={() => setPanelTab(t.id)} style={{
-              padding: "12px 20px",
-              fontSize: 12, fontWeight: panelTab === t.id ? 700 : 500,
-              color: panelTab === t.id ? "#fff" : "rgba(255,255,255,0.3)",
-              background: "none", border: "none", cursor: "pointer",
-              borderBottom: panelTab === t.id ? "2px solid #00C9A7" : "2px solid transparent",
-              fontFamily: "inherit", letterSpacing: ".02em",
-              transition: "all .2s",
-            }}>{t.label}</button>
+            <button
+              key={t.id}
+              onClick={(e) => {
+                setPanelTab(t.id);
+                try { e.currentTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" }); } catch(_) {}
+              }}
+              style={{
+                padding: "12px 18px",
+                fontSize: 12, fontWeight: panelTab === t.id ? 700 : 500,
+                color: panelTab === t.id ? "#fff" : "rgba(255,255,255,0.3)",
+                background: "none", border: "none", cursor: "pointer",
+                borderBottom: panelTab === t.id ? "2px solid #00C9A7" : "2px solid transparent",
+                fontFamily: "inherit", letterSpacing: ".02em",
+                transition: "color .2s, border-color .2s",
+                flexShrink: 0,
+                whiteSpace: "nowrap",
+                scrollSnapAlign: "center",
+              }}
+            >{t.label}</button>
           ))}
         </div>
 
