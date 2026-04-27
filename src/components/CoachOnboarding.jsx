@@ -2,19 +2,22 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
 import Spinner from "./Spinner";
+import { useT } from "../lib/i18n";
 
-const COLORS = [
-  { id: "#02d1ba", name: "Teal" },
-  { id: "#f97316", name: "Orange" },
-  { id: "#a78bfa", name: "Violet" },
-  { id: "#ef4444", name: "Rouge" },
-  { id: "#3b82f6", name: "Bleu" },
-  { id: "#f5c842", name: "Doré" },
-  { id: "#ec4899", name: "Rose" },
-  { id: "#22c55e", name: "Vert" },
+const buildColors = (t) => [
+  { id: "#02d1ba", name: t("co.color_teal") },
+  { id: "#f97316", name: t("co.color_orange") },
+  { id: "#a78bfa", name: t("co.color_violet") },
+  { id: "#ef4444", name: t("co.color_red") },
+  { id: "#3b82f6", name: t("co.color_blue") },
+  { id: "#f5c842", name: t("co.color_gold") },
+  { id: "#ec4899", name: t("co.color_pink") },
+  { id: "#22c55e", name: t("co.color_green") },
 ];
 
 export default function CoachOnboarding({ coachData, onComplete }) {
+  const t = useT();
+  const COLORS = buildColors(t);
   const [step, setStep] = useState(1);
   const [brandName, setBrandName] = useState(coachData?.brand_name || "");
   const [fullName, setFullName] = useState(coachData?.full_name || "");
@@ -33,7 +36,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
   const [tvaStatus, setTvaStatus] = useState(coachData?.tva_status || "non_applicable");
 
   const TOTAL_STEPS = 6;
-  const firstName = fullName.split(" ")[0] || "Coach";
+  const firstName = fullName.split(" ")[0] || t("co.coach_default");
 
   // Generate invite code on step 4
   useEffect(() => {
@@ -46,8 +49,8 @@ export default function CoachOnboarding({ coachData, onComplete }) {
   const uploadLogo = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { toast.error("Logo trop lourd (max 2MB)"); return; }
-    if (!file.type.startsWith("image/")) { toast.error("Fichier image uniquement"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error(t("co.toast_logo_too_heavy")); return; }
+    if (!file.type.startsWith("image/")) { toast.error(t("co.toast_image_only")); return; }
     setUploadingLogo(true);
     try {
       const ext = file.name.split(".").pop();
@@ -57,7 +60,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
       const { data } = supabase.storage.from("coach-logos").getPublicUrl(path);
       setLogoUrl(data.publicUrl + "?t=" + Date.now());
     } catch (err) {
-      toast.error("Upload échoué.");
+      toast.error(t("co.toast_upload_failed"));
       console.error("Logo upload failed:", err);
     }
     setUploadingLogo(false);
@@ -151,12 +154,12 @@ export default function CoachOnboarding({ coachData, onComplete }) {
               {step <= TOTAL_STEPS ? `${step} / ${TOTAL_STEPS}` : ""}
             </div>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.15)" }}>
-              {step === 1 && "30 secondes"}
-              {step === 2 && "Identité visuelle"}
-              {step === 3 && "Profil public"}
-              {step === 4 && "Facturation"}
-              {step === 5 && "Ton premier client"}
-              {step === 6 && "C'est parti"}
+              {step === 1 && t("co.step_1_label")}
+              {step === 2 && t("co.step_2_label")}
+              {step === 3 && t("co.step_3_label")}
+              {step === 4 && t("co.step_4_label")}
+              {step === 5 && t("co.step_5_label")}
+              {step === 6 && t("co.step_6_label")}
             </div>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden" }}>
@@ -168,28 +171,28 @@ export default function CoachOnboarding({ coachData, onComplete }) {
         {step === 1 && (
           <div style={{ animation: "coFade 0.4s ease both" }}>
             <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>
-              Bienvenue
+              {t("co.s1_eyebrow")}
             </div>
             <h1 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
-              Ton cockpit<br /><span style={{ color: accentColor }}>CEO.</span>
+              {t("co.s1_title_part1")}<br /><span style={{ color: accentColor }}>{t("co.s1_title_part2")}</span>
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, marginBottom: 28 }}>
-              Dans 30 secondes, tu auras un dashboard que 99% des coachs n'ont pas.
+              {t("co.s1_intro")}
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 28 }}>
               <div>
-                <div style={label}>Ton nom</div>
-                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Prénom Nom" autoFocus style={inputStyle} />
+                <div style={label}>{t("co.s1_label_name")}</div>
+                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder={t("co.s1_ph_name")} autoFocus style={inputStyle} />
               </div>
               <div>
-                <div style={label}>Le nom de ta marque</div>
-                <input type="text" value={brandName} onChange={e => setBrandName(e.target.value)} placeholder="Ex: PowerCoach, FitStudio..." style={inputStyle} />
+                <div style={label}>{t("co.s1_label_brand")}</div>
+                <input type="text" value={brandName} onChange={e => setBrandName(e.target.value)} placeholder={t("co.s1_ph_brand")} style={inputStyle} />
               </div>
             </div>
 
             <button onClick={() => setStep(2)} disabled={!fullName.trim() || !brandName.trim()} style={btnPrimary(fullName.trim() && brandName.trim())}>
-              Continuer
+              {t("co.continue")}
             </button>
           </div>
         )}
@@ -197,12 +200,12 @@ export default function CoachOnboarding({ coachData, onComplete }) {
         {/* ===== STEP 2 : Couleur ===== */}
         {step === 2 && (
           <div style={{ animation: "coFade 0.4s ease both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>Identité visuelle</div>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>{t("co.s2_eyebrow")}</div>
             <h1 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
-              Ta couleur<br /><span style={{ color: accentColor }}>signature.</span>
+              {t("co.s2_title_part1")}<br /><span style={{ color: accentColor }}>{t("co.s2_title_part2")}</span>
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, marginBottom: 28 }}>
-              Tes clients la verront partout dans leur app.
+              {t("co.s2_intro")}
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
@@ -224,20 +227,20 @@ export default function CoachOnboarding({ coachData, onComplete }) {
 
             {/* Live preview */}
             <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 18, marginBottom: 24 }}>
-              <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>Aperçu client</div>
+              <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>{t("co.s2_preview_label")}</div>
               <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.5px" }}>
-                <span style={{ color: "#fff" }}>{brandName || "Ta Marque"}</span>
+                <span style={{ color: "#fff" }}>{brandName || t("co.s2_brand_default")}</span>
                 <span style={{ color: accentColor }}>.</span>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <div style={{ padding: "6px 14px", background: `${accentColor}15`, border: `1px solid ${accentColor}40`, borderRadius: 100, fontSize: 10, fontWeight: 700, color: accentColor }}>Programme actif</div>
-                <div style={{ padding: "6px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>Score 84</div>
+                <div style={{ padding: "6px 14px", background: `${accentColor}15`, border: `1px solid ${accentColor}40`, borderRadius: 100, fontSize: 10, fontWeight: 700, color: accentColor }}>{t("co.s2_chip_program")}</div>
+                <div style={{ padding: "6px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>{t("co.s2_chip_score")}</div>
               </div>
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setStep(1)} style={btnBack}>←</button>
-              <button onClick={() => setStep(3)} style={btnPrimary()}>Continuer</button>
+              <button onClick={() => setStep(3)} style={btnPrimary()}>{t("co.continue")}</button>
             </div>
           </div>
         )}
@@ -245,25 +248,25 @@ export default function CoachOnboarding({ coachData, onComplete }) {
         {/* ===== STEP 3 : Profil + Logo ===== */}
         {step === 3 && (
           <div style={{ animation: "coFade 0.4s ease both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>Dernière étape</div>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>{t("co.s3_eyebrow")}</div>
             <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
-              Ton profil<br /><span style={{ color: accentColor }}>public.</span>
+              {t("co.s3_title_part1")}<br /><span style={{ color: accentColor }}>{t("co.s3_title_part2")}</span>
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, marginBottom: 24 }}>
-              Visible par tes clients. Tu pourras tout modifier plus tard.
+              {t("co.s3_intro")}
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
               <div>
-                <div style={label}>Activité</div>
-                <input type="text" value={activity} onChange={e => setActivity(e.target.value)} placeholder="Musculation, CrossFit, Running..." style={inputStyle} />
+                <div style={label}>{t("co.s3_label_activity")}</div>
+                <input type="text" value={activity} onChange={e => setActivity(e.target.value)} placeholder={t("co.s3_ph_activity")} style={inputStyle} />
               </div>
               <div>
-                <div style={label}>Ville</div>
-                <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="Paris, Lyon, Marseille..." style={inputStyle} />
+                <div style={label}>{t("co.s3_label_city")}</div>
+                <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder={t("co.s3_ph_city")} style={inputStyle} />
               </div>
               <div>
-                <div style={label}>Logo (optionnel)</div>
+                <div style={label}>{t("co.s3_label_logo")}</div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   {logoUrl ? (
                     <img src={logoUrl} alt="logo" style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: `1px solid ${accentColor}50` }} />
@@ -273,7 +276,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
                     </div>
                   )}
                   <label style={{ flex: 1, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, cursor: "pointer", textAlign: "center", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", letterSpacing: "1px", textTransform: "uppercase" }}>
-                    {uploadingLogo ? "Upload..." : (logoUrl ? "Changer" : "Choisir")}
+                    {uploadingLogo ? t("co.s3_logo_uploading") : (logoUrl ? t("co.s3_logo_change") : t("co.s3_logo_choose"))}
                     <input type="file" accept="image/*" onChange={uploadLogo} style={{ display: "none" }} />
                   </label>
                 </div>
@@ -286,9 +289,9 @@ export default function CoachOnboarding({ coachData, onComplete }) {
                 {saving ? (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
                     <Spinner variant="dots" size={18} color="#000" />
-                    Création...
+                    {t("co.creating")}
                   </span>
-                ) : "Continuer →"}
+                ) : t("co.continue_arrow")}
               </button>
             </div>
           </div>
@@ -297,42 +300,42 @@ export default function CoachOnboarding({ coachData, onComplete }) {
         {/* ===== STEP 4 : Facturation ===== */}
         {step === 4 && (
           <div style={{ animation: "coFade 0.4s ease both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>Facturation</div>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>{t("co.s4_eyebrow")}</div>
             <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
-              Tes infos<br /><span style={{ color: accentColor }}>légales.</span>
+              {t("co.s4_title_part1")}<br /><span style={{ color: accentColor }}>{t("co.s4_title_part2")}</span>
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, marginBottom: 24 }}>
-              Obligatoire pour générer des factures conformes à tes clients.
+              {t("co.s4_intro")}
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
               <div>
-                <div style={label}>SIRET</div>
-                <input type="text" value={siret} onChange={e => setSiret(e.target.value.replace(/[^0-9]/g, '').slice(0, 14))} placeholder="14 chiffres" inputMode="numeric" style={inputStyle} />
+                <div style={label}>{t("co.s4_label_siret")}</div>
+                <input type="text" value={siret} onChange={e => setSiret(e.target.value.replace(/[^0-9]/g, '').slice(0, 14))} placeholder={t("co.s4_ph_siret")} inputMode="numeric" style={inputStyle} />
               </div>
               <div>
-                <div style={label}>Raison sociale / Nom commercial</div>
-                <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder={brandName || "Nom sur la facture"} style={inputStyle} />
+                <div style={label}>{t("co.s4_label_business")}</div>
+                <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder={brandName || t("co.s4_ph_business")} style={inputStyle} />
               </div>
               <div>
-                <div style={label}>Adresse de facturation</div>
-                <input type="text" value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} placeholder="12 rue de la Paix, 75002 Paris" style={inputStyle} />
+                <div style={label}>{t("co.s4_label_address")}</div>
+                <input type="text" value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} placeholder={t("co.s4_ph_address")} style={inputStyle} />
               </div>
               <div>
-                <div style={label}>TVA</div>
+                <div style={label}>{t("co.s4_label_tva")}</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   {[
-                    { id: "non_applicable", label: "Non applicable (art. 293B)" },
-                    { id: "applicable", label: "Assujetti TVA" },
-                  ].map(t => (
-                    <button key={t.id} onClick={() => setTvaStatus(t.id)} style={{
+                    { id: "non_applicable", label: t("co.s4_tva_no") },
+                    { id: "applicable", label: t("co.s4_tva_yes") },
+                  ].map(opt => (
+                    <button key={opt.id} onClick={() => setTvaStatus(opt.id)} style={{
                       flex: 1, padding: "12px 8px", borderRadius: 12, cursor: "pointer",
-                      background: tvaStatus === t.id ? `${accentColor}12` : "rgba(255,255,255,0.02)",
-                      border: `1.5px solid ${tvaStatus === t.id ? accentColor : "rgba(255,255,255,0.06)"}`,
-                      color: tvaStatus === t.id ? accentColor : "rgba(255,255,255,0.4)",
+                      background: tvaStatus === opt.id ? `${accentColor}12` : "rgba(255,255,255,0.02)",
+                      border: `1.5px solid ${tvaStatus === opt.id ? accentColor : "rgba(255,255,255,0.06)"}`,
+                      color: tvaStatus === opt.id ? accentColor : "rgba(255,255,255,0.4)",
                       fontSize: 11, fontWeight: 600, fontFamily: "inherit", textAlign: "center",
                       transition: "all 0.2s",
-                    }}>{t.label}</button>
+                    }}>{opt.label}</button>
                   ))}
                 </div>
               </div>
@@ -344,14 +347,14 @@ export default function CoachOnboarding({ coachData, onComplete }) {
                 {saving ? (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
                     <Spinner variant="dots" size={18} color="#000" />
-                    Création...
+                    {t("co.creating")}
                   </span>
-                ) : "Créer mon espace →"}
+                ) : t("co.s4_create_btn")}
               </button>
             </div>
 
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 16, textAlign: "center" }}>
-              Tu pourras compléter plus tard dans les paramètres.
+              {t("co.s4_note")}
             </div>
           </div>
         )}
@@ -359,12 +362,12 @@ export default function CoachOnboarding({ coachData, onComplete }) {
         {/* ===== STEP 5 : Invite ton premier client ===== */}
         {step === 5 && (
           <div style={{ animation: "coFade 0.4s ease both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>Ton premier client</div>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>{t("co.s5_eyebrow")}</div>
             <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
-              Invite<br /><span style={{ color: accentColor }}>quelqu'un.</span>
+              {t("co.s5_title_part1")}<br /><span style={{ color: accentColor }}>{t("co.s5_title_part2")}</span>
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, marginBottom: 28 }}>
-              Envoie ce code à ton premier client. Il le tape dans l'app et il est connecté à toi.
+              {t("co.s5_intro")}
             </p>
 
             {/* Code display */}
@@ -372,7 +375,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
               background: "rgba(255,255,255,0.03)", border: `1px solid ${accentColor}30`,
               borderRadius: 20, padding: "28px 24px", textAlign: "center", marginBottom: 20,
             }}>
-              <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 14, fontWeight: 700 }}>Code d'invitation</div>
+              <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 14, fontWeight: 700 }}>{t("co.s5_code_label")}</div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: 48, fontWeight: 700,
                 letterSpacing: "12px", color: accentColor,
@@ -390,20 +393,20 @@ export default function CoachOnboarding({ coachData, onComplete }) {
                 letterSpacing: "1px", textTransform: "uppercase",
                 transition: "all 0.2s",
               }}>
-                {copied ? "✓ Copié" : "Copier le code"}
+                {copied ? t("co.s5_copied") : t("co.s5_copy")}
               </button>
             </div>
 
             <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", textAlign: "center", lineHeight: 1.6, marginBottom: 28 }}>
-              Tu pourras aussi générer de nouveaux codes depuis ton dashboard.
-              <br />Pas de client sous la main ? Passe cette étape.
+              {t("co.s5_note")}
+              <br />{t("co.s5_note_skip")}
             </p>
 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setStep(6)} style={{
                 ...btnPrimary(), width: "100%",
               }}>
-                Accéder à mon dashboard →
+                {t("co.s5_dashboard_btn")}
               </button>
             </div>
           </div>
@@ -421,21 +424,21 @@ export default function CoachOnboarding({ coachData, onComplete }) {
               animation: "coPulse 2s ease infinite",
             }}>⚡</div>
             <div style={{ fontSize: 10, letterSpacing: "5px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 14, fontWeight: 700 }}>
-              Tu es prêt
+              {t("co.s6_eyebrow")}
             </div>
             <h1 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 16 }}>
-              Bienvenue,<br /><span style={{ color: accentColor }}>{firstName}.</span>
+              {t("co.s6_title")}<br /><span style={{ color: accentColor }}>{firstName}.</span>
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, marginBottom: 12, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
-              Ton espace <strong style={{ color: "#fff" }}>{brandName}</strong> est en ligne.
+              {t("co.s6_intro_part1")} <strong style={{ color: "#fff" }}>{brandName}</strong> {t("co.s6_intro_part2")}
             </p>
 
             {/* 3 quick stats */}
             <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 32 }}>
               {[
-                { num: "0→", label: "Clients" },
-                { num: "84", label: "Score cible" },
-                { num: "∞", label: "Potentiel" },
+                { num: "0→", label: t("co.s6_stat_clients") },
+                { num: "84", label: t("co.s6_stat_score") },
+                { num: "∞", label: t("co.s6_stat_potential") },
               ].map((s, i) => (
                 <div key={i} style={{
                   padding: "12px 16px", background: "rgba(255,255,255,0.02)",
@@ -455,7 +458,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
               cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase",
               letterSpacing: "0.5px", boxShadow: `0 8px 32px ${accentColor}40`,
             }}>
-              Ouvrir mon dashboard →
+              {t("co.s6_open_btn")}
             </button>
           </div>
         )}

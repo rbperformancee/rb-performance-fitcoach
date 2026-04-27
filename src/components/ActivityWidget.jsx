@@ -2,11 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { toast } from './Toast';
 import AppIcon from './AppIcon';
+import { useT, getLocale } from '../lib/i18n';
+
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const METRICS = [
-  { key: 'steps',    label: 'Pas',      icon: 'shoe',     unit: '',    color: '#02d1ba', target: 10000, hint: 'Ouvre Sante → Activite → Pas' },
-  { key: 'calories', label: 'Calories', icon: 'flame',    unit: 'kcal', color: '#fb923c', target: 2500,  hint: 'Ouvre Sante → Activite → Calories actives' },
-  { key: 'sleep',    label: 'Sommeil',  icon: 'zzz',      unit: 'h',   color: '#a78bfa', target: 8,     hint: 'Ouvre Sante → Sommeil' },
+  { key: 'steps',    labelKey: 'aw.label_steps',    icon: 'shoe',  unit: '',           color: '#02d1ba', target: 10000, hintKey: 'aw.hint_steps' },
+  { key: 'calories', labelKey: 'aw.label_calories', icon: 'flame', unitKey: 'aw.unit_calories', color: '#fb923c', target: 2500,  hintKey: 'aw.hint_calories' },
+  { key: 'sleep',    labelKey: 'aw.label_sleep',    icon: 'zzz',   unitKey: 'aw.unit_sleep',    color: '#a78bfa', target: 8,     hintKey: 'aw.hint_sleep' },
 ];
 
 function RingProgress({ value, target, color, size = 56 }) {
@@ -25,6 +34,7 @@ function RingProgress({ value, target, color, size = 56 }) {
 }
 
 export default function ActivityWidget({ clientId }) {
+  const t = useT();
   const [today, setToday] = useState({});
   const [editing, setEditing] = useState(null);
   const [inputVal, setInputVal] = useState('');
@@ -98,7 +108,7 @@ export default function ActivityWidget({ clientId }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <AppIcon name="lightning" size={12} color="#6b7280" />
-          ACTIVITE DU JOUR
+          {t('aw.eyebrow')}
         </div>
         <button
           onClick={() => window.open('x-apple-health://', '_blank')}
@@ -109,7 +119,7 @@ export default function ActivityWidget({ clientId }) {
             display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 32,
           }}>
           <AppIcon name="heart" size={12} color="#ff2d55" strokeWidth={2.2} />
-          Ouvrir Sante
+          {t('aw.btn_open_health')}
         </button>
       </div>
 
@@ -118,6 +128,9 @@ export default function ActivityWidget({ clientId }) {
           const val = today[m.key];
           const pct = val ? Math.min(val / m.target, 1) : 0;
           const isEditing = editing === m.key;
+          const label = t(m.labelKey);
+          const unit = m.unitKey ? t(m.unitKey) : '';
+          const hint = t(m.hintKey);
 
           return (
             <div key={m.key} style={{
@@ -142,13 +155,15 @@ export default function ActivityWidget({ clientId }) {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1, marginBottom: 2 }}>{m.label.toUpperCase()}</div>
+                      <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1, marginBottom: 2 }}>{label.toUpperCase()}</div>
                       <div style={{ fontSize: 22, fontWeight: 900, color: val ? '#f5f5f5' : '#374151', lineHeight: 1 }}>
-                        {val ? val.toLocaleString('fr-FR') : '--'}
-                        <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 500, marginLeft: 4 }}>{m.unit}</span>
+                        {val ? val.toLocaleString(intlLocale()) : '--'}
+                        <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 500, marginLeft: 4 }}>{unit}</span>
                       </div>
                       <div style={{ fontSize: 10, color: m.color, marginTop: 2, fontWeight: 600 }}>
-                        {val ? `${Math.round(pct * 100)}% de l'objectif` : `Objectif: ${m.target.toLocaleString('fr-FR')} ${m.unit}`}
+                        {val
+                          ? fillTpl(t('aw.pct_of_target'), { pct: Math.round(pct * 100) })
+                          : fillTpl(t('aw.target_label'), { value: m.target.toLocaleString(intlLocale()), unit })}
                       </div>
                     </div>
                     <Sparkline data={history[m.key]} color={m.color} />
@@ -173,7 +188,7 @@ export default function ActivityWidget({ clientId }) {
                     autoFocus
                     type="number"
                     inputMode={m.key === 'sleep' ? 'decimal' : 'numeric'}
-                    placeholder={`Ex: ${m.key === 'steps' ? '8500' : m.key === 'calories' ? '2200' : '7.5'}`}
+                    placeholder={fillTpl(t('aw.placeholder_ex'), { example: m.key === 'steps' ? '8500' : m.key === 'calories' ? '2200' : '7.5' })}
                     value={inputVal}
                     onChange={e => setInputVal(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') saveMetric(m.key); if (e.key === 'Escape') setEditing(null); }}
@@ -198,7 +213,7 @@ export default function ActivityWidget({ clientId }) {
               ) : (
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   <button
-                    onClick={() => openHealthApp(m.hint)}
+                    onClick={() => openHealthApp(hint)}
                     style={{
                       flex: 1, background: 'rgba(255,45,85,0.08)',
                       border: '1px solid rgba(255,45,85,0.15)',
@@ -207,7 +222,7 @@ export default function ActivityWidget({ clientId }) {
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 36,
                     }}>
                     <AppIcon name="heart" size={12} color="#ff2d55" strokeWidth={2.2} />
-                    Voir dans Sante
+                    {t('aw.btn_view_health')}
                   </button>
                   <button
                     onClick={() => { setEditing(m.key); setInputVal(''); }}
@@ -216,7 +231,7 @@ export default function ActivityWidget({ clientId }) {
                       border: `1px solid ${m.color}30`,
                       borderRadius: 10, padding: '8px', color: m.color,
                       fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                    }}>+ Saisir</button>
+                    }}>{t('aw.btn_log')}</button>
                 </div>
               )}
             </div>

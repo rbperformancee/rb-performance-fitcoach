@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useT } from "../lib/i18n";
 
 const G = "#02d1ba";
 
 export default function FaqAssistant({ inline = false }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -27,9 +29,9 @@ export default function FaqAssistant({ inline = false }) {
         body: JSON.stringify({ messages: updated.map(m => ({ role: m.role, content: m.content })) }),
       });
       const data = await res.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.reply || "Erreur" }]);
+      setMessages(prev => [...prev, { role: "assistant", content: data.reply || t("fa.error") }]);
     } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Desole, une erreur est survenue." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: t("fa.error_generic") }]);
     }
     setLoading(false);
   };
@@ -38,7 +40,7 @@ export default function FaqAssistant({ inline = false }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        aria-label="Aide"
+        aria-label={t("fa.aria_open")}
         style={inline ? {
           width: "100%", padding: 15, borderRadius: 14,
           background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)",
@@ -58,7 +60,7 @@ export default function FaqAssistant({ inline = false }) {
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        {inline && "Besoin d'aide ? Demande a l'assistant"}
+        {inline && t("fa.cta_inline")}
       </button>
     );
   }
@@ -68,18 +70,18 @@ export default function FaqAssistant({ inline = false }) {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
         <div>
-          <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.5)", fontWeight: 700 }}>Assistant</div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>Assistant</div>
+          <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.5)", fontWeight: 700 }}>{t("fa.eyebrow")}</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>{t("fa.title")}</div>
         </div>
-        <button onClick={() => setOpen(false)} aria-label="Fermer l'assistant" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, minWidth: 36, color: "rgba(255,255,255,0.5)", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
+        <button onClick={() => setOpen(false)} aria-label={t("fa.aria_close")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, minWidth: 36, color: "rgba(255,255,255,0.5)", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
       </div>
 
       {/* Messages */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8, WebkitOverflowScrolling: "touch" }}>
         {messages.length === 0 && (
           <div style={{ textAlign: "center", padding: "20px 10px", color: "rgba(255,255,255,0.3)", fontSize: 12, lineHeight: 1.6 }}>
-            Pose-moi une question sur l'app.<br />
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Ex: Comment scanner un produit ?</span>
+            {t("fa.empty_prompt")}<br />
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{t("fa.empty_example")}</span>
           </div>
         )}
         {messages.map((m, i) => (
@@ -106,7 +108,7 @@ export default function FaqAssistant({ inline = false }) {
         <input
           value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === "Enter" && send()}
-          placeholder="Ta question..."
+          placeholder={t("fa.input_placeholder")}
           style={{ flex: 1, padding: "10px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, outline: "none", fontFamily: "inherit" }}
         />
         <button onClick={send} disabled={!input.trim() || loading} style={{

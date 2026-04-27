@@ -1,20 +1,27 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
+import { useT } from "../lib/i18n";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const GREEN = "#02d1ba";
 
 const BADGES = [
-  { id: "first_session",   xp: 50,  color: GREEN,       label: "Premier pas",    desc: "1ere seance",          sessions: 1,  icon: "bolt" },
-  { id: "five_sessions",   xp: 80,  color: "#f97316",   label: "En feu",         desc: "5 seances",            sessions: 5,  icon: "fire" },
-  { id: "ten_sessions",    xp: 120, color: "#a78bfa",   label: "Warrior",        desc: "10 seances",           sessions: 10, icon: "dumbbell" },
-  { id: "twenty_sessions", xp: 200, color: "#fbbf24",   label: "Champion",       desc: "20 seances",           sessions: 20, icon: "trophy" },
-  { id: "fifty_sessions",  xp: 400, color: "#ef4444",   label: "Titan",          desc: "50 seances",           sessions: 50, icon: "crown" },
-  { id: "streak_7",        xp: 100, color: "#34d399",   label: "7 jours",        desc: "Streak 7 jours",       streak: 7,    icon: "calendar" },
-  { id: "streak_30",       xp: 300, color: "#818cf8",   label: "Legende",        desc: "30j de streak",        streak: 30,   icon: "star" },
-  { id: "weight_logged",   xp: 30,  color: "#60a5fa",   label: "Suivi poids",    desc: "1ere pesee",           weights: 1,   icon: "scale" },
-  { id: "first_run",       xp: 40,  color: "#ef4444",   label: "Premier km",     desc: "1ere course loguee",   runs: 1,      icon: "run" },
-  { id: "five_runs",       xp: 80,  color: "#f97316",   label: "Runner",         desc: "5 sorties course",     runs: 5,      icon: "fire" },
-  { id: "hundred_km",      xp: 200, color: "#fbbf24",   label: "100 km",         desc: "100 km cumules",       km: 100,      icon: "crown" },
+  { id: "first_session",   xp: 50,  color: GREEN,       labelKey: "bs.label_first_session",   descKey: "bs.desc_first_session",   sessions: 1,  icon: "bolt" },
+  { id: "five_sessions",   xp: 80,  color: "#f97316",   labelKey: "bs.label_five_sessions",   descKey: "bs.desc_five_sessions",   sessions: 5,  icon: "fire" },
+  { id: "ten_sessions",    xp: 120, color: "#a78bfa",   labelKey: "bs.label_ten_sessions",    descKey: "bs.desc_ten_sessions",    sessions: 10, icon: "dumbbell" },
+  { id: "twenty_sessions", xp: 200, color: "#fbbf24",   labelKey: "bs.label_twenty_sessions", descKey: "bs.desc_twenty_sessions", sessions: 20, icon: "trophy" },
+  { id: "fifty_sessions",  xp: 400, color: "#ef4444",   labelKey: "bs.label_fifty_sessions",  descKey: "bs.desc_fifty_sessions",  sessions: 50, icon: "crown" },
+  { id: "streak_7",        xp: 100, color: "#34d399",   labelKey: "bs.label_streak_7",        descKey: "bs.desc_streak_7",        streak: 7,    icon: "calendar" },
+  { id: "streak_30",       xp: 300, color: "#818cf8",   labelKey: "bs.label_streak_30",       descKey: "bs.desc_streak_30",       streak: 30,   icon: "star" },
+  { id: "weight_logged",   xp: 30,  color: "#60a5fa",   labelKey: "bs.label_weight_logged",   descKey: "bs.desc_weight_logged",   weights: 1,   icon: "scale" },
+  { id: "first_run",       xp: 40,  color: "#ef4444",   labelKey: "bs.label_first_run",       descKey: "bs.desc_first_run",       runs: 1,      icon: "run" },
+  { id: "five_runs",       xp: 80,  color: "#f97316",   labelKey: "bs.label_five_runs",       descKey: "bs.desc_five_runs",       runs: 5,      icon: "fire" },
+  { id: "hundred_km",      xp: 200, color: "#fbbf24",   labelKey: "bs.label_hundred_km",      descKey: "bs.desc_hundred_km",      km: 100,      icon: "crown" },
 ];
 
 const ICON = ({ name, color, size = 20 }) => {
@@ -32,6 +39,7 @@ const ICON = ({ name, color, size = 20 }) => {
 };
 
 export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0, runs = 0, km = 0 }) {
+  const t = useT();
   const [earned, setEarned] = useState([]);
   const [newBadge, setNewBadge] = useState(null);
 
@@ -76,14 +84,14 @@ export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0, r
             <ICON name={newBadge.icon} color={newBadge.color} size={18} />
           </div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: newBadge.color }}>Badge debloque !</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{newBadge.label} · +{newBadge.xp} XP</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: newBadge.color }}>{t('bs.unlocked')}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{t(newBadge.labelKey)} · +{newBadge.xp} XP</div>
           </div>
         </div>
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase" }}>Trophees</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontWeight: 600, letterSpacing: "3px", textTransform: "uppercase" }}>{t('bs.eyebrow')}</div>
         <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", fontWeight: 500 }}>{earnedCount} / {BADGES.length}</div>
       </div>
 
@@ -105,10 +113,10 @@ export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0, r
                   <ICON name={b.icon} color={b.color} size={22} />
                 </div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#fff", lineHeight: 1.2, marginBottom: 3 }}>{b.label}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#fff", lineHeight: 1.2, marginBottom: 3 }}>{t(b.labelKey)}</div>
               {has
                 ? <div style={{ fontSize: 9, fontWeight: 700, color: `${b.color}99`, letterSpacing: "0.5px" }}>+{b.xp} XP</div>
-                : <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>{b.desc}</div>
+                : <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>{t(b.descKey)}</div>
               }
             </div>
           );
@@ -122,7 +130,7 @@ export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0, r
             {nextBadge.sessions ? `${sessions}/${nextBadge.sessions}` : nextBadge.streak ? `${streak}/${nextBadge.streak}j` : nextBadge.runs ? `${runs}/${nextBadge.runs}` : nextBadge.km ? `${Math.round(km)}/${nextBadge.km}km` : `${weights}/1`}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginBottom: 5 }}>Prochain · {nextBadge.label}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginBottom: 5 }}>{fillTpl(t('bs.next'), { label: t(nextBadge.labelKey) })}</div>
             <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
               <div style={{ height: "100%", width: `${Math.min(Math.round((nextBadge.sessions ? sessions / nextBadge.sessions : nextBadge.streak ? streak / nextBadge.streak : weights) * 100), 100)}%`, background: nextBadge.color, borderRadius: 1 }} />
             </div>

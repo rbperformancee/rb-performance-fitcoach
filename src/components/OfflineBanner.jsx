@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AppIcon from "./AppIcon";
+import { useT } from "../lib/i18n";
 
 /**
  * OfflineBanner — indicateur discret en haut de l'ecran quand offline.
@@ -7,6 +8,7 @@ import AppIcon from "./AppIcon";
  * se retire quand on recupere la connexion.
  */
 export default function OfflineBanner() {
+  const t = useT();
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== "undefined" ? !navigator.onLine : false
   );
@@ -51,7 +53,7 @@ export default function OfflineBanner() {
     >
       <style>{`@keyframes offFade{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}`}</style>
       <AppIcon name="alert" size={13} color="#fff" strokeWidth={2.2} />
-      Hors ligne
+      {t("ob.offline")}
     </div>
   );
 }

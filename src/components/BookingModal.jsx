@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
+import { useT, getLocale } from "../lib/i18n";
 
 const GREEN = "#02d1ba";
+const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 // Modale de reservation d'un appel avec le coach.
 // Reutilisable depuis :
@@ -10,7 +18,10 @@ const GREEN = "#02d1ba";
 // - TrainLocked Cycle accompli (appel de point / renouvellement)
 // - N'importe quel autre endroit qui veut permettre une prise de rdv
 
-export default function BookingModal({ client, onClose, onBooked, title = "Reserver un appel", subtitle = "Choisis un creneau pour ton appel avec ton coach." }) {
+export default function BookingModal({ client, onClose, onBooked, title, subtitle }) {
+  const t = useT();
+  const effectiveTitle = title ?? t("bm.default_title");
+  const effectiveSubtitle = subtitle ?? t("bm.default_subtitle");
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -53,7 +64,7 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
       if (onBooked) onBooked(selectedSlot);
       if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
     } catch (e) {
-      toast.error("Reservation impossible : " + (e.message || "erreur inconnue"));
+      toast.error(fillTpl(t("bm.toast_error"), { msg: e.message || t("bm.error_unknown") }));
     }
     setSaving(false);
   };
@@ -88,13 +99,13 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 24px 16px", flexShrink: 0 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.55)", marginBottom: 4, fontWeight: 700 }}>
-              Rendez-vous
+              {t("bm.eyebrow")}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>{title}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>{effectiveTitle}</div>
           </div>
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("bm.close_aria")}
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 34, height: 34, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginLeft: 12, WebkitTapHighlightColor: "transparent" }}
           >
             ✕
@@ -115,17 +126,17 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
                 boxShadow: "0 12px 40px rgba(2,209,186,0.4)",
               }}>✓</div>
               <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 12, fontWeight: 700 }}>
-                Appel reserve
+                {t("bm.confirmed_eyebrow")}
               </div>
               <div style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-1px", lineHeight: 1.1, marginBottom: 20 }}>
-                On se voit<br />
+                {t("bm.confirmed_text_part1")}<br />
                 <span style={{ color: GREEN, textTransform: "capitalize" }}>
-                  {new Date(confirmedSlot.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                  {new Date(confirmedSlot.date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
                 </span>
-                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 20, fontWeight: 700 }}> a {confirmedSlot.heure}.</span>
+                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 20, fontWeight: 700 }}> {fillTpl(t("bm.confirmed_text_part2"), { time: confirmedSlot.heure })}</span>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, maxWidth: 320, margin: "0 auto 28px" }}>
-                Un rappel te sera envoye 24h avant. Prepare tes questions et tes objectifs pour le prochain cycle.
+                {t("bm.confirmed_note")}
               </div>
               <button
                 onClick={onClose}
@@ -140,14 +151,14 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
                   fontFamily: "-apple-system,Inter,sans-serif",
                 }}
               >
-                Parfait, merci →
+                {t("bm.confirmed_btn")}
               </button>
             </div>
           ) : (
             <>
               {/* Subtitle */}
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, marginBottom: 20, maxWidth: 400 }}>
-                {subtitle}
+                {effectiveSubtitle}
               </div>
 
               {/* Loading */}
@@ -168,10 +179,10 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
               {!loading && slots.length === 0 && (
                 <div style={{ padding: 28, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, textAlign: "center" }}>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", marginBottom: 6, fontWeight: 600 }}>
-                    Aucun creneau disponible
+                    {t("bm.empty_title")}
                   </div>
                   <div style={{ fontSize: 12, color: GREEN, fontWeight: 600, letterSpacing: "0.3px" }}>
-                    Ton coach te contacte directement dans les prochaines 24h.
+                    {t("bm.empty_subtitle")}
                   </div>
                 </div>
               )}
@@ -207,7 +218,7 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
                       >
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 700, color: isSelected ? GREEN : "#fff", marginBottom: 3, textTransform: "capitalize" }}>
-                            {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                            {date.toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
                           </div>
                           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{slot.heure}</div>
                         </div>
@@ -249,7 +260,7 @@ export default function BookingModal({ client, onClose, onBooked, title = "Reser
                     WebkitTapHighlightColor: "transparent",
                   }}
                 >
-                  {saving ? "Reservation..." : "Confirmer ce creneau"}
+                  {saving ? t("bm.cta_saving") : t("bm.cta_confirm")}
                 </button>
               )}
             </>

@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import AppIcon from './AppIcon';
+import { useT, getLocale } from '../lib/i18n';
+
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 function BarChart({ data, color = '#02d1ba', label }) {
   if (!data || data.length === 0) return null;
   const max = Math.max(...data.map(d => d.value), 1);
-  const days = ['L','M','M','J','V','S','D'];
   return (
     <div>
       <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>{label}</div>
@@ -28,7 +36,8 @@ function BarChart({ data, color = '#02d1ba', label }) {
 }
 
 function LineChart({ data, color = '#02d1ba', unit = '' }) {
-  if (!data || data.length < 2) return <div style={{ textAlign:'center', padding: 16, color:'#4b5563', fontSize:12 }}>Pas assez de données</div>;
+  const t = useT();
+  if (!data || data.length < 2) return <div style={{ textAlign:'center', padding: 16, color:'#4b5563', fontSize:12 }}>{t('clan.no_data')}</div>;
   const W = 300, H = 80, pad = 12;
   const vals = data.map(d => d.value);
   const min = Math.min(...vals) - 0.5;
@@ -58,6 +67,7 @@ function LineChart({ data, color = '#02d1ba', unit = '' }) {
 }
 
 export default function ClientAnalytics({ clientId, period = 30 }) {
+  const t = useT();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('sessions');
@@ -85,13 +95,13 @@ export default function ClientAnalytics({ clientId, period = 30 }) {
     // Poids sur la période
     const weightData = (weights.data||[]).map((w,i) => ({
       value: parseFloat(w.weight),
-      label: new Date(w.logged_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}),
+      label: new Date(w.logged_at).toLocaleDateString(intlLocale(),{day:'2-digit',month:'2-digit'}),
     }));
 
     // Pas (activité)
     const stepsData = (activity.data||[]).filter(a=>a.metric==='steps').map(a=>({
       value: Math.round(a.value/1000*10)/10,
-      label: new Date(a.logged_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}),
+      label: new Date(a.logged_at).toLocaleDateString(intlLocale(),{day:'2-digit',month:'2-digit'}),
     }));
 
     // Score de performance (0-100)
@@ -127,35 +137,39 @@ export default function ClientAnalytics({ clientId, period = 30 }) {
           <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, color:scoreColor }}>{data.perfScore}</div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>SCORE DE PERFORMANCE</div>
+          <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>{t('clan.score_eyebrow')}</div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#f5f5f5', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <AppIcon name={data.perfScore >= 75 ? 'flame' : data.perfScore >= 50 ? 'lightning' : 'dumbbell'} size={18} color={scoreColor} />
-            {data.perfScore >= 75 ? 'Excellent' : data.perfScore >= 50 ? 'Bien' : 'A ameliorer'}
+            {data.perfScore >= 75 ? t('clan.score_excellent') : data.perfScore >= 50 ? t('clan.score_good') : t('clan.score_improve')}
           </div>
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{data.totalSessions} séances sur {period} jours{data.avgRpe ? ` · RPE moy. ${data.avgRpe}` : ''}</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+            {data.avgRpe
+              ? fillTpl(t('clan.summary_with_rpe'), { sessions: data.totalSessions, period, rpe: data.avgRpe })
+              : fillTpl(t('clan.summary'), { sessions: data.totalSessions, period })}
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-        {[['sessions','dumbbell','Seances'],['weight','scale','Poids'],['steps','shoe','Pas']].map(([t,ic,l]) => (
-          <button key={t} onClick={() => setTab(t)} style={{
+        {[['sessions','dumbbell',t('clan.tab_sessions')],['weight','scale',t('clan.tab_weight')],['steps','shoe',t('clan.tab_steps')]].map(([tabId,ic,l]) => (
+          <button key={tabId} onClick={() => setTab(tabId)} style={{
             flex: 1, padding: '10px 4px', borderRadius: 10, border: 'none',
-            background: tab===t ? 'rgba(2,209,186,0.12)' : 'rgba(255,255,255,0.03)',
-            color: tab===t ? '#02d1ba' : '#6b7280',
+            background: tab===tabId ? 'rgba(2,209,186,0.12)' : 'rgba(255,255,255,0.03)',
+            color: tab===tabId ? '#02d1ba' : '#6b7280',
             fontSize: 11, fontWeight: 700, cursor: 'pointer',
-            borderBottom: tab===t ? '2px solid #02d1ba' : '2px solid transparent',
+            borderBottom: tab===tabId ? '2px solid #02d1ba' : '2px solid transparent',
             transition: 'all 0.2s',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 36,
           }}>
-            <AppIcon name={ic} size={12} color={tab===t ? '#02d1ba' : '#6b7280'} />
+            <AppIcon name={ic} size={12} color={tab===tabId ? '#02d1ba' : '#6b7280'} />
             {l}
           </button>
         ))}
       </div>
 
       <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px' }}>
-        {tab === 'sessions' && <BarChart data={data.last7} color="#02d1ba" label="SÉANCES PAR JOUR — 7 DERNIERS JOURS" />}
+        {tab === 'sessions' && <BarChart data={data.last7} color="#02d1ba" label={t('clan.chart_sessions_label')} />}
         {tab === 'weight' && <LineChart data={data.weightData} color="#a78bfa" unit=" kg" />}
         {tab === 'steps' && <LineChart data={data.stepsData} color="#fb923c" unit="k" />}
       </div>

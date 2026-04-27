@@ -2,9 +2,18 @@ import React, { useState, useRef } from "react";
 import { Sparkline } from "./Sparkline";
 import { RestTimer, parseRestSeconds } from "./RestTimer";
 import haptic from "../lib/haptic";
+import { useT, getLocale } from "../lib/i18n";
 
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
+
+const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
+
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 function ytId(url) {
   if (!url) return null;
@@ -148,6 +157,7 @@ function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive
 }
 
 export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData, bandColor }) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
@@ -263,10 +273,10 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
           {/* Historique expandable */}
           {expanded && history.length > 0 && (
             <div style={{ margin: "6px 0 0", padding: "12px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14 }}>
-              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10 }}>Historique</div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10 }}>{t("ec.history")}</div>
               {[...history].reverse().slice(0, 5).map((entry, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{new Date(entry.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{new Date(entry.date).toLocaleDateString(intlLocale(), { day: "2-digit", month: "short" })}</span>
                   <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>{entry.weight} kg</span>
                   {entry.reps && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>× {entry.reps}</span>}
                 </div>
@@ -290,7 +300,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 9, color: GREEN, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
-                ● Exercice actif · {String(globalIndex + 1).padStart(2, "0")}
+                {fillTpl(t("ec.active_badge"), { n: String(globalIndex + 1).padStart(2, "0") })}
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px", lineHeight: 1.1, marginBottom: 10 }}>{ex.name}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -298,7 +308,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                 {ex.rest && <span onClick={() => restSecs && setShowTimer(true)} style={{ fontSize: 11, color: "rgba(255,165,0,0.7)", background: "rgba(255,165,0,0.07)", padding: "5px 12px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>⏱ {ex.rest}</span>}
                 {ex.tempo && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>{ex.tempo}</span>}
                 {ex.rir != null && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>RIR {ex.rir}</span>}
-                {hasVideo && <button onClick={() => setShowVideo(v => !v)} style={{ fontSize: 11, color: GREEN, background: "rgba(2,209,186,0.07)", border: "1px solid rgba(2,209,186,0.2)", padding: "5px 12px", borderRadius: 100, cursor: "pointer" }}>{showVideo ? "Fermer" : "▶ Video"}</button>}
+                {hasVideo && <button onClick={() => setShowVideo(v => !v)} style={{ fontSize: 11, color: GREEN, background: "rgba(2,209,186,0.07)", border: "1px solid rgba(2,209,186,0.2)", padding: "5px 12px", borderRadius: 100, cursor: "pointer" }}>{showVideo ? t("ec.video_close") : t("ec.video_play")}</button>}
               </div>
             </div>
             {/* Anneau de serie */}
@@ -315,7 +325,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                   <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>/{setsCount}</div>
                 </div>
               </div>
-              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>SERIE</div>
+              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>{t("ec.serie")}</div>
             </div>
           </div>
 
@@ -327,7 +337,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 12, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase" }}>Toi · Semaine precedente</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase" }}>{t("ec.ghost_label")}</div>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontStyle: "italic", fontWeight: 200 }}>
                 {ghostData.weight} kg × {ghostData.reps}
@@ -340,8 +350,8 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
         <div style={{ padding: "0 16px 16px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px", gap: 8, marginBottom: 10, padding: "0 2px" }}>
             <div></div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>POIDS</div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>REPS</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>{t("ec.weight_col")}</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>{t("ec.reps_col")}</div>
             <div></div>
           </div>
           {Array.from({ length: setsCount }, (_, i) => (
@@ -357,7 +367,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             />
           ))}
           {doneCount > 0 && doneCount < setsCount && (
-            <button onClick={handleReset} style={{ width: "100%", marginTop: 4, padding: "8px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)", background: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 11, cursor: "pointer" }}>↺ Recommencer</button>
+            <button onClick={handleReset} style={{ width: "100%", marginTop: 4, padding: "8px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)", background: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 11, cursor: "pointer" }}>{t("ec.restart")}</button>
           )}
         </div>
 
@@ -365,7 +375,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "14px 16px", display: "flex", gap: 10 }}>
           {ex.rest && (
             <div onClick={() => restSecs && setShowTimer(true)} style={{ flex: 1, padding: "10px 14px", background: "rgba(255,165,0,0.04)", border: "1px solid rgba(255,165,0,0.08)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: restSecs ? "pointer" : "default" }}>
-              <div style={{ fontSize: 9, color: "rgba(255,165,0,0.4)", letterSpacing: "1px", textTransform: "uppercase" }}>Repos</div>
+              <div style={{ fontSize: 9, color: "rgba(255,165,0,0.4)", letterSpacing: "1px", textTransform: "uppercase" }}>{t("ec.rest_label")}</div>
               <div style={{ fontSize: 18, fontWeight: 100, color: "rgba(255,165,0,0.6)", letterSpacing: "-1px" }}>{ex.rest}</div>
             </div>
           )}
@@ -373,7 +383,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             <div style={{ flex: 1, padding: "10px 14px", background: "rgba(2,209,186,0.03)", border: "1px solid rgba(2,209,186,0.08)", borderRadius: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: delta > 0 ? GREEN : delta < 0 ? "#ef4444" : "#fbbf24", flexShrink: 0 }} />
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", lineHeight: 1.3 }}>
-                {delta > 0 ? `+${delta?.toFixed(1)} kg vs S-1` : delta < 0 ? `${delta?.toFixed(1)} kg vs S-1` : "Stable depuis 2S"}
+                {delta > 0 ? fillTpl(t("ec.delta_up"), { v: delta?.toFixed(1) }) : delta < 0 ? fillTpl(t("ec.delta_down"), { v: delta?.toFixed(1) }) : t("ec.delta_stable")}
               </div>
               {history.length >= 2 && <div style={{ marginLeft: "auto" }}><Sparkline data={history} width={48} height={16}/></div>}
             </div>

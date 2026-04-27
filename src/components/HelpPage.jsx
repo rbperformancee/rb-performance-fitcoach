@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import AppIcon from "./AppIcon";
+import { useT } from "../lib/i18n";
 
 const G = "#02d1ba";
 
@@ -11,131 +12,68 @@ const G = "#02d1ba";
  * et reduction du support coach.
  */
 
-const SECTIONS = [
+const buildSections = (t) => [
   {
     id: "training",
     icon: "dumbbell",
-    title: "Entrainement",
+    title: t("hp.section_training"),
     items: [
-      {
-        q: "Comment commencer ma seance ?",
-        a: "Va dans l'onglet Entrainement, choisis la semaine et la seance du jour, puis tap sur 'Demarrer'. Tu peux logger chaque serie en validant le poids effectue. Le timer de repos demarre automatiquement entre les series.",
-      },
-      {
-        q: "Comment valider une serie ?",
-        a: "Apres ta serie, tap sur le bouton de validation. Tu sentiras une vibration courte (medium). Quand tu finis toutes les series d'un exercice, vibration plus longue de succes.",
-      },
-      {
-        q: "Le timer de repos a-t-il un son ?",
-        a: "Oui, vibration + bip a 5s, 1s et a la fin du repos. Tu peux skip le repos en tapant 'Passer le repos'.",
-      },
-      {
-        q: "Que faire si je rate une serie ?",
-        a: "Logue quand meme avec le poids effectue. Le suivi de progression valorise la regularite, pas la perfection. Ton coach voit tous tes logs.",
-      },
+      { q: t("hp.training_q1"), a: t("hp.training_a1") },
+      { q: t("hp.training_q2"), a: t("hp.training_a2") },
+      { q: t("hp.training_q3"), a: t("hp.training_a3") },
+      { q: t("hp.training_q4"), a: t("hp.training_a4") },
     ],
   },
   {
     id: "nutrition",
     icon: "apple",
-    title: "Nutrition",
+    title: t("hp.section_nutrition"),
     items: [
-      {
-        q: "Comment logger un aliment ?",
-        a: "Onglet Fuel → '+ Ajouter' dans le repas voulu. Recherche dans 456 aliments locaux + millions de produits via Edamam. Tu peux aussi scanner un code-barre ou utiliser l'IA vocal.",
-      },
-      {
-        q: "Comment scanner un code-barre ?",
-        a: "Bouton violet a cote du '+'. Prends une photo claire du code-barre. L'app decode automatiquement et t'affiche le produit avec ses macros.",
-      },
-      {
-        q: "Comment fonctionne l'IA vocal ?",
-        a: "Bouton vert micro. Decris ton repas a voix haute (ex: 'un bol de pates au saumon'). L'IA Mistral analyse les ingredients en 2s et te propose les macros.",
-      },
-      {
-        q: "Comment ajouter de l'eau ?",
-        a: "Tap sur la carte 'Hydratation'. Choix rapides : 150ml, 250ml, 330ml, 500ml. Le total se met a jour direct.",
-      },
+      { q: t("hp.nutrition_q1"), a: t("hp.nutrition_a1") },
+      { q: t("hp.nutrition_q2"), a: t("hp.nutrition_a2") },
+      { q: t("hp.nutrition_q3"), a: t("hp.nutrition_a3") },
+      { q: t("hp.nutrition_q4"), a: t("hp.nutrition_a4") },
     ],
   },
   {
     id: "weight",
     icon: "scale",
-    title: "Suivi poids",
+    title: t("hp.section_weight"),
     items: [
-      {
-        q: "Quand peser ?",
-        a: "Le matin a jeun, apres etre alle aux toilettes. Toujours dans les memes conditions pour des donnees comparables.",
-      },
-      {
-        q: "Comment definir mon objectif ?",
-        a: "Page Poids → 'Definir mon objectif'. Tape ton objectif en kg. La projection se calcule automatiquement selon ta progression.",
-      },
-      {
-        q: "Pourquoi mon poids varie autant d'un jour a l'autre ?",
-        a: "C'est normal, ca peut bouger de +/- 2kg avec l'hydratation, la digestion, le sodium. Regarde la tendance sur 7-14 jours, pas le jour J.",
-      },
+      { q: t("hp.weight_q1"), a: t("hp.weight_a1") },
+      { q: t("hp.weight_q2"), a: t("hp.weight_a2") },
+      { q: t("hp.weight_q3"), a: t("hp.weight_a3") },
     ],
   },
   {
     id: "coach",
     icon: "message",
-    title: "Coach",
+    title: t("hp.section_coach"),
     items: [
-      {
-        q: "Comment contacter mon coach ?",
-        a: "Onglet Profil → section Messagerie. Ecris-lui directement, il recoit en temps reel sur son dashboard.",
-      },
-      {
-        q: "Combien de temps pour avoir une reponse ?",
-        a: "Generalement < 24h en semaine. Si urgent (douleur, blessure), precise-le dans le message.",
-      },
-      {
-        q: "Mon coach voit-il mes donnees ?",
-        a: "Oui, ton coach voit ton poids, tes seances, ta nutrition, ton sommeil et tes pas. C'est la base de l'accompagnement personnalise.",
-      },
+      { q: t("hp.coach_q1"), a: t("hp.coach_a1") },
+      { q: t("hp.coach_q2"), a: t("hp.coach_a2") },
+      { q: t("hp.coach_q3"), a: t("hp.coach_a3") },
     ],
   },
   {
     id: "subscription",
     icon: "calendar",
-    title: "Abonnement",
+    title: t("hp.section_subscription"),
     items: [
-      {
-        q: "Quand mon abonnement expire ?",
-        a: "Tu vois la date de fin dans ton profil. Une notification s'affiche 14 jours avant l'expiration.",
-      },
-      {
-        q: "Comment renouveler ?",
-        a: "Quand ton abonnement approche de la fin, un bouton 'Renouveler' apparait. Tu es redirige vers notre site securise rbperform.app pour finaliser le paiement.",
-      },
-      {
-        q: "Que se passe-t-il si je ne renouvelle pas ?",
-        a: "Ton acces est suspendu. Tes donnees sont conservees 30 jours, ensuite archivees. Tu peux renouveler n'importe quand pour reprendre.",
-      },
+      { q: t("hp.sub_q1"), a: t("hp.sub_a1") },
+      { q: t("hp.sub_q2"), a: t("hp.sub_a2") },
+      { q: t("hp.sub_q3"), a: t("hp.sub_a3") },
     ],
   },
   {
     id: "tech",
     icon: "alert",
-    title: "Technique",
+    title: t("hp.section_tech"),
     items: [
-      {
-        q: "Comment installer l'app sur iPhone ?",
-        a: "Ouvre l'URL dans Safari → tap le bouton Partager → 'Sur l'ecran d'accueil'. L'icone RB Perform apparait comme une vraie app.",
-      },
-      {
-        q: "Comment activer les notifications ?",
-        a: "Au premier lancement, accepte la demande. Si refuse : iOS Reglages → Notifications → RB Perform → Autoriser. Indispensable pour les rappels et messages coach.",
-      },
-      {
-        q: "L'app marche hors connexion ?",
-        a: "Partiellement. Ton programme et l'app sont caches. Logger des seances en offline est limite — privilegie une connexion pour les saves.",
-      },
-      {
-        q: "Comment supprimer mes donnees ?",
-        a: "Profil → 'Supprimer mes donnees'. Conformement RGPD, tout est supprime sous 48h. Action irreversible.",
-      },
+      { q: t("hp.tech_q1"), a: t("hp.tech_a1") },
+      { q: t("hp.tech_q2"), a: t("hp.tech_a2") },
+      { q: t("hp.tech_q3"), a: t("hp.tech_a3") },
+      { q: t("hp.tech_q4"), a: t("hp.tech_a4") },
     ],
   },
 ];
@@ -176,7 +114,9 @@ function Section({ section, isOpen, onToggle }) {
 }
 
 export default function HelpPage({ onClose }) {
+  const t = useT();
   const [openId, setOpenId] = useState("training");
+  const SECTIONS = buildSections(t);
 
   return (
     <div
@@ -196,20 +136,20 @@ export default function HelpPage({ onClose }) {
         <div style={{ paddingTop: "env(safe-area-inset-top, 8px)", marginBottom: 28, animation: "helpExpand 0.3s ease both" }}>
           <button
             onClick={onClose}
-            aria-label="Fermer l'aide"
+            aria-label={t("hp.close_aria")}
             style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0, marginBottom: 16 }}
           >
             <AppIcon name="arrow-left" size={12} color="rgba(255,255,255,0.5)" />
-            Retour
+            {t("hp.back")}
           </button>
           <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${G}b3`, marginBottom: 8, fontWeight: 700 }}>
-            Centre d'aide
+            {t("hp.eyebrow")}
           </div>
           <h1 id="help-title" style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-1.5px", margin: "0 0 12px", lineHeight: 0.95 }}>
-            Comment ca<br /><span style={{ color: G }}>marche.</span>
+            {t("hp.title_part1")}<br /><span style={{ color: G }}>{t("hp.title_part2")}</span>
           </h1>
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-            Tout ce qu'il faut savoir pour utiliser RB Perform. Une question pas dans cette liste ? Contacte ton coach via la messagerie.
+            {t("hp.intro")}
           </p>
         </div>
 
@@ -230,16 +170,16 @@ export default function HelpPage({ onClose }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <AppIcon name="keyboard" size={16} color="rgba(255,255,255,0.7)" />
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>
-              Raccourcis clavier
+              {t("hp.shortcuts_title")}
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
-              { keys: ["⌘", "K"], label: "Palette de commandes (rechercher / naviguer)" },
-              { keys: ["⌘", "/"], label: "Ouvrir l'aide" },
-              { keys: ["Esc"], label: "Fermer un panneau ouvert" },
-              { keys: ["↑", "↓"], label: "Naviguer dans une liste" },
-              { keys: ["↵"], label: "Valider l'element selectionne" },
+              { keys: ["⌘", "K"], label: t("hp.shortcut_palette") },
+              { keys: ["⌘", "/"], label: t("hp.shortcut_help") },
+              { keys: ["Esc"], label: t("hp.shortcut_esc") },
+              { keys: ["↑", "↓"], label: t("hp.shortcut_navigate") },
+              { keys: ["↵"], label: t("hp.shortcut_validate") },
             ].map((s, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8 }}>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)" }}>{s.label}</div>
@@ -252,15 +192,15 @@ export default function HelpPage({ onClose }) {
             ))}
           </div>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 10, lineHeight: 1.5 }}>
-            Sur Windows / Linux, utilise <kbd style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.05)", padding: "1px 4px", borderRadius: 3 }}>Ctrl</kbd> a la place de <kbd style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.05)", padding: "1px 4px", borderRadius: 3 }}>⌘</kbd>.
+            {t("hp.shortcuts_note_prefix")} <kbd style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.05)", padding: "1px 4px", borderRadius: 3 }}>Ctrl</kbd> {t("hp.shortcuts_note_middle")} <kbd style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.05)", padding: "1px 4px", borderRadius: 3 }}>⌘</kbd>{t("hp.shortcuts_note_suffix")}
           </div>
         </div>
 
         {/* Contact coach CTA */}
         <div style={{ marginTop: 28, padding: 20, background: `${G}08`, border: `1px solid ${G}25`, borderRadius: 16, textAlign: "center" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: G, marginBottom: 8 }}>Pas de reponse ?</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: G, marginBottom: 8 }}>{t("hp.cta_eyebrow")}</div>
           <div style={{ fontSize: 14, color: "#fff", marginBottom: 14, lineHeight: 1.5 }}>
-            Pose ta question directement a ton coach via la messagerie.
+            {t("hp.cta_text")}
           </div>
           <button
             onClick={onClose}
@@ -270,7 +210,7 @@ export default function HelpPage({ onClose }) {
               fontFamily: "inherit", letterSpacing: "0.5px", textTransform: "uppercase",
             }}
           >
-            Aller a la messagerie
+            {t("hp.cta_button")}
           </button>
         </div>
       </div>
