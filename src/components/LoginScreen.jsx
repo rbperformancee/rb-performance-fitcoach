@@ -73,6 +73,7 @@ export function LoginScreen({ onBack }) {
         type: 'email',
       });
       if (error) {
+        console.error('[OTP]', error.code, error.message);
         setError('Code incorrect ou expire. Reessaie.');
         setOtp('');
         setTimeout(() => otpRef.current?.focus(), 100);
@@ -80,9 +81,19 @@ export function LoginScreen({ onBack }) {
         // Succes → Supabase met a jour la session, App.jsx detecte et redirige.
         // On lock la verification pour empecher tout retry qui ferait 403 sur
         // le token deja consomme.
+        console.log('[OTP] success, redirecting...');
         verifiedRef.current = true;
+        setSuccess('Connexion reussie, redirection...');
+        // Filet de securite : si onAuthStateChange ne redirige pas en 1.5s,
+        // on force un reload pour relire la session.
+        setTimeout(() => {
+          if (window.location.pathname.includes('login') || document.body.contains(otpRef.current)) {
+            window.location.href = '/';
+          }
+        }, 1500);
       }
-    } catch (_) {
+    } catch (e) {
+      console.error('[OTP] exception', e);
       setError('Erreur de verification');
     }
     verifyingRef.current = false;
