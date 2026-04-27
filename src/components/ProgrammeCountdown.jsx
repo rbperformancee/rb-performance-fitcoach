@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useT, getLocale } from "../lib/i18n";
 
 const G = "#02d1ba";
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const PHRASES = [
   "La discipline est la cle du succes.",
@@ -43,6 +50,7 @@ function getPhrase() {
 function pad(n) { return String(n).padStart(2, "0"); }
 
 export default function ProgrammeCountdown({ programme }) {
+  const t = useT();
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -75,21 +83,21 @@ export default function ProgrammeCountdown({ programme }) {
       <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 420 }}>
         {/* Eyebrow */}
         <div style={{ fontSize: 10, letterSpacing: "5px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 20, fontWeight: 700, animation: "cdFade 0.6s ease both" }}>
-          {programme.programme_name || "Programme"}
+          {programme.programme_name || t("pc.programme_fallback")}
         </div>
 
         {/* Titre */}
         <h1 style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", lineHeight: 1, marginBottom: 28, animation: "cdFade 0.6s ease 0.1s both" }}>
-          Ton programme<br />commence dans<span style={{ color: G }}>.</span>
+          {t("pc.title_p1")}<br />{t("pc.title_p2")}<span style={{ color: G }}>.</span>
         </h1>
 
         {/* Countdown boxes */}
         <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 36, animation: "cdFade 0.6s ease 0.2s both" }}>
           {[
-            { v: pad(days), l: "Jours" },
-            { v: pad(hours), l: "Heures" },
-            { v: pad(mins), l: "Min" },
-            { v: pad(secs), l: "Sec" },
+            { v: pad(days), l: t("pc.unit_days") },
+            { v: pad(hours), l: t("pc.unit_hours") },
+            { v: pad(mins), l: t("pc.unit_min") },
+            { v: pad(secs), l: t("pc.unit_sec") },
           ].map((u, i) => (
             <div key={i} style={{
               background: "rgba(2,209,186,0.06)",
@@ -106,7 +114,7 @@ export default function ProgrammeCountdown({ programme }) {
                 color: G,
                 letterSpacing: "-2px",
                 lineHeight: 1,
-                animation: u.l === "Sec" ? "cdPulse 1s ease-in-out infinite" : "none",
+                animation: u.l === t("pc.unit_sec") ? "cdPulse 1s ease-in-out infinite" : "none",
               }}>
                 {u.v}
               </div>
@@ -119,7 +127,10 @@ export default function ProgrammeCountdown({ programme }) {
 
         {/* Date cible */}
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 32, animation: "cdFade 0.6s ease 0.3s both" }}>
-          Disponible le {new Date(target).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} a {new Date(target).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+          {fillTpl(t("pc.available_on"), {
+            date: new Date(target).toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" }),
+            time: new Date(target).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" }),
+          })}
         </div>
 
         {/* Phrase du jour */}
@@ -139,7 +150,7 @@ export default function ProgrammeCountdown({ programme }) {
         }}>
           "{getPhrase()}"
           <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", marginTop: 8, fontStyle: "normal", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 700 }}>
-            Phrase du jour
+            {t("pc.phrase_label")}
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import haptic from "../lib/haptic";
 import Spinner from "./Spinner";
+import { useT } from "../lib/i18n";
 
 const G = "#02d1ba";
 
@@ -15,6 +16,7 @@ const G = "#02d1ba";
  *   onLinked : callback appele quand le rattachement est reussi
  */
 export default function CoachCodeGate({ client, onLinked }) {
+  const t = useT();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -72,7 +74,7 @@ export default function CoachCodeGate({ client, onLinked }) {
   const validate = async () => {
     const full = code.join("");
     if (full.length !== 6) {
-      setError("Entre les 6 chiffres");
+      setError(t("ccg.error_6digits"));
       return;
     }
     setLoading(true);
@@ -88,7 +90,7 @@ export default function CoachCodeGate({ client, onLinked }) {
 
       if (coachErr || !coach) {
         haptic.error();
-        setError("Code invalide. Verifie avec ton coach.");
+        setError(t("ccg.error_invalid_code"));
         setLoading(false);
         return;
       }
@@ -119,7 +121,7 @@ export default function CoachCodeGate({ client, onLinked }) {
       haptic.success();
       setTimeout(() => onLinked?.(coach), 900);
     } catch (e) {
-      setError(e.message || "Erreur, reessaye.");
+      setError(e.message || t("ccg.error_generic"));
       setLoading(false);
     }
   };
@@ -153,28 +155,28 @@ export default function CoachCodeGate({ client, onLinked }) {
           // ===== ECRAN CONFIRMATION =====
           <>
             <div style={{ fontSize: 10, letterSpacing: "5px", textTransform: "uppercase", color: accent, marginBottom: 16, fontWeight: 700 }}>
-              Rattache
+              {t("ccg.linked_eyebrow")}
             </div>
             <h1 style={{ fontSize: 38, fontWeight: 900, letterSpacing: "-2px", color: "#fff", margin: "0 0 14px", lineHeight: 0.95 }}>
-              Tu rejoins<br />
+              {t("ccg.you_join")}<br />
               <span style={{ color: accent }}>{foundCoach.brand_name || foundCoach.full_name}.</span>
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>
-              Ton espace coaching est pret. On continue.
+              {t("ccg.linked_subtitle")}
             </p>
           </>
         ) : (
           // ===== ECRAN SAISIE =====
           <>
             <div style={{ fontSize: 10, letterSpacing: "5px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 16, fontWeight: 700 }}>
-              Bienvenue
+              {t("ccg.welcome_eyebrow")}
             </div>
             <h1 style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", margin: "0 0 14px", lineHeight: 0.95 }}>
-              Entre le code<br />
-              <span style={{ color: accent }}>de ton coach.</span>
+              {t("ccg.title_p1")}<br />
+              <span style={{ color: accent }}>{t("ccg.title_p2")}</span>
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, marginBottom: 30 }}>
-              Le code 6 chiffres que ton coach t'a partage
+              {t("ccg.subtitle")}
             </p>
 
             {/* 6 champs code */}
@@ -237,13 +239,13 @@ export default function CoachCodeGate({ client, onLinked }) {
               {loading ? (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
                   <Spinner variant="dots" size={18} color="#000" />
-                  Verification
+                  {t("ccg.btn_verifying")}
                 </span>
-              ) : "Rejoindre"}
+              ) : t("ccg.btn_join")}
             </button>
 
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-              Pas de code ? Contacte ton coach<br />pour qu'il te transmette le sien.
+              {t("ccg.no_code_p1")}<br />{t("ccg.no_code_p2")}
             </div>
           </>
         )}
