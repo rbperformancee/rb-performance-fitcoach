@@ -61,19 +61,29 @@ export function LoginScreen({ onBack }) {
     setLoading(true);
     setError('');
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token: code,
         type: 'email',
       });
       if (error) {
-        setError('Code incorrect ou expire. Reessaie.');
+        console.error('[OTP-DEBUG] verifyOtp error:', {
+          name: error.name,
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          full: error,
+        });
+        setError('Code incorrect ou expire. Reessaie. (' + (error.code || error.status || error.message || 'unknown') + ')');
         setOtp('');
         setTimeout(() => otpRef.current?.focus(), 100);
+      } else {
+        console.log('[OTP-DEBUG] verifyOtp success:', data);
       }
       // Succes → Supabase met a jour la session, App.jsx detecte et redirige
     } catch (e) {
-      setError('Erreur de verification');
+      console.error('[OTP-DEBUG] verifyOtp exception:', e);
+      setError('Erreur de verification : ' + (e?.message || 'unknown'));
     }
     setLoading(false);
   };
