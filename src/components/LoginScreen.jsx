@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { useT } from '../lib/i18n';
 
 const G = '#02d1ba';
 
@@ -12,6 +13,7 @@ const G = '#02d1ba';
  * Design coherent avec la landing (fond noir, typo Syne/Inter, accent teal).
  */
 export function LoginScreen({ onBack }) {
+  const t = useT();
   const [mode, setMode] = useState('client'); // client | coach
   const [email, setEmail] = useState('');
   const [step, setStep] = useState('email'); // email | otp
@@ -45,12 +47,12 @@ export function LoginScreen({ onBack }) {
       });
       if (error) throw error;
       setStep('otp');
-      setSuccess('Code envoye a ' + email);
+      setSuccess(t('login.code_sent_success') + ' ' + email);
       setTimeout(() => otpRef.current?.focus(), 100);
     } catch (e) {
       setError(e.message === 'Signups not allowed for otp'
-        ? 'Aucun compte trouve avec cet email. Contacte ton coach.'
-        : e.message || 'Erreur lors de l\'envoi du code.');
+        ? t('login.no_account')
+        : e.message || t('login.send_error'));
     }
     setLoading(false);
   };
@@ -74,7 +76,7 @@ export function LoginScreen({ onBack }) {
       });
       if (error) {
         console.error('[OTP]', error.code, error.message);
-        setError('Code incorrect ou expire. Reessaie.');
+        setError(t('login.code_invalid'));
         setOtp('');
         setTimeout(() => otpRef.current?.focus(), 100);
       } else {
@@ -83,7 +85,7 @@ export function LoginScreen({ onBack }) {
         // le token deja consomme.
         console.log('[OTP] success, redirecting...');
         verifiedRef.current = true;
-        setSuccess('Connexion reussie, redirection...');
+        setSuccess(t('login.success_redirect'));
         // Filet de securite : si onAuthStateChange ne redirige pas en 1.5s,
         // on reload la page actuelle pour que React relise la session
         // (et reste sur /app.html, pas sur la landing).
@@ -95,7 +97,7 @@ export function LoginScreen({ onBack }) {
       }
     } catch (e) {
       console.error('[OTP] exception', e);
-      setError('Erreur de verification');
+      setError(t('login.verify_error'));
     }
     verifyingRef.current = false;
     setLoading(false);
@@ -119,20 +121,20 @@ export function LoginScreen({ onBack }) {
         password,
       });
       if (error) {
-        setError('Email ou mot de passe incorrect.');
+        setError(t('login.bad_credentials'));
       } else {
         // Redirect vers app.html, App.jsx detecte le role et affiche le dashboard
         window.location.href = '/app.html';
       }
     } catch (e) {
-      setError('Erreur de connexion.');
+      setError(t('login.connect_error'));
     }
     setLoading(false);
   };
 
   // ===== COACH : mot de passe oublie =====
   const handleForgotPassword = async () => {
-    if (!validEmail) { setError('Entre ton email d\'abord.'); return; }
+    if (!validEmail) { setError(t('login.email_first')); return; }
     setLoading(true);
     setError('');
     try {
@@ -141,9 +143,9 @@ export function LoginScreen({ onBack }) {
         { redirectTo: window.location.origin + '/#type=recovery' }
       );
       if (error) throw error;
-      setSuccess('Email de reinitialisation envoye.');
+      setSuccess(t('login.reset_email_sent'));
     } catch (e) {
-      setError(e.message || 'Erreur');
+      setError(e.message || t('login.error_generic'));
     }
     setLoading(false);
   };
@@ -169,16 +171,14 @@ export function LoginScreen({ onBack }) {
         {/* Titre — style dashboard coach */}
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontSize: 10, color: 'rgba(2,209,186,0.55)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>
-            {mode === 'client' ? 'Espace client' : 'Espace coach'}
+            {mode === 'client' ? t('login.client_zone') : t('login.coach_zone')}
           </div>
           <div style={{ fontSize: 52, fontWeight: 800, color: '#fff', letterSpacing: '-3px', lineHeight: 0.92, marginBottom: 10 }}>
-            {mode === 'client' ? 'Connexion' : 'Coach'}
+            {mode === 'client' ? t('login.connection') : t('login.coach')}
             <span style={{ color: G }}>.</span>
           </div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>
-            {mode === 'client'
-              ? 'Entre ton email pour recevoir ton code de connexion.'
-              : 'Connecte-toi avec ton email et ton mot de passe.'}
+            {mode === 'client' ? t('login.client_subtitle') : t('login.coach_subtitle')}
           </div>
         </div>
 
@@ -187,13 +187,13 @@ export function LoginScreen({ onBack }) {
           <>
             {step === 'email' ? (
               <div>
-                <label style={labelStyle}>Email</label>
+                <label style={labelStyle}>{t('login.email_label')}</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && sendOTP()}
-                  placeholder="ton@email.com"
+                  placeholder={t('login.email_placeholder')}
                   autoFocus
                   style={inputStyle}
                 />
@@ -206,14 +206,14 @@ export function LoginScreen({ onBack }) {
                     cursor: (!validEmail || loading) ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {loading ? 'Envoi...' : 'Recevoir mon code'}
+                  {loading ? t('login.sending') : t('login.send_code')}
                 </button>
               </div>
             ) : (
               <div>
-                <label style={labelStyle}>Code a 6 chiffres</label>
+                <label style={labelStyle}>{t('login.code_label')}</label>
                 <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: '0 0 12px' }}>
-                  Envoye a {email}
+                  {t('login.code_sent_to')} {email}
                 </p>
                 <input
                   ref={otpRef}
@@ -241,13 +241,13 @@ export function LoginScreen({ onBack }) {
                     cursor: (otp.length < 6 || loading) ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {loading ? 'Verification...' : 'Me connecter'}
+                  {loading ? t('login.verifying') : t('login.connect')}
                 </button>
                 <button
                   onClick={() => { setStep('email'); setOtp(''); setError(''); setSuccess(''); }}
                   style={linkBtnStyle}
                 >
-                  Changer d'email
+                  {t('login.change_email')}
                 </button>
               </div>
             )}
@@ -257,21 +257,21 @@ export function LoginScreen({ onBack }) {
         {/* ===== COACH MODE ===== */}
         {mode === 'coach' && (
           <form onSubmit={handleCoachLogin}>
-            <label style={labelStyle}>Email</label>
+            <label style={labelStyle}>{t('login.email_label')}</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="coach@email.com"
+              placeholder={t('login.coach_email_placeholder')}
               autoFocus
               style={inputStyle}
             />
-            <label style={{ ...labelStyle, marginTop: 16 }}>Mot de passe</label>
+            <label style={{ ...labelStyle, marginTop: 16 }}>{t('login.password_label')}</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Ton mot de passe"
+              placeholder={t('login.password_placeholder')}
               style={inputStyle}
             />
             <button
@@ -283,10 +283,10 @@ export function LoginScreen({ onBack }) {
                 cursor: (!validEmail || !password || loading) ? 'not-allowed' : 'pointer',
               }}
             >
-              {loading ? 'Connexion...' : 'Me connecter'}
+              {loading ? t('login.connecting') : t('login.connect')}
             </button>
             <button type="button" onClick={handleForgotPassword} style={linkBtnStyle}>
-              Mot de passe oublie ?
+              {t('login.forgot_password')}
             </button>
           </form>
         )}
@@ -307,11 +307,11 @@ export function LoginScreen({ onBack }) {
         <div style={{ textAlign: 'center', marginTop: 40 }}>
           {mode === 'client' ? (
             <button onClick={() => { setMode('coach'); setError(''); setSuccess(''); }} style={switchStyle}>
-              Tu es coach ? Espace coach
+              {t('login.coach_switch')}
             </button>
           ) : (
             <button onClick={() => { setMode('client'); setStep('email'); setError(''); setSuccess(''); }} style={switchStyle}>
-              Retour espace client
+              {t('login.client_switch')}
             </button>
           )}
         </div>
