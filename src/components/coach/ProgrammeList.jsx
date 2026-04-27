@@ -3,6 +3,14 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
+import { useT, getLocale, t as tStatic } from "../../lib/i18n";
+
+const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 // Avatar inline (simple, utilise pour eviter import circulaire avec CoachDashboard)
 function Avatar({ name, size = 28 }) {
@@ -42,6 +50,7 @@ const ORANGE = "#00C9A7";
  *   onAssign: (programme) => void  // assigner a d'autres clients
  */
 export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign }) {
+  const t = useT();
   const [loading, setLoading] = useState(true);
   const [programmes, setProgrammes] = useState([]);
   const [filter, setFilter] = useState("all"); // all / active / archived
@@ -64,7 +73,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
         if (!cancelled) setProgrammes(data || []);
       } catch (e) {
         console.error("[ProgrammeList] load error", e);
-        toast.error("Impossible de charger les programmes");
+        toast.error(tStatic("prog.toast_load_error"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -100,25 +109,28 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
   }), [programmes]);
 
   async function handleArchive(prog) {
-    if (!window.confirm(`Archiver le programme "${prog.programme_name}" ?`)) return;
+    if (!window.confirm(fillTpl(tStatic("prog.confirm_archive"), { name: prog.programme_name }))) return;
     haptic.light();
     const { error } = await supabase
       .from("programmes")
       .update({ is_active: false })
       .eq("id", prog.id);
-    if (error) { toast.error("Erreur: " + error.message); return; }
-    toast.success("Programme archive");
+    if (error) { toast.error(tStatic("prog.toast_error_prefix") + error.message); return; }
+    toast.success(tStatic("prog.toast_archived"));
     setProgrammes((list) => list.map((p) => p.id === prog.id ? { ...p, is_active: false } : p));
   }
 
   async function handleDelete(prog) {
     const client = clientsById[prog.client_id];
-    const name = prog.programme_name || "ce programme";
-    if (!window.confirm(`Supprimer definitivement "${name}" ${client ? "de " + (client.full_name || client.email) : ""} ? Cette action est irreversible.`)) return;
+    const name = prog.programme_name || tStatic("prog.this_program");
+    const msg = client
+      ? fillTpl(tStatic("prog.confirm_delete_with_client"), { name, who: client.full_name || client.email })
+      : fillTpl(tStatic("prog.confirm_delete"), { name });
+    if (!window.confirm(msg)) return;
     haptic.heavy();
     const { error } = await supabase.from("programmes").delete().eq("id", prog.id);
-    if (error) { toast.error("Erreur: " + error.message); return; }
-    toast.success("Programme supprime");
+    if (error) { toast.error(tStatic("prog.toast_error_prefix") + error.message); return; }
+    toast.success(tStatic("prog.toast_deleted"));
     setProgrammes((list) => list.filter((p) => p.id !== prog.id));
   }
 
@@ -131,7 +143,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
     haptic.selection();
     // Ouvre un assign modal externe (passe via onAssign)
     if (onAssign) onAssign(prog);
-    else toast.info("Assignation: a venir");
+    else toast.info(tStatic("prog.toast_assign_soon"));
   }
 
   return (
@@ -139,15 +151,15 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
       {/* HEADER */}
       <div style={{ padding: "8px 0 20px" }}>
         <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>
-          Programmes
+          {t("prog.title_eyebrow")}
         </div>
         <h1 style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, margin: 0, marginBottom: 8 }}>
-          Programmes<span style={{ color: G }}>.</span>
+          {t("prog.title")}<span style={{ color: G }}>.</span>
         </h1>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.35)", letterSpacing: ".02em" }}>
-          {counts.total} programme{counts.total > 1 ? "s" : ""}
-          {counts.active > 0 && <> · <span style={{ color: G }}>{counts.active} actif{counts.active > 1 ? "s" : ""}</span></>}
-          {counts.archived > 0 && <> · <span style={{ color: "rgba(255,255,255,.4)" }}>{counts.archived} archive{counts.archived > 1 ? "s" : ""}</span></>}
+          {fillTpl(counts.total > 1 ? t("prog.count_many") : t("prog.count_one"), { n: counts.total })}
+          {counts.active > 0 && <> · <span style={{ color: G }}>{fillTpl(counts.active > 1 ? t("prog.active_many") : t("prog.active_one"), { n: counts.active })}</span></>}
+          {counts.archived > 0 && <> · <span style={{ color: "rgba(255,255,255,.4)" }}>{fillTpl(counts.archived > 1 ? t("prog.archived_many") : t("prog.archived_one"), { n: counts.archived })}</span></>}
         </div>
       </div>
 
@@ -155,9 +167,9 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
       <div style={{ display: "flex", gap: 8, marginBottom: 18, alignItems: "center", flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 6, background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 100, padding: 4 }}>
           {[
-            { id: "all", label: "Tous", count: counts.total },
-            { id: "active", label: "Actifs", count: counts.active },
-            { id: "archived", label: "Archives", count: counts.archived },
+            { id: "all", label: t("prog.filter_all"), count: counts.total },
+            { id: "active", label: t("prog.filter_active"), count: counts.active },
+            { id: "archived", label: t("prog.filter_archived"), count: counts.archived },
           ].map((f) => (
             <button
               key={f.id}
@@ -188,7 +200,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un programme ou un client..."
+            placeholder={t("prog.search_placeholder")}
             style={{
               width: "100%",
               padding: "10px 14px 10px 38px",
@@ -217,17 +229,17 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 16 }}>
           <div style={{ fontSize: 14, color: "rgba(255,255,255,.5)", marginBottom: 6 }}>
-            {search ? `Aucun programme pour "${search}"` : programmes.length === 0 ? "Aucun programme cree" : "Aucun resultat"}
+            {search ? fillTpl(t("prog.empty_query"), { q: search }) : programmes.length === 0 ? t("prog.empty_none") : t("prog.empty_filter")}
           </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,.25)" }}>
-            {programmes.length === 0 ? "Cree ton premier programme depuis une fiche client." : "Essaie un autre filtre."}
+            {programmes.length === 0 ? t("prog.empty_none_sub") : t("prog.empty_filter_sub")}
           </div>
         </div>
       ) : (
         <div className="dash-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
           {filtered.map((prog) => {
             const client = clientsById[prog.client_id];
-            const clientName = client?.full_name || client?.email || "Client inconnu";
+            const clientName = client?.full_name || client?.email || t("prog.unknown_client");
             const isActive = prog.is_active;
             const daysSince = prog.uploaded_at ? Math.floor((Date.now() - new Date(prog.uploaded_at).getTime()) / 86400000) : null;
             const startDate = prog.programme_start_date ? new Date(prog.programme_start_date) : null;
@@ -255,18 +267,18 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? G : "rgba(255,255,255,.2)", boxShadow: isActive ? `0 0 8px ${G}` : "none" }} />
                   <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: isActive ? G : "rgba(255,255,255,.3)" }}>
-                    {isFuture ? "Planifie" : isActive ? "Actif" : "Archive"}
+                    {isFuture ? t("prog.status_planned") : isActive ? t("prog.status_active") : t("prog.status_archived")}
                   </div>
                   {isFuture && (
                     <div style={{ marginLeft: "auto", fontSize: 10, color: ORANGE, fontWeight: 600 }}>
-                      Demarre le {startDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                      {fillTpl(t("prog.starts_on"), { date: startDate.toLocaleDateString(intlLocale(), { day: "numeric", month: "short" }) })}
                     </div>
                   )}
                 </div>
 
                 {/* Nom programme */}
                 <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-.3px", marginBottom: 10, lineHeight: 1.2 }}>
-                  {prog.programme_name || "Sans nom"}
+                  {prog.programme_name || t("prog.no_name")}
                 </div>
 
                 {/* Client row */}
@@ -280,7 +292,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
                       {clientName}
                     </div>
                     <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", marginTop: 1 }}>
-                      {daysSince != null ? `Cree il y a ${daysSince}j` : ""}
+                      {daysSince != null ? fillTpl(t("prog.created_days_ago"), { n: daysSince }) : ""}
                     </div>
                   </div>
                 </div>
@@ -290,22 +302,22 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
                   <button
                     onClick={() => handleEdit(prog)}
                     style={actionBtnStyle(true)}
-                    title="Editer ce programme"
+                    title={t("prog.tooltip_edit")}
                   >
-                    <AppIcon name="edit" size={11} color={G} /> Editer
+                    <AppIcon name="edit" size={11} color={G} /> {t("prog.action_edit")}
                   </button>
                   <button
                     onClick={() => handleDuplicate(prog)}
                     style={actionBtnStyle(false)}
-                    title="Dupliquer vers d'autres clients"
+                    title={t("prog.tooltip_duplicate")}
                   >
-                    <AppIcon name="plus" size={11} color="rgba(255,255,255,.55)" /> Dupliquer
+                    <AppIcon name="plus" size={11} color="rgba(255,255,255,.55)" /> {t("prog.action_duplicate")}
                   </button>
                   {isActive ? (
                     <button
                       onClick={() => handleArchive(prog)}
                       style={actionBtnStyle(false)}
-                      title="Archiver"
+                      title={t("prog.tooltip_archive")}
                     >
                       <AppIcon name="x" size={11} color="rgba(255,255,255,.55)" />
                     </button>
@@ -313,7 +325,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
                     <button
                       onClick={() => handleDelete(prog)}
                       style={{ ...actionBtnStyle(false), color: RED, borderColor: "rgba(255,107,107,.2)" }}
-                      title="Supprimer definitivement"
+                      title={t("prog.tooltip_delete")}
                     >
                       <AppIcon name="x" size={11} color={RED} />
                     </button>
