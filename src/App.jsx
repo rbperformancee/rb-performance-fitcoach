@@ -1319,7 +1319,10 @@ function AppInner() {
       {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
       {/* FaqAssistant deplace dans ProfilePage */}
       {programme && !authError && (
-        <div style={isClientDemo ? {maxWidth:430,margin:'0 auto',position:'relative'} : undefined}>
+        <div style={isClientDemo
+          ? {maxWidth:430,margin:'0 auto',position:'relative',background:'#050505'}
+          : {background:'#050505',minHeight:'100vh'}
+        }>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {isClientDemo && <div style={{height:52}} />}
           {page === "training" ? (
