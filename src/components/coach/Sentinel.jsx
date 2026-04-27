@@ -2,17 +2,24 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../lib/supabase";
 import { captureError } from "../../lib/sentry";
 import haptic from "../../lib/haptic";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 const RED = "#ff6b6b";
 const VIOLET = "#818cf8";
 const ORANGE = "#fbbf24";
 
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
+
 const MODULE_META = {
-  daily_playbook: { label: "Playbook du jour", icon: "zap", color: G, priority: 80 },
-  revenue_unblocker: { label: "Revenus a debloquer", icon: "trending", color: ORANGE, priority: 70 },
-  price_intel: { label: "Intelligence prix", icon: "chart", color: VIOLET, priority: 40 },
-  ranking: { label: "Ton classement", icon: "award", color: "#60a5fa", priority: 30 },
+  daily_playbook: { labelKey: "sn.module_daily_playbook", icon: "zap", color: G, priority: 80 },
+  revenue_unblocker: { labelKey: "sn.module_revenue_unblocker", icon: "trending", color: ORANGE, priority: 70 },
+  price_intel: { labelKey: "sn.module_price_intel", icon: "chart", color: VIOLET, priority: 40 },
+  ranking: { labelKey: "sn.module_ranking", icon: "award", color: "#60a5fa", priority: 30 },
 };
 
 /**
@@ -21,6 +28,7 @@ const MODULE_META = {
  * Optimistic UI: status change instant + rollback on error.
  */
 export default function Sentinel({ coachData, onClose, onNavigate }) {
+  const t = useT();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -143,7 +151,7 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Sentinel — tes insights business"
+      aria-label={t("sn.aria_label")}
       style={{ position: "fixed", inset: 0, zIndex: 600, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
     >
       <style>{`
@@ -159,21 +167,21 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("sn.aria_close")}
             style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, color: "rgba(129,140,248,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Sentinel</div>
+            <div style={{ fontSize: 10, color: "rgba(129,140,248,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>{t("sn.eyebrow")}</div>
             <div style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-2px", lineHeight: 0.92 }}>
-              Tes insights<span style={{ color: VIOLET }}>.</span>
+              {t("sn.title")}<span style={{ color: VIOLET }}>.</span>
             </div>
           </div>
           {/* Live indicator */}
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: G, boxShadow: `0 0 8px ${G}` }} />
-            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>Live</span>
+            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>{t("sn.live")}</span>
           </div>
         </div>
       </div>
@@ -181,7 +189,7 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
       {/* Content */}
       <section
         role="feed"
-        aria-label="Tes insights Sentinel"
+        aria-label={t("sn.aria_feed")}
         className="sent-content"
         style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto", padding: "20px 24px calc(env(safe-area-inset-bottom, 0px) + 100px)" }}
       >
@@ -203,13 +211,13 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
         {!loading && error && (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 16, lineHeight: 1.6 }}>
-              Sentinel est en maintenance, les donnees reviennent dans quelques minutes.
+              {t("sn.error")}
             </div>
             <button
               onClick={() => { setLoading(true); loadCards(); }}
               style={{ padding: "12px 24px", background: `${VIOLET}15`, border: `1px solid ${VIOLET}30`, borderRadius: 100, color: VIOLET, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
             >
-              Reessayer
+              {t("sn.retry")}
             </button>
           </div>
         )}
@@ -220,9 +228,9 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
             <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(129,140,248,0.1)", border: "1px solid rgba(129,140,248,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={VIOLET} strokeWidth="2" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Tout est calme.</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{t("sn.empty_title")}</div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
-              Reviens demain a 7h — Sentinel prepare tes actions du jour.
+              {t("sn.empty_sub")}
             </div>
           </div>
         )}
@@ -258,11 +266,11 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
                       <div style={{ width: 28, height: 28, borderRadius: 8, background: `${meta.color}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <ModuleIcon name={meta.icon} size={14} color={meta.color} />
                       </div>
-                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: meta.color }}>{meta.label}</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: meta.color }}>{t(meta.labelKey)}</span>
                     </div>
                     <button
                       onClick={() => handleDismiss(card)}
-                      aria-label={`Archiver: ${card.title}`}
+                      aria-label={fillTpl(t("sn.aria_archive"), { title: card.title })}
                       style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -282,12 +290,12 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
                   {/* Impact badge (for playbook/unblocker) */}
                   {card.data?.total_impact_eur && (
                     <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: `${G}12`, border: `1px solid ${G}25`, borderRadius: 100, padding: "4px 12px", fontSize: 11, fontWeight: 700, color: G, marginBottom: card.cta_label ? 16 : 0 }}>
-                      +{card.data.total_impact_eur}EUR potentiel
+                      {fillTpl(t("sn.impact_potential"), { n: card.data.total_impact_eur })}
                     </div>
                   )}
                   {card.data?.total_potential_eur && !card.data?.total_impact_eur && (
                     <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: `${ORANGE}12`, border: `1px solid ${ORANGE}25`, borderRadius: 100, padding: "4px 12px", fontSize: 11, fontWeight: 700, color: ORANGE, marginBottom: card.cta_label ? 16 : 0 }}>
-                      +{card.data.total_potential_eur}EUR potentiel
+                      {fillTpl(t("sn.impact_potential"), { n: card.data.total_potential_eur })}
                     </div>
                   )}
 
@@ -339,6 +347,7 @@ function ModuleIcon({ name, size = 14, color = "currentColor" }) {
  * 3 bullets de valeur + CTA upgrade.
  */
 export function SentinelTeaser({ onClose, onUpgrade }) {
+  const t = useT();
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "#0d0d0d", border: "1px solid rgba(129,140,248,0.2)", borderRadius: 22, padding: 28, maxWidth: 420, width: "100%", position: "relative", overflow: "hidden" }}>
@@ -353,22 +362,22 @@ export function SentinelTeaser({ onClose, onUpgrade }) {
         {/* Badge */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${VIOLET}15`, border: `1px solid ${VIOLET}30`, borderRadius: 100, padding: "4px 12px", fontSize: 9, fontWeight: 800, letterSpacing: "1px", textTransform: "uppercase", color: VIOLET, marginBottom: 20 }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill={VIOLET} stroke="none"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          Reserve au plan Pro
+          {t("sn.teaser_badge")}
         </div>
 
         <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-1px", marginBottom: 8, lineHeight: 1.2 }}>
-          Sentinel<span style={{ color: VIOLET }}>.</span>
+          {t("sn.eyebrow")}<span style={{ color: VIOLET }}>.</span>
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 24, lineHeight: 1.6 }}>
-          Ton agent IA business personnel. Il analyse tes data et te dit exactement quoi faire chaque matin.
+          {t("sn.teaser_desc")}
         </div>
 
         {/* Bullets */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 28 }}>
           {[
-            { icon: "zap", title: "Daily Playbook", desc: "3 actions chiffrees chaque matin a 7h", stat: "+340EUR/mois en moyenne" },
-            { icon: "chart", title: "Intelligence Prix", desc: "Compare tes tarifs au marche anonymise", stat: "Ecart moyen detecte: 18%" },
-            { icon: "trending", title: "Revenue Unblockers", desc: "Clients prets a upgrader identifies chaque lundi", stat: "1-5 opportunites/semaine" },
+            { icon: "zap", title: t("sn.teaser_b1_title"), desc: t("sn.teaser_b1_desc"), stat: t("sn.teaser_b1_stat") },
+            { icon: "chart", title: t("sn.teaser_b2_title"), desc: t("sn.teaser_b2_desc"), stat: t("sn.teaser_b2_stat") },
+            { icon: "trending", title: t("sn.teaser_b3_title"), desc: t("sn.teaser_b3_desc"), stat: t("sn.teaser_b3_stat") },
           ].map((b) => (
             <div key={b.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
               <div style={{ width: 32, height: 32, borderRadius: 8, background: `${VIOLET}10`, border: `1px solid ${VIOLET}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
@@ -395,13 +404,13 @@ export function SentinelTeaser({ onClose, onUpgrade }) {
             boxShadow: `0 8px 24px ${VIOLET}40`,
           }}
         >
-          Passer Pro (+100EUR/mois)
+          {t("sn.teaser_cta")}
         </button>
         <div
           onClick={onClose}
           style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 12, cursor: "pointer" }}
         >
-          En savoir plus
+          {t("sn.teaser_more")}
         </div>
       </div>
     </div>
