@@ -1,9 +1,17 @@
 import React, { useMemo } from "react";
 import AppIcon from "./AppIcon";
+import { useT } from "../lib/i18n";
 
 const GREEN = "#02d1ba";
 
+const fillTpl = (s, vars) => {
+  let out = s;
+  Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
+
 export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClose, onExportPDF }) {
+  const t = useT();
   const stats = useMemo(() => {
     let totalVolume = 0;
     let totalSets = 0;
@@ -52,7 +60,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 4 }}>Bilan de séance</div>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 4 }}>{t("sr.eyebrow")}</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#f5f5f5", letterSpacing: "-0.4px" }}>{session.name}</div>
         </div>
         <button onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, width: 36, height: 36, color: "#888", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
@@ -61,10 +69,10 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
       {/* Stats principales */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {[
-          { label: "Volume total", value: stats.totalVolume > 1000 ? `${(stats.totalVolume/1000).toFixed(1)}t` : `${stats.totalVolume} kg`, sub: "levé cette séance" },
-          { label: "Complétion", value: `${completion}%`, sub: `${stats.exDone} / ${stats.exTotal} exercices` },
-          { label: "Séries", value: stats.totalSets, sub: "séries effectuées" },
-          { label: "Records", value: stats.prs.length, sub: stats.prs.length > 0 ? "PR battus" : "continue comme ca" },
+          { label: t("sr.stat_volume"), value: stats.totalVolume > 1000 ? `${(stats.totalVolume/1000).toFixed(1)}t` : `${stats.totalVolume} kg`, sub: t("sr.stat_volume_sub") },
+          { label: t("sr.stat_completion"), value: `${completion}%`, sub: fillTpl(t("sr.stat_completion_sub"), { done: stats.exDone, total: stats.exTotal }) },
+          { label: t("sr.stat_sets"), value: stats.totalSets, sub: t("sr.stat_sets_sub") },
+          { label: t("sr.stat_records"), value: stats.prs.length, sub: stats.prs.length > 0 ? t("sr.stat_records_sub_pr") : t("sr.stat_records_sub_none") },
         ].map((s, i) => (
           <div key={i} style={{
             background: "#141414",
@@ -83,7 +91,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
         <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 8, display: "inline-flex", alignItems: "center", gap: 6 }}>
             <AppIcon name="trophy" size={12} color={GREEN} />
-            Records battus
+            {t("sr.records_label")}
           </div>
           {stats.prs.map((name, i) => (
             <div key={i} style={{ fontSize: 12, color: "#f5f5f5", display: "flex", alignItems: "center", gap: 8, padding: "3px 0" }}>
@@ -95,7 +103,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
 
       {/* Liste exercices */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 10 }}>Détail exercices</div>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#444", marginBottom: 10 }}>{t("sr.exercises_label")}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {stats.exercises.map((ex, i) => (
             <div key={i} style={{
@@ -126,7 +134,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
           ))}
           {stats.exDone < stats.exTotal && (
             <div style={{ fontSize: 11, color: "#444", textAlign: "center", padding: "6px 0" }}>
-              {stats.exTotal - stats.exDone} exercice{stats.exTotal - stats.exDone > 1 ? "s" : ""} non enregistré{stats.exTotal - stats.exDone > 1 ? "s" : ""}
+              {fillTpl(stats.exTotal - stats.exDone > 1 ? t("sr.unrecorded_many") : t("sr.unrecorded_one"), { n: stats.exTotal - stats.exDone })}
             </div>
           )}
         </div>
@@ -144,7 +152,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
             <path d="M10 3v10M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             <line x1="3" y1="16" x2="17" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
-          Exporter PDF
+          {t("sr.btn_export_pdf")}
         </button>
         <button onClick={onClose} style={{
           flex: 1.2, padding: "13px",
@@ -152,7 +160,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
           borderRadius: 12, color: "#0d0d0d", fontSize: 12, fontWeight: 800,
           cursor: "pointer", boxShadow: "0 4px 20px rgba(2,209,186,0.35)",
         }}>
-          Continuer
+          {t("sr.btn_continue")}
         </button>
       </div>
     </div>

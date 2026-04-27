@@ -2,14 +2,16 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import AppIcon from "./AppIcon";
 import haptic from "../lib/haptic";
+import { useT } from "../lib/i18n";
 
 const GREEN = "#02d1ba";
 
-const LABELS = ["Facile", "Correct", "Difficile", "Très dur", "Épuisant"];
+const LABEL_KEYS = ["rpe.label_easy", "rpe.label_correct", "rpe.label_hard", "rpe.label_very_hard", "rpe.label_exhausting"];
 const COLORS = ["#4ade80", "#02d1ba", "#f97316", "#ef4444", "#dc2626"];
 const EMOJIS = ["😊", "💪", "😤", "😰", "🥵"];
 
 export function RPEModal({ clientId, sessionName, onClose }) {
+  const t = useT();
   const [rpe,  setRpe]  = useState(null);
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState(false);
@@ -59,13 +61,13 @@ export function RPEModal({ clientId, sessionName, onClose }) {
             <div style={{ width: 56, height: 56, borderRadius: "50%", background: `${GREEN}18`, border: `1px solid ${GREEN}40`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", color: GREEN }}>
               <AppIcon name="check" size={28} color={GREEN} strokeWidth={2.5} />
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f5" }}>Ressenti enregistré !</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f5" }}>{t("rpe.saved")}</div>
           </div>
         ) : (
           <>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 8 }}>Bilan de séance</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#f5f5f5" }}>Comment tu t'es senti ?</div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GREEN, marginBottom: 8 }}>{t("rpe.eyebrow")}</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#f5f5f5" }}>{t("rpe.question")}</div>
               {sessionName && <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>{sessionName}</div>}
             </div>
 
@@ -87,13 +89,13 @@ export function RPEModal({ clientId, sessionName, onClose }) {
             </div>
             {rpe && (
               <div style={{ textAlign: "center", marginBottom: 16, fontSize: 13, fontWeight: 600, color: COLORS[rpe-1] }}>
-                {EMOJIS[rpe-1]} {LABELS[rpe-1]}
+                {EMOJIS[rpe-1]} {t(LABEL_KEYS[rpe-1])}
               </div>
             )}
 
             {/* Note optionnelle */}
             <textarea
-              placeholder="Note optionnelle (douleur, fatigue, observations...)"
+              placeholder={t("rpe.note_placeholder")}
               value={note}
               onChange={e => setNote(e.target.value)}
               rows={2}
@@ -112,14 +114,14 @@ export function RPEModal({ clientId, sessionName, onClose }) {
                 flex: 1, padding: "12px", background: "none",
                 border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10,
                 color: "#555", fontSize: 12, fontWeight: 600, cursor: "pointer",
-              }}>Passer</button>
+              }}>{t("rpe.btn_skip")}</button>
               <button onClick={handleSave} disabled={!rpe} style={{
                 flex: 2, padding: "12px",
                 background: rpe ? GREEN : "#1a1a1a", border: "none", borderRadius: 10,
                 color: rpe ? "#0d0d0d" : "#444",
                 fontSize: 13, fontWeight: 800, cursor: rpe ? "pointer" : "not-allowed",
                 boxShadow: rpe ? "0 4px 16px rgba(2,209,186,0.3)" : "none",
-              }}>Enregistrer</button>
+              }}>{t("rpe.btn_save")}</button>
             </div>
           </>
         )}
