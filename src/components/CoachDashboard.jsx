@@ -19,6 +19,7 @@ import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
 import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
+import ProgrammeDuplicateModal from "./coach/ProgrammeDuplicateModal";
 import Onboarding from "./coach/Onboarding";
 import InviteClient from "./coach/InviteClient";
 import Settings from "./coach/Settings";
@@ -2135,6 +2136,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showSentinelTeaser, setShowSentinelTeaser] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [invoicePreselect, setInvoicePreselect] = useState(null);
+  const [duplicateProgramme, setDuplicateProgramme] = useState(null);
   const [showCmdK, setShowCmdK] = useState(false);
 
   // Sentinel gating: Pro/Elite/Founding only, behind feature flag
@@ -3053,6 +3055,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         />
       )}
 
+      {duplicateProgramme && (
+        <ProgrammeDuplicateModal
+          programme={duplicateProgramme}
+          clients={clients}
+          onClose={() => setDuplicateProgramme(null)}
+        />
+      )}
+
       <CommandPalette
         open={showCmdK}
         onClose={() => setShowCmdK(false)}
@@ -3238,12 +3248,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               coachId={coachId}
               clients={clients}
               onEdit={(client) => setSelected(client)}
-              onAssign={(prog) => {
-                // Dupliquer = ouvrir la fiche client puis le builder pre-rempli.
-                // Pour l'instant on ouvre la fiche du client source.
-                const src = clients.find((c) => c.id === prog.client_id);
-                if (src) setSelected(src);
-              }}
+              onAssign={(prog) => setDuplicateProgramme(prog)}
             />
           )}
 
