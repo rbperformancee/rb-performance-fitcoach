@@ -229,9 +229,14 @@ const headerNames = globalHeaders.map(h => h.key.toLowerCase());
 console.log('\n\x1b[1m8. Vercel Config\x1b[0m');
 
 const rewrites = vercelConfig.rewrites || [];
-if (rewrites.some(r => r.destination === '/landing.html'))
-  pass('Landing page rewrite configured');
-else fail('No rewrite to landing.html');
+// Landing peut etre cablee soit par rewrite (vieille archi), soit en
+// copiant landing.html sur build/index.html via buildCommand (archi actuelle).
+const buildCmd = vercelConfig.buildCommand || '';
+const landingViaBuild = buildCmd.includes('landing.html') && buildCmd.includes('build/index.html');
+const landingViaRewrite = rewrites.some(r => r.destination === '/landing.html');
+if (landingViaBuild || landingViaRewrite)
+  pass(`Landing page wired (${landingViaBuild ? 'buildCommand copy' : 'rewrite'})`);
+else fail('Landing page not wired (no buildCommand copy of landing.html and no rewrite)');
 
 if (rewrites.some(r => r.source === '/demo'))
   pass('/demo rewrite configured');
