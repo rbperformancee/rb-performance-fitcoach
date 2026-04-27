@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 import SessionOptionsModal from "./SessionOptionsModal";
 import { useProgrammeOverrides } from "../hooks/useProgrammeOverrides";
+import { useT } from "../lib/i18n";
 
 const G = "#02d1ba";
 const G_DIM = "rgba(2,209,186,0.1)";
@@ -24,6 +25,7 @@ function StatusDot({ status }) {
 }
 
 export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta }) {
+  const t = useT();
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
 
@@ -203,7 +205,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
   if (!programme || !currentWeek || !currentSession) return (
     <div style={{ minHeight: "100vh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>Aucun programme charge</div>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>{t("train.no_programme")}</div>
     </div>
   );
 
@@ -212,18 +214,18 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* HERO */}
       <div style={{ padding: "0px 20px 16px" }}>
-        <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>Programme</div>
+        <div style={{ fontSize: 9, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>{t("train.programme_label")}</div>
         <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.9, marginBottom: 10 }}>
-          Train<span style={{ color: G }}>.</span>
+          {t("train.title")}<span style={{ color: G }}>.</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{programme.name}</div>
           <div style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-          <div style={{ fontSize: 13, color: G, fontWeight: 600 }}>Semaine {activeWeek + 1}</div>
+          <div style={{ fontSize: 13, color: G, fontWeight: 600 }}>{t("train.week")} {activeWeek + 1}</div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>Cette semaine</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>{t("train.this_week")}</div>
             <div style={{ fontSize: 11, color: G, fontWeight: 700 }}>
               {(currentWeek?.sessions || []).filter((_, i) => {
                 if (i === activeSession) return sessionValidee;
@@ -231,7 +233,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                   const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${i}`) || "{}");
                   return !!s.validee;
                 } catch(e) { return false; }
-              }).length}/{currentWeek?.sessions?.length || 0} seances
+              }).length}/{currentWeek?.sessions?.length || 0} {t("train.sessions_count")}
             </div>
           </div>
           <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
@@ -260,12 +262,12 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           <div style={{ display: "flex", gap: 20 }}>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>{Math.round(volumeTotal)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>kg</span></div>
-              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Volume</div>
+              <div style={{ fontSize: 20, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>{Math.round(volumeTotal)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>{t("train.kg")}</span></div>
+              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>{t("train.volume")}</div>
             </div>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 200, color: G, letterSpacing: "-1px" }}>{seriesDone}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>series</span></div>
-              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Completees</div>
+              <div style={{ fontSize: 20, fontWeight: 200, color: G, letterSpacing: "-1px" }}>{seriesDone}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 2 }}>{t("train.series")}</span></div>
+              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>{t("train.completed")}</div>
             </div>
           </div>
           {chronoOn ? (
@@ -273,11 +275,11 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
               <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-2px" }}>
                 {fmt(chrono).split(":")[0]}<span style={{ color: "rgba(255,255,255,0.3)" }}>:</span>{fmt(chrono).split(":")[1]}
               </div>
-              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Chrono</div>
+              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>{t("train.chrono")}</div>
             </div>
           ) : (
             <button onClick={startChrono} style={{ background: "#02d1ba", color: "#000", border: "none", borderRadius: 100, padding: "10px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-              ▶ Démarrer
+              {t("train.start_chrono")}
             </button>
           )}
         </div>
@@ -285,7 +287,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* SEMAINES */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, padding: "0 20px" }}>Semaines</div>
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, padding: "0 20px" }}>{t("train.weeks_header")}</div>
         <div style={{ display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none", padding: "0 20px 4px" }}>
           {programme.weeks.map((w, i) => {
             const isDone = i < activeWeek;
@@ -294,7 +296,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
               <div key={i} onClick={() => setActiveWeek(i)} style={{ flexShrink: 0, width: 76, padding: "14px 10px", borderRadius: 18, textAlign: "center", cursor: "pointer", background: isActive ? G_DIM : "rgba(255,255,255,0.02)", border: isActive ? `1.5px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative" }}>
                 {isDone && <div style={{ position: "absolute", top: 7, right: 7, width: 7, height: 7, borderRadius: "50%", background: G }} />}
                 <div style={{ fontSize: 22, fontWeight: isActive ? 800 : 200, color: isActive ? G : isDone ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)", letterSpacing: "-1px" }}>S{i + 1}</div>
-                <div style={{ fontSize: 7, color: isActive ? "rgba(2,209,186,0.6)" : "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>{isDone ? "FAIT" : isActive ? "EN COURS" : "A VENIR"}</div>
+                <div style={{ fontSize: 7, color: isActive ? "rgba(2,209,186,0.6)" : "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>{isDone ? t("train.week_done") : isActive ? t("train.week_active") : t("train.week_upcoming")}</div>
               </div>
             );
           })}
@@ -303,7 +305,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* SEANCES */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, padding: "0 20px" }}>Seances</div>
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, padding: "0 20px" }}>{t("train.sessions_header")}</div>
         <div style={{ display: "flex", gap: 10, overflowX: "auto", scrollbarWidth: "none", padding: "0 20px 4px" }}>
           {currentWeek.sessions.map((s, i) => {
             const isDone = i < activeSession;
@@ -314,10 +316,10 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             return (
               <div key={i} onClick={() => setActiveSession(i)} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
                 <div style={{ fontSize: 8, color: (isDone || (isActive && sessionValidee)) ? G : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>
-                  {isDone || (isActive && sessionValidee) ? "✓ COMPLETE" : isActive ? "AUJOURD HUI" : "A VENIR"}
+                  {isDone || (isActive && sessionValidee) ? t("train.session_done") : isActive ? t("train.session_today") : t("train.session_upcoming")}
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: isDone || (isActive && sessionValidee) ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.3)", marginBottom: 3 }}>{s.name || `Seance ${i + 1}`}</div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 8 }}>{sexs} exercices</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: isDone || (isActive && sessionValidee) ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.3)", marginBottom: 3 }}>{s.name || `${t("train.session_default")} ${i + 1}`}</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 8 }}>{sexs} {t("train.exercises_count")}</div>
                 <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
                   <div style={{ height: "100%", width: (isActive && sessionValidee) ? "100%" : pct + "%", background: G, borderRadius: 1, transition: "width 0.8s ease" }} />
                 </div>
@@ -326,7 +328,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
           })}
           <div onClick={() => setShowOptions(true)} style={{ flexShrink: 0, width: 80, borderRadius: 20, cursor: "pointer", background: "rgba(255,255,255,0.01)", border: "1px dashed rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "16px 10px" }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round" style={{ width: 20, height: 20 }}><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", textAlign: "center", lineHeight: 1.4 }}>Options</div>
+            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", textAlign: "center", lineHeight: 1.4 }}>{t("train.options")}</div>
           </div>
         </div>
       </div>
@@ -338,8 +340,8 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       <div style={{ padding: "0 20px", marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>{currentSession.name || "Seance"}</div>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>{doneEx} <span style={{ color: "rgba(255,255,255,0.2)", fontWeight: 300 }}>/ {totalEx} exercices</span></div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>{currentSession.name || t("train.session_default")}</div>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>{doneEx} <span style={{ color: "rgba(255,255,255,0.2)", fontWeight: 300 }}>/ {totalEx} {t("train.exercises_count")}</span></div>
           </div>
           <div style={{ position: "relative", width: 52, height: 52 }}>
             <svg width="52" height="52" viewBox="0 0 52 52">
@@ -370,7 +372,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
           <div style={{ margin: "0 20px 14px", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
-              Fantome S{activeWeek} {allHave ? "visible sur chaque exercice" : `visible sur ${ghostsCount}/${totalEx} exercices`}
+              {t("train.ghost_prefix")}{activeWeek} {allHave ? t("train.ghost_all") : `${t("train.ghost_some")} ${ghostsCount}/${totalEx} ${t("train.ghost_some_suffix")}`}
             </div>
           </div>
         );
@@ -378,7 +380,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
       {/* EXERCICES */}
       <div style={{ padding: "0 20px" }}>
-        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>Exercices</div>
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>{t("train.exercises_header")}</div>
         {(currentSession.exercises || []).map((ex, ei) => {
           const history = getHistory(activeWeek, activeSession, ei) || [];
           const status = getProgressStatus(history);
@@ -417,7 +419,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             padding: "14px 16px",
           }}>
             <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(239,68,68,0.85)", marginBottom: 8 }}>
-              🔥 Finisher
+              {t("train.finisher_label")}
             </div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
               {currentSession.finisher}
@@ -430,7 +432,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {Array.isArray(currentSession.runs) && currentSession.runs.length > 0 && (
         <div style={{ padding: "0 20px", marginTop: 18 }}>
           <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 800, marginBottom: 10 }}>
-            🏃 Cardio prescrit
+            {t("train.cardio_label")}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {currentSession.runs.map((r, ri) => (
@@ -451,7 +453,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             ))}
           </div>
           <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
-            Tu peux logger ces runs dans l'onglet <strong style={{ color: "rgba(2,209,186,0.7)" }}>Run</strong>.
+            {t("train.cardio_log_hint")} <strong style={{ color: "rgba(2,209,186,0.7)" }}>{t("train.cardio_run_tab")}</strong>.
           </div>
         </div>
       )}
@@ -459,7 +461,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {/* BOUTON TERMINER */}
       <div style={{ padding: "20px 20px 0" }}>
         <div onClick={() => !sessionValidee && setShowConfirm(true)} style={{ padding: "16px 20px", background: sessionValidee ? "rgba(2,209,186,0.05)" : G_DIM, border: `1px solid ${sessionValidee ? "rgba(2,209,186,0.15)" : G_BORDER}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: sessionValidee ? "default" : "pointer", opacity: sessionValidee ? 0.7 : 1, transition: "all 0.5s ease" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: G }}>{sessionValidee ? "✓ Seance validee" : "Terminer la seance"}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: G }}>{sessionValidee ? t("train.session_validated") : t("train.finish_session")}</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{sessionValidee ? fmt(chrono) : `${doneEx}/${totalEx} · +40 XP`}</div>
         </div>
       </div>
@@ -480,11 +482,11 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {showConfirm && (
         <div onClick={() => setShowConfirm(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "28px 20px calc(env(safe-area-inset-bottom,0px) + 28px)", width: "100%", maxWidth: 420 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.5px" }}>Terminer la seance ?</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 24 }}>{doneEx}/{totalEx} exercices · +40 XP</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.5px" }}>{t("train.finish_session_q")}</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 24 }}>{doneEx}/{totalEx} {t("train.exercises_count")} · +40 XP</div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setShowConfirm(false)} style={{ flex: 1, padding: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.4)", fontSize: 14, cursor: "pointer" }}>Continuer</button>
-              <button onClick={() => { setShowConfirm(false); handleBilan(); }} style={{ flex: 1, padding: 16, background: G, border: "none", borderRadius: 14, color: "#000", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Terminer</button>
+              <button onClick={() => setShowConfirm(false)} style={{ flex: 1, padding: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "rgba(255,255,255,0.4)", fontSize: 14, cursor: "pointer" }}>{t("train.confirm_continue")}</button>
+              <button onClick={() => { setShowConfirm(false); handleBilan(); }} style={{ flex: 1, padding: 16, background: G, border: "none", borderRadius: 14, color: "#000", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t("train.confirm_finish")}</button>
             </div>
           </div>
         </div>
@@ -498,14 +500,14 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             {selectedRessenti === null ? (
               /* ETAPE 1 : RPE */
               <>
-                <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>Seance terminee</div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px", marginBottom: 6 }}>Comment tu t'es senti ?</div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 28 }}>Ton ressenti aide ton coach a ajuster</div>
+                <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>{t("train.session_done_label")}</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px", marginBottom: 6 }}>{t("train.how_did_you_feel")}</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 28 }}>{t("train.feedback_help")}</div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   {["😤", "😐", "🙂", "💪", "🔥"].map((e, i) => (
                     <div key={i} onClick={() => handleRessenti(i)} style={{ flex: 1, padding: "16px 0", borderRadius: 18, textAlign: "center", cursor: "pointer", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", transition: "all 0.15s", active: "none" }}>
                       <div style={{ fontSize: 26, marginBottom: 5 }}>{e}</div>
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px" }}>{["Dur", "Ok", "Bien", "Fort", "Top"][i]}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px" }}>{[t("train.rpe_dur"), t("train.rpe_ok"), t("train.rpe_good"), t("train.rpe_strong"), t("train.rpe_top")][i]}</div>
                     </div>
                   ))}
                 </div>
@@ -513,13 +515,13 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             ) : (
               /* ETAPE 2 : RECAP PREMIUM */
               <>
-                <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 16 }}>Bilan de seance</div>
+                <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 16 }}>{t("train.session_recap")}</div>
 
                 {/* Stats principales */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
                   <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "16px 12px", textAlign: "center" }}>
                     <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>{fmt(chrono)}</div>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>Duree</div>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>{t("train.duration_label")}</div>
                   </div>
                   <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, padding: "16px 12px", textAlign: "center" }}>
                     <div style={{ fontSize: 28, fontWeight: 100, color: G, letterSpacing: "-1.5px", lineHeight: 1 }}>
@@ -529,11 +531,11 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                         return tot + (parseFloat(h[h.length-1]?.weight) || 0) * (parseInt(ex.sets)||1) * (parseInt(ex.reps)||1);
                       }, 0))}
                     </div>
-                    <div style={{ fontSize: 8, color: "rgba(2,209,186,0.4)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>Vol. kg</div>
+                    <div style={{ fontSize: 8, color: "rgba(2,209,186,0.4)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>{t("train.volume_kg")}</div>
                   </div>
                   <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "16px 12px", textAlign: "center" }}>
                     <div style={{ fontSize: 28, fontWeight: 100, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>{doneEx}/{totalEx}</div>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>Exercices</div>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>{t("train.exercises_label")}</div>
                   </div>
                 </div>
 
@@ -558,7 +560,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                   return (
                     <div style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)", borderRadius: 18, padding: "16px 12px", textAlign: "center", marginBottom: 12 }}>
                       <div style={{ fontSize: 32, fontWeight: 100, color: "#f97316", letterSpacing: "-1.5px", lineHeight: 1 }}>{kcalTotal}</div>
-                      <div style={{ fontSize: 8, color: "rgba(249,115,22,0.5)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>kcal estimees</div>
+                      <div style={{ fontSize: 8, color: "rgba(249,115,22,0.5)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>{t("train.kcal_estimated")}</div>
                     </div>
                   );
                 })()}
@@ -568,20 +570,20 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                   <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ fontSize: 28 }}>{["😤","😐","🙂","💪","🔥"][selectedRessenti]}</div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{["Difficile","Correct","Bien","Fort","Au top"][selectedRessenti]}</div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Ressenti</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{[t("train.rpe_difficult"), t("train.rpe_correct"), t("train.rpe_good_full"), t("train.rpe_strong_full"), t("train.rpe_top_full")][selectedRessenti]}</div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{t("train.feeling_label")}</div>
                     </div>
                   </div>
                   <div style={{ background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 18, padding: "14px 16px", display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ fontSize: 22, fontWeight: 800, color: G }}>+40</div>
-                    <div style={{ fontSize: 10, color: "rgba(2,209,186,0.5)", lineHeight: 1.3 }}>XP<br/>gagnes</div>
+                    <div style={{ fontSize: 10, color: "rgba(2,209,186,0.5)", lineHeight: 1.3 }}>{t("train.xp_gained_1")}<br/>{t("train.xp_gained_2")}</div>
                   </div>
                 </div>
 
                 {/* Message motivant */}
                 <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "14px 18px", marginBottom: 20 }}>
                   <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontStyle: "italic", lineHeight: 1.5 }}>
-                    {selectedRessenti >= 3 ? "Seance solide. Ton corps s'adapte. Continue." : selectedRessenti === 2 ? "Bonne seance. La regularite construit les champions." : "Le plus dur c'est d'etre la. Et tu l'as fait."}
+                    {selectedRessenti >= 3 ? t("train.message_strong") : selectedRessenti === 2 ? t("train.message_correct") : t("train.message_hard")}
                   </div>
                 </div>
 
@@ -604,7 +606,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                       }, { onConflict: "client_id,week_idx,session_idx" });
                     }
                   }} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
-                  Terminer ✓
+                  {t("train.finish_check")}
                 </button>
               </>
             )}
