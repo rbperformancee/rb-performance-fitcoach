@@ -368,6 +368,71 @@ export default function MovePage({ client, appData }) {
                 })}
               </div>
             )}
+
+            {/* CTA Valider la semaine — visible uniquement quand semaine terminee + sur la viewWeek = currentWeek + pas la derniere */}
+            {scheduled.weekFullyDone
+              && scheduled.viewWeek === scheduled.currentWeek
+              && scheduled.viewWeek > scheduled.validatedUntilWeek
+              && scheduled.viewWeek < scheduled.totalWeeks && (
+              <button
+                onClick={async () => {
+                  haptic.success();
+                  const ok = await scheduled.validateWeek(scheduled.viewWeek);
+                  if (ok) {
+                    // Le hook bump viewWeek vers la semaine suivante automatiquement
+                  }
+                }}
+                style={{
+                  width: "100%", marginTop: 14,
+                  padding: "16px 20px",
+                  background: "linear-gradient(135deg, #02d1ba 0%, #0891b2 100%)",
+                  border: "none",
+                  borderRadius: 14,
+                  color: "#000",
+                  fontSize: 14, fontWeight: 800,
+                  letterSpacing: "0.5px", textTransform: "uppercase",
+                  cursor: "pointer",
+                  boxShadow: "0 12px 32px rgba(2,209,186,0.3)",
+                  fontFamily: "inherit",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                }}
+              >
+                🎉 Valider la semaine {scheduled.viewWeek}
+                <span style={{ fontSize: 16, lineHeight: 1 }}>→</span>
+              </button>
+            )}
+
+            {/* Etat "semaine deja validee" — feedback subtil */}
+            {scheduled.viewWeek <= scheduled.validatedUntilWeek && (
+              <div style={{ marginTop: 14, padding: "10px 14px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, fontSize: 11, color: "rgba(2,209,186,0.8)", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                ✓ Semaine validee
+              </div>
+            )}
+
+            {/* Programme termine */}
+            {scheduled.viewWeek === scheduled.totalWeeks
+              && scheduled.weekFullyDone
+              && scheduled.validatedUntilWeek >= scheduled.totalWeeks - 1 && (
+              <button
+                onClick={async () => { haptic.success(); await scheduled.validateWeek(scheduled.totalWeeks); }}
+                disabled={scheduled.validatedUntilWeek >= scheduled.totalWeeks}
+                style={{
+                  width: "100%", marginTop: 14,
+                  padding: "16px 20px",
+                  background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
+                  border: "none", borderRadius: 14, color: "#000",
+                  fontSize: 14, fontWeight: 800, letterSpacing: "0.5px", textTransform: "uppercase",
+                  cursor: "pointer", boxShadow: "0 12px 32px rgba(251,191,36,0.3)",
+                  fontFamily: "inherit",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                  opacity: scheduled.validatedUntilWeek >= scheduled.totalWeeks ? 0.6 : 1,
+                }}
+              >
+                {scheduled.validatedUntilWeek >= scheduled.totalWeeks
+                  ? "🏆 Programme termine"
+                  : "🏆 Terminer le programme"}
+              </button>
+            )}
           </div>
         )}
 
