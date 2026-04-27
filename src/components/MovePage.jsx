@@ -58,19 +58,24 @@ export default function MovePage({ client, appData }) {
   };
 
   const addRun = async () => {
-    if (!form.distance || !form.minutes) return;
+    const dist = parseFloat(form.distance) || 0;
+    const totalMin = (parseInt(form.heures, 10) || 0) * 60 + (parseInt(form.minutes, 10) || 0);
+    // Au moins une metrique requise (distance OU duree)
+    if (dist <= 0 && totalMin <= 0) return;
     setSaving(true);
-    const dist = parseFloat(form.distance);
-    const totalMin = (parseInt(form.heures || 0) * 60) + (parseInt(form.minutes || 0));
-    const allureTotalSec = Math.round((totalMin / dist) * 60);
-    const allureMin = Math.floor(allureTotalSec / 60);
-    const allureSec = allureTotalSec % 60;
-    const allure = `${allureMin}:${String(allureSec).padStart(2, "0")}`;
+    // Allure calculee uniquement si distance + duree fournies
+    let allure = null;
+    if (dist > 0 && totalMin > 0) {
+      const allureTotalSec = Math.round((totalMin / dist) * 60);
+      const allureMin = Math.floor(allureTotalSec / 60);
+      const allureSec = allureTotalSec % 60;
+      allure = `${allureMin}:${String(allureSec).padStart(2, "0")}`;
+    }
 
     // Si on log un run prescrit, on tag avec le programme + cibles
     const prescribedFields = pendingPrescribed ? {
       programme_id: scheduled.programmeId,
-      programme_week: scheduled.currentWeek,
+      programme_week: scheduled.viewWeek,
       programme_session: pendingPrescribed.sessionIndex,
       programme_run_index: pendingPrescribed.runIndex,
       target_label: pendingPrescribed.name,
@@ -82,8 +87,8 @@ export default function MovePage({ client, appData }) {
     const { data } = await supabase.from("run_logs").insert({
       client_id: client.id,
       date: today,
-      distance_km: dist,
-      duree_min: totalMin,
+      distance_km: dist > 0 ? dist : null,
+      duree_min: totalMin > 0 ? totalMin : null,
       allure_min_km: allure,
       note: form.note || "",
       ...prescribedFields,
@@ -208,69 +213,161 @@ export default function MovePage({ client, appData }) {
         {/* DIVIDER */}
         <div style={{ height: 1, background: "linear-gradient(90deg, rgba(239,68,68,0.3) 0%, rgba(255,255,255,0.04) 100%)", margin: "20px 24px" }} />
 
-        {/* PRESCRITS PAR LE COACH (semaine courante) */}
-        {scheduled.runs.length > 0 && (
-          <div style={{ padding: "0 24px", marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
-              <div>
-                <div style={{ fontSize: 10, color: "rgba(2,209,186,0.7)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>Prevus par ton coach</div>
-                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Semaine {scheduled.currentWeek}</div>
+        {/* PRESCRITS PAR LE COACH (semaine courante avec navigation) */}
+        {scheduled.totalWeeks > 0 && (
+          <div style={{ padding: "0 24px", marginBottom: 28 }}>
+            {/* Header + week selector */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 800, marginBottom: 8 }}>Prescrit par ton coach</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                  <button
+                    onClick={() => scheduled.canGoPrev && scheduled.setViewWeek(scheduled.viewWeek - 1)}
+                    disabled={!scheduled.canGoPrev}
+                    aria-label="Semaine precedente"
+                    style={{
+                      width: 32, height: 32, borderRadius: 100,
+                      background: scheduled.canGoPrev ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: scheduled.canGoPrev ? "#fff" : "rgba(255,255,255,0.2)",
+                      cursor: scheduled.canGoPrev ? "pointer" : "not-allowed",
+                      flexShrink: 0, fontFamily: "inherit", fontSize: 14, lineHeight: 1,
+                    }}
+                  >‹</button>
+                  <div style={{ minWidth: 0, flex: 1, textAlign: "center" }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>
+                      Semaine {scheduled.viewWeek}<span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 400 }}> / {scheduled.totalWeeks}</span>
+                    </div>
+                    {scheduled.viewWeek !== scheduled.currentWeek && (
+                      <button
+                        onClick={() => scheduled.setViewWeek(scheduled.currentWeek)}
+                        style={{ marginTop: 4, fontSize: 10, color: "rgba(2,209,186,0.7)", background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: "inherit", letterSpacing: "1.5px", textTransform: "uppercase" }}
+                      >Aujourd'hui →</button>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => scheduled.canGoNext && scheduled.setViewWeek(scheduled.viewWeek + 1)}
+                    disabled={!scheduled.canGoNext}
+                    aria-label="Semaine suivante"
+                    style={{
+                      width: 32, height: 32, borderRadius: 100,
+                      background: scheduled.canGoNext ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: scheduled.canGoNext ? "#fff" : "rgba(255,255,255,0.2)",
+                      cursor: scheduled.canGoNext ? "pointer" : "not-allowed",
+                      flexShrink: 0, fontFamily: "inherit", fontSize: 14, lineHeight: 1,
+                    }}
+                  >›</button>
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "'JetBrains Mono', monospace" }}>
-                {scheduled.runs.filter(r => r.done).length}/{scheduled.runs.length} fait
-              </div>
+              {/* Progress bar */}
+              {scheduled.runs.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "1px" }}>
+                    <span>{scheduled.runs.filter(r => r.done).length}/{scheduled.runs.length} runs</span>
+                    <span style={{ color: "rgba(2,209,186,0.7)", fontWeight: 700 }}>
+                      {Math.round((scheduled.runs.filter(r => r.done).length / scheduled.runs.length) * 100)}%
+                    </span>
+                  </div>
+                  <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${(scheduled.runs.filter(r => r.done).length / scheduled.runs.length) * 100}%`,
+                      background: "linear-gradient(90deg, #02d1ba, rgba(2,209,186,0.5))",
+                      transition: "width 0.6s cubic-bezier(.4,1.6,.5,1)",
+                    }} />
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {scheduled.runs.map((r, i) => (
-                <button
-                  key={i}
-                  onClick={() => !r.done && startPrescribed(r)}
-                  disabled={r.done}
-                  style={{
-                    width: "100%", textAlign: "left",
-                    background: r.done ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${r.done ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.08)"}`,
-                    borderRadius: 14,
-                    padding: "14px 16px",
-                    cursor: r.done ? "default" : "pointer",
-                    fontFamily: "inherit",
-                    color: "#fff",
-                    transition: "border-color .15s, background .15s",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
-                      <span style={{ fontSize: 14 }}>🏃</span>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: r.done ? "rgba(255,255,255,0.5)" : "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {r.name}
+            {/* Liste des runs prescrits */}
+            {scheduled.runs.length === 0 ? (
+              <div style={{ padding: "20px 16px", textAlign: "center", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)", borderRadius: 14, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                Aucun run prescrit cette semaine
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {scheduled.runs.map((r, i) => {
+                  const accent = r.done ? "rgba(2,209,186,0.6)" : RED;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => !r.done && startPrescribed(r)}
+                      disabled={r.done}
+                      style={{
+                        width: "100%", textAlign: "left",
+                        background: r.done ? "rgba(2,209,186,0.04)" : "rgba(255,255,255,0.025)",
+                        border: `1px solid ${r.done ? "rgba(2,209,186,0.22)" : "rgba(255,255,255,0.07)"}`,
+                        borderLeft: `3px solid ${accent}`,
+                        borderRadius: 14,
+                        padding: "14px 16px",
+                        cursor: r.done ? "default" : "pointer",
+                        fontFamily: "inherit",
+                        color: "#fff",
+                        position: "relative", overflow: "hidden",
+                        transition: "border-color .15s, background .15s, transform .15s",
+                      }}
+                      onMouseEnter={(e) => { if (!r.done) e.currentTarget.style.transform = "translateY(-1px)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                    >
+                      {/* Header : nom + statut */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: r.done ? "rgba(255,255,255,0.55)" : "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {r.name}
+                          </div>
+                          {r.sessionName && (
+                            <div style={{ marginTop: 3, fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700 }}>
+                              {r.sessionName}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{
+                          flexShrink: 0,
+                          fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase",
+                          padding: "4px 10px", borderRadius: 100,
+                          background: r.done ? "rgba(2,209,186,0.12)" : "rgba(239,68,68,0.08)",
+                          color: r.done ? "#02d1ba" : RED,
+                          border: `1px solid ${r.done ? "rgba(2,209,186,0.25)" : "rgba(239,68,68,0.2)"}`,
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                        }}>
+                          {r.done ? "✓" : "●"} {r.done ? "Fait" : "A faire"}
+                        </div>
                       </div>
-                    </div>
-                    <div style={{
-                      flexShrink: 0,
-                      fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase",
-                      padding: "3px 9px", borderRadius: 100,
-                      background: r.done ? "rgba(2,209,186,0.15)" : "rgba(239,68,68,0.1)",
-                      color: r.done ? "#02d1ba" : RED,
-                      border: `1px solid ${r.done ? "rgba(2,209,186,0.3)" : "rgba(239,68,68,0.25)"}`,
-                    }}>
-                      {r.done ? "Fait" : "A faire"}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
-                    {r.distance && <span>📏 {r.distance}</span>}
-                    {r.duration && <span>⏱ {r.duration}</span>}
-                    {r.bpm && <span>❤️ {r.bpm} bpm</span>}
-                    {r.rest && <span>⏸ {r.rest} repos</span>}
-                  </div>
-                  {r.sessionName && (
-                    <div style={{ marginTop: 6, fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase" }}>
-                      {r.sessionName}
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
+
+                      {/* Targets — chips compactes premium */}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                        {r.distance && (
+                          <span style={chipStyle}>
+                            <span style={chipLabel}>Distance</span>
+                            <span style={chipVal}>{r.distance}</span>
+                          </span>
+                        )}
+                        {r.duration && (
+                          <span style={chipStyle}>
+                            <span style={chipLabel}>Duree</span>
+                            <span style={chipVal}>{r.duration}</span>
+                          </span>
+                        )}
+                        {r.bpm && (
+                          <span style={chipStyle}>
+                            <span style={chipLabel}>BPM</span>
+                            <span style={chipVal}>{r.bpm}</span>
+                          </span>
+                        )}
+                        {r.rest && (
+                          <span style={chipStyle}>
+                            <span style={chipLabel}>Repos</span>
+                            <span style={chipVal}>{r.rest}</span>
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -430,9 +527,17 @@ export default function MovePage({ client, appData }) {
               return null;
             })()}
 
-            <button onClick={addRun} disabled={saving || !form.distance || !form.minutes} style={{ width: "100%", padding: 16, background: form.distance && form.minutes ? RED : "rgba(255,255,255,0.06)", color: form.distance && form.duree ? "#fff" : "rgba(255,255,255,0.2)", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: form.distance && form.minutes ? "pointer" : "not-allowed" }}>
-              {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#fff" />Enregistrement</span>) : "Enregistrer la sortie"}
-            </button>
+            {(() => {
+              // Au moins distance OU duree (heures+minutes)
+              const hasDist = parseFloat(form.distance) > 0;
+              const hasDur = (parseInt(form.heures, 10) || 0) > 0 || (parseInt(form.minutes, 10) || 0) > 0;
+              const canSave = !saving && (hasDist || hasDur);
+              return (
+                <button onClick={addRun} disabled={!canSave} style={{ width: "100%", padding: 16, background: canSave ? RED : "rgba(255,255,255,0.06)", color: canSave ? "#fff" : "rgba(255,255,255,0.2)", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: canSave ? "pointer" : "not-allowed" }}>
+                  {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#fff" />Enregistrement</span>) : "Enregistrer la sortie"}
+                </button>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -464,3 +569,21 @@ export default function MovePage({ client, appData }) {
     </div>
   );
 }
+
+// Chip style for prescribed run targets (premium)
+const chipStyle = {
+  display: "inline-flex", alignItems: "center", gap: 6,
+  padding: "5px 10px",
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.07)",
+  borderRadius: 8,
+  fontSize: 11,
+};
+const chipLabel = {
+  fontSize: 9, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase",
+  color: "rgba(255,255,255,0.35)",
+};
+const chipVal = {
+  fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'JetBrains Mono', monospace",
+  letterSpacing: "-0.02em",
+};

@@ -2226,7 +2226,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           supabase.from("weight_logs").select("*").eq("client_id", c.id).order("date", { ascending: false }).limit(10),
           supabase.from("session_rpe").select("*").eq("client_id", c.id).order("date", { ascending: false }).limit(5),
         ]);
-        const lastActivity = logs?.[0]?.logged_at || weights?.[0]?.date || null;
+        // _lastActivity = max(log seance, pesee, derniere connexion auth)
+        const candidates = [logs?.[0]?.logged_at, weights?.[0]?.date, c.last_seen_at].filter(Boolean);
+        const lastActivity = candidates.length > 0
+          ? candidates.reduce((a, b) => new Date(a) > new Date(b) ? a : b)
+          : null;
         const inactiveDays = lastActivity ? Math.floor((Date.now() - new Date(lastActivity)) / 86400000) : 999;
         return {
           ...c,

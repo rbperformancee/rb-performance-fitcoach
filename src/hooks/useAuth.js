@@ -93,7 +93,16 @@ export function useAuth() {
       const u = session?.user ?? null;
       setUser(u);
       setSentryUser(u);
-      if (u) loadClientData(u);
+      if (u) {
+        loadClientData(u);
+        // Track last_seen_at (best-effort, ignore RLS errors si user pas en clients)
+        if (u.email) {
+          supabase.from("clients")
+            .update({ last_seen_at: new Date().toISOString() })
+            .eq("email", u.email)
+            .then(() => {}, () => {});
+        }
+      }
       else setLoading(false);
     });
 
@@ -104,6 +113,12 @@ export function useAuth() {
       if (event === "SIGNED_IN" && u) {
         setLoading(true);
         loadClientData(u);
+        if (u.email) {
+          supabase.from("clients")
+            .update({ last_seen_at: new Date().toISOString() })
+            .eq("email", u.email)
+            .then(() => {}, () => {});
+        }
       }
       if (event === "SIGNED_OUT") {
         setClient(null);
