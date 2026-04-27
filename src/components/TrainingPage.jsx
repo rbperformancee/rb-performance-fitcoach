@@ -341,13 +341,28 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         </div>
       </div>
 
-      {/* FANTOME */}
-      {activeWeek > 0 && (
-        <div style={{ margin: "0 20px 14px", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>Fantome S{activeWeek} visible sur chaque exercice</div>
-        </div>
-      )}
+      {/* FANTOME — affiche uniquement si au moins un exercice a une trace
+          de la semaine precedente. Sinon le message ment ("visible sur
+          chaque exercice" alors qu'aucun n'a de fantome). */}
+      {(() => {
+        if (activeWeek <= 0) return null;
+        const totalEx = (currentSession.exercises || []).length;
+        if (totalEx === 0) return null;
+        const ghostsCount = (currentSession.exercises || []).reduce((acc, _, ei) => {
+          const g = getLatest(activeWeek - 1, activeSession, ei);
+          return acc + (g ? 1 : 0);
+        }, 0);
+        if (ghostsCount === 0) return null;
+        const allHave = ghostsCount === totalEx;
+        return (
+          <div style={{ margin: "0 20px 14px", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
+              Fantome S{activeWeek} {allHave ? "visible sur chaque exercice" : `visible sur ${ghostsCount}/${totalEx} exercices`}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* EXERCICES */}
       <div style={{ padding: "0 20px" }}>
