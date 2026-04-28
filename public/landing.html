@@ -1704,15 +1704,15 @@ html.light .founder-message strong{color:#0a0a0a}
   section.pricing { display: flex !important; flex-direction: column !important; }
   section.pricing > .pricing-inner { flex: 1 0 auto !important; }
   footer { padding: 32px 16px calc(40px + env(safe-area-inset-bottom, 0px)) !important; margin-top: auto !important; text-align: center !important; flex-shrink: 0 !important; }
-  /* Override le `section.pricing * { max-width:100% }` qui empechait
-     le footer de deborder dans la zone padding de la section pour etre
-     vraiment edge-to-edge (full viewport width) */
+  /* Force le footer a 100vw pour casser definitivement la contrainte
+     du padding section.pricing (negative margins ne suffisaient pas
+     a cause de body overflow:hidden qui clippait au viewport edge). */
   section.pricing > footer,
   section > footer {
-    max-width: none !important;
-    margin-left: -16px !important;
-    margin-right: -16px !important;
-    width: calc(100% + 32px) !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important;
+    margin-right: calc(50% - 50vw) !important;
   }
   .footer-inner {
     grid-template-columns: 1fr !important;
