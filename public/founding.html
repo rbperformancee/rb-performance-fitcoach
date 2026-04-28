@@ -367,7 +367,8 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
 
   function detectLang(){
     try {
-      var saved = localStorage.getItem('rb_lang');
+      // Bridge: lire les 2 cles (rb_lang HTML + rbperf_locale React app)
+      var saved = localStorage.getItem('rb_lang') || localStorage.getItem('rbperf_locale');
       if (saved === 'fr' || saved === 'en') return saved;
     } catch(e){}
     var nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
@@ -380,7 +381,11 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
       b.addEventListener('click', function(){
         var lang = b.getAttribute('data-lang');
         applyLang(lang);
-        try { localStorage.setItem('rb_lang', lang); } catch(e){}
+        // Bridge: ecrire dans les 2 cles pour sync React app
+        try {
+          localStorage.setItem('rb_lang', lang);
+          localStorage.setItem('rbperf_locale', lang);
+        } catch(e){}
       });
     });
     applyLang(detectLang());

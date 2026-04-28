@@ -3722,7 +3722,10 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   function initLangToggle() {
     var btns = document.querySelectorAll('.lang-toggle button');
     var saved = null;
-    try { saved = localStorage.getItem('rb_lang'); } catch (e) {}
+    // Bridge: lire les 2 cles (rb_lang HTML + rbperf_locale React app)
+    try {
+      saved = localStorage.getItem('rb_lang') || localStorage.getItem('rbperf_locale');
+    } catch (e) {}
     if (!saved) {
       // Auto-detect : navigator.language commence par 'fr' → fr, sinon en
       var browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
@@ -3734,7 +3737,11 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       b.addEventListener('click', function() {
         var lang = b.dataset.lang;
         applyLang(lang);
-        try { localStorage.setItem('rb_lang', lang); } catch (e) {}
+        // Bridge: ecrire dans les 2 cles pour sync React app
+        try {
+          localStorage.setItem('rb_lang', lang);
+          localStorage.setItem('rbperf_locale', lang);
+        } catch (e) {}
       });
     });
     function applyLang(lang) {

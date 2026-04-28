@@ -18,6 +18,9 @@
 import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "rbperf_locale";
+// Bridge avec les pages HTML statiques (landing.html, founding.html, etc.)
+// qui utilisent la cle "rb_lang". On synchronise les deux dans les 2 sens.
+const STORAGE_KEY_BRIDGE = "rb_lang";
 const DEFAULT_LOCALE = "fr";
 const SUPPORTED = ["fr", "en"];
 
@@ -4584,10 +4587,12 @@ let currentLocale = DEFAULT_LOCALE;
 const subscribers = new Set();
 
 function detectInitialLocale() {
-  // 1. localStorage
+  // 1. localStorage — d'abord la cle React, puis la cle bridge HTML
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && SUPPORTED.includes(saved)) return saved;
+    const savedBridge = localStorage.getItem(STORAGE_KEY_BRIDGE);
+    if (savedBridge && SUPPORTED.includes(savedBridge)) return savedBridge;
   } catch {}
   // 2. navigator.language
   if (typeof navigator !== "undefined") {
@@ -4610,7 +4615,11 @@ export function getLocale() {
 export function setLocale(locale) {
   if (!SUPPORTED.includes(locale)) return;
   currentLocale = locale;
-  try { localStorage.setItem(STORAGE_KEY, locale); } catch {}
+  try {
+    localStorage.setItem(STORAGE_KEY, locale);
+    // Bridge: synchroniser avec la cle utilisee par les pages HTML statiques
+    localStorage.setItem(STORAGE_KEY_BRIDGE, locale);
+  } catch {}
   // Update html lang attribute
   if (typeof document !== "undefined") {
     document.documentElement.lang = locale;
