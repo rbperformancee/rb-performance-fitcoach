@@ -1701,10 +1701,16 @@ html.light .founder-message strong{color:#0a0a0a}
      (sinon le #080C14 du html montre dessous, perçu comme bleu).
      section.pricing devient flex column pour pousser le footer en bas
      meme quand le contenu est court (margin-top:auto). */
-  /* Background noir sur mobile pour que la zone derriere la URL bar
-     Safari (visible via viewport-fit=cover) match le footer noir
-     au lieu de montrer le #080C14 navy par-dessous. */
-  section.pricing { display: flex !important; flex-direction: column !important; background: #000 !important; }
+  /* Background noir sur mobile sur TOUTES les sections pour que la zone
+     derriere la URL bar Safari (visible via viewport-fit=cover) match
+     le foncier noir au lieu de montrer le #080C14 navy par-dessous.
+     Override le `section.* { background:#080C14 !important }` global. */
+  section, section.active,
+  section.how, section.business, section.bento, section.demo-section,
+  section.features, section.pricing, section.cta-final, section.client-view,
+  section.comparison, section.testimonial, section.faq, section.chiffres,
+  section.trust-strip, section.founder, section.stacking { background: #000 !important; }
+  section.pricing { display: flex !important; flex-direction: column !important; }
   section.pricing > .pricing-inner { flex: 1 0 auto !important; }
   footer { padding: 32px 16px calc(40px + env(safe-area-inset-bottom, 0px)) !important; margin-top: auto !important; text-align: center !important; flex-shrink: 0 !important; }
   /* Force le footer a 100vw pour casser definitivement la contrainte
