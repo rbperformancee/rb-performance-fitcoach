@@ -1,14 +1,23 @@
 // supabase/functions/send-invite/index.ts
 //
-// Envoie un email d'invitation client via Resend.
+// Envoie un email d'invitation client via Zoho SMTP (denomailer).
+//
+// Migre de Resend → Zoho SMTP pour aligner avec le reste de la stack
+// (waitlist, welcome, crons utilisent tous Zoho sur rbperform.app).
 //
 // Appele par InviteClient.jsx apres que la row invitation a ete creee
 // dans Supabase. Cette function:
 //   1. Verifie le JWT coach
 //   2. Retrieve l'invitation par id (avec coach_id = auth.uid())
 //   3. Construit le lien /join?token=<uuid>
-//   4. Envoie l'email via Resend
+//   4. Envoie l'email via Zoho SMTP (smtp.zoho.eu:465 TLS)
 //   5. Met a jour sent_at / last_resent_at / resend_count
+//
+// Env vars (Supabase Edge Function secrets) :
+//   ZOHO_SMTP_USER  default rayan@rbperform.app
+//   ZOHO_SMTP_PASS  Zoho app password (REQUIS)
+//   APP_BASE_URL    default https://rbperform.app
+//   EMAIL_FROM      default `RB Perform <${ZOHO_SMTP_USER}>` (auto)
 //
 // Body JSON:
 //   { invitation_id: "uuid", resend?: boolean }
@@ -18,12 +27,14 @@
 //   { success: false, error: "..." }
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
+const SMTP_USER = Deno.env.get('ZOHO_SMTP_USER') ?? 'rayan@rbperform.app'
+const SMTP_PASS = Deno.env.get('ZOHO_SMTP_PASS') ?? ''
 const APP_BASE_URL = Deno.env.get('APP_BASE_URL') ?? 'https://rbperform.app'
-const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'RB Perform <noreply@rbperform.com>'
+const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? `RB Perform <${SMTP_USER}>`
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -138,7 +149,7 @@ serve(async (req) => {
     const coachId = await verifyJwt(token)
     if (!coachId) return json({ success: false, error: 'Invalid JWT' }, 401)
 
-    if (!RESEND_API_KEY) return json({ success: false, error: 'RESEND_API_KEY missing' }, 500)
+    if (!SMTP_PASS) return json({ success: false, error: 'ZOHO_SMTP_PASS missing' }, 500)
 
     const body = await req.json()
     const { invitation_id, resend: isResend } = body || {}
@@ -166,26 +177,30 @@ serve(async (req) => {
       joinUrl,
     })
 
-    // Send via Resend
+    // Send via Zoho SMTP (denomailer)
     const subject = `${coachName} t'invite sur son espace coaching`
-    const mailRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
+    const smtpClient = new SMTPClient({
+      connection: {
+        hostname: 'smtp.zoho.eu',
+        port: 465,
+        tls: true,
+        auth: { username: SMTP_USER, password: SMTP_PASS },
       },
-      body: JSON.stringify({
-        from: EMAIL_FROM,
-        to: [inv.email],
-        subject,
-        html,
-      }),
     })
 
-    if (!mailRes.ok) {
-      const txt = await mailRes.text()
-      console.error('[send-invite] Resend error', mailRes.status, txt)
+    try {
+      await smtpClient.send({
+        from: EMAIL_FROM,
+        to: inv.email,
+        subject,
+        content: 'auto',
+        html,
+      })
+    } catch (e: any) {
+      console.error('[send-invite] SMTP error', e?.message || e)
       return json({ success: false, error: 'Email provider error' }, 502)
+    } finally {
+      try { await smtpClient.close() } catch { /* noop */ }
     }
 
     // Mark as sent / resent
