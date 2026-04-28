@@ -139,7 +139,7 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div role="dialog" aria-modal="true" aria-label={t("inv.eyebrow")} style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 22, padding: 28, maxWidth: 480, width: "100%", maxHeight: "90vh", overflowY: "auto", position: "relative" }}>
 
         {/* Close */}

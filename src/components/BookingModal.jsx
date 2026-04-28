@@ -71,6 +71,8 @@ export default function BookingModal({ client, onClose, onBooked, title, subtitl
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 400,

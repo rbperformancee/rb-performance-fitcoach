@@ -73,7 +73,7 @@ export default function SessionOptionsModal({
   };
 
   return (
-    <div onClick={close} style={overlay}>
+    <div role="dialog" aria-modal="true" onClick={close} style={overlay}>
       <div onClick={e => e.stopPropagation()} style={sheet}>
         {view === "home" && (
           <Home
