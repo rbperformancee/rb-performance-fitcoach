@@ -1665,9 +1665,15 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     <span></span>
   </button>
 
-  <a href="/waitlist" class="nav-link" data-i18n="nav.waitlist">
-    Waitlist
-  </a>
+  <div class="nav-right" style="display:inline-flex;align-items:center;gap:14px">
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" data-lang="fr" aria-pressed="true">FR</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <a href="/waitlist" class="nav-link" data-i18n="nav.waitlist">
+      Waitlist
+    </a>
+  </div>
 </nav>
 
 <!-- ========== MENU OVERLAY PLEIN ECRAN (LVMH style) ========== -->
@@ -3546,7 +3552,41 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'footer.legal_note':'© 2026 Rayan Bonte — Micro-entrepreneur<br>SIRET 990 637 803 00018<br>10 Rue Cardinale, 84000 Avignon, France<br>Hébergé par Vercel Inc. — San Francisco, CA',
       'footer.col_follow':'Suivre','footer.col_legal':'Légal','footer.col_contact':'Contact',
       'footer.legal_mentions':'Mentions légales','footer.legal_rgpd':'Confidentialité &amp; RGPD','footer.legal_cgu':'CGU / CGV','footer.become_founder':'Devenir Founding Coach →',
-      'sticky.label':'Founding Coach Program — <b>30 fondateurs</b>','sticky.cta':'Rejoindre les 30 Founding Coachs →'
+      'sticky.label':'Founding Coach Program — <b>30 fondateurs</b>','sticky.cta':'Rejoindre les 30 Founding Coachs →',
+      // ===== QUIZ RESULTS (dynamiques) =====
+      'quiz.starter_tag':'Plan recommandé',
+      'quiz.starter_title':'Starter — 199€/mois',
+      'quiz.starter_desc':'Parfait pour bâtir tes fondations : dashboard, programme builder, messagerie, jusqu\'à 10 clients. Tu démarres carré, sans surpayer.',
+      'quiz.starter_cta':'Démarrer Starter',
+      'quiz.pro_tag':'Plan recommandé',
+      'quiz.pro_title':'Pro — 299€/mois',
+      'quiz.pro_desc':'Le plan le plus choisi. Anti-churn IA, analytics avancées, automatisations complètes, jusqu\'à 30 clients. C\'est le standard pour les coachs établis.',
+      'quiz.pro_cta':'Démarrer Pro',
+      'quiz.elite_tag':'Plan recommandé',
+      'quiz.elite_title':'Elite — 499€/mois',
+      'quiz.elite_desc':'Pour scale sans limite : clients illimités, support prioritaire 7j/7, onboarding 1:1. Le maximum.',
+      'quiz.elite_cta':'Démarrer Elite',
+      // ===== ROI (dynamique) =====
+      'roi.mrr_sub':'par mois · {annuel}€ / an',
+      'roi.conclusion':'Avec <strong>{clients} clients</strong> à <strong>{tarif}€</strong>, tu perds <strong>{lost} {clientWord}/an</strong> sans anti-churn. RB Perform en sauve 80% — soit <strong>+{gain}€/an</strong> récupérés et <strong>+{hours}h/mois</strong> gagnées.',
+      // ===== BLACK MIRROR (dynamique) =====
+      'bm.label':'Black Mirror',
+      'bm.dormant':'Règle tes chiffres à gauche.<br>Puis regarde.',
+      'bm.analyzing':'Analyse en cours...',
+      'bm.p1_clients':'Tu as {c} clients.',
+      'bm.p1_rate':'Tu factures {t}€ par mois.',
+      'bm.p1_assume':'Tu penses que tout va bien.',
+      'bm.p1_stat':'En moyenne, un coach perd <span style="color:rgba(255,107,107,0.5);font-weight:700;font-style:normal">25%</span> de ses clients par an.',
+      'bm.p1_ratio':'Soit {lost} sur {c}.',
+      'bm.p2_lose':'Tu vas perdre {lost} {clientWord} cette année.',
+      'bm.p2_silent':'perdus. En silence.',
+      'bm.p3_dark':'Et tu ne le sauras pas.',
+      'bm.p3_unless':'Sauf si tu vois avant eux.',
+      'bm.p3_recovered':'par an. Récupérés avec RB Perform.',
+      'bm.cta':'Voir la démo',
+      // ===== COUNTDOWN (dynamique) =====
+      'countdown.expired':'Offre expirée',
+      'countdown.days':'jours','countdown.hours':'heures','countdown.minutes':'minutes','countdown.seconds':'secondes'
     },
     en: {
       'nav.features':'Features','nav.pricing':'Pricing','nav.login':'Sign in','nav.waitlist':'Waitlist',
@@ -3634,15 +3674,62 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'footer.legal_note':'© 2026 Rayan Bonte — Sole proprietorship<br>SIRET 990 637 803 00018<br>10 Rue Cardinale, 84000 Avignon, France<br>Hosted by Vercel Inc. — San Francisco, CA',
       'footer.col_follow':'Follow','footer.col_legal':'Legal','footer.col_contact':'Contact',
       'footer.legal_mentions':'Legal notice','footer.legal_rgpd':'Privacy &amp; GDPR','footer.legal_cgu':'Terms of service','footer.become_founder':'Become a Founding Coach →',
-      'sticky.label':'Founding Coach Program — <b>30 founders</b>','sticky.cta':'Join the 30 Founding Coaches →'
+      'sticky.label':'Founding Coach Program — <b>30 founders</b>','sticky.cta':'Join the 30 Founding Coaches →',
+      // ===== QUIZ RESULTS (dynamic) =====
+      'quiz.starter_tag':'Recommended plan',
+      'quiz.starter_title':'Starter — €199/month',
+      'quiz.starter_desc':'Perfect to build your foundations: dashboard, program builder, messaging, up to 10 clients. You start clean, without overpaying.',
+      'quiz.starter_cta':'Start with Starter',
+      'quiz.pro_tag':'Recommended plan',
+      'quiz.pro_title':'Pro — €299/month',
+      'quiz.pro_desc':'The most-picked plan. Anti-churn AI, advanced analytics, full automations, up to 30 clients. The standard for established coaches.',
+      'quiz.pro_cta':'Start with Pro',
+      'quiz.elite_tag':'Recommended plan',
+      'quiz.elite_title':'Elite — €499/month',
+      'quiz.elite_desc':'To scale without limits: unlimited clients, priority support 7 days a week, 1:1 onboarding. The maximum.',
+      'quiz.elite_cta':'Start with Elite',
+      // ===== ROI (dynamic) =====
+      'roi.mrr_sub':'per month · €{annuel} / year',
+      'roi.conclusion':'With <strong>{clients} clients</strong> at <strong>€{tarif}</strong>, you lose <strong>{lost} {clientWord}/year</strong> without anti-churn. RB Perform saves 80% — that\'s <strong>+€{gain}/year</strong> recovered and <strong>+{hours}h/month</strong> reclaimed.',
+      // ===== BLACK MIRROR (dynamic) =====
+      'bm.label':'Black Mirror',
+      'bm.dormant':'Set your numbers on the left.<br>Then watch.',
+      'bm.analyzing':'Analyzing...',
+      'bm.p1_clients':'You have {c} clients.',
+      'bm.p1_rate':'You charge €{t} per month.',
+      'bm.p1_assume':'You think everything is fine.',
+      'bm.p1_stat':'On average, a coach loses <span style="color:rgba(255,107,107,0.5);font-weight:700;font-style:normal">25%</span> of clients per year.',
+      'bm.p1_ratio':'That\'s {lost} out of {c}.',
+      'bm.p2_lose':'You\'ll lose {lost} {clientWord} this year.',
+      'bm.p2_silent':'lost. In silence.',
+      'bm.p3_dark':'And you won\'t even know.',
+      'bm.p3_unless':'Unless you see it before they do.',
+      'bm.p3_recovered':'per year. Recovered with RB Perform.',
+      'bm.cta':'See the demo',
+      // ===== COUNTDOWN (dynamic) =====
+      'countdown.expired':'Offer expired',
+      'countdown.days':'days','countdown.hours':'hours','countdown.minutes':'minutes','countdown.seconds':'seconds'
     }
   };
+  // Expose current language for other scripts (quiz, ROI, black mirror, countdown...)
+  window.__rbLang = 'fr';
+  window.getCurrentLang = function() { return window.__rbLang || 'fr'; };
+  window.t = function(key) {
+    var dict = I18N[window.__rbLang] || I18N.fr;
+    return (dict && dict[key] !== undefined) ? dict[key] : (I18N.fr[key] !== undefined ? I18N.fr[key] : key);
+  };
+
   function initLangToggle() {
     var btns = document.querySelectorAll('.lang-toggle button');
-    if (!btns.length) return;
-    var saved = 'fr';
-    try { saved = localStorage.getItem('rb_lang') || 'fr'; } catch (e) {}
+    var saved = null;
+    try { saved = localStorage.getItem('rb_lang'); } catch (e) {}
+    if (!saved) {
+      // Auto-detect : navigator.language commence par 'fr' → fr, sinon en
+      var browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+      saved = browserLang.indexOf('fr') === 0 ? 'fr' : 'en';
+    }
     applyLang(saved);
+    if (!btns.length) return;
     btns.forEach(function(b) {
       b.addEventListener('click', function() {
         var lang = b.dataset.lang;
@@ -3652,16 +3739,24 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     });
     function applyLang(lang) {
       var dict = I18N[lang] || I18N.fr;
+      window.__rbLang = lang;
       document.querySelectorAll('[data-i18n]').forEach(function(el) {
         var key = el.dataset.i18n;
         if (dict[key] !== undefined) el.innerHTML = dict[key];
       });
       document.documentElement.lang = lang;
+      // Update og:locale meta if present
+      var ogLocale = document.querySelector('meta[property="og:locale"]');
+      if (ogLocale) ogLocale.setAttribute('content', lang === 'fr' ? 'fr_FR' : 'en_US');
+      var ogLocaleAlt = document.querySelector('meta[property="og:locale:alternate"]');
+      if (ogLocaleAlt) ogLocaleAlt.setAttribute('content', lang === 'fr' ? 'en_US' : 'fr_FR');
       btns.forEach(function(b) {
         var active = b.dataset.lang === lang;
         b.classList.toggle('active', active);
         b.setAttribute('aria-pressed', active ? 'true' : 'false');
       });
+      // Notify other scripts so they can re-render dynamic content
+      try { document.dispatchEvent(new CustomEvent('rb:langchange', { detail: { lang: lang } })); } catch (e) {}
     }
   }
 
@@ -3748,57 +3843,69 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     var opts = document.querySelectorAll('.quiz-opt');
     var result = document.getElementById('quizResult');
     if (!opts.length || !result) return;
-    var RESULTS = {
-      starter: {
-        tag: 'Plan recommandé',
-        title: 'Starter — 199€/mois',
-        desc: 'Parfait pour bâtir tes fondations : dashboard, programme builder, messagerie, jusqu\'à 10 clients. Tu démarres carré, sans surpayer.',
-        href: '/waitlist',
-        cta: 'Démarrer Starter'
-      },
-      pro: {
-        tag: 'Plan recommandé',
-        title: 'Pro — 299€/mois',
-        desc: 'Le plan le plus choisi. Anti-churn IA, analytics avancées, automatisations complètes, jusqu\'à 30 clients. C\'est le standard pour les coachs établis.',
-        href: '/waitlist',
-        cta: 'Démarrer Pro'
-      },
-      elite: {
-        tag: 'Plan recommandé',
-        title: 'Elite — 499€/mois',
-        desc: 'Pour scale sans limite : clients illimités, support prioritaire 7j/7, onboarding 1:1. Le maximum.',
-        href: '/waitlist',
-        cta: 'Démarrer Elite'
-      }
-    };
+    function getResults() {
+      var T = (window.t || function(k){ return k; });
+      return {
+        starter: {
+          tag: T('quiz.starter_tag'),
+          title: T('quiz.starter_title'),
+          desc: T('quiz.starter_desc'),
+          href: '/waitlist',
+          cta: T('quiz.starter_cta')
+        },
+        pro: {
+          tag: T('quiz.pro_tag'),
+          title: T('quiz.pro_title'),
+          desc: T('quiz.pro_desc'),
+          href: '/waitlist',
+          cta: T('quiz.pro_cta')
+        },
+        elite: {
+          tag: T('quiz.elite_tag'),
+          title: T('quiz.elite_title'),
+          desc: T('quiz.elite_desc'),
+          href: '/waitlist',
+          cta: T('quiz.elite_cta')
+        }
+      };
+    }
+    var lastKey = null;
     opts.forEach(function(opt) {
       opt.addEventListener('click', function() {
         opts.forEach(function(o) { o.classList.remove('selected'); });
         opt.classList.add('selected');
         var key = opt.dataset.result;
-        var r = RESULTS[key];
-        if (!r) return;
-        result.innerHTML =
+        lastKey = key;
+        renderResult(key);
+      });
+    });
+    // Re-render when language changes
+    document.addEventListener('rb:langchange', function() {
+      if (lastKey) renderResult(lastKey);
+    });
+    function renderResult(key) {
+      var r = getResults()[key];
+      if (!r) return;
+      result.innerHTML =
           '<div class="r-tag">' + r.tag + '</div>' +
           '<div class="r-title">' + r.title + '</div>' +
           '<p class="r-desc">' + r.desc + '</p>' +
           '<a href="' + r.href + '" class="btn btn-orange magnetic" target="_blank" rel="noopener">' + r.cta +
             ' <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
           '</a>';
-        result.classList.add('show');
-        // Re-init magnetic sur le bouton genere
-        var newBtn = result.querySelector('.magnetic');
-        if (newBtn && !noHover) {
-          newBtn.addEventListener('mousemove', function(e) {
-            var rect = newBtn.getBoundingClientRect();
-            var x = e.clientX - rect.left - rect.width / 2;
-            var y = e.clientY - rect.top - rect.height / 2;
-            newBtn.style.transform = 'translate(' + Math.max(-8, Math.min(8, x * 0.25)) + 'px, ' + Math.max(-8, Math.min(8, y * 0.25)) + 'px)';
-          });
-          newBtn.addEventListener('mouseleave', function() { newBtn.style.transform = ''; });
-        }
-      });
-    });
+      result.classList.add('show');
+      // Re-init magnetic sur le bouton genere
+      var newBtn = result.querySelector('.magnetic');
+      if (newBtn && !noHover) {
+        newBtn.addEventListener('mousemove', function(e) {
+          var rect = newBtn.getBoundingClientRect();
+          var x = e.clientX - rect.left - rect.width / 2;
+          var y = e.clientY - rect.top - rect.height / 2;
+          newBtn.style.transform = 'translate(' + Math.max(-8, Math.min(8, x * 0.25)) + 'px, ' + Math.max(-8, Math.min(8, y * 0.25)) + 'px)';
+        });
+        newBtn.addEventListener('mouseleave', function() { newBtn.style.transform = ''; });
+      }
+    }
   }
 })();
 </script>
@@ -3987,14 +4094,32 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     var hoursPerMonth = Math.round(3 + clients * 0.5);
     var hoursEl = document.getElementById('roi-hours');
 
+    var T = (window.t || function(k){ return k; });
+    var L = (window.getCurrentLang ? window.getCurrentLang() : 'fr');
+
     if (clientsVal) clientsVal.textContent = clients;
     if (tarifVal)   tarifVal.textContent   = tarif;
     if (hoursEl)    hoursEl.textContent    = '+' + hoursPerMonth + 'h';
     if (mrrEl)      mrrEl.textContent      = fmt(mrr) + '€';
-    if (mrrSub)     mrrSub.textContent     = 'par mois · ' + fmt(annuel) + '€ / an';
+    if (mrrSub) {
+      var subTpl = T('roi.mrr_sub'); // e.g. "par mois · {annuel}€ / an"
+      mrrSub.textContent = subTpl.replace('{annuel}', fmt(annuel));
+    }
     if (gainEl)     gainEl.textContent     = '+' + fmt(gainRB) + '€';
     if (multEl)     multEl.textContent     = '×' + roiMult;
-    if (concEl)     concEl.innerHTML       = 'Avec <strong>' + clients + ' clients</strong> à <strong>' + tarif + '€</strong>, tu perds <strong>' + clientsPerdus + ' client' + (clientsPerdus>1?'s':'') + '/an</strong> sans anti-churn. RB Perform en sauve 80% — soit <strong>+' + fmt(gainRB) + '€/an</strong> récupérés et <strong>+' + hoursPerMonth + 'h/mois</strong> gagnées.';
+    if (concEl) {
+      var clientWord = (L === 'en')
+        ? (clientsPerdus > 1 ? 'clients' : 'client')
+        : (clientsPerdus > 1 ? 'clients' : 'client');
+      var tpl = T('roi.conclusion');
+      concEl.innerHTML = tpl
+        .replace('{clients}', clients)
+        .replace('{tarif}', tarif)
+        .replace('{lost}', clientsPerdus)
+        .replace('{clientWord}', clientWord)
+        .replace('{gain}', fmt(gainRB))
+        .replace('{hours}', hoursPerMonth);
+    }
 
     // Slider track progress
     const pClients = raw;
@@ -4005,6 +4130,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   clientsSlider.addEventListener('input', update);
   tarifSlider.addEventListener('input', update);
+  document.addEventListener('rb:langchange', update);
 })();
 </script>
 
@@ -4025,7 +4151,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if (diff <= 0) {
       dEl.textContent = '00'; hEl.textContent = '00'; mEl.textContent = '00'; sEl.textContent = '00';
       var wrap = document.getElementById('foundingCountdown');
-      if (wrap) wrap.innerHTML = '<div style="font-size:16px;font-weight:800;color:#ff6b6b;letter-spacing:0.1em;text-transform:uppercase">Offre expirée</div>';
+      var T = (window.t || function(k){ return k === 'countdown.expired' ? 'Offre expirée' : k; });
+      if (wrap) wrap.innerHTML = '<div style="font-size:16px;font-weight:800;color:#ff6b6b;letter-spacing:0.1em;text-transform:uppercase">' + T('countdown.expired') + '</div>';
       if (cta) { cta.style.opacity = '0.4'; cta.style.cursor = 'not-allowed'; cta.onclick = function(e){ e.preventDefault(); }; }
       return;
     }
@@ -4062,7 +4189,15 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   function getC(){ return clientsEl ? Math.round(2 + Math.pow(+clientsEl.value / 100, 2) * 98) : 10; }
   function getT(){ return tarifEl ? +tarifEl.value : 150; }
-  function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
+  function fmt(n){
+    var lang = (window.getCurrentLang ? window.getCurrentLang() : 'fr');
+    var locale = lang === 'en' ? 'en-US' : 'fr-FR';
+    return Math.round(n).toLocaleString(locale);
+  }
+  function T(key){
+    return (window.t ? window.t(key) : key);
+  }
+  function L(){ return (window.getCurrentLang ? window.getCurrentLang() : 'fr'); }
 
   function say(html, ms, dur){
     var duration = dur || 0.9;
@@ -4104,8 +4239,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   function showDormant(){
     clear();
     content.innerHTML = '<div style="text-align:center;padding:20px 0">' +
-      '<div style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.15);margin-bottom:16px">Black Mirror</div>' +
-      '<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3vw,28px);font-weight:900;color:rgba(255,255,255,0.4);line-height:1.3">Règle tes chiffres à gauche.<br>Puis regarde.</div></div>';
+      '<div style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.15);margin-bottom:16px">' + T('bm.label') + '</div>' +
+      '<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3vw,28px);font-weight:900;color:rgba(255,255,255,0.4);line-height:1.3">' + T('bm.dormant') + '</div></div>';
   }
 
   function run(){
@@ -4120,17 +4255,21 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     if(ghost){ ghost.textContent=''; ghost.style.filter='blur(12px)'; ghost.style.color='rgba(255,107,107,0.03)'; }
     if(pulse){ pulse.style.animation='bmHeart 3s ease-in-out infinite'; pulse.style.background='radial-gradient(circle,rgba(255,255,255,0.015),#000 70%)'; }
 
+    var clientWord = (lost > 1)
+      ? (L() === 'en' ? 'clients' : 'clients')
+      : (L() === 'en' ? 'client' : 'client');
+
     // P1 — intro
-    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:900;color:#fff;line-height:1.1">Tu as '+c+' clients.</div>', 600, 0.8)
-    .then(function(){ return say('<div style="font-size:17px;color:rgba(255,255,255,0.4);margin-top:12px">Tu factures '+t+'€ par mois.</div>', 800, 0.7); })
-    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.15);margin-top:14px">Tu penses que tout va bien.</div>', 1000, 0.8); })
+    say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:900;color:#fff;line-height:1.1">' + T('bm.p1_clients').replace('{c}', c) + '</div>', 600, 0.8)
+    .then(function(){ return say('<div style="font-size:17px;color:rgba(255,255,255,0.4);margin-top:12px">' + T('bm.p1_rate').replace('{t}', t) + '</div>', 800, 0.7); })
+    .then(function(){ return say('<div style="font-size:16px;color:rgba(255,255,255,0.15);margin-top:14px">' + T('bm.p1_assume') + '</div>', 1000, 0.8); })
 
     // Pause
     .then(function(){ return new Promise(function(r){ setTimeout(r, 1200); }); })
 
     // La stat 25%
-    .then(function(){ clear(); return say('<div style="font-size:14px;color:rgba(255,255,255,0.12);font-style:italic;letter-spacing:0.02em;line-height:1.7">En moyenne, un coach perd <span style="color:rgba(255,107,107,0.5);font-weight:700;font-style:normal">25%</span> de ses clients par an.</div>', 300, 1.0); })
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:900;color:rgba(255,107,107,0.4);margin-top:14px">Soit '+lost+' sur '+c+'.</div>', 1200, 0.9); })
+    .then(function(){ clear(); return say('<div style="font-size:14px;color:rgba(255,255,255,0.12);font-style:italic;letter-spacing:0.02em;line-height:1.7">' + T('bm.p1_stat') + '</div>', 300, 1.0); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:900;color:rgba(255,107,107,0.4);margin-top:14px">' + T('bm.p1_ratio').replace('{lost}', lost).replace('{c}', c) + '</div>', 1200, 0.9); })
 
     // P2 — IMPACT
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
@@ -4140,12 +4279,12 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       r();
     },1200); }); })
     .then(function(){ return new Promise(function(r){ setTimeout(function(){ clear(); r(); },400); }); })
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#ff6b6b;line-height:1.2">Tu vas perdre '+lost+' client'+(lost>1?'s':'')+' cette année.</div>', 200, 0.8); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#ff6b6b;line-height:1.2">' + T('bm.p2_lose').replace('{lost}', lost).replace('{clientWord}', clientWord) + '</div>', 200, 0.8); })
     .then(function(){
       if(ghost) ghost.style.filter='blur(0)';
       return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(72px,16vw,130px);color:#ff6b6b;line-height:1;margin:20px 0;animation:bmNumIn 0.8s cubic-bezier(0.16,1,0.3,1) forwards">'+fmt(lostY)+'€</div>', 700, 0.8);
     })
-    .then(function(){ return say('<div style="font-size:15px;color:rgba(255,255,255,0.18);letter-spacing:0.05em">perdus. En silence.</div>', 600, 0.7); })
+    .then(function(){ return say('<div style="font-size:15px;color:rgba(255,255,255,0.18);letter-spacing:0.05em">' + T('bm.p2_silent') + '</div>', 600, 0.7); })
 
     // P3 — fondu au noir
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
@@ -4156,7 +4295,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     },1400); }); })
 
     // Phrase dans le noir
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:900;color:rgba(255,255,255,0.25)">Et tu ne le sauras pas.</div>', 500, 1.0); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:900;color:rgba(255,255,255,0.25)">' + T('bm.p3_dark') + '</div>', 500, 1.0); })
 
     // Transition teal
     .then(function(){ return new Promise(function(r){ setTimeout(function(){
@@ -4166,13 +4305,13 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       if(ghost){ ghost.style.color='rgba(0,201,167,0.03)'; ghost.textContent='+'+fmt(saved)+'€'; ghost.style.filter='blur(6px)'; }
       r();
     },800); }); })
-    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#00C9A7;line-height:1.2">Sauf si tu vois avant eux.</div>', 400, 0.8); })
+    .then(function(){ return say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(20px,3.5vw,28px);font-weight:900;color:#00C9A7;line-height:1.2">' + T('bm.p3_unless') + '</div>', 400, 0.8); })
     .then(function(){
       if(ghost) ghost.style.filter='blur(0)';
       return say('<div style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(64px,14vw,110px);color:#00C9A7;line-height:1;margin:20px 0;animation:bmNumIn 0.8s cubic-bezier(0.16,1,0.3,1) forwards">+'+fmt(saved)+'€</div>', 700, 0.8);
     })
-    .then(function(){ return say('<div style="font-size:14px;color:rgba(255,255,255,0.22);margin-bottom:28px;letter-spacing:0.02em">par an. Récupérés avec RB Perform.</div>', 600, 0.7); })
-    .then(function(){ return say('<a href="javascript:void(0)" onclick="document.querySelector(\'[data-target=demo-section]\').click()" style="display:inline-block;padding:18px 40px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;cursor:pointer;animation:bmGlow 2.5s ease-in-out infinite">Voir la démo</a>', 600, 0.8); })
+    .then(function(){ return say('<div style="font-size:14px;color:rgba(255,255,255,0.22);margin-bottom:28px;letter-spacing:0.02em">' + T('bm.p3_recovered') + '</div>', 600, 0.7); })
+    .then(function(){ return say('<a href="javascript:void(0)" onclick="document.querySelector(\'[data-target=demo-section]\').click()" style="display:inline-block;padding:18px 40px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;border-radius:12px;text-decoration:none;cursor:pointer;animation:bmGlow 2.5s ease-in-out infinite">' + T('bm.cta') + '</a>', 600, 0.8); })
     .then(function(){ setTimeout(function(){ started=false; clearP(); }, 5000);
     });
   }
@@ -4187,6 +4326,11 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   // Etat dormant au demarrage
   showDormant();
+
+  // Re-render dormant on language change (only if not currently animating)
+  document.addEventListener('rb:langchange', function(){
+    if (!started) showDormant();
+  });
 
   var clientsTouched = false;
   var tarifTouched = false;
@@ -4205,7 +4349,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     idleTimer = setTimeout(function(){
       hasPlayed = true;
       clear();
-      say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:rgba(255,255,255,0.25)">Analyse en cours...</div>', 0);
+      say('<div style="font-family:\'Syne\',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:rgba(255,255,255,0.25)">' + T('bm.analyzing') + '</div>', 0);
       setTimeout(function(){ clear(); run(); }, 1500);
     }, 1000);
   }

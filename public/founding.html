@@ -9,6 +9,7 @@
 <title>Founding Coach — RB Perform</title>
 <meta name="description" content="Rejoins les 30 premiers coachs. Plan Pro à 199€/mois verrouillé à vie au lieu de 299€.">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
 <meta property="og:title" content="Founding Coach — 199€/mois verrouillé à vie">
 <meta property="og:description" content="30 places. Plan Pro complet. Anti-churn IA, dashboard MRR, app client. Le prix d'aujourd'hui est ton prix à vie.">
 <meta property="og:url" content="https://rbperform.app/founding">
@@ -36,6 +37,12 @@ html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,system
 .logo span{color:#00C9A7}
 .back{font-size:12px;color:rgba(255,255,255,0.5);text-decoration:none;text-align:center;display:block;margin-bottom:24px;letter-spacing:0.05em}
 .back:hover{color:#00C9A7}
+
+/* Lang toggle */
+.lang-toggle{position:fixed;top:18px;right:18px;display:inline-flex;border:1px solid rgba(255,255,255,0.1);border-radius:100px;overflow:hidden;font-size:11px;font-weight:700;letter-spacing:1.5px;background:rgba(8,12,20,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:50}
+.lang-toggle button{padding:6px 11px;color:rgba(255,255,255,0.5);transition:all 0.2s;font-family:inherit;text-transform:uppercase;background:transparent;border:none;cursor:pointer}
+.lang-toggle button.active{background:rgba(255,255,255,0.08);color:#fff}
+.lang-toggle button:hover:not(.active){color:rgba(255,255,255,0.8)}
 
 /* Badge */
 .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:100px;padding:6px 16px;font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:24px;align-self:center}
@@ -103,45 +110,50 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
   .price-new{font-size:clamp(56px,14vw,80px)}
   .countdown{gap:8px}
   .cd-num{font-size:26px;padding:8px 6px}
+  .lang-toggle{top:12px;right:12px}
 }
 </style>
 </head>
 <body>
+<div class="lang-toggle" role="group" aria-label="Language">
+  <button type="button" data-lang="fr" class="active" aria-pressed="true">FR</button>
+  <button type="button" data-lang="en" aria-pressed="false">EN</button>
+</div>
 <div class="page">
   <main class="content">
 
-    <a href="/" class="back">← Retour</a>
+    <a href="/" class="back" data-i18n="founding.back">← Retour</a>
     <a href="/" class="logo">RB<span>PERFORM</span></a>
 
-    <div class="badge"><span class="dot"></span>Founding Coach Program</div>
+    <div class="badge"><span class="dot"></span><span data-i18n="founding.badge">Founding Coach Program</span></div>
 
-    <h1>Le prix d'aujourd'hui<br>est ton prix à vie.</h1>
-    <p class="sub">30 places. Plan Pro complet à 199€/mois au lieu de 299€.<br>Une fois verrouillé, ton prix ne bouge plus — jamais.</p>
+    <h1 data-i18n="founding.h1">Le prix d'aujourd'hui<br>est ton prix à vie.</h1>
+    <p class="sub" data-i18n="founding.sub">30 places. Plan Pro complet à 199€/mois au lieu de 299€.<br>Une fois verrouillé, ton prix ne bouge plus — jamais.</p>
 
     <!-- Countdown -->
     <div class="countdown">
-      <div class="cd-block"><div class="cd-num" id="fc-d">00</div><div class="cd-label">Jours</div></div>
+      <div class="cd-block"><div class="cd-num" id="fc-d">00</div><div class="cd-label" data-i18n="founding.cd_days">Jours</div></div>
       <div class="cd-sep">:</div>
-      <div class="cd-block"><div class="cd-num" id="fc-h">00</div><div class="cd-label">Heures</div></div>
+      <div class="cd-block"><div class="cd-num" id="fc-h">00</div><div class="cd-label" data-i18n="founding.cd_hours">Heures</div></div>
       <div class="cd-sep">:</div>
-      <div class="cd-block"><div class="cd-num" id="fc-m">00</div><div class="cd-label">Min</div></div>
+      <div class="cd-block"><div class="cd-num" id="fc-m">00</div><div class="cd-label" data-i18n="founding.cd_min">Min</div></div>
       <div class="cd-sep">:</div>
-      <div class="cd-block"><div class="cd-num" id="fc-s">00</div><div class="cd-label">Sec</div></div>
+      <div class="cd-block"><div class="cd-num" id="fc-s">00</div><div class="cd-label" data-i18n="founding.cd_sec">Sec</div></div>
     </div>
 
     <!-- Places restantes -->
     <div class="places">
-      <div class="places-text">Programme limité à <strong>30 fondateurs</strong></div>
+      <div class="places-text" data-i18n="founding.places">Programme limité à <strong>30 fondateurs</strong></div>
     </div>
 
     <!-- Price card -->
     <div class="price-card">
-      <div class="price-old">299€ / mois</div>
+      <div class="price-old" data-i18n="founding.price_old">299€ / mois</div>
       <div class="price-new">199€</div>
-      <div class="price-period">Par mois · Verrouillé à vie</div>
+      <div class="price-period" data-i18n="founding.price_period">Par mois · Verrouillé à vie</div>
       <div class="price-lock">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Prix garanti — pas d'augmentation, jamais
+        <span data-i18n="founding.price_guarantee">Prix garanti — pas d'augmentation, jamais</span>
       </div>
     </div>
 
@@ -149,67 +161,67 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
     <div class="features">
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Toutes les features Pro (valeur 299€/mois)</span>
+        <span data-i18n="founding.feat1">Toutes les features Pro (valeur 299€/mois)</span>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Dashboard MRR + prévision 90 jours</span>
+        <span data-i18n="founding.feat2">Dashboard MRR + prévision 90 jours</span>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Anti-churn IA · 7 signaux par client</span>
+        <span data-i18n="founding.feat3">Anti-churn IA · 7 signaux par client</span>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>IA Analyser (Mistral) illimité</span>
+        <span data-i18n="founding.feat4">IA Analyser (Mistral) illimité</span>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>App client installable iPhone &amp; Android en 1 clic (pas d'App Store)</span>
+        <span data-i18n="founding.feat5">App client installable iPhone &amp; Android en 1 clic (pas d'App Store)</span>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Accès WhatsApp direct au fondateur pendant 90 jours</span>
+        <span data-i18n="founding.feat6">Accès WhatsApp direct au fondateur pendant 90 jours</span>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Vote sur la roadmap produit</span>
+        <span data-i18n="founding.feat7">Vote sur la roadmap produit</span>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Badge Founding Coach dans l'app</span>
+        <span data-i18n="founding.feat8">Badge Founding Coach dans l'app</span>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span><strong style="color:#fff">0% commission sur tes revenus — aujourd'hui, demain, toujours</strong></span>
+        <span data-i18n="founding.feat9"><strong style="color:#fff">0% commission sur tes revenus — aujourd'hui, demain, toujours</strong></span>
       </div>
     </div>
 
     <!-- CTA — Waitlist en attendant le lancement -->
-    <a class="cta" href="/waitlist">
+    <a class="cta" href="/waitlist" data-i18n="founding.cta">
       Rejoindre la Waitlist Founding →
     </a>
-    <div class="cta-sub">Lancement mai 2026 · Inscris-toi pour bloquer ton prix a vie</div>
+    <div class="cta-sub" data-i18n="founding.cta_sub">Lancement mai 2026 · Inscris-toi pour bloquer ton prix a vie</div>
 
     <!-- Engagement Founder — Prix bloqué à vie -->
     <div class="engagements">
       <div class="engagement">
         <div class="engagement-body">
-          <div class="engagement-title">Engagement Prix — à vie</div>
-          <div class="engagement-desc">Tu paies <strong>199€/mois</strong> pour la vie. Quand l'offre passera à <strong>299€/mois</strong> après le lancement, tu économiseras <strong>100€/mois</strong> — soit <strong>1 200€/an</strong> à vie.</div>
+          <div class="engagement-title" data-i18n="founding.eng_title">Engagement Prix — à vie</div>
+          <div class="engagement-desc" data-i18n="founding.eng_desc">Tu paies <strong>199€/mois</strong> pour la vie. Quand l'offre passera à <strong>299€/mois</strong> après le lancement, tu économiseras <strong>100€/mois</strong> — soit <strong>1 200€/an</strong> à vie.</div>
         </div>
       </div>
     </div>
 
     <!-- Email capture fallback -->
     <div style="text-align:center;margin-top:32px;padding-top:32px;border-top:.5px solid rgba(255,255,255,0.04)">
-      <div style="font-size:13px;color:rgba(255,255,255,0.25);margin-bottom:12px">Pas encore prêt ? Sois notifié au lancement.</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.25);margin-bottom:12px" data-i18n="founding.notify_intro">Pas encore prêt ? Sois notifié au lancement.</div>
       <form id="notifyForm" onsubmit="submitNotify(event)" style="display:flex;gap:8px;max-width:380px;margin:0 auto">
-        <input type="email" id="notifyEmail" required placeholder="ton@email.com" style="flex:1;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(0,201,167,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
-        <button type="submit" style="padding:12px 20px;background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);border-radius:10px;color:#00C9A7;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(0,201,167,0.15)'" onmouseout="this.style.background='rgba(0,201,167,0.1)'">Notifier</button>
+        <input type="email" id="notifyEmail" required placeholder="ton@email.com" data-i18n-placeholder="founding.notify_placeholder" style="flex:1;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(0,201,167,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+        <button type="submit" data-i18n="founding.notify_btn" style="padding:12px 20px;background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);border-radius:10px;color:#00C9A7;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(0,201,167,0.15)'" onmouseout="this.style.background='rgba(0,201,167,0.1)'">Notifier</button>
       </form>
-      <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6">En entrant ton email, tu acceptes notre <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">politique de confidentialité</a></div>
-      <div id="notifySuccess" style="display:none;font-size:13px;color:#00C9A7;margin-top:12px">Tu seras notifié. À bientôt.</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6" data-i18n="founding.notify_legal">En entrant ton email, tu acceptes notre <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">politique de confidentialité</a></div>
+      <div id="notifySuccess" data-i18n="founding.notify_ok" style="display:none;font-size:13px;color:#00C9A7;margin-top:12px">Tu seras notifié. À bientôt.</div>
     </div>
 
     <script>
@@ -232,10 +244,10 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
 
   <!-- Footer -->
   <div class="foot">
-    <a href="/legal.html">Mentions légales</a>
-    <a href="/legal.html#rgpd">RGPD</a>
-    <a href="/legal.html#cgu">CGU</a>
-    <div class="foot-copy">© 2026 Rayan Bonte · Micro-entrepreneur · SIRET 990 637 803 00018 · 10 Rue Cardinale, 84000 Avignon, France · Hébergé par Vercel Inc.</div>
+    <a href="/legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
+    <a href="/legal.html#rgpd" data-i18n="footer.legal_rgpd">RGPD</a>
+    <a href="/legal.html#cgu" data-i18n="footer.legal_cgu">CGU</a>
+    <div class="foot-copy" data-i18n="founding.foot_copy">© 2026 Rayan Bonte · Micro-entrepreneur · SIRET 990 637 803 00018 · 10 Rue Cardinale, 84000 Avignon, France · Hébergé par Vercel Inc.</div>
   </div>
 </div>
 
@@ -245,7 +257,12 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
   var end = new Date('2026-05-16T23:59:59').getTime();
   function tick(){
     var now = Date.now(), diff = end - now;
-    if(diff<=0){ document.querySelector('.countdown').innerHTML='<div style="font-size:16px;font-weight:800;color:#ff6b6b;letter-spacing:0.1em;text-transform:uppercase">Offre expirée</div>'; return; }
+    if(diff<=0){
+      var lang = (document.documentElement.lang === 'en') ? 'en' : 'fr';
+      var msg = (lang === 'en') ? 'Offer expired' : 'Offre expirée';
+      document.querySelector('.countdown').innerHTML='<div style="font-size:16px;font-weight:800;color:#ff6b6b;letter-spacing:0.1em;text-transform:uppercase">' + msg + '</div>';
+      return;
+    }
     var d=Math.floor(diff/864e5), h=Math.floor(diff%864e5/36e5), m=Math.floor(diff%36e5/6e4), s=Math.floor(diff%6e4/1e3);
     document.getElementById('fc-d').textContent=String(d).padStart(2,'0');
     document.getElementById('fc-h').textContent=String(h).padStart(2,'0');
@@ -253,6 +270,127 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
     document.getElementById('fc-s').textContent=String(s).padStart(2,'0');
   }
   tick(); setInterval(tick,1000);
+})();
+</script>
+
+<!-- ===== I18N FR/EN ===== -->
+<script>
+(function(){
+  var I18N = {
+    fr: {
+      'founding.back':'← Retour',
+      'founding.badge':'Founding Coach Program',
+      'founding.h1':'Le prix d\'aujourd\'hui<br>est ton prix à vie.',
+      'founding.sub':'30 places. Plan Pro complet à 199€/mois au lieu de 299€.<br>Une fois verrouillé, ton prix ne bouge plus — jamais.',
+      'founding.cd_days':'Jours','founding.cd_hours':'Heures','founding.cd_min':'Min','founding.cd_sec':'Sec',
+      'founding.places':'Programme limité à <strong>30 fondateurs</strong>',
+      'founding.price_old':'299€ / mois',
+      'founding.price_period':'Par mois · Verrouillé à vie',
+      'founding.price_guarantee':'Prix garanti — pas d\'augmentation, jamais',
+      'founding.feat1':'Toutes les features Pro (valeur 299€/mois)',
+      'founding.feat2':'Dashboard MRR + prévision 90 jours',
+      'founding.feat3':'Anti-churn IA · 7 signaux par client',
+      'founding.feat4':'IA Analyser (Mistral) illimité',
+      'founding.feat5':'App client installable iPhone &amp; Android en 1 clic (pas d\'App Store)',
+      'founding.feat6':'Accès WhatsApp direct au fondateur pendant 90 jours',
+      'founding.feat7':'Vote sur la roadmap produit',
+      'founding.feat8':'Badge Founding Coach dans l\'app',
+      'founding.feat9':'<strong style="color:#fff">0% commission sur tes revenus — aujourd\'hui, demain, toujours</strong>',
+      'founding.cta':'Rejoindre la Waitlist Founding →',
+      'founding.cta_sub':'Lancement mai 2026 · Inscris-toi pour bloquer ton prix à vie',
+      'founding.eng_title':'Engagement Prix — à vie',
+      'founding.eng_desc':'Tu paies <strong>199€/mois</strong> pour la vie. Quand l\'offre passera à <strong>299€/mois</strong> après le lancement, tu économiseras <strong>100€/mois</strong> — soit <strong>1 200€/an</strong> à vie.',
+      'founding.notify_intro':'Pas encore prêt ? Sois notifié au lancement.',
+      'founding.notify_placeholder':'ton@email.com',
+      'founding.notify_btn':'Notifier',
+      'founding.notify_legal':'En entrant ton email, tu acceptes notre <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">politique de confidentialité</a>',
+      'founding.notify_ok':'Tu seras notifié. À bientôt.',
+      'footer.legal_mentions':'Mentions légales',
+      'footer.legal_rgpd':'RGPD',
+      'footer.legal_cgu':'CGU',
+      'founding.foot_copy':'© 2026 Rayan Bonte · Micro-entrepreneur · SIRET 990 637 803 00018 · 10 Rue Cardinale, 84000 Avignon, France · Hébergé par Vercel Inc.'
+    },
+    en: {
+      'founding.back':'← Back',
+      'founding.badge':'Founding Coach Program',
+      'founding.h1':'Today\'s price<br>is your price for life.',
+      'founding.sub':'30 seats. Full Pro plan at €199/mo instead of €299.<br>Lock it in once — it never moves again.',
+      'founding.cd_days':'Days','founding.cd_hours':'Hours','founding.cd_min':'Min','founding.cd_sec':'Sec',
+      'founding.places':'Capped at <strong>30 founders</strong>',
+      'founding.price_old':'€299 / month',
+      'founding.price_period':'Per month · Locked for life',
+      'founding.price_guarantee':'Price guaranteed — no hikes, ever',
+      'founding.feat1':'All Pro features (€299/mo value)',
+      'founding.feat2':'MRR dashboard + 90-day forecast',
+      'founding.feat3':'AI anti-churn · 7 signals per client',
+      'founding.feat4':'Unlimited AI Analyser (Mistral)',
+      'founding.feat5':'1-click installable client app — iPhone &amp; Android (no App Store)',
+      'founding.feat6':'Direct WhatsApp line to the founder for 90 days',
+      'founding.feat7':'Vote on the product roadmap',
+      'founding.feat8':'Founding Coach badge inside the app',
+      'founding.feat9':'<strong style="color:#fff">0% commission on your revenue — today, tomorrow, always</strong>',
+      'founding.cta':'Join the Founding Waitlist →',
+      'founding.cta_sub':'Launch May 2026 · Sign up to lock your price for life',
+      'founding.eng_title':'Price commitment — for life',
+      'founding.eng_desc':'You pay <strong>€199/month</strong> for life. When the offer rises to <strong>€299/month</strong> after launch, you\'ll save <strong>€100/month</strong> — that\'s <strong>€1,200/year</strong>, forever.',
+      'founding.notify_intro':'Not ready yet? Get pinged at launch.',
+      'founding.notify_placeholder':'you@email.com',
+      'founding.notify_btn':'Notify me',
+      'founding.notify_legal':'By entering your email, you accept our <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">privacy policy</a>',
+      'founding.notify_ok':'You\'re on the list. Talk soon.',
+      'footer.legal_mentions':'Legal notice',
+      'footer.legal_rgpd':'Privacy &amp; GDPR',
+      'footer.legal_cgu':'Terms of service',
+      'founding.foot_copy':'© 2026 Rayan Bonte · Micro-entrepreneur · SIRET 990 637 803 00018 · 10 Rue Cardinale, 84000 Avignon, France · Hosted by Vercel Inc.'
+    }
+  };
+
+  function applyLang(lang){
+    var dict = I18N[lang] || I18N.fr;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      if (dict[k] !== undefined) el.innerHTML = dict[k];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+      var k = el.getAttribute('data-i18n-placeholder');
+      if (dict[k] !== undefined) el.setAttribute('placeholder', dict[k]);
+    });
+    document.documentElement.lang = lang;
+    var ogLocale = document.querySelector('meta[property="og:locale"]');
+    if (ogLocale) ogLocale.setAttribute('content', lang === 'en' ? 'en_US' : 'fr_FR');
+    document.querySelectorAll('.lang-toggle button').forEach(function(b){
+      var active = b.getAttribute('data-lang') === lang;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function detectLang(){
+    try {
+      var saved = localStorage.getItem('rb_lang');
+      if (saved === 'fr' || saved === 'en') return saved;
+    } catch(e){}
+    var nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+    return nav.indexOf('fr') === 0 ? 'fr' : 'en';
+  }
+
+  function initLangToggle(){
+    var btns = document.querySelectorAll('.lang-toggle button');
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){
+        var lang = b.getAttribute('data-lang');
+        applyLang(lang);
+        try { localStorage.setItem('rb_lang', lang); } catch(e){}
+      });
+    });
+    applyLang(detectLang());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLangToggle);
+  } else {
+    initLangToggle();
+  }
 })();
 </script>
 

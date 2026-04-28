@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex, follow" />
   <meta name="theme-color" content="#0d0d0d" />
   <meta name="color-scheme" content="dark" />
+  <meta property="og:locale" content="fr_FR" />
   <title>RB PERFORM — Page introuvable</title>
 <link rel="icon" type="image/svg+xml" href="/icon.svg" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -50,19 +51,87 @@
     .links { display:flex; flex-direction:column; gap:12px; align-items:center }
     .secondary { font-size: 12px; color: rgba(255,255,255,0.25); text-decoration: none; letter-spacing: 0.04em; margin-top: 4px }
     .secondary:hover { color: #02d1ba }
+
+    /* Lang toggle */
+    .lang-toggle{position:fixed;top:18px;right:18px;display:inline-flex;border:1px solid rgba(255,255,255,0.1);border-radius:100px;overflow:hidden;font-size:11px;font-weight:700;letter-spacing:1.5px;background:rgba(13,13,13,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:50}
+    .lang-toggle button{padding:6px 11px;color:rgba(255,255,255,0.5);transition:all 0.2s;font-family:inherit;text-transform:uppercase;background:transparent;border:none;cursor:pointer}
+    .lang-toggle button.active{background:rgba(255,255,255,0.08);color:#fff}
+    .lang-toggle button:hover:not(.active){color:rgba(255,255,255,0.8)}
+    @media(max-width:480px){.lang-toggle{top:12px;right:12px}}
   </style>
 </head>
 <body>
+  <div class="lang-toggle" role="group" aria-label="Language">
+    <button type="button" data-lang="fr" class="active" aria-pressed="true">FR</button>
+    <button type="button" data-lang="en" aria-pressed="false">EN</button>
+  </div>
   <div class="logo">
     <svg width="48" height="58" viewBox="0 0 48 58" fill="none">
       <polygon points="32,0 10,29 24,29 16,58 38,29 24,29 32,0" fill="#02d1ba"/>
     </svg>
   </div>
   <h1>404</h1>
-  <p>Cette page n'existe pas.<br/>Retourne à l'app RB PERFORM.</p>
+  <p data-i18n="404.text">Cette page n'existe pas.<br/>Retourne à l'app RB PERFORM.</p>
   <div class="links">
-    <a href="/" class="primary">Retour à l'accueil</a>
-    <a href="/status" class="secondary">Tout va bien côté serveurs →</a>
+    <a href="/" class="primary" data-i18n="404.cta">Retour à l'accueil</a>
+    <a href="/status" class="secondary" data-i18n="404.status">Tout va bien côté serveurs →</a>
   </div>
+
+<script>
+(function(){
+  var I18N = {
+    fr: {
+      '404.text':'Cette page n\'existe pas.<br/>Retourne à l\'app RB PERFORM.',
+      '404.cta':'Retour à l\'accueil',
+      '404.status':'Tout va bien côté serveurs →'
+    },
+    en: {
+      '404.text':'This page doesn\'t exist.<br/>Head back to the RB PERFORM app.',
+      '404.cta':'Back to home',
+      '404.status':'Servers are fine →'
+    }
+  };
+
+  function applyLang(lang){
+    var dict = I18N[lang] || I18N.fr;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      if (dict[k] !== undefined) el.innerHTML = dict[k];
+    });
+    document.documentElement.lang = lang;
+    document.title = (lang === 'en') ? 'RB PERFORM — Page not found' : 'RB PERFORM — Page introuvable';
+    var ogLocale = document.querySelector('meta[property="og:locale"]');
+    if (ogLocale) ogLocale.setAttribute('content', lang === 'en' ? 'en_US' : 'fr_FR');
+    document.querySelectorAll('.lang-toggle button').forEach(function(b){
+      var active = b.getAttribute('data-lang') === lang;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function detectLang(){
+    try {
+      var saved = localStorage.getItem('rb_lang');
+      if (saved === 'fr' || saved === 'en') return saved;
+    } catch(e){}
+    var nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+    return nav.indexOf('fr') === 0 ? 'fr' : 'en';
+  }
+
+  function init(){
+    document.querySelectorAll('.lang-toggle button').forEach(function(b){
+      b.addEventListener('click', function(){
+        var lang = b.getAttribute('data-lang');
+        applyLang(lang);
+        try { localStorage.setItem('rb_lang', lang); } catch(e){}
+      });
+    });
+    applyLang(detectLang());
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 </body>
 </html>

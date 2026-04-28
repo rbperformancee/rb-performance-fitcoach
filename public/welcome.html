@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#080C14" />
 <meta name="color-scheme" content="dark" />
 <meta name="robots" content="noindex, follow" />
+<meta property="og:locale" content="fr_FR" />
 <title>Bienvenue · RB Perform</title>
 <link rel="icon" type="image/svg+xml" href="/icon.svg" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -21,6 +22,12 @@ html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,sans-s
 
 .brand{font-family:'Syne',sans-serif;font-size:14px;font-weight:900;letter-spacing:.12em;color:#fff;text-align:center;margin-bottom:32px;display:block;text-decoration:none}
 .brand span{color:#00C9A7}
+
+/* Lang toggle */
+.lang-toggle{position:fixed;top:18px;right:18px;display:inline-flex;border:1px solid rgba(255,255,255,0.1);border-radius:100px;overflow:hidden;font-size:11px;font-weight:700;letter-spacing:1.5px;background:rgba(8,12,20,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:50}
+.lang-toggle button{padding:6px 11px;color:rgba(255,255,255,0.5);transition:all 0.2s;font-family:inherit;text-transform:uppercase;background:transparent;border:none;cursor:pointer}
+.lang-toggle button.active{background:rgba(255,255,255,0.08);color:#fff}
+.lang-toggle button:hover:not(.active){color:rgba(255,255,255,0.8)}
 
 .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.25);border-radius:100px;padding:6px 16px;font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:20px}
 .badge.gold{background:rgba(245,200,66,0.08);border-color:rgba(245,200,66,0.3);color:#f5c842}
@@ -67,62 +74,67 @@ body.is-android .install-android{display:block}
 @media(max-width:480px){
   .page{padding:44px 20px 32px}
   .step{padding:16px 18px}
+  .lang-toggle{top:12px;right:12px}
 }
 </style>
 </head>
 <body>
+<div class="lang-toggle" role="group" aria-label="Language">
+  <button type="button" data-lang="fr" class="active" aria-pressed="true">FR</button>
+  <button type="button" data-lang="en" aria-pressed="false">EN</button>
+</div>
 <main class="page">
 
   <a href="/" class="brand">RB<span>PERFORM</span></a>
 
   <div id="welcomeBlock">
-    <div class="badge" id="badge"><span class="dot"></span><span id="badgeText">Accès créé</span></div>
-    <h1 id="title">Bienvenue. Ton accès est prêt.</h1>
-    <p class="sub" id="sub">
+    <div class="badge" id="badge"><span class="dot"></span><span id="badgeText" data-i18n="welcome.badge_default">Accès créé</span></div>
+    <h1 id="title" data-i18n="welcome.title_default">Bienvenue. Ton accès est prêt.</h1>
+    <p class="sub" id="sub" data-i18n="welcome.sub_default">
       Ton mot de passe est défini. Avant d'entrer dans l'app, voici les <strong style="color:rgba(255,255,255,0.8)">3 gestes essentiels</strong> qui font la différence entre « j'essaie » et « c'est mon outil ».
     </p>
   </div>
 
   <!-- STEP 1 — ENTER APP -->
   <div class="step">
-    <div class="label">Étape 1 · 10 secondes</div>
-    <h3>Entre dans ton dashboard</h3>
-    <p>Connecte-toi avec ton email + ton nouveau mot de passe. La première ouverture est la plus longue (~2s) — après c'est instantané.</p>
-    <a href="/login" class="cta">Ouvrir mon dashboard →</a>
+    <div class="label" data-i18n="welcome.step1_label">Étape 1 · 10 secondes</div>
+    <h3 data-i18n="welcome.step1_title">Entre dans ton dashboard</h3>
+    <p data-i18n="welcome.step1_text">Connecte-toi avec ton email + ton nouveau mot de passe. La première ouverture est la plus longue (~2s) — après c'est instantané.</p>
+    <a href="/login" class="cta" data-i18n="welcome.step1_cta">Ouvrir mon dashboard →</a>
   </div>
 
   <!-- STEP 2 — INSTALL PWA -->
   <div class="step">
-    <div class="label">Étape 2 · 30 secondes</div>
-    <h3>Installe RB Perform sur ton téléphone</h3>
-    <p>Pas besoin d'App Store — RB Perform s'installe en 1 clic depuis ton navigateur. L'app apparaît sur ton écran d'accueil, fonctionne hors-ligne, et envoie les notifications push comme une vraie app native.</p>
-    <div class="install-ios">
+    <div class="label" data-i18n="welcome.step2_label">Étape 2 · 30 secondes</div>
+    <h3 data-i18n="welcome.step2_title">Installe RB Perform sur ton téléphone</h3>
+    <p data-i18n="welcome.step2_text">Pas besoin d'App Store — RB Perform s'installe en 1 clic depuis ton navigateur. L'app apparaît sur ton écran d'accueil, fonctionne hors-ligne, et envoie les notifications push comme une vraie app native.</p>
+    <div class="install-ios" data-i18n="welcome.step2_ios">
       <b>iPhone (Safari) :</b> appuie sur <b>Partager</b> en bas → <b>Sur l'écran d'accueil</b> → <b>Ajouter</b>.
     </div>
-    <div class="install-android">
+    <div class="install-android" data-i18n="welcome.step2_android">
       <b>Android (Chrome) :</b> menu <b>⋮</b> en haut à droite → <b>Installer l'application</b>.
     </div>
-    <p style="margin-top:10px;color:rgba(255,255,255,0.4);font-size:11px">
+    <p data-i18n="welcome.step2_desktop" style="margin-top:10px;color:rgba(255,255,255,0.4);font-size:11px">
       Sur desktop ? L'install est optionnelle — RB Perform fonctionne pareil en onglet navigateur.
     </p>
   </div>
 
   <!-- STEP 3 — ADD FIRST CLIENT / BOOK ONBOARDING (Founder-aware) -->
   <div class="step" id="step3">
-    <div class="label" id="step3Label">Étape 3 · 20 minutes</div>
-    <h3 id="step3Title">Réserve ton onboarding 1:1</h3>
-    <p id="step3Text">
+    <div class="label" id="step3Label" data-i18n="welcome.step3_label_founder">Étape 3 · 20 minutes</div>
+    <h3 id="step3Title" data-i18n="welcome.step3_title_founder">Réserve ton onboarding 1:1</h3>
+    <p id="step3Text" data-i18n="welcome.step3_text_founder">
       Réponds à mon email de bienvenue avec <strong>3 créneaux</strong> où tu es dispo cette semaine. On cale ensemble ton branding, on importe ton premier client, tu repars opérationnel en 20 min.
     </p>
-    <a href="mailto:rayan@rbperform.com?subject=Onboarding%201%3A1%20Founder&body=Salut%20Rayan%2C%20voici%203%20creneaux%20ou%20je%20suis%20dispo%20cette%20semaine%20%3A%0A-%20...%0A-%20...%0A-%20..." class="cta subtle" id="step3Cta">
+    <a href="mailto:rayan@rbperform.com?subject=Onboarding%201%3A1%20Founder&body=Salut%20Rayan%2C%20voici%203%20creneaux%20ou%20je%20suis%20dispo%20cette%20semaine%20%3A%0A-%20...%0A-%20...%0A-%20..." class="cta subtle" id="step3Cta" data-i18n="welcome.step3_cta_founder">
       Envoyer mes créneaux →
     </a>
   </div>
 
   <!-- FOUNDER PRICE LOCK (shown only if ?plan=founding) -->
   <div class="lock" id="lockBlock" style="display:none">
-    <div class="label">🔒 Prix verrouillé à vie</div>
-    <p>Ton tarif de <strong id="lockPrice">199€/mois</strong> ne bougera plus — même quand le Pro public passera à 299€ puis 499€. C'est la seule promesse que je te fais par écrit.</p>
+    <div class="label" data-i18n="welcome.lock_label">🔒 Prix verrouillé à vie</div>
+    <p data-i18n="welcome.lock_text">Ton tarif de <strong id="lockPrice">199€/mois</strong> ne bougera plus — même quand le Pro public passera à 299€ puis 499€. C'est la seule promesse que je te fais par écrit.</p>
   </div>
 
   <!-- SIGNATURE -->
@@ -130,20 +142,98 @@ body.is-android .install-android{display:block}
     <div class="avatar">RB</div>
     <div>
       <div class="who">Rayan Bonte</div>
-      <div class="role">Fondateur — RB Perform</div>
-      <div class="msg">Réponds à n'importe lequel de mes emails — je lis tout, je réponds dans les 24h (souvent dans l'heure en semaine).</div>
+      <div class="role" data-i18n="welcome.sig_role">Fondateur — RB Perform</div>
+      <div class="msg" data-i18n="welcome.sig_msg">Réponds à n'importe lequel de mes emails — je lis tout, je réponds dans les 24h (souvent dans l'heure en semaine).</div>
     </div>
   </div>
 
   <div class="foot">
-    <a href="/">Accueil</a> ·
-    <a href="/legal.html#cgu">CGV</a> ·
-    <a href="/legal.html#rgpd">RGPD</a> ·
-    <a href="/status">Statut plateforme</a>
-    <div style="margin-top:10px">© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France</div>
+    <a href="/" data-i18n="welcome.foot_home">Accueil</a> ·
+    <a href="/legal.html#cgu" data-i18n="welcome.foot_cgu">CGV</a> ·
+    <a href="/legal.html#rgpd" data-i18n="welcome.foot_rgpd">RGPD</a> ·
+    <a href="/status" data-i18n="welcome.foot_status">Statut plateforme</a>
+    <div data-i18n="welcome.foot_copy" style="margin-top:10px">© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France</div>
   </div>
 
 </main>
+
+<!-- ===== I18N FR/EN ===== -->
+<script>
+window.RB_I18N = {
+  fr: {
+    'welcome.badge_default':'Accès créé',
+    'welcome.badge_founder':'Founding Member #',
+    'welcome.badge_plan':'Accès {plan} créé',
+    'welcome.title_default':'Bienvenue. Ton accès est prêt.',
+    'welcome.title_founder':'Tu es fondateur. Voici ce qu\'on fait maintenant.',
+    'welcome.sub_default':'Ton mot de passe est défini. Avant d\'entrer dans l\'app, voici les <strong style="color:rgba(255,255,255,0.8)">3 gestes essentiels</strong> qui font la différence entre « j\'essaie » et « c\'est mon outil ».',
+    'welcome.sub_founder':'Ton mot de passe est défini. Avant d\'entrer dans l\'app, voici les <strong style="color:rgba(255,255,255,0.8)">3 étapes qui rendent ton passage Founder fluide</strong>.',
+    'welcome.step1_label':'Étape 1 · 10 secondes',
+    'welcome.step1_title':'Entre dans ton dashboard',
+    'welcome.step1_text':'Connecte-toi avec ton email + ton nouveau mot de passe. La première ouverture est la plus longue (~2s) — après c\'est instantané.',
+    'welcome.step1_cta':'Ouvrir mon dashboard →',
+    'welcome.step2_label':'Étape 2 · 30 secondes',
+    'welcome.step2_title':'Installe RB Perform sur ton téléphone',
+    'welcome.step2_text':'Pas besoin d\'App Store — RB Perform s\'installe en 1 clic depuis ton navigateur. L\'app apparaît sur ton écran d\'accueil, fonctionne hors-ligne, et envoie les notifications push comme une vraie app native.',
+    'welcome.step2_ios':'<b>iPhone (Safari) :</b> appuie sur <b>Partager</b> en bas → <b>Sur l\'écran d\'accueil</b> → <b>Ajouter</b>.',
+    'welcome.step2_android':'<b>Android (Chrome) :</b> menu <b>⋮</b> en haut à droite → <b>Installer l\'application</b>.',
+    'welcome.step2_desktop':'Sur desktop ? L\'install est optionnelle — RB Perform fonctionne pareil en onglet navigateur.',
+    'welcome.step3_label_founder':'Étape 3 · 20 minutes',
+    'welcome.step3_title_founder':'Réserve ton onboarding 1:1',
+    'welcome.step3_text_founder':'Réponds à mon email de bienvenue avec <strong>3 créneaux</strong> où tu es dispo cette semaine. On cale ensemble ton branding, on importe ton premier client, tu repars opérationnel en 20 min.',
+    'welcome.step3_cta_founder':'Envoyer mes créneaux →',
+    'welcome.step3_label_plan':'Étape 3 · 5 minutes',
+    'welcome.step3_title_plan':'Ajoute ton premier client',
+    'welcome.step3_text_plan':'Dashboard → <strong>Clients</strong> → <strong>Inviter</strong>. Tu génères un code, tu l\'envoies à ton client, il s\'inscrit avec. Ses données remontent automatiquement dans ton dashboard.',
+    'welcome.step3_cta_plan':'Aller à la liste clients →',
+    'welcome.lock_label':'🔒 Prix verrouillé à vie',
+    'welcome.lock_text':'Ton tarif de <strong id="lockPrice">__PRICE__</strong> ne bougera plus — même quand le Pro public passera à 299€ puis 499€. C\'est la seule promesse que je te fais par écrit.',
+    'welcome.sig_role':'Fondateur — RB Perform',
+    'welcome.sig_msg':'Réponds à n\'importe lequel de mes emails — je lis tout, je réponds dans les 24h (souvent dans l\'heure en semaine).',
+    'welcome.foot_home':'Accueil',
+    'welcome.foot_cgu':'CGV',
+    'welcome.foot_rgpd':'RGPD',
+    'welcome.foot_status':'Statut plateforme',
+    'welcome.foot_copy':'© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France'
+  },
+  en: {
+    'welcome.badge_default':'Account ready',
+    'welcome.badge_founder':'Founding Member #',
+    'welcome.badge_plan':'{plan} access ready',
+    'welcome.title_default':'Welcome. Your access is live.',
+    'welcome.title_founder':'You\'re a founder. Here\'s what happens next.',
+    'welcome.sub_default':'Your password is set. Before you dive in, here are the <strong style="color:rgba(255,255,255,0.8)">3 moves</strong> that turn "I\'m trying it" into "this is my tool".',
+    'welcome.sub_founder':'Your password is set. Before you dive in, here are the <strong style="color:rgba(255,255,255,0.8)">3 steps that make your Founder onboarding seamless</strong>.',
+    'welcome.step1_label':'Step 1 · 10 seconds',
+    'welcome.step1_title':'Log into your dashboard',
+    'welcome.step1_text':'Sign in with your email and new password. The first load is the slowest (~2s) — after that it\'s instant.',
+    'welcome.step1_cta':'Open my dashboard →',
+    'welcome.step2_label':'Step 2 · 30 seconds',
+    'welcome.step2_title':'Install RB Perform on your phone',
+    'welcome.step2_text':'No App Store needed — RB Perform installs in 1 click from your browser. The app lands on your home screen, works offline, and pushes notifications like a native app.',
+    'welcome.step2_ios':'<b>iPhone (Safari):</b> tap <b>Share</b> at the bottom → <b>Add to Home Screen</b> → <b>Add</b>.',
+    'welcome.step2_android':'<b>Android (Chrome):</b> <b>⋮</b> menu top-right → <b>Install app</b>.',
+    'welcome.step2_desktop':'On desktop? Install is optional — RB Perform runs just fine in a browser tab.',
+    'welcome.step3_label_founder':'Step 3 · 20 minutes',
+    'welcome.step3_title_founder':'Book your 1:1 onboarding',
+    'welcome.step3_text_founder':'Reply to my welcome email with <strong>3 time slots</strong> that work this week. We dial in your branding, import your first client, and you walk out fully operational in 20 minutes.',
+    'welcome.step3_cta_founder':'Send my slots →',
+    'welcome.step3_label_plan':'Step 3 · 5 minutes',
+    'welcome.step3_title_plan':'Add your first client',
+    'welcome.step3_text_plan':'Dashboard → <strong>Clients</strong> → <strong>Invite</strong>. Generate a code, send it, your client signs up with it. Their data flows into your dashboard automatically.',
+    'welcome.step3_cta_plan':'Go to client list →',
+    'welcome.lock_label':'🔒 Price locked for life',
+    'welcome.lock_text':'Your <strong id="lockPrice">__PRICE__</strong> rate never moves again — even when public Pro hits €299 then €499. The only promise I put in writing.',
+    'welcome.sig_role':'Founder — RB Perform',
+    'welcome.sig_msg':'Reply to any of my emails — I read everything and answer within 24h (often within the hour on weekdays).',
+    'welcome.foot_home':'Home',
+    'welcome.foot_cgu':'Terms',
+    'welcome.foot_rgpd':'Privacy',
+    'welcome.foot_status':'Platform status',
+    'welcome.foot_copy':'© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France'
+  }
+};
+</script>
 
 <script>
 (function(){
@@ -158,23 +248,84 @@ body.is-android .install-android{display:block}
   var params = new URLSearchParams(location.search);
   var plan = (params.get('plan') || '').toLowerCase();
   var isFounder = plan === 'founding' || plan === 'founder';
+  var planNum = params.get('n') || '—';
+  var lockPrice = params.get('price');
+  var simplePlan = (plan === 'starter' || plan === 'pro' || plan === 'elite') ? plan : null;
 
-  if (isFounder) {
-    document.getElementById('badge').className = 'badge gold';
-    document.getElementById('badgeText').textContent = 'Founding Member #' + (params.get('n') || '—');
-    document.getElementById('title').innerHTML = 'Tu es fondateur. Voici ce qu\'on fait maintenant.';
-    document.getElementById('sub').innerHTML = 'Ton mot de passe est défini. Avant d\'entrer dans l\'app, voici les <strong style="color:rgba(255,255,255,0.8)">3 étapes qui rendent ton passage Founder fluide</strong>.';
-    document.getElementById('lockBlock').style.display = 'block';
-    document.getElementById('signatureBlock').style.display = 'flex';
-    var lockPrice = params.get('price');
-    if (lockPrice) document.getElementById('lockPrice').textContent = lockPrice + '€/mois';
-  } else if (plan === 'starter' || plan === 'pro' || plan === 'elite') {
-    document.getElementById('badgeText').textContent = 'Accès ' + plan.charAt(0).toUpperCase() + plan.slice(1) + ' créé';
-    document.getElementById('step3Label').textContent = 'Étape 3 · 5 minutes';
-    document.getElementById('step3Title').textContent = 'Ajoute ton premier client';
-    document.getElementById('step3Text').innerHTML = 'Dashboard → <strong>Clients</strong> → <strong>Inviter</strong>. Tu génères un code, tu l\'envoies à ton client, il s\'inscrit avec. Ses données remontent automatiquement dans ton dashboard.';
-    document.getElementById('step3Cta').href = '/login?page=clients';
-    document.getElementById('step3Cta').textContent = 'Aller à la liste clients →';
+  function detectLang(){
+    try {
+      var saved = localStorage.getItem('rb_lang');
+      if (saved === 'fr' || saved === 'en') return saved;
+    } catch(e){}
+    var nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+    return nav.indexOf('fr') === 0 ? 'fr' : 'en';
+  }
+
+  function applyLang(lang){
+    var dict = (window.RB_I18N && window.RB_I18N[lang]) || (window.RB_I18N && window.RB_I18N.fr) || {};
+
+    // 1) Generic data-i18n keys (defaults)
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      if (dict[k] !== undefined) el.innerHTML = dict[k];
+    });
+
+    // 2) Founder/plan-aware overrides — apply AFTER generic pass so they win
+    if (isFounder) {
+      document.getElementById('badge').className = 'badge gold';
+      var bt = document.getElementById('badgeText');
+      if (bt) bt.textContent = (dict['welcome.badge_founder'] || 'Founding Member #') + planNum;
+      var t = document.getElementById('title');
+      if (t) t.innerHTML = dict['welcome.title_founder'];
+      var s = document.getElementById('sub');
+      if (s) s.innerHTML = dict['welcome.sub_founder'];
+      document.getElementById('lockBlock').style.display = 'block';
+      document.getElementById('signatureBlock').style.display = 'flex';
+      var lockText = dict['welcome.lock_text'] || '';
+      var priceStr = lockPrice ? (lang === 'en' ? '€' + lockPrice + '/mo' : lockPrice + '€/mois')
+                               : (lang === 'en' ? '€199/mo' : '199€/mois');
+      var lockEl = document.querySelector('#lockBlock p');
+      if (lockEl) lockEl.innerHTML = lockText.replace('__PRICE__', priceStr);
+    } else if (simplePlan) {
+      var capPlan = simplePlan.charAt(0).toUpperCase() + simplePlan.slice(1);
+      var bt2 = document.getElementById('badgeText');
+      if (bt2) bt2.textContent = (dict['welcome.badge_plan'] || '{plan} access ready').replace('{plan}', capPlan);
+      var l3 = document.getElementById('step3Label'); if (l3) l3.textContent = dict['welcome.step3_label_plan'];
+      var t3 = document.getElementById('step3Title'); if (t3) t3.textContent = dict['welcome.step3_title_plan'];
+      var x3 = document.getElementById('step3Text'); if (x3) x3.innerHTML = dict['welcome.step3_text_plan'];
+      var c3 = document.getElementById('step3Cta');
+      if (c3) { c3.href = '/login?page=clients'; c3.textContent = dict['welcome.step3_cta_plan']; }
+    }
+
+    // 3) Lang HTML + og:locale
+    document.documentElement.lang = lang;
+    var ogLocale = document.querySelector('meta[property="og:locale"]');
+    if (ogLocale) ogLocale.setAttribute('content', lang === 'en' ? 'en_US' : 'fr_FR');
+
+    // 4) Toggle visual state
+    document.querySelectorAll('.lang-toggle button').forEach(function(b){
+      var active = b.getAttribute('data-lang') === lang;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function initLangToggle(){
+    var btns = document.querySelectorAll('.lang-toggle button');
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){
+        var lang = b.getAttribute('data-lang');
+        applyLang(lang);
+        try { localStorage.setItem('rb_lang', lang); } catch(e){}
+      });
+    });
+    applyLang(detectLang());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLangToggle);
+  } else {
+    initLangToggle();
   }
 })();
 </script>

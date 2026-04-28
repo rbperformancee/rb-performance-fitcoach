@@ -7,6 +7,7 @@
 <meta name="color-scheme" content="dark" />
 <title>Waitlist — RB Perform</title>
 <meta name="description" content="Accès prioritaire à RB Perform. Inscris-toi avant le lancement — mai 2026.">
+<meta property="og:locale" content="fr_FR">
 <meta property="og:title" content="RB Perform — Accès prioritaire">
 <meta property="og:description" content="RB Perform arrive en mai 2026. Inscris-toi pour un accès prioritaire.">
 <meta property="og:image" content="https://rbperform.app/og-image.png">
@@ -27,6 +28,12 @@ html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,sans-s
 
 .logo{font-family:'Syne',sans-serif;font-size:14px;font-weight:900;letter-spacing:.12em;color:#fff;text-decoration:none;text-align:center;margin-bottom:48px;display:block}
 .logo span{color:#00C9A7}
+
+/* Lang toggle */
+.lang-toggle{position:fixed;top:18px;right:18px;display:inline-flex;border:1px solid rgba(255,255,255,0.1);border-radius:100px;overflow:hidden;font-size:11px;font-weight:700;letter-spacing:1.5px;background:rgba(8,12,20,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:50}
+.lang-toggle button{padding:6px 11px;color:rgba(255,255,255,0.5);transition:all 0.2s;font-family:inherit;text-transform:uppercase;background:transparent;border:none;cursor:pointer}
+.lang-toggle button.active{background:rgba(255,255,255,0.08);color:#fff}
+.lang-toggle button:hover:not(.active){color:rgba(255,255,255,0.8)}
 
 .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:100px;padding:6px 16px;font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#00C9A7;margin-bottom:24px;align-self:center}
 .dot{width:6px;height:6px;border-radius:50%;background:#00C9A7;animation:pulse 2s ease infinite}
@@ -68,61 +75,66 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(36px,8vw,52px);font-weight:800;
   .content{padding:60px 0 32px}
   .countdown{gap:10px}
   .cd-num{font-size:28px}
+  .lang-toggle{top:12px;right:12px}
 }
 </style>
 </head>
 <body>
+<div class="lang-toggle" role="group" aria-label="Language">
+  <button type="button" data-lang="fr" class="active" aria-pressed="true">FR</button>
+  <button type="button" data-lang="en" aria-pressed="false">EN</button>
+</div>
 <div class="page">
 <div class="content">
 
   <a href="/" class="logo">RB<span>PERFORM</span></a>
-  <div class="badge"><span class="dot"></span>Lancement mai 2026</div>
+  <div class="badge"><span class="dot"></span><span data-i18n="waitlist.badge">Lancement mai 2026</span></div>
 
-  <div style="font-size:10px;color:rgba(0,201,167,0.55);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;text-align:center">Waitlist</div>
-  <h1>Acces prioritaire<span style="color:#00C9A7">.</span></h1>
-  <p class="sub">RB Perform arrive en <strong>mai 2026</strong>. Les inscrits sur la waitlist auront un accès anticipé + une offre réservée.</p>
+  <div data-i18n="waitlist.eyebrow" style="font-size:10px;color:rgba(0,201,167,0.55);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;text-align:center">Waitlist</div>
+  <h1><span data-i18n="waitlist.title">Acces prioritaire</span><span style="color:#00C9A7">.</span></h1>
+  <p class="sub" data-i18n="waitlist.sub">RB Perform arrive en <strong>mai 2026</strong>. Les inscrits sur la waitlist auront un accès anticipé + une offre réservée.</p>
 
   <!-- Lancement -->
   <div style="text-align:center;margin-bottom:40px;padding:16px 20px;background:rgba(0,201,167,0.04);border:1px solid rgba(0,201,167,0.1);border-radius:14px">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#00C9A7;letter-spacing:1px">MAI 2026</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:4px">Les inscrits seront les premiers prévenus.</div>
+    <div data-i18n="waitlist.month" style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#00C9A7;letter-spacing:1px">MAI 2026</div>
+    <div data-i18n="waitlist.month_sub" style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:4px">Les inscrits seront les premiers prévenus.</div>
   </div>
 
   <!-- Form -->
   <div id="formWrap">
     <form class="form" id="waitlistForm" onsubmit="submitWaitlist(event)">
       <div class="field">
-        <label>Ton prénom</label>
-        <input type="text" id="wl-name" required placeholder="Prénom" autocomplete="given-name">
+        <label data-i18n="waitlist.lbl_name">Ton prénom</label>
+        <input type="text" id="wl-name" required placeholder="Prénom" data-i18n-placeholder="waitlist.ph_name" autocomplete="given-name">
       </div>
       <div class="field">
-        <label>Ton email</label>
-        <input type="email" id="wl-email" required placeholder="coach@email.com" autocomplete="email">
+        <label data-i18n="waitlist.lbl_email">Ton email</label>
+        <input type="email" id="wl-email" required placeholder="coach@email.com" data-i18n-placeholder="waitlist.ph_email" autocomplete="email">
       </div>
       <div class="field">
-        <label>Combien de clients tu coaches actuellement ?</label>
+        <label data-i18n="waitlist.lbl_clients">Combien de clients tu coaches actuellement ?</label>
         <select id="wl-clients" required>
-          <option value="" disabled selected>Sélectionne</option>
-          <option value="0-5">0 à 5</option>
-          <option value="5-15">5 à 15</option>
-          <option value="15-30">15 à 30</option>
-          <option value="30+">30+</option>
+          <option value="" disabled selected data-i18n="waitlist.opt_select">Sélectionne</option>
+          <option value="0-5" data-i18n="waitlist.opt_clients1">0 à 5</option>
+          <option value="5-15" data-i18n="waitlist.opt_clients2">5 à 15</option>
+          <option value="15-30" data-i18n="waitlist.opt_clients3">15 à 30</option>
+          <option value="30+" data-i18n="waitlist.opt_clients4">30+</option>
         </select>
       </div>
       <div class="field">
-        <label>Ton plus gros problème en tant que coach ?</label>
+        <label data-i18n="waitlist.lbl_problem">Ton plus gros problème en tant que coach ?</label>
         <select id="wl-problem" required>
-          <option value="" disabled selected>Sélectionne</option>
-          <option value="visibility">Je ne sais pas combien je vais gagner le mois prochain</option>
-          <option value="churn">Je perds des clients sans comprendre pourquoi</option>
-          <option value="admin">Je passe trop de temps sur l'admin au lieu de coacher</option>
-          <option value="tools">J'utilise 4+ outils différents et c'est le chaos</option>
-          <option value="scale">Je veux passer de 10 à 30+ clients mais je ne sais pas comment</option>
+          <option value="" disabled selected data-i18n="waitlist.opt_select">Sélectionne</option>
+          <option value="visibility" data-i18n="waitlist.opt_p1">Je ne sais pas combien je vais gagner le mois prochain</option>
+          <option value="churn" data-i18n="waitlist.opt_p2">Je perds des clients sans comprendre pourquoi</option>
+          <option value="admin" data-i18n="waitlist.opt_p3">Je passe trop de temps sur l'admin au lieu de coacher</option>
+          <option value="tools" data-i18n="waitlist.opt_p4">J'utilise 4+ outils différents et c'est le chaos</option>
+          <option value="scale" data-i18n="waitlist.opt_p5">Je veux passer de 10 à 30+ clients mais je ne sais pas comment</option>
         </select>
       </div>
-      <button type="submit" class="cta" id="wlBtn">Réserver mon accès prioritaire →</button>
-      <div class="cta-sub">Pas de carte bancaire. Juste ton email.</div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.25);text-align:center;margin-top:8px;line-height:1.6">En t'inscrivant, tu acceptes notre <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">politique de confidentialité</a> · Désinscription en 1 clic</div>
+      <button type="submit" class="cta" id="wlBtn" data-i18n="waitlist.cta">Réserver mon accès prioritaire →</button>
+      <div class="cta-sub" data-i18n="waitlist.cta_sub">Pas de carte bancaire. Juste ton email.</div>
+      <div data-i18n="waitlist.legal" style="font-size:10px;color:rgba(255,255,255,0.25);text-align:center;margin-top:8px;line-height:1.6">En t'inscrivant, tu acceptes notre <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">politique de confidentialité</a> · Désinscription en 1 clic</div>
     </form>
   </div>
 
@@ -130,14 +142,14 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(36px,8vw,52px);font-weight:800;
   <div id="successWrap" style="display:none">
     <div class="success">
       <div class="success-icon">✓</div>
-      <h1 style="font-size:28px;margin-bottom:12px">Tu es sur la liste.</h1>
-      <p class="sub" style="margin-bottom:24px">Tu recevras un email en mai avec ton accès prioritaire. En attendant, suis <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> sur Instagram.</p>
+      <h1 data-i18n="waitlist.success_title" style="font-size:28px;margin-bottom:12px">Tu es sur la liste.</h1>
+      <p class="sub" data-i18n="waitlist.success_sub" style="margin-bottom:24px">Tu recevras un email en mai avec ton accès prioritaire. En attendant, suis <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> sur Instagram.</p>
     </div>
   </div>
 
   <div class="foot">
-    <a href="/">← Retour</a>
-    <a href="/legal.html">Mentions légales</a>
+    <a href="/" data-i18n="waitlist.back">← Retour</a>
+    <a href="/legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
   </div>
 
 </div>
@@ -149,7 +161,8 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(36px,8vw,52px);font-weight:800;
 function submitWaitlist(e) {
   e.preventDefault();
   var btn = document.getElementById('wlBtn');
-  btn.textContent = 'Inscription...';
+  var lang = (document.documentElement.lang === 'en') ? 'en' : 'fr';
+  btn.textContent = (lang === 'en') ? 'Submitting...' : 'Inscription...';
   btn.disabled = true;
 
   var data = {
@@ -171,6 +184,123 @@ function submitWaitlist(e) {
   document.getElementById('formWrap').style.display = 'none';
   document.getElementById('successWrap').style.display = 'block';
 }
+</script>
+
+<!-- ===== I18N FR/EN ===== -->
+<script>
+(function(){
+  var I18N = {
+    fr: {
+      'waitlist.badge':'Lancement mai 2026',
+      'waitlist.eyebrow':'Waitlist',
+      'waitlist.title':'Acces prioritaire',
+      'waitlist.sub':'RB Perform arrive en <strong>mai 2026</strong>. Les inscrits sur la waitlist auront un accès anticipé + une offre réservée.',
+      'waitlist.month':'MAI 2026',
+      'waitlist.month_sub':'Les inscrits seront les premiers prévenus.',
+      'waitlist.lbl_name':'Ton prénom',
+      'waitlist.ph_name':'Prénom',
+      'waitlist.lbl_email':'Ton email',
+      'waitlist.ph_email':'coach@email.com',
+      'waitlist.lbl_clients':'Combien de clients tu coaches actuellement ?',
+      'waitlist.opt_select':'Sélectionne',
+      'waitlist.opt_clients1':'0 à 5',
+      'waitlist.opt_clients2':'5 à 15',
+      'waitlist.opt_clients3':'15 à 30',
+      'waitlist.opt_clients4':'30+',
+      'waitlist.lbl_problem':'Ton plus gros problème en tant que coach ?',
+      'waitlist.opt_p1':'Je ne sais pas combien je vais gagner le mois prochain',
+      'waitlist.opt_p2':'Je perds des clients sans comprendre pourquoi',
+      'waitlist.opt_p3':'Je passe trop de temps sur l\'admin au lieu de coacher',
+      'waitlist.opt_p4':'J\'utilise 4+ outils différents et c\'est le chaos',
+      'waitlist.opt_p5':'Je veux passer de 10 à 30+ clients mais je ne sais pas comment',
+      'waitlist.cta':'Réserver mon accès prioritaire →',
+      'waitlist.cta_sub':'Pas de carte bancaire. Juste ton email.',
+      'waitlist.legal':'En t\'inscrivant, tu acceptes notre <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">politique de confidentialité</a> · Désinscription en 1 clic',
+      'waitlist.success_title':'Tu es sur la liste.',
+      'waitlist.success_sub':'Tu recevras un email en mai avec ton accès prioritaire. En attendant, suis <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> sur Instagram.',
+      'waitlist.back':'← Retour',
+      'footer.legal_mentions':'Mentions légales'
+    },
+    en: {
+      'waitlist.badge':'Launching May 2026',
+      'waitlist.eyebrow':'Waitlist',
+      'waitlist.title':'Priority access',
+      'waitlist.sub':'RB Perform launches <strong>May 2026</strong>. Waitlist members get early access and a reserved offer.',
+      'waitlist.month':'MAY 2026',
+      'waitlist.month_sub':'Waitlist members get notified first.',
+      'waitlist.lbl_name':'Your first name',
+      'waitlist.ph_name':'First name',
+      'waitlist.lbl_email':'Your email',
+      'waitlist.ph_email':'coach@email.com',
+      'waitlist.lbl_clients':'How many clients do you coach right now?',
+      'waitlist.opt_select':'Select',
+      'waitlist.opt_clients1':'0 to 5',
+      'waitlist.opt_clients2':'5 to 15',
+      'waitlist.opt_clients3':'15 to 30',
+      'waitlist.opt_clients4':'30+',
+      'waitlist.lbl_problem':'Your biggest pain as a coach?',
+      'waitlist.opt_p1':'I have no idea what I\'ll earn next month',
+      'waitlist.opt_p2':'I lose clients and never understand why',
+      'waitlist.opt_p3':'I spend too much time on admin instead of coaching',
+      'waitlist.opt_p4':'I juggle 4+ tools and it\'s chaos',
+      'waitlist.opt_p5':'I want to scale from 10 to 30+ clients but don\'t know how',
+      'waitlist.cta':'Reserve my priority access →',
+      'waitlist.cta_sub':'No credit card. Just your email.',
+      'waitlist.legal':'By signing up, you accept our <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">privacy policy</a> · 1-click unsubscribe',
+      'waitlist.success_title':'You\'re on the list.',
+      'waitlist.success_sub':'You\'ll get an email in May with your priority access. In the meantime, follow <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> on Instagram.',
+      'waitlist.back':'← Back',
+      'footer.legal_mentions':'Legal notice'
+    }
+  };
+
+  function applyLang(lang){
+    var dict = I18N[lang] || I18N.fr;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      if (dict[k] !== undefined) el.innerHTML = dict[k];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+      var k = el.getAttribute('data-i18n-placeholder');
+      if (dict[k] !== undefined) el.setAttribute('placeholder', dict[k]);
+    });
+    document.documentElement.lang = lang;
+    var ogLocale = document.querySelector('meta[property="og:locale"]');
+    if (ogLocale) ogLocale.setAttribute('content', lang === 'en' ? 'en_US' : 'fr_FR');
+    document.querySelectorAll('.lang-toggle button').forEach(function(b){
+      var active = b.getAttribute('data-lang') === lang;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function detectLang(){
+    try {
+      var saved = localStorage.getItem('rb_lang');
+      if (saved === 'fr' || saved === 'en') return saved;
+    } catch(e){}
+    var nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+    return nav.indexOf('fr') === 0 ? 'fr' : 'en';
+  }
+
+  function initLangToggle(){
+    var btns = document.querySelectorAll('.lang-toggle button');
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){
+        var lang = b.getAttribute('data-lang');
+        applyLang(lang);
+        try { localStorage.setItem('rb_lang', lang); } catch(e){}
+      });
+    });
+    applyLang(detectLang());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLangToggle);
+  } else {
+    initLangToggle();
+  }
+})();
 </script>
 </body>
 </html>
