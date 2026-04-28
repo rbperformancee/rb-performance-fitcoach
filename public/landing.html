@@ -1695,8 +1695,12 @@ html.light .founder-message strong{color:#0a0a0a}
 
   /* FOOTER — 1 colonne centree, full width edge-to-edge sur mobile +
      safe-area iOS pour que le fond noir couvre la zone home indicator
-     (sinon le #080C14 du html montre dessous, perçu comme bleu) */
-  footer { padding: 32px 16px calc(40px + env(safe-area-inset-bottom, 0px)) !important; margin-top: 60px !important; text-align: center !important; }
+     (sinon le #080C14 du html montre dessous, perçu comme bleu).
+     section.pricing devient flex column pour pousser le footer en bas
+     meme quand le contenu est court (margin-top:auto). */
+  section.pricing { display: flex !important; flex-direction: column !important; }
+  section.pricing > .pricing-inner { flex: 1 0 auto !important; }
+  footer { padding: 32px 16px calc(40px + env(safe-area-inset-bottom, 0px)) !important; margin-top: auto !important; text-align: center !important; flex-shrink: 0 !important; }
   /* Override le `section.pricing * { max-width:100% }` qui empechait
      le footer de deborder dans la zone padding de la section pour etre
      vraiment edge-to-edge (full viewport width) */
