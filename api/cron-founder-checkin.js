@@ -61,10 +61,23 @@ async function logSent(coachId, type) {
 
 async function sendEmail(to, subject, html) {
   if (!RESEND_KEY) return { ok: false, reason: "no_resend_key" };
+  // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
+  // pour les bulk senders, sinon -> Promotions/spam.
+  const unsubUrl = `https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}&type=founder_checkin`;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM, to: [to], reply_to: REPLY_TO, subject, html }),
+    body: JSON.stringify({
+      from: FROM,
+      to: [to],
+      reply_to: REPLY_TO,
+      subject,
+      html,
+      headers: {
+        "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.com?subject=unsubscribe>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    }),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -199,11 +212,15 @@ export default async function handler(req, res) {
   try {
     // Pull every active Founder coach
     const coaches = await sbFetch(
-      "/rest/v1/coaches?select=id,email,full_name,plan,is_active,created_at&plan=eq.founding&is_active=eq.true"
+      "/rest/v1/coaches?select=id,email,full_name,plan,is_active,created_at,unsub_all,unsub_founder_checkin&plan=eq.founding&is_active=eq.true"
     );
     if (!Array.isArray(coaches)) return res.status(200).json({ ok: true, sent: 0, note: "no coaches" });
 
     for (const coach of coaches) {
+      // Respect RFC 8058 opt-out (Gmail/Yahoo bulk sender requirement, fev 2024)
+      if (coach.unsub_all === true) continue;
+      if (coach.unsub_founder_checkin === true) continue;
+
       const createdAt = new Date(coach.created_at).getTime();
       const ageDays = Math.floor((Date.now() - createdAt) / 86400000);
       const firstName = (coach.full_name || coach.email.split("@")[0]).split(/[ .]/)[0];

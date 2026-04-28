@@ -245,6 +245,10 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerNam
   const from = isFounder
     ? 'Rayan Bonte <rayan@rbperform.com>'
     : 'RB Perform <noreply@rbperform.com>';
+  // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
+  // pour les bulk senders. Welcome = transactionnel, mais inclure quand meme par
+  // securite (fait pas de mal et garantit deliverability primary inbox).
+  const unsubUrl = `https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}&type=welcome`;
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -258,6 +262,10 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerNam
         reply_to: 'rayan@rbperform.com',
         subject: buildWelcomeSubject(plan, firstName),
         html: buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }),
+        headers: {
+          'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@rbperform.com?subject=unsubscribe>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       }),
     });
     if (!res.ok) {

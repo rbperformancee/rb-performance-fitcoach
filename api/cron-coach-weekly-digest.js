@@ -24,10 +24,23 @@ async function sbFetch(path) {
 
 async function sendEmail(to, subject, html) {
   if (!RESEND_KEY) return;
+  // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
+  // pour les bulk senders, sinon -> Promotions/spam.
+  const unsubUrl = `https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}&type=weekly_digest`;
   await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: "RB Perform <noreply@rbperform.com>", to: [to], subject, html }),
+    body: JSON.stringify({
+      from: "RB Perform <noreply@rbperform.com>",
+      to: [to],
+      reply_to: "rb.performancee@gmail.com",
+      subject,
+      html,
+      headers: {
+        "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.com?subject=unsubscribe>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    }),
   });
 }
 
@@ -173,8 +186,8 @@ export default async function handler(req, res) {
   if (!RESEND_KEY) return res.status(500).json({ error: "Missing RESEND_API_KEY" });
 
   try {
-    // On selectionne aussi weekly_report_enabled pour respecter le toggle coach
-    const coaches = await sbFetch("/rest/v1/coaches?select=id,email,full_name,weekly_report_enabled,last_business_score&is_active=eq.true");
+    // On selectionne weekly_report_enabled + flags unsub_* (RFC 8058)
+    const coaches = await sbFetch("/rest/v1/coaches?select=id,email,full_name,weekly_report_enabled,unsub_all,unsub_weekly_digest,last_business_score&is_active=eq.true");
     if (!Array.isArray(coaches)) return res.status(500).json({ error: "Failed to load coaches" });
 
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
@@ -182,8 +195,10 @@ export default async function handler(req, res) {
     let sent = 0;
 
     for (const coach of coaches) {
-      // Opt-out (si la colonne n'existe pas, Supabase renvoie null → on envoie par defaut)
+      // Respect des opt-outs (toggle interne + List-Unsubscribe RFC 8058)
       if (coach.weekly_report_enabled === false) continue;
+      if (coach.unsub_all === true) continue;
+      if (coach.unsub_weekly_digest === true) continue;
 
       const clients = await sbFetch(`/rest/v1/clients?coach_id=eq.${coach.id}&select=id,email,full_name,subscription_end_date,subscription_status,subscription_price,last_active_at`);
       if (!Array.isArray(clients) || clients.length === 0) continue;
