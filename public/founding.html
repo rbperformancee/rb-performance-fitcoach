@@ -167,7 +167,7 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
     <!-- Price card -->
     <div class="price-card">
       <div class="price-old" data-i18n="founding.price_old">299€ / mois</div>
-      <div class="price-new">199€</div>
+      <div class="price-new" data-price="founding">199€</div>
       <div class="price-period" data-i18n="founding.price_period">Par mois · Verrouillé à vie</div>
       <div class="price-lock">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
@@ -448,5 +448,20 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
 
 <!-- ===== Cookie consent (GDPR + ePrivacy) — non-blocking, defer ===== -->
 <script src="/cookie-consent.js" defer></script>
+
+<!-- Wave 5.8 — Multi-currency : swap prix selon /api/geo (Vercel ip-country) -->
+<script>
+(function(){
+  fetch('/api/geo').then(function(r){return r.json();}).then(function(g){
+    if(!g||!g.currency)return;
+    try{localStorage.setItem('rb_currency',g.currency);}catch(e){}
+    if(g.currency==='EUR')return; // HTML deja en EUR par defaut
+    document.querySelectorAll('[data-price]').forEach(function(el){
+      var key=el.dataset.price;
+      if(g.prices&&g.prices[key])el.textContent=g.prices[key];
+    });
+  }).catch(function(){});
+})();
+</script>
 </body>
 </html>

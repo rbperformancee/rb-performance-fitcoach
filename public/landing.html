@@ -2940,7 +2940,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
           <!-- Prix + CTA sur la meme ligne -->
           <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
             <div>
-              <span style="font-family:'Syne',sans-serif;font-size:clamp(40px,5vw,52px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1">199€</span>
+              <span data-price="founding" style="font-family:'Syne',sans-serif;font-size:clamp(40px,5vw,52px);font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1">199€</span>
               <span data-i18n="pricing.fc_per_month" style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.3)">/mois</span>
               <div data-i18n="pricing.fc_lock" style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px">12 mois · Verrouillé à vie</div>
             </div>
@@ -4830,5 +4830,20 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
 <!-- ===== Cookie consent (GDPR + ePrivacy) — non-blocking, defer ===== -->
 <script src="/cookie-consent.js" defer></script>
+
+<!-- Wave 5.8 — Multi-currency : swap prix selon /api/geo (Vercel ip-country) -->
+<script>
+(function(){
+  fetch('/api/geo').then(function(r){return r.json();}).then(function(g){
+    if(!g||!g.currency)return;
+    try{localStorage.setItem('rb_currency',g.currency);}catch(e){}
+    if(g.currency==='EUR')return; // HTML deja en EUR par defaut
+    document.querySelectorAll('[data-price]').forEach(function(el){
+      var key=el.dataset.price;
+      if(g.prices&&g.prices[key])el.textContent=g.prices[key];
+    });
+  }).catch(function(){});
+})();
+</script>
 </body>
 </html>

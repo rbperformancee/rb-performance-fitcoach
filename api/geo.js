@@ -50,10 +50,11 @@ const CURRENCY_SYMBOL = {
 // dans le Dashboard (sinon decalage entre landing et checkout).
 // Ces valeurs sont indicatives — la conversion EUR→USD/GBP suit le taux
 // commercial premium (pas le taux interbancaire). Voir MULTI-CURRENCY.md.
+// `founding_old` = prix barre (avant deal Founding). `founding` = prix paye.
 const PRICES = {
-  EUR: { founding: '199€',  starter: '199€', pro: '299€', elite: '499€' },
-  USD: { founding: '$229', starter: '$229', pro: '$349', elite: '$579' },
-  GBP: { founding: '£179', starter: '£179', pro: '£269', elite: '£449' },
+  EUR: { founding: '199€', founding_old: '299€', starter: '199€', pro: '299€', elite: '499€' },
+  USD: { founding: '$229', founding_old: '$349', starter: '$229', pro: '$349', elite: '$579' },
+  GBP: { founding: '£179', founding_old: '£269', starter: '£179', pro: '£269', elite: '£449' },
 };
 
 module.exports = async (req, res) => {
