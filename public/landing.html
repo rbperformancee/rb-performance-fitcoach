@@ -1693,19 +1693,31 @@ html.light .founder-message strong{color:#0a0a0a}
   .ft-mockup, .ft-terminal { max-width: 100% !important; width: 100% !important; }
   .ft-stat { font-size: clamp(36px,10vw,64px) !important; }
 
-  /* FOOTER — 1 colonne, full width sur mobile + safe-area iOS pour
-     que le fond noir du footer couvre la zone home indicator (sinon
-     le #080C14 du html montre dessous, perçu comme bleu) */
-  footer { padding: 32px 16px calc(40px + env(safe-area-inset-bottom, 0px)) !important; margin-top: 60px !important; }
-  section > footer { margin-left: -16px !important; margin-right: -16px !important; width: calc(100% + 32px) !important; }
+  /* FOOTER — 1 colonne centree, full width edge-to-edge sur mobile +
+     safe-area iOS pour que le fond noir couvre la zone home indicator
+     (sinon le #080C14 du html montre dessous, perçu comme bleu) */
+  footer { padding: 32px 16px calc(40px + env(safe-area-inset-bottom, 0px)) !important; margin-top: 60px !important; text-align: center !important; }
+  /* Override le `section.pricing * { max-width:100% }` qui empechait
+     le footer de deborder dans la zone padding de la section pour etre
+     vraiment edge-to-edge (full viewport width) */
+  section.pricing > footer,
+  section > footer {
+    max-width: none !important;
+    margin-left: -16px !important;
+    margin-right: -16px !important;
+    width: calc(100% + 32px) !important;
+  }
   .footer-inner {
     grid-template-columns: 1fr !important;
     gap: 20px !important;
     max-width: 100% !important;
+    justify-items: center !important;
+    text-align: center !important;
   }
+  .footer-brand, .footer-col { text-align: center !important; }
   .footer-brand { margin-bottom: 8px; }
   .footer-col-label { margin-bottom: 10px; }
-  .footer-link { font-size: 12px; }
+  .footer-link { font-size: 12px; justify-content: center !important; }
   .footer-legal-note { font-size: 9px !important; }
 }
 
