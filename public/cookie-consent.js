@@ -109,7 +109,35 @@
     try {
       window.dispatchEvent(new CustomEvent('rb:consent', { detail: payload }));
     } catch (e) {}
+    // Charge Vercel Analytics + Speed Insights uniquement si analytics=true.
+    // Pour les pages HTML statiques (landing, founding, etc.) ou React n'est
+    // pas monte. La SPA React utilise <ConsentAwareAnalytics /> a la place.
+    if (payload.analytics) {
+      loadVercelAnalytics();
+    }
     return payload;
+  }
+
+  // Injecte les scripts Vercel (Analytics + Speed Insights) une seule fois.
+  // Idempotent : safe si appele plusieurs fois ou apres un re-consent.
+  function loadVercelAnalytics() {
+    try {
+      if (window.__rbVercelAnalyticsLoaded) return;
+      window.__rbVercelAnalyticsLoaded = true;
+      var head = document.head || document.getElementsByTagName('head')[0];
+      if (!head) return;
+      var sources = [
+        '/_vercel/insights/script.js',
+        '/_vercel/speed-insights/script.js'
+      ];
+      sources.forEach(function (src) {
+        if (document.querySelector('script[src="' + src + '"]')) return;
+        var s = document.createElement('script');
+        s.defer = true;
+        s.src = src;
+        head.appendChild(s);
+      });
+    } catch (e) {}
   }
 
   function hasConsent(category) {
@@ -397,10 +425,16 @@
   }
 
   function init() {
-    if (!readConsent()) {
+    var existing = readConsent();
+    if (!existing) {
       // Defer slightly so the banner never blocks LCP / first paint.
       var schedule = window.requestIdleCallback || function (cb) { return setTimeout(cb, 250); };
       schedule(function () { show(); });
+    } else if (existing.analytics) {
+      // L'utilisateur a deja consenti dans une visite precedente : on
+      // charge Vercel Analytics au boot (deferred pour ne pas bloquer LCP).
+      var schedule2 = window.requestIdleCallback || function (cb) { return setTimeout(cb, 500); };
+      schedule2(function () { loadVercelAnalytics(); });
     }
     // React to lang switch on the same page → re-render banner if open.
     window.addEventListener('storage', function (e) {

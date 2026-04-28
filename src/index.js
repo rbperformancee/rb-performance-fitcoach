@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineBanner from "./components/OfflineBanner";
+import ConsentAwareAnalytics from "./components/ConsentAwareAnalytics";
 import { initSentry, captureError } from "./lib/sentry";
 import { applyTheme, getStoredTheme } from "./lib/theme";
 
@@ -17,6 +18,7 @@ root.render(
   <ErrorBoundary name="App">
     <OfflineBanner />
     <App />
+    <ConsentAwareAnalytics />
   </ErrorBoundary>
 );
 
