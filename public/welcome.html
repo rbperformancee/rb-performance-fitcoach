@@ -24,7 +24,8 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
-.page{max-width:600px;margin:0 auto;padding:56px 24px 40px}
+body{display:flex;flex-direction:column}
+.page{max-width:600px;margin:0 auto;padding:56px 24px calc(40px + env(safe-area-inset-bottom, 0px));width:100%;flex:1 0 auto;display:flex;flex-direction:column}
 
 .brand{font-family:'Syne',sans-serif;font-size:14px;font-weight:900;letter-spacing:.12em;color:#fff;text-align:center;margin-bottom:32px;display:block;text-decoration:none}
 .brand span{color:#00C9A7}
@@ -71,7 +72,7 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,38px);font-weight:900;
 .signature .role{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px}
 .signature .msg{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.65}
 
-.foot{text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;color:rgba(255,255,255,0.2);line-height:1.7}
+.foot{text-align:center;margin-top:auto;padding-top:20px;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;color:rgba(255,255,255,0.2);line-height:1.7;flex-shrink:0;width:100%}
 .foot a{color:rgba(0,201,167,0.55);text-decoration:none;margin:0 6px}
 .foot a:hover{color:#00C9A7}
 

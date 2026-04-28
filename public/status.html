@@ -23,9 +23,11 @@
     -webkit-font-smoothing:antialiased;
     line-height:1.5;
     min-height:100vh;
-    padding:60px 24px;
+    padding:60px 24px calc(60px + env(safe-area-inset-bottom, 0px));
+    display:flex;
+    flex-direction:column;
   }
-  .wrap{max-width:680px;margin:0 auto}
+  .wrap{max-width:680px;margin:0 auto;width:100%;flex:1 0 auto;display:flex;flex-direction:column}
   .eyebrow{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:12px}
   h1{font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,44px);font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1;margin-bottom:16px}
   .sub{font-size:14px;color:rgba(255,255,255,.4);margin-bottom:40px}
@@ -54,7 +56,7 @@
   .meta span{display:inline-flex;gap:6px}
   .meta b{color:rgba(255,255,255,.5);font-weight:400}
 
-  .foot{margin-top:48px;padding-top:20px;border-top:.5px solid rgba(255,255,255,.04);font-size:11px;color:rgba(255,255,255,.2);text-align:center}
+  .foot{margin-top:auto;padding-top:20px;border-top:.5px solid rgba(255,255,255,.04);font-size:11px;color:rgba(255,255,255,.2);text-align:center;flex-shrink:0;width:100%}
   .foot a{color:rgba(2,209,186,.7);text-decoration:none}
   .foot a:hover{color:#02d1ba}
 

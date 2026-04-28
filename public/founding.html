@@ -38,7 +38,8 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,system-ui,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
-.page{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:0 24px}
+body{display:flex;flex-direction:column}
+.page{display:flex;flex-direction:column;align-items:center;flex:1 0 auto;min-height:100vh;padding:0 24px}
 .content{max-width:540px;width:100%;margin:0 auto;padding:80px 0 40px;flex:1;display:flex;flex-direction:column}
 
 /* Header */
@@ -129,7 +130,7 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
 .engagement-desc strong{color:#00C9A7;font-weight:700}
 
 /* Footer */
-.foot{text-align:center;padding:32px 0;border-top:.5px solid rgba(255,255,255,0.04)}
+.foot{text-align:center;padding:32px 0 calc(32px + env(safe-area-inset-bottom, 0px));border-top:.5px solid rgba(255,255,255,0.04);flex-shrink:0;margin-top:auto;width:100%}
 .foot a{font-size:11px;color:rgba(255,255,255,0.2);text-decoration:none;margin:0 10px}
 .foot a:hover{color:#00C9A7}
 .foot-copy{font-size:10px;color:rgba(255,255,255,0.1);margin-top:12px}

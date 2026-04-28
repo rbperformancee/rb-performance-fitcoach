@@ -73,9 +73,9 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#080808;color:rgba(255,255,255,.78);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh}
-body{padding:60px 24px 80px}
+body{padding:60px 24px calc(80px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column}
 
-.wrap{max-width:780px;margin:0 auto}
+.wrap{max-width:780px;margin:0 auto;width:100%;flex:1 0 auto;display:flex;flex-direction:column}
 
 /* Lang toggle (pattern repris) */
 .lang-toggle{position:fixed;top:18px;right:18px;display:inline-flex;border:1px solid rgba(255,255,255,.1);border-radius:100px;overflow:hidden;font-size:11px;font-weight:700;letter-spacing:1.5px;background:rgba(8,8,8,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:50}
@@ -117,7 +117,7 @@ section.block code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#
 .note{margin-top:24px;padding:18px 22px;background:linear-gradient(135deg,rgba(2,209,186,.06),rgba(2,209,186,.02));border:.5px solid rgba(2,209,186,.18);border-radius:12px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.7}
 .note strong{color:#02d1ba}
 
-.foot{margin-top:64px;padding-top:24px;border-top:.5px solid rgba(255,255,255,.05);font-size:11px;color:rgba(255,255,255,.3);text-align:center;line-height:1.8}
+.foot{margin-top:auto;padding-top:24px;border-top:.5px solid rgba(255,255,255,.05);font-size:11px;color:rgba(255,255,255,.3);text-align:center;line-height:1.8;flex-shrink:0;width:100%;max-width:780px;margin-left:auto;margin-right:auto;padding-bottom:0}
 .foot a{color:rgba(2,209,186,.7);text-decoration:none;margin:0 6px}
 .foot a:hover{color:#02d1ba}
 
