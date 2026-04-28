@@ -1,21 +1,45 @@
 /**
  * POST /api/checkout-founding
  *
- * Crée une Stripe Checkout Session pour le Founding Coach Program.
- * Redirige le prospect vers Stripe pour payer 149€/mois.
+ * Cree une Stripe Checkout Session pour le Founding Coach Program (199€/mois).
  *
- * Env vars requises :
- *   STRIPE_SECRET_KEY — clé secrète Stripe (sk_live_... ou sk_test_...)
- *   STRIPE_FOUNDING_PRICE_ID — ID du prix Stripe (price_...)
+ * Multi-currency (wave 5.8) :
+ *   Body optionnel : { currency: 'EUR' | 'USD' | 'GBP' }
+ *   Le client peut suggerer une devise (depuis /api/geo). Si le Price ID
+ *   correspondant existe, on l'utilise. Sinon fallback EUR (ne casse rien).
  *
- * Le prix doit être créé dans le dashboard Stripe :
- *   - Produit : "Founding Coach Program"
- *   - Prix : 149€/mois récurrent
- *   - Metadata : { founding: true, locked_price: true }
+ * Env vars :
+ *   STRIPE_SECRET_KEY                  — sk_live_... / sk_test_...
+ *   STRIPE_FOUNDING_PRICE_ID           — Price ID EUR (defaut, requis)
+ *   STRIPE_FOUNDING_PRICE_ID_USD       — Price ID USD (optionnel)
+ *   STRIPE_FOUNDING_PRICE_ID_GBP       — Price ID GBP (optionnel)
+ *
+ * Tax compliance EU (RGPD/TVA) :
+ *   - automatic_tax : Stripe calcule TVA selon billing address
+ *   - tax_id_collection : collecte VAT ID B2B (reverse charge UE)
+ *   - billing_address_collection : required (necessaire pour automatic_tax)
+ *
+ * Voir MULTI-CURRENCY.md pour le setup Stripe Dashboard.
  */
 
 const getStripe = require('./_stripe');
 const { secureRequest } = require('./_security');
+
+const CURRENCY_PRICE_ENV = {
+  EUR: 'STRIPE_FOUNDING_PRICE_ID',
+  USD: 'STRIPE_FOUNDING_PRICE_ID_USD',
+  GBP: 'STRIPE_FOUNDING_PRICE_ID_GBP',
+};
+
+function resolvePriceId(requestedCurrency) {
+  const cur = String(requestedCurrency || '').toUpperCase();
+  if (CURRENCY_PRICE_ENV[cur]) {
+    const id = process.env[CURRENCY_PRICE_ENV[cur]];
+    if (id) return { priceId: id, currency: cur };
+  }
+  // Fallback EUR
+  return { priceId: process.env.STRIPE_FOUNDING_PRICE_ID, currency: 'EUR' };
+}
 
 module.exports = async (req, res) => {
   const origin = req.headers.origin || '';
@@ -29,7 +53,8 @@ module.exports = async (req, res) => {
   if (!secureRequest(req, res, { max: 10, windowMs: 3600000 })) return;
 
   try {
-    const priceId = process.env.STRIPE_FOUNDING_PRICE_ID;
+    const { currency } = req.body || {};
+    const { priceId, currency: usedCurrency } = resolvePriceId(currency);
 
     if (!priceId) {
       return res.status(500).json({
@@ -46,10 +71,19 @@ module.exports = async (req, res) => {
         price: priceId,
         quantity: 1,
       }],
+      // Tax compliance — Stripe calcule TVA EU + sales tax US automatiquement
+      automatic_tax: { enabled: true },
+      // VAT ID B2B (reverse charge) — required pour vendre B2B en UE
+      tax_id_collection: { enabled: true },
+      // Necessaire pour automatic_tax
+      billing_address_collection: 'required',
+      // Sync l'address back sur le Customer pour les renouvellements
+      customer_update: undefined,
       subscription_data: {
         metadata: {
           founding_coach: 'true',
           locked_price: '199',
+          currency: usedCurrency,
         },
       },
       success_url: `${baseUrl}/founding?success=true`,
@@ -57,7 +91,7 @@ module.exports = async (req, res) => {
       allow_promotion_codes: true,
     });
 
-    return res.status(200).json({ url: session.url });
+    return res.status(200).json({ url: session.url, currency: usedCurrency });
   } catch (err) {
     console.error('[checkout-founding] Error:', err.message);
     return res.status(500).json({ error: err.message });
