@@ -8,11 +8,14 @@ import { supabase } from '../lib/supabase';
  * - Compte a rebours 15 minutes
  * - A 0 : signOut + redirect vers /?demo_expired=true
  * - Bouton CTA "Demarrer mon essai" pour conversion
+ * - Auto-hide quand une modale ([role="dialog"]) est ouverte, pour ne pas
+ *   chevaucher le close button (bug mobile).
  *
  * Affiche par CoachDashboard quand prop isDemo === true.
  */
 export default function DemoBanner({ onSignup }) {
   const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -29,6 +32,18 @@ export default function DemoBanner({ onSignup }) {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Hide banner while any [role="dialog"] is mounted in the DOM. Toutes
+  // les modales du repo respectent deja cette convention ARIA.
+  useEffect(() => {
+    const check = () => setModalOpen(!!document.querySelector('[role="dialog"]'));
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, []);
+
+  if (modalOpen) return null;
 
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
