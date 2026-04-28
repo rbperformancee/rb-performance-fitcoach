@@ -88,6 +88,12 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(36px,8vw,52px);font-weight:800;
   .cd-num{font-size:28px}
   .lang-toggle{top:12px;right:12px}
 }
+/* ===== A11y : reduced-motion + prefers-contrast + forced-colors ===== */
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}
+@media (prefers-contrast: more){[style*="rgba(255,255,255,0.2"],[style*="rgba(255,255,255,0.3"],[style*="rgba(255,255,255,0.4"],[style*="rgba(255,255,255,0.5"]{color:rgba(255,255,255,0.95)!important}::placeholder{color:rgba(255,255,255,0.85)!important}}
+@media (forced-colors: active){a,button,[role=button]{forced-color-adjust:none;border:1px solid ButtonBorder}*:focus-visible{outline:2px solid Highlight!important;outline-offset:2px}}
+*:focus{outline:none}
+*:focus-visible{outline:2px solid #02d1ba;outline-offset:3px;border-radius:4px}
 </style>
 </head>
 <body>

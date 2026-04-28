@@ -196,6 +196,18 @@ html.light *:focus-visible{outline-color:var(--orange)}
 .skip-link{position:absolute;top:-100px;left:8px;z-index:99999;background:#000;color:#fff;padding:12px 18px;border:2px solid var(--orange);border-radius:8px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;transition:top 0.25s ease}
 .skip-link:focus{top:8px}
 
+/* WCAG 1.4.6 (AAA) — boost contraste sous prefers-contrast: more */
+@media (prefers-contrast: more){
+  :root{--text-dim:rgba(255,255,255,0.92);--text-dimmer:rgba(255,255,255,0.85);--text-faint:rgba(255,255,255,0.75)}
+  .hero-sub,.scroll-text,.trust-item{color:rgba(255,255,255,0.95)!important}
+  ::placeholder{color:rgba(255,255,255,0.85)!important}
+}
+/* Windows High Contrast Mode — laisse le systeme decider les couleurs */
+@media (forced-colors: active){
+  .btn,.btn-ghost,.btn-orange{border:1px solid ButtonBorder;forced-color-adjust:none}
+  *:focus-visible{outline:2px solid Highlight!important}
+}
+
 /* ===== Animation pause when off-screen (Performance) ===== */
 .anim-paused{animation-play-state:paused!important}
 .anim-paused *{animation-play-state:paused!important}

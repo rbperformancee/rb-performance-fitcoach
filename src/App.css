@@ -47,6 +47,49 @@ a:focus:not(:focus-visible) {
   outline: none;
 }
 
+/* WCAG 2.3.3 — respecte prefers-reduced-motion (vestibular disorders) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* WCAG 1.4.6 (AAA) + 1.4.11 — boost contraste sous prefers-contrast: more.
+   Notre design utilise rgba(255,255,255,0.3-0.45) pour le texte secondaire.
+   Sur fond #080C14 : 0.45 ~= 4.6:1 (AA pass), 0.35 ~= 4.0:1 (limite).
+   Sous "more", on remonte tout >= 7:1 (AAA). */
+@media (prefers-contrast: more) {
+  [style*="rgba(255,255,255,0.2"],
+  [style*="rgba(255,255,255,0.3"],
+  [style*="rgba(255,255,255,0.4"],
+  [style*="rgba(255,255,255, 0.2"],
+  [style*="rgba(255,255,255, 0.3"],
+  [style*="rgba(255,255,255, 0.4"] {
+    color: rgba(255,255,255,0.92) !important;
+  }
+  ::placeholder { color: rgba(255,255,255,0.85) !important; }
+  /* Bordures ui-chrome plus visibles aussi */
+  [style*="border:1px solid rgba(255,255,255,0.0"],
+  [style*="border: 1px solid rgba(255,255,255,0.0"] {
+    border-color: rgba(255,255,255,0.4) !important;
+  }
+}
+
+/* Windows High Contrast Mode (forced-colors) — laisse le systeme decider */
+@media (forced-colors: active) {
+  button, a, [role="button"] {
+    forced-color-adjust: none;
+    border: 1px solid ButtonBorder;
+  }
+  :focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px;
+  }
+}
+
 /* Page transitions */
 .page-enter {
   animation: pageSlideIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
