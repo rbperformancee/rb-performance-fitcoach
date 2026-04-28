@@ -207,7 +207,7 @@ table.cmp td.us .cell-note{color:rgba(2,209,186,.65)}
 .final-cta .seats{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.35);margin-top:18px;letter-spacing:.05em}
 
 /* Footer */
-footer{margin-top:72px;padding:40px 24px 32px;border-top:.5px solid rgba(255,255,255,.06);background:#000}
+footer{margin-top:72px;padding:40px 24px calc(32px + env(safe-area-inset-bottom, 0px));border-top:.5px solid rgba(255,255,255,.06);background:#000}
 .foot-inner{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px;align-items:center}
 .foot-brand{font-family:'Syne',sans-serif;font-size:13px;font-weight:900;letter-spacing:.1em;color:rgba(255,255,255,.6)}
 .foot-brand span{color:#02d1ba}

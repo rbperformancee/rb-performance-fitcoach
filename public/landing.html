@@ -1693,8 +1693,10 @@ html.light .founder-message strong{color:#0a0a0a}
   .ft-mockup, .ft-terminal { max-width: 100% !important; width: 100% !important; }
   .ft-stat { font-size: clamp(36px,10vw,64px) !important; }
 
-  /* FOOTER — 1 colonne, full width sur mobile */
-  footer { padding: 32px 16px 40px !important; margin-top: 60px !important; }
+  /* FOOTER — 1 colonne, full width sur mobile + safe-area iOS pour
+     que le fond noir du footer couvre la zone home indicator (sinon
+     le #080C14 du html montre dessous, perçu comme bleu) */
+  footer { padding: 32px 16px calc(40px + env(safe-area-inset-bottom, 0px)) !important; margin-top: 60px !important; }
   section > footer { margin-left: -16px !important; margin-right: -16px !important; width: calc(100% + 32px) !important; }
   .footer-inner {
     grid-template-columns: 1fr !important;
