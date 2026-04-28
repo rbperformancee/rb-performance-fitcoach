@@ -185,11 +185,11 @@ section.block code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#
       la rotation des sessions JWT, et les flux OTP par email.
     </p>
     <ul>
-      <li data-i18n="security.s2_l1">Mots de passe minimum 8 caractères, hashing bcrypt (jamais stockés en clair).</li>
+      <li data-i18n="security.s2_l1">Mots de passe minimum 6 caractères (Supabase default), hashing bcrypt (jamais stockés en clair).</li>
       <li data-i18n="security.s2_l2">Sessions JWT signées, rotation automatique, expiration courte.</li>
       <li data-i18n="security.s2_l3">OTP par email pour les flux sensibles (création de compte, reset mot de passe).</li>
-      <li data-i18n="security.s2_l4">Row-Level Security (RLS) Postgres activée sur toutes les tables — un coach ne peut jamais voir les données d'un autre.</li>
-      <li data-i18n="security.s2_l5">Aucun cookie tiers, aucun tracker comportemental.</li>
+      <li data-i18n="security.s2_l4">Row-Level Security (RLS) Postgres activée sur les tables sensibles — un coach ne peut pas voir les données d'un autre.</li>
+      <li data-i18n="security.s2_l5">Pas de cookies tiers. Vercel Analytics chargé uniquement avec consentement explicite (bandeau RGPD).</li>
     </ul>
   </section>
 
@@ -197,16 +197,16 @@ section.block code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#
   <section class="block">
     <h2><span class="num">03</span><span data-i18n="security.s3_title">Conformité & RGPD</span></h2>
     <p data-i18n="security.s3_p1">
-      RB Perform est <strong>100% RGPD-ready</strong>. Toutes les données — coachs et clients — sont stockées
-      en <strong>Union Européenne</strong> (Supabase Frankfurt, eu-central-1). Aucun transfert hors UE,
-      aucun fournisseur US d'analyse comportementale.
+      RB Perform applique les <strong>principes RGPD</strong> : minimisation des données, hébergement en
+      <strong>Union Européenne</strong> (Supabase Frankfurt, eu-central-1), droits utilisateurs activables
+      sur simple demande email. Aucun transfert hors UE pour les données structurées coachs/clients.
     </p>
     <ul>
-      <li data-i18n="security.s3_l1">Hébergement et traitement des données en UE (Frankfurt, Allemagne).</li>
-      <li data-i18n="security.s3_l2">Droit d'accès, rectification, portabilité et suppression sur simple demande email.</li>
-      <li data-i18n="security.s3_l3">Registre des traitements maintenu (Art. 30 RGPD).</li>
-      <li data-i18n="security.s3_l4">DPA disponible sur demande pour les clients enterprise.</li>
-      <li data-i18n="security.s3_l5">Suppression de compte → purge complète des données associées sous 30 jours.</li>
+      <li data-i18n="security.s3_l1">Hébergement et traitement des données structurées en UE (Frankfurt, Allemagne).</li>
+      <li data-i18n="security.s3_l2">Droit d'accès, rectification, portabilité, suppression sur demande à rb.performancee@gmail.com (réponse sous 30 jours).</li>
+      <li data-i18n="security.s3_l3">DPA Supabase + DPA Vercel applicables. Communicables sur demande.</li>
+      <li data-i18n="security.s3_l4">Registre des traitements (Art. 30 RGPD) en cours de constitution — disponible sur demande clients enterprise.</li>
+      <li data-i18n="security.s3_l5">Suppression de compte → purge des données sous 30 jours après confirmation.</li>
     </ul>
     <div class="cta-row">
       <a class="cta" href="mailto:rb.performancee@gmail.com?subject=DPA%20Request" data-i18n="security.s3_cta_dpa">Demander le DPA</a>
@@ -225,7 +225,7 @@ section.block code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#
       <li data-i18n="security.s4_l1"><strong>Vercel</strong> — front, edge, fonctions serverless. SOC 2 Type 2, ISO 27001.</li>
       <li data-i18n="security.s4_l2"><strong>Supabase (EU Frankfurt)</strong> — Postgres managé, Auth, Storage. SOC 2 Type 2, hébergement AWS eu-central-1.</li>
       <li data-i18n="security.s4_l3"><strong>Stripe</strong> — paiements. PCI-DSS Level 1. Aucun numéro de carte ne touche nos serveurs.</li>
-      <li data-i18n="security.s4_l4">Monitoring uptime + erreurs 24/7. Page de statut publique.</li>
+      <li data-i18n="security.s4_l4">Monitoring erreurs auto via Sentry. Page de statut publique avec checks live à la demande.</li>
     </ul>
     <div class="cta-row">
       <a class="cta subtle" href="/status" data-i18n="security.s4_cta_status">Statut plateforme →</a>
@@ -254,14 +254,14 @@ section.block code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#
   <section class="block">
     <h2><span class="num">06</span><span data-i18n="security.s6_title">Réponse aux incidents</span></h2>
     <p data-i18n="security.s6_p1">
-      En cas d'incident affectant la disponibilité ou la sécurité des données, la communication est <strong>publique et rapide</strong>.
-      La page statut est mise à jour en temps réel et les utilisateurs concernés sont notifiés par email
-      sous 72h maximum (RGPD Art. 33).
+      En cas d'incident affectant la disponibilité ou la sécurité des données, la communication est
+      <strong>publique et rapide</strong>. La page statut est mise à jour, et les utilisateurs concernés
+      sont notifiés par email selon l'obligation RGPD Art. 33 (sous 72h après constatation d'un breach).
     </p>
     <ul>
-      <li data-i18n="security.s6_l1">Page statut publique avec checks en temps réel toutes les 30 secondes.</li>
-      <li data-i18n="security.s6_l2">Notification email aux comptes concernés sous 72h en cas de breach (RGPD Art. 33).</li>
-      <li data-i18n="security.s6_l3">Post-mortem public publié pour les incidents majeurs.</li>
+      <li data-i18n="security.s6_l1">Page statut publique avec checks live à la demande (refresh page).</li>
+      <li data-i18n="security.s6_l2">Notification email aux comptes concernés sous 72h en cas de breach (RGPD Art. 33, obligation légale).</li>
+      <li data-i18n="security.s6_l3">Post-mortem public engagé pour les incidents majeurs.</li>
     </ul>
   </section>
 
@@ -273,10 +273,10 @@ section.block code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#
       En cas de corruption ou de suppression accidentelle, on peut revenir à n'importe quel instant des 7 derniers jours.
     </p>
     <ul>
-      <li data-i18n="security.s7_l1">Snapshots Postgres quotidiens (rétention 7 jours, plan Pro Supabase).</li>
-      <li data-i18n="security.s7_l2">Point-in-time recovery (PITR) granularité 2 minutes.</li>
+      <li data-i18n="security.s7_l1">Snapshots Postgres quotidiens (rétention selon plan Supabase).</li>
+      <li data-i18n="security.s7_l2">Point-in-time recovery (PITR) disponible sur plans Supabase Pro+.</li>
       <li data-i18n="security.s7_l3">Backups manuels avant chaque migration de schéma majeure.</li>
-      <li data-i18n="security.s7_l4">Tests de restauration trimestriels.</li>
+      <li data-i18n="security.s7_l4">Procédure de restauration documentée.</li>
     </ul>
   </section>
 
@@ -334,19 +334,19 @@ window.RB_I18N = {
 
     'security.s2_title':'Authentification',
     'security.s2_p1':'L\'authentification est gérée par <strong>Supabase Auth</strong>, qui gère le hashing des mots de passe (bcrypt), la rotation des sessions JWT, et les flux OTP par email.',
-    'security.s2_l1':'Mots de passe minimum 8 caractères, hashing bcrypt (jamais stockés en clair).',
+    'security.s2_l1':'Mots de passe minimum 6 caractères (Supabase default), hashing bcrypt (jamais stockés en clair).',
     'security.s2_l2':'Sessions JWT signées, rotation automatique, expiration courte.',
     'security.s2_l3':'OTP par email pour les flux sensibles (création de compte, reset mot de passe).',
-    'security.s2_l4':'Row-Level Security (RLS) Postgres activée sur toutes les tables — un coach ne peut jamais voir les données d\'un autre.',
-    'security.s2_l5':'Aucun cookie tiers, aucun tracker comportemental.',
+    'security.s2_l4':'Row-Level Security (RLS) Postgres activée sur les tables sensibles — un coach ne peut pas voir les données d\'un autre.',
+    'security.s2_l5':'Pas de cookies tiers. Vercel Analytics chargé uniquement avec consentement explicite (bandeau RGPD).',
 
     'security.s3_title':'Conformité & RGPD',
-    'security.s3_p1':'RB Perform est <strong>100% RGPD-ready</strong>. Toutes les données — coachs et clients — sont stockées en <strong>Union Européenne</strong> (Supabase Frankfurt, eu-central-1). Aucun transfert hors UE, aucun fournisseur US d\'analyse comportementale.',
-    'security.s3_l1':'Hébergement et traitement des données en UE (Frankfurt, Allemagne).',
-    'security.s3_l2':'Droit d\'accès, rectification, portabilité et suppression sur simple demande email.',
-    'security.s3_l3':'Registre des traitements maintenu (Art. 30 RGPD).',
-    'security.s3_l4':'DPA disponible sur demande pour les clients enterprise.',
-    'security.s3_l5':'Suppression de compte → purge complète des données associées sous 30 jours.',
+    'security.s3_p1':'RB Perform applique les <strong>principes RGPD</strong> : minimisation des données, hébergement en <strong>Union Européenne</strong> (Supabase Frankfurt, eu-central-1), droits utilisateurs activables sur simple demande email. Aucun transfert hors UE pour les données structurées coachs/clients.',
+    'security.s3_l1':'Hébergement et traitement des données structurées en UE (Frankfurt, Allemagne).',
+    'security.s3_l2':'Droit d\'accès, rectification, portabilité, suppression sur demande à rb.performancee@gmail.com (réponse sous 30 jours).',
+    'security.s3_l3':'DPA Supabase + DPA Vercel applicables. Communicables sur demande.',
+    'security.s3_l4':'Registre des traitements (Art. 30 RGPD) en cours de constitution — disponible sur demande clients enterprise.',
+    'security.s3_l5':'Suppression de compte → purge des données sous 30 jours après confirmation.',
     'security.s3_cta_dpa':'Demander le DPA',
     'security.s3_cta_legal':'Mentions RGPD',
 
@@ -355,7 +355,7 @@ window.RB_I18N = {
     'security.s4_l1':'<strong>Vercel</strong> — front, edge, fonctions serverless. SOC 2 Type 2, ISO 27001.',
     'security.s4_l2':'<strong>Supabase (EU Frankfurt)</strong> — Postgres managé, Auth, Storage. SOC 2 Type 2, hébergement AWS eu-central-1.',
     'security.s4_l3':'<strong>Stripe</strong> — paiements. PCI-DSS Level 1. Aucun numéro de carte ne touche nos serveurs.',
-    'security.s4_l4':'Monitoring uptime + erreurs 24/7. Page de statut publique.',
+    'security.s4_l4':'Monitoring erreurs auto via Sentry. Page de statut publique avec checks live à la demande.',
     'security.s4_cta_status':'Statut plateforme →',
 
     'security.s5_title':'Divulgation responsable',
@@ -367,17 +367,17 @@ window.RB_I18N = {
     'security.s5_cta_report':'Signaler une vulnérabilité',
 
     'security.s6_title':'Réponse aux incidents',
-    'security.s6_p1':'En cas d\'incident affectant la disponibilité ou la sécurité des données, la communication est <strong>publique et rapide</strong>. La page statut est mise à jour en temps réel et les utilisateurs concernés sont notifiés par email sous 72h maximum (RGPD Art. 33).',
-    'security.s6_l1':'Page statut publique avec checks en temps réel toutes les 30 secondes.',
-    'security.s6_l2':'Notification email aux comptes concernés sous 72h en cas de breach (RGPD Art. 33).',
-    'security.s6_l3':'Post-mortem public publié pour les incidents majeurs.',
+    'security.s6_p1':'En cas d\'incident affectant la disponibilité ou la sécurité des données, la communication est <strong>publique et rapide</strong>. La page statut est mise à jour, et les utilisateurs concernés sont notifiés par email selon l\'obligation RGPD Art. 33 (sous 72h après constatation d\'un breach).',
+    'security.s6_l1':'Page statut publique avec checks live à la demande (refresh page).',
+    'security.s6_l2':'Notification email aux comptes concernés sous 72h en cas de breach (RGPD Art. 33, obligation légale).',
+    'security.s6_l3':'Post-mortem public engagé pour les incidents majeurs.',
 
     'security.s7_title':'Sauvegardes & restauration',
     'security.s7_p1':'La base Postgres est sauvegardée automatiquement par Supabase, avec point-in-time recovery (PITR). En cas de corruption ou de suppression accidentelle, on peut revenir à n\'importe quel instant des 7 derniers jours.',
     'security.s7_l1':'Snapshots Postgres quotidiens (rétention 7 jours, plan Pro Supabase).',
     'security.s7_l2':'Point-in-time recovery (PITR) granularité 2 minutes.',
     'security.s7_l3':'Backups manuels avant chaque migration de schéma majeure.',
-    'security.s7_l4':'Tests de restauration trimestriels.',
+    'security.s7_l4':'Procédure de restauration documentée.',
 
     'security.s8_title':'Headers de sécurité',
     'security.s8_p1':'Tous les headers de sécurité standards sont configurés au niveau edge (Vercel). Voici exactement ce que ton navigateur reçoit :',
@@ -407,19 +407,19 @@ window.RB_I18N = {
 
     'security.s2_title':'Authentication',
     'security.s2_p1':'Authentication is handled by <strong>Supabase Auth</strong>, which manages password hashing (bcrypt), JWT session rotation, and email OTP flows.',
-    'security.s2_l1':'Passwords minimum 8 characters, bcrypt hashing (never stored in plain text).',
+    'security.s2_l1':'Passwords minimum 6 characters (Supabase default), bcrypt hashing (never stored in plain text).',
     'security.s2_l2':'Signed JWT sessions, automatic rotation, short expiration.',
     'security.s2_l3':'Email OTP for sensitive flows (account creation, password reset).',
-    'security.s2_l4':'Postgres Row-Level Security (RLS) on every table — a coach can never see another coach\'s data.',
-    'security.s2_l5':'No third-party cookies, no behavioral trackers.',
+    'security.s2_l4':'Postgres Row-Level Security (RLS) on sensitive tables — a coach cannot see another coach\'s data.',
+    'security.s2_l5':'No third-party cookies. Vercel Analytics loaded only with explicit consent (GDPR banner).',
 
     'security.s3_title':'Compliance & GDPR',
-    'security.s3_p1':'RB Perform is <strong>100% GDPR-ready</strong>. All data — coaches and clients — is stored in the <strong>European Union</strong> (Supabase Frankfurt, eu-central-1). No transfers outside the EU, no US behavioral analytics vendors.',
-    'security.s3_l1':'Hosting and data processing in the EU (Frankfurt, Germany).',
-    'security.s3_l2':'Right of access, rectification, portability and erasure via simple email request.',
-    'security.s3_l3':'Records of processing activities maintained (GDPR Art. 30).',
-    'security.s3_l4':'DPA available on request for enterprise customers.',
-    'security.s3_l5':'Account deletion → full purge of associated data within 30 days.',
+    'security.s3_p1':'RB Perform applies <strong>GDPR principles</strong>: data minimization, hosting in the <strong>European Union</strong> (Supabase Frankfurt, eu-central-1), user rights activatable via email. No transfers outside the EU for structured coach/client data.',
+    'security.s3_l1':'Hosting and structured data processing in the EU (Frankfurt, Germany).',
+    'security.s3_l2':'Right of access, rectification, portability, erasure via email to rb.performancee@gmail.com (response within 30 days).',
+    'security.s3_l3':'Supabase DPA + Vercel DPA applicable. Available on request.',
+    'security.s3_l4':'Records of processing activities (GDPR Art. 30) under construction — available on request for enterprise customers.',
+    'security.s3_l5':'Account deletion → data purge within 30 days after confirmation.',
     'security.s3_cta_dpa':'Request the DPA',
     'security.s3_cta_legal':'GDPR notice',
 
@@ -428,7 +428,7 @@ window.RB_I18N = {
     'security.s4_l1':'<strong>Vercel</strong> — frontend, edge, serverless functions. SOC 2 Type 2, ISO 27001.',
     'security.s4_l2':'<strong>Supabase (EU Frankfurt)</strong> — managed Postgres, Auth, Storage. SOC 2 Type 2, AWS eu-central-1.',
     'security.s4_l3':'<strong>Stripe</strong> — payments. PCI-DSS Level 1. No card number ever touches our servers.',
-    'security.s4_l4':'24/7 uptime + error monitoring. Public status page.',
+    'security.s4_l4':'Auto error monitoring via Sentry. Public status page with on-demand live checks.',
     'security.s4_cta_status':'Platform status →',
 
     'security.s5_title':'Responsible disclosure',
@@ -440,17 +440,17 @@ window.RB_I18N = {
     'security.s5_cta_report':'Report a vulnerability',
 
     'security.s6_title':'Incident response',
-    'security.s6_p1':'In case of an incident affecting availability or data security, communication is <strong>public and fast</strong>. The status page updates in real-time and affected users are notified by email within 72h max (GDPR Art. 33).',
-    'security.s6_l1':'Public status page with real-time checks every 30 seconds.',
-    'security.s6_l2':'Email notification to affected accounts within 72h on breach (GDPR Art. 33).',
-    'security.s6_l3':'Public post-mortem published for major incidents.',
+    'security.s6_p1':'In case of an incident affecting availability or data security, communication is <strong>public and fast</strong>. The status page is updated, and affected users are notified by email per GDPR Art. 33 obligation (within 72h after breach detection).',
+    'security.s6_l1':'Public status page with on-demand live checks (page refresh).',
+    'security.s6_l2':'Email notification to affected accounts within 72h on breach (GDPR Art. 33, legal obligation).',
+    'security.s6_l3':'Public post-mortem committed for major incidents.',
 
     'security.s7_title':'Backups & recovery',
     'security.s7_p1':'The Postgres database is backed up automatically by Supabase, with point-in-time recovery (PITR). In case of corruption or accidental deletion, we can roll back to any moment in the last 7 days.',
-    'security.s7_l1':'Daily Postgres snapshots (7-day retention, Supabase Pro plan).',
-    'security.s7_l2':'Point-in-time recovery (PITR) at 2-minute granularity.',
+    'security.s7_l1':'Daily Postgres snapshots (retention per Supabase plan).',
+    'security.s7_l2':'Point-in-time recovery (PITR) available on Supabase Pro+ plans.',
     'security.s7_l3':'Manual backups before every major schema migration.',
-    'security.s7_l4':'Quarterly restoration tests.',
+    'security.s7_l4':'Documented restoration procedure.',
 
     'security.s8_title':'Security headers',
     'security.s8_p1':'All standard security headers are configured at the edge (Vercel). Here is exactly what your browser receives:',

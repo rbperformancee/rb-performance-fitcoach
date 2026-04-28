@@ -119,7 +119,6 @@
   <div class="meta">
     <span><span data-i18n="status.meta_region">Région</span> <b id="m-region">—</b></span>
     <span><span data-i18n="status.meta_env">Environnement</span> <b id="m-env">—</b></span>
-    <span><span data-i18n="status.meta_uptime">Uptime</span> <b id="m-uptime">—</b></span>
     <span><span data-i18n="status.meta_build">Build</span> <b id="m-commit">—</b></span>
   </div>
 
@@ -301,7 +300,6 @@
 
       document.getElementById('m-region').textContent = data.region || '—';
       document.getElementById('m-env').textContent = data.env || '—';
-      document.getElementById('m-uptime').textContent = formatUptime(data.uptime_s);
       document.getElementById('m-commit').textContent = data.commit || '—';
       document.getElementById('lastUpdate').textContent = formatTime(new Date());
     } catch (e) {
