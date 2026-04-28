@@ -31,13 +31,13 @@ async function sendEmail(to, subject, html) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "RB Perform <noreply@rbperform.com>",
+      from: "RB Perform <noreply@rbperform.app>",
       to: [to],
       reply_to: "rb.performancee@gmail.com",
       subject,
       html,
       headers: {
-        "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.com?subject=unsubscribe>`,
+        "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
     }),

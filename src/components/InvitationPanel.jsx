@@ -29,7 +29,7 @@ export default function InvitationPanel({ coach }) {
 
   const code = coach.coach_code;
   const slug = coach.coach_slug || "";
-  const link = `https://rbperform.com/rejoindre/${slug}`;
+  const link = `https://rbperform.app/rejoindre/${slug}`;
   const displayName = coach.brand_name || coach.full_name || t("ip.fallback_coach_name");
 
   const shareMessage = fillTpl(t("ip.share_message"), { name: displayName, code, link });

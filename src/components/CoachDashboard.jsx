@@ -3099,11 +3099,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           { id: "tab_achievements", label: t("cd.cmd_achievements"), desc: t("cd.cmd_achievements_desc"), group: t("cd.cmd_group_navigation"), icon: "trophy", run: () => setActiveTab("achievements") },
           { id: "open_pipeline", label: t("cd.cmd_pipeline"), desc: t("cd.cmd_pipeline_desc"), group: t("cd.cmd_group_actions"), icon: "view", run: () => setShowPipeline(true) },
           { id: "action_add_client", label: t("cd.cmd_add_client"), group: t("cd.cmd_group_actions"), icon: "plus", run: () => { setShowClientList(true); setShowAdd(true); } },
-          { id: "action_copy_invite", label: t("cd.cmd_copy_invite"), desc: coachData?.coach_slug ? `rbperform.com/rejoindre/${coachData.coach_slug}` : t("cd.cmd_invite_pending"), group: t("cd.cmd_group_actions"), icon: "link", keywords: t("cd.cmd_kw_invite").split(", "), run: async () => {
+          { id: "action_copy_invite", label: t("cd.cmd_copy_invite"), desc: coachData?.coach_slug ? `rbperform.app/rejoindre/${coachData.coach_slug}` : t("cd.cmd_invite_pending"), group: t("cd.cmd_group_actions"), icon: "link", keywords: t("cd.cmd_kw_invite").split(", "), run: async () => {
             const slug = coachData?.coach_slug;
             if (!slug) { showToast(t("cd.toast_link_not_ready")); return; }
             try {
-              await navigator.clipboard.writeText(`https://rbperform.com/rejoindre/${slug}`);
+              await navigator.clipboard.writeText(`https://rbperform.app/rejoindre/${slug}`);
               showToast(t("cd.toast_link_copied"));
             } catch { showToast(t("cd.toast_copy_failed")); }
           }},

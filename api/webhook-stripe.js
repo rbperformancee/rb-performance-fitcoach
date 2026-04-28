@@ -243,8 +243,8 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerNam
   // Founders get the email from my personal address (replies route back to me).
   // Standard gets noreply + Reply-To set so replies still land.
   const from = isFounder
-    ? 'Rayan Bonte <rayan@rbperform.com>'
-    : 'RB Perform <noreply@rbperform.com>';
+    ? 'Rayan Bonte <rayan@rbperform.app>'
+    : 'RB Perform <noreply@rbperform.app>';
   // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
   // pour les bulk senders. Welcome = transactionnel, mais inclure quand meme par
   // securite (fait pas de mal et garantit deliverability primary inbox).
@@ -259,11 +259,11 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerNam
       body: JSON.stringify({
         from,
         to: [to],
-        reply_to: 'rayan@rbperform.com',
+        reply_to: 'rayan@rbperform.app',
         subject: buildWelcomeSubject(plan, firstName),
         html: buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }),
         headers: {
-          'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@rbperform.com?subject=unsubscribe>`,
+          'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       }),

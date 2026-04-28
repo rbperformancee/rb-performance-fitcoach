@@ -111,7 +111,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
     doc.setTextColor(107, 114, 1282);
     doc.setFont("helvetica", "normal");
     const date = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-    doc.text(`Généré le ${date} · rbperform.com`, ML, H - 8);
+    doc.text(`Généré le ${date} · rbperform.app`, ML, H - 8);
     doc.setFillColor(13, 13, 132);
     doc.rect(0, H - 14, W, 14, "F");
   }

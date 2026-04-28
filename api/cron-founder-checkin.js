@@ -20,8 +20,8 @@ const { captureException } = require("./_sentry");
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_KEY = process.env.RESEND_API_KEY;
-const FROM = "Rayan Bonte <rayan@rbperform.com>";
-const REPLY_TO = "rayan@rbperform.com";
+const FROM = "Rayan Bonte <rayan@rbperform.app>";
+const REPLY_TO = "rayan@rbperform.app";
 
 function isAuthorizedCron(req) {
   const cronSecret = process.env.CRON_SECRET;
@@ -74,7 +74,7 @@ async function sendEmail(to, subject, html) {
       subject,
       html,
       headers: {
-        "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.com?subject=unsubscribe>`,
+        "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
     }),
