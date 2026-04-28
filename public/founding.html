@@ -11,7 +11,7 @@
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:title" content="Founding Coach — 199€/mois verrouillé à vie">
-<meta property="og:description" content="30 places. Plan Pro complet. Anti-churn IA, dashboard MRR, app client. Le prix d'aujourd'hui est ton prix à vie.">
+<meta property="og:description" content="30 places. Plan Pro complet. Anti-churn IA, dashboard MRR, 0% commission. Le prix d'aujourd'hui est ton prix à vie.">
 <meta property="og:url" content="https://rbperform.app/founding">
 <meta property="og:image" content="https://rbperform.app/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -84,7 +84,25 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
 .cta{display:block;width:100%;padding:18px;background:#00C9A7;color:#080C14;font-size:15px;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;text-align:center;border:none;border-radius:14px;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:0 16px 40px rgba(0,201,167,0.25);transition:transform 0.15s,box-shadow 0.15s;text-decoration:none;margin-bottom:16px}
 .cta:hover{transform:translateY(-2px);box-shadow:0 20px 50px rgba(0,201,167,0.35)}
 .cta:active{transform:translateY(0)}
+.cta:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 .cta-sub{font-size:12px;color:rgba(255,255,255,0.25);text-align:center;margin-bottom:32px;line-height:1.6}
+
+/* Lead capture form */
+.join-section{margin-top:8px;padding-top:32px;border-top:.5px solid rgba(255,255,255,0.06);scroll-margin-top:32px}
+.join-eyebrow{font-size:10px;color:rgba(0,201,167,0.7);letter-spacing:0.2em;text-transform:uppercase;font-weight:800;margin-bottom:8px;text-align:center}
+.join-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.02em;text-align:center;margin-bottom:24px}
+.form{display:flex;flex-direction:column;gap:16px;margin-bottom:8px}
+.field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px;font-weight:600}
+.field input,.field select{width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;color:#fff;font-size:16px;outline:none;font-family:inherit;transition:border-color 0.2s}
+.field input:focus,.field select:focus{border-color:rgba(0,201,167,0.3)}
+.field input::placeholder{color:rgba(255,255,255,0.2)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+.field select option{background:#0a0c10;color:#fff}
+.legal-note{font-size:10px;color:rgba(255,255,255,0.25);text-align:center;margin-top:8px;line-height:1.6}
+.legal-note a{color:rgba(0,201,167,0.6);text-decoration:none}
+.success{text-align:center;animation:fadeIn 0.5s ease}
+.success-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#00C9A7,rgba(0,201,167,0.8));display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:28px;color:#000;box-shadow:0 12px 40px rgba(0,201,167,0.4)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 /* Countdown */
 .countdown{display:flex;justify-content:center;gap:12px;margin-bottom:32px}
@@ -195,10 +213,6 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span data-i18n="founding.feat5">App client installable iPhone &amp; Android en 1 clic (pas d'App Store)</span>
-      </div>
-      <div class="feat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
         <span data-i18n="founding.feat6">Accès WhatsApp direct au fondateur pendant 90 jours</span>
       </div>
       <div class="feat">
@@ -215,11 +229,11 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
       </div>
     </div>
 
-    <!-- CTA — Waitlist en attendant le lancement -->
-    <a class="cta" href="/waitlist" data-i18n="founding.cta">
-      Rejoindre la Waitlist Founding →
+    <!-- CTA scroll-to-form -->
+    <a class="cta" href="#join" data-i18n="founding.cta">
+      Réserver ma place Founding →
     </a>
-    <div class="cta-sub" data-i18n="founding.cta_sub">Lancement mai 2026 · Inscris-toi pour bloquer ton prix a vie</div>
+    <div class="cta-sub" data-i18n="founding.cta_sub">Lancement mai 2026 · Inscris-toi pour bloquer ton prix à vie</div>
 
     <!-- Engagement Founder — Prix bloqué à vie -->
     <div class="engagements">
@@ -231,30 +245,84 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
       </div>
     </div>
 
-    <!-- Email capture fallback -->
-    <div style="text-align:center;margin-top:32px;padding-top:32px;border-top:.5px solid rgba(255,255,255,0.04)">
-      <div style="font-size:13px;color:rgba(255,255,255,0.25);margin-bottom:12px" data-i18n="founding.notify_intro">Pas encore prêt ? Sois notifié au lancement.</div>
-      <form id="notifyForm" onsubmit="submitNotify(event)" style="display:flex;gap:8px;max-width:380px;margin:0 auto">
-        <input type="email" id="notifyEmail" required placeholder="ton@email.com" data-i18n-placeholder="founding.notify_placeholder" style="flex:1;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(0,201,167,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
-        <button type="submit" data-i18n="founding.notify_btn" style="padding:12px 20px;background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);border-radius:10px;color:#00C9A7;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(0,201,167,0.15)'" onmouseout="this.style.background='rgba(0,201,167,0.1)'">Notifier</button>
-      </form>
-      <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6" data-i18n="founding.notify_legal">En entrant ton email, tu acceptes notre <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">politique de confidentialité</a></div>
-      <div id="notifySuccess" data-i18n="founding.notify_ok" style="display:none;font-size:13px;color:#00C9A7;margin-top:12px">Tu seras notifié. À bientôt.</div>
-    </div>
+    <!-- Lead capture form (consolidated from /waitlist) -->
+    <section class="join-section" id="join">
+      <div class="join-eyebrow" data-i18n="founding.join_eyebrow">Bloquer ma place</div>
+      <h2 class="join-title" data-i18n="founding.join_title">Une fois les 30 places prises, c'est fini.</h2>
+
+      <div id="formWrap">
+        <form class="form" id="waitlistForm" onsubmit="submitWaitlist(event)">
+          <div class="field">
+            <label data-i18n="founding.lbl_name">Ton prénom</label>
+            <input type="text" id="wl-name" required placeholder="Prénom" data-i18n-placeholder="founding.ph_name" autocomplete="given-name">
+          </div>
+          <div class="field">
+            <label data-i18n="founding.lbl_email">Ton email</label>
+            <input type="email" id="wl-email" required placeholder="coach@email.com" data-i18n-placeholder="founding.ph_email" autocomplete="email">
+          </div>
+          <div class="field">
+            <label data-i18n="founding.lbl_clients">Combien de clients tu coaches actuellement ?</label>
+            <select id="wl-clients" required>
+              <option value="" disabled selected data-i18n="founding.opt_select">Sélectionne</option>
+              <option value="0-5" data-i18n="founding.opt_clients1">0 à 5</option>
+              <option value="5-15" data-i18n="founding.opt_clients2">5 à 15</option>
+              <option value="15-30" data-i18n="founding.opt_clients3">15 à 30</option>
+              <option value="30+" data-i18n="founding.opt_clients4">30+</option>
+            </select>
+          </div>
+          <div class="field">
+            <label data-i18n="founding.lbl_problem">Ton plus gros problème en tant que coach ?</label>
+            <select id="wl-problem" required>
+              <option value="" disabled selected data-i18n="founding.opt_select">Sélectionne</option>
+              <option value="visibility" data-i18n="founding.opt_p1">Je ne sais pas combien je vais gagner le mois prochain</option>
+              <option value="churn" data-i18n="founding.opt_p2">Je perds des clients sans comprendre pourquoi</option>
+              <option value="admin" data-i18n="founding.opt_p3">Je passe trop de temps sur l'admin au lieu de coacher</option>
+              <option value="tools" data-i18n="founding.opt_p4">J'utilise 4+ outils différents et c'est le chaos</option>
+              <option value="scale" data-i18n="founding.opt_p5">Je veux passer de 10 à 30+ clients mais je ne sais pas comment</option>
+            </select>
+          </div>
+          <button type="submit" class="cta" id="wlBtn" data-i18n="founding.form_cta">Réserver ma place →</button>
+          <div class="cta-sub" data-i18n="founding.form_cta_sub" style="margin-bottom:0">Pas de carte bancaire. Juste ton email.</div>
+          <div class="legal-note" data-i18n="founding.form_legal">En t'inscrivant, tu acceptes notre <a href="/legal.html#rgpd">politique de confidentialité</a> · Désinscription en 1 clic</div>
+        </form>
+      </div>
+
+      <div id="successWrap" style="display:none">
+        <div class="success">
+          <div class="success-icon">✓</div>
+          <h3 data-i18n="founding.success_title" style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:12px">Tu es sur la liste.</h3>
+          <p class="cta-sub" data-i18n="founding.success_sub" style="margin-bottom:0">Tu recevras un email en mai avec ton accès prioritaire. En attendant, suis <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> sur Instagram.</p>
+        </div>
+      </div>
+    </section>
 
     <script>
-    function submitNotify(e) {
+    function submitWaitlist(e) {
       e.preventDefault();
-      var email = document.getElementById('notifyEmail').value;
-      // Envoyer à Supabase ou un endpoint
-      fetch('/api/notify-founding', {
+      var btn = document.getElementById('wlBtn');
+      var lang = (document.documentElement.lang === 'en') ? 'en' : 'fr';
+      btn.textContent = (lang === 'en') ? 'Submitting...' : 'Inscription...';
+      btn.disabled = true;
+
+      var data = {
+        name: document.getElementById('wl-name').value.trim(),
+        email: document.getElementById('wl-email').value.trim().toLowerCase(),
+        clients: document.getElementById('wl-clients').value,
+        problem: document.getElementById('wl-problem').value,
+        source: 'founding',
+        created_at: new Date().toISOString()
+      };
+
+      fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email })
+        body: JSON.stringify(data)
       }).catch(function(){});
-      // Toujours montrer le succès (même si l'API échoue)
-      document.getElementById('notifyForm').style.display = 'none';
-      document.getElementById('notifySuccess').style.display = 'block';
+
+      // Always show success (graceful degradation)
+      document.getElementById('formWrap').style.display = 'none';
+      document.getElementById('successWrap').style.display = 'block';
+      try { document.getElementById('successWrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e){}
     }
     </script>
 
@@ -310,20 +378,37 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
       'founding.feat2':'Dashboard MRR + prévision 90 jours',
       'founding.feat3':'Anti-churn IA · 7 signaux par client',
       'founding.feat4':'IA Analyser (Mistral) illimité',
-      'founding.feat5':'App client installable iPhone &amp; Android en 1 clic (pas d\'App Store)',
       'founding.feat6':'Accès WhatsApp direct au fondateur pendant 90 jours',
       'founding.feat7':'Vote sur la roadmap produit',
       'founding.feat8':'Badge Founding Coach dans l\'app',
       'founding.feat9':'<strong style="color:#fff">0% commission sur tes revenus — aujourd\'hui, demain, toujours</strong>',
-      'founding.cta':'Rejoindre la Waitlist Founding →',
+      'founding.cta':'Réserver ma place Founding →',
       'founding.cta_sub':'Lancement mai 2026 · Inscris-toi pour bloquer ton prix à vie',
       'founding.eng_title':'Engagement Prix — à vie',
       'founding.eng_desc':'Tu paies <strong>199€/mois</strong> pour la vie. Quand l\'offre passera à <strong>299€/mois</strong> après le lancement, tu économiseras <strong>100€/mois</strong> — soit <strong>1 200€/an</strong> à vie.',
-      'founding.notify_intro':'Pas encore prêt ? Sois notifié au lancement.',
-      'founding.notify_placeholder':'ton@email.com',
-      'founding.notify_btn':'Notifier',
-      'founding.notify_legal':'En entrant ton email, tu acceptes notre <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">politique de confidentialité</a>',
-      'founding.notify_ok':'Tu seras notifié. À bientôt.',
+      'founding.join_eyebrow':'Bloquer ma place',
+      'founding.join_title':'Une fois les 30 places prises, c\'est fini.',
+      'founding.lbl_name':'Ton prénom',
+      'founding.ph_name':'Prénom',
+      'founding.lbl_email':'Ton email',
+      'founding.ph_email':'coach@email.com',
+      'founding.lbl_clients':'Combien de clients tu coaches actuellement ?',
+      'founding.opt_select':'Sélectionne',
+      'founding.opt_clients1':'0 à 5',
+      'founding.opt_clients2':'5 à 15',
+      'founding.opt_clients3':'15 à 30',
+      'founding.opt_clients4':'30+',
+      'founding.lbl_problem':'Ton plus gros problème en tant que coach ?',
+      'founding.opt_p1':'Je ne sais pas combien je vais gagner le mois prochain',
+      'founding.opt_p2':'Je perds des clients sans comprendre pourquoi',
+      'founding.opt_p3':'Je passe trop de temps sur l\'admin au lieu de coacher',
+      'founding.opt_p4':'J\'utilise 4+ outils différents et c\'est le chaos',
+      'founding.opt_p5':'Je veux passer de 10 à 30+ clients mais je ne sais pas comment',
+      'founding.form_cta':'Réserver ma place →',
+      'founding.form_cta_sub':'Pas de carte bancaire. Juste ton email.',
+      'founding.form_legal':'En t\'inscrivant, tu acceptes notre <a href="/legal.html#rgpd">politique de confidentialité</a> · Désinscription en 1 clic',
+      'founding.success_title':'Tu es sur la liste.',
+      'founding.success_sub':'Tu recevras un email en mai avec ton accès prioritaire. En attendant, suis <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> sur Instagram.',
       'footer.legal_mentions':'Mentions légales',
       'footer.legal_rgpd':'RGPD',
       'footer.legal_cgu':'CGU',
@@ -344,20 +429,37 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900;
       'founding.feat2':'MRR dashboard + 90-day forecast',
       'founding.feat3':'AI anti-churn · 7 signals per client',
       'founding.feat4':'Unlimited AI Analyser (Mistral)',
-      'founding.feat5':'1-click installable client app — iPhone &amp; Android (no App Store)',
       'founding.feat6':'Direct WhatsApp line to the founder for 90 days',
       'founding.feat7':'Vote on the product roadmap',
       'founding.feat8':'Founding Coach badge inside the app',
       'founding.feat9':'<strong style="color:#fff">0% commission on your revenue — today, tomorrow, always</strong>',
-      'founding.cta':'Join the Founding Waitlist →',
+      'founding.cta':'Claim my Founding seat →',
       'founding.cta_sub':'Launch May 2026 · Sign up to lock your price for life',
       'founding.eng_title':'Price commitment — for life',
       'founding.eng_desc':'You pay <strong>€199/month</strong> for life. When the offer rises to <strong>€299/month</strong> after launch, you\'ll save <strong>€100/month</strong> — that\'s <strong>€1,200/year</strong>, forever.',
-      'founding.notify_intro':'Not ready yet? Get pinged at launch.',
-      'founding.notify_placeholder':'you@email.com',
-      'founding.notify_btn':'Notify me',
-      'founding.notify_legal':'By entering your email, you accept our <a href="/legal.html#rgpd" style="color:rgba(0,201,167,0.6);text-decoration:none">privacy policy</a>',
-      'founding.notify_ok':'You\'re on the list. Talk soon.',
+      'founding.join_eyebrow':'Claim my seat',
+      'founding.join_title':'Once the 30 seats are gone, that\'s it.',
+      'founding.lbl_name':'Your first name',
+      'founding.ph_name':'First name',
+      'founding.lbl_email':'Your email',
+      'founding.ph_email':'coach@email.com',
+      'founding.lbl_clients':'How many clients do you coach right now?',
+      'founding.opt_select':'Select',
+      'founding.opt_clients1':'0 to 5',
+      'founding.opt_clients2':'5 to 15',
+      'founding.opt_clients3':'15 to 30',
+      'founding.opt_clients4':'30+',
+      'founding.lbl_problem':'Your biggest pain as a coach?',
+      'founding.opt_p1':'I have no idea what I\'ll earn next month',
+      'founding.opt_p2':'I lose clients and never understand why',
+      'founding.opt_p3':'I spend too much time on admin instead of coaching',
+      'founding.opt_p4':'I juggle 4+ tools and it\'s chaos',
+      'founding.opt_p5':'I want to scale from 10 to 30+ clients but don\'t know how',
+      'founding.form_cta':'Claim my seat →',
+      'founding.form_cta_sub':'No credit card. Just your email.',
+      'founding.form_legal':'By signing up, you accept our <a href="/legal.html#rgpd">privacy policy</a> · 1-click unsubscribe',
+      'founding.success_title':'You\'re on the list.',
+      'founding.success_sub':'You\'ll get an email in May with your priority access. In the meantime, follow <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> on Instagram.',
       'footer.legal_mentions':'Legal notice',
       'footer.legal_rgpd':'Privacy &amp; GDPR',
       'footer.legal_cgu':'Terms of service',

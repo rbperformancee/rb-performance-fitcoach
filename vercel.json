@@ -36,11 +36,13 @@
       "schedule": "0 9 * * *"
     }
   ],
+  "redirects": [
+    { "source": "/waitlist", "destination": "/founding", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/rejoindre/:slug", "destination": "/app.html?coach=:slug" },
     { "source": "/founding",    "destination": "/founding.html" },
     { "source": "/link",        "destination": "/link.html" },
-    { "source": "/waitlist",    "destination": "/waitlist.html" },
     { "source": "/demo",        "destination": "/app.html?demo=true" },
     { "source": "/demo-client", "destination": "/app.html?demo-client=true" },
     { "source": "/login",       "destination": "/app.html" },
