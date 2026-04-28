@@ -67,7 +67,6 @@ const SuperAdminDashboard = lazy(() => import("./components/SuperAdminDashboard"
 const CoachOnboarding = lazy(() => import("./components/CoachOnboarding"));
 import ProgrammeSignature from "./components/ProgrammeSignature";
 import ProgrammeCountdown from "./components/ProgrammeCountdown";
-const SaasLandingPage = lazy(() => import("./components/SaasLandingPage"));
 const CoachCodeGate = lazy(() => import("./components/CoachCodeGate"));
 const HelpPage = lazy(() => import("./components/HelpPage"));
 
@@ -562,12 +561,14 @@ function AppInner() {
   const [showSuperAdmin, setShowSuperAdmin] = React.useState(true);
   const [showTransition, setShowTransition] = React.useState(false);
   const [showLogin, setShowLogin] = React.useState(false);
-  const [showSaasLanding, setShowSaasLanding] = React.useState(() => {
-    // Defaut : landing SaaS pour les coachs (route / non-connecte).
-    // Exceptions :
-    //   ?client=true → SubscribePage (vieux liens email client)
-    //   ?coach=<slug> avec slug != "true" → SubscribePage
-    //     (flow /rejoindre/:slug : un prospect client decouvre un coach)
+  // Determine si /app.html non-connecte doit rediriger vers / (landing.html)
+  // ou afficher SubscribePage (cas client via vieux liens).
+  // Defaut : redirect vers / (landing publique)
+  // Exceptions :
+  //   ?client=true → SubscribePage (vieux liens email client)
+  //   ?coach=<slug> avec slug != "true" → SubscribePage
+  //     (flow /rejoindre/:slug : un prospect client decouvre un coach)
+  const [showSaasLanding] = React.useState(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("client") === "true") return false;
     const coachParam = params.get("coach");
@@ -863,28 +864,25 @@ function AppInner() {
     );
   }
 
-  // ── Pas connecté → Landing SaaS / Pricing client / Login ──
+  // ── Pas connecté → Landing publique / SubscribePage / Login ──
   if (!user) {
     if (showLogin) {
       return <LoginScreen onBack={() => setShowLogin(false)} />;
     }
-    // Landing page SaaS pour les coachs (accessible via ?coach=true ou toggle)
+    // Cas par defaut : visiteur non-loggue arrivant sur /app.html → redirect
+    // vers la landing publique (/ = public/landing.html, single source of truth)
     if (showSaasLanding) {
-      return (
-        <SaasLandingPage
-          onSignup={() => { setShowLogin(true); setShowSaasLanding(false); }}
-          onBack={() => setShowSaasLanding(false)}
-        />
-      );
+      if (typeof window !== "undefined") window.location.replace("/");
+      return null;
     }
-    // Page d'abonnement pour les clients non-connectes (redirect vers site de vente)
+    // Cas client (vieux liens email avec ?client=true ou ?coach=<slug>)
     return (
       <div style={{ position: 'relative' }}>
         <SubscribePage client={null} onLogin={() => setShowLogin(true)} />
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center', padding: '14px 24px calc(env(safe-area-inset-bottom,0px) + 14px)', background: 'linear-gradient(to top, rgba(0,0,0,0.98) 60%, transparent)', pointerEvents: 'none' }}>
-          <button onClick={() => setShowSaasLanding(true)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 12, cursor: 'pointer', fontFamily: '-apple-system,Inter,sans-serif', pointerEvents: 'auto' }}>
+          <a href="/" style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 12, textDecoration: 'none', fontFamily: '-apple-system,Inter,sans-serif', pointerEvents: 'auto' }}>
             Tu es coach ?
-          </button>
+          </a>
         </div>
       </div>
     );
