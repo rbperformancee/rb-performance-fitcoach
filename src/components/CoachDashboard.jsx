@@ -2158,6 +2158,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [duplicateProgramme, setDuplicateProgramme] = useState(null);
   const [showCmdK, setShowCmdK] = useState(false);
 
+  // Couleur d'accent personnalisee par coach (lue depuis coaches.accent_color,
+  // configuree dans onboarding + Settings). Fallback sur G (vert RB Perform)
+  // si pas encore choisie.
+  const accent = coachData?.accent_color || G;
+  // Expose comme CSS var pour les composants enfants qui veulent l'utiliser
+  // via var(--coach-accent) dans leurs inline styles.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--coach-accent', accent);
+  }, [accent]);
+
   // Sentinel gating: Pro/Elite/Founding only, behind feature flag
   const sentinelEnabled = true; // TODO: re-enable gating after beta — was: process.env.REACT_APP_SENTINEL_ENABLED === "true" || coachData?.features?.sentinel_beta === true
   const hasSentinelAccess = true; // TODO: re-enable plan check — was: isFounding || SENTINEL_PLANS.includes(coachData?.subscription_plan)
@@ -2620,15 +2630,23 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       padding: "0 12px",
       zIndex: 500,
     }}>
-      {/* LOGO */}
-      <div style={{ padding: "24px 8px 28px", position: "relative", zIndex: 1 }}>
-        <div style={{
-          fontFamily: "'Syne', sans-serif",
-          fontSize: 14, fontWeight: 900,
-          letterSpacing: ".1em", color: "#fff",
-        }}>
-          RB<span style={{ color: G }}>PERFORM</span>
-        </div>
+      {/* LOGO — coach branding ou fallback RB Perform */}
+      <div style={{ padding: "24px 8px 28px", position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 10 }}>
+        {coachData?.logo_url ? (
+          <img
+            src={coachData.logo_url}
+            alt={coachData.coaching_name || coachData.brand_name || "Coach"}
+            style={{ maxWidth: 140, maxHeight: 36, objectFit: "contain", display: "block" }}
+          />
+        ) : (
+          <div style={{
+            fontFamily: "'Syne', sans-serif",
+            fontSize: 14, fontWeight: 900,
+            letterSpacing: ".1em", color: "#fff",
+          }}>
+            RB<span style={{ color: accent }}>PERFORM</span>
+          </div>
+        )}
       </div>
 
       {/* NAV ITEMS */}
@@ -3143,7 +3161,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <div style={{ padding: "8px 24px 0", position: "relative", zIndex: 2 }}>
             <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t("coach.dashboard_title")}</div>
             <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>
-              {coachData?.full_name?.split(" ")[0] || t("coach.coach_fallback")}<span style={{ color: G }}>.</span>
+              {coachData?.full_name?.split(" ")[0] || t("coach.coach_fallback")}<span style={{ color: accent }}>.</span>
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
               {new Date().toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
@@ -3271,8 +3289,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
           </>)}
 
-          {/* ========== BUSINESS SECTION (MRR + score + objectif) ========== */}
-          {!showClientList && activeTab === "business" && coachData && clients.length > 0 && (
+          {/* ========== BUSINESS SECTION (MRR + score + objectif) ==========
+              Affichee meme avec 0 client (empty state pris en charge dans
+              BusinessSection — montre 0 MRR + CTA pour inviter premier client). */}
+          {!showClientList && activeTab === "business" && coachData && (
             <BusinessSection coachData={coachData} clients={clients} hasSentinelAccess={sentinelEnabled && hasSentinelAccess} onOpenSentinel={() => setShowSentinel(true)} />
           )}
 
@@ -3357,7 +3377,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Clients</div>
                   <h1 style={{ fontSize: "clamp(32px, 8vw, 52px)", fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, margin: 0 }}>
-                    {t("coach.athletes_title")}<span style={{ color: "#02d1ba" }}>.</span>
+                    {t("coach.athletes_title")}<span style={{ color: accent }}>.</span>
                   </h1>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>

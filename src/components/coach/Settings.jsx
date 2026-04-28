@@ -124,21 +124,24 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
               <input type="text" value={coachingName} onChange={(e) => setCoachingName(e.target.value)} placeholder={t("set.coaching_name_placeholder")} style={input} className="set-input" />
             </Field>
             <Field label={t("set.color_label")}>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {[G, "#00C9A7", "#00C9A7", "#ff6b6b", "#60a5fa", "#34d399", "#ec4899", "#eab308"].map((c) => (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {["#02d1ba", "#f97316", "#a78bfa", "#ef4444", "#3b82f6", "#f5c842", "#ec4899", "#22c55e"].map((c, i) => (
                   <button
-                    key={c}
+                    key={i}
                     type="button"
                     onClick={() => setAccentColor(c)}
                     style={{
-                      width: 36, height: 36, borderRadius: "50%",
+                      width: 40, height: 40, borderRadius: "50%",
                       background: c,
-                      border: accentColor === c ? `2px solid #fff` : `.5px solid rgba(255,255,255,.1)`,
+                      padding: 0, margin: 0,
+                      border: accentColor === c ? "2px solid #fff" : ".5px solid rgba(255,255,255,.15)",
                       cursor: "pointer",
-                      boxShadow: accentColor === c ? `0 0 12px ${c}` : "none",
+                      boxShadow: accentColor === c ? `0 0 16px ${c}, 0 0 0 4px ${c}25` : "none",
                       transition: "all .15s",
+                      flexShrink: 0,
                     }}
-                    aria-label={c}
+                    aria-label={`Couleur ${c}`}
+                    aria-pressed={accentColor === c}
                   />
                 ))}
               </div>
