@@ -4859,5 +4859,27 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   }).catch(function(){});
 })();
 </script>
+
+<!-- UTM capture : stocke en sessionStorage les params utm_* + referrer
+     pour les renvoyer avec la submission waitlist. Source attribution. -->
+<script>
+(function(){
+  try {
+    var url = new URL(location.href);
+    var keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+    var utm = {};
+    var hasAny = false;
+    keys.forEach(function(k){
+      var v = url.searchParams.get(k);
+      if (v) { utm[k] = v.slice(0, 100); hasAny = true; }
+    });
+    if (document.referrer && !document.referrer.includes(location.host)) {
+      utm.referrer = document.referrer.slice(0, 200);
+      hasAny = true;
+    }
+    if (hasAny) sessionStorage.setItem('rb_utm', JSON.stringify(utm));
+  } catch(e) {}
+})();
+</script>
 </body>
 </html>

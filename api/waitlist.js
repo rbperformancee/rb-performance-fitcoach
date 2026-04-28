@@ -36,11 +36,14 @@ module.exports = async (req, res) => {
   if (!rl.allowed) return res.status(429).json({ error: 'Trop de tentatives.' });
 
   try {
-    const { name, email, clients, problem, source } = req.body || {};
+    const { name, email, clients, problem, source,
+            utm_source, utm_medium, utm_campaign, utm_content, referrer } = req.body || {};
     if (!email || !email.includes('@')) return res.status(400).json({ error: 'Email invalide' });
 
     const cleanEmail = email.toLowerCase().trim();
     const firstName = (name || '').trim().split(' ')[0] || 'Coach';
+    // Truncate UTM strings (defense en profondeur, frontend cap deja a 100/200)
+    const trunc = (s, n) => (s == null ? null : String(s).slice(0, n));
 
     // Save to Supabase
     const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
@@ -52,7 +55,13 @@ module.exports = async (req, res) => {
         const { error: dbErr } = await supabase.from('waitlist').upsert({
           name: (name || '').trim(), email: cleanEmail,
           clients: clients || null, problem: problem || null,
-          source: source || 'waitlist', created_at: new Date().toISOString(),
+          source: source || 'waitlist',
+          utm_source: trunc(utm_source, 100),
+          utm_medium: trunc(utm_medium, 100),
+          utm_campaign: trunc(utm_campaign, 100),
+          utm_content: trunc(utm_content, 100),
+          referrer: trunc(referrer, 200),
+          created_at: new Date().toISOString(),
         }, { onConflict: 'email' });
         if (dbErr) throw dbErr;
         dbOk = true;
@@ -118,6 +127,8 @@ module.exports = async (req, res) => {
       <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Clients</td><td>${clients || '—'}</td></tr>
       <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Probleme</td><td>${problem || '—'}</td></tr>
       <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Source</td><td>${source || 'waitlist'}</td></tr>
+      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">UTM</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${[utm_source, utm_medium, utm_campaign].filter(Boolean).join(' / ') || '—'}</td></tr>
+      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Referrer</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${referrer || '—'}</td></tr>
     </table>
   </td></tr>
 </table></td></tr></table></body></html>`,

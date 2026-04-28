@@ -2,181 +2,172 @@
 
 Pour assumer leader marché : que **chaque** email RB Perform atterrisse en boîte de réception primaire (pas spam, pas Promotions). Sinon :
 - Onboarding cassé (clients ne reçoivent pas leur invite)
-- Reset password inutilisable (support inondé)
+- Welcome Stripe checkout = mort si en spam
 - Founder checkin → spam = relation client morte
 
-## Domaine émetteur
+## État actuel — `rbperform.app`
 
-`rbperform.com` (utilisé par les emails) — différent de `rbperform.app` (le SaaS frontend).
+Audit via `node scripts/check-email-deliverability.js rbperform.app` :
 
-Tous les emails partent depuis :
-- `noreply@rbperform.com` (notifications transactionnelles)
-- `rb.performancee@gmail.com` (founder direct, fallback Gmail)
+| Check | Statut | Détails |
+|---|---|---|
+| SPF | ✅ | `v=spf1 include:zohomail.eu include:_spf.resend.com ~all` |
+| DMARC | ✅ Phase 1 | `v=DMARC1; p=none; rua=mailto:rayan@rbperform.app; pct=100` |
+| DKIM Zoho | ✅ | `zmail._domainkey.rbperform.app` verified |
+| DKIM Resend | ⚠️ N/A | Ne sert que pour Supabase Edge Functions (invitations) |
+| MX | ✅ | Zoho EU (mx.zoho.eu, mx2.zoho.eu, mx3.zoho.eu) |
+| MTA-STS | ⚠️ Optional | Bonus deliverability — non bloquant |
+| TLS-RPT | ⚠️ Optional | Bonus — non bloquant |
+| BIMI | ⚠️ Future | Logo dans Gmail mobile — nécessite DMARC quarantine/reject + VMC |
 
-À terme, migrer le founder vers `rayan@rbperform.com` pour cohérence brand.
+## Architecture emails
 
-## Checklist DNS
+### Channel principal — Zoho SMTP
 
-À exécuter dans la console DNS du registrar de `rbperform.com` (Cloudflare / OVH / etc.).
+**Pour** : welcome (Stripe checkout), waitlist confirmation, cron founder-checkin, cron weekly-digest, cold outreach.
 
-### 1. SPF — Sender Policy Framework
+**Code** : `api/waitlist.js`, `api/send-welcome.js`, `api/cron-coach-weekly-digest.js`, `api/cron-founder-checkin.js`, `api/cron/cold-outreach.js`, `api/webhook-stripe.js`.
 
-Autorise Resend à envoyer pour `rbperform.com`.
+**Config** :
+- Host : `smtp.zoho.eu:465` (TLS)
+- Auth : `ZOHO_SMTP_USER` (default `rayan@rbperform.app`) + `ZOHO_SMTP_PASS` (Zoho app password)
+- DKIM : signé par Zoho via selector `zmail`
 
-Type : `TXT`
-Host : `@`
-Value :
-```
-v=spf1 include:amazonses.com include:_spf.resend.com -all
-```
+### Channel secondaire — Resend (Supabase Edge Functions)
 
-Note : `-all` (hard fail) est strict. Si tu envoies aussi via Gmail (founder), ajouter `include:_spf.google.com` avant `-all`.
+**Pour** : invitations clients (`send-invite`).
 
-Vérification : `dig TXT rbperform.com | grep "v=spf1"`
+**Code** : `supabase/functions/send-invite/index.ts`.
 
-### 2. DKIM — DomainKeys Identified Mail
+**Config** :
+- Env : `RESEND_API_KEY` (Supabase Edge Function secret)
+- DKIM : signé par Resend si domaine ajouté chez eux (à faire si on migre `send-invite` plus tard)
 
-Resend génère 3 records CNAME automatiquement quand tu vérifies le domaine dans le dashboard Resend → Domains. Suivre :
-1. Aller sur https://resend.com/domains
-2. Add Domain → `rbperform.com`
-3. Resend affiche 3 records (selector1, selector2, selector3)
-4. Ajouter chaque record dans le DNS
+> **Migration future** : `send-invite` migrer vers Zoho via `denomailer` (lib SMTP Deno-compatible) — voir issue tracker.
 
-Type : `CNAME`
-Host : `resend._domainkey` (ou les selectors fournis)
-Value : `<selector>.dkim.resend.com`
+## Progressive DMARC rollout
 
-Vérification : Resend dashboard passe au statut "Verified" (vert).
+Politique de quoi faire si SPF/DKIM échouent. **Démarrer doux puis durcir.**
 
-### 3. DMARC — Domain Message Authentication
-
-Politique de quoi faire si SPF/DKIM échouent. Commencer en monitor-only puis durcir.
-
-#### Phase 1 (semaine 1-2 post-launch) : monitor
-
-Type : `TXT`
-Host : `_dmarc`
-Value :
-```
-v=DMARC1; p=none; rua=mailto:rb.performancee@gmail.com; ruf=mailto:rb.performancee@gmail.com; fo=1; adkim=r; aspf=r; pct=100
-```
-
-#### Phase 2 (mois 1-2) : quarantine
-
-Une fois les rapports DMARC validés (aucun email légitime échouant) :
-```
-v=DMARC1; p=quarantine; rua=mailto:dmarc@rbperform.com; pct=25
-```
-
-#### Phase 3 (mois 3+) : reject
+### J+0 — Monitor only (en place actuellement)
 
 ```
-v=DMARC1; p=reject; rua=mailto:dmarc@rbperform.com; pct=100
+v=DMARC1; p=none; rua=mailto:rayan@rbperform.app; pct=100
 ```
 
-### 4. MTA-STS — Mail Transport Agent Strict Transport Security
+**Effet** : aucun email rejeté. Tu reçois les rapports XML quotidiens dans `rayan@rbperform.app`.
 
-Force TLS pour les emails entrants. Bonus deliverability + trust.
+**À surveiller pendant 7 jours** :
+- Aucun email légitime ne fail SPF + DKIM
+- Identifier sources non-autorisées (potentiel phishing)
 
-Type : `TXT`
-Host : `_mta-sts`
-Value : `v=STSv1; id=<unix-timestamp>` (ex: `id=20260101000000`)
+### J+7 — Quarantine 25%
 
-Plus créer un fichier `.well-known/mta-sts.txt` à `https://mta-sts.rbperform.com/.well-known/mta-sts.txt` :
+Une fois 7 jours de rapports DMARC validés :
+
 ```
-version: STSv1
-mode: enforce
-mx: feedback-smtp.eu-west-1.amazonses.com
-max_age: 604800
+v=DMARC1; p=quarantine; rua=mailto:rayan@rbperform.app; pct=25
 ```
 
-### 5. TLS-RPT — TLS Reporting
+**Effet** : 25% des emails non-conformes vont en spam. Si tu vois des faux positifs, repasse à `p=none` et investigue.
 
-Type : `TXT`
-Host : `_smtp._tls`
-Value : `v=TLSRPTv1; rua=mailto:tls-reports@rbperform.com`
+### J+14 — Quarantine 100%
 
-### 6. BIMI — Brand Indicators (logo dans Gmail mobile)
+Si pas de faux positif après 7 jours :
 
-Trust signal énorme : ton logo s'affiche à côté de chaque email dans Gmail / Yahoo Mail.
+```
+v=DMARC1; p=quarantine; rua=mailto:rayan@rbperform.app; pct=100
+```
 
-Prérequis : DMARC `p=quarantine` ou `p=reject` (Phase 2+).
+### J+30 — Reject
 
-Type : `TXT`
-Host : `default._bimi`
-Value : `v=BIMI1; l=https://rbperform.com/bimi-logo.svg; a=https://rbperform.com/bimi-vmc.pem`
+Niveau leader. Tout email non-conforme rejeté avant inbox :
 
-Logo : SVG Tiny PS 1.2 (carré, ratio 1:1, max 32KB). Le `a=` (Verified Mark Certificate) est optionnel mais Gmail demande VMC depuis 2024 pour afficher le logo. Coût ~1500€/an chez DigiCert. Skip pour l'instant, faisable post-traction.
+```
+v=DMARC1; p=reject; rua=mailto:rayan@rbperform.app; fo=1; adkim=r; aspf=r
+```
 
-## Headers à ajouter aux emails sortants
+**Avant de passer à `reject`** : vérifier que TOUS les services qui envoient pour `rbperform.app` ont SPF + DKIM en règle (Zoho ✓, Resend pour `send-invite` à confirmer).
 
-Dans `api/cron-coach-weekly-digest.js`, `api/cron-founder-checkin.js`, et tout autre endroit qui call Resend :
+## Headers RFC 8058 — déjà en place
+
+> [!warning] Gmail/Yahoo (depuis fev 2024)
+> **Exigent** `List-Unsubscribe` + `List-Unsubscribe-Post` pour les bulk senders. Sans ça → Promotions/spam systématique.
+
+Tous les crons + welcome utilisent :
 
 ```js
-{
-  from: "RB Perform <noreply@rbperform.com>",
-  to: [to],
-  reply_to: "rb.performancee@gmail.com",  // pour que les replies arrivent au founder
-  subject,
-  html,
-  headers: {
-    "List-Unsubscribe": `<https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}>, <mailto:unsubscribe@rbperform.com?subject=unsubscribe>`,
-    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"  // RFC 8058 — Gmail/Yahoo bouton 1-clic unsubscribe
-  }
+headers: {
+  'List-Unsubscribe': `<https://rbperform.app/unsubscribe?email=...&type=...>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
+  'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
 }
 ```
 
-Note : Gmail (depuis fév. 2024) **exige** `List-Unsubscribe` + `List-Unsubscribe-Post` pour les bulk senders sinon l'email atterrit en Promotions/spam. C'est non-négociable.
+L'endpoint `/api/unsubscribe` (RFC 8058 One-Click) est en prod et persiste les flags `unsub_*` dans `coaches` / `clients` Supabase.
+
+## Bonus optionnels
+
+### MTA-STS
+
+Force TLS pour les emails entrants. Améliore le score deliverability mais non-bloquant.
+
+```
+TXT _mta-sts.rbperform.app  "v=STSv1; id=20260428000000Z"
+```
+
+Plus créer `https://mta-sts.rbperform.app/.well-known/mta-sts.txt` :
+```
+version: STSv1
+mode: enforce
+mx: mx.zoho.eu
+mx: mx2.zoho.eu
+mx: mx3.zoho.eu
+max_age: 604800
+```
+
+### TLS-RPT
+
+```
+TXT _smtp._tls.rbperform.app  "v=TLSRPTv1; rua=mailto:rayan@rbperform.app"
+```
+
+### BIMI (logo dans Gmail mobile)
+
+Prérequis : DMARC `p=quarantine` ou `p=reject` (J+14+).
+
+```
+TXT default._bimi.rbperform.app  "v=BIMI1; l=https://rbperform.app/bimi-logo.svg; a=https://rbperform.app/bimi-vmc.pem"
+```
+
+Logo : SVG Tiny PS 1.2 (carré, max 32KB). VMC (Verified Mark Certificate) ~1500€/an chez DigiCert — Gmail demande VMC depuis 2024 pour afficher le logo. Skip pré-launch, faisable post-traction.
 
 ## Vérification automatique
 
-Lancer le script de check :
-
 ```bash
-node scripts/check-email-deliverability.js rbperform.com
+node scripts/check-email-deliverability.js rbperform.app
 ```
 
-Le script ping :
-- SPF
-- DMARC (avec décodage de la policy)
-- DKIM (selectors Resend)
-- MTA-STS
-- TLS-RPT
-- BIMI
-
-Output : ✅ / ⚠️ / ❌ par check + recommandations.
+Output : ✅ / ⚠️ / ❌ par check + recommendations. Lance avant chaque deploy + chaque semaine pour confirmer rien ne s'est cassé.
 
 ## Test deliverability
 
-Avant chaque release majeure :
+Avant launch (et au moindre doute) :
 
-1. **mail-tester.com** : envoyer un email transactionnel à l'adresse temporaire fournie. Score >= 9/10 obligatoire.
-2. **GlockApps** : tester sur 50+ providers (Gmail, Outlook, Yahoo, Apple Mail, ProtonMail, etc.) — score deliverability >= 95%.
-3. **Postmark Spam Check** : analyse de header.
+1. **mail-tester.com** : envoie un email transactionnel à l'adresse temporaire fournie. Score >= 9/10 obligatoire.
+2. **GlockApps** : teste sur 50+ providers (Gmail, Outlook, Yahoo, Apple Mail, ProtonMail). Deliverability >= 95%.
 
-Si score < 9/10, le DNS est probablement à corriger.
+Si score < 9/10 → DNS à corriger. Re-run le script d'audit pour identifier.
 
-## Réponse à un incident deliverability
+## Réponse incident "emails ne partent pas"
 
-Symptôme : "Mes clients reçoivent pas l'invite par email."
+Symptôme : "Mes clients ne reçoivent pas l'invite."
 
-1. Vérifier statut Resend : https://status.resend.com
-2. Vérifier `/api/health?deep=1` côté status.html (Resend apparait dans les checks)
-3. Vérifier les Resend logs : Dashboard → Logs → filtrer par `rbperform.com`
-4. Si bounce : adresse invalide → marquer dans Supabase `clients.email_invalid = true`
-5. Si soft fail : retry après 1h (Resend le fait auto)
-6. Si delivered mais pas reçu : très probablement spam → vérifier DKIM/DMARC, baisser le %DMARC quarantine si récent.
-
-## Calendrier suggéré
-
-- **J-7 (avant launch)** : SPF + DKIM verified Resend + DMARC `p=none`
-- **J0 (launch)** : monitorer rapports DMARC quotidiens
-- **M+1** : DMARC `p=quarantine` à 25%
-- **M+2** : DMARC `p=quarantine` à 100%
-- **M+3** : DMARC `p=reject`, ajout BIMI (sans VMC d'abord)
-- **M+6** : VMC BIMI achete pour afficher le logo dans Gmail
-- **M+12** : MTA-STS + TLS-RPT enforce
+1. Vérifier `/api/health?deep=1` → `zoho_smtp` doit être `configured`
+2. Vérifier que `ZOHO_SMTP_PASS` est bien set dans Vercel env vars
+3. Pour les invitations clients : vérifier `RESEND_API_KEY` dans Supabase Edge Function secrets
+4. Si bounce → adresse invalide → marquer dans Supabase `clients.email_invalid = true`
+5. Si delivered mais pas reçu → spam : tester sur mail-tester.com, vérifier DKIM/DMARC
 
 ## Owner
 
-Rayan Bonte — rb.performancee@gmail.com
+Rayan Bonte — `rayan@rbperform.app` (canal principal) / `rb.performancee@gmail.com` (fallback).

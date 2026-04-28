@@ -306,12 +306,19 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       btn.textContent = (lang === 'en') ? 'Submitting...' : 'Inscription...';
       btn.disabled = true;
 
+      var utm = {};
+      try { utm = JSON.parse(sessionStorage.getItem('rb_utm') || '{}'); } catch(e) {}
       var data = {
         name: document.getElementById('wl-name').value.trim(),
         email: document.getElementById('wl-email').value.trim().toLowerCase(),
         clients: document.getElementById('wl-clients').value,
         problem: document.getElementById('wl-problem').value,
         source: 'founding',
+        utm_source: utm.utm_source || null,
+        utm_medium: utm.utm_medium || null,
+        utm_campaign: utm.utm_campaign || null,
+        utm_content: utm.utm_content || null,
+        referrer: utm.referrer || null,
         created_at: new Date().toISOString()
       };
 
@@ -559,12 +566,33 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
   fetch('/api/geo').then(function(r){return r.json();}).then(function(g){
     if(!g||!g.currency)return;
     try{localStorage.setItem('rb_currency',g.currency);}catch(e){}
-    if(g.currency==='EUR')return; // HTML deja en EUR par defaut
+    if(g.currency==='EUR')return;
     document.querySelectorAll('[data-price]').forEach(function(el){
       var key=el.dataset.price;
       if(g.prices&&g.prices[key])el.textContent=g.prices[key];
     });
   }).catch(function(){});
+})();
+</script>
+
+<!-- UTM capture (idem landing) -->
+<script>
+(function(){
+  try {
+    var url = new URL(location.href);
+    var keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+    var utm = {};
+    var hasAny = false;
+    keys.forEach(function(k){
+      var v = url.searchParams.get(k);
+      if (v) { utm[k] = v.slice(0, 100); hasAny = true; }
+    });
+    if (document.referrer && !document.referrer.includes(location.host)) {
+      utm.referrer = document.referrer.slice(0, 200);
+      hasAny = true;
+    }
+    if (hasAny) sessionStorage.setItem('rb_utm', JSON.stringify(utm));
+  } catch(e) {}
 })();
 </script>
 </body>
