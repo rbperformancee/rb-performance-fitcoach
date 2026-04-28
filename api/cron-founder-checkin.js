@@ -16,12 +16,14 @@
  */
 
 const { captureException } = require("./_sentry");
+const nodemailer = require("nodemailer");
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const RESEND_KEY = process.env.RESEND_API_KEY;
-const FROM = "Rayan Bonte <rayan@rbperform.app>";
-const REPLY_TO = "rayan@rbperform.app";
+const SMTP_USER = process.env.ZOHO_SMTP_USER || "rayan@rbperform.app";
+const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
+const FROM = `Rayan Bonte <${SMTP_USER}>`;
+const REPLY_TO = SMTP_USER;
 
 function isAuthorizedCron(req) {
   const cronSecret = process.env.CRON_SECRET;
@@ -60,30 +62,27 @@ async function logSent(coachId, type) {
 }
 
 async function sendEmail(to, subject, html) {
-  if (!RESEND_KEY) return { ok: false, reason: "no_resend_key" };
+  if (!SMTP_PASS) return { ok: false, reason: "no_smtp_pass" };
   // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
   // pour les bulk senders, sinon -> Promotions/spam.
   const unsubUrl = `https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}&type=founder_checkin`;
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: FROM,
-      to: [to],
-      reply_to: REPLY_TO,
-      subject,
-      html,
-      headers: {
-        "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      },
-    }),
+  const transporter = nodemailer.createTransport({
+    host: "smtp.zoho.eu",
+    port: 465,
+    secure: true,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Resend HTTP ${res.status}: ${body.slice(0, 200)}`);
-  }
-  return res.json();
+  return transporter.sendMail({
+    from: FROM,
+    to,
+    replyTo: REPLY_TO,
+    subject,
+    html,
+    headers: {
+      "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+  });
 }
 
 function wrap(innerHtml) {
@@ -204,7 +203,7 @@ export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "POST") return res.status(405).end();
   if (!isAuthorizedCron(req)) return res.status(401).json({ error: "Unauthorized" });
   if (!SUPABASE_URL || !SUPABASE_KEY) return res.status(500).json({ error: "Supabase env missing" });
-  if (!RESEND_KEY) return res.status(500).json({ error: "RESEND_API_KEY missing" });
+  if (!SMTP_PASS) return res.status(500).json({ error: "ZOHO_SMTP_PASS missing" });
 
   const sent = [];
   const failed = [];

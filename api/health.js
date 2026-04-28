@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
   body.checks = {};
   body.latency = {};
   const supaUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-  const resendKey = process.env.RESEND_API_KEY;
+  const zohoConfigured = !!process.env.ZOHO_SMTP_PASS;
 
   // Reachability probe: treat 2xx, 401, 404 as "reachable" — we only want
   // to know the network path + TLS handshake work, not that we can auth.
@@ -74,23 +74,20 @@ module.exports = async (req, res) => {
   }
 
   // Run all probes in parallel for fastest response
-  const [supaR, stripeR, resendR] = await Promise.all([
+  // Note : pas de ping SMTP Zoho (port 465 bloque depuis Vercel + couteux).
+  // On verifie juste que ZOHO_SMTP_PASS est set en env.
+  const [supaR, stripeR] = await Promise.all([
     supaUrl ? ping(`${supaUrl}/auth/v1/settings`) : Promise.resolve({ status: 'not_configured', ms: 0 }),
     ping('https://api.stripe.com/v1/', { method: 'HEAD' }),
-    resendKey ? ping('https://api.resend.com/domains', {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${resendKey}` },
-    }) : Promise.resolve({ status: 'not_configured', ms: 0 }),
   ]);
 
   body.checks.supabase = supaR.status;
   body.checks.stripe = stripeR.status;
-  body.checks.resend = resendR.status;
+  body.checks.zoho_smtp = zohoConfigured ? 'configured' : 'not_configured';
   if (supaR.ms) body.latency.supabase = supaR.ms;
   if (stripeR.ms) body.latency.stripe = stripeR.ms;
-  if (resendR.ms) body.latency.resend = resendR.ms;
 
-  // Global status based on critical deps (Supabase only — Stripe + Resend nice-to-haves)
+  // Global status based on critical deps (Supabase only — Stripe + Zoho nice-to-haves)
   const critical = [body.checks.supabase];
   const anyDown = critical.some((c) => c === 'fail' || (typeof c === 'string' && c.startsWith('http_5')));
   const anyDegraded = critical.some((c) => typeof c === 'string' && c !== 'ok' && c !== 'not_configured' && !c.startsWith('http_5') && c !== 'fail');

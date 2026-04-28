@@ -111,7 +111,7 @@
   <div class="check" id="chk-app" data-status="loading"><div class="name" data-i18n="status.chk_app">Plateforme applicative</div><div class="state">—</div></div>
   <div class="check" id="chk-supabase" data-status="loading"><div class="name" data-i18n="status.chk_supabase">Base de données (Supabase)</div><div class="state">—<span class="latency"></span></div></div>
   <div class="check" id="chk-stripe" data-status="loading"><div class="name" data-i18n="status.chk_stripe">Paiements (Stripe)</div><div class="state">—<span class="latency"></span></div></div>
-  <div class="check" id="chk-resend" data-status="loading"><div class="name" data-i18n="status.chk_resend">Emails transactionnels (Resend)</div><div class="state">—<span class="latency"></span></div></div>
+  <div class="check" id="chk-zoho" data-status="loading"><div class="name" data-i18n="status.chk_zoho">Emails transactionnels (Zoho)</div><div class="state">—</div></div>
 
   <div class="meta">
     <span><span data-i18n="status.meta_region">Région</span> <b id="m-region">—</b></span>
@@ -142,7 +142,7 @@
       'status.chk_app': 'Plateforme applicative',
       'status.chk_supabase': 'Base de données (Supabase)',
       'status.chk_stripe': 'Paiements (Stripe)',
-      'status.chk_resend': 'Emails transactionnels (Resend)',
+      'status.chk_zoho': 'Emails transactionnels (Zoho)',
       'status.meta_region': 'Région',
       'status.meta_env': 'Environnement',
       'status.meta_uptime': 'Uptime',
@@ -170,7 +170,7 @@
       'status.chk_app': 'Application platform',
       'status.chk_supabase': 'Database (Supabase)',
       'status.chk_stripe': 'Payments (Stripe)',
-      'status.chk_resend': 'Transactional emails (Resend)',
+      'status.chk_zoho': 'Transactional emails (Zoho)',
       'status.meta_region': 'Region',
       'status.meta_env': 'Environment',
       'status.meta_uptime': 'Uptime',
@@ -288,13 +288,12 @@
       setCheck('chk-app', res.ok && data.status !== 'down' ? 'ok' : 'down', res.ok ? 'OK' : 'HTTP ' + res.status);
       setCheck('chk-supabase', mapCheck(data.checks?.supabase), (data.checks?.supabase || '—').toUpperCase(), data.latency?.supabase);
       setCheck('chk-stripe', mapCheck(data.checks?.stripe), (data.checks?.stripe || '—').toUpperCase(), data.latency?.stripe);
-      const resendStatus = data.checks?.resend;
-      if (resendStatus === 'not_configured') {
-        // Hide resend check entirely if not configured (avoid showing "—" forever)
-        const resendEl = document.getElementById('chk-resend');
-        if (resendEl) resendEl.style.display = 'none';
+      const zohoStatus = data.checks?.zoho_smtp;
+      if (zohoStatus === 'not_configured') {
+        const zohoEl = document.getElementById('chk-zoho');
+        if (zohoEl) zohoEl.style.display = 'none';
       } else {
-        setCheck('chk-resend', mapCheck(resendStatus), (resendStatus || '—').toUpperCase(), data.latency?.resend);
+        setCheck('chk-zoho', zohoStatus === 'configured' ? 'ok' : 'down', (zohoStatus || '—').toUpperCase());
       }
 
       document.getElementById('m-region').textContent = data.region || '—';
@@ -310,7 +309,7 @@
       setCheck('chk-app', 'down', 'UNREACHABLE');
       setCheck('chk-supabase', 'loading', '—');
       setCheck('chk-stripe', 'loading', '—');
-      setCheck('chk-resend', 'loading', '—');
+      setCheck('chk-zoho', 'loading', '—');
     }
   }
 

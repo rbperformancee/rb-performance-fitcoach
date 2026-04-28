@@ -882,6 +882,12 @@ html.light .theme-toggle .moon{display:none}
 html.light .lang-toggle{border-color:rgba(0,0,0,0.1)}
 html.light .lang-toggle button{color:rgba(0,0,0,0.5)}
 html.light .lang-toggle button.active{background:rgba(0,0,0,0.08);color:#0a0a0a}
+/* Mobile : hide navbar lang-toggle (le menu overlay en a une copie) */
+.menu-lang-toggle{display:none}
+@media(max-width:768px){
+  .nav-right .lang-toggle:not(.menu-lang-toggle){display:none}
+  .menu-lang-toggle{display:inline-flex}
+}
 
 /* ========== STACKING CARDS (fix : fade quand suivante arrive) ========== */
 .stacking{padding:140px 24px;background:var(--dark);border-top:1px solid var(--border)}
@@ -1788,6 +1794,12 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <a href="/founding#join" class="menu-cta-btn" data-i18n="menu.cta">
         Rejoindre les 30 Founding Coachs →
       </a>
+    </div>
+
+    <!-- Lang toggle inside menu (mobile-friendly placement) -->
+    <div class="lang-toggle menu-lang-toggle" role="group" aria-label="Language" style="margin-top:32px">
+      <button type="button" data-lang="fr" aria-pressed="true">FR</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
     </div>
 
     <div class="menu-sig">rbperform.app</div>

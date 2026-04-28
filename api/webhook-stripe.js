@@ -233,57 +233,48 @@ function buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }) {
 }
 
 async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerName }) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) {
-    console.error('[webhook] RESEND_API_KEY missing, cannot send welcome email');
-    return { ok: false, reason: 'no_key' };
+  const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
+  const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
+  if (!SMTP_PASS) {
+    console.error('[webhook] ZOHO_SMTP_PASS missing, cannot send welcome email');
+    return { ok: false, reason: 'no_smtp_pass' };
   }
   const isFounder = plan === 'founding' || plan === 'founder';
   const firstName = firstNameFrom(customerName || to);
   // Founders get the email from my personal address (replies route back to me).
   // Standard gets noreply + Reply-To set so replies still land.
   const from = isFounder
-    ? 'Rayan Bonte <rayan@rbperform.app>'
-    : 'RB Perform <noreply@rbperform.app>';
+    ? `Rayan Bonte <${SMTP_USER}>`
+    : `RB Perform <${SMTP_USER}>`;
   // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
   // pour les bulk senders. Welcome = transactionnel, mais inclure quand meme par
   // securite (fait pas de mal et garantit deliverability primary inbox).
   const unsubUrl = `https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}&type=welcome`;
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        reply_to: 'rayan@rbperform.app',
-        subject: buildWelcomeSubject(plan, firstName),
-        html: buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }),
-        headers: {
-          'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-        },
-      }),
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.zoho.eu',
+      port: 465,
+      secure: true,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      console.error(`[WEBHOOK_RESEND_FAILED] to=${to} status=${res.status} body="${txt.slice(0, 200)}"`);
-      await captureException(new Error(`Resend HTTP ${res.status}: ${txt.slice(0, 200)}`), {
-        tags: { endpoint: 'webhook-stripe', stage: 'resend', plan },
-        extra: { to, status: res.status, body: txt.slice(0, 500) },
-      });
-      return { ok: false, reason: `http_${res.status}` };
-    }
-    const body = await res.json().catch(() => ({}));
-    console.log('[webhook] Welcome email sent to', to, 'id:', body.id);
-    return { ok: true, id: body.id };
+    const info = await transporter.sendMail({
+      from,
+      to,
+      replyTo: SMTP_USER,
+      subject: buildWelcomeSubject(plan, firstName),
+      html: buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }),
+      headers: {
+        'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    });
+    console.log('[webhook] Welcome email sent to', to, 'msgId:', info.messageId);
+    return { ok: true, id: info.messageId };
   } catch (e) {
-    console.error(`[WEBHOOK_RESEND_EXCEPTION] to=${to} reason="${e.message}"`);
+    console.error(`[WEBHOOK_ZOHO_EXCEPTION] to=${to} reason="${e.message}"`);
     await captureException(e, {
-      tags: { endpoint: 'webhook-stripe', stage: 'resend_exception', plan },
+      tags: { endpoint: 'webhook-stripe', stage: 'zoho_exception', plan },
       extra: { to },
     });
     return { ok: false, reason: 'exception' };

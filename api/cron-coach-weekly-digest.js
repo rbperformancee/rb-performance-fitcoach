@@ -4,10 +4,12 @@
  */
 
 const { captureException } = require("./_sentry");
+const nodemailer = require("nodemailer");
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const RESEND_KEY = process.env.RESEND_API_KEY;
+const SMTP_USER = process.env.ZOHO_SMTP_USER || "rayan@rbperform.app";
+const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
 
 function isAuthorizedCron(req) {
   const cronSecret = process.env.CRON_SECRET;
@@ -23,24 +25,26 @@ async function sbFetch(path) {
 }
 
 async function sendEmail(to, subject, html) {
-  if (!RESEND_KEY) return;
+  if (!SMTP_PASS) return;
   // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
   // pour les bulk senders, sinon -> Promotions/spam.
   const unsubUrl = `https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}&type=weekly_digest`;
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "RB Perform <noreply@rbperform.app>",
-      to: [to],
-      reply_to: "rb.performancee@gmail.com",
-      subject,
-      html,
-      headers: {
-        "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      },
-    }),
+  const transporter = nodemailer.createTransport({
+    host: "smtp.zoho.eu",
+    port: 465,
+    secure: true,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
+  await transporter.sendMail({
+    from: `RB Perform <${SMTP_USER}>`,
+    to,
+    replyTo: "rb.performancee@gmail.com",
+    subject,
+    html,
+    headers: {
+      "List-Unsubscribe": `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 }
 
@@ -183,7 +187,7 @@ function buildDigestHtml({ coach, clients, weekStats }) {
 export default async function handler(req, res) {
   if (!isAuthorizedCron(req)) return res.status(401).json({ error: "Unauthorized" });
   if (!SUPABASE_KEY) return res.status(500).json({ error: "Missing SUPABASE_SERVICE_ROLE_KEY" });
-  if (!RESEND_KEY) return res.status(500).json({ error: "Missing RESEND_API_KEY" });
+  if (!SMTP_PASS) return res.status(500).json({ error: "Missing ZOHO_SMTP_PASS" });
 
   try {
     // On selectionne weekly_report_enabled + flags unsub_* (RFC 8058)
