@@ -8,6 +8,11 @@
 <meta name="robots" content="noindex, follow" />
 <meta property="og:locale" content="fr_FR" />
 <title>Bienvenue · RB Perform</title>
+<link rel="canonical" href="https://rbperform.app/welcome" />
+<link rel="alternate" hreflang="fr" href="https://rbperform.app/welcome" />
+<link rel="alternate" hreflang="en" href="https://rbperform.app/welcome?lang=en" />
+<link rel="alternate" hreflang="x-default" href="https://rbperform.app/welcome" />
+<meta property="og:locale:alternate" content="en_US" />
 <link rel="icon" type="image/svg+xml" href="/icon.svg" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
@@ -151,6 +156,7 @@ body.is-android .install-android{display:block}
     <a href="/" data-i18n="welcome.foot_home">Accueil</a> ·
     <a href="/legal.html#cgu" data-i18n="welcome.foot_cgu">CGV</a> ·
     <a href="/legal.html#rgpd" data-i18n="welcome.foot_rgpd">RGPD</a> ·
+    <a href="#" data-i18n="welcome.foot_cookies" onclick="if(window.RBConsent){window.RBConsent.show();}return false;">Cookies</a> ·
     <a href="/status" data-i18n="welcome.foot_status">Statut plateforme</a>
     <div data-i18n="welcome.foot_copy" style="margin-top:10px">© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France</div>
   </div>
@@ -193,6 +199,7 @@ window.RB_I18N = {
     'welcome.foot_home':'Accueil',
     'welcome.foot_cgu':'CGV',
     'welcome.foot_rgpd':'RGPD',
+    'welcome.foot_cookies':'Cookies',
     'welcome.foot_status':'Statut plateforme',
     'welcome.foot_copy':'© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France'
   },
@@ -229,6 +236,7 @@ window.RB_I18N = {
     'welcome.foot_home':'Home',
     'welcome.foot_cgu':'Terms',
     'welcome.foot_rgpd':'Privacy',
+    'welcome.foot_cookies':'Cookies',
     'welcome.foot_status':'Platform status',
     'welcome.foot_copy':'© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France'
   }
@@ -334,5 +342,8 @@ window.RB_I18N = {
   }
 })();
 </script>
+
+<!-- ===== Cookie consent (GDPR + ePrivacy) — non-blocking, defer ===== -->
+<script src="/cookie-consent.js" defer></script>
 </body>
 </html>

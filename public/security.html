@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#080808" />
+<meta name="color-scheme" content="dark" />
+<title>Trust & Security · RB Perform</title>
+<meta name="description" content="Sécurité, chiffrement, conformité RGPD, hébergement EU, headers de sécurité, divulgation responsable. Comment RB Perform protège ton business et tes clients." />
+<meta name="robots" content="index, follow" />
+<meta name="author" content="Rayan Bonte" />
+
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="fr_FR" />
+<meta property="og:locale:alternate" content="en_US" />
+<meta property="og:title" content="Trust & Security — RB Perform" />
+<meta property="og:description" content="Chiffrement, RGPD, hébergement EU, headers de sécurité, divulgation responsable. La sécurité, sans bullshit." />
+<meta property="og:url" content="https://rbperform.app/security" />
+<meta property="og:image" content="https://rbperform.app/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Trust & Security — RB Perform" />
+<meta name="twitter:description" content="Chiffrement, RGPD, hébergement EU, headers de sécurité, divulgation responsable." />
+<meta name="twitter:image" content="https://rbperform.app/og-image.png" />
+
+<link rel="canonical" href="https://rbperform.app/security" />
+<link rel="alternate" hreflang="fr" href="https://rbperform.app/security" />
+<link rel="alternate" hreflang="en" href="https://rbperform.app/security?lang=en" />
+<link rel="alternate" hreflang="x-default" href="https://rbperform.app/security" />
+
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@graph":[
+    {
+      "@type":"WebPage",
+      "@id":"https://rbperform.app/security#webpage",
+      "url":"https://rbperform.app/security",
+      "name":"Trust & Security — RB Perform",
+      "description":"Comment RB Perform protège tes données et celles de tes clients : chiffrement, RGPD, hébergement EU, headers de sécurité, divulgation responsable.",
+      "inLanguage":["fr-FR","en-US"],
+      "isPartOf":{"@id":"https://rbperform.app/#website"},
+      "about":{"@id":"https://rbperform.app/#org"}
+    },
+    {
+      "@type":"Organization",
+      "@id":"https://rbperform.app/#org",
+      "name":"RB Perform",
+      "url":"https://rbperform.app",
+      "logo":"https://rbperform.app/icon-512.png",
+      "email":"rb.performancee@gmail.com",
+      "contactPoint":{
+        "@type":"ContactPoint",
+        "contactType":"Security",
+        "email":"rb.performancee@gmail.com",
+        "availableLanguage":["French","English"]
+      },
+      "address":{"@type":"PostalAddress","streetAddress":"10 Rue Cardinale","postalCode":"84000","addressLocality":"Avignon","addressCountry":"FR"}
+    }
+  ]
+}
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#080808;color:rgba(255,255,255,.78);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;min-height:100vh}
+body{padding:60px 24px 80px}
+
+.wrap{max-width:780px;margin:0 auto}
+
+/* Lang toggle (pattern repris) */
+.lang-toggle{position:fixed;top:18px;right:18px;display:inline-flex;border:1px solid rgba(255,255,255,.1);border-radius:100px;overflow:hidden;font-size:11px;font-weight:700;letter-spacing:1.5px;background:rgba(8,8,8,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:50}
+.lang-toggle button{padding:6px 11px;color:rgba(255,255,255,.5);transition:all .2s;font-family:inherit;text-transform:uppercase;background:transparent;border:none;cursor:pointer}
+.lang-toggle button.active{background:rgba(255,255,255,.08);color:#fff}
+.lang-toggle button:hover:not(.active){color:rgba(255,255,255,.8)}
+
+/* Header */
+.brand{font-family:'Syne',sans-serif;font-size:14px;font-weight:900;letter-spacing:.12em;color:#fff;text-decoration:none;margin-bottom:32px;display:inline-block}
+.brand span{color:#02d1ba}
+
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px}
+h1{font-family:'Syne',sans-serif;font-size:clamp(34px,5vw,52px);font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1.05;margin-bottom:18px}
+.lead{font-size:16px;color:rgba(255,255,255,.55);max-width:620px;line-height:1.7;margin-bottom:48px}
+
+/* Section */
+section.block{margin-top:48px;padding-top:32px;border-top:.5px solid rgba(255,255,255,.07)}
+section.block:first-of-type{border-top:none;padding-top:0;margin-top:0}
+section.block h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+section.block h2 .num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:rgba(2,209,186,.7);background:rgba(2,209,186,.08);padding:3px 8px;border-radius:6px;letter-spacing:.05em}
+section.block p{font-size:14.5px;color:rgba(255,255,255,.62);margin-bottom:14px;line-height:1.7}
+section.block p strong{color:rgba(255,255,255,.92);font-weight:600}
+section.block ul{list-style:none;margin:14px 0 8px;padding:0}
+section.block li{font-size:14px;color:rgba(255,255,255,.6);padding:7px 0 7px 22px;position:relative;line-height:1.65}
+section.block li::before{content:'';position:absolute;left:0;top:14px;width:8px;height:8px;border-radius:50%;background:#02d1ba;opacity:.6}
+section.block code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#02d1ba;background:rgba(2,209,186,.07);padding:2px 7px;border-radius:5px;border:.5px solid rgba(2,209,186,.15)}
+
+/* Headers card */
+.headers-card{margin-top:18px;padding:18px 22px;background:rgba(255,255,255,.02);border:.5px solid rgba(255,255,255,.07);border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.55);line-height:1.85;overflow-x:auto}
+.headers-card .hk{color:#02d1ba}
+.headers-card .hv{color:rgba(255,255,255,.5)}
+
+.cta-row{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px}
+.cta{display:inline-block;padding:11px 18px;background:rgba(2,209,186,.08);color:#02d1ba;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:100px;text-decoration:none;border:.5px solid rgba(2,209,186,.25);transition:all .15s}
+.cta:hover{background:rgba(2,209,186,.14);transform:translateY(-1px)}
+.cta.subtle{background:transparent;color:rgba(255,255,255,.55);border-color:rgba(255,255,255,.12)}
+.cta.subtle:hover{color:#fff;border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.03)}
+
+.note{margin-top:24px;padding:18px 22px;background:linear-gradient(135deg,rgba(2,209,186,.06),rgba(2,209,186,.02));border:.5px solid rgba(2,209,186,.18);border-radius:12px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.7}
+.note strong{color:#02d1ba}
+
+.foot{margin-top:64px;padding-top:24px;border-top:.5px solid rgba(255,255,255,.05);font-size:11px;color:rgba(255,255,255,.3);text-align:center;line-height:1.8}
+.foot a{color:rgba(2,209,186,.7);text-decoration:none;margin:0 6px}
+.foot a:hover{color:#02d1ba}
+
+@media(max-width:560px){
+  body{padding:48px 18px 60px}
+  .lang-toggle{top:12px;right:12px}
+  section.block h2{font-size:19px}
+  .headers-card{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="lang-toggle" role="group" aria-label="Language">
+  <button type="button" data-lang="fr" class="active" aria-pressed="true">FR</button>
+  <button type="button" data-lang="en" aria-pressed="false">EN</button>
+</div>
+
+<div class="wrap">
+  <a href="/" class="brand">RB<span>PERFORM</span></a>
+
+  <div class="eyebrow" data-i18n="security.eyebrow">Trust & Security</div>
+  <h1 data-i18n="security.title">La sécurité, sans bullshit.</h1>
+  <p class="lead" data-i18n="security.lead">
+    RB Perform héberge le business de coachs premium et les données santé de leurs clients.
+    Voici exactement comment on protège tout ça — sans abréviations marketing, sans certifications de complaisance.
+    Ce que tu lis ici est ce qu'on opère réellement en production.
+  </p>
+
+  <!-- 1. ENCRYPTION -->
+  <section class="block">
+    <h2><span class="num">01</span><span data-i18n="security.s1_title">Chiffrement</span></h2>
+    <p data-i18n="security.s1_p1">
+      Toutes les communications entre ton navigateur et nos serveurs passent en <strong>HTTPS / TLS 1.2+</strong>.
+      Les certificats sont gérés automatiquement par Vercel (Let's Encrypt) et renouvelés tous les 90 jours.
+    </p>
+    <p data-i18n="security.s1_p2">
+      Côté base de données, Supabase chiffre les connexions en <strong>TLS</strong> et les données au repos avec
+      <strong>AES-256</strong> (Postgres + stockage). Aucune donnée client ne transite ni ne dort en clair.
+    </p>
+    <ul>
+      <li data-i18n="security.s1_l1">HTTPS strict via HSTS preload (max-age 2 ans, includeSubDomains).</li>
+      <li data-i18n="security.s1_l2">TLS sur toutes les connexions Postgres (sslmode=require).</li>
+      <li data-i18n="security.s1_l3">Chiffrement au repos AES-256 sur les volumes Supabase.</li>
+      <li data-i18n="security.s1_l4">Secrets applicatifs scellés dans Vercel Environment Variables.</li>
+    </ul>
+  </section>
+
+  <!-- 2. AUTHENTICATION -->
+  <section class="block">
+    <h2><span class="num">02</span><span data-i18n="security.s2_title">Authentification</span></h2>
+    <p data-i18n="security.s2_p1">
+      L'authentification est gérée par <strong>Supabase Auth</strong>, qui gère le hashing des mots de passe (bcrypt),
+      la rotation des sessions JWT, et les flux OTP par email.
+    </p>
+    <ul>
+      <li data-i18n="security.s2_l1">Mots de passe minimum 8 caractères, hashing bcrypt (jamais stockés en clair).</li>
+      <li data-i18n="security.s2_l2">Sessions JWT signées, rotation automatique, expiration courte.</li>
+      <li data-i18n="security.s2_l3">OTP par email pour les flux sensibles (création de compte, reset mot de passe).</li>
+      <li data-i18n="security.s2_l4">Row-Level Security (RLS) Postgres activée sur toutes les tables — un coach ne peut jamais voir les données d'un autre.</li>
+      <li data-i18n="security.s2_l5">Aucun cookie tiers, aucun tracker comportemental.</li>
+    </ul>
+  </section>
+
+  <!-- 3. COMPLIANCE -->
+  <section class="block">
+    <h2><span class="num">03</span><span data-i18n="security.s3_title">Conformité & RGPD</span></h2>
+    <p data-i18n="security.s3_p1">
+      RB Perform est <strong>100% RGPD-ready</strong>. Toutes les données — coachs et clients — sont stockées
+      en <strong>Union Européenne</strong> (Supabase Frankfurt, eu-central-1). Aucun transfert hors UE,
+      aucun fournisseur US d'analyse comportementale.
+    </p>
+    <ul>
+      <li data-i18n="security.s3_l1">Hébergement et traitement des données en UE (Frankfurt, Allemagne).</li>
+      <li data-i18n="security.s3_l2">Droit d'accès, rectification, portabilité et suppression sur simple demande email.</li>
+      <li data-i18n="security.s3_l3">Registre des traitements maintenu (Art. 30 RGPD).</li>
+      <li data-i18n="security.s3_l4">DPA disponible sur demande pour les clients enterprise.</li>
+      <li data-i18n="security.s3_l5">Suppression de compte → purge complète des données associées sous 30 jours.</li>
+    </ul>
+    <div class="cta-row">
+      <a class="cta" href="mailto:rb.performancee@gmail.com?subject=DPA%20Request" data-i18n="security.s3_cta_dpa">Demander le DPA</a>
+      <a class="cta subtle" href="/legal.html#rgpd" data-i18n="security.s3_cta_legal">Mentions RGPD</a>
+    </div>
+  </section>
+
+  <!-- 4. INFRASTRUCTURE -->
+  <section class="block">
+    <h2><span class="num">04</span><span data-i18n="security.s4_title">Infrastructure</span></h2>
+    <p data-i18n="security.s4_p1">
+      Stack volontairement simple, opérée par deux hébergeurs reconnus.
+      Pas de serveurs maison, pas de boîtes noires, pas de single-points-of-failure obscurs.
+    </p>
+    <ul>
+      <li data-i18n="security.s4_l1"><strong>Vercel</strong> — front, edge, fonctions serverless. SOC 2 Type 2, ISO 27001.</li>
+      <li data-i18n="security.s4_l2"><strong>Supabase (EU Frankfurt)</strong> — Postgres managé, Auth, Storage. SOC 2 Type 2, hébergement AWS eu-central-1.</li>
+      <li data-i18n="security.s4_l3"><strong>Stripe</strong> — paiements. PCI-DSS Level 1. Aucun numéro de carte ne touche nos serveurs.</li>
+      <li data-i18n="security.s4_l4">Monitoring uptime + erreurs 24/7. Page de statut publique.</li>
+    </ul>
+    <div class="cta-row">
+      <a class="cta subtle" href="/status" data-i18n="security.s4_cta_status">Statut plateforme →</a>
+    </div>
+  </section>
+
+  <!-- 5. BUG BOUNTY -->
+  <section class="block">
+    <h2><span class="num">05</span><span data-i18n="security.s5_title">Divulgation responsable</span></h2>
+    <p data-i18n="security.s5_p1">
+      Tu as découvert une vulnérabilité ? <strong>Préviens-nous avant de la publier.</strong>
+      On répond en moins de 24h, on patche vite, et on créditera ton nom (si tu veux) une fois le correctif déployé.
+    </p>
+    <ul>
+      <li data-i18n="security.s5_l1">Email dédié : <code>rb.performancee@gmail.com</code> — sujet <code>[SECURITY]</code>.</li>
+      <li data-i18n="security.s5_l2">Réponse initiale &lt; 24h ouvrées, patch sous 7 jours pour les criticals.</li>
+      <li data-i18n="security.s5_l3">Pas de scan automatisé agressif sans accord préalable (ça pollue nos logs et fait perdre du temps).</li>
+      <li data-i18n="security.s5_l4">Hall of fame public pour les chercheurs qui le souhaitent.</li>
+    </ul>
+    <div class="cta-row">
+      <a class="cta" href="mailto:rb.performancee@gmail.com?subject=%5BSECURITY%5D%20Vulnerability%20disclosure" data-i18n="security.s5_cta_report">Signaler une vulnérabilité</a>
+    </div>
+  </section>
+
+  <!-- 6. INCIDENT RESPONSE -->
+  <section class="block">
+    <h2><span class="num">06</span><span data-i18n="security.s6_title">Réponse aux incidents</span></h2>
+    <p data-i18n="security.s6_p1">
+      En cas d'incident affectant la disponibilité ou la sécurité des données, la communication est <strong>publique et rapide</strong>.
+      La page statut est mise à jour en temps réel et les utilisateurs concernés sont notifiés par email
+      sous 72h maximum (RGPD Art. 33).
+    </p>
+    <ul>
+      <li data-i18n="security.s6_l1">Page statut publique avec checks en temps réel toutes les 30 secondes.</li>
+      <li data-i18n="security.s6_l2">Notification email aux comptes concernés sous 72h en cas de breach (RGPD Art. 33).</li>
+      <li data-i18n="security.s6_l3">Post-mortem public publié pour les incidents majeurs.</li>
+    </ul>
+  </section>
+
+  <!-- 7. BACKUPS -->
+  <section class="block">
+    <h2><span class="num">07</span><span data-i18n="security.s7_title">Sauvegardes & restauration</span></h2>
+    <p data-i18n="security.s7_p1">
+      La base Postgres est sauvegardée automatiquement par Supabase, avec point-in-time recovery (PITR).
+      En cas de corruption ou de suppression accidentelle, on peut revenir à n'importe quel instant des 7 derniers jours.
+    </p>
+    <ul>
+      <li data-i18n="security.s7_l1">Snapshots Postgres quotidiens (rétention 7 jours, plan Pro Supabase).</li>
+      <li data-i18n="security.s7_l2">Point-in-time recovery (PITR) granularité 2 minutes.</li>
+      <li data-i18n="security.s7_l3">Backups manuels avant chaque migration de schéma majeure.</li>
+      <li data-i18n="security.s7_l4">Tests de restauration trimestriels.</li>
+    </ul>
+  </section>
+
+  <!-- 8. SECURITY HEADERS -->
+  <section class="block">
+    <h2><span class="num">08</span><span data-i18n="security.s8_title">Headers de sécurité</span></h2>
+    <p data-i18n="security.s8_p1">
+      Tous les headers de sécurité standards sont configurés au niveau edge (Vercel).
+      Voici exactement ce que ton navigateur reçoit :
+    </p>
+    <div class="headers-card">
+      <div><span class="hk">Strict-Transport-Security:</span> <span class="hv">max-age=63072000; includeSubDomains; preload</span></div>
+      <div><span class="hk">Content-Security-Policy:</span> <span class="hv">default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.youtube.com; ...</span></div>
+      <div><span class="hk">X-Content-Type-Options:</span> <span class="hv">nosniff</span></div>
+      <div><span class="hk">X-Frame-Options:</span> <span class="hv">SAMEORIGIN</span></div>
+      <div><span class="hk">Referrer-Policy:</span> <span class="hv">strict-origin-when-cross-origin</span></div>
+      <div><span class="hk">Permissions-Policy:</span> <span class="hv">camera=(self), microphone=(self), geolocation=(), payment=(self), interest-cohort=()</span></div>
+      <div><span class="hk">Cross-Origin-Opener-Policy:</span> <span class="hv">same-origin-allow-popups</span></div>
+      <div><span class="hk">X-DNS-Prefetch-Control:</span> <span class="hv">on</span></div>
+    </div>
+    <p data-i18n="security.s8_p2" style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.45)">
+      Tu peux les vérifier en live avec <code>curl -I https://rbperform.app</code> ou via securityheaders.com.
+    </p>
+  </section>
+
+  <div class="note">
+    <strong data-i18n="security.note_strong">Une question, un doute ?</strong>
+    <span data-i18n="security.note_text"> Écris-moi directement à <a href="mailto:rb.performancee@gmail.com" style="color:#02d1ba;text-decoration:none">rb.performancee@gmail.com</a>. Je réponds personnellement, sous 24h max.</span>
+  </div>
+
+  <div class="foot">
+    <a href="/" data-i18n="security.foot_home">Accueil</a> ·
+    <a href="/status" data-i18n="security.foot_status">Statut</a> ·
+    <a href="/legal.html" data-i18n="security.foot_legal">Mentions légales</a> ·
+    <a href="/legal.html#rgpd" data-i18n="security.foot_rgpd">RGPD</a>
+    <div data-i18n="security.foot_copy" style="margin-top:10px">© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France</div>
+  </div>
+</div>
+
+<!-- ===== I18N FR/EN ===== -->
+<script>
+window.RB_I18N = {
+  fr: {
+    'security.eyebrow':'Trust & Security',
+    'security.title':'La sécurité, sans bullshit.',
+    'security.lead':'RB Perform héberge le business de coachs premium et les données santé de leurs clients. Voici exactement comment on protège tout ça — sans abréviations marketing, sans certifications de complaisance. Ce que tu lis ici est ce qu\'on opère réellement en production.',
+
+    'security.s1_title':'Chiffrement',
+    'security.s1_p1':'Toutes les communications entre ton navigateur et nos serveurs passent en <strong>HTTPS / TLS 1.2+</strong>. Les certificats sont gérés automatiquement par Vercel (Let\'s Encrypt) et renouvelés tous les 90 jours.',
+    'security.s1_p2':'Côté base de données, Supabase chiffre les connexions en <strong>TLS</strong> et les données au repos avec <strong>AES-256</strong> (Postgres + stockage). Aucune donnée client ne transite ni ne dort en clair.',
+    'security.s1_l1':'HTTPS strict via HSTS preload (max-age 2 ans, includeSubDomains).',
+    'security.s1_l2':'TLS sur toutes les connexions Postgres (sslmode=require).',
+    'security.s1_l3':'Chiffrement au repos AES-256 sur les volumes Supabase.',
+    'security.s1_l4':'Secrets applicatifs scellés dans Vercel Environment Variables.',
+
+    'security.s2_title':'Authentification',
+    'security.s2_p1':'L\'authentification est gérée par <strong>Supabase Auth</strong>, qui gère le hashing des mots de passe (bcrypt), la rotation des sessions JWT, et les flux OTP par email.',
+    'security.s2_l1':'Mots de passe minimum 8 caractères, hashing bcrypt (jamais stockés en clair).',
+    'security.s2_l2':'Sessions JWT signées, rotation automatique, expiration courte.',
+    'security.s2_l3':'OTP par email pour les flux sensibles (création de compte, reset mot de passe).',
+    'security.s2_l4':'Row-Level Security (RLS) Postgres activée sur toutes les tables — un coach ne peut jamais voir les données d\'un autre.',
+    'security.s2_l5':'Aucun cookie tiers, aucun tracker comportemental.',
+
+    'security.s3_title':'Conformité & RGPD',
+    'security.s3_p1':'RB Perform est <strong>100% RGPD-ready</strong>. Toutes les données — coachs et clients — sont stockées en <strong>Union Européenne</strong> (Supabase Frankfurt, eu-central-1). Aucun transfert hors UE, aucun fournisseur US d\'analyse comportementale.',
+    'security.s3_l1':'Hébergement et traitement des données en UE (Frankfurt, Allemagne).',
+    'security.s3_l2':'Droit d\'accès, rectification, portabilité et suppression sur simple demande email.',
+    'security.s3_l3':'Registre des traitements maintenu (Art. 30 RGPD).',
+    'security.s3_l4':'DPA disponible sur demande pour les clients enterprise.',
+    'security.s3_l5':'Suppression de compte → purge complète des données associées sous 30 jours.',
+    'security.s3_cta_dpa':'Demander le DPA',
+    'security.s3_cta_legal':'Mentions RGPD',
+
+    'security.s4_title':'Infrastructure',
+    'security.s4_p1':'Stack volontairement simple, opérée par deux hébergeurs reconnus. Pas de serveurs maison, pas de boîtes noires, pas de single-points-of-failure obscurs.',
+    'security.s4_l1':'<strong>Vercel</strong> — front, edge, fonctions serverless. SOC 2 Type 2, ISO 27001.',
+    'security.s4_l2':'<strong>Supabase (EU Frankfurt)</strong> — Postgres managé, Auth, Storage. SOC 2 Type 2, hébergement AWS eu-central-1.',
+    'security.s4_l3':'<strong>Stripe</strong> — paiements. PCI-DSS Level 1. Aucun numéro de carte ne touche nos serveurs.',
+    'security.s4_l4':'Monitoring uptime + erreurs 24/7. Page de statut publique.',
+    'security.s4_cta_status':'Statut plateforme →',
+
+    'security.s5_title':'Divulgation responsable',
+    'security.s5_p1':'Tu as découvert une vulnérabilité ? <strong>Préviens-nous avant de la publier.</strong> On répond en moins de 24h, on patche vite, et on créditera ton nom (si tu veux) une fois le correctif déployé.',
+    'security.s5_l1':'Email dédié : <code>rb.performancee@gmail.com</code> — sujet <code>[SECURITY]</code>.',
+    'security.s5_l2':'Réponse initiale &lt; 24h ouvrées, patch sous 7 jours pour les criticals.',
+    'security.s5_l3':'Pas de scan automatisé agressif sans accord préalable (ça pollue nos logs et fait perdre du temps).',
+    'security.s5_l4':'Hall of fame public pour les chercheurs qui le souhaitent.',
+    'security.s5_cta_report':'Signaler une vulnérabilité',
+
+    'security.s6_title':'Réponse aux incidents',
+    'security.s6_p1':'En cas d\'incident affectant la disponibilité ou la sécurité des données, la communication est <strong>publique et rapide</strong>. La page statut est mise à jour en temps réel et les utilisateurs concernés sont notifiés par email sous 72h maximum (RGPD Art. 33).',
+    'security.s6_l1':'Page statut publique avec checks en temps réel toutes les 30 secondes.',
+    'security.s6_l2':'Notification email aux comptes concernés sous 72h en cas de breach (RGPD Art. 33).',
+    'security.s6_l3':'Post-mortem public publié pour les incidents majeurs.',
+
+    'security.s7_title':'Sauvegardes & restauration',
+    'security.s7_p1':'La base Postgres est sauvegardée automatiquement par Supabase, avec point-in-time recovery (PITR). En cas de corruption ou de suppression accidentelle, on peut revenir à n\'importe quel instant des 7 derniers jours.',
+    'security.s7_l1':'Snapshots Postgres quotidiens (rétention 7 jours, plan Pro Supabase).',
+    'security.s7_l2':'Point-in-time recovery (PITR) granularité 2 minutes.',
+    'security.s7_l3':'Backups manuels avant chaque migration de schéma majeure.',
+    'security.s7_l4':'Tests de restauration trimestriels.',
+
+    'security.s8_title':'Headers de sécurité',
+    'security.s8_p1':'Tous les headers de sécurité standards sont configurés au niveau edge (Vercel). Voici exactement ce que ton navigateur reçoit :',
+    'security.s8_p2':'Tu peux les vérifier en live avec <code>curl -I https://rbperform.app</code> ou via securityheaders.com.',
+
+    'security.note_strong':'Une question, un doute ?',
+    'security.note_text':' Écris-moi directement à <a href="mailto:rb.performancee@gmail.com" style="color:#02d1ba;text-decoration:none">rb.performancee@gmail.com</a>. Je réponds personnellement, sous 24h max.',
+
+    'security.foot_home':'Accueil',
+    'security.foot_status':'Statut',
+    'security.foot_legal':'Mentions légales',
+    'security.foot_rgpd':'RGPD',
+    'security.foot_copy':'© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France'
+  },
+  en: {
+    'security.eyebrow':'Trust & Security',
+    'security.title':'Security, no bullshit.',
+    'security.lead':'RB Perform hosts the business of premium coaches and the health data of their clients. Here is exactly how we protect all of it — no marketing acronyms, no vanity certifications. What you read here is what we actually run in production.',
+
+    'security.s1_title':'Encryption',
+    'security.s1_p1':'All traffic between your browser and our servers runs over <strong>HTTPS / TLS 1.2+</strong>. Certificates are managed automatically by Vercel (Let\'s Encrypt) and renewed every 90 days.',
+    'security.s1_p2':'On the database side, Supabase encrypts connections with <strong>TLS</strong> and data at rest with <strong>AES-256</strong> (Postgres + storage). No customer data ever transits or sleeps in plain text.',
+    'security.s1_l1':'Strict HTTPS via HSTS preload (max-age 2 years, includeSubDomains).',
+    'security.s1_l2':'TLS on every Postgres connection (sslmode=require).',
+    'security.s1_l3':'AES-256 at-rest encryption on Supabase volumes.',
+    'security.s1_l4':'Application secrets sealed in Vercel Environment Variables.',
+
+    'security.s2_title':'Authentication',
+    'security.s2_p1':'Authentication is handled by <strong>Supabase Auth</strong>, which manages password hashing (bcrypt), JWT session rotation, and email OTP flows.',
+    'security.s2_l1':'Passwords minimum 8 characters, bcrypt hashing (never stored in plain text).',
+    'security.s2_l2':'Signed JWT sessions, automatic rotation, short expiration.',
+    'security.s2_l3':'Email OTP for sensitive flows (account creation, password reset).',
+    'security.s2_l4':'Postgres Row-Level Security (RLS) on every table — a coach can never see another coach\'s data.',
+    'security.s2_l5':'No third-party cookies, no behavioral trackers.',
+
+    'security.s3_title':'Compliance & GDPR',
+    'security.s3_p1':'RB Perform is <strong>100% GDPR-ready</strong>. All data — coaches and clients — is stored in the <strong>European Union</strong> (Supabase Frankfurt, eu-central-1). No transfers outside the EU, no US behavioral analytics vendors.',
+    'security.s3_l1':'Hosting and data processing in the EU (Frankfurt, Germany).',
+    'security.s3_l2':'Right of access, rectification, portability and erasure via simple email request.',
+    'security.s3_l3':'Records of processing activities maintained (GDPR Art. 30).',
+    'security.s3_l4':'DPA available on request for enterprise customers.',
+    'security.s3_l5':'Account deletion → full purge of associated data within 30 days.',
+    'security.s3_cta_dpa':'Request the DPA',
+    'security.s3_cta_legal':'GDPR notice',
+
+    'security.s4_title':'Infrastructure',
+    'security.s4_p1':'Deliberately simple stack, operated by two well-known hosts. No homemade servers, no black boxes, no obscure single-points-of-failure.',
+    'security.s4_l1':'<strong>Vercel</strong> — frontend, edge, serverless functions. SOC 2 Type 2, ISO 27001.',
+    'security.s4_l2':'<strong>Supabase (EU Frankfurt)</strong> — managed Postgres, Auth, Storage. SOC 2 Type 2, AWS eu-central-1.',
+    'security.s4_l3':'<strong>Stripe</strong> — payments. PCI-DSS Level 1. No card number ever touches our servers.',
+    'security.s4_l4':'24/7 uptime + error monitoring. Public status page.',
+    'security.s4_cta_status':'Platform status →',
+
+    'security.s5_title':'Responsible disclosure',
+    'security.s5_p1':'Found a vulnerability? <strong>Tell us before publishing.</strong> We reply in under 24h, patch fast, and credit your name (if you want) once the fix is shipped.',
+    'security.s5_l1':'Dedicated email: <code>rb.performancee@gmail.com</code> — subject <code>[SECURITY]</code>.',
+    'security.s5_l2':'Initial reply &lt; 24h business hours, patch within 7 days for criticals.',
+    'security.s5_l3':'No aggressive automated scanning without prior agreement (it pollutes our logs and wastes time).',
+    'security.s5_l4':'Public hall of fame for researchers who want it.',
+    'security.s5_cta_report':'Report a vulnerability',
+
+    'security.s6_title':'Incident response',
+    'security.s6_p1':'In case of an incident affecting availability or data security, communication is <strong>public and fast</strong>. The status page updates in real-time and affected users are notified by email within 72h max (GDPR Art. 33).',
+    'security.s6_l1':'Public status page with real-time checks every 30 seconds.',
+    'security.s6_l2':'Email notification to affected accounts within 72h on breach (GDPR Art. 33).',
+    'security.s6_l3':'Public post-mortem published for major incidents.',
+
+    'security.s7_title':'Backups & recovery',
+    'security.s7_p1':'The Postgres database is backed up automatically by Supabase, with point-in-time recovery (PITR). In case of corruption or accidental deletion, we can roll back to any moment in the last 7 days.',
+    'security.s7_l1':'Daily Postgres snapshots (7-day retention, Supabase Pro plan).',
+    'security.s7_l2':'Point-in-time recovery (PITR) at 2-minute granularity.',
+    'security.s7_l3':'Manual backups before every major schema migration.',
+    'security.s7_l4':'Quarterly restoration tests.',
+
+    'security.s8_title':'Security headers',
+    'security.s8_p1':'All standard security headers are configured at the edge (Vercel). Here is exactly what your browser receives:',
+    'security.s8_p2':'You can verify live with <code>curl -I https://rbperform.app</code> or via securityheaders.com.',
+
+    'security.note_strong':'Question, doubt?',
+    'security.note_text':' Email me directly at <a href="mailto:rb.performancee@gmail.com" style="color:#02d1ba;text-decoration:none">rb.performancee@gmail.com</a>. I reply personally, within 24h max.',
+
+    'security.foot_home':'Home',
+    'security.foot_status':'Status',
+    'security.foot_legal':'Legal',
+    'security.foot_rgpd':'GDPR',
+    'security.foot_copy':'© 2026 Rayan Bonte · SIRET 990 637 803 00018 · Avignon, France'
+  }
+};
+</script>
+
+<script>
+(function(){
+  function detectLang(){
+    try {
+      var saved = localStorage.getItem('rb_lang') || localStorage.getItem('rbperf_locale');
+      if (saved === 'fr' || saved === 'en') return saved;
+    } catch(e){}
+    var qp = new URLSearchParams(location.search).get('lang');
+    if (qp === 'fr' || qp === 'en') return qp;
+    var nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+    return nav.indexOf('fr') === 0 ? 'fr' : 'en';
+  }
+
+  function applyLang(lang){
+    var dict = (window.RB_I18N && window.RB_I18N[lang]) || (window.RB_I18N && window.RB_I18N.fr) || {};
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      if (dict[k] !== undefined) el.innerHTML = dict[k];
+    });
+    document.documentElement.lang = lang;
+    var ogLocale = document.querySelector('meta[property="og:locale"]');
+    if (ogLocale) ogLocale.setAttribute('content', lang === 'en' ? 'en_US' : 'fr_FR');
+    var titleEl = document.querySelector('title');
+    if (titleEl) titleEl.textContent = lang === 'en' ? 'Trust & Security · RB Perform' : 'Trust & Security · RB Perform';
+
+    document.querySelectorAll('.lang-toggle button').forEach(function(b){
+      var active = b.getAttribute('data-lang') === lang;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function init(){
+    document.querySelectorAll('.lang-toggle button').forEach(function(b){
+      b.addEventListener('click', function(){
+        var lang = b.getAttribute('data-lang');
+        applyLang(lang);
+        try {
+          localStorage.setItem('rb_lang', lang);
+          localStorage.setItem('rbperf_locale', lang);
+        } catch(e){}
+      });
+    });
+    applyLang(detectLang());
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+</body>
+</html>

@@ -1,39 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
   <url>
     <loc>https://rbperform.app/</loc>
-    <lastmod>2026-04-24</lastmod>
+    <lastmod>2026-04-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://rbperform.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rbperform.app/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rbperform.app/"/>
   </url>
+
+  <url>
+    <loc>https://rbperform.app/?lang=en</loc>
+    <lastmod>2026-04-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://rbperform.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rbperform.app/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rbperform.app/"/>
+  </url>
+
   <url>
     <loc>https://rbperform.app/founding</loc>
-    <lastmod>2026-04-24</lastmod>
+    <lastmod>2026-04-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://rbperform.app/founding"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rbperform.app/founding?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rbperform.app/founding"/>
   </url>
+
   <url>
     <loc>https://rbperform.app/waitlist</loc>
-    <lastmod>2026-04-24</lastmod>
+    <lastmod>2026-04-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://rbperform.app/waitlist"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rbperform.app/waitlist?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rbperform.app/waitlist"/>
   </url>
+
   <url>
-    <loc>https://rbperform.app/demo</loc>
-    <lastmod>2026-04-17</lastmod>
+    <loc>https://rbperform.app/welcome</loc>
+    <lastmod>2026-04-27</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://rbperform.app/welcome"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rbperform.app/welcome?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rbperform.app/welcome"/>
   </url>
+
+  <url>
+    <loc>https://rbperform.app/security</loc>
+    <lastmod>2026-04-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://rbperform.app/security"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rbperform.app/security?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rbperform.app/security"/>
+  </url>
+
   <url>
     <loc>https://rbperform.app/legal.html</loc>
-    <lastmod>2026-04-24</lastmod>
+    <lastmod>2026-04-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
+
   <url>
     <loc>https://rbperform.app/status</loc>
-    <lastmod>2026-04-25</lastmod>
+    <lastmod>2026-04-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.4</priority>
   </url>
+
 </urlset>

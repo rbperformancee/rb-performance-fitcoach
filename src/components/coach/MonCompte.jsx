@@ -299,6 +299,25 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
             )}
             <SaveButton onClick={changePassword} loading={savingPassword} label={t("mc.btn_change_password")} disabled={newPassword.length < 8 || newPassword !== confirmPassword} />
 
+            {/* Cookies & Confidentialité */}
+            <div style={{ marginTop: 32, padding: "20px", background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.12)", borderRadius: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: G, marginBottom: 8 }}>{t("mc.cookies_title")}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, marginBottom: 14 }}>{t("mc.cookies_desc")}</div>
+              <button
+                style={{ ...outlineBtn, borderColor: "rgba(2,209,186,0.25)", color: G }}
+                onClick={() => {
+                  haptic.light?.();
+                  if (typeof window !== "undefined" && window.RBConsent && typeof window.RBConsent.show === "function") {
+                    window.RBConsent.show();
+                  } else {
+                    toast.error(t("mc.cookies_unavailable"));
+                  }
+                }}
+              >
+                {t("mc.btn_manage_cookies")}
+              </button>
+            </div>
+
             {/* Zone danger */}
             <div style={{ marginTop: 40, padding: "20px", background: "rgba(255,107,107,0.04)", border: "1px solid rgba(255,107,107,0.12)", borderRadius: 16 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: RED, marginBottom: 16 }}>{t("mc.danger_zone")}</div>

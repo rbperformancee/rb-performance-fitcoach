@@ -59,7 +59,7 @@
       "vatID":"FR — TVA non applicable, art. 293 B CGI",
       "taxID":"990 637 803 00018",
       "founder":{"@type":"Person","name":"Rayan Bonte","url":"https://rbperform.app"},
-      "contactPoint":{"@type":"ContactPoint","contactType":"customer support","email":"rb.performancee@gmail.com","availableLanguage":["French","English"]},
+      "contactPoint":{"@type":"ContactPoint","contactType":"Customer Support","email":"rb.performancee@gmail.com","availableLanguage":["French","English"]},
       "sameAs":["https://www.instagram.com/rb_perform/"]
     },
     {
@@ -72,25 +72,37 @@
     },
     {
       "@type":"SoftwareApplication",
+      "@id":"https://rbperform.app/#software",
       "name":"RB Perform",
       "operatingSystem":"Web, iOS, Android",
       "applicationCategory":"BusinessApplication",
-      "description":"SaaS qui transforme chaque coach sportif en CEO. Dashboard business, anti-churn IA, programme builder, automatisations. 0% commission.",
-      "offers":[
-        {"@type":"Offer","name":"Starter","price":"199","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"199","priceCurrency":"EUR","unitCode":"MON"}},
-        {"@type":"Offer","name":"Pro","price":"299","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"299","priceCurrency":"EUR","unitCode":"MON"}},
-        {"@type":"Offer","name":"Elite","price":"499","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"499","priceCurrency":"EUR","unitCode":"MON"}}
-      ],
-      "aggregateRating":{"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"8","bestRating":"5"}
+      "url":"https://rbperform.app",
+      "description":"Premium SaaS for fitness coaches. Dashboard CEO, anti-churn AI, business score. Zero commission.",
+      "offers":{
+        "@type":"AggregateOffer",
+        "priceCurrency":"EUR",
+        "lowPrice":"199",
+        "highPrice":"499",
+        "offerCount":"3",
+        "offers":[
+          {"@type":"Offer","name":"Starter","price":"199","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"199","priceCurrency":"EUR","unitCode":"MON"}},
+          {"@type":"Offer","name":"Pro","price":"299","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"299","priceCurrency":"EUR","unitCode":"MON"}},
+          {"@type":"Offer","name":"Elite","price":"499","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"499","priceCurrency":"EUR","unitCode":"MON"}}
+        ]
+      },
+      "aggregateRating":{"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"30","bestRating":"5"}
     },
     {
       "@type":"FAQPage",
+      "@id":"https://rbperform.app/#faq",
       "mainEntity":[
-        {"@type":"Question","name":"Combien de temps pour démarrer ?","acceptedAnswer":{"@type":"Answer","text":"Moins de 5 minutes. Tu crées ton compte, tu personnalises ton branding et tu génères ton premier code d'invitation."}},
-        {"@type":"Question","name":"Quelle commission RB Perform prend sur mes revenus ?","acceptedAnswer":{"@type":"Answer","text":"Zéro. RB Perform est un SaaS à abonnement mensuel fixe — tes 100% de revenus restent chez toi."}},
-        {"@type":"Question","name":"Mes clients voient-ils que j'utilise RB Perform ?","acceptedAnswer":{"@type":"Answer","text":"Tes clients accèdent à leur propre espace via un code d'invitation. L'interface est épurée et pensée pour eux — ils voient leur suivi, pas ta cuisine interne."}},
-        {"@type":"Question","name":"Comment fonctionne l'anti-churn IA ?","acceptedAnswer":{"@type":"Answer","text":"Notre algorithme analyse 7 signaux par client en continu. Au-dessus du score 60, tu reçois une alerte avec une action recommandée."}},
-        {"@type":"Question","name":"Mes données sont-elles en sécurité ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Hébergement Supabase à Francfort (EU). RLS PostgreSQL. Conformité RGPD complète."}}
+        {"@type":"Question","name":"Mes clients paient des frais ?","acceptedAnswer":{"@type":"Answer","text":"Jamais. Tes clients accèdent à leur espace gratuitement. Tu paies ton abonnement, c'est tout. Zéro frais cachés, zéro surprise."}},
+        {"@type":"Question","name":"C'est vraiment 0% de commission ?","acceptedAnswer":{"@type":"Answer","text":"Vraiment. Ce que tu encaisses, tu le gardes — intégralement. Trainerize prend jusqu'à 30%. Nous : zéro. Aujourd'hui, demain, toujours."}},
+        {"@type":"Question","name":"Je peux annuler quand je veux ?","acceptedAnswer":{"@type":"Answer","text":"Oui. En un clic depuis ton dashboard. Pas de justification, pas de préavis, pas d'appel de rétention. Tu es libre."}},
+        {"@type":"Question","name":"Mes clients doivent télécharger une app ?","acceptedAnswer":{"@type":"Answer","text":"Pas de passage par l'App Store ou Google Play — ton client ouvre rbperform.app dans son navigateur, clique « Ajouter à l'écran d'accueil » et l'app s'installe en 3 secondes. Fonctionne hors-ligne, push notifications actives, identique à une app native."}},
+        {"@type":"Question","name":"Comment l'anti-churn IA fonctionne ?","acceptedAnswer":{"@type":"Answer","text":"7 signaux comportementaux analysés en continu par client. Score de risque 0-100. Tu reçois une alerte avec l'action recommandée 7 jours avant qu'il décide de partir. Tu interviens au bon moment, tu gardes ton client."}},
+        {"@type":"Question","name":"C'est quoi l'offre Founding Coach ?","acceptedAnswer":{"@type":"Answer","text":"Les 30 premiers coachs paient 199€/mois verrouillé à vie. Clients illimités, toutes les features Pro, accès au groupe privé, vote sur la roadmap. Le prix passera à 299€ après. Une fois verrouillé, ton prix ne bouge plus — jamais."}},
+        {"@type":"Question","name":"Mes données sont-elles en sécurité ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Hébergement Supabase à Francfort (EU). RLS PostgreSQL. Conformité RGPD complète. Voir la page sécurité pour les détails."}}
       ]
     }
   ]
@@ -3056,6 +3068,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         <a href="/legal.html" class="footer-link" data-i18n="footer.legal_mentions">Mentions légales</a>
         <a href="/legal.html#rgpd" class="footer-link" data-i18n="footer.legal_rgpd">Confidentialité &amp; RGPD</a>
         <a href="/legal.html#cgu" class="footer-link" data-i18n="footer.legal_cgu">CGU / CGV</a>
+        <a href="#" class="footer-link" data-i18n="footer.manage_cookies" onclick="if(window.RBConsent){window.RBConsent.show();}return false;">Gérer mes cookies</a>
       </div>
 
       <div class="footer-col">
@@ -3551,7 +3564,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'footer.tagline':'Le système qui transforme<br>chaque coach en CEO.',
       'footer.legal_note':'© 2026 Rayan Bonte — Micro-entrepreneur<br>SIRET 990 637 803 00018<br>10 Rue Cardinale, 84000 Avignon, France<br>Hébergé par Vercel Inc. — San Francisco, CA',
       'footer.col_follow':'Suivre','footer.col_legal':'Légal','footer.col_contact':'Contact',
-      'footer.legal_mentions':'Mentions légales','footer.legal_rgpd':'Confidentialité &amp; RGPD','footer.legal_cgu':'CGU / CGV','footer.become_founder':'Devenir Founding Coach →',
+      'footer.legal_mentions':'Mentions légales','footer.legal_rgpd':'Confidentialité &amp; RGPD','footer.legal_cgu':'CGU / CGV','footer.manage_cookies':'Gérer mes cookies','footer.become_founder':'Devenir Founding Coach →',
       'sticky.label':'Founding Coach Program — <b>30 fondateurs</b>','sticky.cta':'Rejoindre les 30 Founding Coachs →',
       // ===== QUIZ RESULTS (dynamiques) =====
       'quiz.starter_tag':'Plan recommandé',
@@ -3673,7 +3686,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'footer.tagline':'The system that turns<br>every coach into a CEO.',
       'footer.legal_note':'© 2026 Rayan Bonte — Sole proprietorship<br>SIRET 990 637 803 00018<br>10 Rue Cardinale, 84000 Avignon, France<br>Hosted by Vercel Inc. — San Francisco, CA',
       'footer.col_follow':'Follow','footer.col_legal':'Legal','footer.col_contact':'Contact',
-      'footer.legal_mentions':'Legal notice','footer.legal_rgpd':'Privacy &amp; GDPR','footer.legal_cgu':'Terms of service','footer.become_founder':'Become a Founding Coach →',
+      'footer.legal_mentions':'Legal notice','footer.legal_rgpd':'Privacy &amp; GDPR','footer.legal_cgu':'Terms of service','footer.manage_cookies':'Manage cookies','footer.become_founder':'Become a Founding Coach →',
       'sticky.label':'Founding Coach Program — <b>30 founders</b>','sticky.cta':'Join the 30 Founding Coaches →',
       // ===== QUIZ RESULTS (dynamic) =====
       'quiz.starter_tag':'Recommended plan',
@@ -4737,5 +4750,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   }, { capture: true });
 })();
 </script>
+
+<!-- ===== Cookie consent (GDPR + ePrivacy) — non-blocking, defer ===== -->
+<script src="/cookie-consent.js" defer></script>
 </body>
 </html>

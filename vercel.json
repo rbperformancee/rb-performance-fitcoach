@@ -49,6 +49,7 @@
     { "source": "/dashboard/mon-compte", "destination": "/app.html?view=mon-compte&tab=abonnement" },
     { "source": "/status", "destination": "/status.html" },
     { "source": "/welcome", "destination": "/welcome.html" },
+    { "source": "/security", "destination": "/security.html" },
     { "source": "/coach/:slug", "destination": "/coach.html" }
   ],
   "headers": [
