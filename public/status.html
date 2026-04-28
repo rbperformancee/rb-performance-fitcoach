@@ -57,67 +57,199 @@
   .foot{margin-top:48px;padding-top:20px;border-top:.5px solid rgba(255,255,255,.04);font-size:11px;color:rgba(255,255,255,.2);text-align:center}
   .foot a{color:rgba(2,209,186,.7);text-decoration:none}
   .foot a:hover{color:#02d1ba}
+
+  /* Lang toggle */
+  .lang-toggle{position:fixed;top:18px;right:18px;display:inline-flex;border:1px solid rgba(255,255,255,0.1);border-radius:100px;overflow:hidden;font-size:11px;font-weight:700;letter-spacing:1.5px;background:rgba(8,8,8,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:50}
+  .lang-toggle button{padding:6px 11px;color:rgba(255,255,255,0.5);transition:all 0.2s;font-family:inherit;text-transform:uppercase;background:transparent;border:none;cursor:pointer}
+  .lang-toggle button.active{background:rgba(255,255,255,0.08);color:#fff}
+  .lang-toggle button:hover:not(.active){color:rgba(255,255,255,0.8)}
+  @media(max-width:480px){.lang-toggle{top:12px;right:12px}}
+
+  /* Skip link */
+  .skip-link{position:absolute;top:-100px;left:0;background:#02d1ba;color:#000;padding:10px 16px;font-weight:700;border-radius:0 0 8px 0;z-index:100;text-decoration:none}
+  .skip-link:focus{top:0}
+
+  /* Latency badge */
+  .check .latency{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.3);margin-left:8px}
+  .check[data-status="ok"] .latency{color:rgba(2,209,186,.5)}
+  .check[data-status="degraded"] .latency{color:rgba(245,200,66,.6)}
+  .check[data-status="down"] .latency{color:rgba(255,107,107,.6)}
+
+  /* Last update */
+  .last-update{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.25);margin-bottom:24px;letter-spacing:.04em}
+  .last-update .live-dot{width:6px;height:6px;border-radius:50%;background:rgba(2,209,186,.6);animation:pulse 1.6s ease-in-out infinite}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="eyebrow">Statut système</div>
-  <h1>Tout tourne.</h1>
-  <p class="sub">État en temps réel des services RB Perform. Mis à jour automatiquement toutes les 30 secondes.</p>
+<a href="#main" class="skip-link" data-i18n="a11y.skip">Aller au contenu</a>
+<div class="lang-toggle" role="group" aria-label="Language">
+  <button type="button" data-lang="fr" class="active" aria-pressed="true">FR</button>
+  <button type="button" data-lang="en" aria-pressed="false">EN</button>
+</div>
+<main class="wrap" id="main" role="main">
+  <div class="eyebrow" data-i18n="status.eyebrow">Statut système</div>
+  <h1 data-i18n="status.title">Tout tourne.</h1>
+  <p class="sub" data-i18n="status.sub">État en temps réel des services RB Perform. Mis à jour automatiquement toutes les 30 secondes.</p>
+
+  <div class="last-update"><span class="live-dot"></span><span data-i18n="status.live">EN DIRECT</span> · <span data-i18n="status.last_check">Dernière vérification :</span> <span id="lastUpdate">—</span></div>
 
   <div class="overall" id="overall" data-status="loading">
     <div class="dot"></div>
     <div class="txt">
-      <div class="title" id="overallTitle">Vérification en cours…</div>
-      <div class="detail" id="overallDetail">Ping de /api/health</div>
+      <div class="title" id="overallTitle" data-i18n="status.title_loading">Vérification en cours…</div>
+      <div class="detail" id="overallDetail" data-i18n="status.detail_loading">Ping de /api/health</div>
     </div>
   </div>
 
-  <div class="label">Composants</div>
-  <div class="check" id="chk-app" data-status="loading"><div class="name">Plateforme applicative</div><div class="state">—</div></div>
-  <div class="check" id="chk-supabase" data-status="loading"><div class="name">Base de données (Supabase)</div><div class="state">—</div></div>
-  <div class="check" id="chk-stripe" data-status="loading"><div class="name">Paiements (Stripe)</div><div class="state">—</div></div>
+  <div class="label" data-i18n="status.components">Composants</div>
+  <div class="check" id="chk-app" data-status="loading"><div class="name" data-i18n="status.chk_app">Plateforme applicative</div><div class="state">—</div></div>
+  <div class="check" id="chk-supabase" data-status="loading"><div class="name" data-i18n="status.chk_supabase">Base de données (Supabase)</div><div class="state">—<span class="latency"></span></div></div>
+  <div class="check" id="chk-stripe" data-status="loading"><div class="name" data-i18n="status.chk_stripe">Paiements (Stripe)</div><div class="state">—<span class="latency"></span></div></div>
+  <div class="check" id="chk-resend" data-status="loading"><div class="name" data-i18n="status.chk_resend">Emails transactionnels (Resend)</div><div class="state">—<span class="latency"></span></div></div>
 
   <div class="meta">
-    <span>Région <b id="m-region">—</b></span>
-    <span>Environnement <b id="m-env">—</b></span>
-    <span>Uptime <b id="m-uptime">—</b></span>
-    <span>Build <b id="m-commit">—</b></span>
+    <span><span data-i18n="status.meta_region">Région</span> <b id="m-region">—</b></span>
+    <span><span data-i18n="status.meta_env">Environnement</span> <b id="m-env">—</b></span>
+    <span><span data-i18n="status.meta_uptime">Uptime</span> <b id="m-uptime">—</b></span>
+    <span><span data-i18n="status.meta_build">Build</span> <b id="m-commit">—</b></span>
   </div>
 
   <div class="foot">
-    En cas d'incident, contacte <a href="mailto:rb.performancee@gmail.com">rb.performancee@gmail.com</a> · <a href="/legal.html">Mentions légales</a>
+    <span data-i18n="status.foot_incident">En cas d'incident, contacte</span> <a href="mailto:rb.performancee@gmail.com">rb.performancee@gmail.com</a> · <a href="/legal.html" data-i18n="status.foot_legal">Mentions légales</a>
   </div>
-</div>
+</main>
 
 <script>
 (function(){
-  const TITLES = {
-    ok: 'Tous les services opérationnels',
-    degraded: 'Service dégradé',
-    down: 'Incident en cours',
-    loading: 'Vérification en cours…'
+  // ===== I18N FR/EN =====
+  const I18N = {
+    fr: {
+      'a11y.skip': 'Aller au contenu',
+      'status.eyebrow': 'Statut système',
+      'status.title': 'Tout tourne.',
+      'status.sub': "État en temps réel des services RB Perform. Mis à jour automatiquement toutes les 30 secondes.",
+      'status.live': 'EN DIRECT',
+      'status.last_check': 'Dernière vérification :',
+      'status.title_loading': 'Vérification en cours…',
+      'status.detail_loading': 'Ping de /api/health',
+      'status.components': 'Composants',
+      'status.chk_app': 'Plateforme applicative',
+      'status.chk_supabase': 'Base de données (Supabase)',
+      'status.chk_stripe': 'Paiements (Stripe)',
+      'status.chk_resend': 'Emails transactionnels (Resend)',
+      'status.meta_region': 'Région',
+      'status.meta_env': 'Environnement',
+      'status.meta_uptime': 'Uptime',
+      'status.meta_build': 'Build',
+      'status.foot_incident': "En cas d'incident, contacte",
+      'status.foot_legal': 'Mentions légales',
+      'status.title_ok': 'Tous les services opérationnels',
+      'status.title_degraded': 'Service dégradé',
+      'status.title_down': 'Incident en cours',
+      'status.detail_ok': 'Plateforme nominale.',
+      'status.detail_degraded': 'Une ou plusieurs dépendances répondent mais signalent un problème.',
+      'status.detail_down': 'Une dépendance critique est injoignable. Support notifié.',
+      'status.unreachable': 'La page de statut elle-même est injoignable. Probable incident réseau.'
+    },
+    en: {
+      'a11y.skip': 'Skip to content',
+      'status.eyebrow': 'System status',
+      'status.title': 'All systems go.',
+      'status.sub': 'Real-time status of RB Perform services. Auto-refreshed every 30 seconds.',
+      'status.live': 'LIVE',
+      'status.last_check': 'Last check:',
+      'status.title_loading': 'Checking…',
+      'status.detail_loading': 'Pinging /api/health',
+      'status.components': 'Components',
+      'status.chk_app': 'Application platform',
+      'status.chk_supabase': 'Database (Supabase)',
+      'status.chk_stripe': 'Payments (Stripe)',
+      'status.chk_resend': 'Transactional emails (Resend)',
+      'status.meta_region': 'Region',
+      'status.meta_env': 'Environment',
+      'status.meta_uptime': 'Uptime',
+      'status.meta_build': 'Build',
+      'status.foot_incident': 'In case of incident, contact',
+      'status.foot_legal': 'Legal notice',
+      'status.title_ok': 'All services operational',
+      'status.title_degraded': 'Degraded service',
+      'status.title_down': 'Incident in progress',
+      'status.detail_ok': 'Platform nominal.',
+      'status.detail_degraded': 'One or more dependencies are responding but reporting issues.',
+      'status.detail_down': 'A critical dependency is unreachable. Support notified.',
+      'status.unreachable': 'The status page itself is unreachable. Likely network incident.'
+    }
   };
-  const DETAILS = {
-    ok: 'Plateforme nominale.',
-    degraded: 'Une ou plusieurs dépendances répondent mais signalent un problème.',
-    down: 'Une dépendance critique est injoignable. Support notifié.',
-    loading: 'Ping de /api/health'
-  };
+
+  let currentLang = 'fr';
+  function detectLang(){
+    try {
+      const saved = localStorage.getItem('rb_lang') || localStorage.getItem('rbperf_locale');
+      if (saved === 'fr' || saved === 'en') return saved;
+    } catch(e){}
+    const nav = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+    return nav.indexOf('fr') === 0 ? 'fr' : 'en';
+  }
+  function t(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N.fr[key] || key; }
+  function applyLang(lang){
+    currentLang = lang;
+    const dict = I18N[lang] || I18N.fr;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      const k = el.getAttribute('data-i18n');
+      if (dict[k] !== undefined) el.textContent = dict[k];
+    });
+    document.documentElement.lang = lang;
+    document.title = lang === 'en' ? 'Status · RB Perform' : 'Statut · RB Perform';
+    document.querySelectorAll('.lang-toggle button').forEach(function(b){
+      const active = b.getAttribute('data-lang') === lang;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    // Refresh dynamic state with new lang
+    const overallStatus = document.getElementById('overall').dataset.status;
+    if (overallStatus !== 'loading') applyOverallI18n(overallStatus);
+  }
+  document.querySelectorAll('.lang-toggle button').forEach(function(b){
+    b.addEventListener('click', function(){
+      const lang = b.getAttribute('data-lang');
+      applyLang(lang);
+      try {
+        localStorage.setItem('rb_lang', lang);
+        localStorage.setItem('rbperf_locale', lang);
+      } catch(e){}
+    });
+  });
+
+  // ===== POLLING =====
   const CHECK_STATE = { ok:'OK', degraded:'DEGRADED', down:'DOWN', fail:'DOWN', not_configured:'—' };
 
-  function setOverall(status, detail) {
-    const el = document.getElementById('overall');
-    el.dataset.status = status;
-    document.getElementById('overallTitle').textContent = TITLES[status] || status;
-    document.getElementById('overallDetail').textContent = detail || DETAILS[status] || '';
+  function applyOverallI18n(status){
+    document.getElementById('overallTitle').textContent = t('status.title_' + status) || status;
+    document.getElementById('overallDetail').textContent = t('status.detail_' + status) || '';
   }
 
-  function setCheck(id, status, stateText) {
+  function setOverall(status) {
+    const el = document.getElementById('overall');
+    el.dataset.status = status;
+    applyOverallI18n(status);
+  }
+
+  function setCheck(id, status, stateText, latencyMs) {
     const el = document.getElementById(id);
     if (!el) return;
     el.dataset.status = status;
-    el.querySelector('.state').textContent = stateText || (CHECK_STATE[status] || status);
+    const stateEl = el.querySelector('.state');
+    const latEl = el.querySelector('.latency');
+    // Reconstruct content : state text + latency badge
+    if (stateEl) {
+      // Clear and rebuild
+      stateEl.firstChild && stateEl.firstChild.nodeType === Node.TEXT_NODE
+        ? stateEl.firstChild.textContent = (stateText || (CHECK_STATE[status] || status))
+        : stateEl.insertBefore(document.createTextNode(stateText || (CHECK_STATE[status] || status)), stateEl.firstChild);
+    }
+    if (latEl) {
+      latEl.textContent = (typeof latencyMs === 'number' && latencyMs > 0) ? '· ' + latencyMs + 'ms' : '';
+    }
   }
 
   function mapCheck(value) {
@@ -125,6 +257,7 @@
     if (value === 'fail') return 'down';
     if (typeof value === 'string' && value.startsWith('http_5')) return 'down';
     if (typeof value === 'string' && value.startsWith('http_')) return 'degraded';
+    if (value === 'not_configured') return 'loading';
     return 'loading';
   }
 
@@ -132,7 +265,12 @@
     if (!seconds || seconds < 60) return (seconds || 0) + 's';
     if (seconds < 3600) return Math.floor(seconds/60) + 'm';
     if (seconds < 86400) return Math.floor(seconds/3600) + 'h ' + Math.floor((seconds%3600)/60) + 'm';
-    return Math.floor(seconds/86400) + 'j ' + Math.floor((seconds%86400)/3600) + 'h';
+    const dayUnit = currentLang === 'en' ? 'd' : 'j';
+    return Math.floor(seconds/86400) + dayUnit + ' ' + Math.floor((seconds%86400)/3600) + 'h';
+  }
+
+  function formatTime(d) {
+    return d.toLocaleTimeString(currentLang === 'en' ? 'en-US' : 'fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
   async function poll() {
@@ -140,26 +278,44 @@
       const res = await fetch('/api/health?deep=1', { cache: 'no-store' });
       const data = await res.json();
 
-      setOverall(data.status || 'ok', DETAILS[data.status]);
+      setOverall(data.status || 'ok');
       setCheck('chk-app', res.ok && data.status !== 'down' ? 'ok' : 'down', res.ok ? 'OK' : 'HTTP ' + res.status);
-      setCheck('chk-supabase', mapCheck(data.checks?.supabase), (data.checks?.supabase || '—').toUpperCase());
-      setCheck('chk-stripe', mapCheck(data.checks?.stripe), (data.checks?.stripe || '—').toUpperCase());
+      setCheck('chk-supabase', mapCheck(data.checks?.supabase), (data.checks?.supabase || '—').toUpperCase(), data.latency?.supabase);
+      setCheck('chk-stripe', mapCheck(data.checks?.stripe), (data.checks?.stripe || '—').toUpperCase(), data.latency?.stripe);
+      const resendStatus = data.checks?.resend;
+      if (resendStatus === 'not_configured') {
+        // Hide resend check entirely if not configured (avoid showing "—" forever)
+        const resendEl = document.getElementById('chk-resend');
+        if (resendEl) resendEl.style.display = 'none';
+      } else {
+        setCheck('chk-resend', mapCheck(resendStatus), (resendStatus || '—').toUpperCase(), data.latency?.resend);
+      }
 
       document.getElementById('m-region').textContent = data.region || '—';
       document.getElementById('m-env').textContent = data.env || '—';
       document.getElementById('m-uptime').textContent = formatUptime(data.uptime_s);
       document.getElementById('m-commit').textContent = data.commit || '—';
+      document.getElementById('lastUpdate').textContent = formatTime(new Date());
     } catch (e) {
-      setOverall('down', 'La page de statut elle-même est injoignable. Probable incident réseau.');
+      const overall = document.getElementById('overall');
+      overall.dataset.status = 'down';
+      document.getElementById('overallTitle').textContent = t('status.title_down');
+      document.getElementById('overallDetail').textContent = t('status.unreachable');
       setCheck('chk-app', 'down', 'UNREACHABLE');
       setCheck('chk-supabase', 'loading', '—');
       setCheck('chk-stripe', 'loading', '—');
+      setCheck('chk-resend', 'loading', '—');
     }
   }
 
+  // Init lang first, then start polling
+  applyLang(detectLang());
   poll();
   setInterval(poll, 30000);
 })();
 </script>
+
+<!-- ===== Cookie consent (GDPR + ePrivacy) — non-blocking, defer ===== -->
+<script src="/cookie-consent.js" defer></script>
 </body>
 </html>

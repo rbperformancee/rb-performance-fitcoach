@@ -16,8 +16,14 @@
  *     "region": "cdg1",
  *     "env": "production",
  *     "checks"?: {
- *       "supabase": "ok" | "fail",
- *       "stripe":   "ok" | "fail"
+ *       "supabase": "ok" | "fail" | "http_<code>",
+ *       "stripe":   "ok" | "fail" | "http_<code>",
+ *       "resend":   "ok" | "fail" | "not_configured"
+ *     },
+ *     "latency"?: {
+ *       "supabase": <ms>,
+ *       "stripe":   <ms>,
+ *       "resend":   <ms>
  *     }
  *   }
  *
@@ -44,28 +50,47 @@ module.exports = async (req, res) => {
 
   // Deep readiness: ping critical deps with short timeouts
   body.checks = {};
+  body.latency = {};
   const supaUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+  const resendKey = process.env.RESEND_API_KEY;
 
   // Reachability probe: treat 2xx, 401, 404 as "reachable" — we only want
   // to know the network path + TLS handshake work, not that we can auth.
+  // Returns { status, ms } for latency tracking.
   async function ping(url, opts = {}) {
+    const start = Date.now();
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 3000);
       const r = await fetch(url, { signal: ctrl.signal, ...opts });
       clearTimeout(t);
-      if (r.ok || r.status === 401 || r.status === 404) return 'ok';
-      if (r.status >= 500) return `http_${r.status}`;
-      return `http_${r.status}`;
+      const ms = Date.now() - start;
+      if (r.ok || r.status === 401 || r.status === 404) return { status: 'ok', ms };
+      if (r.status >= 500) return { status: `http_${r.status}`, ms };
+      return { status: `http_${r.status}`, ms };
     } catch {
-      return 'fail';
+      return { status: 'fail', ms: Date.now() - start };
     }
   }
 
-  body.checks.supabase = supaUrl ? await ping(`${supaUrl}/auth/v1/settings`) : 'not_configured';
-  body.checks.stripe = await ping('https://api.stripe.com/v1/', { method: 'HEAD' });
+  // Run all probes in parallel for fastest response
+  const [supaR, stripeR, resendR] = await Promise.all([
+    supaUrl ? ping(`${supaUrl}/auth/v1/settings`) : Promise.resolve({ status: 'not_configured', ms: 0 }),
+    ping('https://api.stripe.com/v1/', { method: 'HEAD' }),
+    resendKey ? ping('https://api.resend.com/domains', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${resendKey}` },
+    }) : Promise.resolve({ status: 'not_configured', ms: 0 }),
+  ]);
 
-  // Global status based on critical deps (Supabase only — Stripe is a nice-to-have)
+  body.checks.supabase = supaR.status;
+  body.checks.stripe = stripeR.status;
+  body.checks.resend = resendR.status;
+  if (supaR.ms) body.latency.supabase = supaR.ms;
+  if (stripeR.ms) body.latency.stripe = stripeR.ms;
+  if (resendR.ms) body.latency.resend = resendR.ms;
+
+  // Global status based on critical deps (Supabase only — Stripe + Resend nice-to-haves)
   const critical = [body.checks.supabase];
   const anyDown = critical.some((c) => c === 'fail' || (typeof c === 'string' && c.startsWith('http_5')));
   const anyDegraded = critical.some((c) => typeof c === 'string' && c !== 'ok' && c !== 'not_configured' && !c.startsWith('http_5') && c !== 'fail');
