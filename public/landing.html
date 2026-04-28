@@ -43,6 +43,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 
+<!--
+  TODO post-launch : ajouter Reviews structured data avec vrais clients.
+  Exemple a inserer dans le @graph quand >= 3 testimonials reels obtenus :
+
+  {"@type":"Review","author":{"@type":"Person","name":"Jean D."},"reviewRating":{"@type":"Rating","ratingValue":"5","bestRating":"5"},"reviewBody":"...","datePublished":"2026-XX-XX","itemReviewed":{"@id":"https://rbperform.app/#software"}}
+
+  Puis ajouter aggregateRating sur SoftwareApplication base sur les vrais counts.
+  Google penalise si aggregateRating fake — on attend de vrais clients.
+-->
 <!-- Schema.org JSON-LD pour SEO -->
 <script type="application/ld+json">
 {
@@ -52,16 +61,34 @@
       "@type":"Organization",
       "@id":"https://rbperform.app/#org",
       "name":"RB Perform",
+      "alternateName":"RB Perform SaaS",
       "url":"https://rbperform.app",
-      "logo":"https://rbperform.app/icon-512.png",
+      "logo":{"@type":"ImageObject","url":"https://rbperform.app/icon-512.png","width":512,"height":512},
+      "image":"https://rbperform.app/og-image.png",
       "description":"Plateforme SaaS de coaching sportif premium — dashboard business, anti-churn IA, programme builder, 0% commission.",
       "email":"rb.performancee@gmail.com",
-      "address":{"@type":"PostalAddress","streetAddress":"10 Rue Cardinale","postalCode":"84000","addressLocality":"Avignon","addressCountry":"FR"},
+      "address":{"@type":"PostalAddress","streetAddress":"10 Rue Cardinale","postalCode":"84000","addressLocality":"Avignon","addressRegion":"Vaucluse","addressCountry":"FR"},
       "vatID":"FR — TVA non applicable, art. 293 B CGI",
       "taxID":"990 637 803 00018",
-      "founder":{"@type":"Person","name":"Rayan Bonte","url":"https://rbperform.app"},
-      "contactPoint":{"@type":"ContactPoint","contactType":"Customer Support","email":"rb.performancee@gmail.com","availableLanguage":["French","English"]},
+      "foundingDate":"2024",
+      "founder":{"@id":"https://rbperform.app/#founder"},
+      "contactPoint":[
+        {"@type":"ContactPoint","contactType":"Customer Support","email":"rb.performancee@gmail.com","availableLanguage":["French","English"],"areaServed":["FR","EU","US","UK","CA"]},
+        {"@type":"ContactPoint","contactType":"Sales","email":"rb.performancee@gmail.com","availableLanguage":["French","English"],"areaServed":["FR","EU","US","UK","CA"]}
+      ],
+      "areaServed":["FR","EU","US","UK","CA","CH","BE","LU"],
+      "knowsLanguage":["fr-FR","en-US"],
       "sameAs":["https://www.instagram.com/rb_perform/"]
+    },
+    {
+      "@type":"Person",
+      "@id":"https://rbperform.app/#founder",
+      "name":"Rayan Bonte",
+      "jobTitle":"Founder & CEO",
+      "url":"https://rbperform.app",
+      "worksFor":{"@id":"https://rbperform.app/#org"},
+      "knowsAbout":["Fitness Coaching","SaaS","Business Software","Customer Retention","Anti-Churn AI"],
+      "knowsLanguage":["fr-FR","en-US"]
     },
     {
       "@type":"WebSite",
@@ -77,8 +104,28 @@
       "name":"RB Perform",
       "operatingSystem":"Web, iOS, Android",
       "applicationCategory":"BusinessApplication",
+      "applicationSubCategory":"Fitness Coaching SaaS",
       "url":"https://rbperform.app",
       "description":"Premium SaaS for fitness coaches. Dashboard CEO, anti-churn AI, business score. Zero commission.",
+      "softwareVersion":"1.0",
+      "datePublished":"2026-05-16",
+      "publisher":{"@id":"https://rbperform.app/#org"},
+      "author":{"@id":"https://rbperform.app/#founder"},
+      "inLanguage":["fr-FR","en-US"],
+      "featureList":[
+        "Dashboard MRR temps reel",
+        "Anti-churn IA (7 signaux comportementaux)",
+        "Score business 0-100 calcule live",
+        "Programme builder no-code",
+        "Suivi client total (poids, sommeil, pas, RPE, nutrition)",
+        "Nutrition IA vocale + scanner code-barre",
+        "Messagerie illimitee coach <-> client",
+        "Branding personnalise (logo, couleurs)",
+        "Generation de factures legales",
+        "0% commission sur les revenus du coach",
+        "Export RGPD complet",
+        "Bilingue FR/EN"
+      ],
       "offers":{
         "@type":"AggregateOffer",
         "priceCurrency":"EUR",
@@ -86,12 +133,20 @@
         "highPrice":"499",
         "offerCount":"3",
         "offers":[
-          {"@type":"Offer","name":"Starter","price":"199","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"199","priceCurrency":"EUR","unitCode":"MON"}},
-          {"@type":"Offer","name":"Pro","price":"299","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"299","priceCurrency":"EUR","unitCode":"MON"}},
-          {"@type":"Offer","name":"Elite","price":"499","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"499","priceCurrency":"EUR","unitCode":"MON"}}
+          {"@type":"Offer","name":"Starter","price":"199","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"199","priceCurrency":"EUR","unitCode":"MON","billingDuration":"P1M"}},
+          {"@type":"Offer","name":"Pro","price":"299","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"299","priceCurrency":"EUR","unitCode":"MON","billingDuration":"P1M"}},
+          {"@type":"Offer","name":"Elite","price":"499","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"499","priceCurrency":"EUR","unitCode":"MON","billingDuration":"P1M"}}
         ]
-      },
-      "aggregateRating":{"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"30","bestRating":"5"}
+      }
+    },
+    {
+      "@type":"BreadcrumbList",
+      "@id":"https://rbperform.app/#breadcrumb",
+      "itemListElement":[
+        {"@type":"ListItem","position":1,"name":"Accueil","item":"https://rbperform.app"},
+        {"@type":"ListItem","position":2,"name":"Tarifs","item":"https://rbperform.app/#pricing"},
+        {"@type":"ListItem","position":3,"name":"Founding Coach","item":"https://rbperform.app/founding"}
+      ]
     },
     {
       "@type":"FAQPage",
