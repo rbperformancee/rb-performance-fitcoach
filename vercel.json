@@ -50,6 +50,7 @@
     { "source": "/status", "destination": "/status.html" },
     { "source": "/welcome", "destination": "/welcome.html" },
     { "source": "/security", "destination": "/security.html" },
+    { "source": "/comparison", "destination": "/comparison.html" },
     { "source": "/coach/:slug", "destination": "/coach.html" }
   ],
   "headers": [

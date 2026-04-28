@@ -63,6 +63,16 @@
   </url>
 
   <url>
+    <loc>https://rbperform.app/comparison</loc>
+    <lastmod>2026-04-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://rbperform.app/comparison"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rbperform.app/comparison?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rbperform.app/comparison"/>
+  </url>
+
+  <url>
     <loc>https://rbperform.app/legal.html</loc>
     <lastmod>2026-04-27</lastmod>
     <changefreq>monthly</changefreq>

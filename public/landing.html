@@ -817,7 +817,7 @@ section.client-view::-webkit-scrollbar{display:none}
 
 /* ========== FOOTER (refonte 4 colonnes) ========== */
 footer{background:#000;border-top:.5px solid rgba(255,255,255,.06);padding:52px 64px 44px;position:relative;z-index:0;margin-top:80px;width:100%;box-sizing:border-box}
-.footer-inner{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:48px;max-width:1100px;margin:0 auto;align-items:start}
+.footer-inner{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;gap:40px;max-width:1100px;margin:0 auto;align-items:start}
 .footer-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:900;letter-spacing:.1em;color:#fff;margin-bottom:12px;display:inline-block}
 .footer-logo span{color:#02d1ba}
 .footer-tagline{font-size:13px;color:rgba(255,255,255,.3);line-height:1.65;margin-bottom:16px;font-weight:300}
@@ -3120,6 +3120,13 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
 
       <div class="footer-col">
+        <div class="footer-col-label" data-i18n="footer.col_resources">Ressources</div>
+        <a href="/comparison" class="footer-link" data-i18n="footer.res_comparison">Comparaison</a>
+        <a href="/security" class="footer-link" data-i18n="footer.res_security">Sécurité</a>
+        <a href="/status" class="footer-link" data-i18n="footer.res_status">Statut plateforme</a>
+      </div>
+
+      <div class="footer-col">
         <div class="footer-col-label" data-i18n="footer.col_legal">Légal</div>
         <a href="/legal.html" class="footer-link" data-i18n="footer.legal_mentions">Mentions légales</a>
         <a href="/legal.html#rgpd" class="footer-link" data-i18n="footer.legal_rgpd">Confidentialité &amp; RGPD</a>
@@ -3619,7 +3626,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       // ===== FOOTER + STICKY =====
       'footer.tagline':'Le système qui transforme<br>chaque coach en CEO.',
       'footer.legal_note':'© 2026 Rayan Bonte — Micro-entrepreneur<br>SIRET 990 637 803 00018<br>10 Rue Cardinale, 84000 Avignon, France<br>Hébergé par Vercel Inc. — San Francisco, CA',
-      'footer.col_follow':'Suivre','footer.col_legal':'Légal','footer.col_contact':'Contact',
+      'footer.col_follow':'Suivre','footer.col_resources':'Ressources','footer.col_legal':'Légal','footer.col_contact':'Contact',
+      'footer.res_comparison':'Comparaison','footer.res_security':'Sécurité','footer.res_status':'Statut plateforme',
       'footer.legal_mentions':'Mentions légales','footer.legal_rgpd':'Confidentialité &amp; RGPD','footer.legal_cgu':'CGU / CGV','footer.manage_cookies':'Gérer mes cookies','footer.become_founder':'Devenir Founding Coach →',
       'sticky.label':'Founding Coach Program — <b>30 fondateurs</b>','sticky.cta':'Rejoindre les 30 Founding Coachs →',
       // ===== QUIZ RESULTS (dynamiques) =====
@@ -3741,7 +3749,8 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       // ===== FOOTER + STICKY =====
       'footer.tagline':'The system that turns<br>every coach into a CEO.',
       'footer.legal_note':'© 2026 Rayan Bonte — Sole proprietorship<br>SIRET 990 637 803 00018<br>10 Rue Cardinale, 84000 Avignon, France<br>Hosted by Vercel Inc. — San Francisco, CA',
-      'footer.col_follow':'Follow','footer.col_legal':'Legal','footer.col_contact':'Contact',
+      'footer.col_follow':'Follow','footer.col_resources':'Resources','footer.col_legal':'Legal','footer.col_contact':'Contact',
+      'footer.res_comparison':'Comparison','footer.res_security':'Security','footer.res_status':'Platform status',
       'footer.legal_mentions':'Legal notice','footer.legal_rgpd':'Privacy &amp; GDPR','footer.legal_cgu':'Terms of service','footer.manage_cookies':'Manage cookies','footer.become_founder':'Become a Founding Coach →',
       'sticky.label':'Founding Coach Program — <b>30 founders</b>','sticky.cta':'Join the 30 Founding Coaches →',
       // ===== QUIZ RESULTS (dynamic) =====
