@@ -14,12 +14,8 @@
  */
 
 const getStripe = require('./_stripe');
-const { createClient } = require('@supabase/supabase-js');
+const { getServiceClient } = require('./_supabase');
 const { secureRequest } = require('./_security');
-
-const SUPABASE_URL =
-  process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 module.exports = async (req, res) => {
   const origin = req.headers.origin || '';
@@ -34,10 +30,6 @@ module.exports = async (req, res) => {
   if (!secureRequest(req, res, { max: 20, windowMs: 3600000 })) return;
 
   try {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      return res.status(500).json({ error: 'Supabase env vars not configured' });
-    }
-
     // 1. Extract JWT from Authorization header
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -45,7 +37,7 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Missing Authorization header' });
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = getServiceClient();
 
     // 2. Verify JWT and resolve user
     const {

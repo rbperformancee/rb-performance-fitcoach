@@ -16,12 +16,9 @@
  *   - Le compte demo a des RLS qui limitent l'acces aux donnees demo uniquement
  */
 
-const { createClient } = require("@supabase/supabase-js");
+const { getServiceClient, getAnonClient } = require("./_supabase");
 const { isOriginAllowed } = require("./_security");
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
 const DEMO_EMAIL = "lucas.demo@rbperform.app";
 
 const lastCall = {};
@@ -39,10 +36,6 @@ module.exports = async (req, res) => {
     return res.status(403).json({ error: "Origin not allowed" });
   }
 
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
-    return res.status(500).json({ error: "Missing Supabase config" });
-  }
-
   // Rate limit : 1 req / 30s par IP
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
   const now = Date.now();
@@ -53,9 +46,7 @@ module.exports = async (req, res) => {
 
   try {
     // 1. Admin client — genere un magic link pour obtenir le OTP
-    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    const adminClient = getServiceClient();
 
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
@@ -72,9 +63,7 @@ module.exports = async (req, res) => {
     }
 
     // 2. Anon client — echange le OTP contre une vraie session
-    const anonClient = createClient(SUPABASE_URL, ANON_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    const anonClient = getAnonClient();
 
     const { data: session, error: sessionError } =
       await anonClient.auth.verifyOtp({

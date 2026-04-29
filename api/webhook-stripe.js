@@ -16,20 +16,11 @@
  */
 
 const getStripe = require('./_stripe');
-const { createClient } = require('@supabase/supabase-js');
+const { getServiceClient } = require('./_supabase');
 const { captureException } = require('./_sentry');
 const { RB_SUPPORT_EMAIL } = require('./_branding');
 
-let _supabase;
-function getSupabase() {
-  if (!_supabase) {
-    const url = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) throw new Error('Supabase env vars not configured');
-    _supabase = createClient(url, key);
-  }
-  return _supabase;
-}
+const getSupabase = getServiceClient;
 
 // ===== Welcome email via Resend =====
 const PLAN_LABEL = {

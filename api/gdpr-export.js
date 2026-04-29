@@ -17,13 +17,10 @@
  * Output : JSON with a top-level `exported_at` and the coach's scope.
  */
 
-const { createClient } = require("@supabase/supabase-js");
+const { getServiceClient } = require("./_supabase");
 const { secureRequest } = require("./_security");
 const { captureException } = require("./_sentry");
 const { RB_SUPPORT_EMAIL } = require("./_branding");
-
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Tables where we pull data keyed by coach_id. Unknown tables are skipped
 // without erroring — the export tolerates schema drift.
@@ -48,16 +45,12 @@ module.exports = async (req, res) => {
   if (!secureRequest(req, res, { max: 5, windowMs: 3600000 })) return;
 
   try {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      return res.status(500).json({ error: "Supabase env vars not configured" });
-    }
-
     // 1. Extract JWT
     const authHeader = req.headers.authorization || "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
     if (!token) return res.status(401).json({ error: "Missing Authorization header" });
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = getServiceClient();
 
     // 2. Verify + resolve user
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);

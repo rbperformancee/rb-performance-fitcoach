@@ -7,7 +7,7 @@
  * Body: { email: string }
  */
 
-const { createClient } = require('@supabase/supabase-js');
+const { getServiceClient } = require('./_supabase');
 const { rateLimit, attachRequestId } = require('./_security');
 const { captureException } = require('./_sentry');
 
@@ -31,30 +31,19 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Email invalide' });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
-
     const cleanEmail = email.toLowerCase().trim();
 
-    if (supabaseUrl && supabaseKey) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { error: dbErr } = await supabase.from('founding_waitlist').upsert(
-          { email: cleanEmail, created_at: new Date().toISOString() },
-          { onConflict: 'email' }
-        );
-        if (dbErr) throw dbErr;
-      } catch (dbEx) {
-        console.error(`[FOUNDING_WAITLIST_LOST] db_write_failed email=${cleanEmail} reason="${dbEx.message}"`);
-        await captureException(dbEx, {
-          tags: { endpoint: 'notify-founding', stage: 'db' },
-          extra: { email: cleanEmail },
-        });
-      }
-    } else {
-      console.error(`[FOUNDING_WAITLIST_LOST] supabase_env_missing email=${cleanEmail}`);
-      await captureException(new Error('Supabase env vars missing on /api/notify-founding'), {
-        tags: { endpoint: 'notify-founding', stage: 'env' },
+    try {
+      const supabase = getServiceClient();
+      const { error: dbErr } = await supabase.from('founding_waitlist').upsert(
+        { email: cleanEmail, created_at: new Date().toISOString() },
+        { onConflict: 'email' }
+      );
+      if (dbErr) throw dbErr;
+    } catch (dbEx) {
+      console.error(`[FOUNDING_WAITLIST_LOST] db_write_failed email=${cleanEmail} reason="${dbEx.message}"`);
+      await captureException(dbEx, {
+        tags: { endpoint: 'notify-founding', stage: 'db' },
         extra: { email: cleanEmail },
       });
     }

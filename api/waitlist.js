@@ -3,11 +3,30 @@
  * Stocke un prospect + envoie email confirmation + notifie Rayan
  */
 
-const { createClient } = require('@supabase/supabase-js');
+const { getServiceClient } = require('./_supabase');
 const nodemailer = require('nodemailer');
+const { z } = require('zod');
 const { rateLimit, attachRequestId } = require('./_security');
 const { captureException } = require('./_sentry');
 const { RB_SUPPORT_EMAIL } = require('./_branding');
+
+// Schema validation inputs waitlist (zod, defense en profondeur).
+// email = RFC-compliant + max 254 chars (RFC 3696). Reste = strings
+// optionnelles avec caps anti-overflow. Frontend cap deja a 100/200 pour UTM,
+// on double-check cote backend. .passthrough() : tolere des champs en plus
+// sans crasher (resilience aux changements frontend).
+const waitlistSchema = z.object({
+  name: z.string().max(100).optional().nullable(),
+  email: z.string().email().max(254),
+  clients: z.string().max(50).optional().nullable(),
+  problem: z.string().max(500).optional().nullable(),
+  source: z.string().max(50).optional().nullable(),
+  utm_source: z.string().max(100).optional().nullable(),
+  utm_medium: z.string().max(100).optional().nullable(),
+  utm_campaign: z.string().max(100).optional().nullable(),
+  utm_content: z.string().max(100).optional().nullable(),
+  referrer: z.string().max(500).optional().nullable(),
+}).passthrough();
 
 const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
 const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
@@ -37,9 +56,12 @@ module.exports = async (req, res) => {
   if (!rl.allowed) return res.status(429).json({ error: 'Trop de tentatives.' });
 
   try {
+    const parsed = waitlistSchema.safeParse(req.body || {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Email invalide' });
+    }
     const { name, email, clients, problem, source,
-            utm_source, utm_medium, utm_campaign, utm_content, referrer } = req.body || {};
-    if (!email || !email.includes('@')) return res.status(400).json({ error: 'Email invalide' });
+            utm_source, utm_medium, utm_campaign, utm_content, referrer } = parsed.data;
 
     const cleanEmail = email.toLowerCase().trim();
     const firstName = (name || '').trim().split(' ')[0] || 'Coach';
@@ -47,32 +69,25 @@ module.exports = async (req, res) => {
     const trunc = (s, n) => (s == null ? null : String(s).slice(0, n));
 
     // Save to Supabase
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
     let dbOk = false;
-    if (supabaseUrl && supabaseKey) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { error: dbErr } = await supabase.from('waitlist').upsert({
-          name: (name || '').trim(), email: cleanEmail,
-          clients: clients || null, problem: problem || null,
-          source: source || 'waitlist',
-          utm_source: trunc(utm_source, 100),
-          utm_medium: trunc(utm_medium, 100),
-          utm_campaign: trunc(utm_campaign, 100),
-          utm_content: trunc(utm_content, 100),
-          referrer: trunc(referrer, 200),
-          created_at: new Date().toISOString(),
-        }, { onConflict: 'email' });
-        if (dbErr) throw dbErr;
-        dbOk = true;
-      } catch (dbEx) {
-        console.error(`[WAITLIST_LOST] db_write_failed email=${cleanEmail} reason="${dbEx.message}"`);
-        await captureException(dbEx, { tags: { endpoint: 'waitlist', stage: 'db' }, extra: { email: cleanEmail, source: source || 'waitlist' } });
-      }
-    } else {
-      console.error(`[WAITLIST_LOST] supabase_env_missing email=${cleanEmail}`);
-      await captureException(new Error('Supabase env vars missing on /api/waitlist'), { tags: { endpoint: 'waitlist', stage: 'env' }, extra: { email: cleanEmail } });
+    try {
+      const supabase = getServiceClient();
+      const { error: dbErr } = await supabase.from('waitlist').upsert({
+        name: (name || '').trim(), email: cleanEmail,
+        clients: clients || null, problem: problem || null,
+        source: source || 'waitlist',
+        utm_source: trunc(utm_source, 100),
+        utm_medium: trunc(utm_medium, 100),
+        utm_campaign: trunc(utm_campaign, 100),
+        utm_content: trunc(utm_content, 100),
+        referrer: trunc(referrer, 200),
+        created_at: new Date().toISOString(),
+      }, { onConflict: 'email' });
+      if (dbErr) throw dbErr;
+      dbOk = true;
+    } catch (dbEx) {
+      console.error(`[WAITLIST_LOST] db_write_failed email=${cleanEmail} reason="${dbEx.message}"`);
+      await captureException(dbEx, { tags: { endpoint: 'waitlist', stage: 'db' }, extra: { email: cleanEmail, source: source || 'waitlist' } });
     }
 
     // Send emails via Zoho SMTP

@@ -20,10 +20,7 @@
  *   - all : opt-out global de tous les emails non-transactionnels
  */
 
-const { createClient } = require('@supabase/supabase-js');
-
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const { getServiceClient } = require('./_supabase');
 
 const VALID_TYPES = ['weekly_digest', 'founder_checkin', 'welcome', 'marketing', 'all'];
 
@@ -41,17 +38,17 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'invalid_type', valid_types: VALID_TYPES });
   }
 
-  // Idempotent : si Supabase pas configure, on log et on confirme quand meme
-  // (l'user voit "tu es desabonne" — on traitera manuellement)
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  let supabase;
+  try {
+    supabase = getServiceClient();
+  } catch (e) {
+    // Idempotent : si Supabase pas configure, on log et on confirme quand meme
+    // (l'user voit "tu es desabonne" — on traitera manuellement)
     console.warn(`[unsubscribe] Supabase not configured — manual processing needed for ${email} type=${type}`);
     return respondConfirmation(res, req, email);
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
 
     // Try coaches table first (most common for digests/checkin)
     const updateData = {};
