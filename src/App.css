@@ -324,6 +324,24 @@ input[type=number] { -moz-appearance: textfield; }
 
 .app-root { display: flex; flex-direction: column; min-height: 100dvh; margin: 0 auto; }
 
+/* Demo client mobile-frame — sur mobile (< 600px) plein ecran (sans bandes
+   sur iPhone Pro Max). Sur desktop, contraint a 430px centre pour donner
+   l'illusion d'un mockup mobile (voir /demo-client depuis macbook). */
+.demo-client-frame {
+  width: 100%;
+  position: relative;
+  background: #050505;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+@media (min-width: 600px) {
+  .demo-client-frame {
+    max-width: 430px;
+    margin: 0 auto;
+    box-shadow: 0 0 80px rgba(0,0,0,0.6);
+  }
+}
+
 /* ── TOPBAR ── */
 .topbar {
   display: flex; align-items: center; justify-content: space-between;

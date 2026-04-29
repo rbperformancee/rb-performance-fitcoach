@@ -865,6 +865,18 @@ function AppInner() {
     );
   }
 
+  // ── Demo coach en cours de connexion → loading avec splash ──
+  // Sans ce guard, le bloc `if (!user)` plus bas redirige vers /
+  // (la landing) AVANT que signInWithPassword ait le temps de finir.
+  if (!user && isDemo) {
+    return (
+      <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.12em", color: "rgba(255,255,255,0.15)" }}>RB<span style={{ color: "rgba(2,209,186,0.3)" }}>PERFORM</span></div>
+        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Chargement démo coach...</div>
+      </div>
+    );
+  }
+
   // ── Pas connecté → Landing publique / SubscribePage / Login ──
   if (!user) {
     if (showLogin) {
@@ -1291,7 +1303,10 @@ function AppInner() {
 
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
-        <div style={{minHeight:'100dvh', background:'#050505', position:'relative', paddingTop: isClientDemo ? 52 : 0, width:'100%', overflowX:'hidden'}}>
+        <div className={isClientDemo ? "demo-client-frame" : ""} style={isClientDemo
+          ? {paddingTop: 52}
+          : {minHeight:'100dvh', background:'#050505', position:'relative', width:'100%', overflowX:'hidden'}
+        }>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
@@ -1318,7 +1333,10 @@ function AppInner() {
       {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
       {/* FaqAssistant deplace dans ProfilePage */}
       {programme && !authError && (
-        <div style={{width:'100%',position:'relative',background:'#050505',minHeight:'100dvh',overflowX:'hidden'}}>
+        <div className={isClientDemo ? "demo-client-frame" : ""} style={isClientDemo
+          ? {}
+          : {width:'100%',position:'relative',background:'#050505',minHeight:'100dvh',overflowX:'hidden'}
+        }>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {isClientDemo && <div style={{height:52}} />}
           {page === "training" ? (
