@@ -197,7 +197,7 @@ export default function MovePage({ client, appData }) {
   const maxKm = Math.max(...bars.map(b => b.km), 1);
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 120px)", opacity: loading ? 0 : 1, transition: "opacity 0.4s ease" }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)", opacity: loading ? 0 : 1, transition: "opacity 0.4s ease" }}>
 
       {/* Ambient */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "40%", background: "radial-gradient(ellipse at 50% 0%, rgba(239,68,68,0.09) 0%, transparent 55%)", pointerEvents: "none", zIndex: 0 }} />
