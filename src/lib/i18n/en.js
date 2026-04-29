@@ -2282,6 +2282,34 @@ const en = {
     "pb.save": "Save",
     "pb.tab_edit": "Edit",
     "pb.tab_preview": "Preview",
+
+    // ===== WeightChart (Body page) =====
+    "wc.objective": "Goal",
+    "wc.objective_reached": "reached",
+    "wc.modify": "Edit",
+    "wc.set_goal": "Set your weight goal",
+    "wc.set_goal_btn": "+ Set my goal",
+    "wc.projection": "Projection",
+    "wc.today": "Today",
+    "wc.goal_reached_on": "Goal reached on",
+    "wc.remaining_kg": "kg remaining",
+    "wc.add_more_for_projection": "Log more weighings to see your projection",
+    "wc.signal_noise": "Signal · Noise",
+    "wc.add_more_for_analysis": "Log more weighings to analyze your variations.",
+    "wc.daily_variation": "Natural daily variation",
+    "wc.ignore_if": "Ignore if",
+    "wc.false_alerts": "False alerts",
+    "wc.normal_variations": "normal variations",
+    "wc.real_signals": "Real signals",
+    "wc.real_trends": "real trends",
+    "wc.regularity": "Weighing regularity",
+    "wc.no_weighing": "No weighing",
+    "wc.weighing_logged": "Weighing logged",
+    "wc.add_weighing": "Add a weighing",
+
+    // ===== SessionTimer =====
+    "stm.session_done": "Session done.",
+    "stm.great_work": "Great work.",
 };
 
 export default en;

@@ -2282,6 +2282,34 @@ const fr = {
     "pb.save": "Enregistrer",
     "pb.tab_edit": "Edition",
     "pb.tab_preview": "Preview",
+
+    // ===== WeightChart (Body page) =====
+    "wc.objective": "Objectif",
+    "wc.objective_reached": "atteint",
+    "wc.modify": "Modifier",
+    "wc.set_goal": "Definis ton objectif de poids",
+    "wc.set_goal_btn": "+ Definir mon objectif",
+    "wc.projection": "Projection",
+    "wc.today": "Aujourd hui",
+    "wc.goal_reached_on": "Objectif atteint le",
+    "wc.remaining_kg": "kg restants",
+    "wc.add_more_for_projection": "Ajoute plusieurs pesees pour voir ta projection",
+    "wc.signal_noise": "Signal · Bruit",
+    "wc.add_more_for_analysis": "Ajoute plus de pesees pour analyser tes variations.",
+    "wc.daily_variation": "Variation naturelle quotidienne",
+    "wc.ignore_if": "Ignorer si",
+    "wc.false_alerts": "Fausses alertes",
+    "wc.normal_variations": "variations normales",
+    "wc.real_signals": "Vrais signaux",
+    "wc.real_trends": "vraies tendances",
+    "wc.regularity": "Regularite des pesees",
+    "wc.no_weighing": "Pas de pesee",
+    "wc.weighing_logged": "Pesee enregistree",
+    "wc.add_weighing": "Ajouter une pesee",
+
+    // ===== SessionTimer =====
+    "stm.session_done": "Seance terminee.",
+    "stm.great_work": "Excellent travail.",
 };
 
 export default fr;

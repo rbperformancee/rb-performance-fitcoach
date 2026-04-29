@@ -151,8 +151,8 @@ export default function SessionTimer({ clientId, onClose }) {
         <div style={{ width: 88, height: 88, borderRadius: "50%", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, animation: 'bounceIn 0.5s ease', boxShadow: "0 0 40px rgba(251,191,36,0.2)" }}>
           <AppIcon name="trophy" size={40} color="#fbbf24" strokeWidth={1.6} />
         </div>
-        <h2 style={{ fontSize: 28, fontWeight: 900, color: '#f5f5f5', margin: '0 0 8px' }}>Seance terminee.</h2>
-        <p style={{ color: '#6b7280', fontSize: 14, margin: '0 0 32px' }}>Excellent travail.</p>
+        <h2 style={{ fontSize: 28, fontWeight: 900, color: '#f5f5f5', margin: '0 0 8px' }}>{t('stm.session_done')}</h2>
+        <p style={{ color: '#6b7280', fontSize: 14, margin: '0 0 32px' }}>{t('stm.great_work')}</p>
         <div style={{ display: 'flex', gap: 12, marginBottom: 40 }}>
           {[
             { label: 'DUREE', value: `${mins}m${secs < 10 ? '0' : ''}${secs}s`, icon: 'clock', color: '#02d1ba' },

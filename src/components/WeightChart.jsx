@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
+import { useT } from "../lib/i18n";
 import EmptyState from "./EmptyState";
 import haptic from "../lib/haptic";
 import Spinner from "./Spinner";
 
 export default function WeightChart({ clientId, client, programme, appData }) {
+  const t = useT();
   const tracking = useWeightTracking(clientId);
   // Toujours utiliser tracking.weights pour avoir l optimistic update
   const weights = tracking.weights.length > 0 ? tracking.weights : (appData?.weights || []);
@@ -202,7 +204,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>Objectif · {goal} kg</span>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{goalPct}% atteint</span>
-                <button onClick={() => setEditGoal(true)} style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "2px 8px", cursor: "pointer" }}>Modifier</button>
+                <button onClick={() => setEditGoal(true)} style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "2px 8px", cursor: "pointer" }}>{t('wc.modify')}</button>
               </div>
             </div>
             <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
@@ -211,7 +213,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
           </>
         ) : (
           <div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>Definis ton objectif de poids</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>{t('wc.set_goal')}</div>
             {editGoal ? (
               <div style={{ display: "flex", gap: 10 }}>
                 <input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 75" value={newGoal}
@@ -225,7 +227,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             ) : (
               <button onClick={() => setEditGoal(true)}
                 style={{ background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 12, padding: "12px 20px", color: GREEN, fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%" }}>
-                + Definir mon objectif
+                {t('wc.set_goal_btn')}
               </button>
             )}
           </div>
@@ -246,12 +248,12 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
 
       <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Projection</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>{t('wc.projection')}</div>
         {proj ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
-              { dot: GREEN, label: "Aujourd hui", val: latestW ? latestW.toFixed(1) + " kg" : "--" },
-              { dot: "rgba(255,255,255,0.2)", label: "Objectif atteint le", val: proj.date },
+              { dot: GREEN, label: t('wc.today'), val: latestW ? latestW.toFixed(1) + " kg" : "--" },
+              { dot: "rgba(255,255,255,0.2)", label: t('wc.goal_reached_on'), val: proj.date },
               { dot: "rgba(129,140,248,0.7)", label: goal > latestW ? "Reste a prendre" : "Reste a perdre", val: proj.kgLeft + " kg" },
             ].map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -262,17 +264,17 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             ))}
           </div>
         ) : (
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.15)" }}>Ajoute plusieurs pesees pour voir ta projection</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.15)" }}>{t('wc.add_more_for_projection')}</div>
         )}
       </div>
 
       <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
 
       <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>Signal · Bruit</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 16 }}>{t('wc.signal_noise')}</div>
         {(() => {
           if (vals.length < 3) return (
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.15)" }}>Ajoute plus de pesees pour analyser tes variations.</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.15)" }}>{t('wc.add_more_for_analysis')}</div>
           );
           const diffs = vals.slice(1).map((v, i) => Math.abs(v - vals[i]));
           const noise = (diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(2);
@@ -284,7 +286,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 14 }}>
                 <div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>Variation naturelle quotidienne</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>{t('wc.daily_variation')}</div>
                   <div style={{ fontSize: 24, fontWeight: 200, color: GREEN, letterSpacing: "-1px" }}>± {noise} kg</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
@@ -294,12 +296,12 @@ export default function WeightChart({ clientId, client, programme, appData }) {
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <div style={{ flex: 1, padding: "12px 14px", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)", borderRadius: 12 }}>
-                  <div style={{ fontSize: 9, color: "rgba(239,68,68,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Fausses alertes</div>
+                  <div style={{ fontSize: 9, color: "rgba(239,68,68,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>{t('wc.false_alerts')}</div>
                   <div style={{ fontSize: 22, fontWeight: 200, color: "rgba(239,68,68,0.8)" }}>{fakeAlerts}</div>
                   <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>variations normales</div>
                 </div>
                 <div style={{ flex: 1, padding: "12px 14px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.12)", borderRadius: 12 }}>
-                  <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Vrais signaux</div>
+                  <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>{t('wc.real_signals')}</div>
                   <div style={{ fontSize: 22, fontWeight: 200, color: GREEN }}>{realSignals}</div>
                   <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>vraies tendances</div>
                 </div>
@@ -324,7 +326,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
 
       <div style={{ padding: "0 24px", marginBottom: 32, position: "relative", zIndex: 1 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Regularite des pesees</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{t('wc.regularity')}</div>
         <div style={{ display: "flex", gap: "4px", marginBottom: 6 }}>
           {["L","M","M","J","V","S","D"].map((d, i) => (
             <div key={i} style={{ flex: 1, textAlign: "center", fontSize: 9, color: "rgba(255,255,255,0.15)" }}>{d}</div>
@@ -365,10 +367,10 @@ export default function WeightChart({ clientId, client, programme, appData }) {
         </div>
         <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(255,255,255,0.08)", display: "inline-block" }} /> Pas de pesee
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(255,255,255,0.08)", display: "inline-block" }} /> {t('wc.no_weighing')}
           </span>
           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: GREEN, display: "inline-block" }} /> Pesee enregistree
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: GREEN, display: "inline-block" }} /> {t('wc.weighing_logged')}
           </span>
         </div>
       </div>
@@ -389,7 +391,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
           <button onClick={() => setShowInput(true)}
             style={{ width: "100%", padding: "19px 24px", borderRadius: 18, border: "none", background: GREEN, color: "#000", fontSize: 15, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 50%)", pointerEvents: "none" }} />
-            <span>Ajouter une pesee</span>
+            <span>{t('wc.add_weighing')}</span>
             <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 20, height: 20 }}><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
           </button>
         )}
