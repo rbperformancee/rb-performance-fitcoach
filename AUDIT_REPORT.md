@@ -123,7 +123,7 @@
 | Menu hamburger ordre correct | PASS (Systeme/Features/Demo/Acces) |
 | "14 jours gratuits" supprime | PASS |
 | "Sans carte bancaire" supprime | PASS |
-| Countdown Founding Coach | PASS (16 mai 2026) |
+| Countdown Founding Coach | PASS (26 mai 2026) |
 | FAQ interactive | PASS (max-height JS) |
 | Badge Recommande Pro visible | PASS (overflow:visible) |
 | Pricing header "Pret a devenir CEO" | PASS |

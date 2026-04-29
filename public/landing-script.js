@@ -692,7 +692,7 @@ clientsSlider.addEventListener('input', update);
 tarifSlider.addEventListener('input', update);
 })();
 (function(){
-var end = new Date('2026-05-16T23:59:59').getTime();
+var end = new Date('2026-05-26T23:59:59').getTime();
 var dEl = document.getElementById('fc-days');
 var hEl = document.getElementById('fc-hours');
 var mEl = document.getElementById('fc-mins');
