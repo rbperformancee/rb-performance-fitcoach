@@ -1798,23 +1798,23 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="menu-overlay-inner">
 
     <nav class="menu-chapters">
-      <a class="menu-chapter" data-target="how">
+      <a class="menu-chapter" href="#how" data-target="how">
         <span class="ch-num">01</span>
         <span class="ch-name" data-i18n="menu.ch0">Le Système</span>
       </a>
-      <a class="menu-chapter" data-target="business">
+      <a class="menu-chapter" href="#business" data-target="business">
         <span class="ch-num">02</span>
         <span class="ch-name" data-i18n="menu.ch1">Ton Business</span>
       </a>
-      <a class="menu-chapter" data-target="features">
+      <a class="menu-chapter" href="#features" data-target="features">
         <span class="ch-num">03</span>
         <span class="ch-name" data-i18n="menu.ch3">Features</span>
       </a>
-      <a class="menu-chapter" data-target="demo-section">
+      <a class="menu-chapter" href="#demo-section" data-target="demo-section">
         <span class="ch-num">04</span>
         <span class="ch-name" data-i18n="menu.ch4">Explorer</span>
       </a>
-      <a class="menu-chapter" data-target="pricing">
+      <a class="menu-chapter" href="#pricing" data-target="pricing">
         <span class="ch-num">05</span>
         <span class="ch-name" data-i18n="menu.ch5">Ton Offre</span>
       </a>
@@ -1865,7 +1865,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
 
 <!-- ========== LE SYSTÈME — FORMAT CINÉMATIQUE ========== -->
-<section class="how" style="background:#080C14">
+<section class="how" id="how" style="background:#080C14">
 <style>
 /* ===== SYSTÈME — ULTRA PREMIUM ===== */
 .sys-block{display:flex;align-items:center;padding:72px 24px;max-width:1100px;margin:0 auto;gap:72px;position:relative;opacity:0;transform:translateY(40px) scale(0.98);filter:blur(6px);transition:opacity .9s cubic-bezier(0.16,1,0.3,1),transform .9s cubic-bezier(0.16,1,0.3,1),filter .9s cubic-bezier(0.16,1,0.3,1)}
@@ -2265,7 +2265,11 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         </div>
         <!-- MacBook -->
         <div style="margin-top:24px;padding:0 16px;flex:1;display:flex;justify-content:center;align-items:center;min-height:200px">
-          <img src="/macbook_coach.webp" alt="Dashboard coach RB Perform" loading="lazy" style="width:110%;max-width:480px;height:auto;display:block;filter:drop-shadow(0 16px 48px rgba(0,0,0,0.6))" />
+          <img src="/macbook_coach-720.webp"
+               srcset="/macbook_coach-480.webp 480w, /macbook_coach-720.webp 720w, /macbook_coach-1080.webp 1080w, /macbook_coach-1440.webp 1440w"
+               sizes="(max-width: 480px) 480px, (max-width: 720px) 720px, 480px"
+               alt="Dashboard coach RB Perform" loading="lazy" width="2752" height="1568"
+               style="width:110%;max-width:480px;height:auto;display:block;filter:drop-shadow(0 16px 48px rgba(0,0,0,0.6))" />
         </div>
       </div>
 
@@ -2288,7 +2292,11 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
         </div>
         <!-- iPhone -->
         <div style="margin-top:24px;flex:1;display:flex;justify-content:center;align-items:center;min-height:300px;padding:16px 0">
-          <img src="/iphone_client.webp" alt="App client RB Perform" loading="lazy" style="width:110%;max-width:480px;height:auto;display:block;filter:drop-shadow(0 20px 60px rgba(0,0,0,0.6))" />
+          <img src="/iphone_client-720.webp"
+               srcset="/iphone_client-480.webp 480w, /iphone_client-720.webp 720w, /iphone_client-1080.webp 1080w, /iphone_client-1440.webp 1440w"
+               sizes="(max-width: 480px) 480px, (max-width: 720px) 720px, 480px"
+               alt="App client RB Perform" loading="lazy" width="2752" height="1536"
+               style="width:110%;max-width:480px;height:auto;display:block;filter:drop-shadow(0 20px 60px rgba(0,0,0,0.6))" />
         </div>
       </div>
 
