@@ -392,21 +392,41 @@
       : '';
 
     document.title = name + " · RB Perform";
+    // Detect lang from browser (Coach pages are simple — fr default, en if browser asks)
+    var lang = (navigator.language || 'fr').toLowerCase().startsWith('en') ? 'en' : 'fr';
+    var L = lang === 'en' ? {
+      eyebrow: "Join the space",
+      titleA: "Ready to train", titleB: "with",
+      sub_pre: "Request access. ",
+      sub_post: " will reach out to send you an invite.",
+      cta: "Request access →",
+      mail_subject: "Coaching request with ",
+      mail_body: "Hi,%0A%0AI'd like to join your RB Perform coaching space.%0A%0AThanks!",
+    } : {
+      eyebrow: "Rejoindre l'espace",
+      titleA: "Pret a t'entrainer", titleB: "avec",
+      sub_pre: "Demande un acces. ",
+      sub_post: " te recontactera pour t'envoyer ton invitation.",
+      cta: "Demander un acces →",
+      mail_subject: "Demande de coaching avec ",
+      mail_body: "Bonjour,%0A%0AJe souhaite rejoindre votre espace coaching sur RB Perform.%0A%0AMerci !",
+    };
+
     document.getElementById("root").innerHTML =
       '<header class="coach-hero">' +
         '<div class="coach-photo">' + photo + '</div>' +
         '<h1 class="coach-name">' + esc(name) + '<span class="dot">.</span></h1>' +
         '<div class="coach-title">' + esc(subtitle) + '</div>' +
         (coach.public_bio ? '<p class="coach-bio">' + esc(coach.public_bio) + '</p>' : '') +
-        '<a href="https://rbperform.app/landing.html" class="coach-rb-badge" target="_blank" rel="noopener">⚡ Propulse par RB Perform</a>' +
+        '<a href="https://rbperform.app/landing.html" class="coach-rb-badge" target="_blank" rel="noopener">⚡ ' + (lang === 'en' ? 'Powered by RB Perform' : 'Propulse par RB Perform') + '</a>' +
       '</header>' +
       specsHtml +
       testisHtml +
       '<div class="cta-wrap">' +
-        '<div class="cta-eyebrow">Rejoindre l\'espace</div>' +
-        '<div class="cta-title">Pret a t\'entrainer<br>avec ' + esc(name) + ' ?</div>' +
-        '<div class="cta-sub">Demande un acces. ' + esc(name.split(" ")[0] || name) + ' te recontactera pour t\'envoyer ton invitation.</div>' +
-        '<a href="mailto:?subject=Demande de coaching avec ' + encodeURIComponent(name) + '&body=Bonjour,%0A%0AJe souhaite rejoindre votre espace coaching sur RB Perform.%0A%0AMerci !" class="cta-btn">Demander un acces →</a>' +
+        '<div class="cta-eyebrow">' + L.eyebrow + '</div>' +
+        '<div class="cta-title">' + L.titleA + '<br>' + L.titleB + ' ' + esc(name) + ' ?</div>' +
+        '<div class="cta-sub">' + L.sub_pre + esc(name.split(" ")[0] || name) + L.sub_post + '</div>' +
+        '<a href="mailto:?subject=' + encodeURIComponent(L.mail_subject + name) + '&body=' + L.mail_body + '" class="cta-btn">' + L.cta + '</a>' +
       '</div>' +
       '<div class="brand-footer">' +
         '<a href="https://rbperform.app/landing.html">RB Perform — La performance sans compromis</a>' +
