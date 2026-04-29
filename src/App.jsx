@@ -1290,7 +1290,7 @@ function AppInner() {
 
       {/* ── Client sans programme — pages accessibles ── */}
       {user && !isCoach && !cloudProgramme && !showHome && (
-        <div style={{minHeight:'100dvh', background:'#050505', position:'relative', paddingTop: isClientDemo ? 52 : 0, maxWidth: isClientDemo ? 430 : 'none', margin: isClientDemo ? '0 auto' : 0, overflowX:'hidden'}}>
+        <div style={{minHeight:'100dvh', background:'#050505', position:'relative', paddingTop: isClientDemo ? 52 : 0, width:'100%', overflowX:'hidden'}}>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
@@ -1317,10 +1317,7 @@ function AppInner() {
       {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
       {/* FaqAssistant deplace dans ProfilePage */}
       {programme && !authError && (
-        <div style={isClientDemo
-          ? {maxWidth:430,margin:'0 auto',position:'relative',background:'#050505',minHeight:'100dvh',overflowX:'hidden'}
-          : {background:'#050505',minHeight:'100dvh',overflowX:'hidden'}
-        }>
+        <div style={{width:'100%',position:'relative',background:'#050505',minHeight:'100dvh',overflowX:'hidden'}}>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {isClientDemo && <div style={{height:52}} />}
           {page === "training" ? (
