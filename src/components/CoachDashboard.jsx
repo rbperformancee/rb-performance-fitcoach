@@ -5,6 +5,7 @@ import ChatCoach from "./ChatCoach";
 import DemoBanner from "./DemoBanner";
 import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
+import DOMPurify from "dompurify";
 import { supabase } from "../lib/supabase";
 import { generateInvoicePDF } from "../utils/invoicePDF";
 import ProgrammeBuilder from "./ProgrammeBuilder";
@@ -2420,17 +2421,23 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     setUploading(true);
     try {
       let html = await file.text();
-      // 3. Sanitation : strip les <script> et event handlers inline dangereux
-      //    (defense en profondeur meme si React auto-escape l'affichage texte)
-      const scriptsBefore = (html.match(/<script[\s\S]*?<\/script>/gi) || []).length;
-      html = html
-        .replace(/<script[\s\S]*?<\/script>/gi, "")
-        .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
-        .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
-        .replace(/javascript:/gi, "");
-      if (scriptsBefore > 0) {
-        console.warn(`[upload] ${scriptsBefore} <script> tag(s) stripped from programme HTML`);
+      // 3. Sanitation via DOMPurify : strip <script>, event handlers, javascript:
+      //    + tout vecteur XSS connu (svg onload, srcdoc, mutation XSS, etc.).
+      //    Le HTML programme est ensuite rendu dans un iframe sandbox="" cote
+      //    client — defense en profondeur a 2 niveaux (purify + sandbox).
+      const cleanHtml = DOMPurify.sanitize(html, {
+        // On garde la majorite des balises pour preserver le markup riche
+        // du programme (tableaux, listes, images, liens). DOMPurify retire
+        // automatiquement les tags/attributs dangereux.
+        ALLOW_DATA_ATTR: true,
+        FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form'],
+        FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'srcdoc'],
+      });
+      const removedCount = html.length - cleanHtml.length;
+      if (removedCount > 0) {
+        console.warn(`[upload] DOMPurify removed ${removedCount} chars (XSS sanitization)`);
       }
+      html = cleanHtml;
       let progName = file.name.replace(".html", "");
       try {
         const parser = new DOMParser();
