@@ -7,6 +7,11 @@
  * Events gérés :
  *   - checkout.session.completed → crée le coach
  *   - customer.subscription.deleted → désactive le coach
+ *   - customer.subscription.updated → sync status + plan metadata
+ *   - invoice.payment_failed → flag payment_issue (Stripe Smart Retries)
+ *   - charge.refunded → désactive si full refund
+ *   - charge.dispute.created → flag payment_issue
+ *   - charge.dispute.funds_withdrawn / closed → désactive si lost
  *
  * Env vars :
  *   STRIPE_SECRET_KEY
@@ -560,6 +565,122 @@ module.exports = async (req, res) => {
         // Don't capture — the stripe_subscription_status column may not
         // exist yet; it's a best-effort sync. subscription.deleted and
         // payment_failed are the hard signals.
+      }
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // ===== REFUND — coach a ete rembourse (full ou partial) =====
+    if (event.type === 'charge.refunded') {
+      const charge = event.data.object;
+      const customerId = charge.customer;
+      const refunded = charge.amount_refunded || 0;
+      const total = charge.amount || 0;
+      const isFullRefund = refunded >= total;
+
+      console.error(
+        `[WEBHOOK_REFUND] customerId=${customerId} refunded=${refunded / 100}EUR ` +
+          `total=${total / 100}EUR full=${isFullRefund}`
+      );
+
+      // Refund total = on desactive immediatement (le coach a recupere
+      // ses sous, on ne lui doit plus l'acces). Refund partiel = on garde
+      // l'acces actif et on log juste pour la compta.
+      if (isFullRefund) {
+        try {
+          await getSupabase()
+            .from('coaches')
+            .update({
+              is_active: false,
+              payment_issue: true,
+              payment_issue_at: new Date().toISOString(),
+            })
+            .eq('stripe_customer_id', customerId);
+        } catch (dbErr) {
+          console.error(`[WEBHOOK_REFUND_DB_FAIL] ${dbErr.message}`);
+        }
+      }
+
+      await captureException(new Error(`Charge refunded for ${customerId}`), {
+        tags: { endpoint: 'webhook-stripe', stage: 'refund', severity: isFullRefund ? 'critical' : 'warning' },
+        extra: { customerId, refunded: refunded / 100, total: total / 100, isFullRefund, chargeId: charge.id },
+      });
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // ===== DISPUTE OPENED — chargeback en cours, on flag =====
+    if (event.type === 'charge.dispute.created') {
+      const dispute = event.data.object;
+      const customerId = dispute.charge?.customer || dispute.customer;
+      const reason = dispute.reason || 'unknown';
+      const amount = (dispute.amount || 0) / 100;
+
+      console.error(
+        `[WEBHOOK_DISPUTE_OPENED] customerId=${customerId} amount=${amount}EUR reason=${reason}`
+      );
+
+      // Flag at-risk mais on garde l'acces — le dispute peut etre gagne.
+      // Stripe nous notifiera via dispute.closed (won/lost) pour la suite.
+      try {
+        await getSupabase()
+          .from('coaches')
+          .update({ payment_issue: true, payment_issue_at: new Date().toISOString() })
+          .eq('stripe_customer_id', customerId);
+      } catch (dbErr) {
+        console.error(`[WEBHOOK_DISPUTE_DB_WARN] ${dbErr.message}`);
+      }
+
+      await captureException(new Error(`Dispute opened for ${customerId} (${reason})`), {
+        tags: { endpoint: 'webhook-stripe', stage: 'dispute_opened', severity: 'critical' },
+        extra: { customerId, amount, reason, disputeId: dispute.id },
+      });
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // ===== DISPUTE PERDU — fonds retires, le coach a chargeback =====
+    if (event.type === 'charge.dispute.funds_withdrawn' || event.type === 'charge.dispute.closed') {
+      const dispute = event.data.object;
+      const customerId = dispute.charge?.customer || dispute.customer;
+      const status = dispute.status; // 'lost' | 'won' | 'warning_closed' | etc.
+      const amount = (dispute.amount || 0) / 100;
+
+      console.error(
+        `[WEBHOOK_DISPUTE_CLOSED] customerId=${customerId} status=${status} amount=${amount}EUR`
+      );
+
+      // Si le dispute est perdu (lost) OU les fonds sont retires :
+      // desactivation immediate. Le coach a fait un chargeback abusif
+      // ou a vraiment subi une fraude — dans les deux cas on coupe l'acces.
+      if (status === 'lost' || event.type === 'charge.dispute.funds_withdrawn') {
+        try {
+          await getSupabase()
+            .from('coaches')
+            .update({
+              is_active: false,
+              payment_issue: true,
+              payment_issue_at: new Date().toISOString(),
+            })
+            .eq('stripe_customer_id', customerId);
+        } catch (dbErr) {
+          console.error(`[WEBHOOK_DISPUTE_DEACTIVATE_FAIL] ${dbErr.message}`);
+        }
+
+        await captureException(new Error(`Dispute lost / funds withdrawn for ${customerId}`), {
+          tags: { endpoint: 'webhook-stripe', stage: 'dispute_lost', severity: 'critical' },
+          extra: { customerId, amount, status, disputeId: dispute.id },
+        });
+      } else if (status === 'won') {
+        // Dispute gagne — on peut clear le flag at-risk.
+        try {
+          await getSupabase()
+            .from('coaches')
+            .update({ payment_issue: false, payment_issue_at: null })
+            .eq('stripe_customer_id', customerId);
+        } catch (dbErr) {
+          console.error(`[WEBHOOK_DISPUTE_CLEAR_FAIL] ${dbErr.message}`);
+        }
       }
 
       return res.status(200).json({ ok: true });
