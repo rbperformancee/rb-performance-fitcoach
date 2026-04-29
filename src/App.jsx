@@ -1318,8 +1318,8 @@ function AppInner() {
       {/* FaqAssistant deplace dans ProfilePage */}
       {programme && !authError && (
         <div style={isClientDemo
-          ? {maxWidth:430,margin:'0 auto',position:'relative',background:'#050505'}
-          : {background:'#050505',minHeight:'100vh'}
+          ? {maxWidth:430,margin:'0 auto',position:'relative',background:'#050505',minHeight:'100dvh'}
+          : {background:'#050505',minHeight:'100dvh'}
         }>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {isClientDemo && <div style={{height:52}} />}
