@@ -41,6 +41,22 @@ function resolvePriceId(requestedCurrency) {
   return { priceId: process.env.STRIPE_PRICE_FOUNDING, currency: 'EUR' };
 }
 
+/**
+ * Resolve un Stripe Customer existant par email — evite les Founders
+ * qui signup 2x et finissent avec 2 abonnements actifs facturees.
+ */
+async function findExistingCustomer(stripe, email) {
+  if (!email) return null;
+  try {
+    const list = await stripe.customers.list({ email: email.toLowerCase().trim(), limit: 5 });
+    if (!list.data || list.data.length === 0) return null;
+    return list.data[0].id;
+  } catch (e) {
+    console.error('[checkout-founding] customer lookup failed:', e.message);
+    return null;
+  }
+}
+
 module.exports = async (req, res) => {
   const origin = req.headers.origin || '';
   res.setHeader('Access-Control-Allow-Origin', origin || 'https://rbperform.app');
@@ -53,7 +69,7 @@ module.exports = async (req, res) => {
   if (!secureRequest(req, res, { max: 10, windowMs: 3600000 })) return;
 
   try {
-    const { currency } = req.body || {};
+    const { currency, email } = req.body || {};
     const { priceId, currency: usedCurrency } = resolvePriceId(currency);
 
     if (!priceId) {
@@ -63,8 +79,12 @@ module.exports = async (req, res) => {
     }
 
     const baseUrl = 'https://rbperform.app';
+    const stripe = getStripe();
 
-    const session = await getStripe().checkout.sessions.create({
+    // Dedup customer si email fourni — evite la double-souscription Founder
+    const existingCustomerId = await findExistingCustomer(stripe, email);
+
+    const sessionParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{
@@ -77,8 +97,6 @@ module.exports = async (req, res) => {
       tax_id_collection: { enabled: true },
       // Necessaire pour automatic_tax
       billing_address_collection: 'required',
-      // Sync l'address back sur le Customer pour les renouvellements
-      customer_update: undefined,
       subscription_data: {
         metadata: {
           founding_coach: 'true',
@@ -89,7 +107,15 @@ module.exports = async (req, res) => {
       success_url: `${baseUrl}/founding?success=true`,
       cancel_url: `${baseUrl}/founding?cancelled=true`,
       allow_promotion_codes: true,
-    });
+    };
+    if (existingCustomerId) {
+      sessionParams.customer = existingCustomerId;
+      sessionParams.customer_update = { address: 'auto', name: 'auto' };
+    } else if (email) {
+      sessionParams.customer_email = email.toLowerCase().trim();
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return res.status(200).json({ url: session.url, currency: usedCurrency });
   } catch (err) {
