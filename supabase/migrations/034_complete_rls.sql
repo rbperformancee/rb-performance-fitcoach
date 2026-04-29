@@ -1,23 +1,19 @@
--- Migration 034 — Complete RLS coverage
+-- Migration 034 — Complete RLS coverage (SAFE VERSION)
 --
--- Audit pre-launch a revele 14 tables sans RLS dont 3 critiques :
--- coaches (data leak emails/stripe), onboarding_forms (data health),
--- super_admins (liste admins exposee).
---
+-- Audit pre-launch a revele 14 tables sans RLS dont 3 critiques.
 -- Cette migration :
---   1. Enable RLS sur toutes les tables sensibles
---   2. Ajoute des policies basees sur le pattern existant (auth.uid +
---      relation coach-client) pour les flows legitimes
---   3. service_role bypass RLS de toute facon (les crons + API endpoints
---      Vercel utilisent SUPABASE_SERVICE_ROLE_KEY → pas impactes)
+--   1. Enable RLS sur les tables CRITIQUES + add policies (testees avec
+--      pattern existant clients/programmes)
+--   2. Pour les tables avec schema inconnu : enable RLS SANS policy
+--      → bloque tout cote client. service_role bypass de toute facon.
+--      Si l'app utilise ces tables cote client, on ajoutera policies after.
 --
--- Apply : via Supabase Dashboard → SQL Editor → paste + run
--- Rollback : DROP POLICY... + ALTER TABLE ... DISABLE ROW LEVEL SECURITY
+-- Apply : Supabase Dashboard → SQL Editor → paste + run
+-- Si erreur sur une table : c'est que le schema differe, on adapte au cas par cas.
 
 -- ===== 1. coaches (CRITIQUE — emails/stripe/payment_link) =====
 ALTER TABLE coaches ENABLE ROW LEVEL SECURITY;
 
--- Coach peut tout faire sur sa propre row
 DROP POLICY IF EXISTS coaches_self_all ON coaches;
 CREATE POLICY coaches_self_all ON coaches FOR ALL USING (
   auth.uid()::text = id::text
@@ -25,7 +21,6 @@ CREATE POLICY coaches_self_all ON coaches FOR ALL USING (
 );
 
 -- Clients peuvent SELECT le coach auquel ils sont rattaches
--- (pour afficher le branding, logo, accent_color cote client)
 DROP POLICY IF EXISTS coaches_select_by_clients ON coaches;
 CREATE POLICY coaches_select_by_clients ON coaches FOR SELECT USING (
   EXISTS (
@@ -36,20 +31,7 @@ CREATE POLICY coaches_select_by_clients ON coaches FOR SELECT USING (
   )
 );
 
--- Anon users peuvent lookup un coach via invitation valide
--- (flow JoinPage : /join?token=... lit le coach_id puis le coach)
-DROP POLICY IF EXISTS coaches_select_via_invitation ON coaches;
-CREATE POLICY coaches_select_via_invitation ON coaches FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM invitations
-    WHERE invitations.coach_id = coaches.id
-      AND invitations.status = 'pending'
-      AND invitations.expires_at > NOW()
-  )
-);
-
--- Profil public coach via slug (page /coach/:slug ou /rejoindre/:slug)
--- Limit: anon can read coach row si slug existe (revele le profil public)
+-- Profil public coach via slug (page /coach/:slug + JoinPage flow)
 DROP POLICY IF EXISTS coaches_public_via_slug ON coaches;
 CREATE POLICY coaches_public_via_slug ON coaches FOR SELECT USING (
   coach_slug IS NOT NULL
@@ -71,14 +53,11 @@ CREATE POLICY coach_notes_owner ON coach_notes FOR ALL USING (
 -- ===== 3. onboarding_forms (CRITIQUE — health data) =====
 ALTER TABLE onboarding_forms ENABLE ROW LEVEL SECURITY;
 
--- Client owner
 DROP POLICY IF EXISTS onboarding_forms_client ON onboarding_forms;
 CREATE POLICY onboarding_forms_client ON onboarding_forms FOR ALL USING (
   auth.uid()::text = client_id::text
-  OR auth.jwt()->>'email' IN (SELECT email FROM clients WHERE id = onboarding_forms.client_id)
 );
 
--- Coach peut lire l'onboarding de ses clients
 DROP POLICY IF EXISTS onboarding_forms_coach_read ON onboarding_forms;
 CREATE POLICY onboarding_forms_coach_read ON onboarding_forms FOR SELECT USING (
   EXISTS (
@@ -107,154 +86,33 @@ CREATE POLICY weekly_checkins_coach_read ON weekly_checkins FOR SELECT USING (
   )
 );
 
--- ===== 5. exercise_logs (training data) =====
--- Note: avait deja 2 policies definies mais RLS desactive — on l'active
-ALTER TABLE exercise_logs ENABLE ROW LEVEL SECURITY;
-
--- ===== 6. transformation_sessions =====
-ALTER TABLE transformation_sessions ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS transformation_sessions_client ON transformation_sessions;
-CREATE POLICY transformation_sessions_client ON transformation_sessions FOR ALL USING (
-  auth.uid()::text = client_id::text
-);
-
-DROP POLICY IF EXISTS transformation_sessions_coach_read ON transformation_sessions;
-CREATE POLICY transformation_sessions_coach_read ON transformation_sessions FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM coaches c
-    JOIN clients cl ON cl.coach_id = c.id
-    WHERE cl.id = transformation_sessions.client_id
-      AND (auth.uid()::text = c.id::text OR auth.jwt()->>'email' = c.email)
-  )
-);
-
--- ===== 7. session_completions =====
-ALTER TABLE session_completions ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS session_completions_client ON session_completions;
-CREATE POLICY session_completions_client ON session_completions FOR ALL USING (
-  auth.uid()::text = client_id::text
-);
-
-DROP POLICY IF EXISTS session_completions_coach_read ON session_completions;
-CREATE POLICY session_completions_coach_read ON session_completions FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM coaches c
-    JOIN clients cl ON cl.coach_id = c.id
-    WHERE cl.id = session_completions.client_id
-      AND (auth.uid()::text = c.id::text OR auth.jwt()->>'email' = c.email)
-  )
-);
-
--- ===== 8. session_live =====
-ALTER TABLE session_live ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS session_live_client ON session_live;
-CREATE POLICY session_live_client ON session_live FOR ALL USING (
-  auth.uid()::text = client_id::text
-);
-
-DROP POLICY IF EXISTS session_live_coach_read ON session_live;
-CREATE POLICY session_live_coach_read ON session_live FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM coaches c
-    JOIN clients cl ON cl.coach_id = c.id
-    WHERE cl.id = session_live.client_id
-      AND (auth.uid()::text = c.id::text OR auth.jwt()->>'email' = c.email)
-  )
-);
-
--- ===== 9. bookings (appointments) =====
-ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS bookings_client ON bookings;
-CREATE POLICY bookings_client ON bookings FOR ALL USING (
-  auth.uid()::text = client_id::text
-);
-
-DROP POLICY IF EXISTS bookings_coach ON bookings;
-CREATE POLICY bookings_coach ON bookings FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM coaches WHERE coaches.id = bookings.coach_id
-      AND (auth.uid()::text = coaches.id::text OR auth.jwt()->>'email' = coaches.email)
-  )
-);
-
--- ===== 10. coach_slots (creneaux dispo) =====
-ALTER TABLE coach_slots ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS coach_slots_owner ON coach_slots;
-CREATE POLICY coach_slots_owner ON coach_slots FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM coaches WHERE coaches.id = coach_slots.coach_id
-      AND (auth.uid()::text = coaches.id::text OR auth.jwt()->>'email' = coaches.email)
-  )
-);
-
--- Lecture publique des slots (pour les clients qui veulent booker)
-DROP POLICY IF EXISTS coach_slots_public_read ON coach_slots;
-CREATE POLICY coach_slots_public_read ON coach_slots FOR SELECT USING (TRUE);
-
--- ===== 11. coach_messages_flash =====
-ALTER TABLE coach_messages_flash ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS coach_messages_flash_owner ON coach_messages_flash;
-CREATE POLICY coach_messages_flash_owner ON coach_messages_flash FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM coaches WHERE coaches.id = coach_messages_flash.coach_id
-      AND (auth.uid()::text = coaches.id::text OR auth.jwt()->>'email' = coaches.email)
-  )
-);
-
--- Lecture par les clients du coach
-DROP POLICY IF EXISTS coach_messages_flash_clients_read ON coach_messages_flash;
-CREATE POLICY coach_messages_flash_clients_read ON coach_messages_flash FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM clients
-    WHERE clients.coach_id = coach_messages_flash.coach_id
-      AND (auth.uid()::text = clients.id::text OR auth.jwt()->>'email' = clients.email)
-  )
-);
-
--- ===== 12. push_subscriptions =====
--- Note: 2 policies deja definies. On active RLS.
-ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
-
--- ===== 13. client_badges =====
-ALTER TABLE client_badges ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS client_badges_client ON client_badges;
-CREATE POLICY client_badges_client ON client_badges FOR ALL USING (
-  auth.uid()::text = client_id::text
-);
-
-DROP POLICY IF EXISTS client_badges_coach_read ON client_badges;
-CREATE POLICY client_badges_coach_read ON client_badges FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM coaches c
-    JOIN clients cl ON cl.coach_id = c.id
-    WHERE cl.id = client_badges.client_id
-      AND (auth.uid()::text = c.id::text OR auth.jwt()->>'email' = c.email)
-  )
-);
-
--- ===== 14. super_admins (CRITIQUE — liste admins) =====
+-- ===== 5. super_admins (CRITIQUE — liste admins) =====
 ALTER TABLE super_admins ENABLE ROW LEVEL SECURITY;
 
--- Seuls les super admins eux-memes voient la liste
 DROP POLICY IF EXISTS super_admins_self ON super_admins;
 CREATE POLICY super_admins_self ON super_admins FOR SELECT USING (
   auth.jwt()->>'email' = email
 );
 
+-- ===== 6. exercise_logs (avait deja 2 policies, RLS off) =====
+ALTER TABLE exercise_logs ENABLE ROW LEVEL SECURITY;
+
+-- ===== 7. push_subscriptions (avait deja 2 policies, RLS off) =====
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- ===== 8-14. Tables au schema incertain : enable RLS sans policy =====
+-- (= bloque cote client, service_role bypass de toute facon)
+-- Si l'app utilise ces tables cote client, on ajoutera policies after.
+ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_badges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_messages_flash ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE session_completions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE session_live ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transformation_sessions ENABLE ROW LEVEL SECURITY;
+
 -- ===== Verification post-migration =====
--- Apres apply, refaire le SQL audit pour verifier que toutes les tables
--- 🔴 sont devenues ✅ ou 🟠 :
---
 -- SELECT c.relname, c.relrowsecurity, COUNT(p.polname) AS policy_count
--- FROM pg_class c
--- LEFT JOIN pg_policy p ON p.polrelid = c.oid
+-- FROM pg_class c LEFT JOIN pg_policy p ON p.polrelid = c.oid
 -- WHERE c.relkind = 'r' AND c.relnamespace = 'public'::regnamespace
--- GROUP BY c.relname, c.relrowsecurity
--- ORDER BY c.relrowsecurity ASC;
+-- GROUP BY c.relname, c.relrowsecurity ORDER BY c.relrowsecurity ASC;

@@ -2324,10 +2324,27 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   useEffect(() => { loadClients(); }, []);
-  // Auto-refresh clients toutes les 60s pour tracking activite en temps reel
+  // Auto-refresh clients toutes les 60s pour tracking activite en temps reel.
+  // Suspendu quand l'onglet est inactif (battery + bandwidth + Supabase quota).
   useEffect(() => {
-    const iv = setInterval(() => { loadClients(); }, 60000);
-    return () => clearInterval(iv);
+    let iv = null;
+    const start = () => {
+      if (iv) return;
+      iv = setInterval(() => { loadClients(); }, 60000);
+    };
+    const stop = () => {
+      if (iv) { clearInterval(iv); iv = null; }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") start();
+      else stop();
+    };
+    if (document.visibilityState === "visible") start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
 

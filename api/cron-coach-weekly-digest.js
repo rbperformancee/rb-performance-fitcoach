@@ -13,7 +13,10 @@ const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
 
 function isAuthorizedCron(req) {
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true;
+  if (!cronSecret) {
+    console.error("[CRON_AUTH_FAIL] CRON_SECRET missing — refused");
+    return false;
+  }
   return (req.headers.authorization || "") === `Bearer ${cronSecret}`;
 }
 

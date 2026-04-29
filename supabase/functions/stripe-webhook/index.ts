@@ -100,10 +100,14 @@ serve(async (req) => {
         headers: corsHeaders,
       })
     } else {
-      // WARNING : secret non configure, on laisse passer (compatibilite existant)
-      // Ajouter STRIPE_WEBHOOK_SECRET dans Supabase > Edge Functions secrets pour activer la verif
-      console.warn("STRIPE_WEBHOOK_SECRET not set — webhook signature NOT verified")
-      event = JSON.parse(rawBody)
+      // SECURITY : sans secret de signature Stripe, le webhook est spoofable
+      // (n'importe qui peut forger checkout.session.completed → comptes gratuits).
+      // Ajouter STRIPE_WEBHOOK_SECRET dans Supabase > Edge Functions secrets.
+      console.error("STRIPE_WEBHOOK_SECRET missing — webhook rejected for security")
+      return new Response(JSON.stringify({ error: "Webhook signature secret not configured" }), {
+        status: 500,
+        headers: corsHeaders,
+      })
     }
 
     // ===== Nouveau paiement =====

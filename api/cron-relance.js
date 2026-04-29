@@ -20,7 +20,10 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // configurable dans vercel.json. Si CRON_SECRET est set, on exige le match.
 function isAuthorizedCron(req) {
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true; // pas configure : on laisse passer (dev)
+  if (!cronSecret) {
+    console.error("[CRON_AUTH_FAIL] CRON_SECRET missing — refused");
+    return false;
+  }
   const auth = req.headers.authorization || "";
   return auth === `Bearer ${cronSecret}`;
 }
