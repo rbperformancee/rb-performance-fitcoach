@@ -44,12 +44,12 @@ test.describe("Landing — Structure", () => {
     const chapters = page.locator(".menu-chapter");
     await expect(chapters).toHaveCount(5);
 
-    // Check chapter names
-    await expect(page.locator(".ch-name").nth(0)).toContainText("Le Système");
-    await expect(page.locator(".ch-name").nth(1)).toContainText("Ton Business");
-    await expect(page.locator(".ch-name").nth(2)).toContainText("Features");
-    await expect(page.locator(".ch-name").nth(3)).toContainText("Explorer");
-    await expect(page.locator(".ch-name").nth(4)).toContainText("Ton Offre");
+    // Locale-agnostic — on verifie les data-i18n keys plutot que le texte FR/EN
+    await expect(page.locator('.menu-chapter [data-i18n="menu.ch0"]')).toBeAttached();
+    await expect(page.locator('.menu-chapter [data-i18n="menu.ch1"]')).toBeAttached();
+    await expect(page.locator('.menu-chapter [data-i18n="menu.ch3"]')).toBeAttached();
+    await expect(page.locator('.menu-chapter [data-i18n="menu.ch4"]')).toBeAttached();
+    await expect(page.locator('.menu-chapter [data-i18n="menu.ch5"]')).toBeAttached();
   });
 
   // TODO: the section switcher JS relies on specific pointer-event semantics
@@ -93,18 +93,19 @@ test.describe("Landing — CTAs", () => {
     expect(count).toBe(3);
   });
 
-  test("menu CTA links to /waitlist", async ({ page }) => {
+  test("menu CTA links to /founding", async ({ page }) => {
     await page.goto(LANDING);
     await page.locator("#burgerBtn").click();
     await page.waitForTimeout(300);
     const cta = page.locator(".menu-cta-btn");
-    await expect(cta).toHaveAttribute("href", "/waitlist");
+    // /waitlist redirige 301 vers /founding (vercel.json) — on cible la destination finale
+    await expect(cta).toHaveAttribute("href", "/founding#join");
   });
 
-  test("sticky CTA links to /waitlist", async ({ page }) => {
+  test("sticky CTA links to /founding", async ({ page }) => {
     await page.goto(LANDING);
     const sticky = page.locator(".sticky-cta .btn");
-    await expect(sticky).toHaveAttribute("href", "/waitlist");
+    await expect(sticky).toHaveAttribute("href", "/founding#join");
   });
 });
 
@@ -129,7 +130,8 @@ test.describe("Landing — Features section", () => {
     await page.locator('[data-target="features"]').click();
     await page.waitForTimeout(500);
 
-    await expect(page.locator(".features-inner .intro h2")).toContainText("construit ce que");
+    // Locale-agnostic — on cible le data-i18n="features.title"
+    await expect(page.locator('.features-inner .intro h2[data-i18n="features.title"]')).toBeVisible();
   });
 });
 

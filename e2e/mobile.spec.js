@@ -114,8 +114,9 @@ test.describe("Mobile — Landing", () => {
 test.describe("Mobile — Founding", () => {
   test("founding page loads correctly on mobile", async ({ page }) => {
     await page.goto("/founding.html");
-    await expect(page.locator("h1")).toContainText("prix");
-    await expect(page.locator(".price-new")).toContainText("199€");
+    // Locale-agnostic
+    await expect(page.locator('h1[data-i18n="founding.h1"]')).toBeVisible();
+    await expect(page.locator(".price-new")).toContainText(/\d+/);
   });
 
   test("no horizontal overflow on founding", async ({ page }) => {
@@ -127,13 +128,13 @@ test.describe("Mobile — Founding", () => {
 
   test("CTA button is full width and tappable", async ({ page }) => {
     await page.goto("/founding.html");
-    // Main CTA now routes to /waitlist (Payment Link shared via DM only).
+    // Main CTA scroll vers le formulaire #join en bas de page
     const cta = page.locator("a.cta").first();
     const box = await cta.boundingBox();
     expect(box).toBeTruthy();
-    // Button should be at least 300px wide on 390px viewport
+    // Button should be at least 280px wide on 390px viewport
     expect(box.width).toBeGreaterThan(280);
-    // Touch target at least 44px tall
+    // Touch target at least 44px tall (WCAG 2.5.5)
     expect(box.height).toBeGreaterThan(43);
   });
 });

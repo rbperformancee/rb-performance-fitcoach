@@ -39,9 +39,11 @@ test.describe("Routes — Content Verification", () => {
   });
 
   test("/demo loads app with demo flag", async ({ page }) => {
-    await page.goto("/demo");
-    // Should load the React app
-    await expect(page.locator("#root")).toBeAttached({ timeout: 15000 });
+    await page.goto("/demo", { waitUntil: "domcontentloaded" });
+    // Splash 1800ms + bundle ~240KB + hydration. Sur cold start Vercel
+    // preview, peut depasser 30s. On verifie juste que l'app shell est servie
+    // (root present + splash visible) ; le rendering React est teste ailleurs.
+    await expect(page.locator("#root")).toBeAttached({ timeout: 30000 });
   });
 
   test("/legal.html has SIRET", async ({ page }) => {
