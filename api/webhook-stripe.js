@@ -316,7 +316,36 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid signature' });
     }
 
-    console.log(`[webhook] Event: ${event.type}`);
+    console.log(`[webhook] Event: ${event.type} (id: ${event.id})`);
+
+    // ===== IDEMPOTENCY — refuser les retries Stripe =====
+    // Stripe retry les webhooks jusqu'a 3 fois sur 3 jours en cas d'erreur.
+    // On track event.id dans stripe_events ; si deja traite, on retourne 200
+    // immediatement (sans re-creer user, re-envoyer email, etc.).
+    try {
+      const { data: existing } = await getSupabase()
+        .from('stripe_events')
+        .select('event_id')
+        .eq('event_id', event.id)
+        .maybeSingle();
+      if (existing) {
+        console.log(`[webhook] Event ${event.id} already processed — skipping (idempotency)`);
+        return res.status(200).json({ received: true, deduped: true });
+      }
+      // Insert dans stripe_events AVANT le traitement pour eviter race conditions
+      // (si deux retries arrivent en parallele, l'unique constraint event_id rejette le 2e)
+      const { error: insertErr } = await getSupabase()
+        .from('stripe_events')
+        .insert({ event_id: event.id, type: event.type, payload: event });
+      if (insertErr && insertErr.code === '23505') {
+        // Code 23505 = unique violation = race avec un autre worker, deja insere
+        console.log(`[webhook] Event ${event.id} race detected — skipping`);
+        return res.status(200).json({ received: true, deduped: true });
+      }
+    } catch (e) {
+      // Ne pas bloquer le webhook si le check idempotency echoue (mode degrade)
+      console.error('[webhook] idempotency check failed (degraded mode):', e.message);
+    }
 
     // ===== CHECKOUT COMPLETED — CRÉER LE COACH =====
     if (event.type === 'checkout.session.completed') {

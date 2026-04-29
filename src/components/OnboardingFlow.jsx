@@ -165,16 +165,31 @@ export default function OnboardingFlow({ client, onComplete }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [bookedSlot, setBookedSlot] = useState(null);
 
-  const [form, setForm] = useState({
-    nom_prenom: client?.full_name || "",
-    telephone: "",
-    age: "", poids: "", taille: "", passe_sportif: "",
-    metier: "", sommeil: "", pas_jour: "", allergies: "", repas: "", jours_entrainement: "", heures_seance: "", diet_actuelle: "",
-    points_faibles: "", objectifs_6semaines: "", objectifs_3mois: "", objectifs_6mois: "",
-    motivation_score: 0, freins: "", sacrifices: "", vision_physique: "",
-    one_rm_bench: "", one_rm_squat: "", one_rm_traction: "",
-    motivation_principale: "", risques_abandon: "", autres_infos: "",
+  const [form, setForm] = useState(() => {
+    const empty = {
+      nom_prenom: client?.full_name || "",
+      telephone: "",
+      age: "", poids: "", taille: "", passe_sportif: "",
+      metier: "", sommeil: "", pas_jour: "", allergies: "", repas: "", jours_entrainement: "", heures_seance: "", diet_actuelle: "",
+      points_faibles: "", objectifs_6semaines: "", objectifs_3mois: "", objectifs_6mois: "",
+      motivation_score: 0, freins: "", sacrifices: "", vision_physique: "",
+      one_rm_bench: "", one_rm_squat: "", one_rm_traction: "",
+      motivation_principale: "", risques_abandon: "", autres_infos: "",
+    };
+    try {
+      const raw = localStorage.getItem("rb_onboarding_draft");
+      if (!raw) return empty;
+      const { form: saved, ts } = JSON.parse(raw);
+      // Drafts older than 7 days expire
+      if (Date.now() - ts > 7 * 24 * 3600 * 1000) { localStorage.removeItem("rb_onboarding_draft"); return empty; }
+      return { ...empty, ...saved };
+    } catch { return empty; }
   });
+
+  // Persist draft on every form change
+  useEffect(() => {
+    try { localStorage.setItem("rb_onboarding_draft", JSON.stringify({ form, ts: Date.now() })); } catch {}
+  }, [form]);
 
   const set = (key) => (val) => setForm((p) => ({ ...p, [key]: val }));
 
@@ -197,12 +212,22 @@ export default function OnboardingFlow({ client, onComplete }) {
 
   const saveForm = async () => {
     setSaving(true);
-    if (client?.id) {
-      await supabase
-        .from("onboarding_forms")
-        .upsert({ client_id: client.id, ...form, is_complete: true, submitted_at: new Date().toISOString() }, { onConflict: "client_id" });
+    try { localStorage.setItem("rb_onboarding_draft", JSON.stringify({ form, ts: Date.now() })); } catch {}
+    if (!client?.id) {
+      console.error("[onboarding] saveForm called without client.id — keeping localStorage backup");
+      setSaving(false);
+      return { ok: false, reason: "no_client_id" };
     }
+    const { error } = await supabase
+      .from("onboarding_forms")
+      .upsert({ client_id: client.id, ...form, is_complete: true, submitted_at: new Date().toISOString() }, { onConflict: "client_id" });
     setSaving(false);
+    if (error) {
+      console.error("[onboarding] saveForm failed:", error.message);
+      return { ok: false, reason: error.message };
+    }
+    try { localStorage.removeItem("rb_onboarding_draft"); } catch {}
+    return { ok: true };
   };
 
   const bookSlot = async () => {
