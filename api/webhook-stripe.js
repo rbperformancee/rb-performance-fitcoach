@@ -355,9 +355,31 @@ module.exports = async (req, res) => {
       const customerId = session.customer;
       const subscriptionId = session.subscription;
       const metadata = session.subscription_data?.metadata || session.metadata || {};
-      // Without parens, `||` + `===` + ternary misgrouped → every paid coach becomes 'founding'.
-      const plan = metadata.plan || (metadata.founding_coach === 'true' ? 'founding' : 'pro');
-      const lockedPrice = metadata.locked_price || null;
+      // Payment Links peuvent ne pas carrier de metadata (configuree au niveau Price/Product).
+      // On detecte aussi via le price ID Founder pour eviter de creer un Pro par erreur.
+      let plan = metadata.plan || (metadata.founding_coach === 'true' ? 'founding' : null);
+      let lockedPrice = metadata.locked_price || null;
+      if (!plan) {
+        try {
+          const lineItems = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 5 });
+          const priceIds = (lineItems.data || []).map(li => li.price?.id).filter(Boolean);
+          const FOUNDING_PRICES = [
+            process.env.STRIPE_PRICE_FOUNDING,
+            process.env.STRIPE_PRICE_FOUNDING_USD,
+            process.env.STRIPE_PRICE_FOUNDING_GBP,
+          ].filter(Boolean);
+          if (priceIds.some(p => FOUNDING_PRICES.includes(p))) {
+            plan = 'founding';
+            lockedPrice = lockedPrice || '199';
+            console.log(`[webhook] Founder detected via price ID match (Payment Link path)`);
+          } else {
+            plan = 'pro'; // fallback Standard
+          }
+        } catch (e) {
+          console.error('[webhook] line_items fetch failed, defaulting plan=pro:', e.message);
+          plan = 'pro';
+        }
+      }
 
       if (!email) {
         console.error('[webhook] No email in checkout session');

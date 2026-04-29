@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
+import { isClientDemoMode } from "../../lib/demoMode";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -39,6 +40,10 @@ export default function ClientSuivi({ client, accent }) {
     setError("");
     if (isNaN(w) || w < 30 || w > 300) {
       setError(t("csv.invalid_weight"));
+      return;
+    }
+    if (isClientDemoMode()) {
+      setError("Desactive en mode demo");
       return;
     }
     setSaving(true);

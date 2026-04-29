@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
+import { isClientDemoMode } from "../../lib/demoMode";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -48,6 +49,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
   // Init session
   useEffect(() => {
     if (!client?.id) return;
+    if (isClientDemoMode()) { setSessionId("demo"); return; }
     let cancelled = false;
     (async () => {
       try {
@@ -89,6 +91,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
     if (isNaN(w) || isNaN(r)) return;
 
     setSetsDone((s) => ({ ...s, [`${exIdx}-${setIdx}`]: { weight: w, reps: r } }));
+    if (isClientDemoMode()) return;
     try {
       await supabase.from("session_sets").insert({
         session_id: sessionId,
@@ -111,6 +114,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
 
   async function finishSession() {
     if (!sessionId) return;
+    if (isClientDemoMode()) { setDone(true); return; }
     try {
       const completedSets = Object.keys(setsDone).length;
       const duration = Math.floor((Date.now() - startedAt.current) / 60000);

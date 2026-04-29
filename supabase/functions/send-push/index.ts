@@ -18,7 +18,28 @@ serve(async (req) => {
     const sKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const res = await fetch(`${sUrl}/rest/v1/push_subscriptions?client_id=eq.${client_id}`,{headers:{apikey:sKey,Authorization:`Bearer ${sKey}`}})
     const subs = await res.json()
-    const results = await Promise.allSettled(subs.map((r:any)=>webpush.sendNotification(r.subscription,JSON.stringify({title,body,url:url||'/'}))))
-    return new Response(JSON.stringify({sent:results.filter((r:any)=>r.status==='fulfilled').length}),{headers:cors})
+    let sent = 0, dead = 0
+    await Promise.all(subs.map(async (r:any) => {
+      try {
+        await webpush.sendNotification(r.subscription, JSON.stringify({title, body, url: url || '/'}))
+        sent++
+      } catch (e:any) {
+        const status = e?.statusCode
+        // 410 Gone / 404 = subscription invalide → cleanup pour ne pas pourrir la base
+        if (status === 410 || status === 404) {
+          dead++
+          const endpoint = r.endpoint || r.subscription?.endpoint
+          if (endpoint) {
+            await fetch(`${sUrl}/rest/v1/push_subscriptions?endpoint=eq.${encodeURIComponent(endpoint)}`, {
+              method: 'DELETE',
+              headers: {apikey: sKey, Authorization: `Bearer ${sKey}`}
+            }).catch(() => {})
+          }
+        } else {
+          console.error('push send failed:', status, e?.message)
+        }
+      }
+    }))
+    return new Response(JSON.stringify({sent, total: subs.length, dead}), {headers: cors})
   } catch(e) { return new Response(JSON.stringify({error:String(e)}),{status:500,headers:cors}) }
 })

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT, getLocale } from "../../lib/i18n";
+import { isClientDemoMode } from "../../lib/demoMode";
 
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
@@ -58,6 +59,7 @@ export default function ClientMessages({ client, coach, accent, user }) {
   async function handleSend() {
     const content = text.trim();
     if (!content) return;
+    if (isClientDemoMode()) { setText(""); return; }
     setSending(true);
     try {
       const { error } = await supabase.from("messages").insert({

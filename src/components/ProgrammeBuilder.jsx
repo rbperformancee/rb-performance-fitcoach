@@ -669,7 +669,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
           title={t("pb.preview_iframe_title")}
           srcDoc={previewHTML}
           style={S.previewIframe}
-          sandbox="allow-same-origin"
+          sandbox=""
         />
       ) : (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
@@ -795,7 +795,7 @@ export default function ProgrammeBuilder({ client, coachData, onClose, onSaved, 
                 title="Preview du programme"
                 srcDoc={previewHTML}
                 style={S.previewIframe}
-                sandbox="allow-same-origin"
+                sandbox=""
               />
             ) : (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
