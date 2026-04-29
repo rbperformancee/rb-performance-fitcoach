@@ -44,19 +44,34 @@ function firstNameFrom(nameOrEmail) {
   return first ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() : '';
 }
 
-function buildWelcomeSubject(plan, firstName) {
+// i18n welcome — only subject + EN banner translated for now.
+// Full EN translation of the body planned for May 30 (post-launch).
+const I18N_WELCOME = {
+  fr: {
+    subject_founder: (n) => `${n ? n + ', ' : ''}bienvenue parmi les 30 Founders`,
+    subject_standard: (n, l) => `${n ? n + ', ' : ''}bienvenue sur RB Perform ${l}`,
+    banner: '',
+  },
+  en: {
+    subject_founder: (n) => `${n ? n + ', ' : ''}welcome to the 30 Founders`,
+    subject_standard: (n, l) => `${n ? n + ', ' : ''}welcome to RB Perform ${l}`,
+    banner: `<div style="background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.18);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6">🇬🇧 <strong style="color:#02d1ba">Hey there,</strong> the email below is in French (full EN translation coming May 30). Need help right now ? Reply directly — I read every message.</div>`,
+  },
+};
+
+function buildWelcomeSubject(plan, firstName, lang = 'fr') {
   const isFounder = plan === 'founding' || plan === 'founder';
   const label = PLAN_LABEL[plan] || 'RB Perform';
-  const prefix = firstName ? `${firstName}, ` : '';
-  return isFounder
-    ? `${prefix}bienvenue parmi les 30 Founders`
-    : `${prefix}bienvenue sur RB Perform ${label}`;
+  const t = I18N_WELCOME[lang] || I18N_WELCOME.fr;
+  return isFounder ? t.subject_founder(firstName) : t.subject_standard(firstName, label);
 }
 
-function buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }) {
+function buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName, lang = 'fr' }) {
   const label = PLAN_LABEL[plan] || 'RB Perform';
   const isFounder = plan === 'founding' || plan === 'founder';
   const hi = firstName ? `Salut ${firstName},` : 'Salut,';
+  const t = I18N_WELCOME[lang] || I18N_WELCOME.fr;
+  const banner = t.banner;
 
   // ---------- FOUNDER VARIANT ----------
   if (isFounder) {
@@ -76,6 +91,7 @@ function buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }) {
 
   <!-- Hero card -->
   <tr><td style="background:#111;border-radius:22px;border:1px solid rgba(2,209,186,0.15);padding:40px 34px">
+    ${banner}
     <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:16px">${hi}</div>
     <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-.8px;line-height:1.2;margin-bottom:16px">
       Tu es <span style="color:#02d1ba">fondateur</span>.<br>
@@ -179,6 +195,7 @@ function buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }) {
   </td></tr>
 
   <tr><td style="background:#111;border-radius:20px;border:1px solid rgba(255,255,255,0.06);padding:38px 32px">
+    ${banner}
     <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:14px">${hi}</div>
     <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.25;margin-bottom:16px">
       Ton accès <span style="color:#02d1ba">${label}</span> est prêt.
@@ -229,7 +246,7 @@ function buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }) {
 </td></tr></table></body></html>`;
 }
 
-async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerName }) {
+async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerName, lang = 'fr' }) {
   const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
   const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
   if (!SMTP_PASS) {
@@ -259,8 +276,8 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerNam
       from,
       to,
       replyTo: SMTP_USER,
-      subject: buildWelcomeSubject(plan, firstName),
-      html: buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }),
+      subject: buildWelcomeSubject(plan, firstName, lang),
+      html: buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName, lang }),
       headers: {
         'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@rbperform.app?subject=unsubscribe>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -352,6 +369,11 @@ module.exports = async (req, res) => {
       const customerId = session.customer;
       const subscriptionId = session.subscription;
       const metadata = session.subscription_data?.metadata || session.metadata || {};
+      // Detection lang : Stripe Checkout passe `session.locale` ('fr', 'en', 'auto', etc.)
+      // selon ce que le client a vu. Si 'auto', on regarde locale_codes detected.
+      // Fallback FR (notre marche principal).
+      const locale = (session.locale || metadata.lang || '').toLowerCase();
+      const lang = locale.startsWith('en') ? 'en' : 'fr';
       // Payment Links peuvent ne pas carrier de metadata (configuree au niveau Price/Product).
       // On detecte aussi via le price ID Founder pour eviter de creer un Pro par erreur.
       let plan = metadata.plan || (metadata.founding_coach === 'true' ? 'founding' : null);
@@ -467,6 +489,7 @@ module.exports = async (req, res) => {
           lockedPrice,
           actionLink: linkData.properties.action_link,
           customerName,
+          lang,
         });
       } else {
         console.error(`[WEBHOOK_NO_ACTION_LINK] email=${email} — cannot send welcome, no magic link available`);
