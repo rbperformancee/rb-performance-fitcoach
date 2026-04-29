@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { RB_SUPPORT_EMAIL } from "../lib/branding";
 
 const TURQUOISE = "#02d1ba";
 
@@ -15,7 +16,7 @@ function PageWrapper({ title, subtitle, onClose, children }) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 999,
-      background: "rgba(0,0,0,0.95)", backdropFilter: "blur(20px)",
+      background: "rgba(0,0,0,0.95)", WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
       overflowY: "auto", padding: "32px 20px",
       fontFamily: "'Inter', sans-serif",
     }}>
@@ -49,7 +50,7 @@ export function MentionsLegales({ onClose }) {
         <p><strong style={{ color: "#f5f5f5" }}>Rayan Bonte
         <br />Micro-entrepreneur — SIRET : 99063780300018</strong><br />
         Coach sportif personnel<br />
-        Email : rb.performancee@gmail.com
+        Email : {RB_SUPPORT_EMAIL}
         <br />06 95 12 93 47
         <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA<br />
         Site web : rbperform.app</p>
@@ -74,7 +75,7 @@ export function MentionsLegales({ onClose }) {
       <Section title="4. Données personnelles">
         <p>Le traitement des données personnelles est régi par notre Politique de Confidentialité, consultable dans l'application.</p>
         <br />
-        <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits : rb.performancee@gmail.com
+        <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits : {RB_SUPPORT_EMAIL}
         <br />06 95 12 93 47
         <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA</p>
       </Section>
@@ -172,7 +173,7 @@ export function CGU({ onClose }) {
 /* ── EMAIL SUPPRESSION CONFIRMATION (utilisé dans App.jsx) ── */
 export function DeleteConfirmModal({ onConfirm, onCancel }) {
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 998, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 998, background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ background: "#141414", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", fontFamily: "'Inter',sans-serif" }}>
         <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
         <h2 style={{ fontSize: 18, fontWeight: 800, color: "#f5f5f5", marginBottom: 8 }}>Supprimer mes données</h2>

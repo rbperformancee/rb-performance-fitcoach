@@ -69,7 +69,7 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
       style={{
         position: "fixed", inset: 0, zIndex: 500,
         background: "rgba(0,0,0,.8)",
-        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)", backdropFilter: "blur(14px)",
         WebkitBackdropFilter: "blur(14px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "6vh 16px",

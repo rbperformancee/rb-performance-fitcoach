@@ -7,10 +7,11 @@ const { createClient } = require('@supabase/supabase-js');
 const nodemailer = require('nodemailer');
 const { rateLimit, attachRequestId } = require('./_security');
 const { captureException } = require('./_sentry');
+const { RB_SUPPORT_EMAIL } = require('./_branding');
 
 const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
 const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
-const NOTIFY_EMAIL = 'rb.performancee@gmail.com';
+const NOTIFY_EMAIL = RB_SUPPORT_EMAIL;
 const G = '#02d1ba';
 
 function getTransporter() {

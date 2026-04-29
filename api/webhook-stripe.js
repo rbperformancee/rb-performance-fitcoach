@@ -18,6 +18,7 @@
 const getStripe = require('./_stripe');
 const { createClient } = require('@supabase/supabase-js');
 const { captureException } = require('./_sentry');
+const { RB_SUPPORT_EMAIL } = require('./_branding');
 
 let _supabase;
 function getSupabase() {
@@ -213,7 +214,7 @@ function buildWelcomeHtml({ plan, lockedPrice, actionLink, firstName }) {
   <tr><td style="padding:28px 0 0;text-align:center">
     <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7">
       Une question ? Réponds à ce mail, on te répond dans les 24h.<br>
-      <a href="mailto:rb.performancee@gmail.com" style="color:rgba(2,209,186,0.6);text-decoration:none">rb.performancee@gmail.com</a>
+      <a href="mailto:${RB_SUPPORT_EMAIL}" style="color:rgba(2,209,186,0.6);text-decoration:none">${RB_SUPPORT_EMAIL}</a>
     </div>
   </td></tr>
 

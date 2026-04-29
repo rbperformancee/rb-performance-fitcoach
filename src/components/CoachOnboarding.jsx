@@ -124,7 +124,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#050505",
+      minHeight: "100dvh", background: "#050505",
       fontFamily: "-apple-system,Inter,sans-serif", color: "#fff",
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: 24, position: "relative", overflow: "hidden",

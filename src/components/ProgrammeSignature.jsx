@@ -42,7 +42,7 @@ export default function ProgrammeSignature({ programme, client, onSigned }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, position: "relative", overflow: "hidden" }}>
       <style>{`
         @keyframes sigFade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         input::placeholder{color:rgba(255,255,255,0.2)}

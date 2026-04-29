@@ -98,7 +98,7 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 400,
-        background: "rgba(0,0,0,0.65)", backdropFilter: "blur(10px)",
+        background: "rgba(0,0,0,0.65)", WebkitBackdropFilter: "blur(10px)", backdropFilter: "blur(10px)",
         display: "flex", alignItems: "flex-start", justifyContent: "center",
         padding: "12vh 16px 16px",
         animation: "cpFadeIn 0.15s ease both",

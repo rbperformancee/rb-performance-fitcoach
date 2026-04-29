@@ -76,7 +76,7 @@ export default function BookingModal({ client, onClose, onBooked, title, subtitl
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 400,
-        background: "rgba(0,0,0,0.88)", backdropFilter: "blur(12px)",
+        background: "rgba(0,0,0,0.88)", WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)",
         display: "flex", alignItems: "flex-end", justifyContent: "center",
         fontFamily: "-apple-system,Inter,sans-serif",
       }}

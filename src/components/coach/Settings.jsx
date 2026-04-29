@@ -477,7 +477,7 @@ const header = {
   padding: "calc(env(safe-area-inset-top, 0px) + 16px) 20px 16px",
   borderBottom: ".5px solid rgba(255,255,255,.05)",
   background: "rgba(5,5,5,.95)",
-  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)",
   position: "sticky", top: 0, zIndex: 10,
 };
 const backBtn = {

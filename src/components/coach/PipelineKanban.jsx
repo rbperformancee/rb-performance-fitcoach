@@ -89,7 +89,7 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.12) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       {/* Header */}
-      <div className="kan-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div className="kan-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
             onClick={onClose}
@@ -119,7 +119,7 @@ export default function PipelineKanban({ clients = [], onOpenClient, onClose }) 
       </div>
 
       {/* Kanban columns (horizontal scroll mobile) */}
-      <div style={{ display: "flex", gap: 14, padding: "20px 16px 60px", overflowX: "auto", WebkitOverflowScrolling: "touch", minHeight: "calc(100vh - 100px)" }}>
+      <div style={{ display: "flex", gap: 14, padding: "20px 16px 60px", overflowX: "auto", WebkitOverflowScrolling: "touch", minHeight: "calc(100dvh - 100px)" }}>
         {COLUMNS.map((col) => {
           const items = grouped[col.id] || [];
           const isHovered = hoveredCol === col.id && dragged;

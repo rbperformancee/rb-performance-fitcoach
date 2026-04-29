@@ -36,7 +36,7 @@ export default function PullToRefreshIndicator({ pulling, progress = 0, refreshi
           width: 38, height: 38,
           borderRadius: "50%",
           background: "rgba(15,15,15,0.9)",
-          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)",
           border: `1px solid ${progress >= 1 || refreshing ? G : "rgba(255,255,255,0.1)"}`,
           boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
           display: "flex",

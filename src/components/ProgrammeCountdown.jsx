@@ -71,7 +71,7 @@ export default function ProgrammeCountdown({ programme }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, position: "relative", overflow: "hidden" }}>
       <style>{`
         @keyframes cdPulse{0%,100%{opacity:0.7}50%{opacity:1}}
         @keyframes cdFade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}

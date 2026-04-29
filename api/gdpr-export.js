@@ -20,6 +20,7 @@
 const { createClient } = require("@supabase/supabase-js");
 const { secureRequest } = require("./_security");
 const { captureException } = require("./_sentry");
+const { RB_SUPPORT_EMAIL } = require("./_branding");
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -101,7 +102,7 @@ module.exports = async (req, res) => {
       notice:
         "Ce fichier contient l'ensemble des données personnelles que RB Perform détient " +
         "sur votre compte coach. Pour une demande de rectification ou de suppression " +
-        "(art. 16 + 17 RGPD), écrivez à rb.performancee@gmail.com.",
+        `(art. 16 + 17 RGPD), écrivez à ${RB_SUPPORT_EMAIL}.`,
     };
 
     res.setHeader("Content-Type", "application/json; charset=utf-8");

@@ -280,7 +280,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
     <div onClick={unlockAudio} style={{
       position: "fixed", inset: 0, zIndex: 999,
       background: "rgba(0,0,0,0.88)",
-      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
       padding: "32px 24px",

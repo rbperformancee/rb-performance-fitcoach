@@ -196,7 +196,7 @@ function AppIconLite() {
 const overlay = {
   position: "fixed", inset: 0, zIndex: 450,
   background: "rgba(0,0,0,.75)",
-  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)",
   WebkitBackdropFilter: "blur(12px)",
   display: "flex", alignItems: "center", justifyContent: "center",
   padding: "max(6vh, 56px) 16px 16px",

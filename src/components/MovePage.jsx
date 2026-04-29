@@ -186,7 +186,7 @@ export default function MovePage({ client, appData }) {
   };
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#050505", padding: "0px 24px" }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", padding: "0px 24px" }}>
       {[80, 60, 140, 100].map((h, i) => (
         <div key={i} className="skeleton" style={{ height: h, borderRadius: 16, marginBottom: 16 }} />
       ))}

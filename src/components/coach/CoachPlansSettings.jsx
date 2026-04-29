@@ -156,7 +156,7 @@ export default function CoachPlansSettings({ coachId, plans = [], onReload }) {
       {editing && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }} style={{
           position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.7)",
-          backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center",
+          WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center",
           padding: 24,
         }}>
           <div style={{

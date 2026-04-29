@@ -288,7 +288,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
         padding: "12px 16px calc(env(safe-area-inset-bottom, 0px) + 14px)",
         borderTop: "1px solid rgba(255,255,255,0.05)",
         background: "rgba(10,10,10,0.6)",
-        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         display: "flex",
         alignItems: "flex-end",

@@ -50,7 +50,7 @@ export function SessionReport({ session, weekIdx, sessionIdx, getHistory, onClos
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 998,
-      background: "rgba(0,0,0,0.92)", backdropFilter: "blur(20px)",
+      background: "rgba(0,0,0,0.92)", WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
       display: "flex", flexDirection: "column",
       overflowY: "auto", padding: "32px 20px 40px",
       animation: "fadeIn 0.3s ease",

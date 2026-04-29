@@ -1,10 +1,11 @@
 import React from "react";
+import { RB_SUPPORT_EMAIL } from "../lib/branding";
 
 export function PrivacyPolicy({ onClose }) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 999,
-      background: "rgba(0,0,0,0.9)", backdropFilter: "blur(20px)",
+      background: "rgba(0,0,0,0.9)", WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
       overflowY: "auto", padding: "32px 20px",
       fontFamily: "'Inter', sans-serif",
     }}>
@@ -24,7 +25,7 @@ export function PrivacyPolicy({ onClose }) {
         {[
           {
             title: "1. Qui sommes-nous ?",
-            content: `RB Perform est un service de suivi sportif personnalisé exploité par Rayan Bonte (rb.performancee@gmail.com). Dans le cadre du Règlement Général sur la Protection des Données (RGPD), Rayan Bonte agit en qualité de responsable de traitement.`
+            content: `RB Perform est un service de suivi sportif personnalisé exploité par Rayan Bonte (${RB_SUPPORT_EMAIL}). Dans le cadre du Règlement Général sur la Protection des Données (RGPD), Rayan Bonte agit en qualité de responsable de traitement.`
           },
           {
             title: "2. Données collectées",
@@ -48,11 +49,11 @@ export function PrivacyPolicy({ onClose }) {
           },
           {
             title: "7. Vos droits",
-            content: `Conformément au RGPD, vous disposez des droits suivants :\n\n• Droit d'accès : obtenir une copie de vos données\n• Droit de rectification : corriger des données inexactes\n• Droit à l'effacement : demander la suppression de toutes vos données\n• Droit à la portabilité : recevoir vos données dans un format structuré\n• Droit d'opposition : vous opposer au traitement de vos données\n• Droit de retrait du consentement : à tout moment, sans justification\n\nPour exercer vos droits, contactez : rb.performancee@gmail.com\nRéponse garantie sous 30 jours.`
+            content: `Conformément au RGPD, vous disposez des droits suivants :\n\n• Droit d'accès : obtenir une copie de vos données\n• Droit de rectification : corriger des données inexactes\n• Droit à l'effacement : demander la suppression de toutes vos données\n• Droit à la portabilité : recevoir vos données dans un format structuré\n• Droit d'opposition : vous opposer au traitement de vos données\n• Droit de retrait du consentement : à tout moment, sans justification\n\nPour exercer vos droits, contactez : ${RB_SUPPORT_EMAIL}\nRéponse garantie sous 30 jours.`
           },
           {
             title: "8. Suppression du compte",
-            content: `Vous pouvez demander la suppression complète de votre compte et de toutes vos données à tout moment :\n\n• Directement depuis l'application (bouton "Supprimer mes données")\n• Par email à rb.performancee@gmail.com\n\nLa suppression est effective sous 48 heures.`
+            content: `Vous pouvez demander la suppression complète de votre compte et de toutes vos données à tout moment :\n\n• Directement depuis l'application (bouton "Supprimer mes données")\n• Par email à ${RB_SUPPORT_EMAIL}\n\nLa suppression est effective sous 48 heures.`
           },
           {
             title: "9. Réclamation",
@@ -60,7 +61,7 @@ export function PrivacyPolicy({ onClose }) {
           },
           {
             title: "10. Contact",
-            content: `Pour toute question relative à cette politique ou à vos données personnelles :\n\nRayan Bonte — RB Perform\nEmail : rb.performancee@gmail.com`
+            content: `Pour toute question relative à cette politique ou à vos données personnelles :\n\nRayan Bonte — RB Perform\nEmail : ${RB_SUPPORT_EMAIL}`
           },
         ].map((section, i) => (
           <div key={i} style={{ marginBottom: 28 }}>

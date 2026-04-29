@@ -121,7 +121,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
       style={{
         position: "fixed", inset: 0, zIndex: 400,
         background: "rgba(0,0,0,.65)",
-        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "12vh 16px 16px",

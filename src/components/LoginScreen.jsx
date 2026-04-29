@@ -152,7 +152,7 @@ export function LoginScreen({ onBack }) {
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#050505',
+      minHeight: '100dvh', background: '#050505',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: '32px 24px', fontFamily: "'Inter', -apple-system, sans-serif", position: 'relative',
     }}>

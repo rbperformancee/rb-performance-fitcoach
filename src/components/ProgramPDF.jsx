@@ -1,5 +1,6 @@
 import React from 'react';
 import { useT, t as tStatic, getLocale } from '../lib/i18n';
+import { RB_SUPPORT_EMAIL } from '../lib/branding';
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -55,7 +56,7 @@ export function exportProgramPDF(client, programme) {
 </div>
 <div class="accent-bar"></div>
 <div class="content">${html || `<p style="color:#666;text-align:center;padding:40px">${noProgram}</p>`}</div>
-<div class="watermark">RB PERFORM · SIRET 99063780300018 · rb.performancee@gmail.com</div>
+<div class="watermark">RB PERFORM · SIRET 99063780300018 · ${RB_SUPPORT_EMAIL}</div>
 </body>
 </html>`;
 

@@ -41,7 +41,7 @@ export default function SubscribePage({ client = null, onClose, onLogin }) {
       style={{
         position: onClose ? "fixed" : "relative",
         inset: onClose ? 0 : "auto",
-        minHeight: "100vh",
+        minHeight: "100dvh",
         zIndex: onClose ? 300 : "auto",
         background: "#050505",
         overflowY: "auto",

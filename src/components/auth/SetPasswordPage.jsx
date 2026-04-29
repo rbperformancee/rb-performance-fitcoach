@@ -143,7 +143,7 @@ export default function SetPasswordPage({ onComplete }) {
 }
 
 const container = {
-  minHeight: "100vh",
+  minHeight: "100dvh",
   background: "#050505",
   fontFamily: "-apple-system, Inter, sans-serif",
   color: "#fff",

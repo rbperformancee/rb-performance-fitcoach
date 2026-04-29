@@ -9,6 +9,9 @@
  */
 
 const RB_PERFORM_OWNER_EMAIL = "rb.performancee@gmail.com";
+// Support email — centralisation pour les composants legaux/RGPD/footer
+// (utilisateur a explicitement demande de garder Gmail pour l'instant)
+const RB_SUPPORT_EMAIL = RB_PERFORM_OWNER_EMAIL;
 
 /**
  * @param {object|null} coachInfo — coach data returned from useAuth (full_name, brand_name, email, ...)
@@ -47,4 +50,4 @@ export function getBrandLabel(coachInfo) {
   return coachInfo?.brand_name?.trim() || coachInfo?.full_name?.trim() || "Ton coach";
 }
 
-export { RB_PERFORM_OWNER_EMAIL };
+export { RB_PERFORM_OWNER_EMAIL, RB_SUPPORT_EMAIL };

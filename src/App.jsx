@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useMemo, Suspense, lazy } from "react";
+import { RB_SUPPORT_EMAIL } from "./lib/branding";
 import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
 import { ToastProvider, toast } from "./components/Toast";
 import { useAppData } from "./hooks/useAppData";
@@ -191,7 +192,7 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook, coa
     const consistency = Math.min(100, Math.round((avgPerWeek / 3) * 100));
 
     return (
-      <div style={{ minHeight: "calc(100vh - 100px)", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", padding: "40px 24px 140px", position: "relative", overflow: "hidden" }}>
+      <div style={{ minHeight: "calc(100dvh - 100px)", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", padding: "40px 24px 140px", position: "relative", overflow: "hidden" }}>
         {GLOBAL_STYLES}
 
         {/* Ambient radial teal + grille subtile */}
@@ -365,7 +366,7 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook, coa
     : null;
 
   return (
-    <div style={{ minHeight: "calc(100vh - 100px)", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "calc(100dvh - 100px)", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px 120px", position: "relative", overflow: "hidden" }}>
       {GLOBAL_STYLES}
 
       {/* Ambient */}
@@ -555,7 +556,7 @@ function AppInner() {
   // Coach info dynamique — fallback sur valeurs par defaut
   const coachName = coachInfo?.full_name?.split(' ')[0] || coachData?.full_name?.split(' ')[0] || "Ton coach";
   const brandName = coachInfo?.brand_name || coachData?.brand_name || "RB Perform";
-  const coachEmail = coachInfo?.email || coachData?.email || "rb.performancee@gmail.com";
+  const coachEmail = coachInfo?.email || coachData?.email || RB_SUPPORT_EMAIL;
   const [isCoach, setIsCoach] = React.useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [showSuperAdmin, setShowSuperAdmin] = React.useState(true);
@@ -846,7 +847,7 @@ function AppInner() {
   if (authLoading) {
     return (
       <div style={{
-        minHeight: "100vh", background: "#050505",
+        minHeight: "100dvh", background: "#050505",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       }}>
         <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.12em", color: "rgba(255,255,255,0.15)" }}>RB<span style={{ color: "rgba(2,209,186,0.3)" }}>PERFORM</span></div>
@@ -857,7 +858,7 @@ function AppInner() {
   // ── Demo client en cours de connexion → loading avec splash ──
   if (!user && isClientDemo) {
     return (
-      <div style={{ minHeight: "100vh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+      <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
         <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.12em", color: "rgba(255,255,255,0.15)" }}>RB<span style={{ color: "rgba(2,209,186,0.3)" }}>PERFORM</span></div>
         <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Chargement démo client...</div>
       </div>
@@ -963,7 +964,7 @@ function AppInner() {
     };
     const _ctx = getContextMsg();
     return (
-      <div style={{minHeight:'100vh',background:'#050505',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden',maxWidth:isClientDemo?430:'none',margin:isClientDemo?'0 auto':0}}>
+      <div style={{minHeight:'100dvh',background:'#050505',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden',maxWidth:isClientDemo?430:'none',margin:isClientDemo?'0 auto':0}}>
         {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
         {isClientDemo && <div style={{height:52}} />}
 
@@ -1049,7 +1050,7 @@ function AppInner() {
 
         {/* CTA — Apple meets Nike */}
         
-        <nav style={{position:'fixed',bottom:'calc(env(safe-area-inset-bottom, 0px) + 28px)',left:'50%',transform:'translateX(-50%)',display:'flex',gap:0,background:'rgba(15,15,15,0.75)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:100,padding:5,zIndex:100,backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)'}}>
+        <nav style={{position:'fixed',bottom:'calc(env(safe-area-inset-bottom, 0px) + 28px)',left:'50%',transform:'translateX(-50%)',display:'flex',gap:0,background:'rgba(15,15,15,0.75)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:100,padding:5,zIndex:100,WebkitBackdropFilter: 'blur(20px)', backdropFilter: 'blur(20px)',WebkitBackdropFilter:'blur(20px)'}}>
           {[
             {id:'training',icon:<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' style={{width:20,height:20}}><path d='M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12'/></svg>},
             {id:'weight',icon:<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' style={{width:20,height:20}}><path d='M6 3h12l2 7H4L6 3z'/><path d='M4 10v10a1 1 0 001 1h14a1 1 0 001-1V10'/><line x1='12' y1='10' x2='12' y2='20'/></svg>},
@@ -1229,7 +1230,7 @@ function AppInner() {
       {showCoachChat && client?.id && (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) setShowCoachChat(false); }}
-          style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+          style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
         >
           <div style={{ width: "100%", maxWidth: 480, height: "88vh", background: "#0a0a0a", borderRadius: "24px 24px 0 0", border: "1px solid rgba(2,209,186,0.15)", borderBottom: "none", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {/* Header avec close */}
@@ -1297,7 +1298,7 @@ function AppInner() {
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
           {page === 'profile' && <ProfilePage client={client} coachInfo={coachInfo} onDeleteRequest={() => setShowDeleteConfirm(true)} onShowPrivacy={() => setShowPrivacy(true)} onShowMentions={() => setShowMentions(true)} onShowCGU={() => setShowCGU(true)} />}
-          <nav style={{position:'fixed',bottom:'calc(env(safe-area-inset-bottom,0px) + 20px)',left:'50%',transform:'translateX(-50%)',display:'flex',gap:0,background:'rgba(18,18,18,0.88)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:100,padding:5,zIndex:100,backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)'}}>
+          <nav style={{position:'fixed',bottom:'calc(env(safe-area-inset-bottom,0px) + 20px)',left:'50%',transform:'translateX(-50%)',display:'flex',gap:0,background:'rgba(18,18,18,0.88)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:100,padding:5,zIndex:100,WebkitBackdropFilter: 'blur(20px)', backdropFilter: 'blur(20px)',WebkitBackdropFilter:'blur(20px)'}}>
             {[
               {id:'training',icon:<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' style={{width:20,height:20}}><path d='M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12'/></svg>},
               {id:'weight',icon:<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' style={{width:20,height:20}}><path d='M6 3h12l2 7H4L6 3z'/><path d='M4 10v10a1 1 0 001 1h14a1 1 0 001-1V10'/><line x1='12' y1='10' x2='12' y2='20'/></svg>},

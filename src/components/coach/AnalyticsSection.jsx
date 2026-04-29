@@ -111,7 +111,7 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "60%", background: "radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.15) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       {/* Header sticky */}
-      <div className="an-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div className="an-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,20,0.95)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
           <button onClick={onClose} aria-label={t("an.aria_close")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,0.6)" />

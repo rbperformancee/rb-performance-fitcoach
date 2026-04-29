@@ -193,7 +193,7 @@ const nav = {
   border: ".5px solid rgba(255,255,255,.08)",
   borderRadius: 100,
   zIndex: 50,
-  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
   WebkitBackdropFilter: "blur(20px)",
   boxShadow: "0 16px 40px rgba(0,0,0,.5)",
 };

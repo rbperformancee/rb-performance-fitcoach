@@ -144,10 +144,10 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const card = { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" };
   const secTitle = (label, ic) => (<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}><Ic name={ic} size={14} color={BLUE} /><span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(59,130,246,0.6)" }}>{label}</span></div>);
 
-  if (loading) return <div style={{ minHeight: "100vh", background: "#030303", display: "flex", alignItems: "center", justifyContent: "center" }}><Spinner variant="dots" size={40} color={BLUE} /></div>;
+  if (loading) return <div style={{ minHeight: "100dvh", background: "#030303", display: "flex", alignItems: "center", justifyContent: "center" }}><Spinner variant="dots" size={40} color={BLUE} /></div>;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#030303", fontFamily: BODY_FONT, color: IVORY }}>
+    <div style={{ minHeight: "100dvh", background: "#030303", fontFamily: BODY_FONT, color: IVORY }}>
       <style>{`@keyframes cF{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes ceoPulse{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.6;transform:scale(1.3)}}.sa-c:hover{transform:translateY(-2px)!important;box-shadow:0 12px 32px rgba(0,0,0,0.4)!important}`}</style>
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 50% -20%, rgba(129,140,248,0.06), transparent 55%)", pointerEvents: "none" }} />
 

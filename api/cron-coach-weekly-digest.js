@@ -5,6 +5,7 @@
 
 const { captureException } = require("./_sentry");
 const nodemailer = require("nodemailer");
+const { RB_SUPPORT_EMAIL } = require("./_branding");
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -41,7 +42,7 @@ async function sendEmail(to, subject, html) {
   await transporter.sendMail({
     from: `RB Perform <${SMTP_USER}>`,
     to,
-    replyTo: "rb.performancee@gmail.com",
+    replyTo: RB_SUPPORT_EMAIL,
     subject,
     html,
     headers: {

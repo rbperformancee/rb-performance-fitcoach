@@ -275,8 +275,8 @@ function SupplementsTab({ clientId }) {
       {/* Formulaire ajout */}
       {showAdd ? (
         <div style={{ marginTop: 12, padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 }}>
-          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom (ex: Creatine)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }} />
-          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder="Dose (ex: 5g)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit" }} />
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom (ex: Creatine)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }} />
+          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder="Dose (ex: 5g)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit" }} />
           {addError && (
             <div style={{ marginBottom: 10, padding: "8px 12px", background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, fontSize: 11, color: "#ff6b6b" }}>
               {addError}
@@ -774,7 +774,7 @@ export default function FuelPage({ client, appData }) {
   }, [scannedFood, scanQuantite, selectedRepas, addFood]);
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#050505", padding: "0px 24px" }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", padding: "0px 24px" }}>
       {[80, 180, 120, 100].map((h, i) => (
         <div key={i} className="skeleton" style={{ height: h, borderRadius: 16, marginBottom: 16 }} />
       ))}
@@ -1013,7 +1013,7 @@ export default function FuelPage({ client, appData }) {
 
       {/* MODAL AJOUT ALIMENT ULTRA PREMIUM */}
       {showAdd && (
-        <div onClick={(e) => { if (e.target === e.currentTarget) { setShowAdd(false); setQuery(""); setSelectedFood(null); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end", backdropFilter: "blur(8px)" }}>
+        <div onClick={(e) => { if (e.target === e.currentTarget) { setShowAdd(false); setQuery(""); setSelectedFood(null); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end", WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}>
           <div style={{ background: "linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)", borderRadius: "28px 28px 0 0", padding: "6px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none" }}>
             {/* Handle */}
             <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "0 auto 20px" }} />
@@ -1211,7 +1211,7 @@ export default function FuelPage({ client, appData }) {
 
       {/* MODAL VOCAL IA */}
       {showVoice && (
-        <div onClick={e => { if(e.target===e.currentTarget){setShowVoice(false);setVoiceText("");setVoiceResult(null);}}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(12px)"}}>
+        <div onClick={e => { if(e.target===e.currentTarget){setShowVoice(false);setVoiceText("");setVoiceResult(null);}}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center",WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)"}}>
           <div style={{background:"#0a0a0a",borderRadius:"28px 28px 0 0",padding:"20px 24px calc(env(safe-area-inset-bottom,0px) + 32px)",width:"100%",maxWidth:480,border:"1px solid rgba(2,209,186,0.15)",borderBottom:"none"}}>
             <div style={{width:36,height:4,background:"rgba(255,255,255,0.1)",borderRadius:2,margin:"0 auto 24px"}}/>
             <div style={{fontSize:9,color:"rgba(2,209,186,0.5)",letterSpacing:"4px",textTransform:"uppercase",marginBottom:8}}>IA Vocal</div>
@@ -1305,7 +1305,7 @@ export default function FuelPage({ client, appData }) {
 
       {/* MODAL SCAN code-barre */}
       {showScan && (
-        <div onClick={(e) => { if (e.target === e.currentTarget) setShowScan(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(12px)" }}>
+        <div onClick={(e) => { if (e.target === e.currentTarget) setShowScan(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)" }}>
           <div style={{ background: "#0a0a0a", borderRadius: 24, padding: 24, width: "100%", maxWidth: 420, border: "1px solid rgba(167,139,250,0.2)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
@@ -1596,7 +1596,7 @@ export default function FuelPage({ client, appData }) {
       {editingFood && (
         <div
           onClick={e => { if (e.target === e.currentTarget) setEditingFood(null); }}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end", backdropFilter: "blur(8px)" }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end", WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}
         >
           <div style={{ background: "linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)", borderRadius: "28px 28px 0 0", padding: "6px 24px calc(env(safe-area-inset-bottom,0px) + 24px)", maxHeight: "92vh", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none", overflowY: "auto" }}>
             {/* Handle */}

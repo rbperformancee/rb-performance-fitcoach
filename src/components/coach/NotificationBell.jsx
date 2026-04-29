@@ -134,7 +134,7 @@ export default function NotificationBell({ clients = [], coachId, onOpenClient }
       {open && (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
-          style={{ position: "fixed", inset: 0, zIndex: 350, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", display: "flex", justifyContent: "flex-end" }}
+          style={{ position: "fixed", inset: 0, zIndex: 350, background: "rgba(0,0,0,0.6)", WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)", display: "flex", justifyContent: "flex-end" }}
         >
           <div
             role="dialog"

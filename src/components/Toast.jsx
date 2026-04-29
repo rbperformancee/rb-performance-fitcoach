@@ -31,7 +31,7 @@ export function ToastProvider() {
           display: 'flex', alignItems: 'center', gap: 10,
           boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${colors[t.type]}20`,
           animation: 'toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1)',
-          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
         }}>
           <div style={{ width: 24, height: 24, borderRadius: '50%', background: `${colors[t.type]}20`, border: `1px solid ${colors[t.type]}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: colors[t.type], fontWeight: 900, flexShrink: 0 }}>{icons[t.type]}</div>
           <span style={{ fontSize: 13, color: '#f5f5f5', fontWeight: 500 }}>{t.msg}</span>

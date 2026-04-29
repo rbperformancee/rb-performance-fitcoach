@@ -125,7 +125,7 @@ export function SeanceVivante({ clientId, sessionName }) {
   if (!visible || !message) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.95)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, animation: "svFadeIn 0.4s ease" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.95)", WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, animation: "svFadeIn 0.4s ease" }}>
       <style>{`@keyframes svFadeIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } } @keyframes svWave { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(1.8)} }`}</style>
 
       {/* Badge coach */}

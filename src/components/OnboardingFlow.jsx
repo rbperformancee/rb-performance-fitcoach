@@ -253,7 +253,7 @@ export default function OnboardingFlow({ client, onComplete }) {
 
   const S = {
     wrap: {
-      minHeight: "100vh",
+      minHeight: "100dvh",
       background: BG_BLACK,
       fontFamily: "-apple-system,Inter,sans-serif",
       color: "#fff",

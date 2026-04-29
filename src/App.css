@@ -310,7 +310,7 @@ input:focus {
 html { font-size: 14px; -webkit-tap-highlight-color: transparent; }
 body, #root {
   background: var(--bg); color: var(--text);
-  font-family: var(--font); min-height: 100vh;
+  font-family: var(--font); min-height: 100dvh;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -322,7 +322,7 @@ input[type=number] { -moz-appearance: textfield; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 
-.app-root { display: flex; flex-direction: column; min-height: 100vh; margin: 0 auto; }
+.app-root { display: flex; flex-direction: column; min-height: 100dvh; margin: 0 auto; }
 
 /* ── TOPBAR ── */
 .topbar {

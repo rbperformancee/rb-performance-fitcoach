@@ -204,7 +204,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   };
 
   if (!programme || !currentWeek || !currentSession) return (
-    <div style={{ minHeight: "100vh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>{t("train.no_programme")}</div>
     </div>
   );

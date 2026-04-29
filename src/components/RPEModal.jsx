@@ -44,7 +44,7 @@ export function RPEModal({ clientId, sessionName, onClose }) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 997,
-        background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)",
+        background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "24px", fontFamily: "'Inter',sans-serif",
       }}

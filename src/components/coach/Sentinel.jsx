@@ -163,7 +163,7 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 50% -10%, rgba(129,140,248,0.12) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       {/* Header */}
-      <div className="sent-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(5,5,5,0.95)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div className="sent-header" style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(5,5,5,0.95)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", padding: "calc(env(safe-area-inset-top, 0px) + 16px) 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
             onClick={onClose}
@@ -349,7 +349,7 @@ function ModuleIcon({ name, size = 14, color = "currentColor" }) {
 export function SentinelTeaser({ onClose, onUpgrade }) {
   const t = useT();
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.7)", WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "#0d0d0d", border: "1px solid rgba(129,140,248,0.2)", borderRadius: 22, padding: 28, maxWidth: 420, width: "100%", position: "relative", overflow: "hidden" }}>
         {/* Glow */}
         <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, background: "radial-gradient(circle, rgba(129,140,248,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />

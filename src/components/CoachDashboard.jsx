@@ -344,9 +344,9 @@ function CreneauxManager() {
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
             min={new Date().toISOString().split("T")[0]}
-            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 13, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }} />
+            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 16, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }} />
           <select value={heure} onChange={e => setHeure(e.target.value)}
-            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 13, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
+            style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 16, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
             {HEURES.map(h => <option key={h} value={h} style={{ background: "#1a1a1a" }}>{h}</option>)}
           </select>
           <button onClick={addSlot} disabled={saving || !date}
@@ -460,8 +460,8 @@ function CoachSupplementsPanel({ clientId }) {
 
       {showAdd ? (
         <div style={{ marginTop: 8, padding: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
-          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t("csp.placeholder_name")} style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 6, fontFamily: "inherit" }} />
-          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder={t("csp.placeholder_dose")} style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 10, fontFamily: "inherit" }} />
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t("csp.placeholder_name")} style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 6, fontFamily: "inherit" }} />
+          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder={t("csp.placeholder_dose")} style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 10, fontFamily: "inherit" }} />
           <div style={{ display: "flex", gap: 6 }}>
             <button onClick={() => { setShowAdd(false); setNewName(""); setNewDose(""); }} style={{ flex: 1, padding: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{t("csp.btn_cancel")}</button>
             <button onClick={addSupplement} disabled={!newName.trim()} style={{ flex: 1, padding: 10, background: newName.trim() ? "#02d1ba" : "rgba(255,255,255,0.04)", border: "none", borderRadius: 8, color: newName.trim() ? "#000" : "rgba(255,255,255,0.2)", fontSize: 11, fontWeight: 800, cursor: newName.trim() ? "pointer" : "not-allowed", fontFamily: "inherit" }}>{t("csp.btn_add")}</button>
@@ -1725,7 +1725,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       {drawer && (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) setDrawer(null); }}
-          style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(16px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+          style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
         >
           <div style={{ width: "100%", maxWidth: 560, maxHeight: "85vh", background: "#0a0a0a", borderRadius: "24px 24px 0 0", border: "1px solid rgba(255,255,255,0.08)", borderBottom: "none", display: "flex", flexDirection: "column", overflow: "hidden", animation: "cpFadeUp 0.3s ease both" }}>
             {/* Handle */}
@@ -2641,7 +2641,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       background: BG,
       borderRight: "1px solid rgba(255,255,255,.06)",
       flexDirection: "column",
-      height: "100vh",
+      height: "100dvh",
       position: "fixed",
       top: 0,
       left: 0,
@@ -2795,7 +2795,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       borderRadius: 100,
       padding: 5,
       gap: 0,
-      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
       WebkitBackdropFilter: "blur(20px)",
       transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1)",
     }}>
@@ -2858,7 +2858,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       zIndex: 260, background: "rgba(15,15,15,0.95)",
       border: "1px solid rgba(255,255,255,0.1)",
       borderRadius: 16, padding: 6,
-      backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
       display: "flex", flexDirection: "column", gap: 2,
       minWidth: 200, animation: "fadeUp 0.2s ease both",
       boxShadow: "0 -10px 40px rgba(0,0,0,0.5)",
@@ -3025,7 +3025,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           zIndex: 500, boxShadow: "0 16px 40px rgba(0,0,0,0.6), 0 0 30px rgba(2,209,186,0.1)",
           whiteSpace: "nowrap", animation: "fadeUp 0.25s cubic-bezier(0.22,1,0.36,1)",
           display: "flex", alignItems: "center", gap: 8,
-          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
         }}>
           <Icon name={toastMsg.type === "err" ? "alert" : "check"} size={14} />
           {toastMsg.msg}
@@ -3033,7 +3033,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       )}
 
       {uploading && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(8,12,20,0.9)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18 }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(8,12,20,0.9)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18 }}>
           <div style={{ width: 48, height: 48, border: "2.5px solid rgba(2,209,186,0.12)", borderTopColor: G, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
           <div style={{ color: G, fontSize: 12, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" }}>Upload en cours</div>
         </div>
@@ -3414,8 +3414,8 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             {showAdd && (
               <div style={{ background: "rgba(2,209,186,0.04)", border: `1px solid ${G_BORDER}`, borderRadius: 16, padding: 18, marginBottom: 16, animation: "fadeUp 0.2s ease" }}>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <input className="inp-focus" type="email" placeholder={t("coach.input_email_placeholder")} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 180, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-                  <input className="inp-focus" type="text" placeholder={t("coach.input_name_placeholder")} value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 140, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                  <input className="inp-focus" type="email" placeholder={t("coach.input_email_placeholder")} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 180, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 16, outline: "none", boxSizing: "border-box" }} />
+                  <input className="inp-focus" type="text" placeholder={t("coach.input_name_placeholder")} value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addClient()} style={{ flex: 1, minWidth: 140, padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 16, outline: "none", boxSizing: "border-box" }} />
                   <button onClick={addClient} disabled={!newEmail} style={{ padding: "12px 20px", background: newEmail ? G : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: newEmail ? "#000" : "rgba(255,255,255,0.25)", fontSize: 12, fontWeight: 800, cursor: newEmail ? "pointer" : "not-allowed", fontFamily: "inherit" }}>{t("coach.btn_create_client")}</button>
                 </div>
               </div>
@@ -3425,7 +3425,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             <div style={{ marginBottom: 18 }}>
               <div style={{ position: "relative", marginBottom: 12 }}>
                 <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}><Icon name="search" size={14} /></div>
-                <input className="inp-focus" placeholder={t("coach.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: "100%", padding: "12px 14px 12px 38px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, color: "#fff", fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                <input className="inp-focus" placeholder={t("coach.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: "100%", padding: "12px 14px 12px 38px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, color: "#fff", fontFamily: "inherit", fontSize: 16, outline: "none", boxSizing: "border-box" }} />
               </div>
               <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
                 {[["all", t("coach.filter_all"), total], ["active", t("coach.filter_active"), activeWeek], ["noprog", t("coach.filter_noprog"), total - withProg], ["inactive", t("coach.filter_alerts"), inactiveAlerts]].map(([k, l, n]) => {

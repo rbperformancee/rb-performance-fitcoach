@@ -412,7 +412,7 @@ function ViewHeader({ title, onBack }) {
 
 const overlay = {
   position: "fixed", inset: 0, zIndex: 600,
-  background: "rgba(0,0,0,0.78)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+  background: "rgba(0,0,0,0.78)", WebkitBackdropFilter: "blur(14px)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
   display: "flex", alignItems: "flex-end", justifyContent: "center",
 };
 const sheet = {

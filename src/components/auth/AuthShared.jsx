@@ -28,7 +28,7 @@ export const AuthStyles = () => (
     .auth-page {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      min-height: 100vh;
+      min-height: 100dvh;
       min-height: 100svh;
       background: #000;
       color: #fff;
