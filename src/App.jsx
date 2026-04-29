@@ -1344,9 +1344,7 @@ function AppInner() {
           ) : page === "profile" ? (
               <ProfilePage key={page} client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Desactive en mode demo") : () => supabase.auth.signOut().then(() => { window.location.href = "/login"; })} supabase={supabase} appData={appData} />
           ) : (
-            <main className="main" style={{ paddingTop: 8 }}>
-              <WeightChart key={page} clientId={client?.id} client={client} appData={appData} />
-            </main>
+            <WeightChart key={page} clientId={client?.id} client={client} appData={appData} />
           )}
 
           {showRPE && client && <RPEModal clientId={client.id} sessionName={session?.name} onClose={() => setShowRPE(false)} />}
