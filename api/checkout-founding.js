@@ -8,11 +8,11 @@
  *   Le client peut suggerer une devise (depuis /api/geo). Si le Price ID
  *   correspondant existe, on l'utilise. Sinon fallback EUR (ne casse rien).
  *
- * Env vars :
- *   STRIPE_SECRET_KEY                  — sk_live_... / sk_test_...
- *   STRIPE_FOUNDING_PRICE_ID           — Price ID EUR (defaut, requis)
- *   STRIPE_FOUNDING_PRICE_ID_USD       — Price ID USD (optionnel)
- *   STRIPE_FOUNDING_PRICE_ID_GBP       — Price ID GBP (optionnel)
+ * Env vars (alignees sur les standards STRIPE_PRICE_* de checkout.js) :
+ *   STRIPE_SECRET_KEY              — sk_live_... / sk_test_...
+ *   STRIPE_PRICE_FOUNDING          — Price ID EUR (defaut, requis)
+ *   STRIPE_PRICE_FOUNDING_USD      — Price ID USD (optionnel)
+ *   STRIPE_PRICE_FOUNDING_GBP      — Price ID GBP (optionnel)
  *
  * Tax compliance EU (RGPD/TVA) :
  *   - automatic_tax : Stripe calcule TVA selon billing address
@@ -26,9 +26,9 @@ const getStripe = require('./_stripe');
 const { secureRequest } = require('./_security');
 
 const CURRENCY_PRICE_ENV = {
-  EUR: 'STRIPE_FOUNDING_PRICE_ID',
-  USD: 'STRIPE_FOUNDING_PRICE_ID_USD',
-  GBP: 'STRIPE_FOUNDING_PRICE_ID_GBP',
+  EUR: 'STRIPE_PRICE_FOUNDING',
+  USD: 'STRIPE_PRICE_FOUNDING_USD',
+  GBP: 'STRIPE_PRICE_FOUNDING_GBP',
 };
 
 function resolvePriceId(requestedCurrency) {
@@ -38,7 +38,7 @@ function resolvePriceId(requestedCurrency) {
     if (id) return { priceId: id, currency: cur };
   }
   // Fallback EUR
-  return { priceId: process.env.STRIPE_FOUNDING_PRICE_ID, currency: 'EUR' };
+  return { priceId: process.env.STRIPE_PRICE_FOUNDING, currency: 'EUR' };
 }
 
 module.exports = async (req, res) => {
@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
 
     if (!priceId) {
       return res.status(500).json({
-        error: 'STRIPE_FOUNDING_PRICE_ID not configured. Create a price in Stripe Dashboard first.'
+        error: 'STRIPE_PRICE_FOUNDING not configured. Create a price in Stripe Dashboard first.'
       });
     }
 
