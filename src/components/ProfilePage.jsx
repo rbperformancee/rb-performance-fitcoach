@@ -63,7 +63,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
   const { current: lvl, next: nextLvl, pct: xpPct } = levelInfo;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 100, position: "relative", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 120px)", position: "relative", overflowX: "hidden" }}>
 
       {/* Ambient */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 30% 0%, rgba(2,209,186,0.1) 0%, transparent 55%), radial-gradient(ellipse at 80% 0%, rgba(129,140,248,0.06) 0%, transparent 50%)", pointerEvents: "none", zIndex: 0 }} />

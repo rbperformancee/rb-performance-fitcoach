@@ -210,7 +210,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 120 }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 120px)" }}>
 
       {/* HERO */}
       <div style={{ padding: "0px 20px 16px" }}>

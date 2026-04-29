@@ -111,7 +111,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
   const goalY = goal ? toY(goal) : -9999;
 
   return (
-    <div style={{ background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: 40, position: "relative", opacity: loading ? 0 : 1, transform: loading ? "translateY(10px)" : "translateY(0)", transition: "opacity 0.45s ease, transform 0.45s ease" }}>
+    <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 120px)", opacity: loading ? 0 : 1, transition: "opacity 0.4s ease" }}>
 
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 400, height: 400, background: "radial-gradient(ellipse, rgba(2,209,186,0.08) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
