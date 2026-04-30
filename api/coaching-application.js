@@ -18,6 +18,10 @@ const { rateLimit, attachRequestId } = require('./_security');
 const { captureException } = require('./_sentry');
 const { RB_SUPPORT_EMAIL } = require('./_branding');
 
+// Adresse perso pour les recaps candidature (independante du support general).
+// Si tu veux changer, edite cette constante (et redeploy).
+const APPLICATION_RECAP_EMAIL = 'rayan.b2701@gmail.com';
+
 const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
 const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
 const G = '#02d1ba';
@@ -251,7 +255,7 @@ module.exports = async (req, res) => {
         const obj = (data.objectifs_3mois || data.objectifs_6semaines || '').slice(0, 50);
         await transporter.sendMail({
           from: `RB Perform Candidatures <${SMTP_USER}>`,
-          to: [RB_SUPPORT_EMAIL],
+          to: [APPLICATION_RECAP_EMAIL],
           replyTo: data.email,  // Reply direct au candidat
           subject: `Candidature high-ticket : ${(data.nom_prenom || 'Anonyme')} (${score})${obj ? ' — ' + obj : ''}`,
           html: buildAdminEmail(data),
