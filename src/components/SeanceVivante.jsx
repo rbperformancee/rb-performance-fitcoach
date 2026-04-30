@@ -122,7 +122,20 @@ export function SeanceVivante({ clientId, sessionName }) {
     setMessage(null);
   };
 
-  if (!visible || !message) return null;
+  // Le composant a 2 modes :
+  //   1) Indicateur "LIVE" discret en haut tant que la seance tourne (pas de message coach).
+  //   2) Overlay plein ecran quand un message flash arrive (visible && message).
+  // Avant : early-return null tant qu il n y avait pas de message -> aucun DOM monte
+  // -> impossible pour le client de "voir" que SeanceVivante etait actif.
+  if (!visible || !message) {
+    return (
+      <div data-seance-vivante="live" style={{ position: "fixed", top: "calc(env(safe-area-inset-top, 0px) + 8px)", left: "50%", transform: "translateX(-50%)", zIndex: 400, display: "flex", alignItems: "center", gap: 8, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 100, padding: "6px 14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", pointerEvents: "none" }}>
+        <style>{`@keyframes svPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
+        <div style={{ width: 7, height: 7, borderRadius: "50%", background: G, animation: "svPulse 1.4s ease-in-out infinite" }} />
+        <div style={{ fontSize: 9, color: G, letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700 }}>{t("svc.eyebrow")}</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.95)", WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, animation: "svFadeIn 0.4s ease" }}>

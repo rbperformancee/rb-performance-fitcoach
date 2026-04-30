@@ -369,7 +369,9 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
           <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px", gap: 8, marginBottom: 10, padding: "0 2px" }}>
             <div></div>
             <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>{t("ec.weight_col")}</div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>{t("ec.reps_col")}</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>
+              {t("ec.reps_col")}{ex.reps ? <span style={{ color: "rgba(2,209,186,0.5)", marginLeft: 4, textTransform: "none", letterSpacing: 0 }}>· {ex.reps}</span> : null}
+            </div>
             <div></div>
           </div>
           {Array.from({ length: setsCount }, (_, i) => (
@@ -379,7 +381,14 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               done={i < doneCount}
               isActive={i === doneCount}
               defaultW={latest?.sets?.[i]?.weight ?? (latest?.weight ? String(latest.weight) : "")}
-              defaultR={latest?.sets?.[i]?.reps ?? (ex.reps || "")}
+              defaultR={(() => {
+                // N injecter une defaultR que si c est une vraie valeur numerique loggee.
+                // Les fourchettes type "8-10" venaient du fallback ex.reps -> pollution DB.
+                const r = latest?.sets?.[i]?.reps;
+                if (r == null || r === "") return "";
+                if (/^\d+$/.test(String(r).trim())) return String(r);
+                return "";
+              })()}
               placeholder={ex.reps || "—"}
               onDone={handleSetDone}
             />
