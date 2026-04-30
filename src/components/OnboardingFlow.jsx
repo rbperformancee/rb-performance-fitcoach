@@ -183,6 +183,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       motivation_score: 0, freins: "", sacrifices: "", vision_physique: "",
       one_rm_bench: "", one_rm_squat: "", one_rm_traction: "",
       motivation_principale: "", risques_abandon: "", autres_infos: "",
+      preferred_slots: [],  // Mode application : 3 creneaux preferes (JSON array of {date, time})
     };
     try {
       const raw = localStorage.getItem(draftKey);
@@ -288,20 +289,26 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
 
   const nextStep = async () => {
     haptic.selection();
-    // En mode application : step 5 → submit → step 7 (skip booking step 6).
-    // En mode client : step 5 → save → step 6 (booking).
-    if (step === 5) {
-      const result = await saveForm();
-      if (isApplication) {
-        if (!result?.ok) {
-          // Erreur submit : on reste sur step 5 pour que l'user retry
-          alert("Une erreur est survenue lors de l'envoi. Verifie ta connexion et reessaye.");
-          return;
-        }
-        setStep(7);
-        window.scrollTo(0, 0);
+    // En mode application :
+    //   step 5 → step 6 (slot picker, pas de save)
+    //   step 6 → submit avec preferred_slots → step 7
+    // En mode client : step 5 → save → step 6 (booking) → step 7
+    if (step === 5 && !isApplication) {
+      await saveForm();
+    }
+    if (step === 6 && isApplication) {
+      if (!form.preferred_slots || form.preferred_slots.length !== 3) {
+        alert("Sélectionne 3 créneaux pour valider ta candidature.");
         return;
       }
+      const result = await saveForm();
+      if (!result?.ok) {
+        alert("Une erreur est survenue lors de l'envoi. Verifie ta connexion et reessaye.");
+        return;
+      }
+      setStep(7);
+      window.scrollTo(0, 0);
+      return;
     }
     setStep((s) => s + 1);
     window.scrollTo(0, 0);
@@ -602,12 +609,123 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           <Input label={t("obf.abandon_risks_label")} placeholder={t("obf.abandon_risks_placeholder")} value={form.risques_abandon} onChange={set("risques_abandon")} textarea />
           <Input label={t("obf.other_info_label")} placeholder={t("obf.other_info_placeholder")} value={form.autres_infos} onChange={set("autres_infos")} textarea />
           <button style={S.btn()} onClick={nextStep} disabled={saving}>
-            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />{t("obf.saving")}</span>) : t("obf.book_call_btn")}
+            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />{t("obf.saving")}</span>) : (isApplication ? "Choisir mes dispos →" : t("obf.book_call_btn"))}
           </button>
           <button style={S.back} onClick={() => setStep(4)}>{t("obf.back")}</button>
         </div>
       </div>
     );
+
+  // ── ETAPE 6 (mode application) — Picker 3 creneaux preferes ──
+  // Le prospect choisit 3 plages dans les 7 prochains jours, 9h-20h.
+  // Rayan revient ensuite via WhatsApp pour caler le creneau definitif.
+  if (step === 6 && isApplication) {
+    const allHours = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
+    const days = [];
+    const now = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + i);
+      const date = d.toISOString().split("T")[0];
+      const label = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      // Today : filter past hours (round up to next hour)
+      const hours = i === 0 ? allHours.filter(h => parseInt(h, 10) >= now.getHours() + 1) : allHours;
+      if (hours.length > 0) days.push({ date, label, hours });
+    }
+    const selected = form.preferred_slots || [];
+    const isSlotSelected = (date, time) => selected.some(s => s.date === date && s.time === time);
+    const toggleSlot = (date, time) => {
+      haptic.selection();
+      const exists = isSlotSelected(date, time);
+      if (exists) {
+        set("preferred_slots")(selected.filter(s => !(s.date === date && s.time === time)));
+      } else {
+        if (selected.length >= 3) return;
+        set("preferred_slots")([...selected, { date, time }]);
+      }
+    };
+
+    return (
+      <div style={S.wrap}>
+        {GLOBAL_STYLES}
+        {BG}
+        <div key="step6app" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
+          <StepBar step={6} total={6} label={t("obf.step")} />
+          <div style={S.eyebrow}>Tes dispos</div>
+          <div style={S.h1}>
+            Choisis<br />
+            <span style={{ color: GREEN }}>3 créneaux.</span>
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.7, marginBottom: 20, maxWidth: 400 }}>
+            Sélectionne 3 plages où tu serais dispo dans les 7 prochains jours (9h–20h). Je reviens vers toi par message pour confirmer le créneau qui marche pour nous deux.
+          </div>
+
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "8px 14px", marginBottom: 24,
+            background: selected.length === 3 ? "rgba(2,209,186,0.1)" : "rgba(255,255,255,0.04)",
+            border: `1px solid ${selected.length === 3 ? GREEN : "rgba(255,255,255,0.08)"}`,
+            borderRadius: 100, fontSize: 12, fontWeight: 700, letterSpacing: "0.5px",
+            color: selected.length === 3 ? GREEN : "rgba(255,255,255,0.7)",
+            transition: "all 0.2s",
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: selected.length === 3 ? GREEN : "rgba(255,255,255,0.3)" }} />
+            {selected.length} / 3 sélectionné{selected.length > 1 ? "s" : ""}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 24, marginBottom: 24 }}>
+            {days.map(({ date, label, hours }) => (
+              <div key={date}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)", letterSpacing: "0.3px", marginBottom: 10, textTransform: "capitalize" }}>
+                  {label}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {hours.map((h) => {
+                    const sel = isSlotSelected(date, h);
+                    const disabled = !sel && selected.length >= 3;
+                    return (
+                      <button
+                        key={h}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => toggleSlot(date, h)}
+                        style={{
+                          padding: "8px 14px",
+                          background: sel ? GREEN : disabled ? "rgba(255,255,255,0.015)" : "rgba(255,255,255,0.04)",
+                          border: `1px solid ${sel ? GREEN : "rgba(255,255,255,0.08)"}`,
+                          borderRadius: 100,
+                          color: sel ? "#000" : disabled ? "rgba(255,255,255,0.2)" : "#fff",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: "0.3px",
+                          cursor: disabled ? "not-allowed" : "pointer",
+                          transition: "all 0.15s",
+                          fontFamily: "-apple-system,Inter,sans-serif",
+                          WebkitTapHighlightColor: "transparent",
+                          WebkitAppearance: "none",
+                        }}
+                      >
+                        {h.replace(":00", "h")}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            style={S.btn(selected.length === 3)}
+            onClick={nextStep}
+            disabled={saving || selected.length !== 3}
+          >
+            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Envoi…</span>) : "Envoyer ma candidature →"}
+          </button>
+          <button style={S.back} onClick={() => setStep(5)}>{t("obf.back")}</button>
+        </div>
+      </div>
+    );
+  }
 
   // ── ETAPE 6 — Calendrier ────────────────────────────────────
   if (step === 6)
@@ -807,7 +925,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           }}
         >
           {isApplication ? (
-            <>Ta candidature est arrivée.<br/>Si ton profil match les 5 places ultra-premium, je te contacte sous 48h.</>
+            <>Ta candidature est arrivée.<br/>Tu as un email de confirmation. Je reviens vers toi sous 24h pour caler le créneau.</>
           ) : (
             <>{t("obf.sent_line1")}<br />
             {t("obf.sent_line2")}</>

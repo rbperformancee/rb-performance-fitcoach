@@ -58,6 +58,10 @@ const applicationSchema = z.object({
   utm_campaign: z.string().max(100).optional().nullable(),
   utm_content: z.string().max(100).optional().nullable(),
   referrer: z.string().max(500).optional().nullable(),
+  preferred_slots: z.array(z.object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    time: z.string().regex(/^\d{2}:\d{2}$/),
+  })).max(5).optional().nullable(),
 }).passthrough();
 
 function getTransporter() {
@@ -68,10 +72,26 @@ function getTransporter() {
   });
 }
 
+function formatSlot(s) {
+  // Format "lundi 5 mai · 14h"
+  try {
+    const d = new Date(s.date + 'T12:00:00');
+    const day = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    return `${day} · ${s.time.replace(':00', 'h')}`;
+  } catch { return `${s.date} ${s.time}`; }
+}
+
 function buildAdminEmail(app) {
   const score = app.motivation_score != null ? `${app.motivation_score}/10` : '?';
   const obj = (app.objectifs_3mois || app.objectifs_6semaines || '').slice(0, 80);
   const fmt = (k, v) => v ? `<tr><td style="padding:4px 12px 4px 0;color:rgba(255,255,255,0.45);font-size:12px;width:160px;vertical-align:top">${k}</td><td style="padding:4px 0;color:#fff;font-size:13px">${String(v).replace(/</g, '&lt;')}</td></tr>` : '';
+
+  const slotsHtml = Array.isArray(app.preferred_slots) && app.preferred_slots.length
+    ? `<div style="margin-bottom:24px;padding:18px;background:rgba(2,209,186,0.08);border:1px solid rgba(2,209,186,0.3);border-radius:12px">
+         <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:${G};font-weight:800;margin-bottom:12px">Créneaux préférés du prospect</div>
+         ${app.preferred_slots.map(s => `<div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:6px;text-transform:capitalize">→ ${formatSlot(s)}</div>`).join('')}
+       </div>`
+    : '';
 
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
@@ -81,6 +101,8 @@ function buildAdminEmail(app) {
     <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};margin-bottom:12px;font-weight:700">Nouvelle candidature high-ticket</div>
     <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:8px">${(app.nom_prenom || 'Anonyme').replace(/</g, '&lt;')}<span style="color:${G}">.</span></div>
     <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px">Score motivation : <strong style="color:${G}">${score}</strong> · Objectif : "${obj.replace(/</g, '&lt;')}"</div>
+
+    ${slotsHtml}
 
     <table cellpadding="0" cellspacing="0" style="width:100%;border-top:1px solid rgba(255,255,255,0.06);padding-top:20px">
       ${fmt('Email', app.email)}
@@ -123,6 +145,57 @@ function buildAdminEmail(app) {
     </div>
   </td></tr>
   <tr><td style="padding:18px 0 0;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.2)">RB Perform · /candidature high-ticket pipeline</div></td></tr>
+</table>
+</td></tr></table></body></html>`;
+}
+
+function buildClientEmail(app) {
+  const firstName = (app.nom_prenom || '').trim().split(/\s+/)[0] || '';
+  const slots = Array.isArray(app.preferred_slots) ? app.preferred_slots : [];
+
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#050505;font-family:-apple-system,Inter,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 16px"><tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%">
+  <tr><td style="background:#0d0d0d;border-radius:18px;border:1px solid rgba(255,255,255,0.06);padding:40px 32px">
+
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${G};margin-bottom:20px;font-weight:800">Candidature reçue</div>
+
+    <div style="font-size:28px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-1px;margin-bottom:14px">
+      Bien reçu${firstName ? `, ${firstName.replace(/</g, '&lt;')}` : ''}.
+    </div>
+
+    <div style="font-size:15px;color:rgba(255,255,255,0.65);line-height:1.7;margin-bottom:28px">
+      Ta candidature pour l'accompagnement premium RB Perform est arrivée. Je lis chaque dossier personnellement.
+    </div>
+
+    ${slots.length ? `
+    <div style="margin-bottom:28px;padding:20px;background:rgba(2,209,186,0.05);border:1px solid rgba(2,209,186,0.2);border-radius:12px">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:${G};font-weight:800;margin-bottom:10px">Tes 3 créneaux</div>
+      ${slots.map(s => `<div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:6px;text-transform:capitalize">→ ${formatSlot(s)}</div>`).join('')}
+    </div>
+    ` : ''}
+
+    <div style="margin-bottom:28px;padding:18px 20px;background:rgba(255,255,255,0.025);border-left:3px solid ${G};border-radius:6px">
+      <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7;font-weight:600">
+        Prochaine étape : je te recontacte sous 24h pour caler le créneau définitif parmi tes dispos.
+      </div>
+    </div>
+
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:8px">
+      Si ton profil match l'offre (5 places, sélection sur dossier), on enchaîne avec ton appel stratégique de 30 minutes.
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7">
+      Aucun paiement avant validation de ma part.
+    </div>
+
+  </td></tr>
+  <tr><td style="padding:24px 0 0;text-align:center">
+    <div style="font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:.5px">
+      RB Perform · Rayan Bonte<br>
+      <span style="color:rgba(255,255,255,0.18)">Cet email confirme la réception de ta candidature.</span>
+    </div>
+  </td></tr>
 </table>
 </td></tr></table></body></html>`;
 }
@@ -170,7 +243,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Email a Rayan
+    // Email a Rayan + email de confirmation au client
     const transporter = getTransporter();
     if (transporter) {
       try {
@@ -186,8 +259,24 @@ module.exports = async (req, res) => {
       } catch (e) {
         console.error(`[COACHING_APP_EMAIL_FAILED] email=${data.email} reason="${e.message}" db_ok=${dbOk}`);
         await captureException(e, {
-          tags: { endpoint: 'coaching-application', stage: 'email' },
+          tags: { endpoint: 'coaching-application', stage: 'email_admin' },
           extra: { email: data.email, db_ok: dbOk },
+        });
+      }
+      // Confirmation client (best-effort, on-demand)
+      try {
+        await transporter.sendMail({
+          from: `Rayan · RB Perform <${SMTP_USER}>`,
+          to: [data.email],
+          replyTo: SMTP_USER,
+          subject: `Ta candidature est arrivée${data.nom_prenom ? `, ${String(data.nom_prenom).split(/\s+/)[0]}` : ''}.`,
+          html: buildClientEmail(data),
+        });
+      } catch (e) {
+        console.error(`[COACHING_APP_CLIENT_EMAIL_FAILED] email=${data.email} reason="${e.message}"`);
+        await captureException(e, {
+          tags: { endpoint: 'coaching-application', stage: 'email_client' },
+          extra: { email: data.email },
         });
       }
     }

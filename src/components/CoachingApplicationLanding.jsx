@@ -383,8 +383,8 @@ export default function CoachingApplicationLanding() {
           <div style={{ display: "flex", justifyContent: "center", alignItems: "stretch", gap: 8, maxWidth: 480, marginLeft: "auto", marginRight: "auto", flexWrap: "wrap" }}>
             {[
               { n: "01", t: "Questionnaire", d: "8 min" },
-              { n: "02", t: "Réserve ton appel", d: "30 min, visio" },
-              { n: "03", t: "Je valide ton dossier", d: "ou pas" },
+              { n: "02", t: "Indique tes dispos", d: "3 créneaux" },
+              { n: "03", t: "Je te recontacte", d: "sous 24h" },
             ].map((step, i) => (
               <div key={i} style={{ flex: "1 1 130px", textAlign: "left", padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12 }}>
                 <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", fontWeight: 800, letterSpacing: "1.5px", marginBottom: 4 }}>{step.n}</div>
@@ -422,7 +422,7 @@ export default function CoachingApplicationLanding() {
         </button>
 
         <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.8s both" }}>
-          Aucun paiement · Tu réserves ton appel à la fin du questionnaire
+          Aucun paiement · Je te recontacte sous 24h
         </div>
       </div>
     </div>
