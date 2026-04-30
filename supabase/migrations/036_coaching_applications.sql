@@ -1,4 +1,4 @@
--- =========================================================
+ -- =========================================================
 -- COACHING APPLICATIONS — high-ticket lead capture
 -- =========================================================
 -- Table pour stocker les candidatures provenant des stories

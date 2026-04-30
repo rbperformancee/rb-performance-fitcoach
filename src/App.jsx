@@ -10,6 +10,7 @@ const FuelPage = lazy(() => import("./components/FuelPage"));
 const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
 const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
+const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
 const TrainingPage = lazy(() => import("./components/TrainingPage"));
 const ProfilePage = lazy(() => import("./components/ProfilePage"));
 const SessionTimer = lazy(() => import("./components/SessionTimer"));
@@ -444,14 +445,13 @@ function AppInner() {
   if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/"; }} /></Suspense>;
 
   // ===== MODE CANDIDATURE HIGH-TICKET (/candidature) =====
-  // Reuse OnboardingFlow component avec mode="application" : aucun login
-  // requis, submit POST vers /api/coaching-application, page de remerciement
-  // custom. Lien dans les stories Instagram de Rayan.
+  // Landing premium (CoachingApplicationLanding) puis OnboardingFlow
+  // mode='application' au clic sur "Postuler maintenant".
   const isCandidature = typeof window !== "undefined" &&
     (window.location.pathname === "/candidature" ||
      new URLSearchParams(window.location.search).get("candidature") === "true");
   if (isCandidature) {
-    return <Suspense fallback={null}><OnboardingFlow client={null} mode="application" onComplete={() => { window.location.href = "/"; }} /></Suspense>;
+    return <Suspense fallback={null}><CoachingApplicationLanding /></Suspense>;
   }
 
   // ===== MODE DEMO COACH (route /demo ou ?demo=true) =====
