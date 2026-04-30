@@ -18,9 +18,8 @@ const { rateLimit, attachRequestId } = require('./_security');
 const { captureException } = require('./_sentry');
 const { RB_SUPPORT_EMAIL } = require('./_branding');
 
-// Adresse perso pour les recaps candidature (independante du support general).
-// Si tu veux changer, edite cette constante (et redeploy).
-const APPLICATION_RECAP_EMAIL = 'rayan.b2701@gmail.com';
+// Recap candidature → rb.performancee@gmail.com (= RB_SUPPORT_EMAIL).
+const APPLICATION_RECAP_EMAIL = RB_SUPPORT_EMAIL;
 
 const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
 const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
