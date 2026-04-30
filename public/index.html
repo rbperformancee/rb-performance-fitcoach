@@ -51,11 +51,11 @@
          -webkit-fill-available est le fix canonique Apple.
          100dvh est le fix moderne (iOS 15.4+). */
       html { height: 100%; height: -webkit-fill-available; }
-      body { background: #080C14; overscroll-behavior: none; min-height: 100%; min-height: -webkit-fill-available; min-height: 100dvh; }
+      body { background: #050505; overscroll-behavior: none; min-height: 100%; min-height: -webkit-fill-available; min-height: 100dvh; }
       ::-webkit-scrollbar { width: 0; background: transparent; }
       #splash {
         position: fixed; inset: 0;
-        background: #080C14;
+        background: #050505;
         display: flex; flex-direction: column;
         align-items: center; justify-content: center;
         gap: 24px;
@@ -92,13 +92,15 @@
         var splash = document.getElementById('splash');
         if (!splash) return;
 
-        // Disparition apres 1.8s (eclair dessine + texte apparu)
+        // Disparition apres 1.0s (eclair dessine, plus de freeze artificiel).
+        // Sur /demo et /demo-client, la transition est invisible (meme bg) car
+        // le splash React prend immediatement le relais avec progress messaging.
         setTimeout(function(){
           splash.classList.add('fade-out');
           setTimeout(function(){
             if (splash.parentNode) splash.parentNode.removeChild(splash);
           }, 700);
-        }, 1800);
+        }, 1000);
       })();
       // ===== Service Worker registration =====
       // Sans ca : pas de cache offline, pas de push notifications, pas de PWA fullsize.

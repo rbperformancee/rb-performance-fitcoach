@@ -487,6 +487,17 @@ function AppInner() {
       || new URLSearchParams(window.location.search).get("demo-client") === "true";
   });
 
+  // Demo : pre-fetch les chunks du dashboard EN PARALLELE de l'auth roundtrip.
+  // Sans ca, les lazy imports ne demarrent qu'apres user authentifie → 500ms de
+  // sequentiel inutile. La (les chunks telechargent pendant que Supabase repond).
+  React.useEffect(() => {
+    if (!isDemo && !isClientDemo) return;
+    import("./components/TrainingPage");
+    import("./components/FuelPage");
+    import("./components/MovePage");
+    import("./components/ProfilePage");
+  }, [isDemo, isClientDemo]);
+
   // Auto-login demo COACH (mot de passe — compte demo@rbperform.app)
   React.useEffect(() => {
     if (!isDemo) return;
