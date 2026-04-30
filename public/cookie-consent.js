@@ -210,9 +210,44 @@
     document.head.appendChild(s);
   }
 
+  // Padding management : banner sits over bottom CTAs. We push body content up
+  // by the banner height so primary CTAs (cache, signup, etc.) stay tappable.
+  // Restored on destroy().
+  var PREV_BODY_PADDING = null;
+  var BODY_RESIZE_OBSERVER = null;
+
+  function applyBodyPadding() {
+    try {
+      var card = document.querySelector('#' + ROOT_ID + ' .rb-consent-card');
+      if (!card || !document.body) return;
+      var h = Math.ceil(card.getBoundingClientRect().height);
+      if (!h) return;
+      // 16px breathing room above the banner.
+      document.body.style.paddingBottom = (h + 16) + 'px';
+    } catch (e) {}
+  }
+
+  function restoreBodyPadding() {
+    try {
+      if (!document.body) return;
+      if (PREV_BODY_PADDING == null) {
+        document.body.style.removeProperty('padding-bottom');
+      } else {
+        document.body.style.paddingBottom = PREV_BODY_PADDING;
+      }
+      PREV_BODY_PADDING = null;
+      if (BODY_RESIZE_OBSERVER) {
+        try { BODY_RESIZE_OBSERVER.disconnect(); } catch (e) {}
+        BODY_RESIZE_OBSERVER = null;
+      }
+      try { window.removeEventListener('resize', applyBodyPadding); } catch (e) {}
+    } catch (e) {}
+  }
+
   function destroy() {
     var el = document.getElementById(ROOT_ID);
     if (el && el.parentNode) el.parentNode.removeChild(el);
+    restoreBodyPadding();
   }
 
   function buildSimpleView(root, state) {
@@ -431,6 +466,25 @@
     root.id = ROOT_ID;
     document.body.appendChild(root);
     buildSimpleView(root, state);
+
+    // Push page content above the banner so bottom CTAs remain accessible.
+    try {
+      PREV_BODY_PADDING = document.body.style.paddingBottom || '';
+    } catch (e) { PREV_BODY_PADDING = ''; }
+    // Initial measure (next frame so layout has settled post-append).
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(applyBodyPadding);
+    } else {
+      setTimeout(applyBodyPadding, 16);
+    }
+    // Track height changes (simple ↔ detailed view, viewport rotate).
+    if (typeof ResizeObserver !== 'undefined') {
+      try {
+        BODY_RESIZE_OBSERVER = new ResizeObserver(applyBodyPadding);
+        BODY_RESIZE_OBSERVER.observe(root);
+      } catch (e) {}
+    }
+    window.addEventListener('resize', applyBodyPadding);
   }
 
   function init() {

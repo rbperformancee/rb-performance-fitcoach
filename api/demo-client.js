@@ -26,6 +26,9 @@ const lastCall = {};
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store, max-age=0");
 
+  // CORS preflight — return early before any auth/rate-limit logic.
+  if (req.method === "OPTIONS") return res.status(204).end();
+
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -36,11 +39,12 @@ module.exports = async (req, res) => {
     return res.status(403).json({ error: "Origin not allowed" });
   }
 
-  // Rate limit : 1 req / 30s par IP
+  // Rate limit : 3s par IP — auto-login fires several requests on page load,
+  // we just need to absorb the burst, not gate the demo behind 30s.
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
   const now = Date.now();
-  if (lastCall[ip] && now - lastCall[ip] < 30000) {
-    return res.status(429).json({ error: "Too fast — retry in 30 seconds" });
+  if (lastCall[ip] && now - lastCall[ip] < 3000) {
+    return res.status(429).json({ error: "Too fast — retry in a few seconds" });
   }
   lastCall[ip] = now;
 

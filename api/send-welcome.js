@@ -104,8 +104,17 @@ module.exports = async (req, res) => {
 
   if (!SMTP_PASS) return res.status(500).json({ error: 'ZOHO_SMTP_PASS missing' });
 
+  // Reject malformed JSON with 400 instead of letting it surface as 500.
+  let body;
   try {
-    const { email, full_name, type, programme_name } = req.body || {};
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!body || typeof body !== 'object') throw new Error('invalid body');
+  } catch (e) {
+    return res.status(400).json({ error: 'Malformed JSON body' });
+  }
+
+  try {
+    const { email, full_name, type, programme_name } = body;
     if (!email) return res.status(400).json({ error: 'Missing email' });
 
     const name = (full_name || '').split(' ')[0] || '';

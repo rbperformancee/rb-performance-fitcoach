@@ -25,6 +25,20 @@ const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
 const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
 const G = '#02d1ba';
 
+// Escape user input for HTML contexts. The previous .replace(/</g, '&lt;')
+// missed > " ' & ` = / and let attacker break attribute contexts. This
+// covers the OWASP-recommended set for HTML element + attribute contexts.
+const escHtml = (s) => String(s ?? '').replace(/[&<>"'`=\/]/g, (c) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+  "'": '&#39;', '`': '&#96;', '=': '&#61;', '/': '&#47;',
+}[c]));
+
+// Sanitize values used in email Subject headers — strip CR/LF (header
+// injection), control chars, and clamp length. Subjects are not HTML
+// contexts so escHtml is wrong here (would render literal &amp;).
+const sanitizeSubject = (s, max = 120) =>
+  String(s ?? '').replace(/[\r\n\t]+/g, ' ').slice(0, max).trim();
+
 const applicationSchema = z.object({
   email: z.string().email().max(254),
   nom_prenom: z.string().max(120).optional().nullable(),
@@ -87,12 +101,12 @@ function formatSlot(s) {
 function buildAdminEmail(app) {
   const score = app.motivation_score != null ? `${app.motivation_score}/10` : '?';
   const obj = (app.objectifs_3mois || app.objectifs_6semaines || '').slice(0, 80);
-  const fmt = (k, v) => v ? `<tr><td style="padding:4px 12px 4px 0;color:rgba(255,255,255,0.45);font-size:12px;width:160px;vertical-align:top">${k}</td><td style="padding:4px 0;color:#fff;font-size:13px">${String(v).replace(/</g, '&lt;')}</td></tr>` : '';
+  const fmt = (k, v) => v ? `<tr><td style="padding:4px 12px 4px 0;color:rgba(255,255,255,0.45);font-size:12px;width:160px;vertical-align:top">${escHtml(k)}</td><td style="padding:4px 0;color:#fff;font-size:13px">${escHtml(v)}</td></tr>` : '';
 
   const slotsHtml = Array.isArray(app.preferred_slots) && app.preferred_slots.length
     ? `<div style="margin-bottom:24px;padding:18px;background:rgba(2,209,186,0.08);border:1px solid rgba(2,209,186,0.3);border-radius:12px">
          <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:${G};font-weight:800;margin-bottom:12px">Créneaux préférés du prospect</div>
-         ${app.preferred_slots.map(s => `<div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:6px;text-transform:capitalize">→ ${formatSlot(s)}</div>`).join('')}
+         ${app.preferred_slots.map(s => `<div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:6px;text-transform:capitalize">→ ${escHtml(formatSlot(s))}</div>`).join('')}
        </div>`
     : '';
 
@@ -102,8 +116,8 @@ function buildAdminEmail(app) {
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
   <tr><td style="background:#111;border-radius:16px;border:1px solid rgba(2,209,186,0.2);padding:32px">
     <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};margin-bottom:12px;font-weight:700">Nouvelle candidature high-ticket</div>
-    <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:8px">${(app.nom_prenom || 'Anonyme').replace(/</g, '&lt;')}<span style="color:${G}">.</span></div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px">Score motivation : <strong style="color:${G}">${score}</strong> · Objectif : "${obj.replace(/</g, '&lt;')}"</div>
+    <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:8px">${escHtml(app.nom_prenom || 'Anonyme')}<span style="color:${G}">.</span></div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px">Score motivation : <strong style="color:${G}">${escHtml(score)}</strong> · Objectif : "${escHtml(obj)}"</div>
 
     ${slotsHtml}
 
@@ -142,8 +156,8 @@ function buildAdminEmail(app) {
     <div style="margin-top:24px;padding:14px 18px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.18);border-radius:10px">
       <div style="font-size:11px;color:${G};font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Action rapide</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.7)">
-        ${app.telephone ? `WhatsApp : <a href="https://wa.me/${String(app.telephone).replace(/[^0-9]/g, '')}" style="color:${G}">${app.telephone}</a><br>` : ''}
-        ${app.email ? `Email direct : <a href="mailto:${app.email}" style="color:${G}">${app.email}</a>` : ''}
+        ${app.telephone ? `WhatsApp : <a href="https://wa.me/${escHtml(String(app.telephone).replace(/[^0-9]/g, ''))}" style="color:${G}">${escHtml(app.telephone)}</a><br>` : ''}
+        ${app.email ? `Email direct : <a href="mailto:${escHtml(app.email)}" style="color:${G}">${escHtml(app.email)}</a>` : ''}
       </div>
     </div>
   </td></tr>
@@ -165,7 +179,7 @@ function buildClientEmail(app) {
     <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${G};margin-bottom:20px;font-weight:800">Candidature reçue</div>
 
     <div style="font-size:28px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-1px;margin-bottom:14px">
-      Bien reçu${firstName ? `, ${firstName.replace(/</g, '&lt;')}` : ''}.
+      Bien reçu${firstName ? `, ${escHtml(firstName)}` : ''}.
     </div>
 
     <div style="font-size:15px;color:rgba(255,255,255,0.65);line-height:1.7;margin-bottom:28px">
@@ -175,7 +189,7 @@ function buildClientEmail(app) {
     ${slots.length ? `
     <div style="margin-bottom:28px;padding:20px;background:rgba(2,209,186,0.05);border:1px solid rgba(2,209,186,0.2);border-radius:12px">
       <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:${G};font-weight:800;margin-bottom:10px">Tes 3 créneaux</div>
-      ${slots.map(s => `<div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:6px;text-transform:capitalize">→ ${formatSlot(s)}</div>`).join('')}
+      ${slots.map(s => `<div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:6px;text-transform:capitalize">→ ${escHtml(formatSlot(s))}</div>`).join('')}
     </div>
     ` : ''}
 
@@ -218,8 +232,17 @@ module.exports = async (req, res) => {
   const rl = rateLimit(req, { max: 3, windowMs: 3600000 });
   if (!rl.allowed) return res.status(429).json({ error: 'Trop de tentatives. Reessaie plus tard.' });
 
+  // Reject malformed JSON with 400 instead of letting it bubble to 500.
+  let rawBody;
   try {
-    const parsed = applicationSchema.safeParse(req.body || {});
+    rawBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!rawBody || typeof rawBody !== 'object') throw new Error('invalid body');
+  } catch (e) {
+    return res.status(400).json({ error: 'Malformed JSON body' });
+  }
+
+  try {
+    const parsed = applicationSchema.safeParse(rawBody);
     if (!parsed.success) {
       return res.status(400).json({
         error: 'Donnees invalides',
@@ -256,7 +279,7 @@ module.exports = async (req, res) => {
           from: `RB Perform Candidatures <${SMTP_USER}>`,
           to: [APPLICATION_RECAP_EMAIL],
           replyTo: data.email,  // Reply direct au candidat
-          subject: `Candidature high-ticket : ${(data.nom_prenom || 'Anonyme')} (${score})${obj ? ' — ' + obj : ''}`,
+          subject: sanitizeSubject(`Candidature high-ticket : ${data.nom_prenom || 'Anonyme'} (${score})${obj ? ' — ' + obj : ''}`),
           html: buildAdminEmail(data),
         });
       } catch (e) {
@@ -272,7 +295,7 @@ module.exports = async (req, res) => {
           from: `Rayan · RB Perform <${SMTP_USER}>`,
           to: [data.email],
           replyTo: SMTP_USER,
-          subject: `Ta candidature est arrivée${data.nom_prenom ? `, ${String(data.nom_prenom).split(/\s+/)[0]}` : ''}.`,
+          subject: sanitizeSubject(`Ta candidature est arrivée${data.nom_prenom ? `, ${String(data.nom_prenom).split(/\s+/)[0]}` : ''}.`),
           html: buildClientEmail(data),
         });
       } catch (e) {

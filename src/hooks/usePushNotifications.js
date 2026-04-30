@@ -43,6 +43,11 @@ export function usePushNotifications(clientId) {
     } catch(e) { console.error('Push:', e); }
   }, [clientId]);
   const requestPermission = useCallback(async () => {
+    // iOS Safari (WebKit) n'expose pas toujours Notification — guard avant acces.
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setPermission('denied');
+      return 'denied';
+    }
     const perm = await Notification.requestPermission();
     setPermission(perm);
     if (perm === 'granted') await subscribe();

@@ -32,8 +32,17 @@ module.exports = async (req, res) => {
   // session emits ~5 beacons. 120 covers burst + a few sessions.
   if (!secureRequest(req, res, { max: 120, windowMs: 3600000 })) return;
 
+  // Reject malformed JSON with 400 — sendBeacon payloads are normally fine
+  // but a misbehaving client/proxy shouldn't surface as 500 in our logs.
+  let body;
   try {
-    const body = req.body || {};
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!body || typeof body !== 'object') throw new Error('invalid body');
+  } catch (e) {
+    return res.status(400).json({ error: 'Malformed JSON body' });
+  }
+
+  try {
     const { name, value, rating, id, navigationType, url } = body;
 
     if (!ALLOWED.has(name)) {

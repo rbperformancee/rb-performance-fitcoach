@@ -57,8 +57,10 @@
     { "source": "/welcome", "destination": "/welcome.html" },
     { "source": "/security", "destination": "/security.html" },
     { "source": "/comparison", "destination": "/comparison.html" },
+    { "source": "/legal", "destination": "/legal.html" },
     { "source": "/coach/:slug", "destination": "/coach.html" },
-    { "source": "/candidature", "destination": "/app.html?candidature=true" }
+    { "source": "/candidature", "destination": "/app.html?candidature=true" },
+    { "source": "/((?!api/|_next/|static/|videos/|images/|_vercel/|.*\\..*).*)", "destination": "/404.html" }
   ],
   "headers": [
     {
@@ -71,7 +73,7 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Permissions-Policy", "value": "camera=(self), microphone=(self), geolocation=(), payment=(self), interest-cohort=()" },
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.youtube.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'" }
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.youtube.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://fonts.googleapis.com https://fonts.gstatic.com; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'" }
       ]
     },
     {

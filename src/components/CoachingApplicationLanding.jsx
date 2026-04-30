@@ -79,12 +79,12 @@ export default function CoachingApplicationLanding() {
   }
 
   return (
-    <div style={{ minHeight: "100dvh", background: BG, color: "#fff", fontFamily: "-apple-system,Inter,sans-serif", overflow: "hidden", position: "relative" }}>
+    <main style={{ minHeight: "100dvh", background: BG, color: "#fff", fontFamily: "-apple-system,Inter,sans-serif", overflow: "hidden", position: "relative" }}>
       <style>{KEYFRAMES}</style>
 
       {/* Ambient gradients — drift lent (12s) + breath 60bpm overlay */}
-      <div style={{ position: "fixed", top: "-10%", left: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.08), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 12s ease-in-out infinite, breath60Scale 1s ease-in-out infinite" }} />
-      <div style={{ position: "fixed", bottom: "-10%", right: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.06), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 14s ease-in-out infinite reverse, breath60Scale 1s ease-in-out infinite 0.5s" }} />
+      <div aria-hidden="true" style={{ position: "fixed", top: "-10%", left: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.08), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 12s ease-in-out infinite, breath60Scale 1s ease-in-out infinite" }} />
+      <div aria-hidden="true" style={{ position: "fixed", bottom: "-10%", right: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.06), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 14s ease-in-out infinite reverse, breath60Scale 1s ease-in-out infinite 0.5s" }} />
 
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px 100px", position: "relative", zIndex: 1, textAlign: "center" }}>
 
@@ -118,6 +118,8 @@ export default function CoachingApplicationLanding() {
               width={240}
               height={240}
               loading="eager"
+              fetchpriority="high"
+              decoding="async"
               style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%", display: "block" }}
             />
           </div>
@@ -156,6 +158,8 @@ export default function CoachingApplicationLanding() {
                       src={`/transfo-${i + 1}-after-400.webp`}
                       alt=""
                       aria-hidden="true"
+                      loading="lazy"
+                      decoding="async"
                       style={{
                         width: "100%",
                         height: "100%",
@@ -220,6 +224,7 @@ export default function CoachingApplicationLanding() {
                           sizes="(max-width: 600px) 50vw, 240px"
                           alt={`${client.name} - ${label}`}
                           loading="lazy"
+                          decoding="async"
                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                         />
                         <div style={{ position: "absolute", top: 12, left: 12, padding: "5px 10px", background: src === "after" ? `${GREEN}` : "rgba(0,0,0,0.7)", color: src === "after" ? "#000" : "#fff", fontSize: 9, fontWeight: 800, letterSpacing: "2px", borderRadius: 100 }}>
@@ -228,7 +233,7 @@ export default function CoachingApplicationLanding() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.3px" }}>
+                  <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.7)", letterSpacing: "0.3px" }}>
                     <strong style={{ color: "#fff", fontWeight: 700 }}>{client.name}</strong> · {client.duration}
                   </div>
                 </div>
@@ -245,9 +250,9 @@ export default function CoachingApplicationLanding() {
                 </a>
                 <button
                   onClick={() => setShowTransfos(false)}
-                  style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 12, letterSpacing: "0.3px", cursor: "pointer", padding: 0 }}
-                  onMouseOver={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
-                  onMouseOut={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+                  style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 12, letterSpacing: "0.3px", cursor: "pointer", padding: 0 }}
+                  onMouseOver={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
+                  onMouseOut={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                 >
                   Masquer
                 </button>
@@ -283,7 +288,7 @@ export default function CoachingApplicationLanding() {
                 }}
               >
                 <div style={{ fontSize: x.featured ? 17 : 16, fontWeight: x.featured ? 800 : 700, color: x.featured ? GREEN : "#fff", marginBottom: x.d ? 6 : 0, letterSpacing: x.featured ? "-0.2px" : 0 }}>{x.t}</div>
-                {x.d && <div style={{ fontSize: 13, color: x.featured ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{x.d}</div>}
+                {x.d && <div style={{ fontSize: 13, color: x.featured ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{x.d}</div>}
               </div>
             ))}
           </div>
@@ -299,6 +304,7 @@ export default function CoachingApplicationLanding() {
             sizes="(max-width: 600px) 320px, 400px"
             alt="App client RB Perform"
             loading="lazy"
+            decoding="async"
             width={2752}
             height={1536}
             style={{
@@ -343,7 +349,7 @@ export default function CoachingApplicationLanding() {
         <div style={{ padding: "32px 28px", background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 20, marginBottom: 56, animation: "fadeUp 0.7s ease 0.6s both" }}>
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(64px, 14vw, 96px)", color: "#fff", lineHeight: 1, letterSpacing: "-2px", textShadow: "0 0 60px rgba(2,209,186,0.15)" }}>300€</div>
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", fontWeight: 500, marginTop: 4 }}>/ mois · 3 mois min.</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", fontWeight: 500, marginTop: 4 }}>/ mois · 3 mois min.</div>
           </div>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, margin: 0, maxWidth: 460, marginLeft: "auto", marginRight: "auto" }}>
             Le prix d'une salle de sport haut de gamme. Sauf qu'ici tu as l'accompagnement direct, et zéro carte bancaire avant que je valide ton dossier.
@@ -372,7 +378,7 @@ export default function CoachingApplicationLanding() {
                 <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)", marginBottom: 4, letterSpacing: "-0.1px" }}>
                   {item.q}
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.55 }}>{item.a}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.55 }}>{item.a}</div>
               </div>
             ))}
           </div>
@@ -425,6 +431,6 @@ export default function CoachingApplicationLanding() {
           Aucun paiement · Je te recontacte sous 24h
         </div>
       </div>
-    </div>
+    </main>
   );
 }

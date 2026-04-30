@@ -70,8 +70,17 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!secureRequest(req, res, { max: 10, windowMs: 3600000 })) return;
 
+  // Reject malformed JSON with 400 (rather than 500 from generic catch).
+  let body;
   try {
-    const { plan, currency, email } = req.body || {};
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!body || typeof body !== 'object') throw new Error('invalid body');
+  } catch (e) {
+    return res.status(400).json({ error: 'Malformed JSON body' });
+  }
+
+  try {
+    const { plan, currency, email } = body;
 
     if (!plan || !PLANS[plan]) {
       return res.status(400).json({

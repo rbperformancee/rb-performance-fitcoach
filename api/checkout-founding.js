@@ -22,8 +22,14 @@
  * Voir MULTI-CURRENCY.md pour le setup Stripe Dashboard.
  */
 
+const { z } = require('zod');
 const getStripe = require('./_stripe');
 const { secureRequest } = require('./_security');
+
+const bodySchema = z.object({
+  email: z.string().email().max(254),
+  currency: z.enum(['EUR', 'USD', 'GBP']).optional(),
+}).passthrough();
 
 const CURRENCY_PRICE_ENV = {
   EUR: 'STRIPE_PRICE_FOUNDING',
@@ -68,8 +74,28 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!secureRequest(req, res, { max: 10, windowMs: 3600000 })) return;
 
+  // Parse JSON body — Vercel auto-parses, but malformed input may surface as
+  // string or null. Reject malformed early with 400 before reaching Stripe.
+  let rawBody;
   try {
-    const { currency, email } = req.body || {};
+    rawBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!rawBody || typeof rawBody !== 'object') throw new Error('invalid body');
+  } catch (e) {
+    return res.status(400).json({ error: 'Malformed JSON body' });
+  }
+
+  // Schema validation — require at least an email to reduce abuse surface
+  // (empty POSTs spawning Stripe Checkout Sessions).
+  const parsed = bodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: 'Invalid body',
+      details: parsed.error.flatten().fieldErrors,
+    });
+  }
+
+  try {
+    const { currency, email } = parsed.data;
     const { priceId, currency: usedCurrency } = resolvePriceId(currency);
 
     if (!priceId) {
@@ -120,6 +146,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({ url: session.url, currency: usedCurrency });
   } catch (err) {
     console.error('[checkout-founding] Error:', err.message);
-    return res.status(500).json({ error: err.message });
+    const isProd = process.env.VERCEL_ENV === 'production';
+    return res.status(500).json({ error: isProd ? 'Stripe error' : err.message });
   }
 };
