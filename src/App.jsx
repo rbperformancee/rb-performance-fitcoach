@@ -922,22 +922,11 @@ function AppInner() {
     return <CoachCodeGate client={{ email: user.email, id: null }} onLinked={() => window.location.reload()} />;
   }
 
-  // OnboardingFlow desactive pour le lancement — le client arrive directement sur l'app
-  // TODO: reactiver quand le questionnaire sera integre dans le flow coach
-  // QA: ajouter ?test_onboarding=true sur n'importe quelle URL pour forcer
-  // l'apparition de l'OnboardingFlow (test localStorage persistence + saveForm).
-  const testOnboarding = typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("test_onboarding") === "true";
-  if (testOnboarding && user && !isCoach) {
-    // onComplete: strip ?test_onboarding=true sinon le gate re-declenche
-    // l'onboarding au reload (boucle infinie sur "Acceder a mon espace")
-    const exitQA = () => {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("test_onboarding");
-      window.location.href = url.pathname + url.search;
-    };
-    return <Suspense fallback={null}><OnboardingFlow client={client || { email: user.email, id: null }} onComplete={exitQA} /></Suspense>;
-  }
+  // OnboardingFlow desactive — le client arrive directement sur l'app.
+  // Decision : le questionnaire ne sert plus pour le launch (le coach
+  // recolte les infos hors-app). Code conserve dans src/components/
+  // OnboardingFlow.jsx au cas ou. Pour reactiver : decommenter le bloc
+  // ci-dessous.
   // if (!isClientDemo && user && !isCoach && !authLoading && client?.onboarding_done !== true) {
   //   return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
   // }
