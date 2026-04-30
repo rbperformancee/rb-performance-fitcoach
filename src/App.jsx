@@ -929,7 +929,14 @@ function AppInner() {
   const testOnboarding = typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("test_onboarding") === "true";
   if (testOnboarding && user && !isCoach) {
-    return <Suspense fallback={null}><OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} /></Suspense>;
+    // onComplete: strip ?test_onboarding=true sinon le gate re-declenche
+    // l'onboarding au reload (boucle infinie sur "Acceder a mon espace")
+    const exitQA = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("test_onboarding");
+      window.location.href = url.pathname + url.search;
+    };
+    return <Suspense fallback={null}><OnboardingFlow client={client || { email: user.email, id: null }} onComplete={exitQA} /></Suspense>;
   }
   // if (!isClientDemo && user && !isCoach && !authLoading && client?.onboarding_done !== true) {
   //   return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
