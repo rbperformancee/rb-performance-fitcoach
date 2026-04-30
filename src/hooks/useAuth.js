@@ -141,12 +141,18 @@ export function useAuth() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
       });
       if (error) throw error;
       setMagicSent(true);
     } catch (e) {
-      setError(e.message || "Erreur lors de l'envoi du lien.");
+      // Email pas dans la base → afficher un message clair plutot que
+      // l'erreur Supabase brute "Signups not allowed for otp".
+      if (e.message === 'Signups not allowed for otp') {
+        setError("Aucun compte trouve avec cet email. Contacte ton coach pour recevoir une invitation.");
+      } else {
+        setError(e.message || "Erreur lors de l'envoi du lien.");
+      }
     } finally {
       setAuthLoading(false);
     }

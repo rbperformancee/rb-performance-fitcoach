@@ -75,7 +75,7 @@ const fr = {
     "login.coach_switch": "Tu es coach ? Espace coach",
     "login.client_switch": "Retour espace client",
     "login.code_sent_success": "Code envoye a",
-    "login.no_account": "Aucun compte trouve avec cet email. Contacte ton coach.",
+    "login.no_account": "Compte inexistant. Contacte ton coach pour recevoir ton invitation — c'est lui qui te cree ton acces.",
     "login.send_error": "Erreur lors de l'envoi du code.",
     "login.code_invalid": "Code incorrect ou expire. Reessaie.",
     "login.success_redirect": "Connexion reussie, redirection...",

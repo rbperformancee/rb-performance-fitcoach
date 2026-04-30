@@ -43,7 +43,11 @@ export function LoginScreen({ onBack }) {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
-        options: { shouldCreateUser: true },
+        // shouldCreateUser: false — un client ne peut pas s'inscrire seul.
+        // Seul le coach peut creer un compte client via "Inviter" dans le
+        // dashboard. Si l'email n'existe pas, Supabase renvoie l'erreur
+        // "Signups not allowed for otp" → on affiche le message no_account.
+        options: { shouldCreateUser: false },
       });
       if (error) throw error;
       setStep('otp');

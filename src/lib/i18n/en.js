@@ -75,7 +75,7 @@ const en = {
     "login.coach_switch": "Are you a coach? Coach area",
     "login.client_switch": "Back to client area",
     "login.code_sent_success": "Code sent to",
-    "login.no_account": "No account found with this email. Contact your coach.",
+    "login.no_account": "No account found. Contact your coach to receive an invitation — only they can create your access.",
     "login.send_error": "Couldn't send the code. Try again.",
     "login.code_invalid": "Code is invalid or expired. Try again.",
     "login.success_redirect": "Sign-in successful, redirecting...",
