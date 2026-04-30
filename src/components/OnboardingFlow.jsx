@@ -157,8 +157,15 @@ const StepBar = ({ step, total, label = "Etape" }) => (
 
 // ========== COMPOSANT PRINCIPAL ==========
 
-export default function OnboardingFlow({ client, onComplete }) {
+// mode = "client" (default) : onboarding post-invitation, save dans
+//                              onboarding_forms via Supabase, step 6 = booking.
+// mode = "application"      : candidature high-ticket publique sur /candidature,
+//                              save via POST /api/coaching-application, skip
+//                              booking (Rayan contacte ensuite via WhatsApp).
+export default function OnboardingFlow({ client, onComplete, mode = "client" }) {
   const t = useT();
+  const isApplication = mode === "application";
+  const draftKey = isApplication ? "rb_application_draft" : "rb_onboarding_draft";
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [slots, setSlots] = useState([]);
@@ -168,6 +175,7 @@ export default function OnboardingFlow({ client, onComplete }) {
   const [form, setForm] = useState(() => {
     const empty = {
       nom_prenom: client?.full_name || "",
+      email: "",  // Mode application : champ public requis
       telephone: "",
       age: "", poids: "", taille: "", passe_sportif: "",
       metier: "", sommeil: "", pas_jour: "", allergies: "", repas: "", jours_entrainement: "", heures_seance: "", diet_actuelle: "",
@@ -177,25 +185,25 @@ export default function OnboardingFlow({ client, onComplete }) {
       motivation_principale: "", risques_abandon: "", autres_infos: "",
     };
     try {
-      const raw = localStorage.getItem("rb_onboarding_draft");
+      const raw = localStorage.getItem(draftKey);
       if (!raw) return empty;
       const { form: saved, ts } = JSON.parse(raw);
       // Drafts older than 7 days expire
-      if (Date.now() - ts > 7 * 24 * 3600 * 1000) { localStorage.removeItem("rb_onboarding_draft"); return empty; }
+      if (Date.now() - ts > 7 * 24 * 3600 * 1000) { localStorage.removeItem(draftKey); return empty; }
       return { ...empty, ...saved };
     } catch { return empty; }
   });
 
   // Persist draft on every form change
   useEffect(() => {
-    try { localStorage.setItem("rb_onboarding_draft", JSON.stringify({ form, ts: Date.now() })); } catch {}
-  }, [form]);
+    try { localStorage.setItem(draftKey, JSON.stringify({ form, ts: Date.now() })); } catch {}
+  }, [form, draftKey]);
 
   const set = (key) => (val) => setForm((p) => ({ ...p, [key]: val }));
 
   useEffect(() => {
-    if (step === 6) fetchSlots();
-  }, [step]);
+    if (step === 6 && !isApplication) fetchSlots();
+  }, [step, isApplication]);
 
   const fetchSlots = async () => {
     const today = new Date().toISOString().split("T")[0];
@@ -212,7 +220,43 @@ export default function OnboardingFlow({ client, onComplete }) {
 
   const saveForm = async () => {
     setSaving(true);
-    try { localStorage.setItem("rb_onboarding_draft", JSON.stringify({ form, ts: Date.now() })); } catch {}
+    try { localStorage.setItem(draftKey, JSON.stringify({ form, ts: Date.now() })); } catch {}
+
+    // Mode application (publique, /candidature) : POST vers /api/coaching-application
+    if (isApplication) {
+      try {
+        // UTM tracking depuis sessionStorage (capture sur la landing)
+        let utm = {};
+        try { utm = JSON.parse(sessionStorage.getItem("rb_utm") || "{}"); } catch {}
+        const res = await fetch("/api/coaching-application", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...form,
+            source: "instagram",
+            utm_source: utm.utm_source || null,
+            utm_medium: utm.utm_medium || null,
+            utm_campaign: utm.utm_campaign || null,
+            utm_content: utm.utm_content || null,
+            referrer: utm.referrer || document.referrer || null,
+          }),
+        });
+        const json = await res.json();
+        setSaving(false);
+        if (!res.ok || !json.ok) {
+          console.error("[application] submit failed:", json.error);
+          return { ok: false, reason: json.error || "submit_failed" };
+        }
+        try { localStorage.removeItem(draftKey); } catch {}
+        return { ok: true };
+      } catch (e) {
+        console.error("[application] submit exception:", e.message);
+        setSaving(false);
+        return { ok: false, reason: e.message };
+      }
+    }
+
+    // Mode client (onboarding post-invitation) : upsert Supabase
     if (!client?.id) {
       console.error("[onboarding] saveForm called without client.id — keeping localStorage backup");
       setSaving(false);
@@ -226,7 +270,7 @@ export default function OnboardingFlow({ client, onComplete }) {
       console.error("[onboarding] saveForm failed:", error.message);
       return { ok: false, reason: error.message };
     }
-    try { localStorage.removeItem("rb_onboarding_draft"); } catch {}
+    try { localStorage.removeItem(draftKey); } catch {}
     return { ok: true };
   };
 
@@ -244,7 +288,21 @@ export default function OnboardingFlow({ client, onComplete }) {
 
   const nextStep = async () => {
     haptic.selection();
-    if (step === 5) await saveForm();
+    // En mode application : step 5 → submit → step 7 (skip booking step 6).
+    // En mode client : step 5 → save → step 6 (booking).
+    if (step === 5) {
+      const result = await saveForm();
+      if (isApplication) {
+        if (!result?.ok) {
+          // Erreur submit : on reste sur step 5 pour que l'user retry
+          alert("Une erreur est survenue lors de l'envoi. Verifie ta connexion et reessaye.");
+          return;
+        }
+        setStep(7);
+        window.scrollTo(0, 0);
+        return;
+      }
+    }
     setStep((s) => s + 1);
     window.scrollTo(0, 0);
   };
@@ -394,13 +452,25 @@ export default function OnboardingFlow({ client, onComplete }) {
         {GLOBAL_STYLES}
         {BG}
         <div key="step1" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={1} total={6} label={t("obf.step")} />
-          <div style={S.eyebrow}>{t("obf.step1_eyebrow")}</div>
+          <StepBar step={1} total={isApplication ? 5 : 6} label={t("obf.step")} />
+          <div style={S.eyebrow}>{isApplication ? "Candidature Coaching Premium" : t("obf.step1_eyebrow")}</div>
           <div style={S.h1}>
-            {t("obf.step1_title_line1")}<br />
-            <span style={{ color: GREEN }}>{t("obf.step1_title_line2")}</span>
+            {isApplication ? (
+              <>5 places.<br/><span style={{ color: GREEN }}>Pas une de plus.</span></>
+            ) : (
+              <>{t("obf.step1_title_line1")}<br />
+              <span style={{ color: GREEN }}>{t("obf.step1_title_line2")}</span></>
+            )}
           </div>
+          {isApplication && (
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 28, maxWidth: 420 }}>
+              Ce questionnaire prend 8-10 min. Je le lis personnellement. Si ton profil match, je te contacte sous 48h via WhatsApp ou email.
+            </div>
+          )}
           <Input label={t("obf.name_label")} placeholder={t("obf.name_placeholder")} value={form.nom_prenom} onChange={set("nom_prenom")} />
+          {isApplication && (
+            <Input label="Email" placeholder="ton@email.com" type="email" value={form.email} onChange={set("email")} />
+          )}
           <div style={S.row}>
             <Input label={t("obf.age_label")} placeholder={t("obf.age_placeholder")} type="number" value={form.age} onChange={set("age")} half />
             <Input label={t("obf.weight_label")} placeholder={t("obf.weight_placeholder")} type="number" value={form.poids} onChange={set("poids")} half />
@@ -408,7 +478,11 @@ export default function OnboardingFlow({ client, onComplete }) {
           <Input label={t("obf.height_label")} placeholder={t("obf.height_placeholder")} type="number" value={form.taille} onChange={set("taille")} />
           <Input label={t("obf.phone_label")} placeholder={t("obf.phone_placeholder")} type="tel" value={form.telephone} onChange={set("telephone")} />
           <Input label={t("obf.sport_history_label")} placeholder={t("obf.sport_history_placeholder")} value={form.passe_sportif} onChange={set("passe_sportif")} textarea />
-          <button style={S.btn(!!form.nom_prenom)} onClick={nextStep}>{t("obf.continue")}</button>
+          <button
+            style={S.btn(!!form.nom_prenom && (!isApplication || /\S+@\S+\.\S+/.test(form.email)))}
+            onClick={nextStep}
+            disabled={isApplication && !/\S+@\S+\.\S+/.test(form.email)}
+          >{t("obf.continue")}</button>
         </div>
       </div>
     );
@@ -677,7 +751,7 @@ export default function OnboardingFlow({ client, onComplete }) {
             animation: "fadeUp 0.6s ease 0.2s both",
           }}
         >
-          {t("obf.welcome_team")}
+          {isApplication ? "Candidature reçue" : t("obf.welcome_team")}
         </div>
         <h1
           style={{
@@ -689,8 +763,12 @@ export default function OnboardingFlow({ client, onComplete }) {
             animation: "fadeUp 0.6s ease 0.3s both",
           }}
         >
-          {t("obf.ready_line1")}<br />
-          <span style={{ animation: "tealPulse 3s ease-in-out infinite" }}>{t("obf.ready_line2")}</span>
+          {isApplication ? (
+            <>Merci.<br/><span style={{ animation: "tealPulse 3s ease-in-out infinite" }}>Je te recontacte.</span></>
+          ) : (
+            <>{t("obf.ready_line1")}<br />
+            <span style={{ animation: "tealPulse 3s ease-in-out infinite" }}>{t("obf.ready_line2")}</span></>
+          )}
         </h1>
         {bookedSlot && (
           <div
@@ -728,8 +806,12 @@ export default function OnboardingFlow({ client, onComplete }) {
             marginRight: "auto",
           }}
         >
-          {t("obf.sent_line1")}<br />
-          {t("obf.sent_line2")}
+          {isApplication ? (
+            <>Ta candidature est arrivée.<br/>Si ton profil match les 5 places ultra-premium, je te contacte sous 48h via WhatsApp ou email.</>
+          ) : (
+            <>{t("obf.sent_line1")}<br />
+            {t("obf.sent_line2")}</>
+          )}
         </p>
         <button
           style={{ ...S.btn(), animation: "fadeUp 0.6s ease 0.6s both", opacity: saving ? 0.7 : 1 }}
@@ -738,6 +820,12 @@ export default function OnboardingFlow({ client, onComplete }) {
             if (saving) return;
             setSaving(true);
             try {
+              if (isApplication) {
+                // Mode application : retour au site, pas de supabase update
+                haptic.success();
+                window.location.href = "/";
+                return;
+              }
               if (client?.id) {
                 await supabase.from("clients").update({ onboarding_done: true }).eq("id", client.id);
               } else {
@@ -752,7 +840,7 @@ export default function OnboardingFlow({ client, onComplete }) {
             }
           }}
         >
-          {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10, justifyContent: "center" }}><Spinner variant="dots" size={18} color="#000" />{t("obf.finalizing")}</span>) : t("obf.access_space")}
+          {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10, justifyContent: "center" }}><Spinner variant="dots" size={18} color="#000" />{t("obf.finalizing")}</span>) : (isApplication ? "Retour au site" : t("obf.access_space"))}
         </button>
       </div>
     </div>

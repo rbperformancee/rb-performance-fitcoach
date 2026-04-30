@@ -443,6 +443,17 @@ function AppInner() {
   if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
   if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/"; }} /></Suspense>;
 
+  // ===== MODE CANDIDATURE HIGH-TICKET (/candidature) =====
+  // Reuse OnboardingFlow component avec mode="application" : aucun login
+  // requis, submit POST vers /api/coaching-application, page de remerciement
+  // custom. Lien dans les stories Instagram de Rayan.
+  const isCandidature = typeof window !== "undefined" &&
+    (window.location.pathname === "/candidature" ||
+     new URLSearchParams(window.location.search).get("candidature") === "true");
+  if (isCandidature) {
+    return <Suspense fallback={null}><OnboardingFlow client={null} mode="application" onComplete={() => { window.location.href = "/"; }} /></Suspense>;
+  }
+
   // ===== MODE DEMO COACH (route /demo ou ?demo=true) =====
   const [isDemo] = React.useState(() => {
     if (typeof window === "undefined") return false;

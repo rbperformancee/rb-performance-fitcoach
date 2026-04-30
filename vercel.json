@@ -57,7 +57,8 @@
     { "source": "/welcome", "destination": "/welcome.html" },
     { "source": "/security", "destination": "/security.html" },
     { "source": "/comparison", "destination": "/comparison.html" },
-    { "source": "/coach/:slug", "destination": "/coach.html" }
+    { "source": "/coach/:slug", "destination": "/coach.html" },
+    { "source": "/candidature", "destination": "/app.html?candidature=true" }
   ],
   "headers": [
     {
