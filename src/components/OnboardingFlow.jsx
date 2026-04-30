@@ -464,7 +464,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           </div>
           {isApplication && (
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 28, maxWidth: 420 }}>
-              Ce questionnaire prend 8-10 min. Je le lis personnellement. Si ton profil match, je te contacte sous 48h via WhatsApp ou email.
+              Ce questionnaire prend 8-10 min. Je le lis personnellement. Si ton profil match, je te contacte sous 48h.
             </div>
           )}
           <Input label={t("obf.name_label")} placeholder={t("obf.name_placeholder")} value={form.nom_prenom} onChange={set("nom_prenom")} />
@@ -807,7 +807,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           }}
         >
           {isApplication ? (
-            <>Ta candidature est arrivée.<br/>Si ton profil match les 5 places ultra-premium, je te contacte sous 48h via WhatsApp ou email.</>
+            <>Ta candidature est arrivée.<br/>Si ton profil match les 5 places ultra-premium, je te contacte sous 48h.</>
           ) : (
             <>{t("obf.sent_line1")}<br />
             {t("obf.sent_line2")}</>

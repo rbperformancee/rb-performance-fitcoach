@@ -120,9 +120,17 @@
 
   // Injecte les scripts Vercel (Analytics + Speed Insights) une seule fois.
   // Idempotent : safe si appele plusieurs fois ou apres un re-consent.
+  // Skip en dev local : /_vercel/* n'existe pas → CRA renvoie le HTML SPA
+  // que le browser essaie de parser comme JS → SyntaxError + overlay erreur.
   function loadVercelAnalytics() {
     try {
       if (window.__rbVercelAnalyticsLoaded) return;
+      var host = window.location.hostname;
+      var isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
+      if (isLocal) {
+        window.__rbVercelAnalyticsLoaded = true;
+        return; // Vercel scripts n'existent qu'en prod/preview
+      }
       window.__rbVercelAnalyticsLoaded = true;
       var head = document.head || document.getElementsByTagName('head')[0];
       if (!head) return;
@@ -135,6 +143,7 @@
         var s = document.createElement('script');
         s.defer = true;
         s.src = src;
+        s.onerror = function () { /* prod : Vercel server hiccup, on ignore silencieusement */ };
         head.appendChild(s);
       });
     } catch (e) {}
@@ -425,6 +434,12 @@
   }
 
   function init() {
+    // Pages premium sans tracking : on bypass le banner (only-strictly-necessary
+    // = pas de consent requis sous RGPD, le draft localStorage est fonctionnel).
+    var bypassPaths = ['/candidature'];
+    if (bypassPaths.indexOf(window.location.pathname) !== -1) {
+      return;
+    }
     var existing = readConsent();
     if (!existing) {
       // Defer slightly so the banner never blocks LCP / first paint.

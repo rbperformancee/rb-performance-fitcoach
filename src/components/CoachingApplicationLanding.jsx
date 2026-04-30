@@ -1,24 +1,73 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 
 const OnboardingFlow = lazy(() => import("./OnboardingFlow"));
 
 const GREEN = "#02d1ba";
-const GOLD = "#d4af37";
 const BG = "#050505";
 
+// Pouls 60bpm = 1s cycle (rythme cardiaque au repos d'un athlete entraine).
+// Subliminal — le visiteur ne voit pas l'animation consciemment, son cerveau
+// capte que tout est synchronise → "ce site est calibre, premium".
+// Designed pour respecter prefers-reduced-motion (a11y + Lighthouse).
 const KEYFRAMES = `
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
-@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
-@keyframes ambient { 0%, 100% { transform: translate(0, 0); opacity: 0.4; } 50% { transform: translate(20px, -10px); opacity: 0.6; } }
+@keyframes breath60 { 0%, 100% { opacity: 1; } 50% { opacity: 0.62; } }
+@keyframes breath60Scale { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.04); opacity: 0.7; } }
+@keyframes ambientDrift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(20px, -10px); } }
+@keyframes ctaGlow { 0%, 100% { box-shadow: 0 16px 40px rgba(2,209,186,0.22); } 50% { box-shadow: 0 16px 50px rgba(2,209,186,0.42); } }
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 `;
 
 export default function CoachingApplicationLanding() {
   const [showForm, setShowForm] = useState(false);
+  const [showTransfos, setShowTransfos] = useState(false);
+  const iphoneRef = useRef(null);
 
   useEffect(() => {
-    document.title = "Candidature Coaching Premium · RB Perform";
+    document.title = "Candidature Accompagnement Premium · RB Perform";
     if (showForm) window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [showForm]);
+
+  // Tilt 3D iPhone — suit le curseur (Apple Vision Pro style).
+  // Max 8 degrees, smoothed via requestAnimationFrame.
+  // Desactive si prefers-reduced-motion ou viewport mobile (touch).
+  useEffect(() => {
+    if (showForm || !iphoneRef.current) return;
+    const el = iphoneRef.current;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isTouch = window.matchMedia("(hover: none)").matches;
+    if (reduced || isTouch) return;
+
+    let raf = 0;
+    let targetX = 0, targetY = 0;
+    let curX = 0, curY = 0;
+    const onMove = (e) => {
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const dx = (e.clientX - cx) / (r.width / 2);  // -1 → 1
+      const dy = (e.clientY - cy) / (r.height / 2);
+      targetX = Math.max(-1, Math.min(1, dx)) * 8;  // 8° max
+      targetY = Math.max(-1, Math.min(1, dy)) * 8;
+    };
+    const animate = () => {
+      curX += (targetX - curX) * 0.12;
+      curY += (targetY - curY) * 0.12;
+      el.style.transform = `perspective(1000px) rotateY(${curX}deg) rotateX(${-curY}deg)`;
+      raf = requestAnimationFrame(animate);
+    };
+    const onLeave = () => { targetX = 0; targetY = 0; };
+    window.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    raf = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+    };
   }, [showForm]);
 
   if (showForm) {
@@ -33,126 +82,317 @@ export default function CoachingApplicationLanding() {
     <div style={{ minHeight: "100dvh", background: BG, color: "#fff", fontFamily: "-apple-system,Inter,sans-serif", overflow: "hidden", position: "relative" }}>
       <style>{KEYFRAMES}</style>
 
-      {/* Ambient gradients */}
-      <div style={{ position: "fixed", top: "-10%", left: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(212,175,55,0.08), transparent 60%)`, pointerEvents: "none", animation: "ambient 12s ease-in-out infinite" }} />
-      <div style={{ position: "fixed", bottom: "-10%", right: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.06), transparent 60%)`, pointerEvents: "none", animation: "ambient 14s ease-in-out infinite reverse" }} />
+      {/* Ambient gradients — drift lent (12s) + breath 60bpm overlay */}
+      <div style={{ position: "fixed", top: "-10%", left: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.08), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 12s ease-in-out infinite, breath60Scale 1s ease-in-out infinite" }} />
+      <div style={{ position: "fixed", bottom: "-10%", right: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.06), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 14s ease-in-out infinite reverse, breath60Scale 1s ease-in-out infinite 0.5s" }} />
 
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "60px 24px 100px", position: "relative", zIndex: 1 }}>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px 100px", position: "relative", zIndex: 1, textAlign: "center" }}>
 
         {/* Eyebrow with live availability dot */}
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 16px", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 100, marginBottom: 32, animation: "fadeUp 0.6s ease 0.1s both" }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: GOLD, animation: "pulseDot 1.6s ease-in-out infinite" }} />
-          <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: GOLD, fontWeight: 700 }}>Coaching Premium · 5 places ouvertes</div>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 16px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, marginBottom: 32, animation: "fadeUp 0.6s ease 0.1s both" }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: GREEN, animation: "breath60 1s ease-in-out infinite", boxShadow: `0 0 8px ${GREEN}80` }} />
+          <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: GREEN, fontWeight: 700 }}>Accompagnement Premium · 5 places ouvertes</div>
         </div>
 
         {/* Hero title */}
-        <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: "clamp(40px, 7vw, 72px)", fontWeight: 900, letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 24, animation: "fadeUp 0.7s ease 0.2s both" }}>
+        <h1 style={{ fontFamily: "'Inter',-apple-system,sans-serif", fontSize: "clamp(38px, 7vw, 60px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 24, animation: "fadeUp 0.7s ease 0.2s both" }}>
           La transformation<br/>
-          <span style={{ background: `linear-gradient(90deg, ${GREEN}, ${GOLD}, ${GREEN})`, backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 6s linear infinite" }}>
+          <span style={{ background: `linear-gradient(90deg, ${GREEN}, #ffffff, ${GREEN})`, backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 6s linear infinite" }}>
             qui change tout.
           </span>
         </h1>
 
         {/* Subhead */}
-        <p style={{ fontSize: 18, lineHeight: 1.6, color: "rgba(255,255,255,0.6)", marginBottom: 40, maxWidth: 580, animation: "fadeUp 0.7s ease 0.3s both" }}>
-          90 jours. 5 places. Un suivi 24/7 qui ne ressemble à rien d'autre. Si t'es serieux, postule. Sinon ferme cet onglet.
+        <p style={{ fontSize: 17, lineHeight: 1.65, color: "rgba(255,255,255,0.6)", marginBottom: 40, maxWidth: 520, marginLeft: "auto", marginRight: "auto", animation: "fadeUp 0.7s ease 0.3s both" }}>
+          90 jours. 5 places. Un suivi 24/7 qui ne ressemble à rien d'autre.
         </p>
 
-        {/* Photo placeholder */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32, padding: "18px 22px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, animation: "fadeUp 0.7s ease 0.4s both" }}>
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, ${GREEN}, #0891b2)`, display: "flex", alignItems: "center", justifyContent: "center", color: "#000", fontSize: 20, fontWeight: 900, letterSpacing: "-0.5px", flexShrink: 0 }}>RB</div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 2 }}>Rayan Bonte</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.3px" }}>Athlète · Coach · Fondateur RB Perform</div>
+        {/* Profile — vraie photo HD avec ring teal */}
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 16, marginBottom: 56, padding: "12px 22px 12px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, animation: "fadeUp 0.7s ease 0.4s both" }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: `2px solid ${GREEN}`, boxShadow: `0 0 16px rgba(2,209,186,0.35)`, position: "relative" }}>
+            <img
+              src="/rayan-portrait-240.webp"
+              srcSet="/rayan-portrait-240.webp 240w, /rayan-portrait-480.webp 480w"
+              sizes="56px"
+              alt="Rayan Bonte"
+              width={240}
+              height={240}
+              loading="eager"
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%", display: "block" }}
+            />
+          </div>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>Rayan Bonte</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.3px", marginTop: 2 }}>Athlète · CQP ALS · Fondateur RB Perform</div>
           </div>
         </div>
 
-        {/* Testimonials */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 48, animation: "fadeUp 0.7s ease 0.45s both" }}>
-          {[
-            {
-              name: "Léo",
-              meta: "21 ans · Première compétition",
-              quote: "3 mois avec Rayan : +8kg de muscle sec, première compé gagnée, et une discipline que je pensais ne jamais atteindre. Le mec ne lâche rien — moi non plus du coup.",
-              initial: "L",
-              accent: GREEN,
-            },
-            {
-              name: "Andy",
-              meta: "34 ans · Entrepreneur",
-              quote: "Je dirige ma boîte 60h/semaine. Rayan a calibré tout autour de mon emploi du temps réel. -12kg en 90 jours sans cramer mon énergie au boulot. Aucun coach n'avait su faire ça avant.",
-              initial: "A",
-              accent: GOLD,
-            },
-          ].map((tm) => (
-            <div key={tm.name} style={{ padding: "20px 22px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16 }}>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, marginBottom: 14, fontStyle: "italic" }}>
-                "{tm.quote}"
+        {/* Transformations clients — preuve réelle */}
+        <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.45s both" }}>
+          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 28 }}>Résultats · pas des promesses</div>
+
+          {!showTransfos && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+              {/* Stack de previews floutées — donne envie de cliquer (curiosité) */}
+              <div style={{ position: "relative", width: 200, height: 120, marginBottom: 4 }}>
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: "50%",
+                      width: 90,
+                      height: 120,
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      border: "2px solid rgba(255,255,255,0.08)",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+                      transform: `translateX(${(i - 1) * 56 - 45}px) rotate(${(i - 1) * 6}deg)`,
+                      zIndex: 3 - i,
+                    }}
+                  >
+                    <img
+                      src={`/transfo-${i + 1}-after-400.webp`}
+                      alt=""
+                      aria-hidden="true"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        filter: "blur(8px) brightness(0.6) saturate(0.8)",
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${tm.accent}18`, border: `1px solid ${tm.accent}40`, display: "flex", alignItems: "center", justifyContent: "center", color: tm.accent, fontSize: 14, fontWeight: 800, flexShrink: 0 }}>{tm.initial}</div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{tm.name}</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{tm.meta}</div>
-                </div>
-                <div style={{ marginLeft: "auto", display: "flex", gap: 2 }}>
-                  {[1,2,3,4,5].map(s => (<span key={s} style={{ color: tm.accent, fontSize: 12 }}>★</span>))}
-                </div>
+
+              <button
+                onClick={() => setShowTransfos(true)}
+                style={{
+                  position: "relative",
+                  background: `linear-gradient(135deg, rgba(2,209,186,0.12) 0%, rgba(2,209,186,0.04) 100%)`,
+                  border: `1px solid ${GREEN}`,
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  letterSpacing: "0.5px",
+                  padding: "16px 32px",
+                  borderRadius: 100,
+                  cursor: "pointer",
+                  transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
+                  boxShadow: `0 8px 24px rgba(2,209,186,0.18)`,
+                  animation: "ctaGlow 2s ease-in-out infinite",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 12px 32px rgba(2,209,186,0.35)`; }}
+                onMouseOut={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = `0 8px 24px rgba(2,209,186,0.18)`; }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: GREEN, animation: "breath60Scale 1s ease-in-out infinite", boxShadow: `0 0 12px ${GREEN}` }} />
+                Ils n'ont pas attendu
+              </button>
+
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
+                3 transformations · photos privées
               </div>
             </div>
-          ))}
+          )}
+
+          {showTransfos && (
+            <div style={{ animation: "fadeUp 0.5s ease both" }}>
+              {[
+                { id: 1, name: "Senan", duration: "3 mois d'accompagnement" },
+                { id: 2, name: "Mael",  duration: "3 mois d'accompagnement" },
+                { id: 3, name: "Léo",   duration: "12 mois d'accompagnement" },
+              ].map((client) => (
+                <div key={client.id} style={{ marginBottom: 28, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    {[
+                      { src: "before", label: "AVANT" },
+                      { src: "after",  label: "APRÈS" },
+                    ].map(({ src, label }) => (
+                      <div key={src} style={{ position: "relative", borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", aspectRatio: "3 / 4", boxShadow: "0 12px 32px rgba(0,0,0,0.5)" }}>
+                        <img
+                          src={`/transfo-${client.id}-${src}-400.webp`}
+                          srcSet={`/transfo-${client.id}-${src}-400.webp 400w, /transfo-${client.id}-${src}-800.webp 800w`}
+                          sizes="(max-width: 600px) 50vw, 240px"
+                          alt={`${client.name} - ${label}`}
+                          loading="lazy"
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                        <div style={{ position: "absolute", top: 12, left: 12, padding: "5px 10px", background: src === "after" ? `${GREEN}` : "rgba(0,0,0,0.7)", color: src === "after" ? "#000" : "#fff", fontSize: 9, fontWeight: 800, letterSpacing: "2px", borderRadius: 100 }}>
+                          {label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.3px" }}>
+                    <strong style={{ color: "#fff", fontWeight: 700 }}>{client.name}</strong> · {client.duration}
+                  </div>
+                </div>
+              ))}
+
+              <div style={{ display: "flex", gap: 20, justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: 4 }}>
+                <a
+                  href="https://instagram.com/rb_perform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: "inline-block", fontSize: 12, color: "rgba(2,209,186,0.8)", textDecoration: "none", letterSpacing: "0.3px", borderBottom: "1px solid rgba(2,209,186,0.3)", paddingBottom: 1 }}
+                >
+                  Plus de transformations sur Instagram →
+                </a>
+                <button
+                  onClick={() => setShowTransfos(false)}
+                  style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 12, letterSpacing: "0.3px", cursor: "pointer", padding: 0 }}
+                  onMouseOver={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+                  onMouseOut={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+                >
+                  Masquer
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Ce que tu reçois — bullets propres, sans prix */}
-        <div style={{ marginBottom: 48, animation: "fadeUp 0.7s ease 0.5s both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 20 }}>Ce que tu reçois</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Ce que tu reçois — bullets centrés */}
+        <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.5s both" }}>
+          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 28 }}>Ce que tu reçois</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
             {[
-              { t: "Programme sur-mesure réajusté chaque semaine", d: "Construit autour de ton corps, ton planning, ton objectif. Pas un template recyclé." },
-              { t: "WhatsApp direct 7j/7 avec moi", d: "Question, photo, vidéo. Réponse dans l'heure en semaine. Aucun assistant." },
+              { t: "Programme adapté à ton profil", d: "Construit autour de ton corps, ton planning, ton objectif. Pas un template recyclé." },
+              { t: "Messagerie privée 7j/7 dans l'app", d: "Tu m'écris directement depuis l'app. Réponse sous 2 heures en semaine. Aucun intermédiaire." },
               { t: "Appel stratégique hebdomadaire en visio", d: "30 min chaque semaine. On débloque, on ajuste, on mesure." },
-              { t: "Audio review personnalisé de tes séances", d: "Tu m'envoies tes vidéos d'exécution, je te renvoie un audio détaillé sous 24h." },
               { t: "Suivi nutrition + récupération intégré", d: "Macros calibrés, sommeil tracké, supplémentation. Tout dans la même app." },
-              { t: "Accès complet à RB Perform Pro", d: "L'app premium + dashboard + analyses Sentinel — comme mes coachs Founders." },
+              { t: "★ Accès à l'app premium RB PERFORM", d: "Le seul endroit où ce produit existe. Disponible uniquement pour mes clients privés.", featured: true },
             ].map((x, i) => (
-              <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, marginTop: 9, flexShrink: 0, boxShadow: `0 0 12px ${GOLD}40` }} />
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 3 }}>{x.t}</div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{x.d}</div>
-                </div>
+              <div
+                key={i}
+                style={{
+                  maxWidth: 480,
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  ...(x.featured ? {
+                    padding: "20px 24px",
+                    background: "linear-gradient(135deg, rgba(2,209,186,0.08), rgba(2,209,186,0.02))",
+                    border: "1px solid rgba(2,209,186,0.3)",
+                    borderRadius: 16,
+                    boxShadow: "0 0 30px rgba(2,209,186,0.08)",
+                  } : {}),
+                }}
+              >
+                <div style={{ fontSize: x.featured ? 17 : 16, fontWeight: x.featured ? 800 : 700, color: x.featured ? GREEN : "#fff", marginBottom: x.d ? 6 : 0, letterSpacing: x.featured ? "-0.2px" : 0 }}>{x.t}</div>
+                {x.d && <div style={{ fontSize: 13, color: x.featured ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{x.d}</div>}
               </div>
             ))}
           </div>
+        </div>
+
+        {/* App preview — meme image que la landing, lien vers /demo-client */}
+        <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.55s both", display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
+          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700 }}>L'app que tu utiliseras</div>
+          <img
+            ref={iphoneRef}
+            src="/iphone_client-720.webp"
+            srcSet="/iphone_client-480.webp 480w, /iphone_client-720.webp 720w, /iphone_client-1080.webp 1080w"
+            sizes="(max-width: 600px) 320px, 400px"
+            alt="App client RB Perform"
+            loading="lazy"
+            width={2752}
+            height={1536}
+            style={{
+              width: "100%",
+              maxWidth: 380,
+              height: "auto",
+              display: "block",
+              filter: "drop-shadow(0 24px 64px rgba(0,0,0,0.7))",
+              transition: "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
+              transformStyle: "preserve-3d",
+              willChange: "transform",
+            }}
+          />
+          <a
+            href="/demo-client"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "12px 22px",
+              background: "rgba(2,209,186,0.08)",
+              border: "1px solid rgba(2,209,186,0.25)",
+              borderRadius: 100,
+              color: GREEN,
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.5px",
+              textTransform: "uppercase",
+              textDecoration: "none",
+              transition: "all 0.2s",
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.14)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.45)"; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.08)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.25)"; }}
+          >
+            Explorer la démo →
+          </a>
         </div>
 
         {/* Pricing block — Elon clean, deux phrases qui suffisent */}
-        <div style={{ padding: 32, background: `linear-gradient(135deg, rgba(212,175,55,0.06), rgba(2,209,186,0.04))`, border: "1px solid rgba(212,175,55,0.2)", borderRadius: 20, marginBottom: 48, animation: "fadeUp 0.7s ease 0.6s both" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 64, fontWeight: 900, color: "#fff", letterSpacing: "-2px", lineHeight: 1 }}>300€</div>
-            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>/ mois · 3 mois min.</div>
+        <div style={{ padding: "32px 28px", background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 20, marginBottom: 56, animation: "fadeUp 0.7s ease 0.6s both" }}>
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(64px, 14vw, 96px)", color: "#fff", lineHeight: 1, letterSpacing: "-2px", textShadow: "0 0 60px rgba(2,209,186,0.15)" }}>300€</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", fontWeight: 500, marginTop: 4 }}>/ mois · 3 mois min.</div>
           </div>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, margin: 0 }}>
-            Le prix d'une salle de sport haut de gamme, sans le coach. Sauf qu'ici tu as le coach,
-            la garantie résultat à J90, et zéro carte bancaire avant que je valide ton dossier.
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, margin: 0, maxWidth: 460, marginLeft: "auto", marginRight: "auto" }}>
+            Le prix d'une salle de sport haut de gamme. Sauf qu'ici tu as l'accompagnement direct, et zéro carte bancaire avant que je valide ton dossier.
           </p>
         </div>
 
-        {/* Filter / Pour qui */}
-        <div style={{ marginBottom: 48, animation: "fadeUp 0.7s ease 0.7s both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 16 }}>Ce coaching n'est pas pour toi si…</div>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* FAQ — discrete, juste 3 objections silencieuses */}
+        <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.65s both", textAlign: "left", maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+          <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", fontWeight: 600, marginBottom: 20, textAlign: "center" }}>Avant de postuler</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
-              "Tu cherches une solution magique sans rien changer à ton hygiène",
-              "Tu veux \"essayer\" sans t'engager 3 mois",
-              "Tu négocies les prix",
-              "Tu ne réponds pas dans les 24h aux messages WhatsApp",
-            ].map((x, i) => (
-              <li key={i} style={{ display: "flex", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>
-                <span style={{ color: "#ef4444", flexShrink: 0 }}>✕</span>{x}
-              </li>
+              {
+                q: "Pourquoi 3 mois minimum ?",
+                a: "La transformation prend 60 à 90 jours minimum. Vendre 1 mois serait te mentir. 3 mois = le seuil où ça se voit vraiment.",
+              },
+              {
+                q: "Et si je dois mettre en pause ?",
+                a: "Voyage, blessure, urgence pro — la vie passe. On adapte, on ralentit. Mais on n'arrête pas.",
+              },
+              {
+                q: "Je débute / je suis avancé — c'est pour moi ?",
+                a: "Le programme est calibré sur ton niveau, pas sur un standard. La méthode change, l'exigence reste.",
+              },
+            ].map((item, i) => (
+              <div key={i} style={{ paddingTop: i === 0 ? 0 : 14, borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.04)" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)", marginBottom: 4, letterSpacing: "-0.1px" }}>
+                  {item.q}
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.55 }}>{item.a}</div>
+              </div>
             ))}
-          </ul>
+          </div>
+        </div>
+
+        {/* Process — 3 etapes pour cadrer ce qui suit le clic CTA */}
+        <div style={{ marginBottom: 22, animation: "fadeUp 0.7s ease 0.68s both" }}>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "stretch", gap: 8, maxWidth: 480, marginLeft: "auto", marginRight: "auto", flexWrap: "wrap" }}>
+            {[
+              { n: "01", t: "Questionnaire", d: "8 min" },
+              { n: "02", t: "Réserve ton appel", d: "30 min, visio" },
+              { n: "03", t: "Je valide ton dossier", d: "ou pas" },
+            ].map((step, i) => (
+              <div key={i} style={{ flex: "1 1 130px", textAlign: "left", padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12 }}>
+                <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", fontWeight: 800, letterSpacing: "1.5px", marginBottom: 4 }}>{step.n}</div>
+                <div style={{ fontSize: 12, color: "#fff", fontWeight: 700, lineHeight: 1.3 }}>{step.t}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{step.d}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* CTA */}
@@ -160,29 +400,29 @@ export default function CoachingApplicationLanding() {
           onClick={() => setShowForm(true)}
           style={{
             width: "100%",
-            padding: "22px 32px",
-            background: `linear-gradient(135deg, ${GOLD}, #b8941e)`,
+            maxWidth: 480,
+            padding: "20px 32px",
+            background: `linear-gradient(135deg, ${GREEN}, #0891b2)`,
             border: "none",
             borderRadius: 18,
             color: "#000",
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: 900,
             letterSpacing: "1.5px",
             textTransform: "uppercase",
             cursor: "pointer",
             fontFamily: "-apple-system,Inter,sans-serif",
-            boxShadow: `0 16px 40px rgba(212,175,55,0.25)`,
-            transition: "transform 0.2s ease, box-shadow 0.2s ease",
-            animation: "fadeUp 0.7s ease 0.8s both",
+            transition: "transform 0.2s ease",
+            animation: "fadeUp 0.7s ease 0.7s both, ctaGlow 1s ease-in-out infinite 0.7s",
           }}
-          onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 20px 50px rgba(212,175,55,0.35)`; }}
-          onMouseOut={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = `0 16px 40px rgba(212,175,55,0.25)`; }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = ""; }}
         >
           Réserve ta transformation →
         </button>
 
-        <div style={{ textAlign: "center", marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.9s both" }}>
-          Questionnaire 8-10 min · Réponse sous 48h · Aucune carte bancaire requise
+        <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.8s both" }}>
+          Aucun paiement · Tu réserves ton appel à la fin du questionnaire
         </div>
       </div>
     </div>

@@ -11,6 +11,25 @@ const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
 const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
 const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
+
+// Texte cyclique pour le splash demo client (3 etapes, 1.5s chacune).
+function DemoLoadingText() {
+  const [idx, setIdx] = React.useState(0);
+  const messages = [
+    "Création de la session sécurisée",
+    "Préparation de ton espace",
+    "Chargement final",
+  ];
+  React.useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % messages.length), 1500);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600, transition: "opacity 0.3s" }}>
+      {messages[idx]}<span style={{ color: "#02d1ba" }}>…</span>
+    </div>
+  );
+}
 const TrainingPage = lazy(() => import("./components/TrainingPage"));
 const ProfilePage = lazy(() => import("./components/ProfilePage"));
 const SessionTimer = lazy(() => import("./components/SessionTimer"));
@@ -866,24 +885,50 @@ function AppInner() {
     );
   }
 
-  // ── Demo client en cours de connexion → loading avec splash ──
+  // ── Demo client en cours de connexion → loading premium avec progress ──
   if (!user && isClientDemo) {
     return (
-      <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.12em", color: "rgba(255,255,255,0.15)" }}>RB<span style={{ color: "rgba(2,209,186,0.3)" }}>PERFORM</span></div>
-        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Chargement démo client...</div>
+      <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, fontFamily: "'Inter',-apple-system,sans-serif" }}>
+        <style>{`
+          @keyframes rbDemoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+          @keyframes rbDemoBar {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .rb-demo-bar-anim { animation: none !important; }
+          }
+        `}</style>
+        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 900, letterSpacing: "-0.5px", color: "#fff", animation: "rbDemoPulse 1s ease-in-out infinite" }}>
+          RB<span style={{ color: "#02d1ba" }}>.</span>Perform
+        </div>
+        <div style={{ width: 200, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1, overflow: "hidden", position: "relative" }}>
+          <div className="rb-demo-bar-anim" style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, #02d1ba, transparent)", animation: "rbDemoBar 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite" }} />
+        </div>
+        <DemoLoadingText />
       </div>
     );
   }
 
-  // ── Demo coach en cours de connexion → loading avec splash ──
+  // ── Demo coach en cours de connexion → loading premium avec progress ──
   // Sans ce guard, le bloc `if (!user)` plus bas redirige vers /
   // (la landing) AVANT que signInWithPassword ait le temps de finir.
   if (!user && isDemo) {
     return (
-      <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.12em", color: "rgba(255,255,255,0.15)" }}>RB<span style={{ color: "rgba(2,209,186,0.3)" }}>PERFORM</span></div>
-        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Chargement démo coach...</div>
+      <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, fontFamily: "'Inter',-apple-system,sans-serif" }}>
+        <style>{`
+          @keyframes rbDemoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+          @keyframes rbDemoBar { 0% { transform: translateX(-100%); } 50% { transform: translateX(0%); } 100% { transform: translateX(100%); } }
+          @media (prefers-reduced-motion: reduce) { .rb-demo-bar-anim { animation: none !important; } }
+        `}</style>
+        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 900, letterSpacing: "-0.5px", color: "#fff", animation: "rbDemoPulse 1s ease-in-out infinite" }}>
+          RB<span style={{ color: "#02d1ba" }}>.</span>Perform
+        </div>
+        <div style={{ width: 200, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1, overflow: "hidden", position: "relative" }}>
+          <div className="rb-demo-bar-anim" style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, #02d1ba, transparent)", animation: "rbDemoBar 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite" }} />
+        </div>
+        <DemoLoadingText />
       </div>
     );
   }
