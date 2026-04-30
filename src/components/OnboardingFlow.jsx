@@ -229,11 +229,29 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
         // UTM tracking depuis sessionStorage (capture sur la landing)
         let utm = {};
         try { utm = JSON.parse(sessionStorage.getItem("rb_utm") || "{}"); } catch {}
+
+        // Nettoie les valeurs numeriques : virgule -> point, strip unites (kg, m, etc),
+        // garde uniquement digits/dot/dash. Si vide apres nettoyage -> null.
+        const cleanNum = (v) => {
+          if (v === null || v === undefined || v === "") return null;
+          const s = String(v).trim().replace(",", ".").replace(/[^\d.\-]/g, "");
+          return s === "" ? null : s;
+        };
+        const cleaned = {
+          ...form,
+          age: cleanNum(form.age),
+          poids: cleanNum(form.poids),
+          taille: cleanNum(form.taille),
+          one_rm_bench: cleanNum(form.one_rm_bench),
+          one_rm_squat: cleanNum(form.one_rm_squat),
+          one_rm_traction: cleanNum(form.one_rm_traction),
+        };
+
         const res = await fetch("/api/coaching-application", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ...form,
+            ...cleaned,
             source: "instagram",
             utm_source: utm.utm_source || null,
             utm_medium: utm.utm_medium || null,
@@ -245,8 +263,13 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
         const json = await res.json();
         setSaving(false);
         if (!res.ok || !json.ok) {
-          console.error("[application] submit failed:", json.error);
-          return { ok: false, reason: json.error || "submit_failed" };
+          // Surface le champ qui a echoue (zod details) pour aider l'utilisateur
+          const fieldErrors = json.details ? Object.keys(json.details).join(", ") : null;
+          const reason = fieldErrors
+            ? `${json.error || "Donnees invalides"} (champs : ${fieldErrors})`
+            : (json.error || "submit_failed");
+          console.error("[application] submit failed:", reason, json.details || "");
+          return { ok: false, reason };
         }
         try { localStorage.removeItem(draftKey); } catch {}
         return { ok: true };
@@ -303,7 +326,11 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       }
       const result = await saveForm();
       if (!result?.ok) {
-        alert("Une erreur est survenue lors de l'envoi. Verifie ta connexion et reessaye.");
+        // result.reason inclut le champ fautif si zod a renvoyé des details
+        const detail = result?.reason && result.reason !== "submit_failed"
+          ? `\n\nDétail : ${result.reason}`
+          : "";
+        alert(`Impossible d'envoyer ta candidature.${detail}\n\nVerifie tes valeurs (ex : poids 75 et non "75 kg") et reessaye.`);
         return;
       }
       setStep(7);
