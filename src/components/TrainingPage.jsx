@@ -24,10 +24,19 @@ function StatusDot({ status }) {
   return <div style={{ width: 8, height: 8, borderRadius: "50%", background: colors[status] || colors.neutral, flexShrink: 0 }} />;
 }
 
-export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta }) {
+export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta, onStartSession }) {
   const t = useT();
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
+  // Helper : verifier si une seance (week, sessionIdx) est validee via localStorage
+  const isSessionValidee = useCallback((wIdx, sIdx) => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`rb_c_${wIdx}_${sIdx}`) || "{}");
+      return !!s.validee;
+    } catch (e) { return false; }
+  }, []);
+  // Ref pour la rangee horizontale des seances (auto-scroll vers la seance active)
+  const sessionsRowRef = useRef(null);
 
   // Recharger depuis Supabase + localStorage quand on change de seance
   useEffect(() => {
@@ -105,9 +114,21 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     return () => { clearInterval(intervalRef.current); document.removeEventListener("visibilitychange", onVisible); };
   }, [chronoOn, CKEY]);
 
+  // Auto-scroll la rangee horizontale des seances pour centrer la seance active
+  useEffect(() => {
+    const row = sessionsRowRef.current;
+    if (!row) return;
+    const node = row.querySelector(`[data-session-idx="${activeSession}"]`);
+    if (node && typeof node.scrollIntoView === "function") {
+      try { node.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch(e) {}
+    }
+  }, [activeSession, activeWeek]);
+
   const startChrono = () => {
     try { localStorage.setItem(CKEY, JSON.stringify({ start: Date.now() })); } catch(e) {}
     setChrono(0); setChronoDone(false); setChronoOn(true);
+    // Notifier le parent que la seance demarre (mount SeanceVivante / session_live)
+    if (typeof onStartSession === "function") onStartSession(true);
   };
 
   const stopChrono = async (total) => {
@@ -137,7 +158,13 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     [ovApi, rawCurrentSession, activeWeek, activeSession]
   );
   const totalSessions = programme?.weeks?.reduce((a, w) => a + (w.sessions?.length || 0), 0) || 0;
-  const doneSessions = programme?.weeks?.slice(0, activeWeek).reduce((a, w) => a + (w.sessions?.length || 0), 0) + activeSession || 0;
+  // Le compteur "done" provient EXCLUSIVEMENT des seances explicitement validees.
+  const doneSessions = (programme?.weeks || []).reduce((a, w, wIdx) => {
+    return a + (w.sessions || []).reduce((b, _s, sIdx) => {
+      if (wIdx === activeWeek && sIdx === activeSession) return b + (sessionValidee ? 1 : 0);
+      return b + (isSessionValidee(wIdx, sIdx) ? 1 : 0);
+    }, 0);
+  }, 0);
   const globalPct = totalSessions > 0 ? Math.min(Math.round((doneSessions / totalSessions) * 100), 100) : 0;
   const totalEx = currentSession?.exercises?.length || 0;
   const doneEx = (currentSession?.exercises || []).filter((_, ei) => (getHistory(activeWeek, activeSession, ei) || []).length > 0).length;
@@ -228,11 +255,9 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
             <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>{t("train.this_week")}</div>
             <div style={{ fontSize: 11, color: G, fontWeight: 700 }}>
               {(currentWeek?.sessions || []).filter((_, i) => {
+                // i === activeSession : utiliser sessionValidee (state React reactif)
                 if (i === activeSession) return sessionValidee;
-                try {
-                  const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${i}`) || "{}");
-                  return !!s.validee;
-                } catch(e) { return false; }
+                return isSessionValidee(activeWeek, i);
               }).length}/{currentWeek?.sessions?.length || 0} {t("train.sessions_count")}
             </div>
           </div>
@@ -290,13 +315,16 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, padding: "0 20px" }}>{t("train.weeks_header")}</div>
         <div style={{ display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none", padding: "0 20px 4px" }}>
           {programme.weeks.map((w, i) => {
-            const isDone = i < activeWeek;
+            // "Done" : seulement si toutes les seances de la semaine ont ete validees explicitement.
+            const totalSes = w.sessions?.length || 0;
+            const doneSes = (w.sessions || []).filter((_, sIdx) => isSessionValidee(i, sIdx)).length;
+            const isDone = totalSes > 0 && doneSes === totalSes;
             const isActive = i === activeWeek;
             return (
               <div key={i} onClick={() => setActiveWeek(i)} style={{ flexShrink: 0, width: 76, padding: "14px 10px", borderRadius: 18, textAlign: "center", cursor: "pointer", background: isActive ? G_DIM : "rgba(255,255,255,0.02)", border: isActive ? `1.5px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative" }}>
                 {isDone && <div style={{ position: "absolute", top: 7, right: 7, width: 7, height: 7, borderRadius: "50%", background: G }} />}
-                <div style={{ fontSize: 22, fontWeight: isActive ? 800 : 200, color: isActive ? G : isDone ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)", letterSpacing: "-1px" }}>S{i + 1}</div>
-                <div style={{ fontSize: 7, color: isActive ? "rgba(2,209,186,0.6)" : "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>{isDone ? t("train.week_done") : isActive ? t("train.week_active") : t("train.week_upcoming")}</div>
+                <div style={{ fontSize: 22, fontWeight: isActive ? 800 : 200, color: isActive ? G : isDone ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.5)", letterSpacing: "-1px" }}>S{i + 1}</div>
+                <div style={{ fontSize: 7, color: isActive ? "rgba(2,209,186,0.6)" : "rgba(255,255,255,0.4)", marginTop: 4, letterSpacing: "1px" }}>{isDone ? t("train.week_done") : isActive ? t("train.week_active") : t("train.week_upcoming")}</div>
               </div>
             );
           })}
@@ -306,22 +334,24 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {/* SEANCES */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, padding: "0 20px" }}>{t("train.sessions_header")}</div>
-        <div style={{ display: "flex", gap: 10, overflowX: "auto", scrollbarWidth: "none", padding: "0 20px 4px" }}>
+        <div ref={sessionsRowRef} style={{ display: "flex", gap: 10, overflowX: "auto", scrollbarWidth: "none", padding: "0 20px 4px" }}>
           {currentWeek.sessions.map((s, i) => {
-            const isDone = i < activeSession;
             const isActive = i === activeSession;
+            // Une seance n est marquee "DONE" QUE si validee explicitement (localStorage / Supabase),
+            // jamais juste parce qu on la depasse en navigation.
+            const isDone = isActive ? sessionValidee : isSessionValidee(activeWeek, i);
             const sexs = s.exercises?.length || 0;
             const doneS = (s.exercises || []).filter((_, ei) => (getHistory(activeWeek, i, ei) || []).length > 0).length;
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
             return (
-              <div key={i} onClick={() => setActiveSession(i)} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
-                <div style={{ fontSize: 8, color: (isDone || (isActive && sessionValidee)) ? G : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>
-                  {isDone || (isActive && sessionValidee) ? t("train.session_done") : isActive ? t("train.session_today") : t("train.session_upcoming")}
+              <div key={i} data-session-idx={i} onClick={() => setActiveSession(i)} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
+                <div style={{ fontSize: 8, color: isDone ? G : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>
+                  {isDone ? t("train.session_done") : isActive ? t("train.session_today") : t("train.session_upcoming")}
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: isDone || (isActive && sessionValidee) ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.3)", marginBottom: 3 }}>{s.name || `${t("train.session_default")} ${i + 1}`}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: isDone ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.45)", marginBottom: 3 }}>{s.name || `${t("train.session_default")} ${i + 1}`}</div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 8 }}>{sexs} {t("train.exercises_count")}</div>
                 <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
-                  <div style={{ height: "100%", width: (isActive && sessionValidee) ? "100%" : pct + "%", background: G, borderRadius: 1, transition: "width 0.8s ease" }} />
+                  <div style={{ height: "100%", width: isDone ? "100%" : pct + "%", background: G, borderRadius: 1, transition: "width 0.8s ease" }} />
                 </div>
               </div>
             );
@@ -381,31 +411,38 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       {/* EXERCICES */}
       <div style={{ padding: "0 20px" }}>
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>{t("train.exercises_header")}</div>
-        {(currentSession.exercises || []).map((ex, ei) => {
-          const history = getHistory(activeWeek, activeSession, ei) || [];
-          const status = getProgressStatus(history);
-          const isDone = history.length > 0;
-          const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
-          const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
-          return (
-            <div key={ei} style={{ marginBottom: 10, opacity: isDone ? 1 : (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4 }}>
-              <ExerciseCard
-                ex={ex}
-                weekIdx={activeWeek}
-                sessionIdx={activeSession}
-                exIdx={ei}
-                globalIndex={ei}
-                getHistory={getHistory}
-                getLatest={getLatest}
-                saveLog={saveLog}
-                getDelta={getDelta}
-                nextExName={(currentSession.exercises || [])[ei + 1]?.name}
-                ghostData={ghostData}
-                bandColor={bandColor}
-              />
-            </div>
-          );
-        })}
+        {(() => {
+          const exs = currentSession.exercises || [];
+          // Le premier exercice "non-fait" est le seul a etre marque ACTIF.
+          const firstUndoneIdx = exs.findIndex((_, ei) => (getHistory(activeWeek, activeSession, ei) || []).length === 0);
+          return exs.map((ex, ei) => {
+            const history = getHistory(activeWeek, activeSession, ei) || [];
+            const status = getProgressStatus(history);
+            const isDone = history.length > 0;
+            const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
+            const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
+            const isExActive = firstUndoneIdx !== -1 && firstUndoneIdx === ei;
+            return (
+              <div key={ei} style={{ marginBottom: 10, opacity: isDone ? 1 : (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4 }}>
+                <ExerciseCard
+                  ex={ex}
+                  weekIdx={activeWeek}
+                  sessionIdx={activeSession}
+                  exIdx={ei}
+                  globalIndex={ei}
+                  getHistory={getHistory}
+                  getLatest={getLatest}
+                  saveLog={saveLog}
+                  getDelta={getDelta}
+                  nextExName={(currentSession.exercises || [])[ei + 1]?.name}
+                  ghostData={ghostData}
+                  bandColor={bandColor}
+                  isActive={isExActive}
+                />
+              </div>
+            );
+          });
+        })()}
       </div>
 
       {/* FINISHER */}
@@ -590,6 +627,8 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                 <button onClick={() => {
                     setShowRessenti(false);
                     setSessionValidee(true);
+                    // Fermer SeanceVivante (session_live -> active=false via cleanup)
+                    if (typeof onStartSession === "function") onStartSession(false);
                     // Sauvegarder dans localStorage
                     try {
                       const ckey = `rb_c_${activeWeek}_${activeSession}`;

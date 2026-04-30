@@ -680,6 +680,10 @@ function AppInner() {
   const [localProgramme,  setLocalProgramme]  = useState(null);
   const [activeWeek,      setActiveWeek]      = useState(0);
   const [activeSession,   setActiveSession]   = useState(0);
+  // sessionStarted : true uniquement quand l utilisateur a clique "Demarrer"
+  // sur la page Training. Conditionne le mount de SeanceVivante (overlay coach
+  // + flag session_live cote Supabase).
+  const [sessionStarted,  setSessionStarted]  = useState(false);
   const [isDragging,      setIsDragging]      = useState(false);
   const [page, setPage] = useState("training");
   const [prevPage, setPrevPage] = useState(null);
@@ -725,6 +729,12 @@ function AppInner() {
       }
     });
   }, [client?.id]);
+
+  // Reset le flag session-started quand on change de seance ou de semaine :
+  // chaque seance est un demarrage explicite via le bouton "Demarrer".
+  React.useEffect(() => {
+    setSessionStarted(false);
+  }, [activeWeek, activeSession]);
 
   React.useEffect(() => {
     if (showHome) { setNavVisible(true); return; }
@@ -1413,7 +1423,9 @@ function AppInner() {
       )}
 
       {/* ── App principale ── */}
-      {client && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
+      {/* SeanceVivante = overlay coach (session_live + messages flash).
+          Ne mount QUE quand le client a explicitement clique "Demarrer". */}
+      {client && sessionStarted && <SeanceVivante clientId={client.id} sessionName={activeSession !== null ? programme?.weeks?.[activeWeek]?.sessions?.[activeSession]?.name : null} />}
       {/* FaqAssistant deplace dans ProfilePage */}
       {programme && !authError && (
         <div className={isClientDemo ? "demo-client-frame" : ""} style={isClientDemo
@@ -1435,6 +1447,7 @@ function AppInner() {
                 getLatest={getLatest}
                 saveLog={saveLog}
                 getDelta={getDelta}
+                onStartSession={setSessionStarted}
               />
           ) : page === "move" ? (
               <MovePage key={page} client={client} appData={appData} />

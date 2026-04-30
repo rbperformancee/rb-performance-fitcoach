@@ -7,6 +7,18 @@ import { useT, getLocale } from "../lib/i18n";
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
 
+// Style global injecte une seule fois : placeholder REPS tres dim + italic
+// pour eviter qu il ressemble a une valeur tapee (ex. "8-10").
+if (typeof document !== "undefined" && !document.getElementById("rb-reps-input-style")) {
+  const _st = document.createElement("style");
+  _st.id = "rb-reps-input-style";
+  _st.textContent = `
+    .rb-reps-input::placeholder { color: rgba(255,255,255,0.15) !important; font-style: italic; font-weight: 200; }
+    .rb-reps-input::-webkit-input-placeholder { color: rgba(255,255,255,0.15) !important; font-style: italic; font-weight: 200; }
+  `;
+  document.head.appendChild(_st);
+}
+
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
 const fillTpl = (s, vars) => {
@@ -102,7 +114,9 @@ function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive
   const [w, setW] = useState(defaultW || "");
   const [r, setR] = useState(defaultR || "");
   const validate = () => {
-    if (!w || done) return;
+    // Bloque la validation si la serie n est pas done OU si ce n est PAS la serie active.
+    // Garantit l ordre sequentiel : on ne peut pas "sauter" une serie pour valider l exo.
+    if (!w || done || !isActive) return;
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
     onDone(w, r, index);
   };
@@ -132,6 +146,7 @@ function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive
         }}
       />
       <input type="text" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder || "—"}
+        className="rb-reps-input"
         onKeyDown={e => e.key === "Enter" && validate()}
         style={{
           background: done ? "rgba(2,209,186,0.06)" : isActive ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
@@ -156,7 +171,7 @@ function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive
   );
 }
 
-export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData, bandColor }) {
+export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData, bandColor, isActive }) {
   const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
@@ -217,7 +232,10 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   };
 
   // DESIGN : exercice a venir (pas encore actif, pas complete)
-  const isNextActive = doneCount === 0 && !allDone;
+  // L exercice est "ouvert/actif" SI :
+  //   - le parent l a marque comme actif (premier exercice non-complete de la liste), OU
+  //   - l utilisateur a deja commence a logger des series dessus.
+  const isNextActive = (isActive === true) || (doneCount > 0 && !allDone);
   // Si pas fait et pas le prochain actif -> bande coloree fermee
   if (!allDone && !isNextActive) {
     const bc = bandColor || "rgba(255,255,255,0.15)";
