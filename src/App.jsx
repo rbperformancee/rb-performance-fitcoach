@@ -924,6 +924,13 @@ function AppInner() {
 
   // OnboardingFlow desactive pour le lancement — le client arrive directement sur l'app
   // TODO: reactiver quand le questionnaire sera integre dans le flow coach
+  // QA: ajouter ?test_onboarding=true sur n'importe quelle URL pour forcer
+  // l'apparition de l'OnboardingFlow (test localStorage persistence + saveForm).
+  const testOnboarding = typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("test_onboarding") === "true";
+  if (testOnboarding && user && !isCoach) {
+    return <Suspense fallback={null}><OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} /></Suspense>;
+  }
   // if (!isClientDemo && user && !isCoach && !authLoading && client?.onboarding_done !== true) {
   //   return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
   // }
