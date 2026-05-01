@@ -1051,6 +1051,7 @@ function AppInner() {
     const _q = _quotes[new Date().getDay() % _quotes.length];
     const _tw = programme?.weeks?.length || 0;
     const _ts = programme?.weeks?.reduce((a,w) => a+(w.sessions?.length||0), 0) || 0;
+    const _te = programme?.weeks?.reduce((a,w) => a + (w.sessions?.reduce((b,s) => b + (s.exercises?.length||0), 0)||0), 0) || 0;
     const _now = new Date();
     const _time = String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
     const _days = ['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
@@ -1142,7 +1143,7 @@ function AppInner() {
           {[
             {label:'Séances',value:_ts,unit:'total',color:'#02d1ba'},
             {label:'Semaines',value:_tw,unit:'programme',color:'rgba(255,255,255,0.5)'},
-            {label:'Exercices',value:0,unit:'validés',color:'rgba(255,255,255,0.5)'},
+            {label:'Exercices',value:_te,unit:'total',color:'#02d1ba'},
           ].map((s,i)=>(
             <div key={i} style={{borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:14}}>
               <div style={{fontSize:32,fontWeight:200,color:s.color,letterSpacing:'-1.5px',lineHeight:1}}>{s.value}</div>

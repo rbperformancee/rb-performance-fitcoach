@@ -490,7 +490,7 @@
   function init() {
     // Pages premium sans tracking : on bypass le banner (only-strictly-necessary
     // = pas de consent requis sous RGPD, le draft localStorage est fonctionnel).
-    var bypassPaths = ['/candidature'];
+    var bypassPaths = ['/candidature', '/demo', '/demo-client'];
     if (bypassPaths.indexOf(window.location.pathname) !== -1) {
       return;
     }
