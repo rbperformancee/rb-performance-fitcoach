@@ -431,7 +431,25 @@ function ExercisePicker({ value, onChange, onPickFull }) {
   );
 }
 
-function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate }) {
+function SortableExercise({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: ex.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <ExerciseRow
+        ex={ex} idx={idx} total={total}
+        onUpdate={onUpdate} onRemove={onRemove} onMove={onMove} onDuplicate={onDuplicate}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
+function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps }) {
   const update = (k, v) => onUpdate({ ...ex, [k]: v });
   const iconBtn = { width: 24, height: 24, borderRadius: 6, border: "1px solid " + BORDER, background: "transparent", color: "rgba(255,255,255,0.45)", cursor: "pointer", fontSize: 11, flexShrink: 0, fontFamily: "inherit" };
 
@@ -441,6 +459,12 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate }
       borderRadius: 12, padding: 12, marginBottom: 10,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        {dragHandleProps ? (
+          <button type="button" {...dragHandleProps}
+            style={{ width: 16, height: 24, cursor: "grab", color: "rgba(255,255,255,0.3)", background: "transparent", border: "none", padding: 0, fontSize: 12, flexShrink: 0 }}
+            title="Glisser"
+          >⋮⋮</button>
+        ) : null}
         <div style={{
           width: 24, height: 24, borderRadius: 6, background: G_DIM,
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -557,14 +581,28 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
       </div>
 
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 10 }}>Exercices</div>
-      {(session.exercises || []).map((ex, i) => (
-        <ExerciseRow key={ex.id} ex={ex} idx={i} total={session.exercises.length}
-          onUpdate={(e) => updateExercise(i, e)}
-          onRemove={() => removeExercise(i)}
-          onMove={(dir) => moveExercise(i, dir)}
-          onDuplicate={() => duplicateExercise(i)}
-        />
-      ))}
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={(event) => {
+          const { active, over } = event;
+          if (!over || active.id === over.id) return;
+          const oldIdx = session.exercises.findIndex((e) => e.id === active.id);
+          const newIdx = session.exercises.findIndex((e) => e.id === over.id);
+          if (oldIdx < 0 || newIdx < 0) return;
+          onUpdate({ ...session, exercises: arrayMove(session.exercises, oldIdx, newIdx) });
+        }}
+      >
+        <SortableContext items={(session.exercises || []).map((e) => e.id)} strategy={verticalListSortingStrategy}>
+          {(session.exercises || []).map((ex, i) => (
+            <SortableExercise key={ex.id} ex={ex} idx={i} total={session.exercises.length}
+              onUpdate={(e) => updateExercise(i, e)}
+              onRemove={() => removeExercise(i)}
+              onMove={(dir) => moveExercise(i, dir)}
+              onDuplicate={() => duplicateExercise(i)}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
       <button
         type="button"
         onClick={addExercise}
