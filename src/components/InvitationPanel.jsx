@@ -73,51 +73,9 @@ export default function InvitationPanel({ coach }) {
         {t("ip.section_title")}
       </div>
 
-      {/* ===== CODE 6 CHIFFRES ===== */}
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8, fontWeight: 600 }}>
-          {t("ip.coach_code_label")}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div
-            style={{
-              fontFamily: "'JetBrains Mono',monospace",
-              fontSize: 38,
-              fontWeight: 800,
-              letterSpacing: "8px",
-              color: G,
-              background: "rgba(2,209,186,0.08)",
-              border: "1px solid rgba(2,209,186,0.25)",
-              borderRadius: 14,
-              padding: "14px 22px",
-              userSelect: "all",
-              textShadow: "0 0 20px rgba(2,209,186,0.35)",
-            }}
-          >
-            {code}
-          </div>
-          <button
-            onClick={() => copy(code, "code")}
-            aria-label={t("ip.aria_copy_code")}
-            style={{
-              padding: "12px 18px",
-              background: copied === "code" ? G : "rgba(2,209,186,0.08)",
-              color: copied === "code" ? "#000" : G,
-              border: `1px solid ${copied === "code" ? G : "rgba(2,209,186,0.25)"}`,
-              borderRadius: 12,
-              fontSize: 12,
-              fontWeight: 800,
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "all 0.2s",
-            }}
-          >
-            {copied === "code" ? t("ip.btn_copied") : t("ip.btn_copy")}
-          </button>
-        </div>
-      </div>
+      {/* Code 6 chiffres retiré — les clients rejoignent via email
+          (InviteClient) ou via le lien slug ci-dessous. Le code reste
+          en DB pour rétro-compatibilité avec CoachCodeGate. */}
 
       {/* ===== LIEN D'INVITATION ===== */}
       <div style={{ marginBottom: 18 }}>
