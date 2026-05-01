@@ -83,7 +83,7 @@ const G_BORDER = "rgba(0,201,167,0.2)";
 function ConfirmDeleteProgramme({ progName, onCancel, onConfirm }) {
   const [typed, setTyped] = useState("");
   const RED = "#ff6b6b";
-  const matches = typed.trim().toUpperCase() === "SUPPRIMER";
+  const matches = typed.trim() === "SUPPRIMER";
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 11000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
