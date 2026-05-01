@@ -72,7 +72,7 @@ function renderPage(coach, testimonials, slug) {
   // OG description : bio courte ou fallback
   const ogDesc = bio
     ? bio.replace(/\s+/g, ' ').trim().slice(0, 200)
-    : `${brand}${city ? ' · ' + city : ''} — Coach Performance sur RB Perform.${specialties.length ? ' Spécialités : ' + specialties.slice(0, 3).join(', ') + '.' : ''}`;
+    : `${brand}${city ? ' · ' + city : ''} — RB Perform.${specialties.length ? ' ' + specialties.slice(0, 3).join(' · ') + '.' : ''}`;
 
   const initials = (brand || 'C').split(' ').map(w => (w[0] || '')).join('').slice(0, 2).toUpperCase();
 
@@ -127,7 +127,8 @@ function renderPage(coach, testimonials, slug) {
     '@type': 'Person',
     name: brand,
     ...(coach.full_name && coach.full_name !== brand ? { alternateName: coach.full_name } : {}),
-    jobTitle: 'Coach Performance',
+    // jobTitle volontairement omis : qualification CQP ALS, pas BPJEPS.
+    // Le titre exact est déclaré dans la bio par le coach.
     description: ogDesc,
     url,
     ...(photo ? { image: photo } : {}),
@@ -155,7 +156,7 @@ function renderPage(coach, testimonials, slug) {
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
-<title>${escHtml(brand)} — Coach RB Perform</title>
+<title>${escHtml(brand)} — RB Perform</title>
 <meta name="description" content="${escAttr(ogDesc)}"/>
 <meta name="theme-color" content="#050505"/>
 <meta name="color-scheme" content="dark"/>
@@ -167,21 +168,21 @@ function renderPage(coach, testimonials, slug) {
 
 <!-- Open Graph -->
 <meta property="og:type" content="profile"/>
-<meta property="og:title" content="${escAttr(brand + ' — Coach RB Perform')}"/>
+<meta property="og:title" content="${escAttr(brand + ' — RB Perform')}"/>
 <meta property="og:description" content="${escAttr(ogDesc)}"/>
 <meta property="og:url" content="${escAttr(url)}"/>
 <meta property="og:image" content="${escAttr(ogImage)}"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:image:type" content="image/png"/>
-<meta property="og:image:alt" content="${escAttr(brand + ' — Coach RB Perform')}"/>
+<meta property="og:image:alt" content="${escAttr(brand + ' — RB Perform')}"/>
 <meta property="og:site_name" content="RB Perform"/>
 <meta property="og:locale" content="fr_FR"/>
 <meta property="profile:first_name" content="${escAttr((coach.full_name || brand).split(' ')[0] || '')}"/>
 
 <!-- Twitter Cards -->
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="${escAttr(brand + ' — Coach RB Perform')}"/>
+<meta name="twitter:title" content="${escAttr(brand + ' — RB Perform')}"/>
 <meta name="twitter:description" content="${escAttr(ogDesc)}"/>
 <meta name="twitter:image" content="${escAttr(ogImage)}"/>
 
@@ -220,7 +221,7 @@ html,body{background:#050505;color:#fff;min-height:100vh;min-height:100dvh;font-
 
     <div style="display:inline-flex;align-items:center;gap:10px;padding:8px 16px;background:${accent}10;border:1px solid ${accent}33;border-radius:100px;margin-bottom:36px;animation:fadeUp .6s ease .05s both">
       <div style="width:7px;height:7px;border-radius:50%;background:${accent};animation:breath60 1s ease-in-out infinite;box-shadow:0 0 8px ${accent}80"></div>
-      <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${accent};font-weight:700">Coach Performance · Disponible</div>
+      <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${accent};font-weight:700">RB Perform · Disponible</div>
     </div>
 
     <div style="display:inline-block;margin-bottom:28px;animation:fadeUp .7s ease .1s both">

@@ -57,7 +57,7 @@ export default function PublicCoachProfile({ slug }) {
   useEffect(() => {
     if (coach) {
       const brand = coach.brand_name || coach.coaching_name || coach.full_name;
-      document.title = `${brand} — Coach RB Perform`;
+      document.title = `${brand} — RB Perform`;
     }
   }, [coach]);
 
@@ -111,7 +111,7 @@ export default function PublicCoachProfile({ slug }) {
         {/* Eyebrow */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 16px", background: `${accentHex}10`, border: `1px solid ${accentHex}33`, borderRadius: 100, marginBottom: 36, animation: "fadeUp 0.6s ease 0.05s both" }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: accentHex, animation: "breath60 1s ease-in-out infinite", boxShadow: `0 0 8px ${accentHex}80` }} />
-          <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: accentHex, fontWeight: 700 }}>Coach Performance · Disponible</div>
+          <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: accentHex, fontWeight: 700 }}>RB Perform · Disponible</div>
         </div>
 
         {/* Photo hero — ring breath */}

@@ -106,7 +106,7 @@ function coachCard(coach) {
         style: { display: 'flex', alignItems: 'center', fontSize: 16, letterSpacing: 6, textTransform: 'uppercase', color: accent, fontWeight: 700, marginBottom: 22 },
       },
         el('div', { style: { width: 12, height: 12, borderRadius: 6, background: accent, marginRight: 12, display: 'flex' } }),
-        'Coach Performance',
+        'RB Perform',
       ),
       el('div', {
         style: { fontSize: brand.length > 18 ? 70 : 92, fontWeight: 900, letterSpacing: -3, lineHeight: 1.0, color: '#fff', marginBottom: 18, display: 'flex', flexWrap: 'wrap' },
