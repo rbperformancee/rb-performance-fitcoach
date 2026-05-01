@@ -26,7 +26,7 @@ const STATIC_PAGES = [
 
 async function fetchPublicCoaches() {
   try {
-    const url = `${SUPABASE_URL}/rest/v1/coaches?public_profile_enabled=eq.true&select=public_slug,updated_at&limit=1000`;
+    const url = `${SUPABASE_URL}/rest/v1/coaches?public_profile_enabled=eq.true&select=public_slug,created_at&limit=1000`;
     const r = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
     if (!r.ok) return [];
     const rows = await r.json();
@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
     const urls = [
       ...STATIC_PAGES.map(p => `  <url><loc>${SITE}${p.loc}</loc><lastmod>${now}</lastmod><changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`),
       ...coaches.map(c => {
-        const lastmod = c.updated_at ? String(c.updated_at).slice(0, 10) : now;
+        const lastmod = c.created_at ? String(c.created_at).slice(0, 10) : now;
         return `  <url><loc>${SITE}/coach/${escXml(c.public_slug)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
       }),
     ].join('\n');
