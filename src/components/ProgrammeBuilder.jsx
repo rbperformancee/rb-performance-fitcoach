@@ -127,6 +127,110 @@ const REST_SUGGESTIONS = [
   "4'", "5'", "6'", "7'", "8'", "10'",
 ];
 
+// ─── Templates de phases ──────────────────────────────────────────────────────
+// Skeletons pré-remplis : structure (semaines × séances × exos vides + reps/RIR
+// suggérés selon la phase). L'exercice picker remplit le nom + vidéo au tap.
+const TEMPLATES = [
+  {
+    id: "blank",
+    name: "Vierge",
+    desc: "1 semaine, 1 séance, 1 exercice. Pour partir de zéro.",
+    icon: "📄",
+    build: () => ({ name: "", clientName: "", duration: "", tagline: "", objective: "", weeks: [newWeek(1)] }),
+  },
+  {
+    id: "ppl-hypertrophie-4",
+    name: "PPL Hypertrophie · 4 sem",
+    desc: "Push / Pull / Legs × 4 semaines progressives. Volume → intensité.",
+    icon: "💪",
+    build: () => ({
+      name: "PPL Hypertrophie · Q1",
+      clientName: "",
+      duration: "4",
+      tagline: "Volume puis intensité.",
+      objective: "prise-de-masse",
+      weeks: [1, 2, 3, 4].map((wn) => {
+        const repsByWeek = { 1: { heavy: "4X8-10", mid: "4X10-12", light: "3X12-15" }, 2: { heavy: "4X6-8", mid: "4X8-10", light: "3X10-12" }, 3: { heavy: "5X6-8", mid: "4X8-10", light: "4X10-12" }, 4: { heavy: "3X4-6", mid: "3X6-8", light: "3X8-10" } };
+        const r = repsByWeek[wn];
+        const mkEx = (reps, tempo, rir, rest) => ({ id: uid(), name: "", reps, tempo, rir, rest, group: "", vidUrl: "" });
+        return {
+          id: uid(), name: `Semaine ${wn}`,
+          sessions: [
+            { id: uid(), name: "Push", description: "Pectoraux, épaules, triceps.", finisher: "", exercises: Array.from({length:6}, (_,i) => mkEx(i<2?r.heavy:i<4?r.mid:r.light, "3010", "1", i<2?"2'30":i<4?"2'":"1'30")) },
+            { id: uid(), name: "Pull", description: "Dos, biceps, deltoïdes postérieurs.", finisher: "", exercises: Array.from({length:6}, (_,i) => mkEx(i<2?r.heavy:i<4?r.mid:r.light, "2010", "1", i<2?"2'30":i<4?"2'":"1'30")) },
+            { id: uid(), name: "Legs", description: "Quadriceps, ischios, fessiers, mollets.", finisher: "", exercises: Array.from({length:6}, (_,i) => mkEx(i<2?r.heavy:i<4?r.mid:r.light, "3010", "1", i<2?"3'":i<4?"2'":"1'30")) },
+          ],
+        };
+      }),
+    }),
+  },
+  {
+    id: "force-pure-4",
+    name: "Force pure · 4 sem",
+    desc: "Squat / Bench / Deadlift / OHP. Reps 3-6, RIR 1-2, longs repos.",
+    icon: "🏋️",
+    build: () => ({
+      name: "Force pure · Bloc 1",
+      clientName: "",
+      duration: "4",
+      tagline: "Lourd. Précis. Patient.",
+      objective: "force",
+      weeks: [1, 2, 3, 4].map((wn) => {
+        const reps = { 1: "5X5", 2: "5X4", 3: "6X3", 4: "3X3-5" }[wn];
+        const mkEx = (rir, rest) => ({ id: uid(), name: "", reps, tempo: "2010", rir, rest, group: "", vidUrl: "" });
+        return {
+          id: uid(), name: `Semaine ${wn}`,
+          sessions: [
+            { id: uid(), name: "Squat day", description: "Squat barre dos + accessoires jambes.", finisher: "", exercises: Array.from({length:4}, () => mkEx("2", "3'")) },
+            { id: uid(), name: "Bench day", description: "Bench press + accessoires push.", finisher: "", exercises: Array.from({length:4}, () => mkEx("2", "3'")) },
+            { id: uid(), name: "Deadlift day", description: "Soulevé de terre + accessoires pull.", finisher: "", exercises: Array.from({length:4}, () => mkEx("2", "3'")) },
+          ],
+        };
+      }),
+    }),
+  },
+  {
+    id: "full-body-3",
+    name: "Full body · 3 sem",
+    desc: "3 séances/sem full body. Idéal débutant ou retour à l'entraînement.",
+    icon: "🔄",
+    build: () => ({
+      name: "Full Body · Phase 1",
+      clientName: "",
+      duration: "3",
+      tagline: "Bouger souvent. Bien.",
+      objective: "remise-en-forme",
+      weeks: [1, 2, 3].map((wn) => ({
+        id: uid(), name: `Semaine ${wn}`,
+        sessions: ["A", "B", "C"].map((letter) => ({
+          id: uid(), name: `Full ${letter}`, description: "Polyarticulaire + isolation.", finisher: "",
+          exercises: Array.from({ length: 5 }, () => ({ id: uid(), name: "", reps: "3X8-12", tempo: "2010", rir: "2", rest: "1'30", group: "", vidUrl: "" })),
+        })),
+      })),
+    }),
+  },
+  {
+    id: "deload-1",
+    name: "Deload · 1 sem",
+    desc: "Semaine de récup : 50% volume, RIR 3+. Préserve la fraîcheur.",
+    icon: "🌿",
+    build: () => ({
+      name: "Deload",
+      clientName: "",
+      duration: "1",
+      tagline: "Récupère. Reviens plus fort.",
+      objective: "recuperation",
+      weeks: [{
+        id: uid(), name: "Semaine de deload",
+        sessions: ["Push", "Pull", "Legs"].map((n) => ({
+          id: uid(), name: n, description: "Mouvements légers, focus technique.", finisher: "",
+          exercises: Array.from({ length: 4 }, () => ({ id: uid(), name: "", reps: "3X8", tempo: "3010", rir: "3", rest: "2'", group: "", vidUrl: "" })),
+        })),
+      }],
+    }),
+  },
+];
+
 // Convertit un programme parsé (parserProgramme.js) en state ProgrammeBuilder.
 function fromParsed(parsed) {
   if (!parsed) return null;
@@ -423,7 +527,7 @@ function SessionPanel({ session, onUpdate, onRemove, idx }) {
   );
 }
 
-function WeekPanel({ week, weekIdx, onUpdate, onRemove, onDuplicate }) {
+function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove }) {
   const update = (k, v) => onUpdate({ ...week, [k]: v });
   const updateSession = (sIdx, s) => onUpdate({ ...week, sessions: week.sessions.map((x, i) => i === sIdx ? s : x) });
   const addSession = () => onUpdate({ ...week, sessions: [...week.sessions, newSession(week.sessions.length + 1)] });
@@ -456,6 +560,16 @@ function WeekPanel({ week, weekIdx, onUpdate, onRemove, onDuplicate }) {
             borderRadius: 10, color: "#fff", fontSize: 16, fontWeight: 800, fontFamily: "inherit", outline: "none",
           }}
         />
+        {weekIdx > 0 && (
+          <button type="button" onClick={() => onMove(-1)} title="Monter cette semaine"
+            style={{ padding: "8px 10px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >↑</button>
+        )}
+        {weekIdx < totalWeeks - 1 && (
+          <button type="button" onClick={() => onMove(1)} title="Descendre cette semaine"
+            style={{ padding: "8px 10px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >↓</button>
+        )}
         <button
           type="button"
           onClick={onDuplicate}
@@ -574,18 +688,30 @@ function Preview({ programme }) {
 }
 
 export default function ProgrammeBuilder({ client, onClose, onSaved, existingProgramme }) {
+  // Clé draft localStorage : 1 par client. Persiste entre sessions.
+  const draftKey = `rb_progbuilder_draft_${client?.id || "anon"}`;
+  // Autosave désactivé en mode "edit existing" (on travaille sur une copie live).
+  const editMode = !!(existingProgramme && existingProgramme.html_content);
+
   const [programme, setProgramme] = useState(() => {
-    // existingProgramme = { id, programme_name, html_content } pour edit mode
-    if (existingProgramme && existingProgramme.html_content) {
+    if (editMode) {
       try {
-        // Parse côté client : reuse parserProgramme.js
-        // Import dynamique-style : resolve la fonction au mount
         const ParserMod = require("../utils/parserProgramme");
         const parsed = ParserMod.parseProgrammeHTML(existingProgramme.html_content);
         const restored = fromParsed(parsed);
         if (restored && restored.weeks && restored.weeks.length > 0) return restored;
       } catch (e) { console.warn("[ProgrammeBuilder] parse existing failed:", e); }
     }
+    // Tente de restaurer un draft localStorage (mode création)
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft && draft.weeks && draft.weeks.length > 0 && (Date.now() - (draft.savedAt || 0)) < 14 * 24 * 3600 * 1000) {
+          return draft;
+        }
+      }
+    } catch {}
     return {
       name: "",
       clientName: (client && client.full_name) ? client.full_name : "",
@@ -597,6 +723,39 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   });
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [autosavedAt, setAutosavedAt] = useState(0);
+  const [showTemplates, setShowTemplates] = useState(!editMode && (programme.weeks?.length === 1 && programme.weeks[0].sessions?.[0]?.exercises?.[0]?.name === "" && !programme.name));
+
+  // Autosave debounce 800ms (uniquement mode création, pas edit)
+  useEffect(() => {
+    if (editMode) return;
+    const t = setTimeout(() => {
+      try {
+        const draft = { ...programme, savedAt: Date.now() };
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+        setAutosavedAt(Date.now());
+      } catch {}
+    }, 800);
+    return () => clearTimeout(t);
+  }, [programme, draftKey, editMode]);
+
+  const applyTemplate = (tplId) => {
+    const tpl = TEMPLATES.find((t) => t.id === tplId);
+    if (!tpl) return;
+    if (programme.weeks.some((w) => w.sessions.some((s) => s.exercises.some((e) => e.name)))) {
+      if (!window.confirm("Appliquer le template '" + tpl.name + "' va remplacer ton programme actuel. Continuer ?")) return;
+    }
+    const fresh = tpl.build();
+    setProgramme({
+      ...fresh,
+      clientName: (client && client.full_name) ? client.full_name : fresh.clientName,
+    });
+    setShowTemplates(false);
+  };
+
+  const clearDraft = () => {
+    try { localStorage.removeItem(draftKey); } catch {}
+  };
 
   const update = (k, v) => setProgramme((p) => ({ ...p, [k]: v }));
   const updateWeek = (idx, w) => setProgramme((p) => ({ ...p, weeks: p.weeks.map((x, i) => i === idx ? w : x) }));
@@ -634,6 +793,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         uploaded_by: email,
       });
       if (error) throw error;
+      clearDraft();
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 2500);
       if (typeof onSaved === "function") onSaved();
@@ -647,6 +807,37 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   return (
     <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, background: BG, color: "#fff", fontFamily: "Inter,-apple-system,sans-serif", display: "flex", flexDirection: "column" }}>
+      {showTemplates ? (
+        <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}>
+          <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 720, width: "100%", padding: 28 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 18 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>Démarrer rapidement</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>Choisis un template</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>Tu remplis le squelette via l'autocomplete exos. Tu modifies tout après.</div>
+              </div>
+              <button type="button" onClick={() => setShowTemplates(false)} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => applyTemplate(tpl.id)}
+                  style={{ padding: 18, background: "rgba(255,255,255,0.025)", border: "1px solid " + BORDER, borderRadius: 14, textAlign: "left", cursor: "pointer", fontFamily: "inherit", color: "#fff", transition: "all .15s" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.06)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.3)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; e.currentTarget.style.borderColor = BORDER; }}
+                >
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>{tpl.icon}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{tpl.name}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{tpl.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "14px 22px", borderBottom: "1px solid " + BORDER, background: BG_2, flexShrink: 0,
@@ -666,7 +857,21 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {savedFlash ? <span style={{ fontSize: 11, color: G, fontWeight: 700 }}>✓ Sauvegardé</span> : null}
+          {!editMode && !savedFlash && autosavedAt > 0 ? (
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>Brouillon auto-sauvegardé</span>
+          ) : null}
+          {savedFlash ? <span style={{ fontSize: 11, color: G, fontWeight: 700 }}>✓ Enregistré côté client</span> : null}
+          {!editMode && (
+            <button
+              type="button"
+              onClick={() => setShowTemplates(true)}
+              style={{
+                padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+                border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+                fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
+              }}
+            >📋 Templates</button>
+          )}
           <button
             type="button"
             onClick={handleSave}
@@ -702,9 +907,17 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               key={w.id}
               week={w}
               weekIdx={i}
+              totalWeeks={programme.weeks.length}
               onUpdate={(nw) => updateWeek(i, nw)}
               onRemove={() => removeWeek(i)}
               onDuplicate={() => duplicateWeek(i)}
+              onMove={(dir) => setProgramme((p) => {
+                const arr = [...p.weeks];
+                const j = i + dir;
+                if (j < 0 || j >= arr.length) return p;
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+                return { ...p, weeks: arr };
+              })}
             />
           ))}
           <button
