@@ -1708,6 +1708,8 @@ const fr = {
     "ec.history": "Historique",
     "ec.video_close": "Fermer",
     "ec.video_play": "▶ Video",
+    "ec.video_soon": "📷 Vidéo bientôt",
+    "ec.video_soon_tooltip": "Vidéo perso à venir — je tourne mes démos au fil de l'eau.",
     "ec.active_badge": "● Exercice actif · {n}",
     "ec.serie": "SERIE",
     "ec.weight_col": "POIDS",

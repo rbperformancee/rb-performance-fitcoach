@@ -1708,6 +1708,8 @@ const en = {
     "ec.history": "History",
     "ec.video_close": "Close",
     "ec.video_play": "▶ Video",
+    "ec.video_soon": "📷 Video soon",
+    "ec.video_soon_tooltip": "Custom demo coming — I film mine over time.",
     "ec.active_badge": "● Active exercise · {n}",
     "ec.serie": "SET",
     "ec.weight_col": "WEIGHT",

@@ -32,7 +32,7 @@ const buildSessions = (weekNum) => {
       exercises: [
         { name: 'Développé couché barre',          reps: r.heavy, tempo: '3010', rir: '1', rest: "2'30",  vidUrl: yt('vwPhNxREbnc') },
         { name: 'Développé incliné haltères',      reps: r.mid,   tempo: '3010', rir: '2', rest: "2'",   vidUrl: yt('WixS_Smh4mw') },
-        { name: 'Dips lestés',                     reps: r.mid,   tempo: '3010', rir: '1', rest: "2'",   vidUrl: '' },
+        { name: 'Développé couché prise serrée',   reps: r.mid,   tempo: '3010', rir: '1', rest: "2'",   vidUrl: yt('yBhTUtd7lSw') },
         { name: 'Élévations latérales haltères',   reps: r.light, tempo: '2010', rir: '1', rest: "1'30", vidUrl: yt('_zbC5RQfkmk') },
         { name: 'Triceps poulie corde',            reps: r.light, tempo: '2010', rir: '0', rest: "1'30", vidUrl: yt('G8GYdDkdmUk') },
         { name: 'Extensions verticales haltère',   reps: r.light, tempo: '3010', rir: '1', rest: "1'30", vidUrl: yt('tPgqu7J0Q4A') },
