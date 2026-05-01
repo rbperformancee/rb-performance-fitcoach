@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
+// Throttle module-level pour eviter le spam de coach_activity_log :
+// chaque slider bump (calories, proteines, eau, pas) declenche updateGoals,
+// et sans throttle on inserait 10+ rows par session. Window de 5s glissante
+// par client suffit pour collapser un drag en un seul event.
+const _lastActivityLog = new Map(); // clientId -> timestamp ms
+const ACTIVITY_LOG_THROTTLE_MS = 5000;
+
 export function useFuel(clientId, dateOverride) {
   const [goals, setGoals] = useState(null);
   const [logs, setLogs] = useState([]);
@@ -151,20 +158,27 @@ export function useFuel(clientId, dateOverride) {
           Math.abs((newGoals.pas || 0) - (previous.pas || 0)) >= 1000
         );
       if (significantChange) {
-        const { data: client } = await supabase.from("clients")
-          .select("id, coach_id, full_name").eq("id", clientId).maybeSingle();
-        if (client?.coach_id) {
-          const summary = `${client.full_name || "Client"} a modifie ses objectifs : `
-            + `kcal ${previous.calories || 0}→${newGoals.calories || 0}, `
-            + `prot ${previous.proteines || 0}→${newGoals.proteines || 0}g, `
-            + `eau ${previous.eau_ml || 0}→${newGoals.eau_ml || 0}ml, `
-            + `pas ${previous.pas || 0}→${newGoals.pas || 0}`;
-          supabase.from("coach_activity_log").insert({
-            coach_id: client.coach_id,
-            client_id: clientId,
-            activity_type: "client_goals_changed",
-            details: summary,
-          }).then(() => {}, () => {});
+        // Throttle : un seul log par client par fenetre de 5s pour eviter
+        // que 10 changes successifs (slider drag) generent 10 rows.
+        const now = Date.now();
+        const lastTs = _lastActivityLog.get(clientId) || 0;
+        if (now - lastTs >= ACTIVITY_LOG_THROTTLE_MS) {
+          _lastActivityLog.set(clientId, now);
+          const { data: client } = await supabase.from("clients")
+            .select("id, coach_id, full_name").eq("id", clientId).maybeSingle();
+          if (client?.coach_id) {
+            const summary = `${client.full_name || "Client"} a modifie ses objectifs : `
+              + `kcal ${previous.calories || 0}→${newGoals.calories || 0}, `
+              + `prot ${previous.proteines || 0}→${newGoals.proteines || 0}g, `
+              + `eau ${previous.eau_ml || 0}→${newGoals.eau_ml || 0}ml, `
+              + `pas ${previous.pas || 0}→${newGoals.pas || 0}`;
+            supabase.from("coach_activity_log").insert({
+              coach_id: client.coach_id,
+              client_id: clientId,
+              activity_type: "client_goals_changed",
+              details: summary,
+            }).then(() => {}, () => {});
+          }
         }
       }
     } catch (_) {}

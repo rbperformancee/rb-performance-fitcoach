@@ -877,7 +877,7 @@ export default function FuelPage({ client, appData }) {
               </div>
             </div>
             <div style={{ background: totals.calories > (goals?.calories || 2000) ? "rgba(239,68,68,0.1)" : "rgba(2,209,186,0.1)", border: `1px solid ${totals.calories > (goals?.calories || 2000) ? "rgba(239,68,68,0.3)" : "rgba(2,209,186,0.2)"}`, borderRadius: 100, padding: "4px 12px", fontSize: 11, color: totals.calories > (goals?.calories || 2000) ? "#ef4444" : GREEN, fontWeight: 600 }}>
-              {totals.calories > (goals?.calories || 2000) ? `+${totals.calories - (goals?.calories || 2000)} kcal` : `${(goals?.calories || 2000) - totals.calories} restantes`}
+              {totals.calories > (goals?.calories || 2000) ? `+${totals.calories - (goals?.calories || 2000)} ${t("fuel.kcal_over")}` : `${(goals?.calories || 2000) - totals.calories} ${t("fuel.kcal_remaining")}`}
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -895,7 +895,7 @@ export default function FuelPage({ client, appData }) {
             <div style={{ fontSize: 24, fontWeight: 200, color: BLUE, letterSpacing: "-1px" }}>
               {((dailyTracking?.eau_ml || 0) / 1000).toFixed(1)}<span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>L</span>
             </div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase", marginTop: 4 }}>Hydratation</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase", marginTop: 4 }}>{t("fuel.hydration_label")}</div>
             <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1, marginTop: 8 }}>
               <div style={{ height: "100%", width: Math.min(Math.round(((dailyTracking?.eau_ml || 0) / (goals?.eau_ml || 2500)) * 100), 100) + "%", background: BLUE, borderRadius: 1 }} />
             </div>
@@ -906,7 +906,7 @@ export default function FuelPage({ client, appData }) {
             <div style={{ fontSize: 24, fontWeight: 200, color: PURPLE, letterSpacing: "-1px" }}>
               {dailyTracking?.sommeil_h || 0}<span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>h</span>
             </div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase", marginTop: 4 }}>Sommeil</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase", marginTop: 4 }}>{t("fuel.sleep_label")}</div>
             <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1, marginTop: 8 }}>
               <div style={{ height: "100%", width: Math.min(Math.round(((dailyTracking?.sommeil_h || 0) / 8) * 100), 100) + "%", background: PURPLE, borderRadius: 1 }} />
             </div>
@@ -922,8 +922,8 @@ export default function FuelPage({ client, appData }) {
           {/* Header + boutons add / vocal / scan */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, gap: 10 }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>Journal du jour</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px" }}>Mes repas<span style={{ color: ORANGE }}>.</span></div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>{t("fuel.day_journal")}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px" }}>{t("fuel.my_meals")}<span style={{ color: ORANGE }}>.</span></div>
             </div>
             <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
               <button
@@ -976,7 +976,7 @@ export default function FuelPage({ client, appData }) {
 
                   {repasLogs.length === 0 ? (
                     <div onClick={() => { setSelectedRepas(repas); setShowAdd(true); }} style={{ padding: "14px 16px", background: "rgba(255,255,255,0.015)", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 14, fontSize: 12, color: "rgba(255,255,255,0.2)", cursor: "pointer", textAlign: "center", transition: "all 0.2s" }}>
-                      Tap pour logger ce repas
+                      {t("fuel.tap_to_log")}
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1005,7 +1005,7 @@ export default function FuelPage({ client, appData }) {
                           </button>
                         </div>
                       ))}
-                      <div onClick={() => { setSelectedRepas(repas); setShowAdd(true); }} style={{ padding: "10px 14px", background: "transparent", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", cursor: "pointer", textAlign: "center" }}>+ Ajouter</div>
+                      <div onClick={() => { setSelectedRepas(repas); setShowAdd(true); }} style={{ padding: "10px 14px", background: "transparent", border: "1px dashed rgba(255,255,255,0.06)", borderRadius: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", cursor: "pointer", textAlign: "center" }}>{t("fuel.add_inline")}</div>
                     </div>
                   )}
                 </div>
@@ -1028,8 +1028,8 @@ export default function FuelPage({ client, appData }) {
               {/* Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <div>
-                  <div style={{ fontSize: 9, color: "rgba(249,115,22,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>Nutrition</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Logger un aliment</div>
+                  <div style={{ fontSize: 9, color: "rgba(249,115,22,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>{t("fuel.modal_eyebrow")}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>{t("fuel.modal_log_food")}</div>
                 </div>
                 <button onClick={() => { setShowAdd(false); setQuery(""); setSelectedFood(null); }} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 44, height: 44, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
               </div>
@@ -1060,7 +1060,7 @@ export default function FuelPage({ client, appData }) {
                       }}
                     >
                       <MealIcon type={id} size={14} />
-                      {id}
+                      {repasLabel(id)}
                     </button>
                   );
                 })}
@@ -1079,7 +1079,7 @@ export default function FuelPage({ client, appData }) {
                   value={query}
                   onChange={e => handleSearch(e.target.value)}
                   onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: "center", behavior: "smooth" }), 300)}
-                  placeholder="Rechercher : poulet, riz, pomme, yaourt..."
+                  placeholder={t("fuel.search_full_placeholder")}
                   autoFocus
                   enterKeyHint="search"
                   style={{ width: "100%", padding: "15px 16px 15px 44px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, color: "#fff", fontSize: 16, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", transition: "border 0.2s", WebkitAppearance: "none", WebkitTapHighlightColor: "transparent" }}
@@ -1095,7 +1095,7 @@ export default function FuelPage({ client, appData }) {
                 {/* Searching */}
                 {searching && (
                   <div style={{ textAlign: "center", padding: "32px 0" }}>
-                    <Spinner variant="dots" size={28} color="#f97316" label="Recherche en cours" />
+                    <Spinner variant="dots" size={28} color="#f97316" label={t("fuel.search_loading")} />
                   </div>
                 )}
 
@@ -1143,8 +1143,8 @@ export default function FuelPage({ client, appData }) {
                 {!searching && query.length > 2 && results.length === 0 && (
                   <EmptyState
                     icon="search"
-                    title="Rien trouve"
-                    subtitle={`Aucun aliment pour "${query}". Essaie un nom plus general ou en francais (ex: poulet, pates, yaourt).`}
+                    title={t("fuel.no_results_title")}
+                    subtitle={t("fuel.no_results_subtitle").replace("{q}", query)}
                     size="md"
                     style={{ padding: "24px 0" }}
                   />
@@ -1160,7 +1160,7 @@ export default function FuelPage({ client, appData }) {
                           <div style={{ fontSize: 15, color: "#fff", fontWeight: 700, marginBottom: 2 }}>{selectedFood.name}</div>
                           {selectedFood.brand && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{selectedFood.brand}</div>}
                         </div>
-                        <button onClick={() => setSelectedFood(null)} style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "4px 10px", color: "rgba(255,255,255,0.4)", fontSize: 11, cursor: "pointer" }}>Changer</button>
+                        <button onClick={() => setSelectedFood(null)} style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "4px 10px", color: "rgba(255,255,255,0.4)", fontSize: 11, cursor: "pointer" }}>{t("fuel.change_food")}</button>
                       </div>
                       {/* Macros live */}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1185,7 +1185,7 @@ export default function FuelPage({ client, appData }) {
 
                     {/* Quantite selector */}
                     <div style={{ marginBottom: 20 }}>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Quantité</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{t("fuel.quantity")}</div>
                       {/* Quick amounts */}
                       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
                         {[50, 100, 150, 200, 250, 300].map(q => (
@@ -1205,7 +1205,7 @@ export default function FuelPage({ client, appData }) {
 
                     {/* CTA */}
                     <button onClick={handleAddFood} style={{ width: "100%", padding: 17, background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 18, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase" }}>
-                      Ajouter au {selectedRepas}
+                      {t("fuel.add_to")} {repasLabel(selectedRepas)}
                     </button>
                   </div>
                 )}
@@ -1220,8 +1220,8 @@ export default function FuelPage({ client, appData }) {
         <div onClick={e => { if(e.target===e.currentTarget){setShowVoice(false);setVoiceText("");setVoiceResult(null);}}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center",WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)"}}>
           <div style={{background:"#0a0a0a",borderRadius:"28px 28px 0 0",padding:"20px 24px calc(env(safe-area-inset-bottom,0px) + 32px)",width:"100%",maxWidth:480,border:"1px solid rgba(2,209,186,0.15)",borderBottom:"none"}}>
             <div style={{width:36,height:4,background:"rgba(255,255,255,0.1)",borderRadius:2,margin:"0 auto 24px"}}/>
-            <div style={{fontSize:9,color:"rgba(2,209,186,0.5)",letterSpacing:"4px",textTransform:"uppercase",marginBottom:8}}>IA Vocal</div>
-            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:16,letterSpacing:"-0.5px"}}>Décris ton repas</div>
+            <div style={{fontSize:9,color:"rgba(2,209,186,0.5)",letterSpacing:"4px",textTransform:"uppercase",marginBottom:8}}>{t("fuel.voice_eyebrow")}</div>
+            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:16,letterSpacing:"-0.5px"}}>{t("fuel.voice_describe")}</div>
 
             {/* Selecteur de repas (theme vert IA Vocal) */}
             <div style={{display:"flex",gap:6,marginBottom:20,overflowX:"auto",scrollbarWidth:"none",paddingBottom:2}}>
@@ -1249,7 +1249,7 @@ export default function FuelPage({ client, appData }) {
                     }}
                   >
                     <MealIcon type={id} size={14} />
-                    {id}
+                    {repasLabel(id)}
                   </button>
                 );
               })}
@@ -1259,10 +1259,10 @@ export default function FuelPage({ client, appData }) {
               <button onClick={recording ? ()=>recognitionRef.current?.stop() : startVoice} style={{width:88,height:88,borderRadius:"50%",border:`2px solid ${recording?"#02d1ba":"rgba(2,209,186,0.3)"}`,background:recording?"rgba(2,209,186,0.15)":"rgba(255,255,255,0.04)",color:"#02d1ba",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.3s",boxShadow:recording?"0 0 40px rgba(2,209,186,0.3)":"none"}}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{width:36,height:36}}><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               </button>
-              <div style={{marginTop:12,fontSize:12,color:recording?"#02d1ba":"rgba(255,255,255,0.3)",transition:"all 0.3s"}}>{recording?"Écoute en cours...":"Tap pour parler"}</div>
+              <div style={{marginTop:12,fontSize:12,color:recording?"#02d1ba":"rgba(255,255,255,0.3)",transition:"all 0.3s"}}>{recording ? t("fuel.voice_listening") : t("fuel.voice_tap_to_speak")}</div>
             </div>
             {voiceText && <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"12px 16px",marginBottom:16,fontSize:14,color:"rgba(255,255,255,0.7)",fontStyle:"italic"}}>"{voiceText}"</div>}
-            {voiceLoading && <div style={{textAlign:"center",padding:"16px 0"}}><Spinner variant="dots" size={26} label="Analyse IA" /></div>}
+            {voiceLoading && <div style={{textAlign:"center",padding:"16px 0"}}><Spinner variant="dots" size={26} label={t("fuel.voice_analyzing")} /></div>}
             {voiceResult && !voiceLoading && (
               <div>
                 <div style={{background:"rgba(2,209,186,0.06)",border:"1px solid rgba(2,209,186,0.2)",borderRadius:16,padding:16,marginBottom:16}}>
@@ -1285,7 +1285,7 @@ export default function FuelPage({ client, appData }) {
                 {/* Breakdown des ingredients (transparence : on montre comment on a calcule) */}
                 {Array.isArray(voiceResult.ingredients) && voiceResult.ingredients.length > 0 && (
                   <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:14,padding:"10px 14px",marginBottom:16}}>
-                    <div style={{fontSize:9,color:"rgba(2,209,186,0.5)",letterSpacing:"2px",textTransform:"uppercase",marginBottom:8}}>Detail du calcul</div>
+                    <div style={{fontSize:9,color:"rgba(2,209,186,0.5)",letterSpacing:"2px",textTransform:"uppercase",marginBottom:8}}>{t("fuel.voice_calc_detail")}</div>
                     <div style={{display:"flex",flexDirection:"column",gap:6}}>
                       {voiceResult.ingredients.map((ing, i) => (
                         <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",fontSize:11,gap:8}}>
@@ -1302,7 +1302,7 @@ export default function FuelPage({ client, appData }) {
                   </div>
                 )}
 
-                <button onClick={addVoiceFood} style={{width:"100%",padding:16,background:"linear-gradient(135deg,#02d1ba,#0891b2)",color:"#000",border:"none",borderRadius:16,fontSize:14,fontWeight:800,cursor:"pointer",textTransform:"uppercase",letterSpacing:"0.5px"}}>Ajouter au {selectedRepas}</button>
+                <button onClick={addVoiceFood} style={{width:"100%",padding:16,background:"linear-gradient(135deg,#02d1ba,#0891b2)",color:"#000",border:"none",borderRadius:16,fontSize:14,fontWeight:800,cursor:"pointer",textTransform:"uppercase",letterSpacing:"0.5px"}}>{t("fuel.add_to")} {repasLabel(selectedRepas)}</button>
               </div>
             )}
           </div>
@@ -1315,8 +1315,8 @@ export default function FuelPage({ client, appData }) {
           <div style={{ background: "#0a0a0a", borderRadius: 24, padding: 24, width: "100%", maxWidth: 420, border: "1px solid rgba(167,139,250,0.2)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 9, color: "rgba(167,139,250,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>Scanner</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Scanner un code-barre</div>
+                <div style={{ fontSize: 9, color: "rgba(167,139,250,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>{t("fuel.scan_eyebrow")}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>{t("fuel.scan_modal_title")}</div>
               </div>
               <button onClick={() => setShowScan(false)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 44, height: 44, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer" }}>✕</button>
             </div>
@@ -1347,7 +1347,7 @@ export default function FuelPage({ client, appData }) {
                     }}
                   >
                     <MealIcon type={id} size={14} />
-                    {id}
+                    {repasLabel(id)}
                   </button>
                 );
               })}
@@ -1366,8 +1366,8 @@ export default function FuelPage({ client, appData }) {
 
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 290 }}>
                     {scanLoading
-                      ? (scanStatus || "Decodage en cours...")
-                      : "Touche le bouton, prends une photo du code-barre. On decode automatiquement avec l'appareil photo natif."}
+                      ? (scanStatus || t("fuel.scan_decoding_short"))
+                      : t("fuel.scan_invite_hint")}
                   </div>
 
                   <button
@@ -1387,7 +1387,7 @@ export default function FuelPage({ client, appData }) {
                       boxShadow: scanLoading ? "none" : "0 6px 24px rgba(167,139,250,0.4)",
                     }}
                   >
-                    {scanLoading ? "Decodage..." : "Prendre la photo"}
+                    {scanLoading ? t("fuel.scan_take_photo_loading") : t("fuel.scan_take_photo")}
                   </button>
                 </div>
 
@@ -1417,7 +1417,7 @@ export default function FuelPage({ client, appData }) {
                       onClick={() => { setScannedFood(null); setScanQuantite(100); setScanError(""); }}
                       style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "4px 10px", color: "rgba(255,255,255,0.4)", fontSize: 11, cursor: "pointer", flexShrink: 0, marginLeft: 8 }}
                     >
-                      Re-scanner
+                      {t("fuel.rescan")}
                     </button>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1442,7 +1442,7 @@ export default function FuelPage({ client, appData }) {
 
                 {/* Selecteur de quantite */}
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Quantite</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{t("fuel.quantity")}</div>
                   {/* Quick amounts */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
                     {[50, 100, 150, 200, 250, 300].map(q => (
@@ -1492,13 +1492,13 @@ export default function FuelPage({ client, appData }) {
                   onClick={confirmScannedFood}
                   style={{ width: "100%", padding: 17, background: "linear-gradient(135deg, #a78bfa, #8b5cf6)", color: "#0a0a0a", border: "none", borderRadius: 18, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase" }}
                 >
-                  Ajouter au {selectedRepas}
+                  {t("fuel.add_to")} {repasLabel(selectedRepas)}
                 </button>
               </div>
             )}
 
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 10 }}>
-              Repas : <span style={{ color: PURPLE, fontWeight: 700 }}>{selectedRepas}</span>
+              {t("fuel.scan_meal_label")} <span style={{ color: PURPLE, fontWeight: 700 }}>{repasLabel(selectedRepas)}</span>
             </div>
             {scanError && (
               <div style={{ fontSize: 12, color: "#ef4444", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "10px 12px", textAlign: "center" }}>
@@ -1514,7 +1514,7 @@ export default function FuelPage({ client, appData }) {
         <div onClick={e => { if (e.target === e.currentTarget) setShowWater(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ background: "#111", borderRadius: 24, padding: 24, width: "100%", maxWidth: 360 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>Hydratation</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>{t("fuel.water_modal_title")}</div>
               {/* Toggle Ajouter / Corriger — subtil, deux pills mini */}
               <div style={{ display: "inline-flex", padding: 3, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100 }}>
                 <button
@@ -1527,7 +1527,7 @@ export default function FuelPage({ client, appData }) {
                     fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
                     cursor: "pointer", fontFamily: "inherit",
                   }}
-                >Ajouter</button>
+                >{t("fuel.water_mode_add")}</button>
                 <button
                   onClick={() => setWaterMode && setWaterMode("sub")}
                   style={{
@@ -1538,7 +1538,7 @@ export default function FuelPage({ client, appData }) {
                     fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
                     cursor: "pointer", fontFamily: "inherit",
                   }}
-                >Corriger</button>
+                >{t("fuel.water_mode_correct")}</button>
               </div>
             </div>
             <div style={{ fontSize: 44, fontWeight: 100, color: BLUE, textAlign: "center", marginBottom: 20, letterSpacing: "-2px" }}>
@@ -1574,7 +1574,7 @@ export default function FuelPage({ client, appData }) {
                 );
               })}
             </div>
-            <button onClick={() => setShowWater(false)} style={{ width: "100%", padding: 14, background: BLUE, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>OK</button>
+            <button onClick={() => setShowWater(false)} style={{ width: "100%", padding: 14, background: BLUE, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t("fuel.water_ok")}</button>
           </div>
         </div>
       )}
@@ -1583,7 +1583,7 @@ export default function FuelPage({ client, appData }) {
       {showSleep && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowSleep(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ background: "#111", borderRadius: 24, padding: 24, width: "100%", maxWidth: 360 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Sommeil cette nuit</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>{t("fuel.sleep_modal_title")}</div>
             <div style={{ fontSize: 44, fontWeight: 100, color: PURPLE, textAlign: "center", marginBottom: 20, letterSpacing: "-2px" }}>
               {tempSleep !== null ? tempSleep : (dailyTracking?.sommeil_h || 0)} h
             </div>
@@ -1593,7 +1593,7 @@ export default function FuelPage({ client, appData }) {
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 20 }}>
               <span>0h</span><span>6h</span><span>8h</span><span>12h</span>
             </div>
-            <button onClick={() => { updateTracking("sommeil_h", tempSleep !== null ? tempSleep : (dailyTracking?.sommeil_h || 0)); setShowSleep(false); }} style={{ width: "100%", padding: 14, background: PURPLE, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
+            <button onClick={() => { updateTracking("sommeil_h", tempSleep !== null ? tempSleep : (dailyTracking?.sommeil_h || 0)); setShowSleep(false); }} style={{ width: "100%", padding: 14, background: PURPLE, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t("fuel.sleep_save")}</button>
           </div>
         </div>
       )}
@@ -1611,8 +1611,8 @@ export default function FuelPage({ client, appData }) {
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
               <div>
-                <div style={{ fontSize: 9, color: "rgba(249,115,22,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>Edition</div>
-                <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Modifier l'aliment</div>
+                <div style={{ fontSize: 9, color: "rgba(249,115,22,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>{t("fuel.edit_eyebrow")}</div>
+                <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>{t("fuel.edit_title")}</div>
               </div>
               <button
                 onClick={() => setEditingFood(null)}
@@ -1622,12 +1622,12 @@ export default function FuelPage({ client, appData }) {
 
             {/* Nom de l'aliment */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Nom</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{t("fuel.edit_name_label")}</div>
               <input
                 type="text"
                 value={editAliment}
                 onChange={e => setEditAliment(e.target.value)}
-                placeholder="Nom de l'aliment"
+                placeholder={t("fuel.food_name_placeholder")}
                 style={{ width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "#fff", fontSize: 14, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }}
               />
             </div>
@@ -1635,8 +1635,8 @@ export default function FuelPage({ client, appData }) {
             {/* Quantite — auto-rescale les macros au prorata */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase" }}>Quantite</div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>les macros se recalculent au prorata</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase" }}>{t("fuel.quantity")}</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>{t("fuel.edit_quantity_hint")}</div>
               </div>
               <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
                 {[50, 100, 150, 200, 250, 300].map(q => (
@@ -1672,13 +1672,13 @@ export default function FuelPage({ client, appData }) {
 
             {/* Macros editables manuellement */}
             <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Macros (modifiables)</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{t("fuel.edit_macros_label")}</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {[
-                  { label: "Calories", value: editKcal, setter: setEditKcal, color: ORANGE, unit: "kcal", step: 1 },
-                  { label: "Proteines", value: editProt, setter: setEditProt, color: GREEN, unit: "g", step: 0.1 },
-                  { label: "Glucides", value: editGluc, setter: setEditGluc, color: ORANGE, unit: "g", step: 0.1 },
-                  { label: "Lipides", value: editLip, setter: setEditLip, color: BLUE, unit: "g", step: 0.1 },
+                  { label: t("fuel.macro_calories_label"), value: editKcal, setter: setEditKcal, color: ORANGE, unit: "kcal", step: 1 },
+                  { label: t("fuel.macro_proteines_label"), value: editProt, setter: setEditProt, color: GREEN, unit: "g", step: 0.1 },
+                  { label: t("fuel.macro_glucides_label"), value: editGluc, setter: setEditGluc, color: ORANGE, unit: "g", step: 0.1 },
+                  { label: t("fuel.macro_lipides_label"), value: editLip, setter: setEditLip, color: BLUE, unit: "g", step: 0.1 },
                 ].map((m, i) => (
                   <div key={i} style={{ background: `${m.color}10`, border: `1px solid ${m.color}25`, borderRadius: 12, padding: "10px 12px" }}>
                     <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{m.label}</div>
@@ -1703,13 +1703,13 @@ export default function FuelPage({ client, appData }) {
                 onClick={deleteEditFood}
                 style={{ flexShrink: 0, padding: "14px 18px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 14, color: "#ef4444", fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: "0.3px" }}
               >
-                Supprimer
+                {t("fuel.edit_delete")}
               </button>
               <button
                 onClick={saveEditFood}
                 style={{ flex: 1, padding: 14, background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase" }}
               >
-                Enregistrer
+                {t("fuel.edit_save")}
               </button>
             </div>
           </div>

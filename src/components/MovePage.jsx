@@ -148,11 +148,15 @@ export default function MovePage({ client, appData }) {
       await scheduled.refresh();
     }
 
-    // Log XP dans session_logs pour que useXP le compte
+    // Log XP dans session_logs pour que useXP le compte.
+    // Si pas de distance fournie : on n'append pas le suffixe "· 0 km".
+    const sessionName = dist > 0
+      ? `${t("move.run_session_label")} · ${dist} km`
+      : t("move.run_session_label");
     await supabase.from("session_logs").insert({
       client_id: client.id,
-      session_name: "Course · " + form.distance + " km",
-      programme_name: "Move",
+      session_name: sessionName,
+      programme_name: wasPrescribed ? "Move" : null,
       logged_at: new Date().toISOString(),
     }).then(() => {});
   };
@@ -219,7 +223,7 @@ export default function MovePage({ client, appData }) {
           <div style={{ fontSize: 10, color: "rgba(239,68,68,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t("move.activity")}</div>
           <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Run<span style={{ color: RED }}>.</span></div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic" }}>
-            {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            {new Date().toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
           </div>
         </div>
 
@@ -530,7 +534,7 @@ export default function MovePage({ client, appData }) {
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
-                  {isRecord ? `" Nouveau record ! Tu repousses tes limites. "` : pct >= 95 ? `" Tout pres de ton record. Encore un effort. "` : `" Continue — chaque sortie te rapproche de ton record. "`}
+                  {isRecord ? t("move.record_new_subtitle") : pct >= 95 ? t("move.record_close_subtitle") : t("move.record_keep_going_subtitle")}
                 </div>
               </div>
             </div>
@@ -539,7 +543,7 @@ export default function MovePage({ client, appData }) {
 
         {/* GRAPHIQUE SEMAINE */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 14 }}>Cette semaine</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 14 }}>{t("move.this_week_title")}</div>
           <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 60 }}>
             {bars.map((b, i) => (
               <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
@@ -649,7 +653,7 @@ export default function MovePage({ client, appData }) {
       {showSteps && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowSteps(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ background: "#111", borderRadius: 24, padding: 24, width: "100%", maxWidth: 360 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Nombre de pas</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>{t("move.steps_label")}</div>
             <div style={{ fontSize: 52, fontWeight: 100, color: GREEN, textAlign: "center", marginBottom: 20, letterSpacing: "-2px" }}>
               {tempSteps.toLocaleString()}
             </div>
@@ -664,7 +668,7 @@ export default function MovePage({ client, appData }) {
                 <button key={v} onClick={() => setTempSteps(Math.min(tempSteps + v, 20000))} style={{ flex: 1, padding: "10px 0", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.2)", borderRadius: 10, color: GREEN, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>+{v >= 1000 ? v/1000 + "k" : v}</button>
               ))}
             </div>
-            <button onClick={() => { saveSteps(tempSteps); setShowSteps(false); }} style={{ width: "100%", padding: 14, background: GREEN, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
+            <button onClick={() => { saveSteps(tempSteps); setShowSteps(false); }} style={{ width: "100%", padding: 14, background: GREEN, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t("move.steps_save")}</button>
           </div>
         </div>
       )}
