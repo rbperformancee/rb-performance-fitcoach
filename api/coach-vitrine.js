@@ -64,7 +64,10 @@ function renderPage(coach, testimonials, slug) {
   const city = coach.public_city || '';
   const bio = coach.public_bio || '';
   const url = `${SITE}/coach/${slug}`;
-  const ogImage = photo || `${SITE}/og-image.png`;
+  // OG image stylisée 1200x630 générée dynamiquement par /api/og-coach
+  // (photo + nom + spécialités + branding RB Perform). Évite le crop bizarre
+  // d'une photo carrée en preview sociale.
+  const ogImage = `${SITE}/api/og-coach?slug=${encodeURIComponent(slug)}`;
 
   // OG description : bio courte ou fallback
   const ogDesc = bio
@@ -168,6 +171,9 @@ function renderPage(coach, testimonials, slug) {
 <meta property="og:description" content="${escAttr(ogDesc)}"/>
 <meta property="og:url" content="${escAttr(url)}"/>
 <meta property="og:image" content="${escAttr(ogImage)}"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:type" content="image/png"/>
 <meta property="og:image:alt" content="${escAttr(brand + ' — Coach RB Perform')}"/>
 <meta property="og:site_name" content="RB Perform"/>
 <meta property="og:locale" content="fr_FR"/>
