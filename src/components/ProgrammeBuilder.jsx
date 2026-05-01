@@ -131,6 +131,46 @@ const REST_SUGGESTIONS = [
   "4'", "5'", "6'", "7'", "8'", "10'",
 ];
 
+// ─── Classification muscle groups (pour analytics builder) ───────────────────
+// Mapping basique nom d'exercice → groupe musculaire principal.
+// Utilisé pour calculer le volume hebdo et la balance push/pull/legs.
+const MUSCLE_PATTERNS = [
+  { group: "Pectoraux", patterns: [/d[ée]velopp[ée]\s*couch[ée]|bench|dips|pec\s*fly|pec\s*deck|push.*press|pompe|pullover/i] },
+  { group: "Épaules",   patterns: [/d[ée]velopp[ée]\s*militaire|shoulder\s*press|[ée]l[ée]vation\s*lat[ée]rale|lateral\s*raise|front\s*raise|arnold|face\s*pull|oiseaux|rear\s*delt|y\s*raise|push\s*jerk|push\s*press/i] },
+  { group: "Triceps",   patterns: [/triceps|extension.*triceps|extension.*haltere|haltere.*au.*front|skull|jm.*press|tate.*press|tricep|kickback/i] },
+  { group: "Biceps",    patterns: [/biceps|curl/i] },
+  { group: "Dos",       patterns: [/traction|pull[\s-]?up|chin[\s-]?up|tirage|rowing|row\s|t[\s-]?bar|pendlay|lat[\s-]?pull|shrug|deadlift|soulev[ée]\s*de\s*terre|good\s*morning|clean\s*pull|snatch\s*pull/i] },
+  { group: "Quadriceps", patterns: [/squat|fente|presse.*cuisse|leg\s*press|leg\s*extension|hack\s*squat|split\s*squat|bulgarian|step.*up|lunge/i] },
+  { group: "Ischios",   patterns: [/leg\s*curl|nordic|hip\s*thrust|glute\s*bridge|RDL|romanian|jambes?\s*tendu|stiff\s*leg|good\s*morning/i] },
+  { group: "Fessiers",  patterns: [/glute|fessier|hip\s*thrust|kickback|bridge|pull[\s-]?through/i] },
+  { group: "Mollets",   patterns: [/mollet|calf/i] },
+  { group: "Abdos",     patterns: [/abdo|crunch|plank|gainage|leg\s*raise|relev[ée]\s*jambes|hollow|dead\s*bug|bird\s*dog|ab\s*wheel|pallof|woodchop|russian\s*twist/i] },
+  { group: "Adducteurs/Abducteurs", patterns: [/adducteur|abducteur|adductor|abductor/i] },
+];
+
+function classifyExercise(name) {
+  if (!name) return "Autre";
+  for (const { group, patterns } of MUSCLE_PATTERNS) {
+    for (const p of patterns) if (p.test(name)) return group;
+  }
+  return "Autre";
+}
+
+// Analyse les sets totaux par groupe musculaire pour une semaine donnée.
+function weeklyVolumeByGroup(week) {
+  const groups = {};
+  (week.sessions || []).forEach((s) => {
+    (s.exercises || []).forEach((ex) => {
+      const grp = classifyExercise(ex.name);
+      // Parse les sets depuis "4X8-10" ou "5X5"
+      const m = String(ex.reps || "").match(/^(\d+)\s*[xX×]/);
+      const sets = m ? parseInt(m[1], 10) : 0;
+      groups[grp] = (groups[grp] || 0) + sets;
+    });
+  });
+  return groups;
+}
+
 // ─── Templates de phases ──────────────────────────────────────────────────────
 // Skeletons pré-remplis : structure (semaines × séances × exos vides + reps/RIR
 // suggérés selon la phase). L'exercice picker remplit le nom + vidéo au tap.
@@ -764,9 +804,133 @@ function Stat({ label, value }) {
   );
 }
 
-function Preview({ programme }) {
+function AnalyticsPanel({ programme }) {
+  // Volume agrégé sur tout le programme, par groupe musculaire
+  const totalByGroup = useMemo(() => {
+    const acc = {};
+    (programme.weeks || []).forEach((w) => {
+      const wkVol = weeklyVolumeByGroup(w);
+      for (const [grp, sets] of Object.entries(wkVol)) {
+        acc[grp] = (acc[grp] || 0) + sets;
+      }
+    });
+    return acc;
+  }, [programme]);
+
+  const totalSets = Object.values(totalByGroup).reduce((a, b) => a + b, 0);
+  const sortedGroups = Object.entries(totalByGroup).sort((a, b) => b[1] - a[1]);
+
+  // Balance push/pull/legs (ratio recommandé : ~1:1:1 ou 1:1.2:1.5 selon objectif)
+  const pushSets = (totalByGroup["Pectoraux"] || 0) + (totalByGroup["Épaules"] || 0) + (totalByGroup["Triceps"] || 0);
+  const pullSets = (totalByGroup["Dos"] || 0) + (totalByGroup["Biceps"] || 0);
+  const legsSets = (totalByGroup["Quadriceps"] || 0) + (totalByGroup["Ischios"] || 0) + (totalByGroup["Fessiers"] || 0) + (totalByGroup["Mollets"] || 0);
+
+  // Volume par semaine (pour détecter progression / deload)
+  const weeklyTotals = (programme.weeks || []).map((w, i) => ({
+    name: w.name || `Sem ${i + 1}`,
+    sets: Object.values(weeklyVolumeByGroup(w)).reduce((a, b) => a + b, 0),
+  }));
+  const maxWeekly = Math.max(1, ...weeklyTotals.map((w) => w.sets));
+
+  // Alertes : groupes oubliés (ex: 0 sets sur jambes), volume trop élevé/bas
+  const alerts = [];
+  if (totalByGroup["Quadriceps"] === undefined && totalByGroup["Ischios"] === undefined) {
+    alerts.push({ level: "warn", msg: "Aucune séance jambes détectée." });
+  }
+  if (pushSets > 0 && pullSets === 0) {
+    alerts.push({ level: "warn", msg: "Push sans tirage. Risque déséquilibre épaules." });
+  }
+  if (pushSets > 0 && pullSets > 0 && pullSets < pushSets * 0.7) {
+    alerts.push({ level: "info", msg: `Tirage inférieur à push (${pullSets} vs ${pushSets} sets). Considère plus de dos.` });
+  }
+  const totalWeeks = (programme.weeks || []).length;
+  if (totalWeeks >= 4 && weeklyTotals.every((w, i) => i === 0 || w.sets >= weeklyTotals[i - 1].sets * 0.85)) {
+    // Pas de deload détecté (toutes les semaines au moins 85% de la précédente)
+    alerts.push({ level: "info", msg: "Pas de semaine de récupération détectée sur 4+ semaines." });
+  }
+
+  if (totalSets === 0) {
+    return (
+      <div style={{ padding: 20, background: "rgba(255,255,255,0.02)", border: "1px dashed " + BORDER, borderRadius: 14, color: "rgba(255,255,255,0.4)", textAlign: "center", fontSize: 12 }}>
+        Ajoute des exercices avec un format reps "NXM" pour voir les analytics.
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Volume par groupe musculaire */}
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Volume par muscle</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+        {sortedGroups.map(([grp, sets]) => {
+          const pct = (sets / totalSets) * 100;
+          return (
+            <div key={grp} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", width: 100, flexShrink: 0 }}>{grp}</div>
+              <div style={{ flex: 1, height: 8, background: "rgba(255,255,255,0.04)", borderRadius: 4, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: pct + "%", background: G, borderRadius: 4 }} />
+              </div>
+              <div style={{ fontSize: 11, color: "#fff", fontWeight: 700, width: 50, textAlign: "right", flexShrink: 0 }}>{sets} sets</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Balance Push/Pull/Legs */}
+      {(pushSets + pullSets + legsSets > 0) && (
+        <>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Balance</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
+            <Stat label="Push" value={pushSets} />
+            <Stat label="Pull" value={pullSets} />
+            <Stat label="Legs" value={legsSets} />
+          </div>
+        </>
+      )}
+
+      {/* Volume par semaine */}
+      {weeklyTotals.length > 1 && (
+        <>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Volume par semaine</div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 100, marginBottom: 20, padding: "4px 0" }}>
+            {weeklyTotals.map((w, i) => (
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>{w.sets}</div>
+                <div style={{ width: "100%", height: ((w.sets / maxWeekly) * 80) + "px", background: G, borderRadius: 3, transition: "height 0.4s" }} />
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: 1 }}>{w.name.replace("Semaine", "S")}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Alertes */}
+      {alerts.length > 0 && (
+        <>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Suggestions</div>
+          {alerts.map((a, i) => (
+            <div key={i} style={{ padding: 10, marginBottom: 6, background: a.level === "warn" ? "rgba(239,68,68,0.06)" : "rgba(2,209,186,0.04)", border: "1px solid " + (a.level === "warn" ? "rgba(239,68,68,0.2)" : "rgba(2,209,186,0.15)"), borderRadius: 8, fontSize: 11, color: a.level === "warn" ? "#ff8888" : "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+              {a.level === "warn" ? "⚠ " : "💡 "}{a.msg}
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+
+function Preview({ programme, showAnalytics }) {
   const totalEx = (programme.weeks || []).reduce((a, w) => a + (w.sessions || []).reduce((b, s) => b + (s.exercises || []).length, 0), 0);
   const totalSessions = (programme.weeks || []).reduce((a, w) => a + (w.sessions || []).length, 0);
+
+  if (showAnalytics) {
+    return (
+      <div style={{ background: "#050505", borderRadius: 16, padding: 24, height: "100%", overflowY: "auto" }}>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 3, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 16 }}>📊 Analytics programme</div>
+        <AnalyticsPanel programme={programme} />
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -872,6 +1036,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   const [savedFlash, setSavedFlash] = useState(false);
   const [autosavedAt, setAutosavedAt] = useState(0);
   const [showTemplates, setShowTemplates] = useState(!editMode && (programme.weeks?.length === 1 && programme.weeks[0].sessions?.[0]?.exercises?.[0]?.name === "" && !programme.name));
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Autosave debounce 800ms (uniquement mode création, pas edit)
   useEffect(() => {
@@ -1107,8 +1272,17 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           >+ Ajouter une semaine</button>
         </div>
 
-        <div style={{ overflowY: "auto", padding: 22, background: BG_2 }}>
-          <Preview programme={programme} />
+        <div style={{ overflowY: "auto", padding: 22, background: BG_2, position: "relative" }}>
+          {/* Toggle Aperçu / Analytics */}
+          <div style={{ display: "flex", gap: 4, padding: 4, background: "rgba(255,255,255,0.04)", border: "1px solid " + BORDER, borderRadius: 100, width: "fit-content", marginBottom: 14 }}>
+            <button type="button" onClick={() => setShowAnalytics(false)}
+              style={{ padding: "6px 14px", borderRadius: 100, border: "none", background: !showAnalytics ? G : "transparent", color: !showAnalytics ? "#000" : "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}
+            >Aperçu</button>
+            <button type="button" onClick={() => setShowAnalytics(true)}
+              style={{ padding: "6px 14px", borderRadius: 100, border: "none", background: showAnalytics ? G : "transparent", color: showAnalytics ? "#000" : "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}
+            >📊 Analytics</button>
+          </div>
+          <Preview programme={programme} showAnalytics={showAnalytics} />
         </div>
       </div>
     </div>
