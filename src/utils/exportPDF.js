@@ -431,3 +431,131 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
   const filename = `${(programme.name || "programme").toLowerCase().replace(/\s+/g, "-")}_progression_${date}.pdf`;
   doc.save(filename);
 }
+
+// =========================================================
+// Export PDF du PROGRAMME (builder) — pour partage / impression
+// Différent de exportProgressPDF qui inclut les logs client.
+// =========================================================
+export async function exportProgrammePDF(p) {
+  const JsPDF = await loadJsPDF();
+  const doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, H = 297, ML = 14, MR = 14;
+  let y = 0;
+
+  const header = (title, subtitle) => {
+    doc.setFillColor(...DARK);
+    doc.rect(0, 0, W, H, 'F');
+    doc.setFillColor(...GREEN);
+    doc.rect(0, 0, W, 28, 'F');
+    doc.setTextColor(...DARK);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text(title || 'Programme', ML, 18);
+    if (subtitle) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(subtitle, ML, 24);
+    }
+  };
+
+  // ── Page 1 : couverture ──
+  header(p.name || 'Programme', p.clientName || '');
+  y = 42;
+  doc.setTextColor(...WHITE);
+  doc.setFont('helvetica', 'normal');
+  if (p.tagline) {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'italic');
+    doc.text('« ' + p.tagline + ' »', ML, y);
+    y += 12;
+  }
+
+  const totalSessions = (p.weeks || []).reduce((a, w) => a + (w.sessions || []).length, 0);
+  const totalEx = (p.weeks || []).reduce((a, w) => a + (w.sessions || []).reduce((b, s) => b + (s.exercises || []).length, 0), 0);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(...GREEN);
+  doc.text('PROGRAMME', ML, y);
+  y += 6;
+  doc.setTextColor(...WHITE);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  if (p.duration) { doc.text('Durée : ' + p.duration + ' semaines', ML, y); y += 5; }
+  if (p.objective) { doc.text('Objectif : ' + p.objective, ML, y); y += 5; }
+  doc.text('Semaines : ' + (p.weeks || []).length, ML, y); y += 5;
+  doc.text('Séances : ' + totalSessions, ML, y); y += 5;
+  doc.text('Exercices : ' + totalEx, ML, y); y += 12;
+
+  // ── Pour chaque semaine : nouvelle page ──
+  (p.weeks || []).forEach((w, wi) => {
+    doc.addPage();
+    header(w.name || ('Semaine ' + (wi + 1)), p.name || '');
+    y = 38;
+
+    (w.sessions || []).forEach((s, si) => {
+      if (y > H - 30) { doc.addPage(); header(w.name || ('Semaine ' + (wi + 1)) + ' (suite)', p.name || ''); y = 38; }
+      doc.setTextColor(...GREEN);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text((si + 1) + '. ' + (s.name || ('Séance ' + (si + 1))), ML, y);
+      y += 6;
+      if (s.description) {
+        doc.setTextColor(...GRAY);
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(8);
+        const lines = doc.splitTextToSize(s.description, W - ML - MR);
+        doc.text(lines, ML, y);
+        y += lines.length * 4;
+      }
+      y += 2;
+
+      // Tableau exos
+      (s.exercises || []).forEach((ex, ei) => {
+        if (y > H - 24) { doc.addPage(); header(w.name + ' (suite)', p.name || ''); y = 38; }
+        doc.setFillColor(...DARK3);
+        doc.rect(ML, y - 3, W - ML - MR, 9, 'F');
+        doc.setTextColor(...GREEN);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.text(String(ei + 1).padStart(2, '0'), ML + 2, y + 2.5);
+        doc.setTextColor(...WHITE);
+        doc.setFontSize(9);
+        doc.text((ex.name || '—').slice(0, 50), ML + 10, y + 2.5);
+        // chips reps tempo rir rest à droite
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...GREEN);
+        const meta = [ex.reps, ex.tempo ? 't' + ex.tempo : null, ex.rir ? 'RIR ' + ex.rir : null, ex.rest ? 'r' + ex.rest : null].filter(Boolean).join(' · ');
+        if (meta) doc.text(meta, W - MR - 2, y + 2.5, { align: 'right' });
+        y += 11;
+      });
+
+      if (s.finisher) {
+        doc.setFillColor(...RED);
+        doc.rect(ML, y - 2, 2, 6, 'F');
+        doc.setTextColor(...RED);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.text('FINISHER', ML + 4, y + 1);
+        doc.setTextColor(...WHITE);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        const finLines = doc.splitTextToSize(s.finisher, W - ML - MR - 28);
+        doc.text(finLines, ML + 28, y + 1);
+        y += finLines.length * 4 + 4;
+      }
+      y += 4;
+    });
+  });
+
+  // Footer dernière page
+  doc.setTextColor(...GRAY);
+  doc.setFontSize(7);
+  doc.text('Généré par RB Perform · ' + new Date().toLocaleDateString('fr-FR'), W / 2, H - 8, { align: 'center' });
+
+  const date = new Date().toISOString().slice(0, 10);
+  const filename = (p.name || 'programme').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '_' + date + '.pdf';
+  doc.save(filename);
+}
+

@@ -4,6 +4,10 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { exportProgrammePDF } from "../utils/exportPDF";
 
 const G = "#02d1ba";
 const G_DIM = "rgba(2,209,186,0.1)";
@@ -466,7 +470,26 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate }
   );
 }
 
-function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate }) {
+function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: session.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    position: "relative",
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <SessionPanel
+        session={session} idx={idx} total={total}
+        onUpdate={onUpdate} onRemove={onRemove} onMove={onMove} onDuplicate={onDuplicate}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
+function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps }) {
   const update = (k, v) => onUpdate({ ...session, [k]: v });
   const updateExercise = (exIdx, ex) => onUpdate({ ...session, exercises: session.exercises.map((e, i) => i === exIdx ? ex : e) });
   const addExercise = () => onUpdate({ ...session, exercises: [...session.exercises, newExercise()] });
@@ -492,6 +515,12 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
       padding: 16, marginBottom: 14,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        {dragHandleProps ? (
+          <button type="button" {...dragHandleProps}
+            style={{ width: 24, height: 24, cursor: "grab", color: "rgba(255,255,255,0.3)", background: "transparent", border: "none", padding: 0, fontSize: 16 }}
+            title="Glisser pour réorganiser"
+          >⋮⋮</button>
+        ) : null}
         <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase" }}>Séance {idx + 1}</span>
         <input
           type="text"
@@ -550,7 +579,25 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
   );
 }
 
-function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove }) {
+function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: week.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <WeekPanel
+        week={week} weekIdx={weekIdx} totalWeeks={totalWeeks}
+        onUpdate={onUpdate} onRemove={onRemove} onDuplicate={onDuplicate} onMove={onMove}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
+function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove, dragHandleProps }) {
   const update = (k, v) => onUpdate({ ...week, [k]: v });
   const updateSession = (sIdx, s) => onUpdate({ ...week, sessions: week.sessions.map((x, i) => i === sIdx ? s : x) });
   const addSession = () => onUpdate({ ...week, sessions: [...week.sessions, newSession(week.sessions.length + 1)] });
@@ -582,6 +629,12 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
       border: "1px solid " + BORDER, borderRadius: 18,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        {dragHandleProps ? (
+          <button type="button" {...dragHandleProps}
+            style={{ width: 24, height: 36, cursor: "grab", color: "rgba(255,255,255,0.4)", background: "transparent", border: "none", padding: 0, fontSize: 18 }}
+            title="Glisser pour réorganiser la semaine"
+          >⋮⋮</button>
+        ) : null}
         <div style={{
           width: 36, height: 36, borderRadius: 10,
           background: G, color: "#000", display: "flex", alignItems: "center", justifyContent: "center",
@@ -628,14 +681,28 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
         >Supprimer</button>
       </div>
 
-      {(week.sessions || []).map((s, i) => (
-        <SessionPanel key={s.id} session={s} idx={i} total={week.sessions.length}
-          onUpdate={(ns) => updateSession(i, ns)}
-          onRemove={() => removeSession(i)}
-          onMove={(dir) => moveSession(i, dir)}
-          onDuplicate={() => duplicateSession(i)}
-        />
-      ))}
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={(event) => {
+          const { active, over } = event;
+          if (!over || active.id === over.id) return;
+          const oldIdx = week.sessions.findIndex((s) => s.id === active.id);
+          const newIdx = week.sessions.findIndex((s) => s.id === over.id);
+          if (oldIdx < 0 || newIdx < 0) return;
+          onUpdate({ ...week, sessions: arrayMove(week.sessions, oldIdx, newIdx) });
+        }}
+      >
+        <SortableContext items={(week.sessions || []).map((s) => s.id)} strategy={verticalListSortingStrategy}>
+          {(week.sessions || []).map((s, i) => (
+            <SortableSession key={s.id} session={s} idx={i} total={week.sessions.length}
+              onUpdate={(ns) => updateSession(i, ns)}
+              onRemove={() => removeSession(i)}
+              onMove={(dir) => moveSession(i, dir)}
+              onDuplicate={() => duplicateSession(i)}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
       <button
         type="button"
         onClick={addSession}
@@ -916,6 +983,18 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           )}
           <button
             type="button"
+            onClick={async () => {
+              try { await exportProgrammePDF(programme); }
+              catch (e) { console.error(e); alert("Erreur PDF : " + e.message); }
+            }}
+            style={{
+              padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+              border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
+            }}
+          >📄 Export PDF</button>
+          <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
             style={{
@@ -944,24 +1023,40 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           </div>
 
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 12 }}>Structure</div>
-          {(programme.weeks || []).map((w, i) => (
-            <WeekPanel
-              key={w.id}
-              week={w}
-              weekIdx={i}
-              totalWeeks={programme.weeks.length}
-              onUpdate={(nw) => updateWeek(i, nw)}
-              onRemove={() => removeWeek(i)}
-              onDuplicate={() => duplicateWeek(i)}
-              onMove={(dir) => setProgramme((p) => {
-                const arr = [...p.weeks];
-                const j = i + dir;
-                if (j < 0 || j >= arr.length) return p;
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-                return { ...p, weeks: arr };
-              })}
-            />
-          ))}
+          <DndContext
+            collisionDetection={closestCenter}
+            onDragEnd={(event) => {
+              const { active, over } = event;
+              if (!over || active.id === over.id) return;
+              setProgramme((p) => {
+                const oldIdx = p.weeks.findIndex((w) => w.id === active.id);
+                const newIdx = p.weeks.findIndex((w) => w.id === over.id);
+                if (oldIdx < 0 || newIdx < 0) return p;
+                return { ...p, weeks: arrayMove(p.weeks, oldIdx, newIdx) };
+              });
+            }}
+          >
+            <SortableContext items={(programme.weeks || []).map((w) => w.id)} strategy={verticalListSortingStrategy}>
+              {(programme.weeks || []).map((w, i) => (
+                <SortableWeek
+                  key={w.id}
+                  week={w}
+                  weekIdx={i}
+                  totalWeeks={programme.weeks.length}
+                  onUpdate={(nw) => updateWeek(i, nw)}
+                  onRemove={() => removeWeek(i)}
+                  onDuplicate={() => duplicateWeek(i)}
+                  onMove={(dir) => setProgramme((p) => {
+                    const arr = [...p.weeks];
+                    const j = i + dir;
+                    if (j < 0 || j >= arr.length) return p;
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    return { ...p, weeks: arr };
+                  })}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
           <button
             type="button"
             onClick={addWeek}
