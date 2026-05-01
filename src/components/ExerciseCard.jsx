@@ -4,6 +4,7 @@ import { RestTimer, parseRestSeconds } from "./RestTimer";
 import haptic from "../lib/haptic";
 import { useT, getLocale } from "../lib/i18n";
 import { findVideo } from "../data/exerciseVideos";
+import { findFallbackVideo } from "../data/fallbackVideos";
 
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
@@ -201,9 +202,13 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const allDone = doneCount >= parsedSets && doneCount > 0;
   const deltaPos = delta !== null && delta > 0;
   const deltaNeg = delta !== null && delta < 0;
-  // Fallback : si pas de vidUrl explicite dans le programme, on cherche dans la
-  // bibliothèque centrale (src/data/exerciseVideos.js) par nom + alias.
-  const effectiveVidUrl = ex.vidUrl || findVideo(ex.name);
+  // Cascade fallback :
+  //   1. ex.vidUrl explicite (programme HTML)
+  //   2. findVideo() — lib perso Rayan (EXERCISE_VIDEOS)
+  //   3. findFallbackVideo() — créateurs externes (FALLBACK_VIDEOS), avec attribution
+  const fallbackHit = !ex.vidUrl && !findVideo(ex.name) ? findFallbackVideo(ex.name) : null;
+  const effectiveVidUrl = ex.vidUrl || findVideo(ex.name) || (fallbackHit && fallbackHit.url) || null;
+  const fallbackCreator = fallbackHit ? fallbackHit.creator : null;
   const hasVideo = !!effectiveVidUrl;
   const chipsReps = ex.rawReps || (ex.sets && ex.reps ? `${ex.sets}×${ex.reps}` : ex.reps) || null;
   const restSecs = parseRestSeconds(ex.rest);
@@ -353,7 +358,16 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
           </div>
 
           {/* Video */}
-          {hasVideo && showVideo && <VideoCard vidUrl={effectiveVidUrl} thumbUrl={ex.thumbUrl} exName={ex.name} />}
+          {hasVideo && showVideo && (
+            <div>
+              <VideoCard vidUrl={effectiveVidUrl} thumbUrl={ex.thumbUrl} exName={ex.name} />
+              {fallbackCreator ? (
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "right", marginTop: -8, marginBottom: 12, fontStyle: "italic", letterSpacing: 0.3 }}>
+                  Démo externe · {fallbackCreator}
+                </div>
+              ) : null}
+            </div>
+          )}
 
           {/* Fantome semaine precedente */}
           {ghostData && (
