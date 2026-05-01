@@ -4,6 +4,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
+import { findFallbackVideo } from "../data/fallbackVideos";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -493,6 +494,15 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
   const update = (k, v) => onUpdate({ ...ex, [k]: v });
   const iconBtn = { width: 24, height: 24, borderRadius: 6, border: "1px solid " + BORDER, background: "transparent", color: "rgba(255,255,255,0.45)", cursor: "pointer", fontSize: 11, flexShrink: 0, fontFamily: "inherit" };
 
+  // Détecte la source effective de la vidéo
+  // Priorité : ex.vidUrl > findVideo (lib perso) > findFallbackVideo (externe) > rien
+  const personalUrl = !ex.vidUrl ? findVideo(ex.name) : null;
+  const fallbackHit = !ex.vidUrl && !personalUrl ? findFallbackVideo(ex.name) : null;
+  let videoSource = "none";
+  if (ex.vidUrl) videoSource = "explicit";
+  else if (personalUrl) videoSource = "personal";
+  else if (fallbackHit) videoSource = "fallback";
+
   return (
     <div style={{
       background: "rgba(255,255,255,0.025)", border: "1px solid " + BORDER,
@@ -530,6 +540,23 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
         <TextField label="Groupe" value={ex.group} onChange={(v) => update("group", v)} placeholder="A1, A2…" />
         <TextField label="🎥 Vidéo URL" value={ex.vidUrl} onChange={(v) => update("vidUrl", v)} placeholder="Auto-rempli si tu choisis depuis la liste" />
       </div>
+
+      {/* Indicateur source vidéo + CTA remplacer si fallback externe */}
+      {videoSource !== "none" && !ex.vidUrl && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, padding: "6px 10px", background: videoSource === "fallback" ? "rgba(255,165,0,0.06)" : "rgba(2,209,186,0.06)", border: "1px solid " + (videoSource === "fallback" ? "rgba(255,165,0,0.2)" : "rgba(2,209,186,0.2)"), borderRadius: 8, fontSize: 11 }}>
+          <span style={{ color: videoSource === "fallback" ? "rgba(255,180,80,0.85)" : G, fontWeight: 700 }}>
+            {videoSource === "personal" ? "✓ Tes vidéos" : "↗ Démo externe · " + (fallbackHit?.creator || "")}
+          </span>
+          {videoSource === "fallback" && (
+            <button type="button" onClick={() => {
+              const newUrl = window.prompt("Colle l'URL de TA vidéo YouTube pour remplacer la démo externe :", "");
+              if (newUrl && newUrl.trim()) update("vidUrl", newUrl.trim());
+            }} style={{ marginLeft: "auto", padding: "3px 10px", background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 100, color: G, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3 }}>
+              Remplacer par ma vidéo
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
