@@ -567,12 +567,303 @@ function PublicProfileSection({ coachData, isDemo }) {
         {savingVitrine ? "Enregistrement…" : "Enregistrer la vitrine"}
       </button>
 
-      <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,.35)", lineHeight: 1.55, textAlign: "center" }}>
-        💡 Active la vitrine pour la rendre publique. Tu pourras gérer tes témoignages clients dans une prochaine mise à jour.
-      </div>
+      {/* TÉMOIGNAGES */}
+      <TestimonialsManager coachData={coachData} isDemo={isDemo} />
     </div>
   );
 }
+
+// ===== TÉMOIGNAGES MANAGER =====
+function TestimonialsManager({ coachData, isDemo }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null); // null | "new" | id
+  const [draft, setDraft] = useState({ client_name: "", content: "", rating: 5, client_photo_url: "" });
+  const [saving, setSaving] = useState(false);
+  const [uploadingT, setUploadingT] = useState(false);
+
+  async function load() {
+    if (!coachData?.id) { setLoading(false); return; }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("coach_testimonials")
+        .select("*")
+        .eq("coach_id", coachData.id)
+        .order("ordre", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setItems(data || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [coachData?.id]);
+
+  function startNew() {
+    setDraft({ client_name: "", content: "", rating: 5, client_photo_url: "" });
+    setEditing("new");
+  }
+
+  function startEdit(t) {
+    setDraft({
+      client_name: t.client_name || "",
+      content: t.content || "",
+      rating: t.rating || 5,
+      client_photo_url: t.client_photo_url || "",
+    });
+    setEditing(t.id);
+  }
+
+  function cancel() {
+    setEditing(null);
+    setDraft({ client_name: "", content: "", rating: 5, client_photo_url: "" });
+  }
+
+  async function uploadPhoto(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { toast.error("Photo trop lourde (max 2 Mo)"); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Format image uniquement"); return; }
+    if (isDemo) { toast.info("Démo : upload désactivé"); return; }
+    setUploadingT(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${coachData.id}/testimonial-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("coach-logos").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("coach-logos").getPublicUrl(path);
+      setDraft(d => ({ ...d, client_photo_url: data.publicUrl + "?t=" + Date.now() }));
+    } catch (err) { toast.error(err.message); }
+    setUploadingT(false);
+  }
+
+  async function save() {
+    if (isDemo) { toast.info("Démo : enregistrement désactivé"); return; }
+    if (!draft.client_name.trim() || !draft.content.trim()) {
+      toast.error("Nom + témoignage requis"); return;
+    }
+    setSaving(true);
+    try {
+      if (editing === "new") {
+        const ordre = items.length;
+        const { error } = await supabase.from("coach_testimonials").insert({
+          coach_id: coachData.id,
+          client_name: draft.client_name.trim(),
+          content: draft.content.trim(),
+          rating: draft.rating,
+          client_photo_url: draft.client_photo_url || null,
+          visible: true,
+          ordre,
+        });
+        if (error) throw error;
+        toast.success("Témoignage ajouté ✓");
+      } else {
+        const { error } = await supabase.from("coach_testimonials").update({
+          client_name: draft.client_name.trim(),
+          content: draft.content.trim(),
+          rating: draft.rating,
+          client_photo_url: draft.client_photo_url || null,
+        }).eq("id", editing);
+        if (error) throw error;
+        toast.success("Témoignage modifié ✓");
+      }
+      cancel();
+      load();
+    } catch (e) { toast.error(e.message); }
+    setSaving(false);
+  }
+
+  async function toggleVisible(t) {
+    if (isDemo) return;
+    try {
+      const { error } = await supabase.from("coach_testimonials")
+        .update({ visible: !t.visible }).eq("id", t.id);
+      if (error) throw error;
+      load();
+    } catch (e) { toast.error(e.message); }
+  }
+
+  async function remove(t) {
+    if (isDemo) return;
+    if (!window.confirm(`Supprimer le témoignage de ${t.client_name} ?`)) return;
+    try {
+      const { error } = await supabase.from("coach_testimonials").delete().eq("id", t.id);
+      if (error) throw error;
+      toast.success("Supprimé");
+      load();
+    } catch (e) { toast.error(e.message); }
+  }
+
+  async function move(t, dir) {
+    if (isDemo) return;
+    const idx = items.findIndex(x => x.id === t.id);
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= items.length) return;
+    const swap = items[newIdx];
+    try {
+      await Promise.all([
+        supabase.from("coach_testimonials").update({ ordre: newIdx }).eq("id", t.id),
+        supabase.from("coach_testimonials").update({ ordre: idx }).eq("id", swap.id),
+      ]);
+      load();
+    } catch (e) { toast.error(e.message); }
+  }
+
+  return (
+    <div style={{ marginTop: 24, paddingTop: 22, borderTop: "1px solid rgba(255,255,255,.06)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 4 }}>
+            Témoignages clients
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.45)", lineHeight: 1.5 }}>
+            Affichés sur ta vitrine (max 3 visibles)
+          </div>
+        </div>
+        {editing === null && (
+          <button onClick={startNew} style={{ ...btnGhost, flexShrink: 0 }}>+ Ajouter</button>
+        )}
+      </div>
+
+      {loading && (
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", padding: "12px 0" }}>Chargement…</div>
+      )}
+
+      {!loading && items.length === 0 && editing === null && (
+        <div style={{ padding: "20px", background: "rgba(255,255,255,.02)", border: ".5px dashed rgba(255,255,255,.1)", borderRadius: 12, fontSize: 12, color: "rgba(255,255,255,.45)", textAlign: "center", lineHeight: 1.6 }}>
+          Aucun témoignage pour l'instant.<br/>
+          Ajoute-en pour booster la conversion sur ta vitrine.
+        </div>
+      )}
+
+      {/* LISTE */}
+      {!loading && items.length > 0 && editing === null && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {items.map((t, i) => (
+            <div key={t.id} style={{
+              padding: "14px 14px",
+              background: "rgba(255,255,255,.025)",
+              border: ".5px solid rgba(255,255,255,.07)",
+              borderRadius: 12,
+              opacity: t.visible ? 1 : 0.5,
+            }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
+                {t.client_photo_url ? (
+                  <img src={t.client_photo_url} alt={t.client_name} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${G}22`, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 800, color: G, flexShrink: 0 }}>
+                    {(t.client_name || "?")[0]?.toUpperCase()}
+                  </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2 }}>{t.client_name}</div>
+                  <div style={{ fontSize: 11, color: "#fbbf24", letterSpacing: 1.5 }}>
+                    {"★".repeat(t.rating || 5)}<span style={{ color: "rgba(255,255,255,.15)" }}>{"★".repeat(5 - (t.rating || 5))}</span>
+                  </div>
+                </div>
+                {!t.visible && (
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: "rgba(255,255,255,.4)", padding: "3px 7px", background: "rgba(255,255,255,.05)", borderRadius: 100 }}>MASQUÉ</span>
+                )}
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.7)", lineHeight: 1.55, marginBottom: 10, fontStyle: "italic" }}>
+                « {t.content} »
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <button onClick={() => move(t, -1)} disabled={i === 0} style={miniBtn(i === 0)}>↑</button>
+                <button onClick={() => move(t, 1)} disabled={i === items.length - 1} style={miniBtn(i === items.length - 1)}>↓</button>
+                <button onClick={() => toggleVisible(t)} style={miniBtn(false)}>{t.visible ? "Masquer" : "Afficher"}</button>
+                <button onClick={() => startEdit(t)} style={miniBtn(false)}>Éditer</button>
+                <button onClick={() => remove(t)} style={{ ...miniBtn(false), color: "#ff6b6b", borderColor: "rgba(255,107,107,.25)" }}>Supprimer</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* FORMULAIRE */}
+      {editing !== null && (
+        <div style={{ padding: "16px 16px 18px", background: "rgba(2,209,186,.04)", border: `.5px solid ${G}25`, borderRadius: 12 }}>
+          <div style={{ ...sectionSubtitle, color: G, marginBottom: 12 }}>
+            {editing === "new" ? "Nouveau témoignage" : "Modifier"}
+          </div>
+
+          {/* Photo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,.04)", border: `1px solid ${G}33`, flexShrink: 0, display: "grid", placeItems: "center" }}>
+              {draft.client_photo_url
+                ? <img src={draft.client_photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <div style={{ fontSize: 18, fontWeight: 800, color: `${G}aa` }}>{(draft.client_name || "?")[0]?.toUpperCase()}</div>
+              }
+            </div>
+            <label style={{ ...btnGhost, cursor: "pointer" }}>
+              {uploadingT ? "Upload…" : (draft.client_photo_url ? "Changer photo" : "Photo (optionnel)")}
+              <input type="file" accept="image/*" onChange={uploadPhoto} style={{ display: "none" }} />
+            </label>
+            {draft.client_photo_url && (
+              <button onClick={() => setDraft(d => ({ ...d, client_photo_url: "" }))} style={{ ...miniBtn(false), color: "#ff6b6b" }}>×</button>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={sectionSubtitle}>Prénom du client</div>
+            <input className="set-input" value={draft.client_name} onChange={e => setDraft(d => ({ ...d, client_name: e.target.value.slice(0, 60) }))} placeholder="Lucas" style={input} />
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={sectionSubtitle}>Note</div>
+            <div style={{ display: "flex", gap: 4 }}>
+              {[1, 2, 3, 4, 5].map(n => (
+                <button key={n} onClick={() => setDraft(d => ({ ...d, rating: n }))} style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  fontSize: 22, color: n <= draft.rating ? "#fbbf24" : "rgba(255,255,255,.15)",
+                  padding: 0, lineHeight: 1,
+                }} aria-label={`${n} étoiles`}>★</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <div style={sectionSubtitle}>Témoignage (max 280 caractères)</div>
+            <textarea
+              className="set-input"
+              value={draft.content}
+              onChange={e => setDraft(d => ({ ...d, content: e.target.value.slice(0, 280) }))}
+              placeholder="-12 kg en 4 mois sans jamais être affamé. Le suivi quotidien fait toute la différence."
+              rows={4}
+              style={{ ...input, height: "auto", padding: "10px 14px", lineHeight: 1.55, resize: "vertical", minHeight: 90 }}
+            />
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,.3)", textAlign: "right", marginTop: 4 }}>
+              {draft.content.length}/280
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={cancel} style={{ ...btnGhost, flex: 1 }}>Annuler</button>
+            <button onClick={save} disabled={saving} style={{ ...btnPrimary, flex: 1, opacity: saving ? 0.5 : 1 }}>
+              {saving ? "…" : "Enregistrer"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const miniBtn = (disabled) => ({
+  padding: "6px 10px",
+  background: "rgba(255,255,255,.04)",
+  border: ".5px solid rgba(255,255,255,.1)",
+  borderRadius: 8,
+  color: "rgba(255,255,255,.7)",
+  fontSize: 11, fontWeight: 600,
+  cursor: disabled ? "not-allowed" : "pointer",
+  opacity: disabled ? 0.4 : 1,
+  fontFamily: "inherit",
+  letterSpacing: ".02em",
+});
 
 // ===== PARRAINAGE COACH =====
 function ReferralSection({ coachData, isDemo }) {
