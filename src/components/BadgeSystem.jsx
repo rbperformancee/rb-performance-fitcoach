@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useT } from "../lib/i18n";
+import { isClientDemoMode } from "../lib/demoMode";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -60,10 +61,13 @@ export function BadgeSystem({ clientId, sessions = 0, streak = 0, weights = 0, r
 
     const newlyEarned = toEarn.filter(b => !earnedIds.has(b.id));
     if (newlyEarned.length > 0) {
-      await supabase.from("client_badges").upsert(
-        newlyEarned.map(b => ({ client_id: clientId, badge_id: b.id })),
-        { onConflict: "client_id,badge_id" }
-      );
+      // Skip l'upsert en mode demo client (RLS bloque + pas de persistance attendue)
+      if (!isClientDemoMode()) {
+        await supabase.from("client_badges").upsert(
+          newlyEarned.map(b => ({ client_id: clientId, badge_id: b.id })),
+          { onConflict: "client_id,badge_id" }
+        );
+      }
       setNewBadge(newlyEarned[0]);
       if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
       setTimeout(() => setNewBadge(null), 3500);

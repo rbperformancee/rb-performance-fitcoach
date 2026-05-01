@@ -139,24 +139,29 @@ function SupplementsTab({ clientId }) {
   const today = new Date().toISOString().slice(0, 10);
 
   const loadData = useCallback(async () => {
-    if (!clientId) return;
-    const { data: sups } = await supabase
-      .from("client_supplements")
-      .select("*")
-      .eq("client_id", clientId)
-      .eq("is_active", true)
-      .order("created_at");
-    setSupplements(sups || []);
+    if (!clientId) { setLoading(false); return; }
+    try {
+      const { data: sups } = await supabase
+        .from("client_supplements")
+        .select("*")
+        .eq("client_id", clientId)
+        .eq("is_active", true)
+        .order("created_at");
+      setSupplements(sups || []);
 
-    const { data: todayLogs } = await supabase
-      .from("supplement_logs")
-      .select("supplement_id,taken")
-      .eq("client_id", clientId)
-      .eq("date", today);
-    const logMap = {};
-    (todayLogs || []).forEach(l => { logMap[l.supplement_id] = l.taken; });
-    setLogs(logMap);
-    setLoading(false);
+      const { data: todayLogs } = await supabase
+        .from("supplement_logs")
+        .select("supplement_id,taken")
+        .eq("client_id", clientId)
+        .eq("date", today);
+      const logMap = {};
+      (todayLogs || []).forEach(l => { logMap[l.supplement_id] = l.taken; });
+      setLogs(logMap);
+    } catch (e) {
+      console.error("[supplements] loadData failed", e);
+    } finally {
+      setLoading(false);
+    }
   }, [clientId, today]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -511,7 +516,8 @@ export default function FuelPage({ client, appData }) {
 
   const handleAddFood = async () => {
     if (!selectedFood) return;
-    const factor = quantite / 100;
+    const qty = Math.max(1, quantite);
+    const factor = qty / 100;
     await addFood({
       repas: selectedRepas,
       aliment: selectedFood.name,
@@ -519,7 +525,7 @@ export default function FuelPage({ client, appData }) {
       proteines: parseFloat((selectedFood.proteines * factor).toFixed(1)),
       glucides: parseFloat((selectedFood.glucides * factor).toFixed(1)),
       lipides: parseFloat((selectedFood.lipides * factor).toFixed(1)),
-      quantite_g: quantite,
+      quantite_g: qty,
     });
     setShowAdd(false);
     setQuery("");

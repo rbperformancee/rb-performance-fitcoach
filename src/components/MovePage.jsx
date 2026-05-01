@@ -36,8 +36,8 @@ export default function MovePage({ client, appData }) {
     setLoading(true);
     const [runsRes, trackingRes, goalsRes] = await Promise.all([
       supabase.from("run_logs").select("*").eq("client_id", client.id).order("date", { ascending: false }).limit(10),
-      supabase.from("daily_tracking").select("*").eq("client_id", client.id).eq("date", today).single(),
-      supabase.from("nutrition_goals").select("pas").eq("client_id", client.id).single(),
+      supabase.from("daily_tracking").select("*").eq("client_id", client.id).eq("date", today).maybeSingle(),
+      supabase.from("nutrition_goals").select("pas").eq("client_id", client.id).maybeSingle(),
     ]);
     setRuns(runsRes.data || []);
     setDailySteps(trackingRes.data?.pas || 0);
@@ -78,6 +78,16 @@ export default function MovePage({ client, appData }) {
     const totalMin = (parseInt(form.heures, 10) || 0) * 60 + (parseInt(form.minutes, 10) || 0);
     // Au moins une metrique requise (distance OU duree)
     if (dist <= 0 && totalMin <= 0) return;
+    // Bornes superieures realistes (200 km / 10 h)
+    if (dist > 200 || totalMin > 600) {
+      try {
+        const { toast } = await import("./Toast");
+        toast.error("Valeurs irréalistes");
+      } catch (_) {
+        alert("Valeurs irréalistes");
+      }
+      return;
+    }
     setSaving(true);
     // Allure calculee uniquement si distance + duree fournies
     let allure = null;
@@ -240,7 +250,7 @@ export default function MovePage({ client, appData }) {
           </div>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14 }}>
             <div style={{ fontSize: 26, fontWeight: 200, color: "rgba(239,68,68,0.4)", letterSpacing: "-1.5px", lineHeight: 1 }}>{weekRuns.length}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}> {t("move.runs_unit")}</span></div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>{t("move.this_month")}</div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 5 }}>{t("move.this_week")}</div>
           </div>
         </div>
 
@@ -414,6 +424,7 @@ export default function MovePage({ client, appData }) {
 
             {/* CTA Valider la semaine — visible uniquement quand semaine terminee + sur la viewWeek = currentWeek + pas la derniere */}
             {scheduled.weekFullyDone
+              && scheduled.runs.length > 0
               && scheduled.viewWeek === scheduled.currentWeek
               && scheduled.viewWeek > scheduled.validatedUntilWeek
               && scheduled.viewWeek < scheduled.totalWeeks && (
@@ -455,6 +466,7 @@ export default function MovePage({ client, appData }) {
             {/* Programme termine */}
             {scheduled.viewWeek === scheduled.totalWeeks
               && scheduled.weekFullyDone
+              && scheduled.runs.length > 0
               && scheduled.validatedUntilWeek >= scheduled.totalWeeks - 1 && (
               <button
                 onClick={async () => { haptic.success(); await scheduled.validateWeek(scheduled.totalWeeks); }}
@@ -589,8 +601,8 @@ export default function MovePage({ client, appData }) {
 
       {/* MODAL AJOUTER SORTIE */}
       {showAdd && (
-        <div onClick={e => { if (e.target === e.currentTarget) { setShowAdd(false); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-          <div style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
+        <div onClick={e => { if (e.target === e.currentTarget) { setShowAdd(false); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center" }}>
+          <div style={{ background: "#111", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(env(safe-area-inset-bottom, 0px) + 24px)", width: "100%", maxWidth: 480, boxSizing: "border-box" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>{t("move.new_run")}</div>
               <button onClick={() => setShowAdd(false)} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, width: 44, height: 44, color: "rgba(255,255,255,0.85)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -617,23 +629,6 @@ export default function MovePage({ client, appData }) {
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>{t("move.note_optional")}</div>
               <input type="text" value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))} placeholder={t("move.note_placeholder")} style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, color: "#fff", fontSize: 16, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box" }} />
             </div>
-
-            {form.distance && form.duree && (() => {
-              const dist = parseFloat(form.distance);
-              const totalMin = (parseInt(form.heures || 0) * 60) + (parseInt(form.minutes || 0));
-              if (dist > 0 && totalMin > 0) {
-                const allureSec = Math.round((totalMin / dist) * 60);
-                const aMin = Math.floor(allureSec / 60);
-                const aSec = allureSec % 60;
-                return (
-                  <div style={{ padding: "12px 16px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{t("move.calc_pace")}</div>
-                    <div style={{ fontSize: 20, color: RED, fontWeight: 600 }}>{aMin}:{String(aSec).padStart(2, "0")} <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>min/km</span></div>
-                  </div>
-                );
-              }
-              return null;
-            })()}
 
             {(() => {
               // Au moins distance OU duree (heures+minutes)

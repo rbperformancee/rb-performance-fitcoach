@@ -40,7 +40,7 @@ export function useXP(clientId) {
     if (!clientId) return;
     setLoading(true);
     const [sessions, weights, streakData, badgesData] = await Promise.all([
-      supabase.from("session_logs").select("id, logged_at, note").eq("client_id", clientId).order("logged_at", { ascending: false }).limit(50),
+      supabase.from("session_logs").select("id, logged_at").eq("client_id", clientId).order("logged_at", { ascending: false }).limit(50),
       supabase.from("weight_logs").select("id, date, weight").eq("client_id", clientId).order("date", { ascending: false }).limit(10),
       supabase.from("session_logs").select("logged_at").eq("client_id", clientId).order("logged_at", { ascending: false }).limit(60),
       supabase.from("client_badges").select("badge_id").eq("client_id", clientId),
@@ -100,7 +100,7 @@ export function useXP(clientId) {
     }
 
     // XP pas (objectif atteint)
-    const goalsRes2 = await supabase.from("nutrition_goals").select("pas").eq("client_id", clientId).single();
+    const goalsRes2 = await supabase.from("nutrition_goals").select("pas").eq("client_id", clientId).maybeSingle();
     const pasGoal = goalsRes2.data?.pas || 8000;
     const stepsGoalDays = (stepsRes.data || []).filter(d => (d.pas || 0) >= pasGoal).length;
     totalXP += stepsGoalDays * 5;
