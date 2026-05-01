@@ -241,11 +241,17 @@ html,body{background:#050505;color:#fff;min-height:100vh;min-height:100dvh;font-
     ${testimonialsHtml}
 
     ${(() => {
-      // Founder Rayan : CTA pointe vers /candidature (high-ticket).
-      // Autres coachs : mailto pré-rempli vers leur email.
+      // Priorité : 1) public_cta_url explicite (Calendly, wa.me, etc.)
+      //           2) Founder Rayan → /candidature
+      //           3) mailto fallback vers email du coach
       const isFounder = slug === 'rayan' || coach.email === 'rb.performancee@gmail.com';
+      const customCta = coach.public_cta_url && /^(https?:|mailto:|tel:)/.test(coach.public_cta_url) ? coach.public_cta_url : null;
       let href, label, subline;
-      if (isFounder) {
+      if (customCta) {
+        href = customCta;
+        label = 'Demander un accès';
+        subline = 'Réponse rapide';
+      } else if (isFounder) {
         href = '/candidature';
         label = 'Travailler avec moi';
         subline = 'Sélection sur dossier · 5 places';
