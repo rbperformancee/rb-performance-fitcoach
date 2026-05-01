@@ -11,6 +11,7 @@ const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
 const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
 const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
+const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
 // Texte cyclique pour le splash demo client (3 etapes, 1.5s chacune).
 function DemoLoadingText() {
@@ -471,6 +472,17 @@ function AppInner() {
      new URLSearchParams(window.location.search).get("candidature") === "true");
   if (isCandidature) {
     return <Suspense fallback={null}><CoachingApplicationLanding /></Suspense>;
+  }
+
+  // ===== VITRINE PUBLIQUE COACH (/coach/:slug) =====
+  // Page publique servie via RLS anon (public_profile_enabled = true).
+  const coachVitrineSlug = (() => {
+    if (typeof window === "undefined") return null;
+    const m = window.location.pathname.match(/^\/coach\/([a-z0-9-]+)\/?$/i);
+    return m ? m[1] : null;
+  })();
+  if (coachVitrineSlug) {
+    return <Suspense fallback={null}><PublicCoachProfile slug={coachVitrineSlug} /></Suspense>;
   }
 
   // ===== MODE DEMO COACH (route /demo ou ?demo=true) =====

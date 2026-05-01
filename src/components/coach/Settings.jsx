@@ -283,86 +283,293 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
 // ===== VITRINE PUBLIQUE =====
 function PublicProfileSection({ coachData, isDemo }) {
   const t = useT();
-  const slug = coachData?.public_slug;
-  const enabled = coachData?.public_profile_enabled === true;
   const baseUrl = (typeof window !== "undefined" ? window.location.origin : "");
+
+  const [enabled, setEnabled] = useState(coachData?.public_profile_enabled === true);
+  const [slug, setSlug] = useState(coachData?.public_slug || "");
+  const [bio, setBio] = useState(coachData?.public_bio || "");
+  const [city, setCity] = useState(coachData?.public_city || "");
+  const [photoUrl, setPhotoUrl] = useState(coachData?.public_photo_url || "");
+  const [specialties, setSpecialties] = useState(Array.isArray(coachData?.public_specialties) ? coachData.public_specialties : []);
+  const [newSpec, setNewSpec] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [savingVitrine, setSavingVitrine] = useState(false);
+
   const url = slug ? `${baseUrl}/coach/${slug}` : null;
 
-  // ⚠ Vitrine publique en travaux — masquer la section pour éviter de
-  // promettre une feature pas encore prête. Décommenter quand prêt.
-  return (
-    <div style={{ marginTop: 32, padding: 18, background: "rgba(255,165,0,0.04)", border: "1px dashed rgba(255,165,0,0.25)", borderRadius: 14 }}>
-      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(255,165,0,0.85)", textTransform: "uppercase", marginBottom: 6 }}>🚧 En travaux</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>Vitrine publique</div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
-        Bientôt : ta page publique avec bio, photos, témoignages et lien d'invitation. Activable depuis ces paramètres une fois disponible.
-      </div>
-    </div>
-  );
-
-  // eslint-disable-next-line no-unreachable
-  // (legacy code below, conservé pour activation rapide)
+  function slugify(s) {
+    return (s || "")
+      .toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40);
+  }
 
   async function copy(text) {
-    try { await navigator.clipboard.writeText(text); toast.success(t("set.toast_copied")); }
-    catch { toast.error(t("set.toast_copy_error")); }
+    try { await navigator.clipboard.writeText(text); toast.success("Lien copié ✓"); }
+    catch { toast.error("Copie impossible"); }
+  }
+
+  async function uploadPhoto(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { toast.error("Photo trop lourde (max 3 Mo)"); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Format image uniquement"); return; }
+    if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${coachData.id}/vitrine-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("coach-logos").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("coach-logos").getPublicUrl(path);
+      const newUrl = data.publicUrl + "?t=" + Date.now();
+      setPhotoUrl(newUrl);
+      await supabase.from("coaches").update({ public_photo_url: newUrl }).eq("id", coachData.id);
+      toast.success("Photo vitrine mise à jour ✓");
+    } catch (err) {
+      toast.error(err.message || "Erreur upload");
+    }
+    setUploading(false);
+  }
+
+  function addSpec() {
+    const s = newSpec.trim();
+    if (!s) return;
+    if (specialties.includes(s)) { toast.info("Déjà ajouté"); return; }
+    if (specialties.length >= 6) { toast.info("Max 6 spécialités"); return; }
+    setSpecialties([...specialties, s]);
+    setNewSpec("");
+  }
+
+  function removeSpec(i) {
+    setSpecialties(specialties.filter((_, idx) => idx !== i));
+  }
+
+  async function saveVitrine() {
+    if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; }
+    if (!coachData?.id) return;
+    const finalSlug = slug ? slugify(slug) : slugify(coachData.full_name || "coach");
+    setSavingVitrine(true);
+    try {
+      const { error } = await supabase
+        .from("coaches")
+        .update({
+          public_slug: finalSlug || null,
+          public_bio: bio.trim() || null,
+          public_city: city.trim() || null,
+          public_specialties: specialties.length ? specialties : [],
+          public_photo_url: photoUrl || null,
+        })
+        .eq("id", coachData.id);
+      if (error) throw error;
+      setSlug(finalSlug);
+      toast.success("Vitrine enregistrée ✓");
+    } catch (e) {
+      if (String(e.message || "").includes("duplicate") || String(e.message || "").includes("unique")) {
+        toast.error("Ce slug est déjà pris, choisis-en un autre");
+      } else {
+        toast.error(e.message || "Erreur enregistrement");
+      }
+    }
+    setSavingVitrine(false);
   }
 
   async function toggleEnabled() {
     if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; }
     if (!coachData?.id) return;
+    // Si on active sans slug, on en génère un automatiquement
+    if (!enabled && !slug) {
+      const auto = slugify(coachData.full_name || "coach");
+      setSlug(auto);
+      const { error: e1 } = await supabase
+        .from("coaches")
+        .update({ public_slug: auto, public_profile_enabled: true })
+        .eq("id", coachData.id);
+      if (e1) { toast.error(e1.message); return; }
+      setEnabled(true);
+      toast.success(`Vitrine en ligne sur /coach/${auto}`);
+      return;
+    }
     try {
+      const next = !enabled;
       const { error } = await supabase
         .from("coaches")
-        .update({ public_profile_enabled: !enabled })
+        .update({ public_profile_enabled: next })
         .eq("id", coachData.id);
       if (error) throw error;
-      toast.success(enabled ? t("set.toast_vitrine_hidden") : t("set.toast_vitrine_enabled"));
-      setTimeout(() => window.location.reload(), 600);
+      setEnabled(next);
+      toast.success(next ? "Vitrine en ligne ✓" : "Vitrine masquée");
     } catch (e) { toast.error(e.message); }
   }
 
   return (
-    <div style={{ marginTop: 32, padding: "20px 22px", background: "rgba(255,255,255,.025)", border: ".5px solid rgba(255,255,255,.07)", borderRadius: 14 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: enabled ? G : "rgba(255,255,255,.3)", marginBottom: 10 }}>
-        {t("set.public_eyebrow")} {enabled && t("set.public_active_suffix")}
-      </div>
-      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
-        {coachData?.full_name || t("set.public_default_name")}<span style={{ color: G }}>.</span>
-      </div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 16, lineHeight: 1.5 }}>
-        {t("set.public_desc")}
+    <div style={{ marginTop: 32, padding: "22px 22px 24px", background: "rgba(255,255,255,.025)", border: ".5px solid rgba(255,255,255,.07)", borderRadius: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: enabled ? G : "rgba(255,255,255,.35)", marginBottom: 4 }}>
+            Vitrine publique {enabled && "· EN LIGNE"}
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.5 }}>
+            Ta page publique partageable (Insta bio, signature email…)
+          </div>
+        </div>
+        <button
+          onClick={toggleEnabled}
+          style={{
+            position: "relative", flexShrink: 0,
+            width: 44, height: 26, borderRadius: 100,
+            background: enabled ? G : "rgba(255,255,255,.12)",
+            border: "none", cursor: "pointer", padding: 0, transition: "background .2s",
+          }}
+          aria-label={enabled ? "Masquer la vitrine" : "Activer la vitrine"}
+        >
+          <div style={{
+            position: "absolute", top: 3, left: enabled ? 21 : 3,
+            width: 20, height: 20, borderRadius: "50%",
+            background: "#fff", transition: "left .2s",
+          }} />
+        </button>
       </div>
 
-      {url && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-          <input
-            readOnly
-            value={url}
-            style={{ ...input, fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}
-            onClick={(e) => e.target.select()}
-          />
-          <button onClick={() => copy(url)} style={{ ...btnGhost, flexShrink: 0 }} title={t("set.public_tooltip_copy")}>
-            <AppIcon name="check" size={14} color={G} />
+      {/* URL + copy */}
+      {enabled && url && (
+        <div style={{ display: "flex", gap: 6, marginBottom: 18, padding: "10px 12px", background: "rgba(2,209,186,.05)", border: `.5px solid ${G}33`, borderRadius: 10 }}>
+          <div style={{ flex: 1, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: G, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "8px 0" }}>
+            {url}
+          </div>
+          <button onClick={() => copy(url)} style={{ ...btnGhost, padding: "8px 12px", flexShrink: 0 }}>
+            Copier
           </button>
+          <a href={url} target="_blank" rel="noopener noreferrer" style={{ ...btnGhost, padding: "8px 12px", flexShrink: 0, textDecoration: "none" }}>
+            Voir →
+          </a>
         </div>
       )}
 
+      {/* PHOTO */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={sectionSubtitle}>Photo vitrine</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ position: "relative", width: 72, height: 72, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,.04)", border: `1px solid ${G}33`, flexShrink: 0 }}>
+            {photoUrl ? (
+              <img src={photoUrl} alt="vitrine" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ display: "grid", placeItems: "center", height: "100%", fontSize: 22, fontWeight: 800, color: `${G}aa` }}>
+                {(coachData?.full_name || "?")[0]?.toUpperCase()}
+              </div>
+            )}
+            {uploading && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.6)", display: "grid", placeItems: "center", color: "#fff", fontSize: 10 }}>...</div>}
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ ...btnGhost, display: "inline-flex", cursor: "pointer" }}>
+              {photoUrl ? "Changer" : "Téléverser"}
+              <input type="file" accept="image/*" onChange={uploadPhoto} style={{ display: "none" }} />
+            </label>
+            {photoUrl && (
+              <button
+                onClick={async () => {
+                  if (isDemo) return;
+                  setPhotoUrl("");
+                  await supabase.from("coaches").update({ public_photo_url: null }).eq("id", coachData.id);
+                  toast.success("Photo retirée");
+                }}
+                style={{ ...btnGhost, marginLeft: 8, color: "#ff6b6b", borderColor: "rgba(255,107,107,.25)", background: "rgba(255,107,107,.04)" }}
+              >
+                Retirer
+              </button>
+            )}
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,.35)", marginTop: 8, letterSpacing: ".05em" }}>
+              JPG/PNG/WebP · max 3 Mo
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SLUG */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={sectionSubtitle}>URL personnalisée</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+          <div style={{ padding: "0 12px", height: 44, display: "flex", alignItems: "center", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.08)", borderRight: "none", borderRadius: "10px 0 0 10px", fontSize: 12, color: "rgba(255,255,255,.45)", fontFamily: "'JetBrains Mono', monospace" }}>
+            /coach/
+          </div>
+          <input
+            className="set-input"
+            value={slug}
+            onChange={e => setSlug(slugify(e.target.value))}
+            placeholder="ton-nom"
+            style={{ ...input, borderRadius: "0 10px 10px 0", fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
+          />
+        </div>
+      </div>
+
+      {/* CITY */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={sectionSubtitle}>Ville</div>
+        <input
+          className="set-input"
+          value={city}
+          onChange={e => setCity(e.target.value)}
+          placeholder="Paris"
+          style={input}
+        />
+      </div>
+
+      {/* BIO */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={sectionSubtitle}>Bio (max 500 caractères)</div>
+        <textarea
+          className="set-input"
+          value={bio}
+          onChange={e => setBio(e.target.value.slice(0, 500))}
+          placeholder="Présente-toi en quelques lignes : ton parcours, ta méthode, à qui tu t'adresses…"
+          rows={5}
+          style={{ ...input, height: "auto", padding: "12px 14px", lineHeight: 1.6, resize: "vertical", minHeight: 120 }}
+        />
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,.3)", textAlign: "right", marginTop: 4 }}>
+          {bio.length}/500
+        </div>
+      </div>
+
+      {/* SPECIALITES */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={sectionSubtitle}>Spécialités (max 6)</div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+          {specialties.map((s, i) => (
+            <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", background: `${G}10`, border: `.5px solid ${G}40`, borderRadius: 100, fontSize: 12, color: "#fff", fontWeight: 600 }}>
+              {s}
+              <button onClick={() => removeSpec(i)} style={{ background: "none", border: "none", color: `${G}aa`, cursor: "pointer", padding: 0, fontSize: 14, lineHeight: 1 }} aria-label={`Retirer ${s}`}>×</button>
+            </span>
+          ))}
+        </div>
+        {specialties.length < 6 && (
+          <div style={{ display: "flex", gap: 6 }}>
+            <input
+              className="set-input"
+              value={newSpec}
+              onChange={e => setNewSpec(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addSpec(); } }}
+              placeholder="Force athlétique, mobilité, perte de poids…"
+              style={input}
+            />
+            <button onClick={addSpec} style={{ ...btnGhost, flexShrink: 0 }}>+ Ajouter</button>
+          </div>
+        )}
+      </div>
+
+      {/* SAVE */}
       <button
-        onClick={toggleEnabled}
-        style={{
-          width: "100%",
-          padding: "11px 16px",
-          background: enabled ? "rgba(255,107,107,.06)" : G,
-          color: enabled ? "#ff6b6b" : "#000",
-          border: enabled ? ".5px solid rgba(255,107,107,.2)" : "none",
-          borderRadius: 10,
-          fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase",
-          cursor: "pointer", fontFamily: "'Syne', sans-serif",
-        }}
+        onClick={saveVitrine}
+        disabled={savingVitrine}
+        style={{ ...btnPrimary, opacity: savingVitrine ? 0.5 : 1 }}
       >
-        {enabled ? t("set.public_btn_hide") : t("set.public_btn_show")}
+        {savingVitrine ? "Enregistrement…" : "Enregistrer la vitrine"}
       </button>
+
+      <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,.35)", lineHeight: 1.55, textAlign: "center" }}>
+        💡 Active la vitrine pour la rendre publique. Tu pourras gérer tes témoignages clients dans une prochaine mise à jour.
+      </div>
     </div>
   );
 }
