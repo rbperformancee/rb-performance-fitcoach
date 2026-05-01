@@ -29,7 +29,7 @@ const escAttr = (s) => String(s ?? '').replace(/[<>"'&]/g, (c) => ({
 }[c]));
 
 async function fetchCoach(slug) {
-  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=id,full_name,brand_name,public_bio,public_specialties,public_photo_url,public_city,logo_url,accent_color`;
+  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=id,full_name,brand_name,email,public_bio,public_specialties,public_photo_url,public_city,logo_url,accent_color`;
   const r = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
   if (!r.ok) return null;
   const rows = await r.json();
@@ -77,7 +77,7 @@ function renderPage(coach, testimonials, slug) {
   const initials = (brand || 'C').split(' ').map(w => (w[0] || '')).join('').slice(0, 2).toUpperCase();
 
   const photoHtml = photo
-    ? `<img src="${escAttr(photo)}" alt="${escAttr(brand)}" style="width:100%;height:100%;object-fit:cover;display:block"/>`
+    ? `<img src="${escAttr(photo)}" alt="${escAttr(brand)}" style="width:100%;height:100%;object-fit:cover;object-position:50% 25%;display:block"/>`
     : `<div style="display:grid;place-items:center;height:100%;font-size:46px;font-weight:900;color:#000;font-family:Inter,sans-serif;letter-spacing:-1px">${escHtml(initials)}</div>`;
 
   const photoBg = photo ? '' : `background:linear-gradient(135deg,${accent},${accent}66);`;
@@ -240,14 +240,32 @@ html,body{background:#050505;color:#fff;min-height:100vh;min-height:100dvh;font-
     ${specsHtml}
     ${testimonialsHtml}
 
+    ${(() => {
+      // Founder Rayan : CTA pointe vers /candidature (high-ticket).
+      // Autres coachs : mailto pré-rempli vers leur email.
+      const isFounder = slug === 'rayan' || coach.email === 'rb.performancee@gmail.com';
+      let href, label, subline;
+      if (isFounder) {
+        href = '/candidature';
+        label = 'Travailler avec moi';
+        subline = 'Sélection sur dossier · 5 places';
+      } else {
+        const subj = encodeURIComponent(`Demande de coaching avec ${brand}`);
+        const body = encodeURIComponent(`Bonjour ${(coach.full_name || brand).split(' ')[0]},\n\nJe découvre ta vitrine sur RB Perform et j'aimerais discuter d'un accompagnement.\n\nMerci !`);
+        href = coach.email ? `mailto:${coach.email}?subject=${subj}&body=${body}` : '#';
+        label = 'Demander un accès';
+        subline = 'Réponse sous 24-48h';
+      }
+      return `
     <div style="margin-top:56px;animation:fadeUp .7s ease .6s both">
-      <a href="/candidature" class="cta-btn" style="display:inline-flex;align-items:center;gap:12px;text-decoration:none;padding:18px 32px;background:linear-gradient(135deg,${accent},${accent}cc);color:#000;border-radius:100px;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;animation:ctaGlow 2.4s ease-in-out infinite">
+      <a href="${escAttr(href)}" class="cta-btn" style="display:inline-flex;align-items:center;gap:12px;text-decoration:none;padding:18px 32px;background:linear-gradient(135deg,${accent},${accent}cc);color:#000;border-radius:100px;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;animation:ctaGlow 2.4s ease-in-out infinite">
         <span style="width:8px;height:8px;border-radius:50%;background:#000;animation:breath60Scale 1s ease-in-out infinite"></span>
-        Travailler avec moi
+        ${escHtml(label)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-left:2px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </a>
-      <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,.42);letter-spacing:.15em;text-transform:uppercase;font-weight:600">Sélection sur dossier · 5 places</div>
-    </div>
+      <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,.42);letter-spacing:.15em;text-transform:uppercase;font-weight:600">${escHtml(subline)}</div>
+    </div>`;
+    })()}
 
     <div style="margin-top:80px;padding-top:28px;border-top:1px solid rgba(255,255,255,.06)">
       <div style="font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.28);font-weight:700">

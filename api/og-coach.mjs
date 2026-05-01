@@ -69,7 +69,7 @@ function coachCard(coach) {
 
   // Photo or initials
   const photoNode = photo
-    ? el('img', { src: photo, width: 380, height: 380, style: { width: 380, height: 380, objectFit: 'cover' } })
+    ? el('img', { src: photo, width: 380, height: 380, style: { width: 380, height: 380, objectFit: 'cover', objectPosition: '50% 25%' } })
     : el('div', { style: { fontSize: 140, fontWeight: 900, color: '#000', fontFamily: 'Inter, sans-serif', letterSpacing: -4, display: 'flex' } }, initials);
 
   // Specialty chips
