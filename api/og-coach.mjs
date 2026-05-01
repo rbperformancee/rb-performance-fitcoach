@@ -61,7 +61,10 @@ function coachCard(coach) {
   const brand = coach.brand_name || coach.full_name || 'Coach';
   const city = coach.public_city || '';
   const specialties = Array.isArray(coach.public_specialties) ? coach.public_specialties.filter(Boolean).slice(0, 3) : [];
-  const photo = coach.public_photo_url || coach.logo_url || '';
+  // Satori (moteur de @vercel/og) ne supporte pas WebP. Si l'URL pointe
+  // vers .webp, on tente la version .jpg équivalente same-origin.
+  const rawPhoto = coach.public_photo_url || coach.logo_url || '';
+  const photo = rawPhoto.endsWith('.webp') ? rawPhoto.replace(/\.webp(\?.*)?$/, '.jpg$1') : rawPhoto;
   const initials = (brand || 'C').split(' ').map(w => (w[0] || '')).join('').slice(0, 2).toUpperCase();
 
   // Photo or initials
