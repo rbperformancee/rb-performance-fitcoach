@@ -2,12 +2,12 @@
   "name": "RB Perform — Coach Dashboard",
   "short_name": "RB Perform",
   "description": "Premium SaaS for fitness coaches. Dashboard CEO, anti-churn AI, business score. Coaching sportif personnalise, programmes sur-mesure, suivi nutrition, seances en temps reel.",
-  "start_url": "/?source=pwa",
+  "start_url": "/app.html?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#080C14",
+  "background_color": "#050505",
   "theme_color": "#02d1ba",
   "lang": "fr-FR",
   "dir": "ltr",
@@ -67,14 +67,14 @@
       "name": "Entrainement du jour",
       "short_name": "Training",
       "description": "Acceder directement a ta seance",
-      "url": "/?page=training",
+      "url": "/app.html?page=training",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Logger mon poids",
       "short_name": "Poids",
       "description": "Enregistrer ma pesee du jour",
-      "url": "/?page=weight",
+      "url": "/app.html?page=weight",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]

@@ -40,10 +40,11 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
     }
 
     try {
-      const perm = await Notification.requestPermission();
+      // Detection : Notification.permission peut déjà être "granted" sans demande
+      const existingPerm = Notification.permission;
+      const perm = existingPerm === "granted" ? "granted" : await Notification.requestPermission();
       if (perm === "granted") {
         toast.success(t("pn.toast_activated"));
-        // Persister l'etat dans Supabase (best-effort)
         if (coachId) {
           try {
             await supabase
@@ -52,10 +53,10 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
               .eq("id", coachId);
           } catch (_) {}
         }
-        // TODO: register subscription via push API + VAPID (Edge Fn dediee)
       } else if (perm === "denied") {
         toast.info(t("pn.toast_denied"));
       }
+      // perm === "default" : user a fermé le prompt sans choisir → pas de toast (silent)
     } catch (_) {
       toast.error(t("pn.toast_error"));
     }
@@ -147,9 +148,21 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
         {/* 3 benefices */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28, textAlign: "left" }}>
           {[
-            { emoji: "🔴", title: t("pn.benefit1_title"), desc: t("pn.benefit1_desc") },
-            { emoji: "💪", title: t("pn.benefit2_title"), desc: t("pn.benefit2_desc") },
-            { emoji: "💬", title: t("pn.benefit3_title"), desc: t("pn.benefit3_desc") },
+            {
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+              color: "#ff6b6b",
+              title: t("pn.benefit1_title"), desc: t("pn.benefit1_desc"),
+            },
+            {
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+              color: "#02d1ba",
+              title: t("pn.benefit2_title"), desc: t("pn.benefit2_desc"),
+            },
+            {
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+              color: "#a78bfa",
+              title: t("pn.benefit3_title"), desc: t("pn.benefit3_desc"),
+            },
           ].map((b, i) => (
             <div
               key={i}
@@ -162,14 +175,16 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
               }}
             >
               <div style={{
-                fontSize: 18,
-                width: 32, height: 32,
+                width: 32, height: 32, borderRadius: 8,
+                background: b.color + "1a", color: b.color,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
-              }}>{b.emoji}</div>
+              }}>
+                {React.cloneElement(b.icon, { width: 16, height: 16 })}
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{b.title}</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)", marginTop: 2 }}>{b.desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{b.title}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 2 }}>{b.desc}</div>
               </div>
             </div>
           ))}
@@ -183,9 +198,9 @@ export default function PushNotifModal({ open, onClose, coachId, isDemo = false 
             padding: "14px 20px",
             background: G, color: "#000",
             border: "none", borderRadius: 12,
-            fontFamily: "'Syne', sans-serif",
-            fontSize: 12, fontWeight: 900,
-            letterSpacing: ".1em", textTransform: "uppercase",
+            fontFamily: "'Inter', -apple-system, sans-serif",
+            fontSize: 13, fontWeight: 900,
+            letterSpacing: ".05em",
             cursor: "pointer",
             boxShadow: `0 16px 40px rgba(2,209,186,.35)`,
             transition: "opacity .15s, transform .15s",

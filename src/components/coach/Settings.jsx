@@ -75,12 +75,19 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
 
       {/* Header */}
       <div className="set-header" style={header}>
-        <button onClick={onClose} style={{ ...backBtn, padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", transition: "all .15s" }}
+        <button
+          onClick={() => {
+            // Smart back : si on est dans un onglet non-default, on revient à l'onglet branding (vue d'entrée).
+            // Si déjà sur branding, on ferme les paramètres (retour dashboard).
+            if (tab !== "branding") setTab("branding");
+            else onClose?.();
+          }}
+          style={{ ...backBtn, padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", transition: "all .15s" }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,201,167,0.3)"; e.currentTarget.style.background = "rgba(0,201,167,0.06)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
         >
           <AppIcon name="arrow-left" size={14} color="rgba(255,255,255,.6)" />
-          <span>{t("set.back")}</span>
+          <span>{tab !== "branding" ? t("set.back") : t("set.back")}</span>
         </button>
         <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px" }}>
           {t("set.title")}<span style={{ color: "#00C9A7" }}>.</span>
