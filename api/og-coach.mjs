@@ -69,19 +69,28 @@ function coachCard(coach) {
 
   // Photo or initials
   const photoNode = photo
-    ? el('img', { src: photo, width: 380, height: 380, style: { width: 380, height: 380, objectFit: 'cover', objectPosition: '50% 25%' } })
-    : el('div', { style: { fontSize: 140, fontWeight: 900, color: '#000', fontFamily: 'Inter, sans-serif', letterSpacing: -4, display: 'flex' } }, initials);
+    ? el('img', { src: photo, width: 240, height: 240, style: { width: 240, height: 240, objectFit: 'cover', objectPosition: '50% 25%' } })
+    : el('div', { style: { fontSize: 90, fontWeight: 900, color: '#000', fontFamily: 'Inter, sans-serif', letterSpacing: -3, display: 'flex' } }, initials);
 
   // Specialty chips
   const chips = specialties.length === 0 ? null
-    : el('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8 } },
+    : el('div', {
+        style: { display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginTop: 22 },
+      },
         specialties.map(s => el('div', {
           style: { padding: '10px 18px', background: `${accent}14`, border: `2px solid ${accent}55`, borderRadius: 999, fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: 1, textTransform: 'uppercase', display: 'flex' },
         }, s))
       );
 
   return el('div', {
-    style: { width: '100%', height: '100%', display: 'flex', position: 'relative', background: BG, color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden' },
+    style: {
+      width: '100%', height: '100%',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      position: 'relative', background: BG, color: '#fff',
+      fontFamily: 'Inter, sans-serif', overflow: 'hidden',
+      padding: '50px 60px',
+    },
   },
     // Top accent line
     el('div', { style: { position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, transparent, ${accent}, transparent)`, display: 'flex' } }),
@@ -89,44 +98,42 @@ function coachCard(coach) {
     el('div', { style: { position: 'absolute', top: -200, right: -200, width: 800, height: 800, background: `radial-gradient(circle, ${accent}33, transparent 60%)`, display: 'flex' } }),
     el('div', { style: { position: 'absolute', bottom: -200, left: -200, width: 700, height: 700, background: `radial-gradient(circle, ${accent}22, transparent 60%)`, display: 'flex' } }),
 
-    // Left photo column
+    // Photo (top, centered)
     el('div', {
-      style: { width: 480, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 },
+      style: { width: 240, height: 240, borderRadius: 9999, border: `4px solid ${accent}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 20px 60px ${accent}40`, background: `linear-gradient(135deg, ${accent}, ${accent}66)`, marginBottom: 28, position: 'relative', zIndex: 1 },
+    }, photoNode),
+
+    // Eyebrow centered
+    el('div', {
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, letterSpacing: 6, textTransform: 'uppercase', color: accent, fontWeight: 700, marginBottom: 18, position: 'relative', zIndex: 1 },
     },
-      el('div', {
-        style: { width: 380, height: 380, borderRadius: 9999, border: `4px solid ${accent}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 30px 80px ${accent}40`, background: `linear-gradient(135deg, ${accent}, ${accent}66)` },
-      }, photoNode),
+      el('div', { style: { width: 10, height: 10, borderRadius: 5, background: accent, marginRight: 10, display: 'flex' } }),
+      'RB Perform · Disponible',
     ),
 
-    // Right text column
+    // Brand name centered
     el('div', {
-      style: { flex: 1, padding: '60px 64px 60px 0', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 1 },
+      style: { fontSize: brand.length > 22 ? 56 : 76, fontWeight: 900, letterSpacing: -2, lineHeight: 1.0, color: '#fff', textAlign: 'center', display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 1 },
     },
-      el('div', {
-        style: { display: 'flex', alignItems: 'center', fontSize: 16, letterSpacing: 6, textTransform: 'uppercase', color: accent, fontWeight: 700, marginBottom: 22 },
-      },
-        el('div', { style: { width: 12, height: 12, borderRadius: 6, background: accent, marginRight: 12, display: 'flex' } }),
-        'RB Perform',
-      ),
-      el('div', {
-        style: { fontSize: brand.length > 18 ? 70 : 92, fontWeight: 900, letterSpacing: -3, lineHeight: 1.0, color: '#fff', marginBottom: 18, display: 'flex', flexWrap: 'wrap' },
-      },
-        el('span', null, brand),
-        el('span', { style: { color: accent } }, '.'),
-      ),
-      city ? el('div', {
-        style: { fontSize: 22, color: 'rgba(255,255,255,0.55)', letterSpacing: 4, textTransform: 'uppercase', fontWeight: 600, marginBottom: 28 },
-      }, city) : null,
-      chips,
+      el('span', null, brand),
+      el('span', { style: { color: accent } }, '.'),
     ),
 
-    // Footer brand bottom-right
+    // City centered
+    city ? el('div', {
+      style: { fontSize: 18, color: 'rgba(255,255,255,0.55)', letterSpacing: 4, textTransform: 'uppercase', fontWeight: 600, marginTop: 14, textAlign: 'center', display: 'flex', position: 'relative', zIndex: 1 },
+    }, city) : null,
+
+    // Chips centered
+    chips,
+
+    // Footer brand bottom-center
     el('div', {
-      style: { position: 'absolute', bottom: 32, right: 64, display: 'flex', alignItems: 'center', gap: 12, zIndex: 2 },
+      style: { position: 'absolute', bottom: 28, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 },
     },
       el('div', {
-        style: { fontSize: 18, fontWeight: 800, letterSpacing: 6, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', display: 'flex' },
-      }, 'RB Perform'),
+        style: { fontSize: 14, fontWeight: 800, letterSpacing: 6, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', display: 'flex' },
+      }, 'rbperform.app'),
     ),
   );
 }

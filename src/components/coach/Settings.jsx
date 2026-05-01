@@ -291,6 +291,7 @@ function PublicProfileSection({ coachData, isDemo }) {
   const [city, setCity] = useState(coachData?.public_city || "");
   const [photoUrl, setPhotoUrl] = useState(coachData?.public_photo_url || "");
   const [specialties, setSpecialties] = useState(Array.isArray(coachData?.public_specialties) ? coachData.public_specialties : []);
+  const [ctaUrl, setCtaUrl] = useState(coachData?.public_cta_url || "");
   const [newSpec, setNewSpec] = useState("");
   const [uploading, setUploading] = useState(false);
   const [savingVitrine, setSavingVitrine] = useState(false);
@@ -361,6 +362,7 @@ function PublicProfileSection({ coachData, isDemo }) {
           public_city: city.trim() || null,
           public_specialties: specialties.length ? specialties : [],
           public_photo_url: photoUrl || null,
+          public_cta_url: ctaUrl.trim() || null,
         })
         .eq("id", coachData.id);
       if (error) throw error;
@@ -556,6 +558,23 @@ function PublicProfileSection({ coachData, isDemo }) {
             <button onClick={addSpec} style={{ ...btnGhost, flexShrink: 0 }}>+ Ajouter</button>
           </div>
         )}
+      </div>
+
+      {/* CTA URL */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={sectionSubtitle}>Bouton "Demander un accès" — destination</div>
+        <input
+          className="set-input"
+          value={ctaUrl}
+          onChange={e => setCtaUrl(e.target.value)}
+          placeholder="https://calendly.com/... ou https://wa.me/33... ou autre"
+          style={{ ...input, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
+        />
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 6, lineHeight: 1.55 }}>
+          💡 URL où le bouton mène quand un visiteur clique.<br/>
+          Idées : ton Calendly, lien WhatsApp <code style={{ color: G, fontSize: 11 }}>https://wa.me/33XXX</code>, ton Insta DM <code style={{ color: G, fontSize: 11 }}>https://ig.me/m/username</code>, formulaire externe…<br/>
+          Si vide → mailto vers ton email.
+        </div>
       </div>
 
       {/* SAVE */}

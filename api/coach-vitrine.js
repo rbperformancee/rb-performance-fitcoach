@@ -29,7 +29,7 @@ const escAttr = (s) => String(s ?? '').replace(/[<>"'&]/g, (c) => ({
 }[c]));
 
 async function fetchCoach(slug) {
-  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=id,full_name,brand_name,email,public_bio,public_specialties,public_photo_url,public_city,logo_url,accent_color`;
+  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=id,full_name,brand_name,email,public_bio,public_specialties,public_photo_url,public_city,public_cta_url,logo_url,accent_color`;
   const r = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
   if (!r.ok) return null;
   const rows = await r.json();
