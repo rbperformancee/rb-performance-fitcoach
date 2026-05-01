@@ -56,9 +56,47 @@ ${weeksHtml}
 </body></html>`;
 }
 
-const newExercise = () => ({ id: uid(), name: "", reps: "4X8-10", tempo: "3010", rir: "1", rest: "2'", group: "", vidUrl: "" });
+const newExercise = () => ({ id: uid(), name: "", reps: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "" });
 const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", exercises: [newExercise()] });
 const newWeek = (n = 1) => ({ id: uid(), name: `Semaine ${n}`, sessions: [newSession(1)] });
+
+// Suggestions communes pour les champs exercice (autocomplete au focus).
+const REPS_SUGGESTIONS = ["3X3-5", "4X4-6", "4X6-8", "4X8-10", "4X10-12", "3X12-15", "4X15-20", "5X5", "5X3", "AMRAP", "3X10/jambe", "3X45 secondes"];
+const TEMPO_SUGGESTIONS = ["3010", "2010", "4010", "5010", "X010", "Libre"];
+const RIR_SUGGESTIONS = ["0", "1", "2", "3", "Échec"];
+const REST_SUGGESTIONS = ["30s", "45s", "1'", "1'30", "2'", "2'30", "3'", "5'"];
+
+// Convertit un programme parsé (parserProgramme.js) en state ProgrammeBuilder.
+function fromParsed(parsed) {
+  if (!parsed) return null;
+  return {
+    name: parsed.name || "",
+    clientName: parsed.clientName || "",
+    duration: parsed.duration || "",
+    tagline: parsed.tagline || "",
+    objective: parsed.objective || "",
+    weeks: (parsed.weeks || []).map((w) => ({
+      id: uid(),
+      name: w.name || "",
+      sessions: (w.sessions || []).map((s) => ({
+        id: uid(),
+        name: s.name || "",
+        description: s.description || "",
+        finisher: s.finisher || "",
+        exercises: (s.exercises || []).map((e) => ({
+          id: uid(),
+          name: e.name || "",
+          reps: e.rawReps || e.reps || "",
+          tempo: e.tempo || "",
+          rir: e.rir || "",
+          rest: e.rest || "",
+          group: e.group || "",
+          vidUrl: e.vidUrl || "",
+        })),
+      })),
+    })),
+  };
+}
 
 const inputBaseStyle = {
   width: "100%", padding: "8px 10px", background: "rgba(255,255,255,0.03)",
@@ -81,6 +119,54 @@ function TextField({ label, value, onChange, placeholder }) {
   );
 }
 
+function SuggestField({ label, value, onChange, placeholder, suggestions }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+  const filtered = (value || "").length > 0
+    ? suggestions.filter((s) => s.toLowerCase().includes((value || "").toLowerCase()))
+    : suggestions;
+  return (
+    <label ref={ref} style={{ display: "block", position: "relative" }}>
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>{label}</div>
+      <input
+        type="text"
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setOpen(true)}
+        placeholder={placeholder}
+        style={inputBaseStyle}
+      />
+      {open && filtered.length > 0 && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 2px)", left: 0, right: 0,
+          background: "#161616", border: "1px solid " + BORDER, borderRadius: 8,
+          maxHeight: 240, overflowY: "auto", zIndex: 60,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+        }}>
+          {filtered.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); onChange(s); setOpen(false); }}
+              style={{
+                width: "100%", padding: "7px 10px", textAlign: "left",
+                background: "transparent", border: "none", color: "#fff",
+                fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                borderBottom: "1px solid rgba(255,255,255,0.04)",
+              }}
+            >{s}</button>
+          ))}
+        </div>
+      )}
+    </label>
+  );
+}
+
 function TextArea({ label, value, onChange, placeholder, rows = 2 }) {
   return (
     <label style={{ display: "block" }}>
@@ -96,7 +182,7 @@ function TextArea({ label, value, onChange, placeholder, rows = 2 }) {
   );
 }
 
-function ExercisePicker({ value, onChange, onPickVideo }) {
+function ExercisePicker({ value, onChange, onPickFull }) {
   const [query, setQuery] = useState(value || "");
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -140,9 +226,10 @@ function ExercisePicker({ value, onChange, onPickVideo }) {
             <button
               key={v.id}
               type="button"
-              onClick={() => {
-                onChange(v.title);
-                onPickVideo("https://youtu.be/" + v.id);
+              onMouseDown={(e) => {
+                e.preventDefault();
+                // Single update : nom + URL ensemble pour éviter race state.
+                onPickFull({ name: v.title, vidUrl: "https://youtu.be/" + v.id });
                 setQuery(v.title);
                 setOpen(false);
               }}
@@ -192,7 +279,7 @@ function ExerciseRow({ ex, idx, onUpdate, onRemove }) {
         <ExercisePicker
           value={ex.name}
           onChange={(v) => update("name", v)}
-          onPickVideo={(v) => onUpdate({ ...ex, vidUrl: v })}
+          onPickFull={({ name, vidUrl }) => onUpdate({ ...ex, name, vidUrl })}
         />
         <button
           type="button"
@@ -206,10 +293,10 @@ function ExerciseRow({ ex, idx, onUpdate, onRemove }) {
         >×</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
-        <TextField label="Reps" value={ex.reps} onChange={(v) => update("reps", v)} placeholder="4X8-10" />
-        <TextField label="Tempo" value={ex.tempo} onChange={(v) => update("tempo", v)} placeholder="3010" />
-        <TextField label="RIR" value={ex.rir} onChange={(v) => update("rir", v)} placeholder="1" />
-        <TextField label="Repos" value={ex.rest} onChange={(v) => update("rest", v)} placeholder="2'" />
+        <SuggestField label="Reps" value={ex.reps} onChange={(v) => update("reps", v)} placeholder="4X8-10" suggestions={REPS_SUGGESTIONS} />
+        <SuggestField label="Tempo" value={ex.tempo} onChange={(v) => update("tempo", v)} placeholder="3010" suggestions={TEMPO_SUGGESTIONS} />
+        <SuggestField label="RIR" value={ex.rir} onChange={(v) => update("rir", v)} placeholder="1" suggestions={RIR_SUGGESTIONS} />
+        <SuggestField label="Repos" value={ex.rest} onChange={(v) => update("rest", v)} placeholder="2'" suggestions={REST_SUGGESTIONS} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 6, marginTop: 6 }}>
         <TextField label="Groupe" value={ex.group} onChange={(v) => update("group", v)} placeholder="A1, A2…" />
@@ -425,15 +512,28 @@ function Preview({ programme }) {
   );
 }
 
-export default function ProgrammeBuilder({ client, onClose, onSaved }) {
-  const [programme, setProgramme] = useState(() => ({
-    name: "",
-    clientName: (client && client.full_name) ? client.full_name : "",
-    duration: "",
-    tagline: "",
-    objective: "",
-    weeks: [newWeek(1)],
-  }));
+export default function ProgrammeBuilder({ client, onClose, onSaved, existingProgramme }) {
+  const [programme, setProgramme] = useState(() => {
+    // existingProgramme = { id, programme_name, html_content } pour edit mode
+    if (existingProgramme && existingProgramme.html_content) {
+      try {
+        // Parse côté client : reuse parserProgramme.js
+        // Import dynamique-style : resolve la fonction au mount
+        const ParserMod = require("../utils/parserProgramme");
+        const parsed = ParserMod.parseProgrammeHTML(existingProgramme.html_content);
+        const restored = fromParsed(parsed);
+        if (restored && restored.weeks && restored.weeks.length > 0) return restored;
+      } catch (e) { console.warn("[ProgrammeBuilder] parse existing failed:", e); }
+    }
+    return {
+      name: "",
+      clientName: (client && client.full_name) ? client.full_name : "",
+      duration: "",
+      tagline: "",
+      objective: "",
+      weeks: [newWeek(1)],
+    };
+  });
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
 

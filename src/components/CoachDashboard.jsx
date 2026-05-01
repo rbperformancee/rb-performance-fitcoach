@@ -500,6 +500,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [panelTab, setPanelTab] = useState("resume");
   const [uploadProgWeeks, setUploadProgWeeks] = useState(6);
   const [showBuilder, setShowBuilder] = useState(false); // duree du programme en semaines
+  const [builderEditing, setBuilderEditing] = useState(null); // programme pour edit mode
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
   const fileRef = useRef();
 
@@ -608,15 +609,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
   return (
     <>
-    {/* Programme Builder plein ecran */}
+    {/* Programme Builder plein ecran — z-index > demo banner (9999) */}
     {showBuilder && (
-      <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 300 }}>
+      <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 10000 }}>
         <ProgrammeBuilder
           client={client}
           coachData={null}
-          onClose={() => setShowBuilder(false)}
-          onSaved={() => { setShowBuilder(false); onClose(); }}
+          onClose={() => { setShowBuilder(false); setBuilderEditing(null); }}
+          onSaved={() => { setShowBuilder(false); setBuilderEditing(null); onClose(); }}
           onWantInvoice={onWantInvoice}
+          existingProgramme={builderEditing}
         />
       </div>
     )}
@@ -817,6 +819,21 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const { data, error } = await supabase
+                            .from("programmes")
+                            .select("id, programme_name, html_content")
+                            .eq("id", prog.id)
+                            .maybeSingle();
+                          if (error || !data) { toast.error("Impossible de charger le programme"); return; }
+                          setBuilderEditing(data);
+                          setShowBuilder(true);
+                        } catch (e) { toast.error("Erreur : " + e.message); }
+                      }}
+                      style={{ fontSize: 10, fontWeight: 700, color: G, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
+                    >Éditer</button>
                     <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>{t("cp.btn_maj")}</button>
                     <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);toast.error(t("cp.toast_error_prefix")+error.message);return;} toast.success(t("cp.toast_programme_archived")); onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>{t("cp.btn_suppr")}</button>
                   </div>
