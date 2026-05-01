@@ -77,6 +77,55 @@ const G_BORDER = "rgba(0,201,167,0.2)";
 
 // ===== Icon component premium (lucide/feather style) =====
 // Remplace TOUS les emojis du dashboard. stroke 1.8 pour finesse, size par defaut 18.
+// Modal de confirmation suppression programme — typed-confirmation
+// Pour supprimer, l'utilisateur doit taper le mot SUPPRIMER. Empêche tout
+// clic réflexe sur "OK" d'un window.confirm.
+function ConfirmDeleteProgramme({ progName, onCancel, onConfirm }) {
+  const [typed, setTyped] = useState("");
+  const RED = "#ff6b6b";
+  const matches = typed.trim().toUpperCase() === "SUPPRIMER";
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 11000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
+      <div style={{ background: "#0f0f0f", border: "1px solid rgba(255,107,107,0.3)", borderRadius: 18, maxWidth: 460, width: "100%", padding: 28, boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 40px rgba(255,107,107,0.15)" }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(255,107,107,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={RED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.3, marginBottom: 10 }}>Supprimer définitivement ?</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.6, marginBottom: 18 }}>
+          Tu vas supprimer <strong style={{ color: "#fff" }}>{progName || "ce programme"}</strong>. Cette action est <strong style={{ color: RED }}>irréversible</strong> — toutes les semaines, séances et exercices seront perdus.
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Tape <strong style={{ color: RED, letterSpacing: 1 }}>SUPPRIMER</strong> pour confirmer :</div>
+        <input
+          type="text"
+          autoFocus
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          placeholder="SUPPRIMER"
+          style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid " + (matches ? RED : "rgba(255,255,255,0.08)"), borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 1, fontFamily: "inherit", outline: "none", marginBottom: 18, transition: "border-color .2s" }}
+        />
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}
+          >Annuler</button>
+          <button
+            type="button"
+            disabled={!matches}
+            onClick={onConfirm}
+            style={{ padding: "10px 18px", background: matches ? RED : "rgba(255,107,107,0.2)", border: "none", borderRadius: 10, color: matches ? "#fff" : "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 800, cursor: matches ? "pointer" : "not-allowed", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase", opacity: matches ? 1 : 0.5, transition: "all .2s" }}
+          >Supprimer définitivement</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Icon({ name, size = 18, color = "currentColor", strokeWidth = 1.8 }) {
   const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth, strokeLinecap: "round", strokeLinejoin: "round" };
   const map = {
@@ -501,6 +550,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [uploadProgWeeks, setUploadProgWeeks] = useState(6);
   const [showBuilder, setShowBuilder] = useState(false); // duree du programme en semaines
   const [builderEditing, setBuilderEditing] = useState(null); // programme pour edit mode
+  const [confirmDelete, setConfirmDelete] = useState(null); // { progId, progName } pour modal confirm
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
   const fileRef = useRef();
 
@@ -609,6 +659,22 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
   return (
     <>
+    {/* Modal de confirmation suppression programme — z-index très haut */}
+    {confirmDelete && (
+      <ConfirmDeleteProgramme
+        progName={confirmDelete.progName}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={async () => {
+          const progId = confirmDelete.progId;
+          setConfirmDelete(null);
+          const { error } = await supabase.from('programmes').delete().eq('id', progId);
+          if (error) { console.error(error); toast.error("Erreur : " + error.message); return; }
+          toast.success("Programme supprimé");
+          onClose();
+        }}
+      />
+    )}
+
     {/* Programme Builder plein ecran — z-index > demo banner (9999) */}
     {showBuilder && (
       <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 10000 }}>
@@ -835,13 +901,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       style={{ fontSize: 10, fontWeight: 700, color: G, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
                     >Éditer</button>
                     <button
-                      onClick={async () => {
-                        if (!window.confirm("Supprimer définitivement le programme \"" + prog.programme_name + "\" ? Cette action est irréversible.")) return;
-                        const { error } = await supabase.from('programmes').delete().eq('id', prog.id);
-                        if (error) { console.error(error); toast.error("Erreur : " + error.message); return; }
-                        toast.success("Programme supprimé");
-                        onClose();
-                      }}
+                      onClick={() => setConfirmDelete({ progId: prog.id, progName: prog.programme_name })}
                       style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
                     >{t("cp.btn_suppr")}</button>
                   </div>
