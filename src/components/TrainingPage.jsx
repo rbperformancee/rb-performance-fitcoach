@@ -591,21 +591,32 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
 
                 {/* ESTIMATION KCAL */}
                 {(() => {
-                  // Estimation basee sur : duree (min), volume (kg), nombre d'exos, intensite (RPE)
-                  const durationMin = Math.max(1, Math.round(chrono / 60));
-                  const volume = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
+                  // Si user a oublié de démarrer le chrono, on estime la durée à partir
+                  // du nombre de sets logués (≈ 2 min par set avec repos compris) + 8 min warmup.
+                  const sessionsExos = currentSession?.exercises || [];
+                  let setsDone = 0;
+                  sessionsExos.forEach((ex, ei) => {
+                    const h = getHistory(activeWeek, activeSession, ei) || [];
+                    if (h.length > 0) setsDone += parseInt(ex.sets) || 1;
+                  });
+                  const chronoMin = Math.round(chrono / 60);
+                  const estimatedFromSets = setsDone > 0 ? (8 + setsDone * 2) : 0;
+                  // Si chrono < 5min, on assume "oublié de démarrer" et on prend l'estimation
+                  const durationMin = chronoMin >= 5 ? chronoMin : Math.max(1, estimatedFromSets);
+                  const wasEstimated = chronoMin < 5 && setsDone > 0;
+                  const volume = sessionsExos.reduce((tot, ex, ei) => {
                     const h = getHistory(activeWeek, activeSession, ei) || [];
                     if (h.length === 0) return tot;
                     return tot + (parseFloat(h[h.length-1]?.weight) || 0) * (parseInt(ex.sets)||1) * (parseInt(ex.reps)||1);
                   }, 0);
-                  // MET moyen musculation : 3-6 selon intensite
-                  const met = 3 + (selectedRessenti || 2) * 0.7;
+                  // MET musculation : 3 (modéré) à 6 (intense). Calibré selon RPE 1-5.
+                  const met = 3.5 + (selectedRessenti || 2) * 0.6;
                   // Poids client (fallback 75kg)
                   const bodyWeight = client?.weight || client?.current_weight || 75;
-                  // Formule : kcal = MET x poids(kg) x duree(h)
+                  // Formule MET : kcal = MET × kg × heures (validée scientifique)
                   const kcalBase = Math.round(met * bodyWeight * (durationMin / 60));
-                  // Bonus volume : +1 kcal par 100kg de volume
-                  const kcalVolume = Math.round(volume / 100);
+                  // Bonus volume musculation : +1 kcal par 200 kg de volume (corrigé : était trop élevé)
+                  const kcalVolume = Math.round(volume / 200);
                   const kcalTotal = kcalBase + kcalVolume;
                   return (
                     <div style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)", borderRadius: 18, padding: "16px 12px", textAlign: "center", marginBottom: 12 }}>

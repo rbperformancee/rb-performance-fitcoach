@@ -230,7 +230,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         {/* MESSAGERIE COACH */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
           <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>{t("profile.messages")}</div>
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, overflow: "hidden", height: 360 }}>
+          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, overflow: "hidden", minHeight: 420, display: "flex", flexDirection: "column" }}>
             {client?.id && <ChatCoach clientId={client.id} coachEmail="" isCoach={false} />}
           </div>
         </div>

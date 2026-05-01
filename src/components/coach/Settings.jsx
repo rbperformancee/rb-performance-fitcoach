@@ -288,6 +288,21 @@ function PublicProfileSection({ coachData, isDemo }) {
   const baseUrl = (typeof window !== "undefined" ? window.location.origin : "");
   const url = slug ? `${baseUrl}/coach/${slug}` : null;
 
+  // ⚠ Vitrine publique en travaux — masquer la section pour éviter de
+  // promettre une feature pas encore prête. Décommenter quand prêt.
+  return (
+    <div style={{ marginTop: 32, padding: 18, background: "rgba(255,165,0,0.04)", border: "1px dashed rgba(255,165,0,0.25)", borderRadius: 14 }}>
+      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(255,165,0,0.85)", textTransform: "uppercase", marginBottom: 6 }}>🚧 En travaux</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>Vitrine publique</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+        Bientôt : ta page publique avec bio, photos, témoignages et lien d'invitation. Activable depuis ces paramètres une fois disponible.
+      </div>
+    </div>
+  );
+
+  // eslint-disable-next-line no-unreachable
+  // (legacy code below, conservé pour activation rapide)
+
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); toast.success(t("set.toast_copied")); }
     catch { toast.error(t("set.toast_copy_error")); }
@@ -354,6 +369,19 @@ function PublicProfileSection({ coachData, isDemo }) {
 
 // ===== PARRAINAGE COACH =====
 function ReferralSection({ coachData, isDemo }) {
+  // ⚠ En travaux — masqué jusqu'au launch SaaS finalisé
+  return (
+    <div style={{ marginTop: 16, padding: 18, background: "rgba(255,165,0,0.04)", border: "1px dashed rgba(255,165,0,0.25)", borderRadius: 14 }}>
+      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(255,165,0,0.85)", textTransform: "uppercase", marginBottom: 6 }}>🚧 En travaux</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>Parrainage coach</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+        Bientôt : invite d'autres coachs et reçois 1 mois offert par parrainage. Disponible pour le launch SaaS.
+      </div>
+    </div>
+  );
+
+  // eslint-disable-next-line no-unreachable
+  /* legacy code below */
   const t = useT();
   const code = coachData?.referral_code || "";
   const baseUrl = (typeof window !== "undefined" ? window.location.origin : "");
