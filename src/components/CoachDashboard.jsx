@@ -834,8 +834,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       }}
                       style={{ fontSize: 10, fontWeight: 700, color: G, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
                     >Éditer</button>
-                    <button onClick={() => fileRef.current?.click()} style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>{t("cp.btn_maj")}</button>
-                    <button onClick={async () => { const {error} = await supabase.from('programmes').update({is_active:false}).eq('id',prog.id); if(error){console.error(error);toast.error(t("cp.toast_error_prefix")+error.message);return;} toast.success(t("cp.toast_programme_archived")); onClose(); }} style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>{t("cp.btn_suppr")}</button>
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm("Supprimer définitivement le programme \"" + prog.programme_name + "\" ? Cette action est irréversible.")) return;
+                        const { error } = await supabase.from('programmes').delete().eq('id', prog.id);
+                        if (error) { console.error(error); toast.error("Erreur : " + error.message); return; }
+                        toast.success("Programme supprimé");
+                        onClose();
+                      }}
+                      style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
+                    >{t("cp.btn_suppr")}</button>
                   </div>
                 </div>
 

@@ -61,10 +61,71 @@ const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "
 const newWeek = (n = 1) => ({ id: uid(), name: `Semaine ${n}`, sessions: [newSession(1)] });
 
 // Suggestions communes pour les champs exercice (autocomplete au focus).
-const REPS_SUGGESTIONS = ["3X3-5", "4X4-6", "4X6-8", "4X8-10", "4X10-12", "3X12-15", "4X15-20", "5X5", "5X3", "AMRAP", "3X10/jambe", "3X45 secondes"];
-const TEMPO_SUGGESTIONS = ["3010", "2010", "4010", "5010", "X010", "Libre"];
-const RIR_SUGGESTIONS = ["0", "1", "2", "3", "Échec"];
-const REST_SUGGESTIONS = ["30s", "45s", "1'", "1'30", "2'", "2'30", "3'", "5'"];
+// Fourchettes exhaustives (force, hypertrophie, endurance, drop sets, special).
+const REPS_SUGGESTIONS = [
+  // Force / Power
+  "1X1", "2X1", "3X1", "5X1", "10X1",
+  "5X2", "6X2", "7X2", "8X2", "10X2",
+  "3X3", "4X3", "5X3", "6X3", "7X3", "8X3", "10X3",
+  "3X4", "4X4", "5X4", "6X4",
+  "3X5", "4X5", "5X5", "6X5",
+  // Force-hypertrophie
+  "3X6", "4X6", "5X6", "6X6",
+  "3X3-5", "4X3-5", "5X3-5",
+  "3X4-6", "4X4-6", "5X4-6",
+  "3X5-7", "4X5-7",
+  // Hypertrophie
+  "3X8", "4X8", "5X8", "6X8",
+  "3X6-8", "4X6-8", "5X6-8",
+  "3X8-10", "4X8-10", "5X8-10",
+  "3X10", "4X10", "5X10",
+  "3X8-12", "4X8-12",
+  "3X10-12", "4X10-12",
+  // Endurance / pump
+  "3X12", "4X12", "5X12",
+  "3X15", "4X15",
+  "3X12-15", "4X12-15",
+  "3X15-20", "4X15-20",
+  "3X20", "4X20",
+  // Special
+  "AMRAP", "Max reps", "À l'échec",
+  "5/3/1", "5x5", "3x5",
+  // Unilatéral
+  "3X8/jambe", "3X10/jambe", "3X12/jambe", "4X8/bras", "3X10/bras",
+  // Isométrique / temps
+  "3X20 secondes", "3X30 secondes", "3X45 secondes", "3X60 secondes",
+  // Drop set / cluster
+  "Drop set", "Cluster set", "Rest-pause",
+];
+
+const TEMPO_SUGGESTIONS = [
+  // Standard contrôle excentrique
+  "1010", "2010", "3010", "4010", "5010", "6010", "8010",
+  // Avec pause au stretch
+  "1110", "2110", "3110", "4110", "5110",
+  // Pause au top
+  "1011", "2011", "3011", "1012", "2012", "3012",
+  // Pause des 2 côtés
+  "2121", "3131", "4141",
+  // Concentrique pause (X = explosif)
+  "30X0", "20X0", "10X0", "40X0", "50X0",
+  // Tempo balance contrôle
+  "2020", "3030", "4040",
+  // Explosif
+  "X010", "X020", "X030",
+  // Special
+  "Libre", "Tempo coach",
+];
+
+const RIR_SUGGESTIONS = ["0", "1", "2", "3", "4", "5", "Échec", "Pré-fatigue"];
+
+const REST_SUGGESTIONS = [
+  "15s", "20s", "30s", "45s",
+  "1'", "1'15", "1'30", "1'45",
+  "2'", "2'15", "2'30", "2'45",
+  "3'", "3'30",
+  "4'", "5'", "6'", "7'", "8'", "10'",
+];
 
 // Convertit un programme parsé (parserProgramme.js) en state ProgrammeBuilder.
 function fromParsed(parsed) {
