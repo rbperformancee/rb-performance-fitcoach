@@ -24,7 +24,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_
 const SUPABASE_ANON = process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud';
 
 async function fetchCoach(slug) {
-  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=full_name,brand_name,coaching_name,public_specialties,public_photo_url,public_city,logo_url,accent_color`;
+  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=full_name,brand_name,public_specialties,public_photo_url,public_city,logo_url,accent_color`;
   const r = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
   if (!r.ok) return null;
   const rows = await r.json();
@@ -48,7 +48,7 @@ function FallbackCard() {
 
 function CoachCard({ coach }) {
   const accent = (coach.accent_color && coach.accent_color.startsWith('#')) ? coach.accent_color : G;
-  const brand = coach.brand_name || coach.coaching_name || coach.full_name || 'Coach';
+  const brand = coach.brand_name || coach.full_name || 'Coach';
   const city = coach.public_city || '';
   const specialties = Array.isArray(coach.public_specialties) ? coach.public_specialties.filter(Boolean).slice(0, 3) : [];
   const photo = coach.public_photo_url || coach.logo_url || '';

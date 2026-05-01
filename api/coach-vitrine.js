@@ -29,7 +29,7 @@ const escAttr = (s) => String(s ?? '').replace(/[<>"'&]/g, (c) => ({
 }[c]));
 
 async function fetchCoach(slug) {
-  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=id,full_name,brand_name,coaching_name,public_bio,public_specialties,public_photo_url,public_city,logo_url,accent_color`;
+  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=id,full_name,brand_name,public_bio,public_specialties,public_photo_url,public_city,logo_url,accent_color`;
   const r = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
   if (!r.ok) return null;
   const rows = await r.json();
@@ -58,7 +58,7 @@ function render404() {
 
 function renderPage(coach, testimonials, slug) {
   const accent = (coach.accent_color && coach.accent_color.startsWith('#')) ? coach.accent_color : '#02d1ba';
-  const brand = coach.brand_name || coach.coaching_name || coach.full_name || 'Coach';
+  const brand = coach.brand_name || coach.full_name || 'Coach';
   const photo = coach.public_photo_url || coach.logo_url || '';
   const specialties = Array.isArray(coach.public_specialties) ? coach.public_specialties.filter(Boolean) : [];
   const city = coach.public_city || '';
@@ -264,24 +264,6 @@ html,body{background:#050505;color:#fff;min-height:100vh;min-height:100dvh;font-
 module.exports = async (req, res) => {
   try {
     const slug = String(req.query?.slug || '').trim().toLowerCase();
-
-    // Debug endpoint : ?debug=1 retourne le payload brut Supabase
-    if (req.query?.debug === '1') {
-      const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=id,public_slug,public_profile_enabled`;
-      const r = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
-      const body = await r.text();
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({
-        slug,
-        env: { has_url: !!process.env.SUPABASE_URL, has_anon: !!process.env.SUPABASE_ANON_KEY, has_react_anon: !!process.env.REACT_APP_SUPABASE_ANON_KEY },
-        url_used: SUPABASE_URL,
-        anon_prefix: SUPABASE_ANON.slice(0, 10),
-        status: r.status,
-        body,
-      }));
-      return;
-    }
 
     if (!slug || !/^[a-z0-9-]{2,40}$/.test(slug)) {
       res.statusCode = 404;
