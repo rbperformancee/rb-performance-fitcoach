@@ -24,9 +24,18 @@ const norm = (s) => String(s || "")
 // Format d'entrée :
 // { id: "abc123XYZ", title: "Hip thrust barre", aliases: ["hip thrust", "thrust"], creator: "All Musculation" }
 export const FALLBACK_VIDEOS = [
-  // Exemples de format (vide jusqu'à fournir les vraies URLs) :
-  // { id: "xxxxxxxxxx", title: "Hip thrust barre", aliases: ["hip thrust", "thrust"], creator: "Jeff Nippard" },
-  // { id: "yyyyyyyyyy", title: "Hanging leg raise", aliases: ["releve jambes suspendu"], creator: "All Musculation" },
+  // Vidéos vérifiées via cross-référence (existence + attribution créateur).
+  // À remplacer par tes propres tournages quand tu films ces exos.
+  { id: "xDmFkJxPzeM", title: "Hip thrust barre",                 aliases: ["hip thrust", "thrust", "barbell hip thrust"],                                  creator: "Jeff Nippard" },
+  { id: "Q5vwsJFwhyg", title: "Romanian deadlift (RDL) barre",   aliases: ["RDL", "soulevé de terre roumain", "romanian deadlift", "barbell RDL"],          creator: "Jeff Nippard" },
+  { id: "6GYxDJ9ee7I", title: "Bulgarian split squat",            aliases: ["split squat", "fente bulgare", "bulgarian split squat"],                       creator: "Jeff Nippard" },
+  { id: "21inrjhoFkQ", title: "Calf raise debout",                aliases: ["standing calf raise", "extension mollets debout", "mollets debout"],            creator: "Jeff Nippard" },
+  { id: "gfUg6qWohTk", title: "Rowing haltère un bras",           aliases: ["dumbbell row", "single arm dumbbell row", "rowing haltère", "one arm row"],     creator: "Jeff Nippard" },
+  { id: "jTVbilkxSAk", title: "Shrug barre",                       aliases: ["barbell shrug", "shrug", "haussement épaules barre", "trap shrug"],            creator: "Jeff Nippard" },
+  { id: "IdNOahFD450", title: "Élévation latérale",               aliases: ["lateral raise", "élévation latérale", "side raise", "cable lateral raise"],    creator: "Jeff Nippard" },
+  { id: "9B-5irFdB3c", title: "Seated cable row",                  aliases: ["cable row", "rowing assis poulie", "seated row"],                              creator: "Jeff Nippard" },
+  { id: "axoeDmW0oAY", title: "T-bar row / Pendlay row",          aliases: ["t-bar row", "pendlay row", "rowing barre"],                                    creator: "Jeff Nippard" },
+  { id: "AAjlNtI1NiI", title: "Dumbbell pullover",                aliases: ["pullover haltère", "dumbbell pullover", "lat pullover"],                       creator: "Athlean-X" },
 ];
 
 // Index normalisé pour lookup rapide.
