@@ -118,6 +118,35 @@ function renderPage(coach, testimonials, slug) {
   const cityHtml = city ? `<div style="font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.2em;text-transform:uppercase;font-weight:600;margin-bottom:8px;animation:fadeUp .7s ease .2s both">${escHtml(city)}</div>` : '';
   const fullNameHtml = (coach.full_name && coach.full_name !== brand) ? `<div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:8px;animation:fadeUp .7s ease .25s both">par ${escHtml(coach.full_name)}</div>` : '';
 
+  // JSON-LD schema.org Person — pour rich results Google
+  const ldPerson = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: brand,
+    ...(coach.full_name && coach.full_name !== brand ? { alternateName: coach.full_name } : {}),
+    jobTitle: 'Coach Performance',
+    description: ogDesc,
+    url,
+    ...(photo ? { image: photo } : {}),
+    ...(specialties.length ? { knowsAbout: specialties } : {}),
+    ...(city ? { address: { '@type': 'PostalAddress', addressLocality: city, addressCountry: 'FR' } } : {}),
+    worksFor: { '@type': 'Organization', name: 'RB Perform', url: SITE },
+    ...(testimonials.length ? {
+      review: testimonials.map(t => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: t.client_name },
+        reviewBody: t.content,
+        reviewRating: { '@type': 'Rating', ratingValue: t.rating || 5, bestRating: 5 },
+      })),
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: (testimonials.reduce((s, t) => s + (t.rating || 5), 0) / testimonials.length).toFixed(1),
+        reviewCount: testimonials.length,
+        bestRating: 5,
+      },
+    } : {}),
+  };
+
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -129,6 +158,9 @@ function renderPage(coach, testimonials, slug) {
 <meta name="color-scheme" content="dark"/>
 <meta name="robots" content="index,follow"/>
 <link rel="canonical" href="${escAttr(url)}"/>
+
+<!-- JSON-LD Person + Reviews pour rich results Google -->
+<script type="application/ld+json">${JSON.stringify(ldPerson).replace(/</g, '\\u003c')}</script>
 
 <!-- Open Graph -->
 <meta property="og:type" content="profile"/>
