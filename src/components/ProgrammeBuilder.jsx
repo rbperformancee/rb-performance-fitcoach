@@ -1068,6 +1068,11 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   const [coachClients, setCoachClients] = useState([]);
   const [selectedClients, setSelectedClients] = useState([]);
   const [applying, setApplying] = useState(false);
+  const [coachTemplates, setCoachTemplates] = useState([]);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [tplName, setTplName] = useState("");
+  const [tplDesc, setTplDesc] = useState("");
+  const [savingTpl, setSavingTpl] = useState(false);
 
   // Autosave debounce 800ms (uniquement mode création, pas edit)
   useEffect(() => {
@@ -1098,6 +1103,87 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   const clearDraft = () => {
     try { localStorage.removeItem(draftKey); } catch {}
+  };
+
+  // Charge les templates perso du coach (pour les afficher dans la modal Templates)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const userResp = await supabase.auth.getUser();
+        const email = userResp?.data?.user?.email;
+        if (!email) return;
+        const { data: coach } = await supabase.from("coaches").select("id").eq("email", email).maybeSingle();
+        if (!coach?.id) return;
+        const { data } = await supabase.from("coach_programme_templates")
+          .select("id, name, description, html_content, weeks_count, sessions_count, exercises_count, created_at")
+          .eq("coach_id", coach.id)
+          .order("created_at", { ascending: false });
+        if (!cancelled) setCoachTemplates(data || []);
+      } catch (e) { console.warn("[ProgrammeBuilder] coach templates load failed:", e); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const saveAsTemplate = async () => {
+    if (!tplName.trim()) { alert("Donne un nom au template."); return; }
+    setSavingTpl(true);
+    try {
+      const userResp = await supabase.auth.getUser();
+      const email = userResp?.data?.user?.email;
+      const { data: coach } = await supabase.from("coaches").select("id").eq("email", email).maybeSingle();
+      if (!coach?.id) throw new Error("Coach non trouvé");
+      const html = buildHTML(programme);
+      const totalSessions = (programme.weeks || []).reduce((a, w) => a + (w.sessions || []).length, 0);
+      const totalEx = (programme.weeks || []).reduce((a, w) => a + (w.sessions || []).reduce((b, s) => b + (s.exercises || []).length, 0), 0);
+      const { data: inserted, error } = await supabase.from("coach_programme_templates").insert({
+        coach_id: coach.id,
+        name: tplName.trim(),
+        description: tplDesc.trim() || null,
+        html_content: html,
+        weeks_count: (programme.weeks || []).length,
+        sessions_count: totalSessions,
+        exercises_count: totalEx,
+      }).select().single();
+      if (error) throw error;
+      setCoachTemplates((prev) => [inserted, ...prev]);
+      setShowSaveTemplate(false);
+      setTplName("");
+      setTplDesc("");
+      alert("Template sauvegardé.");
+    } catch (e) {
+      alert("Erreur : " + (e.message || "inconnue"));
+    } finally {
+      setSavingTpl(false);
+    }
+  };
+
+  const applyCoachTemplate = (tpl) => {
+    if (programme.weeks.some((w) => w.sessions.some((s) => s.exercises.some((e) => e.name)))) {
+      if (!window.confirm("Appliquer le template '" + tpl.name + "' va remplacer ton programme actuel. Continuer ?")) return;
+    }
+    try {
+      const ParserMod = require("../utils/parserProgramme");
+      const parsed = ParserMod.parseProgrammeHTML(tpl.html_content);
+      const restored = fromParsed(parsed);
+      if (restored && restored.weeks?.length > 0) {
+        setProgramme({
+          ...restored,
+          name: tpl.name + " (depuis template)",
+          clientName: (client && client.full_name) || restored.clientName,
+        });
+        setShowTemplates(false);
+      }
+    } catch (e) { alert("Erreur lecture template : " + e.message); }
+  };
+
+  const deleteCoachTemplate = async (tplId) => {
+    if (!window.confirm("Supprimer ce template ?")) return;
+    try {
+      const { error } = await supabase.from("coach_programme_templates").delete().eq("id", tplId);
+      if (error) throw error;
+      setCoachTemplates((prev) => prev.filter((t) => t.id !== tplId));
+    } catch (e) { alert("Erreur : " + e.message); }
   };
 
   // Charge la liste des clients du coach connecté pour le multi-apply
@@ -1201,6 +1287,25 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   return (
     <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, background: BG, color: "#fff", fontFamily: "Inter,-apple-system,sans-serif", display: "flex", flexDirection: "column" }}>
+      {showSaveTemplate ? (
+        <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 460, width: "100%", padding: 28 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>Template perso</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5, marginBottom: 8 }}>Sauvegarder ce programme</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 18 }}>Réutilisable dans la modal Templates pour tes prochains programmes.</div>
+            <TextField label="Nom du template" value={tplName} onChange={setTplName} placeholder="ex: PPL Hypertrophie 4 sem" />
+            <div style={{ height: 10 }} />
+            <TextField label="Description (optionnel)" value={tplDesc} onChange={setTplDesc} placeholder="ex: Volume → intensité, intermédiaire" />
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
+              <button type="button" onClick={() => setShowSaveTemplate(false)} style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid " + BORDER, borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}>Annuler</button>
+              <button type="button" onClick={saveAsTemplate} disabled={savingTpl || !tplName.trim()}
+                style={{ padding: "10px 22px", background: savingTpl || !tplName.trim() ? "rgba(2,209,186,0.2)" : "linear-gradient(135deg, " + G + ", #0891b2)", border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: savingTpl || !tplName.trim() ? "not-allowed" : "pointer", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase", opacity: savingTpl || !tplName.trim() ? 0.5 : 1 }}
+              >{savingTpl ? "Sauvegarde…" : "Sauvegarder"}</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {showApplyMulti ? (
         <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}>
           <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 580, width: "100%", padding: 28, maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
@@ -1275,6 +1380,29 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               </div>
               <button type="button" onClick={() => setShowTemplates(false)} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
             </div>
+            {coachTemplates.length > 0 ? (
+              <>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>⭐ Mes templates</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 22 }}>
+                  {coachTemplates.map((tpl) => (
+                    <div key={tpl.id} style={{ position: "relative", padding: 18, background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 14 }}>
+                      <button type="button" onClick={() => applyCoachTemplate(tpl)}
+                        style={{ display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: "inherit", color: "#fff" }}
+                      >
+                        <div style={{ fontSize: 24, marginBottom: 6 }}>⭐</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{tpl.name}</div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, marginBottom: 6 }}>{tpl.description || `${tpl.weeks_count || "?"} sem · ${tpl.sessions_count || "?"} séances · ${tpl.exercises_count || "?"} exos`}</div>
+                      </button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); deleteCoachTemplate(tpl.id); }}
+                        style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: 6, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}
+                        title="Supprimer ce template"
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginBottom: 10 }}>Templates par défaut</div>
+              </>
+            ) : null}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               {TEMPLATES.map((tpl) => (
                 <button
@@ -1350,6 +1478,15 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
             }}
           >👥 Appliquer à plusieurs</button>
+          <button
+            type="button"
+            onClick={() => setShowSaveTemplate(true)}
+            style={{
+              padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+              border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
+            }}
+          >⭐ Sauver comme template</button>
           <button
             type="button"
             onClick={handleSave}

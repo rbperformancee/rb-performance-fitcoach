@@ -126,6 +126,182 @@ function ConfirmDeleteProgramme({ progName, onCancel, onConfirm }) {
   );
 }
 
+// ProgrammesHistorySection — liste tous les programmes (actifs + archivés) du
+// client avec dates et actions Re-utiliser / Éditer / Comparer.
+function ProgrammesHistorySection({ client, onEdit, onReuse }) {
+  const [history, setHistory] = React.useState([]);
+  const [expanded, setExpanded] = React.useState(false);
+  const [compareIds, setCompareIds] = React.useState([]);
+  const [compareData, setCompareData] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!client?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("programmes")
+        .select("id, programme_name, uploaded_at, is_active, programme_accepted_at")
+        .eq("client_id", client.id)
+        .order("uploaded_at", { ascending: false });
+      if (!cancelled) setHistory(data || []);
+    })();
+    return () => { cancelled = true; };
+  }, [client?.id]);
+
+  const archived = (history || []).filter((p) => !p.is_active);
+  if (archived.length === 0) return null;
+
+  const toggleCompare = (id) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 2) return [prev[1], id];
+      return [...prev, id];
+    });
+  };
+
+  const openCompare = async () => {
+    if (compareIds.length !== 2) return;
+    try {
+      const { data } = await supabase
+        .from("programmes")
+        .select("id, programme_name, html_content, uploaded_at")
+        .in("id", compareIds);
+      if (!data || data.length !== 2) return;
+      setCompareData(data);
+    } catch (e) { console.error(e); }
+  };
+
+  return (
+    <div style={{ marginTop: 16, padding: 16, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14 }}>
+      <button type="button" onClick={() => setExpanded((v) => !v)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "transparent", border: "none", color: "#fff", padding: 0, cursor: "pointer", fontFamily: "inherit" }}
+      >
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.55)", textTransform: "uppercase", marginBottom: 4 }}>📜 Historique programmes</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>{archived.length} programme{archived.length > 1 ? "s" : ""} archivé{archived.length > 1 ? "s" : ""}</div>
+        </div>
+        <span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)" }}>{expanded ? "−" : "+"}</span>
+      </button>
+
+      {expanded && (
+        <div style={{ marginTop: 14 }}>
+          {compareIds.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", marginBottom: 10, background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 8, fontSize: 11 }}>
+              <div style={{ color: "rgba(255,255,255,0.7)" }}>{compareIds.length}/2 sélectionnés pour comparer</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setCompareIds([])} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 11, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>Annuler</button>
+                {compareIds.length === 2 && (
+                  <button type="button" onClick={openCompare} style={{ background: "#02d1ba", border: "none", color: "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: "4px 10px", borderRadius: 6 }}>Comparer →</button>
+                )}
+              </div>
+            </div>
+          )}
+          {archived.map((p) => {
+            const isCompareSel = compareIds.includes(p.id);
+            return (
+              <div key={p.id} style={{
+                display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 6,
+                background: isCompareSel ? "rgba(2,209,186,0.08)" : "rgba(255,255,255,0.025)",
+                border: "1px solid " + (isCompareSel ? "rgba(2,209,186,0.35)" : "rgba(255,255,255,0.05)"),
+                borderRadius: 10,
+              }}>
+                <input type="checkbox" checked={isCompareSel} onChange={() => toggleCompare(p.id)}
+                  style={{ width: 16, height: 16, cursor: "pointer", accentColor: "#02d1ba" }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.programme_name}</div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                    {new Date(p.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                  </div>
+                </div>
+                <button type="button" onClick={() => onEdit(p.id)} style={{ padding: "5px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Éditer</button>
+                <button type="button" onClick={() => onReuse(p.id)} style={{ padding: "5px 10px", background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 6, color: "#02d1ba", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Réutiliser</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {compareData && <ProgrammeCompareModal data={compareData} onClose={() => { setCompareData(null); setCompareIds([]); }} />}
+    </div>
+  );
+}
+
+// ProgrammeCompareModal — affiche 2 programmes côte à côte (#C feature)
+function ProgrammeCompareModal({ data, onClose }) {
+  const [parsedA, parsedB] = React.useMemo(() => {
+    try {
+      const Parser = require("../utils/parserProgramme");
+      return [Parser.parseProgrammeHTML(data[0].html_content), Parser.parseProgrammeHTML(data[1].html_content)];
+    } catch { return [null, null]; }
+  }, [data]);
+
+  if (!parsedA || !parsedB) return null;
+  const stat = (p) => {
+    const sessions = (p.weeks || []).reduce((a, w) => a + (w.sessions || []).length, 0);
+    const exos = (p.weeks || []).reduce((a, w) => a + (w.sessions || []).reduce((b, s) => b + (s.exercises || []).length, 0), 0);
+    return { weeks: (p.weeks || []).length, sessions, exos };
+  };
+  const sa = stat(parsedA), sb = stat(parsedB);
+
+  // Liste des exos uniques (par programme)
+  const exoList = (p) => Array.from(new Set((p.weeks || []).flatMap((w) => (w.sessions || []).flatMap((s) => (s.exercises || []).map((e) => e.name))))).filter(Boolean);
+  const exA = exoList(parsedA), exB = exoList(parsedB);
+  const onlyA = exA.filter((e) => !exB.includes(e));
+  const onlyB = exB.filter((e) => !exA.includes(e));
+  const common = exA.filter((e) => exB.includes(e));
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 11000, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "auto" }}>
+      <div style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, maxWidth: 900, width: "100%", maxHeight: "90vh", padding: 28, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: "#02d1ba", textTransform: "uppercase", marginBottom: 6 }}>📊 Comparateur</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>Comparaison de programmes</div>
+          </div>
+          <button type="button" onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          {[{ p: parsedA, s: sa, src: data[0] }, { p: parsedB, s: sb, src: data[1] }].map((side, i) => (
+            <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 6 }}>{i === 0 ? "Programme A" : "Programme B"}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{side.src.programme_name}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>{new Date(side.src.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 14 }}>
+                {[{ l: "Sem", v: side.s.weeks }, { l: "Séances", v: side.s.sessions }, { l: "Exos", v: side.s.exos }].map((x, j) => (
+                  <div key={j} style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", borderRadius: 8, textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 200, color: "#fff", lineHeight: 1 }}>{x.v}</div>
+                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase", marginTop: 3 }}>{x.l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 18, padding: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 10 }}>Diff exos</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, fontSize: 11 }}>
+            <div>
+              <div style={{ color: "#ff8888", fontWeight: 700, marginBottom: 4 }}>− Retirés ({onlyA.length})</div>
+              {onlyA.length === 0 ? <div style={{ color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>—</div> : onlyA.map((n) => <div key={n} style={{ color: "rgba(255,136,136,0.85)" }}>− {n}</div>)}
+            </div>
+            <div>
+              <div style={{ color: "rgba(255,255,255,0.5)", fontWeight: 700, marginBottom: 4 }}>= Conservés ({common.length})</div>
+              {common.length === 0 ? <div style={{ color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>—</div> : common.map((n) => <div key={n} style={{ color: "rgba(255,255,255,0.55)" }}>= {n}</div>)}
+            </div>
+            <div>
+              <div style={{ color: "#02d1ba", fontWeight: 700, marginBottom: 4 }}>+ Ajoutés ({onlyB.length})</div>
+              {onlyB.length === 0 ? <div style={{ color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>—</div> : onlyB.map((n) => <div key={n} style={{ color: "rgba(2,209,186,0.85)" }}>+ {n}</div>)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Icon({ name, size = 18, color = "currentColor", strokeWidth = 1.8 }) {
   const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth, strokeLinecap: "round", strokeLinejoin: "round" };
   const map = {
@@ -1022,6 +1198,34 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               </div>
             </div>
           )}
+
+          {/* HISTORIQUE PROGRAMMES — affiché si plus de 1 programme dans l'historique */}
+          <ProgrammesHistorySection client={client} onEdit={async (progId) => {
+            try {
+              const { data, error } = await supabase.from("programmes").select("id, programme_name, html_content").eq("id", progId).maybeSingle();
+              if (error || !data) { toast.error("Impossible de charger ce programme"); return; }
+              setBuilderEditing(data); setShowBuilder(true);
+            } catch (e) { toast.error("Erreur : " + e.message); }
+          }} onReuse={async (progId) => {
+            // Re-applique un programme passé : copy html, désactive l'actuel, insert nouveau
+            if (!window.confirm("Réutiliser ce programme ? Il deviendra actif et le programme courant sera désactivé.")) return;
+            try {
+              const { data: src } = await supabase.from("programmes").select("programme_name, html_content").eq("id", progId).maybeSingle();
+              if (!src) return;
+              await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
+              const userResp = await supabase.auth.getUser();
+              const { error } = await supabase.from("programmes").insert({
+                client_id: client.id,
+                programme_name: src.programme_name,
+                html_content: src.html_content,
+                is_active: true,
+                uploaded_by: userResp?.data?.user?.email || null,
+              });
+              if (error) throw error;
+              toast.success("Programme réutilisé");
+              onClose();
+            } catch (e) { toast.error("Erreur : " + e.message); }
+          }} />
         </div>
 
         {/* ===== POIDS + SPARKLINE ===== */}
