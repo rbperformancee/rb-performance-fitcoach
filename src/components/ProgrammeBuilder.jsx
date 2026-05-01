@@ -427,15 +427,16 @@ function ExercisePicker({ value, onChange, onPickFull }) {
   );
 }
 
-function ExerciseRow({ ex, idx, onUpdate, onRemove }) {
+function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate }) {
   const update = (k, v) => onUpdate({ ...ex, [k]: v });
+  const iconBtn = { width: 24, height: 24, borderRadius: 6, border: "1px solid " + BORDER, background: "transparent", color: "rgba(255,255,255,0.45)", cursor: "pointer", fontSize: 11, flexShrink: 0, fontFamily: "inherit" };
 
   return (
     <div style={{
       background: "rgba(255,255,255,0.025)", border: "1px solid " + BORDER,
       borderRadius: 12, padding: 12, marginBottom: 10,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
         <div style={{
           width: 24, height: 24, borderRadius: 6, background: G_DIM,
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -446,16 +447,10 @@ function ExerciseRow({ ex, idx, onUpdate, onRemove }) {
           onChange={(v) => update("name", v)}
           onPickFull={({ name, vidUrl }) => onUpdate({ ...ex, name, vidUrl })}
         />
-        <button
-          type="button"
-          onClick={onRemove}
-          style={{
-            width: 28, height: 28, borderRadius: 8, border: "1px solid " + BORDER,
-            background: "rgba(255,255,255,0.02)", color: "rgba(255,255,255,0.4)",
-            cursor: "pointer", fontSize: 14, flexShrink: 0,
-          }}
-          title="Supprimer cet exercice"
-        >×</button>
+        {idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter" style={iconBtn}>↑</button>}
+        {idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre" style={iconBtn}>↓</button>}
+        <button type="button" onClick={onDuplicate} title="Dupliquer" style={{ ...iconBtn, background: G_DIM, borderColor: "rgba(2,209,186,0.25)", color: G }}>⎘</button>
+        <button type="button" onClick={onRemove} title="Supprimer" style={{ ...iconBtn, fontSize: 14 }}>×</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
         <SuggestField label="Reps" value={ex.reps} onChange={(v) => update("reps", v)} placeholder="4X8-10" suggestions={REPS_SUGGESTIONS} />
@@ -471,11 +466,25 @@ function ExerciseRow({ ex, idx, onUpdate, onRemove }) {
   );
 }
 
-function SessionPanel({ session, onUpdate, onRemove, idx }) {
+function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate }) {
   const update = (k, v) => onUpdate({ ...session, [k]: v });
   const updateExercise = (exIdx, ex) => onUpdate({ ...session, exercises: session.exercises.map((e, i) => i === exIdx ? ex : e) });
   const addExercise = () => onUpdate({ ...session, exercises: [...session.exercises, newExercise()] });
   const removeExercise = (exIdx) => onUpdate({ ...session, exercises: session.exercises.filter((_, i) => i !== exIdx) });
+  const moveExercise = (exIdx, dir) => {
+    const arr = [...session.exercises];
+    const j = exIdx + dir;
+    if (j < 0 || j >= arr.length) return;
+    [arr[exIdx], arr[j]] = [arr[j], arr[exIdx]];
+    onUpdate({ ...session, exercises: arr });
+  };
+  const duplicateExercise = (exIdx) => {
+    const orig = session.exercises[exIdx];
+    const dup = { ...orig, id: uid() };
+    const arr = [...session.exercises];
+    arr.splice(exIdx + 1, 0, dup);
+    onUpdate({ ...session, exercises: arr });
+  };
 
   return (
     <div style={{
@@ -494,6 +503,15 @@ function SessionPanel({ session, onUpdate, onRemove, idx }) {
             borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit", outline: "none",
           }}
         />
+        {idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter la séance"
+          style={{ padding: "6px 8px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
+        >↑</button>}
+        {idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre la séance"
+          style={{ padding: "6px 8px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
+        >↓</button>}
+        <button type="button" onClick={onDuplicate} title="Dupliquer la séance"
+          style={{ padding: "6px 10px", background: G_DIM, border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+        >⎘</button>
         <button
           type="button"
           onClick={onRemove}
@@ -501,7 +519,7 @@ function SessionPanel({ session, onUpdate, onRemove, idx }) {
             padding: "6px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)",
             borderRadius: 8, color: "#c0392b", fontSize: 11, cursor: "pointer", fontFamily: "inherit",
           }}
-        >Supprimer la séance</button>
+        >Supprimer</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
@@ -511,7 +529,12 @@ function SessionPanel({ session, onUpdate, onRemove, idx }) {
 
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 10 }}>Exercices</div>
       {(session.exercises || []).map((ex, i) => (
-        <ExerciseRow key={ex.id} ex={ex} idx={i} onUpdate={(e) => updateExercise(i, e)} onRemove={() => removeExercise(i)} />
+        <ExerciseRow key={ex.id} ex={ex} idx={i} total={session.exercises.length}
+          onUpdate={(e) => updateExercise(i, e)}
+          onRemove={() => removeExercise(i)}
+          onMove={(dir) => moveExercise(i, dir)}
+          onDuplicate={() => duplicateExercise(i)}
+        />
       ))}
       <button
         type="button"
@@ -536,6 +559,20 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
     if (!sess) return;
     if (!window.confirm("Supprimer la séance \"" + sess.name + "\" et ses " + (sess.exercises || []).length + " exercices ?")) return;
     onUpdate({ ...week, sessions: week.sessions.filter((_, i) => i !== sIdx) });
+  };
+  const moveSession = (sIdx, dir) => {
+    const arr = [...week.sessions];
+    const j = sIdx + dir;
+    if (j < 0 || j >= arr.length) return;
+    [arr[sIdx], arr[j]] = [arr[j], arr[sIdx]];
+    onUpdate({ ...week, sessions: arr });
+  };
+  const duplicateSession = (sIdx) => {
+    const orig = week.sessions[sIdx];
+    const dup = { ...orig, id: uid(), name: orig.name + " (copie)", exercises: orig.exercises.map((e) => ({ ...e, id: uid() })) };
+    const arr = [...week.sessions];
+    arr.splice(sIdx + 1, 0, dup);
+    onUpdate({ ...week, sessions: arr });
   };
 
   return (
@@ -592,7 +629,12 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
       </div>
 
       {(week.sessions || []).map((s, i) => (
-        <SessionPanel key={s.id} session={s} idx={i} onUpdate={(ns) => updateSession(i, ns)} onRemove={() => removeSession(i)} />
+        <SessionPanel key={s.id} session={s} idx={i} total={week.sessions.length}
+          onUpdate={(ns) => updateSession(i, ns)}
+          onRemove={() => removeSession(i)}
+          onMove={(dir) => moveSession(i, dir)}
+          onDuplicate={() => duplicateSession(i)}
+        />
       ))}
       <button
         type="button"
