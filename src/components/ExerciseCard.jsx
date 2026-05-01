@@ -3,6 +3,7 @@ import { Sparkline } from "./Sparkline";
 import { RestTimer, parseRestSeconds } from "./RestTimer";
 import haptic from "../lib/haptic";
 import { useT, getLocale } from "../lib/i18n";
+import { findVideo } from "../data/exerciseVideos";
 
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
@@ -200,7 +201,10 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const allDone = doneCount >= parsedSets && doneCount > 0;
   const deltaPos = delta !== null && delta > 0;
   const deltaNeg = delta !== null && delta < 0;
-  const hasVideo = !!ex.vidUrl;
+  // Fallback : si pas de vidUrl explicite dans le programme, on cherche dans la
+  // bibliothèque centrale (src/data/exerciseVideos.js) par nom + alias.
+  const effectiveVidUrl = ex.vidUrl || findVideo(ex.name);
+  const hasVideo = !!effectiveVidUrl;
   const chipsReps = ex.rawReps || (ex.sets && ex.reps ? `${ex.sets}×${ex.reps}` : ex.reps) || null;
   const restSecs = parseRestSeconds(ex.rest);
   const setsCount = parsedSets;
@@ -348,7 +352,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
           </div>
 
           {/* Video */}
-          {hasVideo && showVideo && <VideoCard vidUrl={ex.vidUrl} thumbUrl={ex.thumbUrl} exName={ex.name} />}
+          {hasVideo && showVideo && <VideoCard vidUrl={effectiveVidUrl} thumbUrl={ex.thumbUrl} exName={ex.name} />}
 
           {/* Fantome semaine precedente */}
           {ghostData && (
