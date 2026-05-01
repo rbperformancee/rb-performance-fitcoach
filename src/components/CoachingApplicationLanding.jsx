@@ -82,9 +82,11 @@ export default function CoachingApplicationLanding() {
     <main style={{ minHeight: "100dvh", background: BG, color: "#fff", fontFamily: "-apple-system,Inter,sans-serif", overflow: "hidden", position: "relative" }}>
       <style>{KEYFRAMES}</style>
 
-      {/* Ambient gradients — drift lent (12s) + breath 60bpm overlay */}
-      <div aria-hidden="true" style={{ position: "fixed", top: "-10%", left: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.08), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 12s ease-in-out infinite, breath60Scale 1s ease-in-out infinite" }} />
-      <div aria-hidden="true" style={{ position: "fixed", bottom: "-10%", right: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.06), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 14s ease-in-out infinite reverse, breath60Scale 1s ease-in-out infinite 0.5s" }} />
+      {/* Ambient gradients — drift lent (12s). Breath retire ici : double
+          animation (drift + scale) sur 60% viewport = compositing continu
+          qui bloque le LCP. On garde le drift seul, ca suffit comme calme. */}
+      <div aria-hidden="true" style={{ position: "fixed", top: "-10%", left: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.08), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 12s ease-in-out infinite", willChange: "transform" }} />
+      <div aria-hidden="true" style={{ position: "fixed", bottom: "-10%", right: "-10%", width: "60%", height: "60%", background: `radial-gradient(circle, rgba(2,209,186,0.06), transparent 60%)`, pointerEvents: "none", animation: "ambientDrift 14s ease-in-out infinite reverse", willChange: "transform" }} />
 
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px 100px", position: "relative", zIndex: 1, textAlign: "center" }}>
 
@@ -94,8 +96,10 @@ export default function CoachingApplicationLanding() {
           <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: GREEN, fontWeight: 700 }}>Accompagnement Premium · 5 places ouvertes</div>
         </div>
 
-        {/* Hero title */}
-        <h1 style={{ fontFamily: "'Inter',-apple-system,sans-serif", fontSize: "clamp(38px, 7vw, 60px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 24, animation: "fadeUp 0.7s ease 0.2s both" }}>
+        {/* Hero title — pas de fadeUp ici : c'est le LCP candidate. Si on
+            le rend opacity:0 puis fade-in, Lighthouse mesure le LCP a la fin
+            de l'animation (700ms + 200ms delay = +900ms regression). */}
+        <h1 style={{ fontFamily: "'Inter',-apple-system,sans-serif", fontSize: "clamp(38px, 7vw, 60px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 24 }}>
           La transformation<br/>
           <span style={{ background: `linear-gradient(90deg, ${GREEN}, #ffffff, ${GREEN})`, backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 6s linear infinite" }}>
             qui change tout.
@@ -125,13 +129,13 @@ export default function CoachingApplicationLanding() {
           </div>
           <div style={{ textAlign: "left" }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>Rayan Bonte</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.3px", marginTop: 2 }}>Athlète · CQP ALS · Fondateur RB Perform</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.62)", letterSpacing: "0.3px", marginTop: 2 }}>Athlète · CQP ALS · Fondateur RB Perform</div>
           </div>
         </div>
 
         {/* Transformations clients — preuve réelle */}
         <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.45s both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 28 }}>Résultats · pas des promesses</div>
+          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 28 }}>Résultats · pas des promesses</div>
 
           {!showTransfos && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
@@ -198,7 +202,7 @@ export default function CoachingApplicationLanding() {
                 Ils n'ont pas attendu
               </button>
 
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.62)", letterSpacing: "0.5px" }}>
                 3 transformations · photos privées
               </div>
             </div>
@@ -244,7 +248,7 @@ export default function CoachingApplicationLanding() {
                   href="https://instagram.com/rb_perform"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: "inline-block", fontSize: 12, color: "rgba(2,209,186,0.8)", textDecoration: "none", letterSpacing: "0.3px", borderBottom: "1px solid rgba(2,209,186,0.3)", paddingBottom: 1 }}
+                  style={{ display: "inline-block", fontSize: 12, color: GREEN, textDecoration: "none", letterSpacing: "0.3px", borderBottom: "1px solid rgba(2,209,186,0.45)", paddingBottom: 1 }}
                 >
                   Plus de transformations sur Instagram →
                 </a>
@@ -263,7 +267,7 @@ export default function CoachingApplicationLanding() {
 
         {/* Ce que tu reçois — bullets centrés */}
         <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.5s both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700, marginBottom: 28 }}>Ce que tu reçois</div>
+          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 28 }}>Ce que tu reçois</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
             {[
               { t: "Programme adapté à ton profil", d: "Construit autour de ton corps, ton planning, ton objectif. Pas un template recyclé." },
@@ -296,7 +300,7 @@ export default function CoachingApplicationLanding() {
 
         {/* App preview — meme image que la landing, lien vers /demo-client */}
         <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.55s both", display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
-          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontWeight: 700 }}>L'app que tu utiliseras</div>
+          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700 }}>L'app que tu utiliseras</div>
           <img
             ref={iphoneRef}
             src="/iphone_client-720.webp"
@@ -358,7 +362,7 @@ export default function CoachingApplicationLanding() {
 
         {/* FAQ — discrete, juste 3 objections silencieuses */}
         <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.65s both", textAlign: "left", maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
-          <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", fontWeight: 600, marginBottom: 20, textAlign: "center" }}>Avant de postuler</div>
+          <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 20, textAlign: "center" }}>Avant de postuler</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
               {
@@ -393,9 +397,9 @@ export default function CoachingApplicationLanding() {
               { n: "03", t: "Je te recontacte", d: "sous 24h" },
             ].map((step, i) => (
               <div key={i} style={{ flex: "1 1 130px", textAlign: "left", padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12 }}>
-                <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", fontWeight: 800, letterSpacing: "1.5px", marginBottom: 4 }}>{step.n}</div>
+                <div style={{ fontSize: 9, color: GREEN, fontWeight: 800, letterSpacing: "1.5px", marginBottom: 4 }}>{step.n}</div>
                 <div style={{ fontSize: 12, color: "#fff", fontWeight: 700, lineHeight: 1.3 }}>{step.t}</div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{step.d}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.62)", marginTop: 2 }}>{step.d}</div>
               </div>
             ))}
           </div>
@@ -427,7 +431,7 @@ export default function CoachingApplicationLanding() {
           Réserve ta transformation →
         </button>
 
-        <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.8s both" }}>
+        <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.62)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.8s both" }}>
           Aucun paiement · Je te recontacte sous 24h
         </div>
       </div>
