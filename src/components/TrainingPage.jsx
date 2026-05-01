@@ -541,10 +541,23 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                 <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px", marginBottom: 6 }}>{t("train.how_did_you_feel")}</div>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 28 }}>{t("train.feedback_help")}</div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                  {["😤", "😐", "🙂", "💪", "🔥"].map((e, i) => (
-                    <div key={i} onClick={() => handleRessenti(i)} style={{ flex: 1, padding: "16px 0", borderRadius: 18, textAlign: "center", cursor: "pointer", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", transition: "all 0.15s", active: "none" }}>
-                      <div style={{ fontSize: 26, marginBottom: 5 }}>{e}</div>
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px" }}>{[t("train.rpe_dur"), t("train.rpe_ok"), t("train.rpe_good"), t("train.rpe_strong"), t("train.rpe_top")][i]}</div>
+                  {[
+                    { num: "1", label: t("train.rpe_dur"),    color: "#ef4444" },
+                    { num: "2", label: t("train.rpe_ok"),     color: "#fb923c" },
+                    { num: "3", label: t("train.rpe_good"),   color: "#facc15" },
+                    { num: "4", label: t("train.rpe_strong"), color: "#a3e635" },
+                    { num: "5", label: t("train.rpe_top"),    color: G },
+                  ].map((r, i) => (
+                    <div key={i} onClick={() => handleRessenti(i)} style={{
+                      flex: 1, padding: "18px 4px", borderRadius: 18, textAlign: "center", cursor: "pointer",
+                      background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = r.color + "10"; e.currentTarget.style.borderColor = r.color + "55"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; }}
+                    >
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 200, color: r.color, lineHeight: 1, letterSpacing: -1 }}>{r.num}</div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700, marginTop: 6 }}>{r.label}</div>
                     </div>
                   ))}
                 </div>
@@ -605,7 +618,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
                 {/* RPE + XP */}
                 <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
                   <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ fontSize: 28 }}>{["😤","😐","🙂","💪","🔥"][selectedRessenti]}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 200, color: ["#ef4444","#fb923c","#facc15","#a3e635",G][selectedRessenti], letterSpacing: -1, lineHeight: 1 }}>{selectedRessenti + 1}</div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{[t("train.rpe_difficult"), t("train.rpe_correct"), t("train.rpe_good_full"), t("train.rpe_strong_full"), t("train.rpe_top_full")][selectedRessenti]}</div>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{t("train.feeling_label")}</div>

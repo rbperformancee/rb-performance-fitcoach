@@ -833,7 +833,7 @@ export default function FuelPage({ client, appData }) {
         </div>
 
         {/* TABS */}
-        <div style={{ display: "flex", gap: 4, margin: "16px 24px 0", overflow: "hidden" }}>
+        <div style={{ display: "flex", gap: 4, margin: "32px 24px 0", overflow: "hidden" }}>
           {[
             { id: "nutrition", label: t("fuel.tab_nutrition") },
             { id: "supplements", label: t("fuel.tab_supplements") },

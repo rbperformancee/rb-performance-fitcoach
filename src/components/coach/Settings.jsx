@@ -32,8 +32,34 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
   const [lastName, setLastName]   = useState(coachData?.full_name?.split(" ").slice(1).join(" ") || "");
   const [coachingName, setCoachingName] = useState(coachData?.coaching_name || "");
   const [accentColor, setAccentColor]   = useState(coachData?.accent_color || G);
+  const [logoUrl, setLogoUrl] = useState(coachData?.logo_url || "");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const [saving, setSaving] = useState(false);
+
+  async function uploadLogo(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { toast.error("Photo trop lourde (max 2 Mo)"); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Format image uniquement"); return; }
+    if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; }
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${coachData.id}/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("coach-logos").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("coach-logos").getPublicUrl(path);
+      const url = data.publicUrl + "?t=" + Date.now();
+      setLogoUrl(url);
+      // Persist immédiatement
+      await supabase.from("coaches").update({ logo_url: url }).eq("id", coachData.id);
+      toast.success("Photo de profil mise à jour ✓");
+    } catch (err) {
+      toast.error(err.message || "Erreur upload");
+    }
+    setUploadingLogo(false);
+  }
 
   async function saveProfile() {
     if (isDemo) {
@@ -45,7 +71,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
       const full_name = `${firstName.trim()} ${lastName.trim()}`.trim();
       const { error } = await supabase
         .from("coaches")
-        .update({ full_name, coaching_name: coachingName.trim() || null, accent_color: accentColor })
+        .update({ full_name, coaching_name: coachingName.trim() || null, accent_color: accentColor, logo_url: logoUrl || null })
         .eq("id", coachData.id);
       if (error) throw error;
       toast.success(t("set.toast_profile_saved"));
@@ -127,6 +153,29 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
       <div className="set-content" style={content}>
         {tab === "branding" && (
           <Section title={t("set.coaching_title")} sub={t("set.coaching_sub")}>
+            <Field label="Photo de profil" sub="Apparaît dans l'app de tes clients et sur ta vitrine publique. Max 2 Mo, JPG ou PNG.">
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                {logoUrl ? (
+                  <img src={logoUrl} alt="logo" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: `2px solid ${accentColor}55`, boxShadow: `0 0 16px ${accentColor}30` }} />
+                ) : (
+                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: `${accentColor}1a`, border: `1px dashed ${accentColor}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: accentColor, fontWeight: 800, fontFamily: "'Bebas Neue',sans-serif" }}>
+                    {((firstName + lastName) || coachingName || "RB").slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <label style={{ flex: 1, padding: "12px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, cursor: "pointer", textAlign: "center", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", letterSpacing: "1px", textTransform: "uppercase", transition: "all .15s" }}>
+                  {uploadingLogo ? "Upload…" : (logoUrl ? "Changer la photo" : "Choisir une photo")}
+                  <input type="file" accept="image/*" onChange={uploadLogo} style={{ display: "none" }} />
+                </label>
+                {logoUrl ? (
+                  <button type="button" onClick={async () => {
+                    if (!window.confirm("Retirer la photo de profil ?")) return;
+                    setLogoUrl("");
+                    if (!isDemo) await supabase.from("coaches").update({ logo_url: null }).eq("id", coachData.id);
+                    toast.success("Photo retirée");
+                  }} style={{ padding: "10px 12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, color: "#ff8888", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "inherit" }}>×</button>
+                ) : null}
+              </div>
+            </Field>
             <Field label={t("set.coaching_name_label")} sub={t("set.coaching_name_sub")}>
               <input type="text" value={coachingName} onChange={(e) => setCoachingName(e.target.value)} placeholder={t("set.coaching_name_placeholder")} style={input} className="set-input" />
             </Field>

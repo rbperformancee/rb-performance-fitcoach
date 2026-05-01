@@ -36,6 +36,8 @@ export default function AppIcon({ name, size = 20, color = "currentColor", strok
     shoe: <svg {...p}><path d="M3 18h18a0 0 0 0 1 0 0v2H3v-2z" /><path d="M3 18c0-3 2-5 5-6 1.5-0.5 3-2 4-4 1.5-1 3-1 4 0 1 1 2 3 4 3h1v7" /><circle cx="7" cy="18" r="0.5" fill={color} /></svg>,
     run: <svg {...p}><circle cx="16" cy="4" r="1.5" /><path d="M7 18l2-5-3-2 2-4h4l1 3 3 1" /><path d="M7 13l-2 2 1 5" /><path d="M13 12l2 1v5" /></svg>,
     scale: <svg {...p}><rect x="3" y="15" width="18" height="5" rx="2" /><line x1="12" y1="15" x2="12" y2="9" /><path d="M8 9h8" /><path d="M6 9a6 6 0 0 1 12 0" /></svg>,
+    apple: <svg {...p}><path d="M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14z" /><path d="M9 7c1-2 3-2 3-2"/><path d="M14 4c0-1 1-2 2-2"/></svg>,
+    nutrition: <svg {...p}><path d="M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14z" /><path d="M14 4c0-1 1-2 2-2"/></svg>,
 
     // ===== COMMUNICATION =====
     message: <svg {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
