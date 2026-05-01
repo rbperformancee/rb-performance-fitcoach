@@ -1037,6 +1037,10 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   const [autosavedAt, setAutosavedAt] = useState(0);
   const [showTemplates, setShowTemplates] = useState(!editMode && (programme.weeks?.length === 1 && programme.weeks[0].sessions?.[0]?.exercises?.[0]?.name === "" && !programme.name));
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showApplyMulti, setShowApplyMulti] = useState(false);
+  const [coachClients, setCoachClients] = useState([]);
+  const [selectedClients, setSelectedClients] = useState([]);
+  const [applying, setApplying] = useState(false);
 
   // Autosave debounce 800ms (uniquement mode création, pas edit)
   useEffect(() => {
@@ -1067,6 +1071,57 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   const clearDraft = () => {
     try { localStorage.removeItem(draftKey); } catch {}
+  };
+
+  // Charge la liste des clients du coach connecté pour le multi-apply
+  const loadCoachClients = async () => {
+    try {
+      const userResp = await supabase.auth.getUser();
+      const email = userResp?.data?.user?.email;
+      if (!email) return;
+      const { data: coach } = await supabase.from("coaches").select("id").eq("email", email).maybeSingle();
+      if (!coach?.id) return;
+      const { data } = await supabase.from("clients").select("id, full_name, email, programmes(id, is_active)").eq("coach_id", coach.id).order("full_name");
+      setCoachClients(data || []);
+    } catch (e) {
+      console.error("[ProgrammeBuilder] loadCoachClients:", e);
+    }
+  };
+
+  const openApplyMulti = async () => {
+    if (!programme.name?.trim()) { alert("Sauvegarde le programme d'abord ou nomme-le."); return; }
+    await loadCoachClients();
+    setSelectedClients([]);
+    setShowApplyMulti(true);
+  };
+
+  const applyToSelectedClients = async () => {
+    if (selectedClients.length === 0) return;
+    setApplying(true);
+    try {
+      const html = buildHTML(programme);
+      const userResp = await supabase.auth.getUser();
+      const email = userResp?.data?.user?.email || null;
+      // Désactive les anciens programmes actifs des clients sélectionnés
+      await supabase.from("programmes").update({ is_active: false }).in("client_id", selectedClients);
+      // Insert le nouveau pour chaque
+      const inserts = selectedClients.map((clientId) => ({
+        client_id: clientId,
+        programme_name: programme.name,
+        html_content: html,
+        is_active: true,
+        uploaded_by: email,
+      }));
+      const { error } = await supabase.from("programmes").insert(inserts);
+      if (error) throw error;
+      setShowApplyMulti(false);
+      alert("Programme appliqué à " + selectedClients.length + " client" + (selectedClients.length > 1 ? "s" : "") + ".");
+      setSelectedClients([]);
+    } catch (e) {
+      alert("Erreur : " + (e.message || "inconnue"));
+    } finally {
+      setApplying(false);
+    }
   };
 
   const update = (k, v) => setProgramme((p) => ({ ...p, [k]: v }));
@@ -1119,6 +1174,69 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   return (
     <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, background: BG, color: "#fff", fontFamily: "Inter,-apple-system,sans-serif", display: "flex", flexDirection: "column" }}>
+      {showApplyMulti ? (
+        <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}>
+          <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 580, width: "100%", padding: 28, maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 18 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>Bulk apply</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>Appliquer à plusieurs clients</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>"{programme.name}" deviendra leur programme actif. Les anciens seront désactivés.</div>
+              </div>
+              <button type="button" onClick={() => setShowApplyMulti(false)} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, paddingRight: 4 }}>
+              {coachClients.length === 0 ? (
+                <div style={{ padding: 24, textAlign: "center", background: "rgba(255,255,255,0.02)", border: "1px dashed " + BORDER, borderRadius: 12, color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
+                  Aucun client trouvé.
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, padding: "0 4px" }}>
+                    <button type="button" onClick={() => setSelectedClients(coachClients.map((c) => c.id))} style={{ background: "transparent", border: "none", color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>Tout sélectionner</button>
+                    <button type="button" onClick={() => setSelectedClients([])} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>Désélectionner</button>
+                  </div>
+                  {coachClients.map((c) => {
+                    const sel = selectedClients.includes(c.id);
+                    const hasActive = (c.programmes || []).some((p) => p.is_active);
+                    return (
+                      <div key={c.id} onClick={() => setSelectedClients((s) => sel ? s.filter((id) => id !== c.id) : [...s, c.id])}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", marginBottom: 6, cursor: "pointer",
+                          background: sel ? "rgba(2,209,186,0.08)" : "rgba(255,255,255,0.025)",
+                          border: "1px solid " + (sel ? "rgba(2,209,186,0.35)" : BORDER),
+                          borderRadius: 10, transition: "all .12s",
+                        }}
+                      >
+                        <div style={{ width: 22, height: 22, borderRadius: 6, border: "2px solid " + (sel ? G : "rgba(255,255,255,0.15)"), background: sel ? G : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13, color: "#000", fontWeight: 800 }}>{sel ? "✓" : ""}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, color: "#fff", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.full_name || "(sans nom)"}</div>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{c.email}</div>
+                        </div>
+                        {hasActive ? (
+                          <div style={{ fontSize: 9, padding: "3px 8px", background: "rgba(255,165,0,0.1)", border: "1px solid rgba(255,165,0,0.25)", borderRadius: 100, color: "rgba(255,165,0,0.8)", fontWeight: 700, letterSpacing: 0.5, flexShrink: 0 }}>PROG ACTIF</div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{selectedClients.length} client{selectedClients.length > 1 ? "s" : ""} sélectionné{selectedClients.length > 1 ? "s" : ""}</div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button type="button" onClick={() => setShowApplyMulti(false)} style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid " + BORDER, borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}>Annuler</button>
+                <button type="button" disabled={applying || selectedClients.length === 0} onClick={applyToSelectedClients}
+                  style={{ padding: "10px 22px", background: applying || selectedClients.length === 0 ? "rgba(2,209,186,0.2)" : "linear-gradient(135deg, " + G + ", #0891b2)", border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: applying || selectedClients.length === 0 ? "not-allowed" : "pointer", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase", opacity: applying || selectedClients.length === 0 ? 0.5 : 1 }}
+                >{applying ? "Application…" : "Appliquer"}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {showTemplates ? (
         <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}>
           <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 720, width: "100%", padding: 28 }}>
@@ -1196,6 +1314,15 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
             }}
           >📄 Export PDF</button>
+          <button
+            type="button"
+            onClick={openApplyMulti}
+            style={{
+              padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+              border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
+            }}
+          >👥 Appliquer à plusieurs</button>
           <button
             type="button"
             onClick={handleSave}
