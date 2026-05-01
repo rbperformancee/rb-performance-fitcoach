@@ -725,11 +725,6 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   const [savedFlash, setSavedFlash] = useState(false);
   const [autosavedAt, setAutosavedAt] = useState(0);
   const [showTemplates, setShowTemplates] = useState(!editMode && (programme.weeks?.length === 1 && programme.weeks[0].sessions?.[0]?.exercises?.[0]?.name === "" && !programme.name));
-  const [showAi, setShowAi] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState("");
-  const [aiGenerated, setAiGenerated] = useState(false);  // flag: programme courant vient de l'IA
 
   // Autosave debounce 800ms (uniquement mode création, pas edit)
   useEffect(() => {
@@ -760,55 +755,6 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   const clearDraft = () => {
     try { localStorage.removeItem(draftKey); } catch {}
-  };
-
-  const handleAiGenerate = async () => {
-    if (!aiPrompt.trim()) { setAiError("Décris le programme que tu veux."); return; }
-    setAiLoading(true);
-    setAiError("");
-    try {
-      const res = await fetch("/api/generate-programme", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt.trim() }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        setAiError((json && (json.reason || json.error)) || "Erreur génération");
-        setAiLoading(false);
-        return;
-      }
-      const generated = json.programme;
-      // Ajouter ids React + clientName depuis le panel
-      const next = {
-        name: generated.name || "Programme IA",
-        clientName: (client && client.full_name) ? client.full_name : "",
-        duration: generated.duration || "",
-        tagline: generated.tagline || "",
-        objective: generated.objective || "",
-        weeks: (generated.weeks || []).map((w) => ({
-          id: uid(), name: w.name || "",
-          sessions: (w.sessions || []).map((s) => ({
-            id: uid(), name: s.name || "", description: s.description || "", finisher: s.finisher || "",
-            exercises: (s.exercises || []).map((e) => ({
-              id: uid(),
-              name: e.name || "", reps: e.reps || "", tempo: e.tempo || "",
-              rir: e.rir || "", rest: e.rest || "", group: e.group || "",
-              vidUrl: findVideo(e.name || "") || "",
-            })),
-          })),
-        })),
-      };
-      if (next.weeks.length === 0) next.weeks = [newWeek(1)];
-      setProgramme(next);
-      setAiGenerated(true);
-      setShowAi(false);
-      setAiPrompt("");
-    } catch (e) {
-      setAiError("Erreur réseau : " + (e.message || "inconnue"));
-    } finally {
-      setAiLoading(false);
-    }
   };
 
   const update = (k, v) => setProgramme((p) => ({ ...p, [k]: v }));
@@ -861,85 +807,6 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   return (
     <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, background: BG, color: "#fff", fontFamily: "Inter,-apple-system,sans-serif", display: "flex", flexDirection: "column" }}>
-      {showAi ? (
-        <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}>
-          <div style={{ background: BG_2, border: "1px solid rgba(167,139,250,0.3)", borderRadius: 18, maxWidth: 620, width: "100%", padding: 28, boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.12)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 18 }}>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: "#c4a8ff", textTransform: "uppercase", marginBottom: 6 }}>✨ Génération IA · Mistral (Paris)</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>Décris le programme</div>
-              </div>
-              <button type="button" onClick={() => { setShowAi(false); setAiError(""); }} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, marginBottom: 14 }}>
-              Plus tu es précis, meilleur le résultat. Mentionne durée, fréquence, niveau, objectif, points faibles. <strong style={{ color: "#fff" }}>Pas d'infos médicales</strong> (pathologies, médicaments).
-            </div>
-            <textarea
-              autoFocus
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="Ex: PPL Hypertrophie 4 semaines, niveau intermédiaire, 4 séances/sem, focus pectoraux faibles, prise de masse, 1h30 par séance"
-              rows={5}
-              maxLength={2000}
-              style={{
-                width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)",
-                border: "1px solid " + BORDER, borderRadius: 12, color: "#fff",
-                fontSize: 13, fontFamily: "inherit", outline: "none", resize: "vertical",
-                marginBottom: 12,
-              }}
-            />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{aiPrompt.length} / 2000</div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>~10 sec, 0,02€ / génération</div>
-            </div>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
-              {[
-                "PPL Hypertrophie 4 sem niveau intermédiaire",
-                "Force pure 4 sem 3 séances : Squat / Bench / Deadlift",
-                "Full body 3 sem débutant 3 séances par semaine",
-                "Bloc spécifique pectoraux 4 sem",
-                "Programme bras 6 sem volume + intensité",
-              ].map((preset) => (
-                <button
-                  key={preset} type="button" onClick={() => setAiPrompt(preset)}
-                  style={{ padding: "5px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid " + BORDER, borderRadius: 100, color: "rgba(255,255,255,0.65)", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}
-                >{preset}</button>
-              ))}
-            </div>
-
-            {aiError ? (
-              <div style={{ padding: 10, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, fontSize: 12, color: "#ff8888", marginBottom: 16 }}>
-                ⚠ {aiError}
-              </div>
-            ) : null}
-
-            <div style={{ padding: 12, background: "rgba(255,255,255,0.025)", border: "1px solid " + BORDER, borderRadius: 10, fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginBottom: 16 }}>
-              ⚠ <strong style={{ color: "#fff" }}>Tu restes responsable du programme.</strong> L'IA propose un squelette : <strong style={{ color: "#fff" }}>relis chaque exercice, charge, RIR avant d'envoyer au client</strong>. Aucun avis médical n'est généré.
-            </div>
-
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button
-                type="button" onClick={() => { setShowAi(false); setAiError(""); }}
-                style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid " + BORDER, borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}
-              >Annuler</button>
-              <button
-                type="button" disabled={aiLoading || !aiPrompt.trim()} onClick={handleAiGenerate}
-                style={{
-                  padding: "10px 22px",
-                  background: aiLoading || !aiPrompt.trim() ? "rgba(167,139,250,0.2)" : "linear-gradient(135deg, #a78bfa, #7c3aed)",
-                  border: "none", borderRadius: 10, color: "#fff",
-                  fontSize: 12, fontWeight: 800, cursor: aiLoading || !aiPrompt.trim() ? "not-allowed" : "pointer",
-                  fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase",
-                  boxShadow: "0 6px 20px rgba(167,139,250,0.3)", transition: "all .2s",
-                  opacity: aiLoading || !aiPrompt.trim() ? 0.6 : 1,
-                }}
-              >{aiLoading ? "Génération…" : "✨ Générer"}</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       {showTemplates ? (
         <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}>
           <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 720, width: "100%", padding: 28 }}>
@@ -990,27 +857,10 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {aiGenerated ? (
-            <span style={{ fontSize: 10, color: "#c4a8ff", fontWeight: 700, padding: "4px 10px", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 100, letterSpacing: 0.5 }}>
-              ✨ Généré par IA · à valider
-            </span>
-          ) : null}
           {!editMode && !savedFlash && autosavedAt > 0 ? (
             <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>Brouillon auto-sauvegardé</span>
           ) : null}
           {savedFlash ? <span style={{ fontSize: 11, color: G, fontWeight: 700 }}>✓ Enregistré côté client</span> : null}
-          {!editMode && (
-            <button
-              type="button"
-              onClick={() => setShowAi(true)}
-              style={{
-                padding: "8px 14px",
-                background: "linear-gradient(135deg, rgba(167,139,250,0.15), rgba(124,58,237,0.15))",
-                border: "1px solid rgba(167,139,250,0.35)", borderRadius: 10, color: "#c4a8ff",
-                fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
-              }}
-            >✨ Générer avec IA</button>
-          )}
           {!editMode && (
             <button
               type="button"

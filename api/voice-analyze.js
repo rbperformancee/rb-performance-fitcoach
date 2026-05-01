@@ -1,5 +1,76 @@
 // Vercel Serverless Function — proxy vers l'API Mistral La Plateforme
 // Lit MISTRAL_API_KEY depuis les env vars Vercel (jamais exposee au browser)
+
+const nodemailer = require("nodemailer");
+
+// Rate-limit alerte quota Mistral : max 1 email/30 min (évite spam si plusieurs
+// clients hit la limite en même temps). En mémoire instance Vercel.
+let lastQuotaAlertAt = 0;
+
+function notifyMistralQuotaIssue(ctx) {
+  const now = Date.now();
+  if (now - lastQuotaAlertAt < 30 * 60 * 1000) return;
+  lastQuotaAlertAt = now;
+
+  const SMTP_USER = process.env.ZOHO_SMTP_USER || "rayan@rbperform.app";
+  const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
+  const TO = process.env.MISTRAL_ALERT_EMAIL || "rb.performancee@gmail.com";
+  if (!SMTP_PASS) {
+    console.error("[voice-analyze] ALERT Mistral status=" + ctx.statusCode + " no SMTP to notify");
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: "smtp.zoho.eu", port: 465, secure: true,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
+
+  const isQuota = ctx.statusCode === 429;
+  const subject = isQuota ? "⚠ Quota Mistral dépassé · client bloqué" : "⚠ Erreur Mistral 5xx · " + ctx.statusCode;
+  const safePreview = String(ctx.textPreview || "").replace(/[<>&]/g, "").slice(0, 200);
+
+  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:32px 16px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+<tr><td style="background:#111;border-radius:16px;border:1px solid rgba(239,68,68,0.3);padding:32px">
+  <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#ff6b6b;margin-bottom:12px;font-weight:700">${isQuota ? "⚠ Quota Mistral dépassé" : "⚠ Erreur Mistral"}</div>
+  <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:14px">${isQuota ? "Tes clients ne peuvent plus logger en vocal" : "Mistral indisponible"}</div>
+  <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;margin-bottom:18px">
+    ${isQuota
+      ? "Un client vient d'essayer l'analyse vocale d'un repas mais Mistral a renvoyé <strong>429 (quota)</strong>. Le client a un message gentil 'momentanément indispo' mais ne peut pas utiliser cette feature jusqu'à ton intervention."
+      : "Mistral renvoie une erreur " + ctx.statusCode + " sur l'endpoint " + ctx.endpoint + ". Probablement temporaire (panne service)."}
+  </div>
+  ${isQuota ? `<div style="padding:14px 18px;background:rgba(2,209,186,0.05);border:1px solid rgba(2,209,186,0.2);border-radius:10px;margin-bottom:18px">
+    <div style="font-size:11px;color:#02d1ba;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">À faire</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6">
+      Va sur <a href="https://console.mistral.ai/billing" style="color:#02d1ba">console.mistral.ai/billing</a> →<br>
+      • Soit attendre le reset du quota (début mois)<br>
+      • Soit ajouter une carte (pay-as-you-go ~0,002€ par analyse vocale)
+    </div>
+  </div>` : ""}
+  <div style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.6">
+    <strong style="color:rgba(255,255,255,0.7)">Détails technique</strong><br>
+    Endpoint : ${ctx.endpoint}<br>
+    Status : ${ctx.statusCode}<br>
+    Timestamp : ${new Date().toISOString()}<br>
+    IP client : ${(ctx.ip || "—").slice(0, 40)}<br>
+    Texte (200c) : ${safePreview}
+  </div>
+  <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);font-size:10px;color:rgba(255,255,255,0.3)">
+    Cette alerte est rate-limitée à 1/30min. D'autres clients peuvent avoir été affectés.
+  </div>
+</td></tr></table>
+</td></tr></table></body></html>`;
+
+  transporter.sendMail({
+    from: `RB Perform Alerts <${SMTP_USER}>`,
+    to: [TO],
+    subject,
+    html,
+  }).catch((e) => console.error("[voice-analyze] alert send failed:", e.message));
+}
+
 //
 // Strategie pour la PRECISION :
 // - Modele : mistral-large-latest (le plus capable de Mistral, beaucoup plus precis
@@ -165,7 +236,22 @@ export default async function handler(req, res) {
 
     const data = await upstream.json();
     if (!upstream.ok) {
-      return res.status(upstream.status).json({ error: "Mistral error", details: data });
+      // Alerte Rayan si quota Mistral dépassé (429) ou erreur grave (5xx)
+      // pour qu'il puisse upgrader le plan avant que ça pénalise les clients.
+      if (upstream.status === 429 || upstream.status >= 500) {
+        notifyMistralQuotaIssue({
+          statusCode: upstream.status,
+          textPreview: text.slice(0, 200),
+          ip: req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "",
+          endpoint: "voice-analyze",
+        });
+      }
+      // Réponse user-friendly côté client (pas de détail technique exposé).
+      // Le client voit "indisponible momentanément" au lieu d'une erreur sèche.
+      const userMsg = upstream.status === 429
+        ? "Analyse vocale momentanément indisponible. Saisie manuelle dispo en attendant."
+        : "Erreur d'analyse. Saisie manuelle dispo en attendant.";
+      return res.status(upstream.status).json({ error: userMsg, retry: upstream.status === 429 });
     }
 
     const raw = (data?.choices?.[0]?.message?.content || "{}").replace(/```json|```/g, "").trim();
