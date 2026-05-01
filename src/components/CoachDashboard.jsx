@@ -2458,9 +2458,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     document.documentElement.style.setProperty('--coach-accent', accent);
   }, [accent]);
 
-  // Sentinel gating: Pro/Elite/Founding only, behind feature flag
+  // Sentinel gating: Pro/Elite/Founding ont accès. Free voit le teaser.
   const SENTINEL_PLANS = ["pro", "elite", "founding"];
-  const sentinelEnabled = process.env.REACT_APP_SENTINEL_ENABLED === "true" || coachData?.features?.sentinel_beta === true;
+  const sentinelEnabled = true; // launch SaaS — plus derrière flag
   const isFoundingCoach = coachData?.founding_coach === true || coachData?.subscription_plan === "founding";
   const hasSentinelAccess = isFoundingCoach || SENTINEL_PLANS.includes(coachData?.subscription_plan);
   const [activeTab, setActiveTab] = useState("overview");
