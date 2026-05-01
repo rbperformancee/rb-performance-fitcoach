@@ -356,6 +356,13 @@ export default function CoachOnboarding({ coachData, onComplete }) {
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 16, textAlign: "center" }}>
               {t("co.s4_note")}
             </div>
+            <button onClick={() => { setSiret(""); setBusinessName(""); setBusinessAddress(""); save(); }} style={{
+              marginTop: 10, width: "100%", padding: "10px 16px", background: "transparent", border: "none",
+              color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer",
+              fontFamily: "inherit", letterSpacing: 0.3,
+            }}>
+              Configurer ma facturation plus tard →
+            </button>
           </div>
         )}
 
@@ -451,15 +458,24 @@ export default function CoachOnboarding({ coachData, onComplete }) {
               ))}
             </div>
 
-            <button onClick={onComplete} style={{
-              width: "100%", maxWidth: 320, padding: 17,
-              background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
-              color: "#000", border: "none", borderRadius: 16, fontSize: 14, fontWeight: 800,
-              cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase",
-              letterSpacing: "0.5px", boxShadow: `0 8px 32px ${accentColor}40`,
-            }}>
-              {t("co.s6_open_btn")}
-            </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+              <button onClick={() => onComplete?.({ next: "build_programme" })} style={{
+                width: "100%", maxWidth: 320, padding: 17,
+                background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
+                color: "#000", border: "none", borderRadius: 16, fontSize: 14, fontWeight: 800,
+                cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase",
+                letterSpacing: "0.5px", boxShadow: `0 8px 32px ${accentColor}40`,
+              }}>
+                ⚡ Construire mon premier programme
+              </button>
+              <button onClick={() => onComplete?.({ next: "dashboard" })} style={{
+                padding: "10px 16px", background: "transparent", border: "none",
+                color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                fontFamily: "inherit", letterSpacing: 0.3,
+              }}>
+                Ouvrir le dashboard d'abord →
+              </button>
+            </div>
           </div>
         )}
       </div>
