@@ -35,7 +35,8 @@ export default function CoachOnboarding({ coachData, onComplete }) {
   const [businessAddress, setBusinessAddress] = useState(coachData?.business_address || "");
   const [tvaStatus, setTvaStatus] = useState(coachData?.tva_status || "non_applicable");
 
-  const TOTAL_STEPS = 6;
+  // Step 2 (couleur) désactivé — DA fixe sur teal. Visuellement 5 étapes pour le user.
+  const TOTAL_STEPS = 5;
   const firstName = fullName.split(" ")[0] || t("co.coach_default");
 
   // Generate invite code on step 4
@@ -151,11 +152,10 @@ export default function CoachOnboarding({ coachData, onComplete }) {
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: `${accentColor}88`, fontWeight: 700 }}>
-              {step <= TOTAL_STEPS ? `${step} / ${TOTAL_STEPS}` : ""}
+              {step <= 6 ? `${step >= 3 ? step - 1 : step} / ${TOTAL_STEPS}` : ""}
             </div>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.15)" }}>
               {step === 1 && t("co.step_1_label")}
-              {step === 2 && t("co.step_2_label")}
               {step === 3 && t("co.step_3_label")}
               {step === 4 && t("co.step_4_label")}
               {step === 5 && t("co.step_5_label")}
@@ -163,7 +163,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
             </div>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${(Math.min(step, TOTAL_STEPS) / TOTAL_STEPS) * 100}%`, background: accentColor, borderRadius: 2, transition: "width 0.5s ease" }} />
+            <div style={{ height: "100%", width: `${(Math.min(step >= 3 ? step - 1 : step, TOTAL_STEPS) / TOTAL_STEPS) * 100}%`, background: accentColor, borderRadius: 2, transition: "width 0.5s ease" }} />
           </div>
         </div>
 
@@ -191,14 +191,14 @@ export default function CoachOnboarding({ coachData, onComplete }) {
               </div>
             </div>
 
-            <button onClick={() => setStep(2)} disabled={!fullName.trim() || !brandName.trim()} style={btnPrimary(fullName.trim() && brandName.trim())}>
+            <button onClick={() => setStep(3)} disabled={!fullName.trim() || !brandName.trim()} style={btnPrimary(fullName.trim() && brandName.trim())}>
               {t("co.continue")}
             </button>
           </div>
         )}
 
-        {/* ===== STEP 2 : Couleur ===== */}
-        {step === 2 && (
+        {/* ===== STEP 2 : Couleur (DÉSACTIVÉ — DA brand fixe sur teal #02d1ba) ===== */}
+        {false && step === 2 && (
           <div style={{ animation: "coFade 0.4s ease both" }}>
             <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>{t("co.s2_eyebrow")}</div>
             <h1 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-2px", lineHeight: 0.95, marginBottom: 12 }}>
@@ -245,7 +245,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
           </div>
         )}
 
-        {/* ===== STEP 3 : Profil + Logo ===== */}
+        {/* ===== STEP 3 : Profil + Logo (renvoie back vers 1 car 2 supprimé) ===== */}
         {step === 3 && (
           <div style={{ animation: "coFade 0.4s ease both" }}>
             <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: `${accentColor}88`, marginBottom: 12, fontWeight: 700 }}>{t("co.s3_eyebrow")}</div>
@@ -284,7 +284,7 @@ export default function CoachOnboarding({ coachData, onComplete }) {
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setStep(2)} style={btnBack}>←</button>
+              <button onClick={() => setStep(1)} style={btnBack}>←</button>
               <button onClick={save} disabled={saving} style={btnPrimary(!saving)}>
                 {saving ? (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>

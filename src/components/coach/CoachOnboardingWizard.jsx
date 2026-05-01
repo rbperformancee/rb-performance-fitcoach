@@ -65,7 +65,7 @@ export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
         <div style={{ fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", fontWeight: 700, marginBottom: 12 }}>
           {t("ow.welcome")}
         </div>
-        <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 900, color: "#fff", margin: "0 0 12px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+        <h2 style={{ fontFamily: "'Inter',-apple-system,sans-serif", fontSize: "clamp(34px, 5vw, 48px)", fontWeight: 900, color: "#fff", margin: "0 0 12px", letterSpacing: "-0.03em", lineHeight: 1.0 }}>
           {t("ow.title")}<span style={{ color: G }}>.</span>
         </h2>
         <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: "0 auto", maxWidth: 380 }}>

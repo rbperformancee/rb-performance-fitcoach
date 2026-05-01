@@ -1353,7 +1353,7 @@ const en = {
     "csp.placeholder_dose": "Dose (e.g. 5g)",
     "csp.btn_cancel": "Cancel",
     "csp.btn_add": "Add",
-    "csp.btn_prescribe": "+ Prescribe a supplement",
+    "csp.btn_prescribe": "+ Recommend a supplement",
     "cd.toast_waitlist": "Available at launch — join the waitlist",
     "cd.toast_link_not_ready": "Link not ready yet",
     "cd.toast_link_copied": "Link copied",

@@ -172,6 +172,15 @@ function weeklyVolumeByGroup(week) {
   return groups;
 }
 
+// ─── Icônes SVG premium pour templates (vs emojis) ───────────────────────────
+const TPL_ICONS = {
+  blank:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  hyper:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  force:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12"/></svg>,
+  fullbody: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="6" r="3"/><path d="M12 9v6"/><path d="M9 12h6"/><path d="M9 21l3-6 3 6"/></svg>,
+  deload:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v6M12 14v8M4.93 10.93 8.46 14.46M15.54 9.54l3.53-3.53M2 12h6M16 12h6"/></svg>,
+};
+
 // ─── Templates de phases ──────────────────────────────────────────────────────
 // Skeletons pré-remplis : structure (semaines × séances × exos vides + reps/RIR
 // suggérés selon la phase). L'exercice picker remplit le nom + vidéo au tap.
@@ -180,14 +189,14 @@ const TEMPLATES = [
     id: "blank",
     name: "Vierge",
     desc: "1 semaine, 1 séance, 1 exercice. Pour partir de zéro.",
-    icon: "📄",
+    iconKey: "blank",
     build: () => ({ name: "", clientName: "", duration: "", tagline: "", objective: "", weeks: [newWeek(1)] }),
   },
   {
     id: "ppl-hypertrophie-4",
     name: "PPL Hypertrophie · 4 sem",
     desc: "Push / Pull / Legs × 4 semaines progressives. Volume → intensité.",
-    icon: "💪",
+    iconKey: "hyper",
     build: () => ({
       name: "PPL Hypertrophie · Q1",
       clientName: "",
@@ -213,7 +222,7 @@ const TEMPLATES = [
     id: "force-pure-4",
     name: "Force pure · 4 sem",
     desc: "Squat / Bench / Deadlift / OHP. Reps 3-6, RIR 1-2, longs repos.",
-    icon: "🏋️",
+    iconKey: "force",
     build: () => ({
       name: "Force pure · Bloc 1",
       clientName: "",
@@ -238,7 +247,7 @@ const TEMPLATES = [
     id: "full-body-3",
     name: "Full body · 3 sem",
     desc: "3 séances/sem full body. Idéal débutant ou retour à l'entraînement.",
-    icon: "🔄",
+    iconKey: "fullbody",
     build: () => ({
       name: "Full Body · Phase 1",
       clientName: "",
@@ -258,7 +267,7 @@ const TEMPLATES = [
     id: "deload-1",
     name: "Deload · 1 sem",
     desc: "Semaine de récup : 50% volume, RIR 3+. Préserve la fraîcheur.",
-    icon: "🌿",
+    iconKey: "deload",
     build: () => ({
       name: "Deload",
       clientName: "",
@@ -1413,7 +1422,9 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
                   onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.06)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.3)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; e.currentTarget.style.borderColor = BORDER; }}
                 >
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>{tpl.icon}</div>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(2,209,186,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: G, marginBottom: 12 }}>
+                    {tpl.iconKey ? React.cloneElement(TPL_ICONS[tpl.iconKey], { width: 20, height: 20 }) : null}
+                  </div>
                   <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{tpl.name}</div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{tpl.desc}</div>
                 </button>

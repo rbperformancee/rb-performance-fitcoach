@@ -54,7 +54,8 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
   const [history30d, setHistory30d] = useState([]);
   const [lastMonthMrr, setLastMonthMrr] = useState(null);
   const [platformBenchmark, setPlatformBenchmark] = useState(null);
-  const [previewMode, setPreviewMode] = useState(clients.length === 0);
+  // Plus de previewMode : si 0 client, on affiche un empty state premium (pas de mock data fake).
+  const [previewMode, setPreviewMode] = useState(false);
   const [sentinelCard, setSentinelCard] = useState(null);
 
   // Fetch latest daily playbook card from Sentinel (for Pro/Elite/Founding)
@@ -187,13 +188,21 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
         </div>
       </div>
 
-      {/* ===== BANNER APERÇU (0 clients) ===== */}
-      {previewMode && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 12, marginBottom: 18, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", flex: 1 }}>{t("biz.preview_banner")}</span>
-          <button onClick={() => setPreviewMode(!previewMode)} style={{ padding: "6px 14px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-            {previewMode ? t("biz.preview_btn_real") : t("biz.preview_btn_demo")}
-          </button>
+      {/* ===== EMPTY STATE PREMIUM (0 clients) — pas de fake data ===== */}
+      {clients.length === 0 && (
+        <div style={{
+          padding: "44px 32px", textAlign: "center", marginBottom: 24,
+          background: "linear-gradient(180deg, rgba(2,209,186,0.05), transparent)",
+          border: "1px solid rgba(2,209,186,0.18)", borderRadius: 20,
+        }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, margin: "0 auto 18px", background: "rgba(2,209,186,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "#02d1ba" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 3, color: "#02d1ba", textTransform: "uppercase", marginBottom: 10 }}>Business</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: -0.5, marginBottom: 10, lineHeight: 1.15 }}>Tes vrais chiffres apparaîtront ici.</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, maxWidth: 480, margin: "0 auto" }}>
+            MRR, score business, retention, forecast — tout se débloque automatiquement dès ton premier client. Aucune donnée fictive : seules tes vraies metriques s'affichent.
+          </div>
         </div>
       )}
 

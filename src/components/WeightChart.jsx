@@ -173,11 +173,19 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             <circle cx={toX(vals.length - 1)} cy={toY(vals[vals.length - 1])} r={5} fill={GREEN} />
             <circle cx={toX(vals.length - 1)} cy={toY(vals[vals.length - 1])} r={12} fill="rgba(2,209,186,0.12)" />
           </svg>
+        ) : vals.length === 1 ? (
+          <EmptyState
+            icon="scale"
+            title="C'est noté."
+            subtitle="Une nouvelle pesée demain matin et ta courbe commence à se dessiner."
+            size="md"
+            style={{ padding: "24px 16px 12px" }}
+          />
         ) : (
           <EmptyState
             icon="scale"
-            title="Ta premiere pesee."
-            subtitle="Pese-toi ce matin pour voir ton evolution ici."
+            title="Ta première pesée."
+            subtitle="Pèse-toi ce matin pour voir ton évolution ici."
             size="md"
             style={{ padding: "24px 16px 12px" }}
           />

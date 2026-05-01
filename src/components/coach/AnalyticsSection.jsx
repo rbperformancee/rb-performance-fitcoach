@@ -44,7 +44,13 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
   }, [onClose]);
 
   useEffect(() => {
-    if (!coachId || clients.length === 0) return;
+    if (!coachId) return;
+    if (clients.length === 0) {
+      // Pas de client = pas de loading infini, on bascule en empty state propre
+      setLoading(false);
+      setData(null);
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
@@ -144,6 +150,21 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
         {loading ? (
           <div style={{ padding: 60, display: "flex", justifyContent: "center" }}>
             <Spinner variant="dots" size={32} color={VIOLET} label={t("an.spinner_label")} />
+          </div>
+        ) : !data ? (
+          <div style={{
+            padding: "80px 24px", textAlign: "center", maxWidth: 420, margin: "0 auto",
+            background: "linear-gradient(180deg, rgba(167,139,250,0.06), transparent)",
+            border: "1px solid rgba(167,139,250,0.18)", borderRadius: 20,
+          }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, margin: "0 auto 18px", background: "rgba(167,139,250,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: VIOLET }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 3, color: VIOLET, textTransform: "uppercase", marginBottom: 10 }}>Analytics</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5, marginBottom: 10 }}>Tes données apparaîtront ici</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+              Ajoute un premier client et crée son programme. Les analytics se déverrouillent automatiquement avec ses pesées, séances et progression.
+            </div>
           </div>
         ) : (
           <>
