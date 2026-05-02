@@ -325,9 +325,6 @@ async function sendCriticalAlert({ subject, body, customerEmail, magicLink, reas
   }
 }
 
-// Vercel envoie le body brut si on désactive le bodyParser
-module.exports.config = { api: { bodyParser: false } };
-
 async function getRawBody(req) {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
@@ -768,3 +765,9 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+// CRITIQUE : config DOIT être après `module.exports = handler` sinon
+// l'assignation ci-dessus écrase l'objet et Vercel ne reçoit pas
+// `bodyParser: false`. Sans ça, le body est parsé → signature Stripe
+// devient invalide → vérification webhook contournable.
+module.exports.config = { api: { bodyParser: false } };

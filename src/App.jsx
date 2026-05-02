@@ -510,20 +510,33 @@ function AppInner() {
     import("./components/ProfilePage");
   }, [isDemo, isClientDemo]);
 
-  // Auto-login demo COACH (mot de passe — compte demo@rbperform.app)
+  // Auto-login demo COACH — bascule en OTP via /api/demo-coach (zero password
+  // exposé dans le bundle JS public). Le mot de passe demo a été retiré pour
+  // fixer la faille CRIT-2 (audit sécurité 2 mai 2026).
   React.useEffect(() => {
     if (!isDemo) return;
-    const email = process.env.REACT_APP_DEMO_EMAIL;
-    const password = process.env.REACT_APP_DEMO_PASSWORD;
-    if (!email || !password) { console.warn("[demo] REACT_APP_DEMO_EMAIL/PASSWORD manquantes"); return; }
-    supabase.auth.getSession().then(({ data }) => {
-      const sessionEmail = data?.session?.user?.email;
-      if (sessionEmail === email) return;
-      const tryLogin = () => supabase.auth.signInWithPassword({ email, password })
-        .then(({ error }) => { if (error) console.error("[demo] login error:", error.message); });
-      if (sessionEmail) { supabase.auth.signOut().then(tryLogin); }
-      else { tryLogin(); }
-    });
+    let cancelled = false;
+    (async () => {
+      const DEMO_EMAIL = "demo@rbperform.app";
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing?.user?.email === DEMO_EMAIL) return;
+      if (existing) await supabase.auth.signOut();
+      try {
+        const res = await fetch("/api/demo-coach");
+        const json = await res.json();
+        if (cancelled || !json.access_token) {
+          console.error("[demo-coach] API error:", json.error || "no token");
+          return;
+        }
+        await supabase.auth.setSession({
+          access_token: json.access_token,
+          refresh_token: json.refresh_token,
+        });
+      } catch (e) {
+        console.error("[demo-coach] fetch error:", e);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [isDemo]);
 
   // Auto-login demo CLIENT (OTP via API serverless — zero mot de passe)
