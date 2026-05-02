@@ -22,14 +22,57 @@ const { secureRequest } = require("./_security");
 const { captureException } = require("./_sentry");
 const { RB_SUPPORT_EMAIL } = require("./_branding");
 
-// Tables where we pull data keyed by coach_id. Unknown tables are skipped
-// without erroring — the export tolerates schema drift.
+// Tables où on pull les données par coach_id (rôle coach).
+// Inconnues / schéma drift / RLS deny → skipped sans erreur.
+// Couverture exhaustive RGPD art. 20 : toutes les tables qui contiennent
+// des données personnelles du coach OU qu'il a créées.
 const COACH_SCOPED_TABLES = [
-  "clients",
-  "programmes",
-  "notification_logs",
-  "invoices",
-  "coach_plans",
+  "clients",                     // ses clients (data managed)
+  "programmes",                  // programmes assignés
+  "coach_programme_templates",   // templates persos
+  "coach_notes",                 // notes privées sur clients
+  "coach_plans",                 // plans tarifaires custom
+  "coach_reminders",             // rappels CRM
+  "coach_monthly_goals",         // objectifs mensuels
+  "coach_testimonials",          // témoignages publics
+  "coach_invitations",           // invitations envoyées
+  "coach_messages_flash",        // messages flash
+  "coach_activity_log",          // log activité
+  "coach_badges",                // badges débloqués
+  "coach_business_snapshots",    // snapshots biz quotidiens
+  "coach_slots",                 // créneaux dispo
+  "invoices",                    // factures émises
+  "client_payments",             // paiements reçus loggés
+  "sentinel_cards",              // feed IA business
+  "notification_logs",           // logs notif (filtré via clients)
+];
+
+// Tables où on pull par client_id (rôle client).
+const CLIENT_SCOPED_TABLES = [
+  "programmes",                  // programmes assignés au client
+  "weight_logs",                 // pesées
+  "exercise_logs",               // logs exos
+  "nutrition_logs",              // logs repas
+  "nutrition_goals",             // macros cibles
+  "run_logs",                    // logs course
+  "daily_tracking",              // tracking quotidien
+  "session_completions",         // séances complétées
+  "session_live",                // séance vivante
+  "session_logs",                // logs séances
+  "session_rpe",                 // RPE par exo
+  "weekly_checkins",             // check-ins hebdo
+  "supplement_logs",             // logs compléments
+  "client_supplements",          // compléments configurés
+  "client_goals",                // objectifs personnels
+  "client_badges",               // badges débloqués
+  "transformation_sessions",     // sessions photos transfo
+  "onboarding_forms",            // formulaire d'onboarding
+  "programme_overrides",         // ajustements perso programme
+  "messages",                    // messages avec coach
+  "push_subscriptions",          // souscriptions push
+  "notification_logs",           // logs notif reçues
+  "activity_logs",               // logs activité app
+  "client_payments",             // paiements faits au coach
 ];
 
 module.exports = async (req, res) => {
@@ -58,44 +101,64 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: "Invalid or expired session" });
     }
 
-    // 3. Fetch coach profile
-    const { data: coach, error: coachErr } = await supabase
-      .from("coaches")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (coachErr) throw coachErr;
-    if (!coach) return res.status(404).json({ error: "Coach profile not found" });
+    // 3. Détecter le rôle (coach OU client) — un user peut être l'un OU l'autre
+    const [{ data: coach }, { data: client }] = await Promise.all([
+      supabase.from("coaches").select("*").eq("id", user.id).maybeSingle(),
+      supabase.from("clients").select("*").or(`id.eq.${user.id},email.eq.${user.email}`).maybeSingle(),
+    ]);
 
-    // 4. Fetch coach-scoped data from each known table. Skip missing tables.
+    if (!coach && !client) {
+      return res.status(404).json({ error: "Profile not found (neither coach nor client)" });
+    }
+
+    // 4. Collecte exhaustive selon le rôle
     const collected = {};
-    for (const table of COACH_SCOPED_TABLES) {
+    let role = null;
+    let scopeKey = null; // "coach_id" ou "client_id"
+    let scopeId = null;
+    let tables = [];
+
+    if (coach) {
+      role = "coach";
+      scopeKey = "coach_id";
+      scopeId = user.id;
+      tables = COACH_SCOPED_TABLES;
+    } else {
+      role = "client";
+      scopeKey = "client_id";
+      scopeId = client.id;
+      tables = CLIENT_SCOPED_TABLES;
+    }
+
+    for (const table of tables) {
       try {
-        const { data, error } = await supabase.from(table).select("*").eq("coach_id", user.id);
+        const { data, error } = await supabase.from(table).select("*").eq(scopeKey, scopeId);
         if (!error) collected[table] = data || [];
-      } catch {
-        // Table doesn't exist or column mismatch — tolerate, log for awareness
-        console.log(`[GDPR_EXPORT] skipped table=${table} (not present or non-standard schema)`);
+        else console.log(`[GDPR_EXPORT] table=${table} skipped (${error.message})`);
+      } catch (e) {
+        console.log(`[GDPR_EXPORT] table=${table} threw (${e.message})`);
       }
     }
 
     // 5. Package + emit
     const blob = {
       exported_at: new Date().toISOString(),
-      export_version: 1,
+      export_version: 2,
       article: "RGPD art. 20 — droit à la portabilité des données",
       subject: {
         user_id: user.id,
         email: user.email,
+        role,
         created_at: user.created_at,
         last_sign_in_at: user.last_sign_in_at,
       },
-      coach_profile: coach,
+      profile: coach || client,
       scoped_data: collected,
+      tables_exported: Object.keys(collected),
       notice:
         "Ce fichier contient l'ensemble des données personnelles que RB Perform détient " +
-        "sur votre compte coach. Pour une demande de rectification ou de suppression " +
-        `(art. 16 + 17 RGPD), écrivez à ${RB_SUPPORT_EMAIL}.`,
+        "sur votre compte. Vous pouvez demander la suppression complète (art. 17 RGPD) " +
+        `via Settings → Sécurité → Supprimer mon compte, ou écrire à ${RB_SUPPORT_EMAIL}.`,
     };
 
     res.setHeader("Content-Type", "application/json; charset=utf-8");

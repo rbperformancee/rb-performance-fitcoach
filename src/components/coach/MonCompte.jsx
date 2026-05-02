@@ -100,6 +100,68 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
     else { toast.success(t("mc.toast_password_changed")); setNewPassword(""); setConfirmPassword(""); }
   };
 
+  // RGPD art. 20 — export de toutes les données personnelles
+  const exportMyData = async () => {
+    if (isDemo) { toast.info(t("mc.toast_demo_unavailable")); return; }
+    haptic.light?.();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token;
+      if (!jwt) { toast.error("Session expirée"); return; }
+      toast.info("Préparation de l'export…");
+      const res = await fetch("/api/gdpr-export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+      });
+      if (!res.ok) { const j = await res.json().catch(()=>({})); throw new Error(j.error || "Export failed"); }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rbperform-export-${Date.now()}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Export téléchargé ✓");
+    } catch (e) {
+      toast.error(e.message || "Export indisponible");
+    }
+  };
+
+  // RGPD art. 17 — suppression définitive du compte
+  const deleteMyAccount = async () => {
+    if (isDemo) { toast.info(t("mc.toast_demo_unavailable")); return; }
+    const confirmation = window.prompt(
+      "⚠ Suppression DÉFINITIVE de ton compte et de toutes tes données.\n\n" +
+      "Cette action est IRRÉVERSIBLE. Aucune sauvegarde ne sera conservée.\n\n" +
+      "Tape SUPPRIMER (en majuscules) pour confirmer :"
+    );
+    if (confirmation !== "SUPPRIMER") {
+      if (confirmation !== null) toast.info("Suppression annulée — confirmation invalide");
+      return;
+    }
+    haptic.medium?.();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token;
+      if (!jwt) { toast.error("Session expirée"); return; }
+      const res = await fetch("/api/gdpr-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({ confirm: "SUPPRIMER" }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Suppression échouée");
+      toast.success("Compte supprimé. Email de confirmation envoyé.");
+      // Sign out + redirect après 3s pour laisser le toast être lu
+      setTimeout(async () => {
+        await supabase.auth.signOut();
+        window.location.href = "/";
+      }, 3000);
+    } catch (e) {
+      toast.error(e.message || "Suppression indisponible");
+    }
+  };
+
   const handleBillingPortal = async () => {
     if (isDemo) { toast.success(t("mc.toast_demo_unavailable")); return; }
     setLoadingPortal(true);
@@ -321,8 +383,8 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
             {/* Zone danger */}
             <div style={{ marginTop: 40, padding: "20px", background: "rgba(255,107,107,0.04)", border: "1px solid rgba(255,107,107,0.12)", borderRadius: 16 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: RED, marginBottom: 16 }}>{t("mc.danger_zone")}</div>
-              <button style={{ ...outlineBtn, borderColor: "rgba(255,107,107,0.2)", color: RED }} onClick={() => toast.success(t("mc.toast_export_contact"))}>{t("mc.btn_export_data")}</button>
-              <button style={{ ...outlineBtn, borderColor: "rgba(255,107,107,0.2)", color: RED, marginTop: 8 }} onClick={() => toast.error(t("mc.toast_delete_contact"))}>{t("mc.btn_delete_account")}</button>
+              <button style={{ ...outlineBtn, borderColor: "rgba(2,209,186,0.25)", color: G }} onClick={exportMyData}>{t("mc.btn_export_data")}</button>
+              <button style={{ ...outlineBtn, borderColor: "rgba(255,107,107,0.2)", color: RED, marginTop: 8 }} onClick={deleteMyAccount}>{t("mc.btn_delete_account")}</button>
             </div>
 
             {/* Déconnexion */}
