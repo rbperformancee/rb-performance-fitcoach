@@ -772,7 +772,7 @@ const fr = {
     "iv.error_invalid_email": "Email invalide.",
     "iv.error_session_expired": "Session expiree, reconnecte-toi",
     "iv.error_generic": "Erreur, reessaie",
-    "iv.toast_email_not_sent": "Invitation creee — email non envoye (relance plus tard)",
+    "iv.toast_email_not_sent": "Client ajouté ✓ — l'email automatique n'est pas parti, transfere-lui le code coach manuellement",
     "iv.toast_sent": "Invitation envoyee a {email}",
     // InvoiceModal
     "inv.eyebrow": "Nouvelle facture",

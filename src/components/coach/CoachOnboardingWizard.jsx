@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
 import { useT } from "../../lib/i18n";
@@ -11,6 +11,8 @@ const fillTpl = (s, vars) => {
   return out;
 };
 
+const DISMISS_KEY = (id) => `rb_coach_wizard_dismissed_${id || "anon"}`;
+
 /**
  * CoachOnboardingWizard — affiche aux nouveaux coachs sans clients
  * un guide visuel des 3 etapes pour demarrer.
@@ -19,9 +21,30 @@ const fillTpl = (s, vars) => {
  *   1. Configurer ton profil (logo, payment_link)
  *   2. Inviter ton 1er client (via code)
  *   3. Uploader un programme
+ *
+ * Dismissible : le coach peut masquer le guide (preference stockee en
+ * localStorage par coach_id, ne re-apparait pas au login suivant).
  */
 export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
   const t = useT();
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !coach?.id) return;
+    if (window.localStorage.getItem(DISMISS_KEY(coach.id)) === "1") {
+      setDismissed(true);
+    }
+  }, [coach?.id]);
+
+  function handleDismiss() {
+    haptic.light();
+    if (typeof window !== "undefined" && coach?.id) {
+      window.localStorage.setItem(DISMISS_KEY(coach.id), "1");
+    }
+    setDismissed(true);
+  }
+
+  if (dismissed) return null;
   const profileComplete = !!(coach?.brand_name && coach?.full_name);
   const hasLogo = !!coach?.logo_url;
   const hasPayment = !!coach?.payment_link;
@@ -61,7 +84,30 @@ export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
   return (
     <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease both" }}>
       {/* Hero accueil — premium */}
-      <div style={{ padding: "40px 28px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, marginBottom: 20, textAlign: "center" }}>
+      <div style={{ position: "relative", padding: "40px 28px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, marginBottom: 20, textAlign: "center" }}>
+        {/* Bouton masquer le guide */}
+        <button
+          onClick={handleDismiss}
+          aria-label="Masquer le guide"
+          title="Masquer ce guide (n'apparaitra plus au prochain login)"
+          style={{
+            position: "absolute", top: 12, right: 12,
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "6px 10px",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 100,
+            color: "rgba(255,255,255,0.5)",
+            fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
+            cursor: "pointer", fontFamily: "inherit",
+            transition: "color .15s, background .15s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+        >
+          × Masquer
+        </button>
+
         <div style={{ fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#4A4A5A", fontWeight: 700, marginBottom: 12 }}>
           {t("ow.welcome")}
         </div>
