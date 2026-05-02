@@ -29,11 +29,24 @@ const escAttr = (s) => String(s ?? '').replace(/[<>"'&]/g, (c) => ({
 }[c]));
 
 async function fetchCoach(slug) {
-  const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=id,full_name,brand_name,email,public_bio,public_specialties,public_photo_url,public_city,public_cta_url,logo_url,accent_color`;
-  const r = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
-  if (!r.ok) return null;
-  const rows = await r.json();
-  return Array.isArray(rows) && rows[0] ? rows[0] : null;
+  // Tente le SELECT complet (avec public_cta_url) d'abord. Si la colonne
+  // n'existe pas encore en DB (migration pas encore passée), retombe sur
+  // le set safe sans cette colonne. Évite le 42703 qui casserait la vitrine.
+  const FULL = 'id,full_name,brand_name,email,public_bio,public_specialties,public_photo_url,public_city,public_cta_url,logo_url,accent_color';
+  const SAFE = 'id,full_name,brand_name,email,public_bio,public_specialties,public_photo_url,public_city,logo_url,accent_color';
+  const headers = { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` };
+
+  for (const cols of [FULL, SAFE]) {
+    const url = `${SUPABASE_URL}/rest/v1/coaches?public_slug=eq.${encodeURIComponent(slug)}&public_profile_enabled=eq.true&select=${cols}`;
+    const r = await fetch(url, { headers });
+    if (r.ok) {
+      const rows = await r.json();
+      return Array.isArray(rows) && rows[0] ? rows[0] : null;
+    }
+    // 4xx avec column missing → on retente avec SAFE. Autres erreurs → null
+    if (r.status !== 400) return null;
+  }
+  return null;
 }
 
 async function fetchTestimonials(coachId) {
