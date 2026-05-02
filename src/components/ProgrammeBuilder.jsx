@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
-import { findFallbackVideo } from "../data/fallbackVideos";
+import { findFallbackVideo, FALLBACK_VIDEOS } from "../data/fallbackVideos";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -179,6 +179,19 @@ const TPL_ICONS = {
   force:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12"/></svg>,
   fullbody: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="6" r="3"/><path d="M12 9v6"/><path d="M9 12h6"/><path d="M9 21l3-6 3 6"/></svg>,
   deload:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v6M12 14v8M4.93 10.93 8.46 14.46M15.54 9.54l3.53-3.53M2 12h6M16 12h6"/></svg>,
+};
+
+// ─── Icônes SVG pour la barre toolbar (remplacent les emojis 📋📄👥⭐💾) ───
+const ToolbarIcon = ({ name, size = 14 }) => {
+  const props = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (name) {
+    case "templates": return <svg {...props}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
+    case "pdf":       return <svg {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>;
+    case "users":     return <svg {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+    case "star":      return <svg {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>;
+    case "save":      return <svg {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
+    default: return null;
+  }
 };
 
 // ─── Templates de phases ──────────────────────────────────────────────────────
@@ -417,12 +430,18 @@ function ExercisePicker({ value, onChange, onPickFull }) {
     if (!query || query.length < 2) return [];
     const norm = (s) => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     const q = norm(query);
-    return EXERCISE_VIDEOS
-      .filter((v) => {
-        if (norm(v.title).includes(q)) return true;
-        return (v.aliases || []).some((a) => norm(a).includes(q));
-      })
-      .slice(0, 8);
+    const matches = (v) =>
+      norm(v.title).includes(q) ||
+      (v.aliases || []).some((a) => norm(a).includes(q));
+
+    // Bibliothèque perso prioritaire (badge "Perso"), puis fallback externe
+    // (avec attribution créateur). Dedup par youtube id.
+    const personal = EXERCISE_VIDEOS.filter(matches).map((v) => ({ ...v, source: "personal" }));
+    const fallback = FALLBACK_VIDEOS.filter(matches).map((v) => ({ ...v, source: "fallback" }));
+    const seen = new Set();
+    return [...personal, ...fallback]
+      .filter((v) => { if (seen.has(v.id)) return false; seen.add(v.id); return true; })
+      .slice(0, 10);
   }, [query]);
 
   return (
@@ -465,12 +484,17 @@ function ExercisePicker({ value, onChange, onPickFull }) {
                 style={{ width: 60, height: 45, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.title}</div>
-                {(v.aliases || []).length > 0 && (
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                    {v.aliases.slice(0, 3).join(" · ")}
-                  </div>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>{v.title}</span>
+                  {v.source === "personal" ? (
+                    <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1, color: G, background: "rgba(2,209,186,0.1)", padding: "2px 6px", borderRadius: 100, textTransform: "uppercase", flexShrink: 0 }}>Perso</span>
+                  ) : (
+                    <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1, color: "rgba(168,139,250,0.85)", background: "rgba(168,139,250,0.08)", padding: "2px 6px", borderRadius: 100, textTransform: "uppercase", flexShrink: 0 }} title={v.creator || "Créateur externe"}>Démo</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+                  {v.source === "fallback" && v.creator ? `via ${v.creator}` : ((v.aliases || []).slice(0, 2).join(" · ") || " ")}
+                </div>
               </div>
               <div style={{ fontSize: 14, color: G }}>+</div>
             </button>
@@ -1391,16 +1415,21 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             </div>
             {coachTemplates.length > 0 ? (
               <>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>⭐ Mes templates</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 10, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>
+                  <ToolbarIcon name="star" size={11} />
+                  Mes templates
+                </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 22 }}>
                   {coachTemplates.map((tpl) => (
                     <div key={tpl.id} style={{ position: "relative", padding: 18, background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 14 }}>
                       <button type="button" onClick={() => applyCoachTemplate(tpl)}
                         style={{ display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: "inherit", color: "#fff" }}
                       >
-                        <div style={{ fontSize: 24, marginBottom: 6 }}>⭐</div>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(2,209,186,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: G, marginBottom: 12 }}>
+                          <ToolbarIcon name="star" size={18} />
+                        </div>
                         <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{tpl.name}</div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, marginBottom: 6 }}>{tpl.description || `${tpl.weeks_count || "?"} sem · ${tpl.sessions_count || "?"} séances · ${tpl.exercises_count || "?"} exos`}</div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{tpl.description || `${tpl.weeks_count || "?"} sem · ${tpl.sessions_count || "?"} séances · ${tpl.exercises_count || "?"} exos`}</div>
                       </button>
                       <button type="button" onClick={(e) => { e.stopPropagation(); deleteCoachTemplate(tpl.id); }}
                         style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: 6, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}
@@ -1453,20 +1482,36 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Status indicator — point pulsé discret (pas de texte qui surcharge) */}
           {!editMode && !savedFlash && autosavedAt > 0 ? (
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>Brouillon auto-sauvegardé</span>
+            <span title="Brouillon auto-sauvegardé" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
+              Brouillon
+            </span>
           ) : null}
-          {savedFlash ? <span style={{ fontSize: 11, color: G, fontWeight: 700 }}>✓ Enregistré côté client</span> : null}
+          {savedFlash ? (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10, color: G, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: G, boxShadow: `0 0 8px ${G}` }} />
+              Enregistré
+            </span>
+          ) : null}
+
+          {/* Boutons secondaires — icon-first, label visible mais discret */}
           {!editMode && (
             <button
               type="button"
               onClick={() => setShowTemplates(true)}
+              title="Templates"
               style={{
-                padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "8px 12px", background: "rgba(255,255,255,0.03)",
                 border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
-                fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
+                fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
               }}
-            >📋 Templates</button>
+            >
+              <ToolbarIcon name="templates" />
+              <span>Templates</span>
+            </button>
           )}
           <button
             type="button"
@@ -1474,35 +1519,51 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               try { await exportProgrammePDF(programme); }
               catch (e) { console.error(e); alert("Erreur PDF : " + e.message); }
             }}
+            title="Export PDF"
             style={{
-              padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "8px 12px", background: "rgba(255,255,255,0.03)",
               border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
-              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
+              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
             }}
-          >📄 Export PDF</button>
+          >
+            <ToolbarIcon name="pdf" />
+            <span>PDF</span>
+          </button>
           <button
             type="button"
             onClick={openApplyMulti}
+            title="Appliquer à plusieurs clients"
             style={{
-              padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "8px 12px", background: "rgba(255,255,255,0.03)",
               border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
-              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
+              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
             }}
-          >👥 Appliquer à plusieurs</button>
+          >
+            <ToolbarIcon name="users" />
+            <span>Multi-clients</span>
+          </button>
           <button
             type="button"
             onClick={() => setShowSaveTemplate(true)}
+            title="Sauver comme template"
             style={{
-              padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "8px 12px", background: "rgba(255,255,255,0.03)",
               border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
-              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5,
+              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
             }}
-          >⭐ Sauver comme template</button>
+          >
+            <ToolbarIcon name="star" />
+            <span>Template</span>
+          </button>
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
             style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
               padding: "10px 18px",
               background: "linear-gradient(135deg, " + G + ", #0891b2)",
               border: "none", borderRadius: 10, color: "#000",
@@ -1510,7 +1571,10 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase",
               boxShadow: "0 6px 20px rgba(2,209,186,0.25)",
             }}
-          >{saving ? "Sauvegarde…" : "💾 Sauvegarder"}</button>
+          >
+            {!saving && <ToolbarIcon name="save" size={14} />}
+            <span>{saving ? "Sauvegarde…" : "Sauvegarder"}</span>
+          </button>
         </div>
       </div>
 
