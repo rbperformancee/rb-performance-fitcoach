@@ -33,6 +33,9 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
   const [notes, setNotes] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [saving, setSaving] = useState(false);
+  // Hook A : marquer la facture comme déjà encaissée à la génération
+  // → crée auto un client_payment lié à cette invoice (invoice_id FK)
+  const [markAsPaid, setMarkAsPaid] = useState(false);
 
   // Auto-generate invoice number
   useEffect(() => {
@@ -95,14 +98,39 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
       installments_count: installments,
       installment_amount: installments > 1 ? Math.round((totalTTC / installments) * 100) / 100 : null,
       notes: notes.trim() || null,
-      status: "draft",
+      status: markAsPaid ? "paid" : "draft",
     };
 
-    const { error } = await supabase.from("invoices").insert(invoiceData).select();
+    const { data: insertedRows, error } = await supabase.from("invoices").insert(invoiceData).select();
     if (error && !error.message?.includes("0 rows") && error.code !== "PGRST116") {
       toast.error(t("inv.toast_save_error") + error.message);
       setSaving(false);
       return;
+    }
+    const invoiceRow = Array.isArray(insertedRows) && insertedRows[0] ? insertedRows[0] : null;
+
+    // Hook A : si "Marquer comme encaissée" coché → crée un client_payment
+    // lié à cette facture (invoice_id FK), évite le doublon via UNIQUE INDEX.
+    if (markAsPaid && invoiceRow?.id && clientId) {
+      const dur = typeof durationMonths === "number" && durationMonths > 0 ? durationMonths : 1;
+      const today = new Date();
+      const periodEnd = new Date(today);
+      periodEnd.setDate(periodEnd.getDate() + 30 * dur);
+      const { error: payErr } = await supabase.from("client_payments").insert({
+        client_id: clientId,
+        coach_id: coachData.id,
+        invoice_id: invoiceRow.id,
+        amount_eur: totalTTC,
+        payment_method: "virement",
+        received_date: today.toISOString().slice(0, 10),
+        period_start: today.toISOString().slice(0, 10),
+        period_end: periodEnd.toISOString().slice(0, 10),
+        notes: `Auto-loggé depuis facture ${invoiceNumber}`,
+      });
+      if (payErr) {
+        console.warn("[InvoiceModal] auto-log payment failed:", payErr.message);
+        // Pas bloquant — la facture est créée, le coach peut logger manuellement après
+      }
     }
 
     // Generate PDF
@@ -268,6 +296,32 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
             </div>
           )}
         </div>
+
+        {/* Toggle "Marquer comme déjà encaissée" */}
+        {clientId && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "12px 16px", background: markAsPaid ? "rgba(2,209,186,0.06)" : "rgba(255,255,255,0.025)", border: `1px solid ${markAsPaid ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.06)"}`, borderRadius: 12, transition: "all .15s" }}>
+            <button
+              type="button"
+              onClick={() => setMarkAsPaid(!markAsPaid)}
+              aria-pressed={markAsPaid}
+              style={{
+                width: 40, height: 22, borderRadius: 100,
+                background: markAsPaid ? G : "rgba(255,255,255,0.1)",
+                border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0,
+              }}
+            >
+              <div style={{ position: "absolute", top: 2, left: markAsPaid ? 20 : 2, width: 18, height: 18, background: "#fff", borderRadius: "50%", transition: "left 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.3)" }} />
+            </button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>Marquer comme déjà encaissée</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>
+                {markAsPaid
+                  ? `Un paiement de ${totalTTC.toFixed(2)} € sera loggé pour le suivi MRR (période ${typeof durationMonths === "number" && durationMonths > 0 ? `${durationMonths} mois` : "30 jours"})`
+                  : "Active si le virement est déjà reçu — sinon laisse en brouillon, tu logueras plus tard"}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* CTA */}
         <button onClick={handleGenerate} disabled={saving || !clientName.trim() || amountNum <= 0} style={{

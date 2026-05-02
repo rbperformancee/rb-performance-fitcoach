@@ -53,6 +53,9 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
   const [savingGoal, setSavingGoal] = useState(false);
   const [history30d, setHistory30d] = useState([]);
   const [lastMonthMrr, setLastMonthMrr] = useState(null);
+  // MRR réellement encaissé ce mois — somme des client_payments non-void
+  // dont received_date est dans le mois calendaire courant.
+  const [cashThisMonth, setCashThisMonth] = useState(null);
   const [platformBenchmark, setPlatformBenchmark] = useState(null);
   // Plus de previewMode : si 0 client, on affiche un empty state premium (pas de mock data fake).
   const [previewMode, setPreviewMode] = useState(false);
@@ -134,6 +137,24 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
         setPlatformBenchmark({ score: avgScore, retention: avgRetention });
       }
     }).catch((e) => console.warn("[BusinessSection load]", e));
+
+    // Cash encaissé ce mois — somme des paiements non-void
+    (async () => {
+      try {
+        const start = new Date();
+        start.setDate(1);
+        const startStr = start.toISOString().slice(0, 10);
+        const { data } = await supabase.from("client_payments")
+          .select("amount_eur")
+          .eq("coach_id", coachData.id)
+          .eq("void", false)
+          .gte("received_date", startStr);
+        if (mounted) {
+          const total = (data || []).reduce((s, p) => s + (parseFloat(p.amount_eur) || 0), 0);
+          setCashThisMonth(total);
+        }
+      } catch (_) {}
+    })();
 
     return () => { mounted = false; };
   }, [coachData?.id]);
@@ -285,6 +306,19 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
           <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
             {t("biz.annualized")} <strong style={{ color: "#fff" }}>{annualizedRevenue(mrr).toLocaleString(intlLocale())} €</strong>
           </div>
+          {/* Cash réellement encaissé ce mois (paiements loggés manuellement) */}
+          {cashThisMonth != null && cashThisMonth > 0 && (
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(2,209,186,0.15)" }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+                <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.45)", fontWeight: 600 }}>
+                  Encaissé ce mois
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 700, color: "#fff" }}>
+                  {cashThisMonth.toLocaleString(intlLocale())} €
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Score business ring */}

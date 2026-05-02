@@ -70,8 +70,7 @@ export default function LogPaymentModal({
       setCustomEnd("");
       setNotes("");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, defaultAmount]);
+  }, [open, defaultAmount, today, startDefault]);
 
   if (!open) return null;
 

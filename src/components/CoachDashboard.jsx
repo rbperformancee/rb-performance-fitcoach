@@ -23,6 +23,7 @@ import ProgrammeList from "./coach/ProgrammeList";
 import ProgrammeDuplicateModal from "./coach/ProgrammeDuplicateModal";
 import Onboarding from "./coach/Onboarding";
 import InviteClient from "./coach/InviteClient";
+import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
 import { BehavioralBadge } from "./coach/BehavioralBadge";
@@ -726,6 +727,24 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [uploadProgWeeks, setUploadProgWeeks] = useState(6);
   const [showBuilder, setShowBuilder] = useState(false); // duree du programme en semaines
   const [builderEditing, setBuilderEditing] = useState(null); // programme pour edit mode
+  // Hook B : modal "logger paiement" pour ce client (déclenchée manuellement
+  // depuis la fiche client via le bouton "Logger un paiement reçu")
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [lastPayment, setLastPayment] = useState(null);
+  // Reload last payment after a save
+  const reloadLastPayment = React.useCallback(async () => {
+    if (!client?.id) return;
+    const { data } = await supabase
+      .from("client_payments")
+      .select("amount_eur, received_date, period_start, period_end, payment_method")
+      .eq("client_id", client.id)
+      .eq("void", false)
+      .order("period_end", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setLastPayment(data || null);
+  }, [client?.id]);
+  React.useEffect(() => { reloadLastPayment(); }, [reloadLastPayment]);
   const [confirmDelete, setConfirmDelete] = useState(null); // { progId, progName } pour modal confirm
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
   const fileRef = useRef();
@@ -1974,6 +1993,47 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           </div>
         </div>
 
+        {/* ===== PAIEMENTS REÇUS ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.38s both" }}>
+          <div style={sectionTitle}>
+            <Icon name="check" size={14} color={G} />
+            Paiements reçus
+          </div>
+          <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              {lastPayment ? (() => {
+                const today = new Date().toISOString().slice(0, 10);
+                const expired = lastPayment.period_end < today;
+                const fmt = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+                return (
+                  <>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4, letterSpacing: 0.5 }}>Dernier paiement</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 2 }}>
+                      {parseFloat(lastPayment.amount_eur).toFixed(0)} € · {fmt(lastPayment.received_date)}
+                    </div>
+                    <div style={{ fontSize: 11, color: expired ? "#ff6b6b" : G, fontWeight: 600 }}>
+                      {expired ? `⚠ Période dépassée depuis le ${fmt(lastPayment.period_end)}` : `✓ Couvre jusqu'au ${fmt(lastPayment.period_end)}`}
+                    </div>
+                  </>
+                );
+              })() : (
+                <>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4, letterSpacing: 0.5 }}>Statut</div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>
+                    Aucun paiement loggé pour ce client.
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              style={{ padding: "10px 16px", background: `${G}15`, border: `1px solid ${G}40`, borderRadius: 100, color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3, whiteSpace: "nowrap" }}
+            >
+              + Logger un paiement
+            </button>
+          </div>
+        </div>
+
         {/* ===== ZONE DANGEREUSE ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.4s both", paddingTop: 20, borderTop: "1px solid rgba(255,107,107,0.1)" }}>
           <button
@@ -1984,6 +2044,17 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             {t("cp.btn_delete_client")}
           </button>
         </div>
+
+        {/* Hook B : modal logger paiement (déclenché par bouton ci-dessus) */}
+        <LogPaymentModal
+          open={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          clientId={client?.id}
+          clientName={client?.full_name}
+          coachId={coachId}
+          defaultAmount={300}
+          onSaved={reloadLastPayment}
+        />
 
         </>)}
 

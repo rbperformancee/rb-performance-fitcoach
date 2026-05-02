@@ -5,6 +5,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
 import { findFallbackVideo, FALLBACK_VIDEOS } from "../data/fallbackVideos";
+import LogPaymentModal, { checkPaymentNeeded } from "./coach/LogPaymentModal";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -1094,6 +1095,10 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   });
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  // Hook C : modal "logger paiement" déclenchée après save si la période en
+  // cours du client est dépassée OU pas définie. Skippable.
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentCoachId, setPaymentCoachId] = useState(null);
   const [autosavedAt, setAutosavedAt] = useState(0);
   const [showTemplates, setShowTemplates] = useState(!editMode && (programme.weeks?.length === 1 && programme.weeks[0].sessions?.[0]?.exercises?.[0]?.name === "" && !programme.name));
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -1310,6 +1315,22 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 2500);
       if (typeof onSaved === "function") onSaved();
+
+      // Hook C : check si un paiement est nécessaire pour ce client
+      // (aucun paiement loggé OU période dépassée). Skippable, non bloquant.
+      try {
+        const status = await checkPaymentNeeded(client.id);
+        if (status.needs) {
+          // Récupère le coach_id (auth.uid) pour le modal
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.id) {
+            setPaymentCoachId(user.id);
+            setShowPaymentModal(true);
+          }
+        }
+      } catch (_) {
+        // Pas bloquant — le programme est sauvegardé même si on rate le check
+      }
     } catch (e) {
       console.error("[ProgrammeBuilder] save error:", e);
       alert("Erreur de sauvegarde : " + (e.message || "inconnue"));
@@ -1651,6 +1672,16 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           <Preview programme={programme} showAnalytics={showAnalytics} />
         </div>
       </div>
+
+      {/* Hook C : modal logger paiement (après save programme) */}
+      <LogPaymentModal
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        clientId={client?.id}
+        clientName={client?.full_name}
+        coachId={paymentCoachId}
+        defaultAmount={300}
+      />
     </div>
   );
 }
