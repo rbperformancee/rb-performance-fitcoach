@@ -208,9 +208,6 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
 
             {/* ===== VITRINE PUBLIQUE ===== */}
             <PublicProfileSection coachData={coachData} isDemo={isDemo} />
-
-            {/* ===== PARRAINAGE ===== */}
-            <ReferralSection coachData={coachData} isDemo={isDemo} />
           </Section>
         )}
 
@@ -917,126 +914,6 @@ const miniBtn = (disabled) => ({
   fontFamily: "inherit",
   letterSpacing: ".02em",
 });
-
-// ===== PARRAINAGE COACH =====
-function ReferralSection({ coachData, isDemo }) {
-  // ⚠ En travaux — masqué jusqu'au launch SaaS finalisé
-  return (
-    <div style={{ marginTop: 16, padding: 18, background: "rgba(255,165,0,0.04)", border: "1px dashed rgba(255,165,0,0.25)", borderRadius: 14 }}>
-      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(255,165,0,0.85)", textTransform: "uppercase", marginBottom: 6 }}>🚧 En travaux</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>Parrainage coach</div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
-        Bientôt : invite d'autres coachs et reçois 1 mois offert par parrainage. Disponible pour le launch SaaS.
-      </div>
-    </div>
-  );
-
-  // eslint-disable-next-line no-unreachable
-  /* legacy code below */
-  const t = useT();
-  const code = coachData?.referral_code || "";
-  const baseUrl = (typeof window !== "undefined" ? window.location.origin : "");
-  const link = code ? `${baseUrl}/signup?ref=${code}` : null;
-  const [stats, setStats] = useState({ total: 0, active: 0, rewarded: 0 });
-
-  useEffect(() => {
-    if (!coachData?.id || isDemo) return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from("referrals")
-        .select("status")
-        .eq("referrer_id", coachData.id);
-      if (!cancelled && Array.isArray(data)) {
-        setStats({
-          total:    data.length,
-          active:   data.filter((r) => r.status === "active").length,
-          rewarded: data.filter((r) => r.status === "rewarded").length,
-        });
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [coachData?.id, isDemo]);
-
-  // Demo stats
-  const displayStats = isDemo ? { total: 3, active: 2, rewarded: 1 } : stats;
-
-  async function copy(text) {
-    try { await navigator.clipboard.writeText(text); toast.success(t("set.toast_link_copied")); }
-    catch { toast.error(t("set.toast_copy_error")); }
-  }
-
-  return (
-    <div style={{ marginTop: 16, padding: "20px 22px", background: "rgba(0,201,167,.04)", border: ".5px solid rgba(0,201,167,.2)", borderRadius: 14 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "#00C9A7", marginBottom: 10 }}>
-        {t("set.referral_eyebrow")}
-      </div>
-      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
-        {t("set.referral_title")}<span style={{ color: "#00C9A7" }}>.</span>
-      </div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 16, lineHeight: 1.5 }}>
-        {t("set.referral_desc_prefix")}<strong style={{ color: "#00C9A7" }}>{t("set.referral_reward")}</strong>{t("set.referral_desc_suffix")}
-      </div>
-
-      {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
-        <ReferralStat label={t("set.referral_stat_invited")} value={displayStats.total} />
-        <ReferralStat label={t("set.referral_stat_active")}  value={displayStats.active} accent="#00C9A7" />
-        <ReferralStat label={t("set.referral_stat_rewarded")} value={displayStats.rewarded} accent={G} />
-      </div>
-
-      {/* Code */}
-      {code && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)" }}>
-            {t("set.referral_your_code")}
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <div style={{ flex: 1, padding: "11px 14px", background: "rgba(0,201,167,.06)", border: ".5px solid rgba(0,201,167,.2)", borderRadius: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: "#00C9A7", letterSpacing: ".05em", textAlign: "center" }}>
-              {code}
-            </div>
-            <button onClick={() => copy(code)} style={{ ...btnGhost, flexShrink: 0 }} title={t("set.referral_tooltip_copy_code")}>
-              <AppIcon name="check" size={14} color={G} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {link && (
-        <div style={{ display: "flex", gap: 6 }}>
-          <input
-            readOnly
-            value={link}
-            style={{ ...input, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
-            onClick={(e) => e.target.select()}
-          />
-          <button onClick={() => copy(link)} style={{ ...btnGhost, flexShrink: 0 }} title={t("set.referral_tooltip_copy")}>
-            <AppIcon name="arrow-right" size={14} color={G} />
-          </button>
-        </div>
-      )}
-
-      {!code && !isDemo && (
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", textAlign: "center", padding: 14 }}>
-          {t("set.referral_code_pending")}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ReferralStat({ label, value, accent }) {
-  return (
-    <div style={{ padding: "12px 8px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.05)", borderRadius: 10, textAlign: "center" }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 200, color: accent || "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
-        {value}
-      </div>
-      <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginTop: 6 }}>
-        {label}
-      </div>
-    </div>
-  );
-}
 
 // ===== COMPOSANTS =====
 function Section({ title, sub, children }) {
