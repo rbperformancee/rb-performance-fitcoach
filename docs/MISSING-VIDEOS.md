@@ -1,53 +1,41 @@
 # Vidéos exercices — gaps à combler
 
-Audit du **2 mai 2026** : 144 vidéos uniques (64 perso + 81 fallback). Voici les exercices courants **sans aucune match** (ni perso, ni fallback). À combler au fil de l'eau.
+Audit du **2 mai 2026**, mis à jour le **2 mai 2026** après wave Q2.
+158 vidéos uniques (64 perso + 94 fallback).
 
-## 🔴 Top priorité (très demandés)
+## ✅ Comblées dans la wave Q2 (14 exos)
 
-| Exercice | Suggéré (créateur recommandé) | Statut |
+| Exercice | Source | Statut |
 |---|---|---|
-| **Trap bar deadlift** | Squat University ou Jeff Nippard | ❌ |
-| **Hip thrust barre** | All Musculation (FR) ou Athlean-X | ❌ |
-| **Battle ropes** | Athlean-X | ❌ |
-| **Sled push** | Squat University | ❌ |
-| **Farmer walk / carry** | Athlean-X (loaded carries) | ❌ |
-| **Hanging leg raise** | Athlean-X | ❌ |
-| **Dragon flag** | Athlean-X (Bruce Lee classic) | ❌ |
-| **Step-up** (banc + haltères) | Squat University | ❌ |
+| Trap bar deadlift | Tutorial | ✅ |
+| Hip thrust barre | Tutorial | ✅ |
+| Battle ropes | Athlean-X | ✅ |
+| Sled push (TANK) | Squat University | ✅ |
+| Farmer walk / carry | Tutorial | ✅ |
+| Hanging leg raise | Athlean-X | ✅ |
+| Dragon flag | Athlean-X | ✅ |
+| Step-up | Tutorial | ✅ |
+| Zercher squat | Chris Duffin | ✅ |
+| Front squat | Squat University | ✅ |
+| Landmine press | Athlean-X | ✅ |
+| Overhead press barre | Jeff Nippard | ✅ |
+| Bayesian cable curl | Jeff Nippard | ✅ |
+| Bicep ranking (preacher · concentration · incline · hammer · spider) | Jeff Nippard | ✅ (vidéo couvre les 5) |
 
-## 🟡 Variantes curls bras (très utilisées)
+## 🟡 Restant à combler quand tu aures le temps
 
-| Exercice | Suggéré | Statut |
+| Exercice | Suggéré | Priorité |
 |---|---|---|
-| **Concentration curl** | Jeff Nippard | ❌ |
-| **Incline curl haltères** (banc à 45°) | Jeff Nippard | ❌ |
-| **Spider curl** | Jeff Nippard | ❌ |
-| **Cable curl** (poulie basse) | Jeff Nippard | ❌ |
-| **Dumbbell curl basique** (debout) | Jeff Nippard | ❌ |
-| **Curl marteau** (hammer) | Jeff Nippard | ❌ |
-
-## 🟠 Variantes squat / haltéro
-
-| Exercice | Suggéré | Statut |
-|---|---|---|
-| **Zercher squat** | Squat University | ❌ |
-| **Front squat** | Catalyst Athletics | ❌ |
-| **Back squat technique** | Squat University | ❌ |
-| **Goblet squat** | Squat University | ❌ |
-
-## 🔵 Landmine variations (full-body utile)
-
-| Exercice | Suggéré | Statut |
-|---|---|---|
-| **Landmine press** | Athlean-X | ❌ |
-| **Landmine row** | Squat University | ❌ |
-| **Landmine squat** | Squat University | ❌ |
-
-## 🟢 Overhead press barre (standard, manque)
-
-| Exercice | Suggéré | Statut |
-|---|---|---|
-| **Overhead press barre debout (OHP)** | Jeff Nippard ou Squat University | ❌ |
+| **Spider curl** dédié (vidéo isolée, pas le ranking) | Jeff Nippard | basse |
+| **Dumbbell curl basique** dédié | Jeff Nippard | basse |
+| **Back squat technique** dédié | Squat University | moyenne |
+| **Goblet squat** dédié | Squat University | basse |
+| **Landmine row** | Squat University | moyenne |
+| **Landmine squat** | Squat University | basse |
+| **Concentration curl** dédié | Jeff Nippard | basse |
+| **Curl marteau** dédié | Jeff Nippard | basse |
+| **Incline curl** dédié | Jeff Nippard | basse |
+| **Cable curl** (poulie basse standard) | Jeff Nippard | basse |
 
 ---
 

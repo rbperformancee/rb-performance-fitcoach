@@ -115,6 +115,24 @@ export const FALLBACK_VIDEOS = [
   { id: "loYKxW_8EbY", title: "Développé couché prise serrée (FR)", aliases: ["développé couché prise serrée fr", "close grip bench fr"],                     creator: "AM Nutrition (All-Musculation)" },
   { id: "OhzsFUM8T1Y", title: "Curl barre (FR)",                   aliases: ["curl barre fr", "barbell curl fr"],                                             creator: "AM Nutrition (All-Musculation)" },
   { id: "CRnwmX9wE3s", title: "Tractions serrées supination (FR)", aliases: ["tractions serrées", "pull up close grip fr"],                                   creator: "AM Nutrition (All-Musculation)" },
+
+  // ═══ Wave gaps Q2 2026 — exos courants manquants (audit 2 mai 2026) ═══
+  // Sources : Athlean-X, Squat University, Jeff Nippard, Chris Duffin
+  // Si une vidéo se révèle morte/déplacée → la swap ou retirer
+  { id: "w86k0S5rhFs", title: "Trap bar deadlift",                  aliases: ["trap bar", "trap bar deadlift", "TBDL", "soulevé hexagonal"],                  creator: "Tutorial" },
+  { id: "PbwWOv4xv8o", title: "Battle ropes workout",               aliases: ["battle ropes", "cordes", "cordes ondulatoires", "rope waves"],                 creator: "Athlean-X" },
+  { id: "kICxJien7xM", title: "Dragon flag",                        aliases: ["dragon flag", "drapeau du dragon", "bruce lee abs"],                            creator: "Athlean-X" },
+  { id: "Pr1ieGZ5atk", title: "Hanging leg raise",                  aliases: ["hanging leg raise", "leg raise barre", "relevé de jambes suspendu"],            creator: "Athlean-X" },
+  { id: "bqpXK3SFAKY", title: "Sled push (TANK)",                   aliases: ["sled push", "prowler", "tank push", "poussée traîneau"],                       creator: "Squat University" },
+  { id: "Zp26q4BY5HE", title: "Hip thrust barre",                   aliases: ["hip thrust", "hip thrust barre", "barbell hip thrust"],                         creator: "Tutorial" },
+  { id: "WCFCdxzFBa4", title: "Step-up (banc + haltères)",          aliases: ["step up", "step-up", "montée banc", "box step up"],                             creator: "Tutorial" },
+  { id: "vbYoTdbVXcE", title: "Zercher squat",                      aliases: ["zercher squat", "zercher", "squat zercher"],                                    creator: "Chris Duffin" },
+  { id: "x071zV-Bo2E", title: "Landmine press",                     aliases: ["landmine press", "landmine shoulder press", "presse landmine"],                creator: "Athlean-X" },
+  { id: "_RlRDWO2jfg", title: "Overhead press barre debout",        aliases: ["OHP", "overhead press", "développé militaire barre", "military press barre", "strict press"], creator: "Jeff Nippard" },
+  { id: "lLAw6fUccKA", title: "Farmer walk / carry",                aliases: ["farmer walk", "farmer carry", "marche du fermier", "loaded carry"],             creator: "Tutorial" },
+  { id: "G-Vamqoy8qM", title: "Front squat",                        aliases: ["front squat", "squat avant", "ask squatu front squat"],                         creator: "Squat University" },
+  { id: "nBSAXcjlYJ0", title: "Bayesian cable curl (face away)",    aliases: ["bayesian curl", "cable curl bayesian", "face away cable curl", "cable curl"],   creator: "Jeff Nippard" },
+  { id: "GNO4OtYoCYk", title: "Bicep exercises ranking (preacher · concentration · incline · hammer · spider)", aliases: ["preacher curl", "concentration curl", "incline curl", "hammer curl", "spider curl", "curl haltères incliné", "marteau", "curl marteau"], creator: "Jeff Nippard" },
 ];
 
 // Index normalisé pour lookup rapide.
