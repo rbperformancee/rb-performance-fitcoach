@@ -8,7 +8,10 @@
 // Pour ajouter : push dans FALLBACK_VIDEOS avec id (YouTube videoId) + title +
 // aliases + creator (nom du créateur affiché aux utilisateurs).
 
-const yt = (id) => `https://youtu.be/${id}`;
+// Helper URL — supporte un timestamp optionnel (en secondes) pour ouvrir
+// la vidéo au bon moment (utile pour les vidéos compilation / ranking).
+// Pour l'iframe embed, le param est `start` ; pour les liens partagés, `t`.
+const yt = (id, start) => start ? `https://youtu.be/${id}?t=${start}` : `https://youtu.be/${id}`;
 
 const norm = (s) => String(s || "")
   .toLowerCase()
@@ -132,7 +135,19 @@ export const FALLBACK_VIDEOS = [
   { id: "lLAw6fUccKA", title: "Farmer walk / carry",                aliases: ["farmer walk", "farmer carry", "marche du fermier", "loaded carry"],             creator: "Tutorial" },
   { id: "G-Vamqoy8qM", title: "Front squat",                        aliases: ["front squat", "squat avant", "ask squatu front squat"],                         creator: "Squat University" },
   { id: "nBSAXcjlYJ0", title: "Bayesian cable curl (face away)",    aliases: ["bayesian curl", "cable curl bayesian", "face away cable curl", "cable curl"],   creator: "Jeff Nippard" },
-  { id: "GNO4OtYoCYk", title: "Bicep exercises ranking (preacher · concentration · incline · hammer · spider)", aliases: ["preacher curl", "concentration curl", "incline curl", "hammer curl", "spider curl", "curl haltères incliné", "marteau", "curl marteau"], creator: "Jeff Nippard" },
+
+  // ═══ Curl variations (vidéos dédiées par exo, pas le ranking long) ═══
+  // Champ optionnel `start` (en secondes) pour ouvrir au bon moment dans
+  // une vidéo longue. Vide = lecture du début.
+  { id: "BPmUhDtdQfw", title: "Preacher curl",                      aliases: ["preacher curl", "curl pupitre", "curl banc preacher"],                          creator: "Tutorial" },
+  { id: "Iz1kGNIfS3Y", title: "Hammer curl (curl marteau)",         aliases: ["hammer curl", "curl marteau", "marteau"],                                       creator: "Tutorial" },
+  { id: "rAx_tf13V5k", title: "Incline dumbbell curl",              aliases: ["incline curl", "curl haltères incliné", "incline dumbbell curl", "curl banc incliné"], creator: "Tutorial" },
+  { id: "8KySC0rUgpQ", title: "Concentration curl",                 aliases: ["concentration curl", "curl concentré", "curl concentration"],                   creator: "Tutorial" },
+
+  // Catch-all : vidéo Jeff Nippard ranking tous les bicep exercises (long).
+  // Reste utile pour spider curl + dumbbell curl basique (pas de vidéo dédiée
+  // identifiée). Aliases réduits aux exos non-couverts par les dédiées au-dessus.
+  { id: "GNO4OtYoCYk", title: "Bicep exercises ranking",            aliases: ["spider curl", "dumbbell curl", "bicep ranking", "best bicep exercises"], creator: "Jeff Nippard" },
 ];
 
 // Index normalisé pour lookup rapide.
@@ -149,7 +164,10 @@ const INDEX = (() => {
   return map;
 })();
 
-// Retourne { url, creator } si match, sinon null.
+// Retourne { url, creator, start } si match, sinon null.
+// `start` est en secondes — utile pour les vidéos compilation / ranking
+// où on veut ouvrir au timestamp précis de l'exo (ex: bicep ranking
+// Jeff Nippard, t=180 pour preacher curl).
 export function findFallbackVideo(exerciseName) {
   if (!exerciseName) return null;
   const target = norm(exerciseName);
@@ -157,11 +175,11 @@ export function findFallbackVideo(exerciseName) {
 
   // 1. Match exact
   const exact = INDEX.get(target);
-  if (exact) return { url: yt(exact.id), creator: exact.creator };
+  if (exact) return { url: yt(exact.id, exact.start), creator: exact.creator, start: exact.start || null };
 
   // 2. Substring match
   for (const [k, v] of INDEX) {
-    if (target.includes(k) || k.includes(target)) return { url: yt(v.id), creator: v.creator };
+    if (target.includes(k) || k.includes(target)) return { url: yt(v.id, v.start), creator: v.creator, start: v.start || null };
   }
 
   return null;

@@ -43,6 +43,29 @@ function ytId(url) {
   return null;
 }
 
+// Extrait un timestamp (?t=Xs ou ?t=X ou ?start=X) d'une URL YouTube.
+// Retourne le nombre de secondes ou null. Supporte les formats "1m30s",
+// "90s", "90" — convertit tout en secondes.
+function ytStart(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const raw = u.searchParams.get("t") || u.searchParams.get("start");
+    if (!raw) return null;
+    // Format "1m30s" → 90s
+    const m = String(raw).match(/^(?:(\d+)m)?(?:(\d+)s?)?$/);
+    if (m) {
+      const minutes = parseInt(m[1] || "0", 10);
+      const seconds = parseInt(m[2] || "0", 10);
+      const total = minutes * 60 + seconds;
+      return total > 0 ? total : null;
+    }
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {}
+  return null;
+}
+
 function ThumbWithFallback({ id, thumbUrl, alt }) {
   const [idx, setIdx] = useState(0);
   const srcs = [
@@ -67,11 +90,16 @@ function ThumbWithFallback({ id, thumbUrl, alt }) {
 function VideoCard({ vidUrl, thumbUrl, exName }) {
   const [playing, setPlaying] = useState(false);
   const id = ytId(vidUrl);
+  const start = ytStart(vidUrl);
   if (playing && id) {
+    // Si l'URL contient un timestamp (?t=Xs), on l'ajoute au param `start`
+    // de l'iframe pour ouvrir la vidéo au bon moment (ex: chapitre dans
+    // une vidéo compilation).
+    const startParam = start ? `&start=${start}` : "";
     return (
       <div style={{ borderRadius: 14, overflow: "hidden", background: "#000", margin: "0 0 12px", position: "relative" }}>
         <iframe
-          src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+          src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1${startParam}`}
           style={{ width: "100%", aspectRatio: "16/9", border: "none", display: "block" }}
           allow="autoplay; encrypted-media; fullscreen" allowFullScreen
         />
