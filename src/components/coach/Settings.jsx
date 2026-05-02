@@ -253,15 +253,9 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
                 </div>
                 <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 900, color: "#fff" }}>{t("set.payments_card_title")}</div>
               </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.6, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
                 {t("set.payments_card_desc")}
               </div>
-              <button
-                onClick={() => { if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; } toast.info(t("set.toast_stripe_soon")); }}
-                style={btnPrimary}
-              >
-                {t("set.payments_btn")}
-              </button>
             </div>
           </Section>
         )}
