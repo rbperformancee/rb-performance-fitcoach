@@ -348,10 +348,37 @@ function PublicProfileSection({ coachData, isDemo }) {
     setSpecialties(specialties.filter((_, idx) => idx !== i));
   }
 
+  // Normalise un input CTA en URL valide :
+  //   "06 12 34 56 78"      → "tel:+33612345678"
+  //   "+33612345678"        → "tel:+33612345678"
+  //   "@username"           → "https://instagram.com/username"
+  //   "instagram.com/foo"   → "https://instagram.com/foo"
+  //   "wa.me/33xxx"         → "https://wa.me/33xxx"
+  //   "https://..."         → tel quel
+  function normalizeCta(raw) {
+    const s = (raw || "").trim();
+    if (!s) return "";
+    // Déjà une URL valide
+    if (/^(https?:|mailto:|tel:)/i.test(s)) return s;
+    // Téléphone (chiffres, espaces, +, .)
+    if (/^[+\d][\d\s.\-()]{6,}$/.test(s)) {
+      let digits = s.replace(/[^\d+]/g, "");
+      if (digits.startsWith("0")) digits = "+33" + digits.slice(1);
+      else if (!digits.startsWith("+")) digits = "+" + digits;
+      return "tel:" + digits;
+    }
+    // @username Insta
+    if (/^@\w+$/.test(s)) return "https://instagram.com/" + s.slice(1);
+    // Domaine sans protocole
+    if (/^[\w.-]+\.[a-z]{2,}/i.test(s)) return "https://" + s;
+    return s;
+  }
+
   async function saveVitrine() {
     if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; }
     if (!coachData?.id) return;
     const finalSlug = slug ? slugify(slug) : slugify(coachData.full_name || "coach");
+    const finalCta = normalizeCta(ctaUrl);
     setSavingVitrine(true);
     try {
       const { error } = await supabase
@@ -362,11 +389,12 @@ function PublicProfileSection({ coachData, isDemo }) {
           public_city: city.trim() || null,
           public_specialties: specialties.length ? specialties : [],
           public_photo_url: photoUrl || null,
-          public_cta_url: ctaUrl.trim() || null,
+          public_cta_url: finalCta || null,
         })
         .eq("id", coachData.id);
       if (error) throw error;
       setSlug(finalSlug);
+      if (finalCta && finalCta !== ctaUrl) setCtaUrl(finalCta);
       toast.success("Vitrine enregistrée ✓");
     } catch (e) {
       if (String(e.message || "").includes("duplicate") || String(e.message || "").includes("unique")) {
@@ -567,13 +595,19 @@ function PublicProfileSection({ coachData, isDemo }) {
           className="set-input"
           value={ctaUrl}
           onChange={e => setCtaUrl(e.target.value)}
-          placeholder="https://calendly.com/... ou https://wa.me/33... ou autre"
+          placeholder="0612345678  ·  @ton_insta  ·  calendly.com/..."
           style={{ ...input, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
         />
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 6, lineHeight: 1.55 }}>
-          💡 URL où le bouton mène quand un visiteur clique.<br/>
-          Idées : ton Calendly, lien WhatsApp <code style={{ color: G, fontSize: 11 }}>https://wa.me/33XXX</code>, ton Insta DM <code style={{ color: G, fontSize: 11 }}>https://ig.me/m/username</code>, formulaire externe…<br/>
-          Si vide → mailto vers ton email.
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 6, lineHeight: 1.6 }}>
+          💡 Ce champ accepte plusieurs formats — auto-conversion à l'enregistrement :
+          <ul style={{ margin: "6px 0 0 14px", padding: 0, listStyle: "disc" }}>
+            <li><code style={{ color: G, fontSize: 11 }}>0612345678</code> ou <code style={{ color: G, fontSize: 11 }}>+33612345678</code> → téléphone (ouvre le dialer)</li>
+            <li><code style={{ color: G, fontSize: 11 }}>@ton_insta</code> → ton profil Instagram</li>
+            <li><code style={{ color: G, fontSize: 11 }}>https://wa.me/33XXX</code> → WhatsApp</li>
+            <li><code style={{ color: G, fontSize: 11 }}>https://ig.me/m/username</code> → DM Insta direct</li>
+            <li><code style={{ color: G, fontSize: 11 }}>https://calendly.com/...</code> → ton Calendly</li>
+            <li>Vide → mailto vers ton email (par défaut)</li>
+          </ul>
         </div>
       </div>
 
