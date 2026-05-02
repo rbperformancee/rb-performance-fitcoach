@@ -6,11 +6,47 @@
 
 const nodemailer = require('nodemailer');
 const { secureRequest } = require('./_security');
+const { getServiceClient } = require('./_supabase');
 
 const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
 const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
 const APP_URL = 'https://rbperform.app';
 const G = '#02d1ba';
+
+/**
+ * Vérifie que l'appelant est un coach authentifié ET que `recipientEmail`
+ * appartient à un de ses clients (ou au coach lui-même).
+ * Sans cette vérif, n'importe qui pouvait envoyer du mail à n'importe
+ * quelle adresse via notre SMTP Zoho — abus deliverability + spam (audit
+ * ULTRA-SECURITY HIGH).
+ */
+async function verifyCoachOwnsRecipient(req, recipientEmail) {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!token) return { ok: false, reason: 'no_auth_token' };
+
+  const supabase = getServiceClient();
+  const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+  if (userErr || !userData?.user) return { ok: false, reason: 'invalid_token' };
+
+  const callerEmail = String(userData.user.email || '').toLowerCase();
+  const targetEmail = String(recipientEmail || '').toLowerCase();
+  if (!callerEmail || !targetEmail) return { ok: false, reason: 'missing_email' };
+
+  // Le coach peut s'envoyer un email à lui-même (test)
+  if (callerEmail === targetEmail) return { ok: true, role: 'self' };
+
+  // Sinon vérifier que le caller est un coach et que la cible est SON client
+  const { data: coach } = await supabase
+    .from('coaches').select('id').eq('email', callerEmail).maybeSingle();
+  if (!coach) return { ok: false, reason: 'not_a_coach' };
+
+  const { data: client } = await supabase
+    .from('clients').select('id').eq('coach_id', coach.id).eq('email', targetEmail).maybeSingle();
+  if (!client) return { ok: false, reason: 'recipient_not_your_client' };
+
+  return { ok: true, role: 'coach_to_client', coachId: coach.id, clientId: client.id };
+}
 
 function buildWelcomeHtml(name, type, extra) {
   const greeting = name ? `Salut ${name},` : 'Bienvenue,';
@@ -116,6 +152,13 @@ module.exports = async (req, res) => {
   try {
     const { email, full_name, type, programme_name } = body;
     if (!email) return res.status(400).json({ error: 'Missing email' });
+
+    // ===== AUTH : seul un coach connecté peut envoyer un welcome à SON client =====
+    const verify = await verifyCoachOwnsRecipient(req, email);
+    if (!verify.ok) {
+      console.warn(`[send-welcome] auth fail (${verify.reason}) → ${email}`);
+      return res.status(403).json({ error: 'Forbidden', reason: verify.reason });
+    }
 
     const name = (full_name || '').split(' ')[0] || '';
     const subject = type === 'programme_ready'

@@ -128,18 +128,25 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
                 }),
               }).catch(() => {});
             }
-            // email
+            // email — auth Bearer obligatoire (vérif coach owns recipient)
             if (clientObj.email) {
-              fetch("/api/send-welcome", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  email: clientObj.email,
-                  full_name: clientObj.full_name,
-                  type: "programme_ready",
-                  programme_name: finalName,
-                }),
-              }).catch(() => {});
+              (async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                const jwt = session?.access_token;
+                fetch("/api/send-welcome", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+                  },
+                  body: JSON.stringify({
+                    email: clientObj.email,
+                    full_name: clientObj.full_name,
+                    type: "programme_ready",
+                    programme_name: finalName,
+                  }),
+                }).catch(() => {});
+              })();
             }
           }
         }

@@ -17,6 +17,7 @@
 
 const { captureException } = require("./_sentry");
 const nodemailer = require("nodemailer");
+const { buildUnsubUrl } = require("./_unsubToken");
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -68,7 +69,7 @@ async function sendEmail(to, subject, html) {
   if (!SMTP_PASS) return { ok: false, reason: "no_smtp_pass" };
   // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
   // pour les bulk senders, sinon -> Promotions/spam.
-  const unsubUrl = `https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}&type=founder_checkin`;
+  const unsubUrl = buildUnsubUrl(to, "founder_checkin");
   const transporter = nodemailer.createTransport({
     host: "smtp.zoho.eu",
     port: 465,

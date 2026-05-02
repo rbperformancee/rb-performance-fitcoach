@@ -21,6 +21,7 @@
  */
 
 const { getServiceClient } = require('./_supabase');
+const { verifyUnsubToken } = require('./_unsubToken');
 
 const VALID_TYPES = ['weekly_digest', 'founder_checkin', 'welcome', 'marketing', 'all'];
 
@@ -30,12 +31,31 @@ module.exports = async (req, res) => {
 
   const email = (req.query?.email || '').trim().toLowerCase();
   const type = (req.query?.type || 'all').trim().toLowerCase();
+  const token = (req.query?.t || '').trim();
 
   if (!email || !email.includes('@')) {
     return res.status(400).json({ error: 'invalid_email' });
   }
   if (!VALID_TYPES.includes(type)) {
     return res.status(400).json({ error: 'invalid_type', valid_types: VALID_TYPES });
+  }
+
+  // Vérification HMAC token (audit ULTRA-SECURITY HIGH).
+  // Sans ça, n'importe qui peut désabonner n'importe quel email en boucle.
+  // Tolérance : on accepte une absence de token uniquement pour les vieux
+  // liens d'avant ce déploiement (grace period 30 jours). Logger les hits
+  // sans token pour identifier l'arrêt de la grace period.
+  if (token) {
+    if (!verifyUnsubToken(email, type, token)) {
+      console.warn(`[unsubscribe] invalid token for ${email} type=${type} — possible abuse`);
+      // Réponse 200 pour ne pas divulguer la validation aux scanners,
+      // mais on n'effectue PAS le désabonnement.
+      return respondConfirmation(res, req, email);
+    }
+  } else {
+    console.info(`[unsubscribe] LEGACY no-token request ${email} type=${type} — grace period`);
+    // TODO post-2026-06-02 : changer en `return respondConfirmation(res, req, email)`
+    // sans appliquer le désabonnement, une fois la grace period écoulée.
   }
 
   let supabase;

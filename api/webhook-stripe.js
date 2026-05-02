@@ -24,6 +24,7 @@ const getStripe = require('./_stripe');
 const { getServiceClient } = require('./_supabase');
 const { captureException } = require('./_sentry');
 const { RB_SUPPORT_EMAIL } = require('./_branding');
+const { buildUnsubUrl } = require('./_unsubToken');
 
 const getSupabase = getServiceClient;
 
@@ -263,7 +264,7 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerNam
   // Gmail/Yahoo (depuis fev 2024) exigent List-Unsubscribe + List-Unsubscribe-Post
   // pour les bulk senders. Welcome = transactionnel, mais inclure quand meme par
   // securite (fait pas de mal et garantit deliverability primary inbox).
-  const unsubUrl = `https://rbperform.app/unsubscribe?email=${encodeURIComponent(to)}&type=welcome`;
+  const unsubUrl = buildUnsubUrl(to, 'welcome');
   try {
     const nodemailer = require('nodemailer');
     const transporter = nodemailer.createTransport({

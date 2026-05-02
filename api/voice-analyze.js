@@ -192,6 +192,7 @@ Exemple 3 - Repas : "deux oeufs brouilles avec une tranche de pain complet et un
 Maintenant, analyse le repas decrit ci-dessous et reponds UNIQUEMENT par un JSON suivant exactement ce format. Sois aussi precis que possible en t'appuyant sur les valeurs de reference fournies.`;
 
 const { secureRequest } = require("./_security");
+const { getServiceClient } = require("./_supabase");
 
 export default async function handler(req, res) {
   // Reflect allowed origin (pas de wildcard)
@@ -199,13 +200,29 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", origin || "https://rbperform.app");
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // Securite : origin + rate limit (20 requetes / heure / IP)
+  // Securite : origin + rate limit (60 requetes / heure / IP)
   if (!secureRequest(req, res, { max: 60, windowMs: 3600000 })) return;
+
+  // ===== AUTH OBLIGATOIRE (audit ULTRA-SECURITY HIGH) =====
+  // Sans cette vérif, n'importe qui pouvait piller le quota Mistral via
+  // 1000 IPs distribuées → ~$2880/jour de facture sur le compte du fondateur.
+  // Maintenant : token Bearer Supabase obligatoire.
+  const auth = req.headers.authorization || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+  if (!token) return res.status(401).json({ error: "Missing auth token" });
+  try {
+    const { data: userData, error: userErr } = await getServiceClient().auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return res.status(401).json({ error: "Invalid auth token" });
+    }
+  } catch (e) {
+    return res.status(401).json({ error: "Auth check failed" });
+  }
 
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey) {

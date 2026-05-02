@@ -2731,10 +2731,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     const { error } = await supabase.from("clients").insert(insertData);
     if (error) { showToast(error.code === "23505" ? t("cd.toast_email_used") : error.message, "err"); return; }
     // Envoyer l'email de bienvenue via Vercel API (Zoho SMTP)
+    // Auth Bearer requise — vérifie que coach connecté + recipient est son client
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token;
       await fetch("/api/send-welcome", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+        },
         body: JSON.stringify({ email, full_name: fullName }),
       });
     } catch (e) {

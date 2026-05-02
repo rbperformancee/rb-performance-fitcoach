@@ -565,9 +565,16 @@ export default function FuelPage({ client, appData }) {
     setVoiceLoading(true);
     setVoiceResult(null);
     try {
+      // Auth Bearer obligatoire (vérif côté serveur — protège le quota Mistral)
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token;
+      if (!jwt) throw new Error("Session expirée — reconnecte-toi");
       const res = await fetch("/api/voice-analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
         body: JSON.stringify({ text }),
       });
       const data = await res.json();
