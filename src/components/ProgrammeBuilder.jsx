@@ -455,6 +455,36 @@ function ExercisePicker({ value, onChange, onPickFull }) {
         placeholder="Nom (tape 'bench', 'squat', 'curl'…)"
         style={{ ...inputBaseStyle, padding: "10px 12px", fontSize: 13, background: "rgba(255,255,255,0.04)" }}
       />
+      {/* Si query >= 3 char et 0 résultat → fallback YouTube search */}
+      {open && query && query.length >= 3 && suggestions.length === 0 && (
+        <div style={{
+          position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4,
+          background: "#161616", border: "1px solid " + BORDER, borderRadius: 10,
+          padding: "10px 12px", zIndex: 50, boxShadow: "0 12px 32px rgba(0,0,0,0.6)",
+        }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 8, lineHeight: 1.5 }}>
+            Aucune vidéo dans la bibliothèque pour <strong style={{ color: "#fff" }}>« {query} »</strong>.
+          </div>
+          <a
+            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(query + " exercice musculation technique")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "6px 12px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.3)",
+              borderRadius: 100, color: G, fontSize: 11, fontWeight: 700,
+              textDecoration: "none", letterSpacing: 0.3,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Chercher sur YouTube
+          </a>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 8, lineHeight: 1.5 }}>
+            Trouve une vidéo, copie l'URL, colle-la dans le champ « Vidéo URL » de l'exercice.
+          </div>
+        </div>
+      )}
       {open && suggestions.length > 0 && (
         <div style={{
           position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4,
@@ -527,6 +557,8 @@ function SortableExercise({ ex, idx, total, onUpdate, onRemove, onMove, onDuplic
 function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps }) {
   const update = (k, v) => onUpdate({ ...ex, [k]: v });
   const iconBtn = { width: 24, height: 24, borderRadius: 6, border: "1px solid " + BORDER, background: "transparent", color: "rgba(255,255,255,0.45)", cursor: "pointer", fontSize: 11, flexShrink: 0, fontFamily: "inherit" };
+  const [showCustomUrl, setShowCustomUrl] = useState(false);
+  const [customUrlDraft, setCustomUrlDraft] = useState("");
 
   // Détecte la source effective de la vidéo
   // Priorité : ex.vidUrl > findVideo (lib perso) > findFallbackVideo (externe) > rien
@@ -582,13 +614,59 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
             {videoSource === "personal" ? "✓ Tes vidéos" : "↗ Démo externe · " + (fallbackHit?.creator || "")}
           </span>
           {videoSource === "fallback" && (
-            <button type="button" onClick={() => {
-              const newUrl = window.prompt("Colle l'URL de TA vidéo YouTube pour remplacer la démo externe :", "");
-              if (newUrl && newUrl.trim()) update("vidUrl", newUrl.trim());
-            }} style={{ marginLeft: "auto", padding: "3px 10px", background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 100, color: G, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3 }}>
+            <button
+              type="button"
+              onClick={() => { setCustomUrlDraft(""); setShowCustomUrl(true); }}
+              style={{ marginLeft: "auto", padding: "3px 10px", background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 100, color: G, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3 }}
+            >
               Remplacer par ma vidéo
             </button>
           )}
+        </div>
+      )}
+
+      {/* Modal premium pour coller une URL custom (remplace window.prompt) */}
+      {showCustomUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowCustomUrl(false); }}
+        >
+          <div style={{ background: "#0e0e0e", border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 460, width: "100%", padding: 24 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>Vidéo personnelle</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 4, letterSpacing: -0.3 }}>Remplacer la démo externe</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 18, lineHeight: 1.5 }}>
+              Colle l'URL YouTube de TA vidéo pour <strong style={{ color: "#fff" }}>{ex.name || "cet exercice"}</strong>. Elle remplacera la démo externe pour tous tes clients.
+            </div>
+            <input
+              type="text"
+              autoFocus
+              value={customUrlDraft}
+              onChange={(e) => setCustomUrlDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && customUrlDraft.trim()) { update("vidUrl", customUrlDraft.trim()); setShowCustomUrl(false); } }}
+              placeholder="https://youtu.be/abc123XYZ ou https://www.youtube.com/watch?v=abc123XYZ"
+              style={{
+                width: "100%", padding: "11px 14px",
+                background: "rgba(255,255,255,0.04)", border: "1px solid " + BORDER,
+                borderRadius: 10, color: "#fff", fontSize: 12, fontFamily: "'JetBrains Mono', monospace",
+                outline: "none", boxSizing: "border-box", marginBottom: 14,
+              }}
+            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setShowCustomUrl(false)}
+                style={{ flex: 1, padding: "10px 16px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase" }}
+              >Annuler</button>
+              <button
+                type="button"
+                disabled={!customUrlDraft.trim()}
+                onClick={() => { update("vidUrl", customUrlDraft.trim()); setShowCustomUrl(false); }}
+                style={{ flex: 2, padding: "10px 16px", background: customUrlDraft.trim() ? `linear-gradient(135deg, ${G}, #0891b2)` : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: customUrlDraft.trim() ? "#000" : "rgba(255,255,255,0.3)", fontSize: 11, fontWeight: 800, cursor: customUrlDraft.trim() ? "pointer" : "not-allowed", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase", boxShadow: customUrlDraft.trim() ? "0 6px 20px rgba(2,209,186,0.25)" : "none" }}
+              >Utiliser cette vidéo</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
