@@ -295,6 +295,36 @@ async function sendWelcomeEmail({ to, plan, lockedPrice, actionLink, customerNam
   }
 }
 
+// Alerte critique → envoyée à Rayan quand un coach paie mais que
+// l'email de bienvenue n'a pas pu être envoyé (SMTP fail, magic link
+// manquant, etc.). Permet une intervention manuelle rapide sans
+// dépendre des logs Vercel ou de Sentry.
+async function sendCriticalAlert({ subject, body, customerEmail, magicLink, reason }) {
+  const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
+  const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
+  const ALERT_TO = 'rb.performancee@gmail.com';
+  if (!SMTP_PASS) {
+    console.error('[webhook] ZOHO_SMTP_PASS missing — cannot send critical alert either');
+    return;
+  }
+  try {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.zoho.eu', port: 465, secure: true,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+    await transporter.sendMail({
+      from: `RB Perform Alerts <${SMTP_USER}>`,
+      to: ALERT_TO,
+      subject: `🚨 ${subject}`,
+      text: `${body}\n\n———\nCustomer email: ${customerEmail}\nReason: ${reason}\n${magicLink ? `Magic link à transférer manuellement :\n${magicLink}\n` : 'Pas de magic link disponible — régénérer via Supabase Studio.'}\n———\nWebhook timestamp: ${new Date().toISOString()}`,
+    });
+    console.log('[webhook] Critical alert sent to', ALERT_TO);
+  } catch (e) {
+    console.error('[webhook] Critical alert FAILED:', e.message);
+  }
+}
+
 // Vercel envoie le body brut si on désactive le bodyParser
 module.exports.config = { api: { bodyParser: false } };
 
@@ -479,11 +509,12 @@ module.exports = async (req, res) => {
         });
       }
 
-      // 5. Send welcome email via Resend with the password setup link.
-      // If Resend fails, we still 200 to Stripe (the coach row exists;
-      // we can re-send the magic link manually from Vercel logs).
+      // 5. Send welcome email via Zoho SMTP with the password setup link.
+      // Si l'envoi échoue OU pas de magic link → alerte critique à Rayan
+      // pour intervention manuelle (le coach a payé, on ne le laisse pas
+      // dans le noir). On 200 quand même Stripe pour ne pas re-trigger.
       if (linkData?.properties?.action_link) {
-        await sendWelcomeEmail({
+        const sendResult = await sendWelcomeEmail({
           to: email.toLowerCase(),
           plan,
           lockedPrice,
@@ -491,11 +522,27 @@ module.exports = async (req, res) => {
           customerName,
           lang,
         });
+        if (!sendResult?.ok) {
+          await sendCriticalAlert({
+            subject: `Coach a payé mais welcome email FAIL — ${email}`,
+            body: `Un coach (${plan}) a complété son paiement Stripe mais l'envoi de l'email de bienvenue a échoué.\n\nCoach : ${customerName || email}\nPlan : ${plan}${lockedPrice ? ` (locked ${lockedPrice}€)` : ''}\n\nAction requise : transférer le magic link ci-dessous au coach manuellement.`,
+            customerEmail: email,
+            magicLink: linkData.properties.action_link,
+            reason: sendResult?.reason || 'unknown',
+          });
+        }
       } else {
         console.error(`[WEBHOOK_NO_ACTION_LINK] email=${email} — cannot send welcome, no magic link available`);
         await captureException(new Error('No action_link returned from generateLink'), {
           tags: { endpoint: 'webhook-stripe', stage: 'no_action_link', plan },
           extra: { email, userId, plan },
+        });
+        await sendCriticalAlert({
+          subject: `Coach a payé mais magic link non généré — ${email}`,
+          body: `Un coach (${plan}) a complété son paiement mais Supabase n'a pas généré de magic link.\n\nCoach : ${customerName || email}\nPlan : ${plan}\n\nAction requise : régénérer manuellement un lien de récupération via Supabase Studio (Authentication → Users → ${email} → Send recovery link) puis l'envoyer au coach.`,
+          customerEmail: email,
+          magicLink: null,
+          reason: linkError?.message || 'no_action_link_returned',
         });
       }
 

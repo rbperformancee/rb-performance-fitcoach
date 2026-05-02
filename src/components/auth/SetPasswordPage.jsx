@@ -44,7 +44,14 @@ export default function SetPasswordPage({ onComplete }) {
 
       setDone(true);
       setTimeout(() => {
-        onComplete?.();
+        // Si onComplete est fourni → l'utiliser (cas SPA classique).
+        // Sinon → redirection hard vers /app.html pour ne pas laisser
+        // l'utilisateur stuck sur l'écran "Prêt" (audit funnel HIGH #2).
+        if (typeof onComplete === "function") {
+          onComplete();
+        } else {
+          window.location.href = "/app.html";
+        }
       }, 2000);
     } catch (err) {
       setError(err.message || t("spp.err_retry"));

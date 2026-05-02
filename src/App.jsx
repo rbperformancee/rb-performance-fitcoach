@@ -462,7 +462,7 @@ function AppInner() {
   if (authRoute === "login")  return <LoginScreen />;
   if (authRoute === "signup") return <Suspense fallback={null}><SignupPage /></Suspense>;
   if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
-  if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/"; }} /></Suspense>;
+  if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/app.html"; }} /></Suspense>;
 
   // ===== MODE CANDIDATURE HIGH-TICKET (/candidature) =====
   // Landing premium (CoachingApplicationLanding) puis OnboardingFlow

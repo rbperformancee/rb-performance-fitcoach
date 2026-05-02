@@ -135,21 +135,38 @@ export default function JoinPage() {
         if (invitation.programme_id) {
           try {
             // Clone le programme source vers le nouveau client_id
-            const { data: srcProg } = await supabase
+            const { data: srcProg, error: fetchErr } = await supabase
               .from("programmes")
               .select("html_content, programme_name")
               .eq("id", invitation.programme_id)
               .maybeSingle();
-            if (srcProg) {
-              await supabase.from("programmes").insert({
+            if (fetchErr) throw fetchErr;
+            if (!srcProg) {
+              console.warn("[JoinPage] Programme source introuvable :", invitation.programme_id);
+            } else {
+              const { error: insErr } = await supabase.from("programmes").insert({
                 client_id: userId,
                 html_content: srcProg.html_content,
                 programme_name: srcProg.programme_name,
                 is_active: true,
                 uploaded_by: "invitation",
               });
+              if (insErr) throw insErr;
             }
-          } catch (_) {}
+          } catch (e) {
+            // Le programme n'a pas pu être cloné — on log et on alerte le coach
+            // par notif côté client (toast). L'inscription continue : le coach
+            // pourra réassigner depuis son dashboard.
+            console.warn("[JoinPage] Clone programme échoué :", e?.message || e);
+            try {
+              if (typeof window !== "undefined" && window.__SENTRY__) {
+                window.__SENTRY__.hub?.getClient()?.captureException?.(
+                  new Error(`JoinPage clone programme failed: ${e?.message}`),
+                  { extra: { invitation_id: invitation.id, programme_id: invitation.programme_id, user_id: userId } },
+                );
+              }
+            } catch (_) {}
+          }
         }
 
         // Marque invitation comme acceptee
