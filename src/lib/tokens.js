@@ -100,5 +100,14 @@ export const EASE = {
   linear: "linear",
 };
 
+// ===== Aliases legacy pour migration progressive =====
+// Les composants déclaraient localement `const G = "#02d1ba"` partout.
+// On exporte les valeurs canoniques pour que les imports remplacent
+// progressivement les const locales sans casser.
+export const G = colors.teal;
+export const RED = colors.red;
+export const ORANGE = colors.orange;
+export const VIOLET = colors.violet;
+
 const tokens = { colors, SP, R, FONT, FS, SHADOW, Z, EASE };
 export default tokens;

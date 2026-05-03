@@ -134,23 +134,60 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Failed to load clients", detail: clients });
     }
 
+    // ===== BATCH PRELOAD pour éviter N+1 (audit ULTRA-REVIEW) =====
+    // Avant : 1 query exercise_logs + 4 queries notification_logs PAR client.
+    // À 200 clients = 1000+ requêtes → timeout Vercel garanti.
+    // Maintenant : 2 queries totales pour TOUS les clients.
+
+    const clientIds = clients.map(c => c.id).filter(Boolean);
+    const today = new Date().toISOString().split("T")[0];
+
+    // 1. Latest exercise_log par client (en une seule query, on filtre côté JS)
+    const allLogs = clientIds.length > 0
+      ? await sbFetch(
+          `/rest/v1/exercise_logs?client_id=in.(${clientIds.join(",")})&select=client_id,logged_at&order=logged_at.desc`
+        )
+      : [];
+    const latestLogByClient = {};
+    if (Array.isArray(allLogs)) {
+      for (const log of allLogs) {
+        // Comme on a déjà order=desc, le premier rencontré pour un client est le plus récent
+        if (!latestLogByClient[log.client_id]) {
+          latestLogByClient[log.client_id] = log.logged_at;
+        }
+      }
+    }
+
+    // 2. Notifications déjà envoyées aujourd'hui pour TOUS les clients
+    const sentTypes = ["inactivity_hard", "inactivity_soft", "sub_expiring", "sub_expired"];
+    const sentToday = clientIds.length > 0
+      ? await sbFetch(
+          `/rest/v1/notification_logs?client_id=in.(${clientIds.join(",")})&type=in.(${sentTypes.join(",")})&sent_date=eq.${today}&select=client_id,type`
+        )
+      : [];
+    const sentSet = new Set();
+    if (Array.isArray(sentToday)) {
+      for (const s of sentToday) {
+        sentSet.add(`${s.client_id}|${s.type}`);
+      }
+    }
+    const wasSent = (cid, type) => sentSet.has(`${cid}|${type}`);
+
     for (const c of clients) {
       const name = c.full_name?.split(" ")[0] || "Champion";
       const hasProg = c.programmes?.some((p) => p.is_active);
 
-      // Calculer jours d'inactivite
+      // Inactivité depuis la map en mémoire
       let inactiveDays = 999;
-      const logsRes = await sbFetch(
-        `/rest/v1/exercise_logs?client_id=eq.${c.id}&select=logged_at&order=logged_at.desc&limit=1`
-      );
-      if (Array.isArray(logsRes) && logsRes.length > 0) {
+      const lastLogAt = latestLogByClient[c.id];
+      if (lastLogAt) {
         inactiveDays = Math.floor(
-          (Date.now() - new Date(logsRes[0].logged_at).getTime()) / 86400000
+          (Date.now() - new Date(lastLogAt).getTime()) / 86400000
         );
       }
 
       // Inactivite 7j+
-      if (hasProg && inactiveDays >= 7 && !(await wasSentToday(c.id, "inactivity_hard"))) {
+      if (hasProg && inactiveDays >= 7 && !wasSent(c.id, "inactivity_hard")) {
         const t = TEMPLATES.inactivity_hard(name, inactiveDays);
         const ok = await sendPush(c.id, t.title, t.body);
         if (ok) {
@@ -159,7 +196,7 @@ export default async function handler(req, res) {
         }
       }
       // Inactivite 3-6j
-      else if (hasProg && inactiveDays >= 3 && inactiveDays < 7 && !(await wasSentToday(c.id, "inactivity_soft"))) {
+      else if (hasProg && inactiveDays >= 3 && inactiveDays < 7 && !wasSent(c.id, "inactivity_soft")) {
         const t = TEMPLATES.inactivity_soft(name, inactiveDays);
         const ok = await sendPush(c.id, t.title, t.body);
         if (ok) {
@@ -174,7 +211,7 @@ export default async function handler(req, res) {
           (new Date(c.subscription_end_date).getTime() - Date.now()) / 86400000
         );
 
-        if (daysLeft > 0 && daysLeft <= 14 && !(await wasSentToday(c.id, "sub_expiring"))) {
+        if (daysLeft > 0 && daysLeft <= 14 && !wasSent(c.id, "sub_expiring")) {
           const t = TEMPLATES.sub_expiring(name, daysLeft);
           const ok = await sendPush(c.id, t.title, t.body);
           if (ok) {
@@ -186,7 +223,7 @@ export default async function handler(req, res) {
           }
         }
 
-        if (daysLeft <= 0 && !(await wasSentToday(c.id, "sub_expired"))) {
+        if (daysLeft <= 0 && !wasSent(c.id, "sub_expired")) {
           const t = TEMPLATES.sub_expired(name);
           const ok = await sendPush(c.id, t.title, t.body);
           if (ok) {
