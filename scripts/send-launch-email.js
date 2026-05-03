@@ -24,6 +24,9 @@ const args = process.argv.slice(2);
 const isTest = args.includes('--test');
 const isLive = args.includes('--live');
 const deliveredOnly = args.includes('--delivered-only');
+// --resume : lit /tmp/launch-email.log et skip les emails déjà envoyés (✓)
+// Permet de reprendre un batch interrompu sans re-spammer.
+const isResume = args.includes('--resume');
 
 if (!isTest && !isLive) {
   console.error('Usage: node send-launch-email.js [--test|--live] [--delivered-only]');
@@ -139,7 +142,35 @@ Rayan.
 
 P.S. — Les 5 places se ferment des qu'elles sont remplies.`;
 
-// ── Read leads from CSV ──
+// ── Leads supplémentaires (clients Pack découverte récents) ──
+// Ajoutés manuellement par Rayan le 2026-05-04 pour le launch /candidature.
+// Inclus par défaut (--include-extras pas requis).
+const EXTRA_LEADS = [
+  'asheshbarreau@gmail.com',
+  'halim.salhi@hotmail.com',
+  'arthurroca66220@gmail.com',
+  'paulrebert75@gmail.com',
+  'thomasloubatieres@icloud.com',
+  'floriangustot@gmail.com',
+  'gio-italia@outlook.fr',
+  'lesmlogan@gmail.com',
+  'barth.mlh94@gmail.com',
+];
+
+// ── Lecture des emails déjà envoyés (pour --resume) ──
+const loadAlreadySent = () => {
+  if (!fs.existsSync(LOG_FILE)) return new Set();
+  const raw = fs.readFileSync(LOG_FILE, 'utf8');
+  const sent = new Set();
+  for (const line of raw.split('\n')) {
+    // Format : "2026-05-04T18:34:21.234Z [N/M] ✓ email@example.com (<msgId>)"
+    const m = line.match(/✓\s+([^\s]+@[^\s]+)\s/);
+    if (m) sent.add(m[1].toLowerCase());
+  }
+  return sent;
+};
+
+// ── Read leads from CSV + extras ──
 const loadLeads = () => {
   const raw = fs.readFileSync(LEADS_CSV, 'utf8').replace(/^﻿/, '');
   const lines = raw.split(/\r?\n/).filter(Boolean);
@@ -147,11 +178,36 @@ const loadLeads = () => {
   const cols = header.split(',');
   const emailIdx = cols.findIndex(c => c.toLowerCase().trim() === 'email');
   const statusIdx = cols.findIndex(c => c.toLowerCase().includes('statut'));
-  const leads = rows.map(r => {
+  let leads = rows.map(r => {
     const parts = r.split(',');
     return { email: (parts[emailIdx] || '').trim(), status: (parts[statusIdx] || '').trim() };
   }).filter(l => l.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(l.email));
-  return deliveredOnly ? leads.filter(l => l.status === 'delivered') : leads;
+  if (deliveredOnly) leads = leads.filter(l => l.status === 'delivered');
+
+  // Append les EXTRA_LEADS (si pas déjà dans le CSV)
+  const csvEmails = new Set(leads.map(l => l.email.toLowerCase()));
+  for (const e of EXTRA_LEADS) {
+    if (!csvEmails.has(e.toLowerCase())) {
+      leads.push({ email: e, status: 'extra' });
+    }
+  }
+
+  // Si --resume, retire les emails déjà envoyés (logged ✓)
+  if (isResume) {
+    const sent = loadAlreadySent();
+    const before = leads.length;
+    leads = leads.filter(l => !sent.has(l.email.toLowerCase()));
+    console.log(`[resume] Skipped ${before - leads.length} emails déjà envoyés (depuis ${LOG_FILE})`);
+  }
+
+  // Dédup final (au cas où)
+  const seen = new Set();
+  return leads.filter(l => {
+    const k = l.email.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
 };
 
 // ── Main ──

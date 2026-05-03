@@ -1631,6 +1631,35 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           </button>
           <button
             type="button"
+            onClick={() => {
+              try {
+                const json = JSON.stringify(programme, null, 2);
+                const blob = new Blob([json], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `programme-${(programme.name || "rb-perform").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}.json`;
+                document.body.appendChild(a); a.click(); a.remove();
+                URL.revokeObjectURL(url);
+              } catch (e) { alert("Erreur export JSON : " + e.message); }
+            }}
+            title="Export JSON (pour outil PDF standalone)"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "8px 12px", background: "rgba(255,255,255,0.03)",
+              border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <text x="6" y="17" fontSize="6" fill="currentColor" stroke="none" fontFamily="monospace" fontWeight="bold">{ }</text>
+            </svg>
+            <span>JSON</span>
+          </button>
+          <button
+            type="button"
             onClick={openApplyMulti}
             title="Appliquer à plusieurs clients"
             style={{

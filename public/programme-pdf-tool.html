@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RB Perform — Programme PDF Tool</title>
+<meta name="robots" content="noindex" />
+<style>
+  /* ===== Variables (charte RB Perform) ===== */
+  :root {
+    --accent: #02d1ba;
+    --bg: #050505;
+    --bg2: #0d0d0d;
+    --bg3: #161616;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.16);
+    --text: #ffffff;
+    --text-dim: rgba(255,255,255,0.6);
+    --text-faint: rgba(255,255,255,0.35);
+    --paper: #ffffff;
+    --paper-text: #0d0d0d;
+    --paper-dim: #555;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--text); min-height: 100vh; font-family: -apple-system, "Inter", BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  /* ===== Toolbar ===== */
+  .toolbar { position: sticky; top: 0; z-index: 100; background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .toolbar h1 { font-size: 14px; font-weight: 800; letter-spacing: -0.3px; }
+  .toolbar h1 .dot { color: var(--accent); }
+  .toolbar .spacer { flex: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; color: var(--text-dim); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .15s; }
+  .btn:hover { background: rgba(255,255,255,0.07); color: var(--text); border-color: var(--border-strong); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), #0891b2); color: #000; border: none; box-shadow: 0 6px 20px rgba(2,209,186,0.25); }
+  .btn.primary:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(2,209,186,0.35); }
+  .btn svg { width: 14px; height: 14px; }
+
+  /* ===== Layout split : éditeur JSON | preview ===== */
+  .layout { display: grid; grid-template-columns: minmax(0, 0.4fr) minmax(0, 0.6fr); gap: 0; height: calc(100vh - 56px); }
+  .editor-pane { background: var(--bg2); border-right: 1px solid var(--border); padding: 18px 22px; overflow-y: auto; }
+  .preview-pane { background: var(--paper); color: var(--paper-text); overflow-y: auto; padding: 0; }
+  .editor-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-faint); font-weight: 800; margin-bottom: 10px; }
+  .editor-textarea { width: 100%; min-height: calc(100vh - 220px); padding: 14px 16px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; resize: vertical; outline: none; transition: border-color .15s; }
+  .editor-textarea:focus { border-color: var(--accent); }
+  .editor-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .editor-actions .btn { font-size: 10px; padding: 7px 12px; }
+  .editor-help { font-size: 11px; color: var(--text-faint); margin-top: 14px; line-height: 1.6; }
+  .editor-help code { background: rgba(2,209,186,0.08); color: var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+
+  /* ===== Mode mobile (toolbar only, single pane) ===== */
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; height: auto; }
+    .editor-pane { border-right: none; border-bottom: 1px solid var(--border); }
+    .editor-textarea { min-height: 280px; }
+  }
+
+  /* ===== PREVIEW (paper layout — A4 print-ready) ===== */
+  .doc { max-width: 720px; margin: 0 auto; padding: 48px 56px; background: var(--paper); color: var(--paper-text); }
+
+  .doc-header { padding-bottom: 28px; border-bottom: 2px solid var(--paper-text); margin-bottom: 32px; }
+  .doc-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; color: #00b89c; margin-bottom: 12px; }
+  .doc-title { font-size: 32px; font-weight: 900; letter-spacing: -1px; line-height: 1.1; margin-bottom: 6px; }
+  .doc-subtitle { font-size: 13px; color: var(--paper-dim); margin-bottom: 14px; }
+  .doc-meta { display: flex; gap: 22px; flex-wrap: wrap; font-size: 11px; color: var(--paper-dim); }
+  .doc-meta strong { color: var(--paper-text); font-weight: 700; }
+
+  .doc-tagline { padding: 14px 18px; background: #f4f4f4; border-left: 4px solid #00b89c; border-radius: 0 6px 6px 0; font-size: 13px; font-style: italic; color: var(--paper-text); margin-bottom: 32px; }
+
+  .week { margin-bottom: 28px; page-break-inside: avoid; }
+  .week-header { font-size: 18px; font-weight: 900; letter-spacing: -0.3px; padding: 10px 14px; background: var(--paper-text); color: var(--paper); border-radius: 6px; margin-bottom: 12px; }
+  .session { margin-bottom: 22px; padding: 16px 18px; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; page-break-inside: avoid; }
+  .session-name { font-size: 14px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.2px; }
+  .session-desc { font-size: 11px; color: var(--paper-dim); margin-bottom: 10px; }
+  .session-finisher { font-size: 11px; color: #c2410c; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e5e5e5; font-style: italic; }
+  .session-finisher::before { content: "Finisher : "; font-weight: 700; font-style: normal; color: var(--paper-text); }
+
+  table.exercises { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+  table.exercises th, table.exercises td { padding: 7px 8px; text-align: left; border-bottom: 1px solid #e5e5e5; }
+  table.exercises th { font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--paper-dim); background: #f0f0f0; }
+  table.exercises td { vertical-align: top; }
+  table.exercises td.ex-name { font-weight: 700; color: var(--paper-text); }
+  table.exercises td.ex-name .ex-group { font-size: 9px; font-weight: 800; color: #00b89c; margin-right: 6px; }
+  table.exercises td.center { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--paper-text); }
+  table.exercises td.dim { color: var(--paper-dim); }
+
+  .doc-footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e5e5e5; text-align: center; font-size: 10px; color: var(--paper-dim); letter-spacing: 1px; }
+  .doc-footer .brand { color: #00b89c; font-weight: 800; letter-spacing: 3px; }
+
+  .empty { padding: 80px 24px; text-align: center; color: var(--paper-dim); }
+  .empty .icon { font-size: 32px; opacity: 0.3; margin-bottom: 12px; }
+  .empty h2 { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: var(--paper-text); letter-spacing: -0.3px; }
+  .empty p { font-size: 13px; line-height: 1.6; max-width: 360px; margin: 0 auto; }
+
+  /* ===== Print (PDF) — 100% paper, no editor pane ===== */
+  @media print {
+    @page { size: A4; margin: 12mm 14mm; }
+    body, html { background: white; color: black; }
+    .toolbar, .editor-pane { display: none !important; }
+    .layout { display: block; height: auto; }
+    .preview-pane { overflow: visible; padding: 0; }
+    .doc { padding: 0; max-width: 100%; }
+    .week, .session { page-break-inside: avoid; }
+    .week:not(:first-child) { page-break-before: auto; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1>RB Perform<span class="dot">.</span> &middot; Programme PDF Tool</h1>
+  <span style="font-size:10px;color:var(--text-faint);letter-spacing:2px;text-transform:uppercase">Standalone — pas besoin de connexion</span>
+  <div class="spacer"></div>
+  <button class="btn" id="btn-load-example">Charger un exemple</button>
+  <button class="btn" id="btn-clear">Vider</button>
+  <button class="btn primary" id="btn-print">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Imprimer / PDF
+  </button>
+</div>
+
+<div class="layout">
+
+  <!-- ===== EDITEUR JSON ===== -->
+  <div class="editor-pane">
+    <div class="editor-label">Données programme (JSON)</div>
+    <div class="editor-actions">
+      <button class="btn" id="btn-load-file">📁 Charger un .json</button>
+      <input type="file" id="file-input" accept=".json,application/json" style="display:none" />
+    </div>
+    <textarea id="editor" class="editor-textarea" spellcheck="false" placeholder='Colle ici le JSON exporté depuis l&#39;app RB Perform, ou clique "Charger un exemple" ci-dessus pour voir le format.
+
+Format attendu :
+{
+  "name": "PRISE DE MASSE 12 SEM",
+  "clientName": "Lucas",
+  "duration": "12",
+  "tagline": "LA DISCIPLINE EST LA CLÉ",
+  "objective": "prise-de-masse",
+  "weeks": [
+    {
+      "name": "Semaine 1",
+      "sessions": [
+        {
+          "name": "Push",
+          "description": "Pectoraux + Triceps",
+          "finisher": "Drop set pec deck",
+          "exercises": [
+            {
+              "name": "Bench press barre",
+              "reps": "4X8-10",
+              "tempo": "3010",
+              "rir": "2",
+              "rest": "2&apos;",
+              "group": "A1",
+              "vidUrl": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}'></textarea>
+    <div class="editor-help">
+      <strong>Workflow :</strong>
+      <ol style="margin:6px 0 0 18px;line-height:1.8">
+        <li>Exporte ton programme depuis l&apos;app (bouton "Export JSON" ou copie depuis la console)</li>
+        <li>Colle le JSON ci-dessus</li>
+        <li>Clique sur <code>Imprimer / PDF</code></li>
+        <li>Dans la dialog d&apos;impression, choisis "Enregistrer au format PDF"</li>
+      </ol>
+      <div style="margin-top:14px;font-size:10px;color:var(--text-faint)">⌨ Raccourci : Cmd+P (Mac) / Ctrl+P (Windows)</div>
+    </div>
+  </div>
+
+  <!-- ===== PREVIEW (paper) ===== -->
+  <div class="preview-pane" id="preview-pane">
+    <div id="preview"></div>
+  </div>
+
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const editor = $("#editor");
+const preview = $("#preview");
+
+const escHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+}[c]));
+
+const EXAMPLE = {
+  name: "PRISE DE MASSE · 4 SEM",
+  clientName: "Lucas Démo",
+  duration: "4",
+  tagline: "LA DISCIPLINE EST LA CLÉ DU SUCCÈS.",
+  objective: "prise-de-masse",
+  weeks: [
+    {
+      name: "Semaine 1 · Volume",
+      sessions: [
+        {
+          name: "PUSH — Pectoraux / Triceps / Épaules",
+          description: "Focus volume — RIR 2 sur les compounds, RIR 0-1 sur les iso.",
+          finisher: "Drop set pec deck (3 paliers, 10 reps × 3)",
+          exercises: [
+            { name: "Développé couché barre", reps: "4X8-10", tempo: "3010", rir: "2", rest: "2'30", group: "A1", vidUrl: "" },
+            { name: "Développé incliné haltères", reps: "3X10-12", tempo: "2010", rir: "1", rest: "2'", group: "A2", vidUrl: "" },
+            { name: "Pec fly machine", reps: "3X12-15", tempo: "2011", rir: "1", rest: "1'30", group: "B", vidUrl: "" },
+            { name: "Élévation latérale haltères", reps: "4X12", tempo: "2010", rir: "0", rest: "1'", group: "C1", vidUrl: "" },
+            { name: "Extension triceps corde", reps: "3X12-15", tempo: "2011", rir: "1", rest: "1'", group: "C2", vidUrl: "" },
+          ],
+        },
+        {
+          name: "PULL — Dos / Biceps",
+          description: "Tractions à l'échauffement, puis charges lourdes sur tirages.",
+          finisher: "Curl marteau dropset (3X)",
+          exercises: [
+            { name: "Tractions pronation", reps: "4X6-8", tempo: "3010", rir: "1", rest: "2'30", group: "A", vidUrl: "" },
+            { name: "Rowing barre buste penché", reps: "4X8-10", tempo: "3010", rir: "2", rest: "2'30", group: "B", vidUrl: "" },
+            { name: "Tirage horizontal poulie", reps: "3X10-12", tempo: "2011", rir: "1", rest: "2'", group: "C", vidUrl: "" },
+            { name: "Curl barre EZ", reps: "3X10-12", tempo: "2010", rir: "1", rest: "1'30", group: "D1", vidUrl: "" },
+            { name: "Curl marteau haltères", reps: "3X10-12", tempo: "2010", rir: "0", rest: "1'", group: "D2", vidUrl: "" },
+          ],
+        },
+        {
+          name: "LEGS — Quadriceps / Ischios / Fessiers",
+          description: "Squat lourd, puis volume sur extensions et leg curl.",
+          finisher: "Mollet station debout (4X20)",
+          exercises: [
+            { name: "Back squat barre", reps: "4X6-8", tempo: "3010", rir: "2", rest: "3'", group: "A", vidUrl: "" },
+            { name: "Leg press 45°", reps: "3X10-12", tempo: "2010", rir: "1", rest: "2'30", group: "B", vidUrl: "" },
+            { name: "Leg curl assis", reps: "3X12-15", tempo: "2011", rir: "0", rest: "1'30", group: "C1", vidUrl: "" },
+            { name: "Leg extension", reps: "3X12-15", tempo: "2011", rir: "0", rest: "1'30", group: "C2", vidUrl: "" },
+            { name: "Hip thrust barre", reps: "3X10", tempo: "2012", rir: "1", rest: "2'", group: "D", vidUrl: "" },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Semaine 2 · Intensité",
+      sessions: [
+        {
+          name: "PUSH — montée en charge",
+          description: "Reps plus basses, charges +5%, RIR 1.",
+          finisher: "",
+          exercises: [
+            { name: "Développé couché barre", reps: "5X5", tempo: "3010", rir: "1", rest: "3'", group: "A1", vidUrl: "" },
+            { name: "Développé militaire haltères", reps: "4X6-8", tempo: "3010", rir: "1", rest: "2'30", group: "A2", vidUrl: "" },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+function render(p) {
+  if (!p || !p.weeks || p.weeks.length === 0) {
+    preview.innerHTML = `
+      <div class="empty">
+        <div class="icon">⚡</div>
+        <h2>Programme prêt à imprimer</h2>
+        <p>Colle un JSON dans l'éditeur à gauche, ou clique sur "Charger un exemple" pour voir le format.</p>
+      </div>`;
+    return;
+  }
+
+  const weeksHtml = (p.weeks || []).map((w) => {
+    const sessionsHtml = (w.sessions || []).map((s) => {
+      const exsHtml = (s.exercises || []).map((ex) => {
+        const groupBadge = ex.group ? `<span class="ex-group">${escHtml(ex.group)}</span>` : "";
+        return `
+          <tr>
+            <td class="ex-name">${groupBadge}${escHtml(ex.name || "—")}</td>
+            <td class="center">${escHtml(ex.reps || "—")}</td>
+            <td class="center dim">${escHtml(ex.tempo || "—")}</td>
+            <td class="center dim">${ex.rir ? "RIR " + escHtml(ex.rir) : "—"}</td>
+            <td class="center dim">${escHtml(ex.rest || "—")}</td>
+          </tr>`;
+      }).join("");
+      const finisher = s.finisher ? `<div class="session-finisher">${escHtml(s.finisher)}</div>` : "";
+      const desc = s.description ? `<div class="session-desc">${escHtml(s.description)}</div>` : "";
+      return `
+        <div class="session">
+          <div class="session-name">${escHtml(s.name || "Séance")}</div>
+          ${desc}
+          <table class="exercises">
+            <thead>
+              <tr>
+                <th style="width:42%">Exercice</th>
+                <th class="center" style="width:18%">Séries × Reps</th>
+                <th class="center" style="width:12%">Tempo</th>
+                <th class="center" style="width:14%">RIR</th>
+                <th class="center" style="width:14%">Repos</th>
+              </tr>
+            </thead>
+            <tbody>${exsHtml}</tbody>
+          </table>
+          ${finisher}
+        </div>`;
+    }).join("");
+    return `
+      <div class="week">
+        <div class="week-header">${escHtml(w.name || "Semaine")}</div>
+        ${sessionsHtml}
+      </div>`;
+  }).join("");
+
+  const meta = [
+    p.clientName && `Client : <strong>${escHtml(p.clientName)}</strong>`,
+    p.duration && `Durée : <strong>${escHtml(p.duration)} sem</strong>`,
+    p.objective && `Objectif : <strong>${escHtml(p.objective)}</strong>`,
+  ].filter(Boolean).join(" · ");
+
+  preview.innerHTML = `
+    <div class="doc">
+      <div class="doc-header">
+        <div class="doc-eyebrow">Programme RB Perform</div>
+        <div class="doc-title">${escHtml(p.name || "Programme")}</div>
+        ${meta ? `<div class="doc-meta">${meta}</div>` : ""}
+      </div>
+      ${p.tagline ? `<div class="doc-tagline">${escHtml(p.tagline)}</div>` : ""}
+      ${weeksHtml}
+      <div class="doc-footer">
+        <span class="brand">RB PERFORM</span> &middot; Programme édité le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+      </div>
+    </div>`;
+}
+
+function tryRender() {
+  const raw = editor.value.trim();
+  if (!raw) { render(null); return; }
+  try {
+    const parsed = JSON.parse(raw);
+    render(parsed);
+    localStorage.setItem("rb_pdf_tool_last", raw);
+  } catch (e) {
+    preview.innerHTML = `<div class="empty"><div class="icon">⚠</div><h2>JSON invalide</h2><p style="color:#c2410c">${escHtml(e.message)}</p></div>`;
+  }
+}
+
+editor.addEventListener("input", tryRender);
+
+$("#btn-load-example").addEventListener("click", () => {
+  editor.value = JSON.stringify(EXAMPLE, null, 2);
+  tryRender();
+});
+
+$("#btn-clear").addEventListener("click", () => {
+  editor.value = "";
+  localStorage.removeItem("rb_pdf_tool_last");
+  render(null);
+});
+
+$("#btn-print").addEventListener("click", () => {
+  if (!editor.value.trim()) {
+    alert("Colle d'abord un programme JSON pour imprimer.");
+    return;
+  }
+  window.print();
+});
+
+$("#btn-load-file").addEventListener("click", () => $("#file-input").click());
+$("#file-input").addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    editor.value = String(evt.target.result || "");
+    tryRender();
+  };
+  reader.readAsText(file);
+});
+
+// Restore le dernier JSON (persistence locale)
+const last = localStorage.getItem("rb_pdf_tool_last");
+if (last) {
+  editor.value = last;
+  tryRender();
+} else {
+  render(null);
+}
+
+// Cmd+P / Ctrl+P override pour print direct
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "p") {
+    e.preventDefault();
+    if (editor.value.trim()) window.print();
+  }
+});
+</script>
+
+</body>
+</html>
