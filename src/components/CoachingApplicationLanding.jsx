@@ -270,10 +270,10 @@ export default function CoachingApplicationLanding() {
           <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 28 }}>Ce que tu reçois</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
             {[
-              { t: "Programme adapté à ton profil", d: "Construit autour de ton corps, ton planning, ton objectif. Pas un template recyclé." },
+              { t: "Programme adapté à ton niveau et tes objectifs", d: "Construit autour de ton corps, ton planning, ton niveau actuel. Pas un template recyclé." },
               { t: "Messagerie privée 7j/7 dans l'app", d: "Tu m'écris directement depuis l'app. Réponse sous 2 heures en semaine. Aucun intermédiaire." },
-              { t: "Appel stratégique hebdomadaire en visio", d: "30 min chaque semaine. On débloque, on ajuste, on mesure." },
-              { t: "Suivi nutrition + récupération intégré", d: "Macros calibrés, sommeil tracké, supplémentation. Tout dans la même app." },
+              { t: "Appel stratégique tous les 15 jours en visio", d: "30 min toutes les 2 semaines. On débloque, on ajuste, on mesure." },
+              { t: "Suivi nutrition + récupération intégré", d: "On fixe tes macros, ton sommeil et ta supplémentation avec les outils intégrés. Tout dans la même app." },
               { t: "★ Accès à l'app premium RB PERFORM", d: "Le seul endroit où ce produit existe. Disponible uniquement pour mes clients privés.", featured: true },
             ].map((x, i) => (
               <div

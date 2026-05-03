@@ -61,6 +61,7 @@
     { "source": "/coach/:slug", "destination": "/api/coach-vitrine?slug=:slug" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap.xml" },
     { "source": "/programme-pdf", "destination": "/programme-pdf-tool.html" },
+    { "source": "/programme-pdf-v2", "destination": "/programme-pdf-v2.html" },
     { "source": "/candidature", "destination": "/app.html?candidature=true" },
     { "source": "/((?!api/|_next/|static/|videos/|images/|_vercel/|.*\\..*).*)", "destination": "/404.html" }
   ],
