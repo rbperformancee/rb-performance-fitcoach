@@ -100,8 +100,14 @@ Coche au fur et à mesure. Mis à jour automatiquement par chaque commit qui fer
   ```sql
   -- contenu de supabase/migrations/040_gdpr_deletions.sql
   ```
-- [ ] Webhook Stripe ne whitelist pas `plan` par priceId (price escalation possible)
-- [ ] HTML injection dans email admin waitlist (`api/waitlist.js:138-148`)
+- [x] Webhook Stripe whitelist `plan` par priceId (price escalation bloquée) ✅
+- [x] HTML injection dans email admin waitlist patchée via escHtml ✅
+- [ ] **ACTION FONDATEUR** — vérifier les env vars Stripe en prod :
+  - `STRIPE_PRICE_FOUNDING` (199€ EUR)
+  - `STRIPE_PRICE_FOUNDING_USD` / `_GBP` (multi-currency)
+  - `STRIPE_PRICE_PRO` / `_USD` / `_GBP` (si plan Pro live)
+  - `STRIPE_PRICE_ELITE` / `_USD` / `_GBP` (si plan Elite live)
+  Sans ces vars, le webhook refuse les paiements (sécurité). À configurer dans Vercel env.
 - [ ] `cold-outreach.js` permissif sur preview deployments
 - [ ] Vue `coaches_public` à créer pour limiter colonnes exposées en anon
 - [ ] Mode demo écrivable côté serveur — verrouiller en read-only

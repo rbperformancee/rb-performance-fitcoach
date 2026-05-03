@@ -402,30 +402,68 @@ module.exports = async (req, res) => {
       // Fallback FR (notre marche principal).
       const locale = (session.locale || metadata.lang || '').toLowerCase();
       const lang = locale.startsWith('en') ? 'en' : 'fr';
-      // Payment Links peuvent ne pas carrier de metadata (configuree au niveau Price/Product).
-      // On detecte aussi via le price ID Founder pour eviter de creer un Pro par erreur.
-      let plan = metadata.plan || (metadata.founding_coach === 'true' ? 'founding' : null);
+      // SÉCURITÉ : ne pas faire confiance à metadata.plan (manipulable client-side).
+      // On dérive le plan UNIQUEMENT depuis le priceId réel du line_item Stripe,
+      // qui est validé serveur-side par Stripe lors du paiement.
+      // Sans cette whitelist, un attaquant pouvait crafter une session Checkout avec
+      // metadata.plan='elite' et payer 199€ pour avoir un Elite (price escalation).
+      let plan = null;
       let lockedPrice = metadata.locked_price || null;
-      if (!plan) {
-        try {
-          const lineItems = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 5 });
-          const priceIds = (lineItems.data || []).map(li => li.price?.id).filter(Boolean);
-          const FOUNDING_PRICES = [
-            process.env.STRIPE_PRICE_FOUNDING,
-            process.env.STRIPE_PRICE_FOUNDING_USD,
-            process.env.STRIPE_PRICE_FOUNDING_GBP,
-          ].filter(Boolean);
-          if (priceIds.some(p => FOUNDING_PRICES.includes(p))) {
-            plan = 'founding';
-            lockedPrice = lockedPrice || '199';
-            console.log(`[webhook] Founder detected via price ID match (Payment Link path)`);
-          } else {
-            plan = 'pro'; // fallback Standard
+      try {
+        const lineItems = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 5 });
+        const priceIds = (lineItems.data || []).map(li => li.price?.id).filter(Boolean);
+
+        // Whitelist STRICTE par priceId. Toute autre valeur → rejet.
+        const PLAN_BY_PRICE = {
+          // Founding (199€/mois locked)
+          [process.env.STRIPE_PRICE_FOUNDING]:     { plan: 'founding', defaultLocked: '199' },
+          [process.env.STRIPE_PRICE_FOUNDING_USD]: { plan: 'founding', defaultLocked: '199' },
+          [process.env.STRIPE_PRICE_FOUNDING_GBP]: { plan: 'founding', defaultLocked: '199' },
+          // Pro mensuel
+          [process.env.STRIPE_PRICE_PRO]:          { plan: 'pro' },
+          [process.env.STRIPE_PRICE_PRO_USD]:      { plan: 'pro' },
+          [process.env.STRIPE_PRICE_PRO_GBP]:      { plan: 'pro' },
+          // Elite mensuel
+          [process.env.STRIPE_PRICE_ELITE]:        { plan: 'elite' },
+          [process.env.STRIPE_PRICE_ELITE_USD]:    { plan: 'elite' },
+          [process.env.STRIPE_PRICE_ELITE_GBP]:    { plan: 'elite' },
+        };
+        // Filtre les undefined (env vars non définies)
+        Object.keys(PLAN_BY_PRICE).forEach(k => { if (!k || k === 'undefined') delete PLAN_BY_PRICE[k]; });
+
+        for (const pid of priceIds) {
+          if (PLAN_BY_PRICE[pid]) {
+            plan = PLAN_BY_PRICE[pid].plan;
+            lockedPrice = lockedPrice || PLAN_BY_PRICE[pid].defaultLocked || null;
+            console.log(`[webhook] Plan derived from priceId ${pid} → ${plan}`);
+            break;
           }
-        } catch (e) {
-          console.error('[webhook] line_items fetch failed, defaulting plan=pro:', e.message);
-          plan = 'pro';
         }
+
+        if (!plan) {
+          console.error(`[webhook] UNKNOWN_PRICE_ID priceIds=${JSON.stringify(priceIds)} email=${email} — refusing to create coach`);
+          await captureException(new Error(`Unknown priceId in checkout — possible price escalation attempt`), {
+            tags: { endpoint: 'webhook-stripe', stage: 'price_whitelist', sev: 'high' },
+            extra: { email, customerId, subscriptionId, priceIds, sessionId: session.id },
+          });
+          // 200 pour ne pas re-trigger Stripe, mais NE PAS créer de coach.
+          // Alerte Sentry + email critique pour intervention manuelle.
+          await sendCriticalAlert({
+            subject: `Price ID inconnu dans checkout — refus création coach (${email})`,
+            body: `Une session Checkout Stripe contient des priceIds non whitelistés. Coach NON créé pour éviter l'escalation de plan.\n\nEmail : ${email}\nPriceIds reçus : ${JSON.stringify(priceIds)}\n\nVérifier dans Stripe Dashboard et créer le coach manuellement si paiement légitime.`,
+            customerEmail: email,
+            magicLink: null,
+            reason: 'unknown_price_id',
+          });
+          return res.status(200).json({ ok: false, reason: 'price_not_whitelisted' });
+        }
+      } catch (e) {
+        console.error('[webhook] line_items fetch failed:', e.message);
+        await captureException(e, {
+          tags: { endpoint: 'webhook-stripe', stage: 'price_lookup_failed' },
+          extra: { email, sessionId: session.id },
+        });
+        return res.status(500).json({ error: 'plan derivation failed' });
       }
 
       if (!email) {

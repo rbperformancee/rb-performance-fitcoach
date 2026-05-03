@@ -33,6 +33,14 @@ const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
 const NOTIFY_EMAIL = RB_SUPPORT_EMAIL;
 const G = '#02d1ba';
 
+// Escape user-provided strings before interpolating dans l'email HTML admin.
+// Sans ça, un attaquant peut injecter <a href="evil.com"> ou casser le layout
+// (audit ULTRA-SECURITY MOYEN). Couvre les contextes HTML element + attribute.
+const escHtml = (s) => String(s ?? '').replace(/[&<>"'`=\/]/g, (c) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+  "'": '&#39;', '`': '&#96;', '=': '&#61;', '/': '&#47;',
+}[c]));
+
 function getTransporter() {
   if (!SMTP_PASS) return null;
   return nodemailer.createTransport({
@@ -127,24 +135,35 @@ module.exports = async (req, res) => {
 
       // 2. Notification a Rayan
       try {
+        // Escape tous les inputs user pour éviter HTML injection / phishing
+        // dans l'email admin (audit ULTRA-SECURITY MOYEN).
+        const safeName = escHtml((name || '').trim() || 'Anonyme');
+        const safeEmail = escHtml(cleanEmail);
+        const safeClients = escHtml(clients || '—');
+        const safeProblem = escHtml(problem || '—');
+        const safeSource = escHtml(source || 'waitlist');
+        const safeUtm = escHtml([utm_source, utm_medium, utm_campaign].filter(Boolean).join(' / ') || '—');
+        const safeReferrer = escHtml(referrer || '—');
+        const subjectName = String((name || '').trim() || cleanEmail).replace(/[\r\n\t]+/g, ' ').slice(0, 80);
+
         await transporter.sendMail({
           from: `RB Perform <${SMTP_USER}>`,
           to: [NOTIFY_EMAIL],
-          subject: `Nouveau inscrit waitlist : ${(name || '').trim() || cleanEmail}`,
+          subject: `Nouveau inscrit waitlist : ${subjectName}`,
           html: `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:32px 16px"><tr><td align="center">
 <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%">
   <tr><td style="background:#111;border-radius:16px;border:1px solid rgba(2,209,186,0.2);padding:28px">
     <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};margin-bottom:12px;font-weight:700">Nouvelle inscription waitlist</div>
-    <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:16px">${(name || '').trim() || 'Anonyme'}<span style="color:${G}">.</span></div>
+    <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:16px">${safeName}<span style="color:${G}">.</span></div>
     <table cellpadding="0" cellspacing="0" style="font-size:13px;color:rgba(255,255,255,0.6);line-height:2.2">
-      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Email</td><td style="color:#fff;font-weight:600">${cleanEmail}</td></tr>
-      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Clients</td><td>${clients || '—'}</td></tr>
-      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Probleme</td><td>${problem || '—'}</td></tr>
-      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Source</td><td>${source || 'waitlist'}</td></tr>
-      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">UTM</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${[utm_source, utm_medium, utm_campaign].filter(Boolean).join(' / ') || '—'}</td></tr>
-      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Referrer</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${referrer || '—'}</td></tr>
+      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Email</td><td style="color:#fff;font-weight:600">${safeEmail}</td></tr>
+      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Clients</td><td>${safeClients}</td></tr>
+      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Probleme</td><td>${safeProblem}</td></tr>
+      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Source</td><td>${safeSource}</td></tr>
+      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">UTM</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${safeUtm}</td></tr>
+      <tr><td style="color:rgba(255,255,255,0.3);padding-right:12px">Referrer</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${safeReferrer}</td></tr>
     </table>
   </td></tr>
 </table></td></tr></table></body></html>`,
