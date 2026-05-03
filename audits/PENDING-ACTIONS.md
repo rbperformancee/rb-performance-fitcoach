@@ -102,6 +102,11 @@ Coche au fur et à mesure. Mis à jour automatiquement par chaque commit qui fer
   ```
 - [x] Webhook Stripe whitelist `plan` par priceId (price escalation bloquée) ✅
 - [x] HTML injection dans email admin waitlist patchée via escHtml ✅
+- [x] N+1 cron-relance fixé (1000 queries → 3 à 200 clients) ✅
+- [x] Mensonge sémantique colors landing (--orange/--violet) corrigé ✅
+- [x] Tokens design exports legacy (G, RED, ORANGE, VIOLET) pour migration ✅
+- [x] Composant Button partagé créé (src/components/ui/Button.jsx) ✅
+- [x] CI : npm test (unit) + e2e Playwright chromium ajoutés au workflow ✅
 - [ ] **ACTION FONDATEUR** — vérifier les env vars Stripe en prod :
   - `STRIPE_PRICE_FOUNDING` (199€ EUR)
   - `STRIPE_PRICE_FOUNDING_USD` / `_GBP` (multi-currency)
