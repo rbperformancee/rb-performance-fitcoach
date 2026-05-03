@@ -93,7 +93,7 @@ export default function CoachingApplicationLanding() {
         {/* Eyebrow with live availability dot */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 16px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, marginBottom: 32, animation: "fadeUp 0.6s ease 0.1s both" }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: GREEN, animation: "breath60 1s ease-in-out infinite", boxShadow: `0 0 8px ${GREEN}80` }} />
-          <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: GREEN, fontWeight: 700 }}>Méthode Premium · 5 places ouvertes</div>
+          <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: GREEN, fontWeight: 700 }}>Accompagnement Premium · 5 places ouvertes</div>
         </div>
 
         {/* Hero title — pas de fadeUp ici : c'est le LCP candidate. Si on
@@ -108,7 +108,7 @@ export default function CoachingApplicationLanding() {
 
         {/* Subhead */}
         <p style={{ fontSize: 17, lineHeight: 1.65, color: "rgba(255,255,255,0.6)", marginBottom: 40, maxWidth: 520, marginLeft: "auto", marginRight: "auto", animation: "fadeUp 0.7s ease 0.3s both" }}>
-          90 jours. 5 places. Une méthode 24/7 qui ne ressemble à rien d'autre.
+          90 jours. 5 places. Un suivi 24/7 qui ne ressemble à rien d'autre.
         </p>
 
         {/* Profile — vraie photo HD avec ring teal */}
@@ -270,11 +270,11 @@ export default function CoachingApplicationLanding() {
           <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 28 }}>Ce que tu reçois</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
             {[
-              { t: "Programme du profil qui matche ton objectif", d: "Force / Hypertrophie / Performance. 3 systèmes complets pensés pour aller au bout. Pas un template recyclé." },
-              { t: "Messagerie 7j/7 pour clarifications", d: "Tu m'écris depuis l'app pour toute question sur la méthode. Réponse async sous 2h en semaine." },
-              { t: "Call de clarification mensuel · 30 min", d: "On fait le point sur ton profil, ta progression, ton ressenti. Tu poses tes questions, j'oriente." },
-              { t: "Outils nutrition + récupération dans l'app", d: "Calculateur macros, tracking sommeil, framework supplémentation. Tu fixes tes cibles avec les outils intégrés." },
-              { t: "★ Accès à l'app premium RB PERFORM", d: "Le seul endroit où la méthode existe. Disponible uniquement sur sélection.", featured: true },
+              { t: "Programme adapté à ton profil", d: "Construit autour de ton corps, ton planning, ton objectif. Pas un template recyclé." },
+              { t: "Messagerie privée 7j/7 dans l'app", d: "Tu m'écris directement depuis l'app. Réponse sous 2 heures en semaine. Aucun intermédiaire." },
+              { t: "Appel stratégique hebdomadaire en visio", d: "30 min chaque semaine. On débloque, on ajuste, on mesure." },
+              { t: "Suivi nutrition + récupération intégré", d: "Macros calibrés, sommeil tracké, supplémentation. Tout dans la même app." },
+              { t: "★ Accès à l'app premium RB PERFORM", d: "Le seul endroit où ce produit existe. Disponible uniquement pour mes clients privés.", featured: true },
             ].map((x, i) => (
               <div
                 key={i}
@@ -356,7 +356,7 @@ export default function CoachingApplicationLanding() {
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", fontWeight: 500, marginTop: 4 }}>/ mois · 3 mois min.</div>
           </div>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, margin: 0, maxWidth: 460, marginLeft: "auto", marginRight: "auto" }}>
-            Le prix d'une salle de sport haut de gamme. Sauf qu'ici tu as un accès direct à la méthode et aux outils, et zéro carte bancaire avant que je valide ton dossier.
+            Le prix d'une salle de sport haut de gamme. Sauf qu'ici tu as l'accompagnement direct, et zéro carte bancaire avant que je valide ton dossier.
           </p>
         </div>
 
@@ -367,15 +367,15 @@ export default function CoachingApplicationLanding() {
             {[
               {
                 q: "Pourquoi 3 mois minimum ?",
-                a: "Les profils sont conçus sur cycles 60-90 jours pour des résultats visibles. Vendre 1 mois serait te mentir.",
+                a: "La transformation prend 60 à 90 jours minimum. Vendre 1 mois serait te mentir. 3 mois = le seuil où ça se voit vraiment.",
               },
               {
                 q: "Et si je dois mettre en pause ?",
-                a: "Voyage, blessure, urgence pro — la vie passe. Tu peux changer de profil ou mettre en pause ton accès. Mais on n'arrête pas.",
+                a: "Voyage, blessure, urgence pro — la vie passe. On adapte, on ralentit. Mais on n'arrête pas.",
               },
               {
                 q: "Je débute / je suis avancé — c'est pour moi ?",
-                a: "Chaque profil existe en plusieurs niveaux. Tu me décris ton point de départ, je t'oriente vers celui qui te correspond. La méthode reste, le niveau s'aligne.",
+                a: "Le programme est calibré sur ton niveau, pas sur un standard. La méthode change, l'exigence reste.",
               },
             ].map((item, i) => (
               <div key={i} style={{ paddingTop: i === 0 ? 0 : 14, borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.04)" }}>
@@ -428,19 +428,11 @@ export default function CoachingApplicationLanding() {
           onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
           onMouseOut={(e) => { e.currentTarget.style.transform = ""; }}
         >
-          Postuler à la méthode →
+          Réserve ta transformation →
         </button>
 
         <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.62)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.8s both" }}>
           Aucun paiement · Je te recontacte sous 24h
-        </div>
-
-        {/* Mention légale obligatoire — méthode ≠ encadrement sportif */}
-        <div style={{ marginTop: 64, padding: "18px 22px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, animation: "fadeUp 0.7s ease 0.85s both" }}>
-          <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", fontWeight: 700, marginBottom: 8 }}>Mention importante</div>
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, margin: 0 }}>
-            La méthode RB Perform est un produit numérique : tu accèdes à des programmes structurés, des outils et un système async pour suivre ta progression en autonomie. <strong style={{ color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>L'offre n'inclut pas d'encadrement sportif au sens de l'article L212-1 du Code du sport</strong> et ne se substitue pas à un avis médical. Un certificat médical de non-contre-indication à la pratique sportive est requis. Tu suis la méthode sous ta propre responsabilité. <a href="/legal#cgu-methode" target="_blank" rel="noopener" style={{ color: GREEN, textDecoration: "none", borderBottom: `1px solid ${GREEN}40`, paddingBottom: 1 }}>Lire les conditions complètes →</a>
-          </p>
         </div>
       </div>
     </main>
