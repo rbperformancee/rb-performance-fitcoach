@@ -108,12 +108,13 @@ Coche au fur et à mesure. Mis à jour automatiquement par chaque commit qui fer
   - `STRIPE_PRICE_PRO` / `_USD` / `_GBP` (si plan Pro live)
   - `STRIPE_PRICE_ELITE` / `_USD` / `_GBP` (si plan Elite live)
   Sans ces vars, le webhook refuse les paiements (sécurité). À configurer dans Vercel env.
-- [ ] `cold-outreach.js` permissif sur preview deployments
-- [ ] Vue `coaches_public` à créer pour limiter colonnes exposées en anon
-- [ ] Mode demo écrivable côté serveur — verrouiller en read-only
-- [ ] CSP `unsafe-inline` à durcir
-- [ ] X-Powered-By non strippé (cosmétique)
-- [ ] 2FA non disponible (post-launch)
+- [x] `cold-outreach.js` + sentinel-helpers.js : CRON_SECRET maintenant requis (plus de bypass preview) ✅
+- [x] X-Powered-By déjà strippé par Vercel (vérifié via curl) ✅
+- [x] **Mode demo écrivable** verrouillé read-only via RLS Postgres (migration 041) ✅
+- [ ] **MIGRATION 041** à passer dans Supabase Studio (`supabase/migrations/041_demo_readonly.sql`)
+- [ ] Vue `coaches_public` à créer pour limiter colonnes exposées en anon (SKIP launch — gros refacto, faible criticité : ne fuit pas de password)
+- [ ] CSP `unsafe-inline` à durcir (SKIP launch — gros refacto styles inline)
+- [ ] 2FA non disponible (post-launch, utile à 50+ coachs)
 
 ---
 

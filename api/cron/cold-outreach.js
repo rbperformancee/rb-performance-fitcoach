@@ -22,7 +22,14 @@ const CRON_SECRET = process.env.CRON_SECRET;
 const MAX_PER_RUN = 30;
 
 function isAuthorized(req) {
-  if (!CRON_SECRET) return process.env.NODE_ENV !== 'production';
+  // SÉCURITÉ : CRON_SECRET DOIT être configuré, jamais de bypass.
+  // L'ancien comportement (`!CRON_SECRET → autorisé en non-prod`) ouvrait
+  // la cron à tout le monde sur les preview deployments → un attaquant
+  // pouvait spammer 30 prospects/run en boucle (audit ULTRA-SECURITY MOYEN).
+  if (!CRON_SECRET) {
+    console.error('[CRON_AUTH_FAIL] CRON_SECRET missing — refused');
+    return false;
+  }
   return (req.headers.authorization || '') === `Bearer ${CRON_SECRET}`;
 }
 

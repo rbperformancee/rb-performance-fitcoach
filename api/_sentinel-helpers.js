@@ -19,8 +19,14 @@ const DAILY_BUDGET = parseFloat(process.env.MISTRAL_DAILY_BUDGET_USD || "50");
 const SENTINEL_PLANS = ["pro", "elite"];
 
 function isAuthorizedCron(req) {
+  // SÉCURITÉ : CRON_SECRET requis en toutes circonstances. Pas de bypass
+  // sur preview/dev (sinon les sentinel crons sont déclenchables par n'importe
+  // qui sur les preview deployments → consommation Mistral / spam emails).
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return process.env.NODE_ENV !== "production";
+  if (!cronSecret) {
+    console.error("[SENTINEL_AUTH_FAIL] CRON_SECRET missing — refused");
+    return false;
+  }
   const auth = req.headers.authorization || "";
   return auth === `Bearer ${cronSecret}`;
 }
