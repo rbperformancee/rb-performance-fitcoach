@@ -349,17 +349,6 @@ export default function CoachingApplicationLanding() {
           </a>
         </div>
 
-        {/* Pricing block — Elon clean, deux phrases qui suffisent */}
-        <div style={{ padding: "32px 28px", background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 20, marginBottom: 56, animation: "fadeUp 0.7s ease 0.6s both" }}>
-          <div style={{ marginBottom: 18 }}>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(64px, 14vw, 96px)", color: "#fff", lineHeight: 1, letterSpacing: "-2px", textShadow: "0 0 60px rgba(2,209,186,0.15)" }}>300€</div>
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", fontWeight: 500, marginTop: 4 }}>/ mois · 3 mois min.</div>
-          </div>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, margin: 0, maxWidth: 460, marginLeft: "auto", marginRight: "auto" }}>
-            Le prix d'une salle de sport haut de gamme. Sauf qu'ici tu as l'accompagnement direct, et zéro carte bancaire avant que je valide ton dossier.
-          </p>
-        </div>
-
         {/* FAQ — discrete, juste 3 objections silencieuses */}
         <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.65s both", textAlign: "left", maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
           <div style={{ fontSize: 9, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 20, textAlign: "center" }}>Avant de postuler</div>
