@@ -206,13 +206,8 @@ function FinisherCard({ finisher, weekIdx, sessionIdx, label }) {
   );
 }
 
-// Compute today's expected session based on programme start date + training days.
-// Returns:
-//   { type: "session", week, session } when today is a training day with a session available
-//   { type: "rest" } when today is a rest day (not in training_days)
-//   { type: "not_started", daysUntil } when today < start_date
-//   { type: "finished" } when programme has ended
-//   null when meta is incomplete (no start_date or training_days)
+// Compute today's expected session based on programme.start_date + training_days,
+// en sautant les dates dans skipped_dates (Reporter / Jour de repos).
 function computeTodaysSession(programmeMeta, programme) {
   if (!programmeMeta?.start_date || !programmeMeta?.training_days?.length || !programme?.weeks?.length) {
     return null;
@@ -220,18 +215,36 @@ function computeTodaysSession(programmeMeta, programme) {
   const start = new Date(programmeMeta.start_date + "T00:00:00");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const msPerDay = 24 * 60 * 60 * 1000;
+  const todayStr = today.toISOString().slice(0, 10);
+  const skipped = new Set(programmeMeta.skipped_dates || []);
+  const msPerDay = 86400000;
   const daysSinceStart = Math.floor((today.getTime() - start.getTime()) / msPerDay);
   if (daysSinceStart < 0) return { type: "not_started", daysUntil: -daysSinceStart };
 
-  // weekday: 1=Mon..7=Sun (ISO)
+  // Aujourd'hui marqué comme skip via le bouton Reporter ou Jour de repos
+  if (skipped.has(todayStr)) return { type: "rest" };
+
   const weekday = ((today.getDay() + 6) % 7) + 1;
   const trainingDays = programmeMeta.training_days.slice().sort((a, b) => a - b);
   if (!trainingDays.includes(weekday)) return { type: "rest" };
 
+  // Compte les training days "effectifs" (non skippés) jusqu'à aujourd'hui.
+  // Si le client a skip 1 mardi, le mercredi suivant prend la session qui
+  // était prévue ce mardi → effet "session reportée d'1 jour".
+  let effectiveIdx = -1;
+  for (let d = 0; d <= daysSinceStart; d++) {
+    const date = new Date(start.getTime() + d * msPerDay);
+    const dateStr = date.toISOString().slice(0, 10);
+    const dayWeekday = ((date.getDay() + 6) % 7) + 1;
+    if (trainingDays.includes(dayWeekday) && !skipped.has(dateStr)) {
+      effectiveIdx++;
+    }
+  }
+  if (effectiveIdx < 0) return { type: "rest" };
+
   const sessionsPerWeek = trainingDays.length;
-  const weekIdx = Math.floor(daysSinceStart / 7);
-  const sessionIdx = trainingDays.indexOf(weekday);
+  const weekIdx = Math.floor(effectiveIdx / sessionsPerWeek);
+  const sessionIdx = effectiveIdx % sessionsPerWeek;
   if (weekIdx >= programme.weeks.length) return { type: "finished" };
   const sessionsInWeek = programme.weeks[weekIdx]?.sessions?.length || 0;
   if (sessionIdx >= sessionsInWeek) return { type: "rest" };

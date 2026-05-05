@@ -75,17 +75,19 @@ export function useProgrammeOverrides({ clientId, programmeId }) {
     if (!programmeId) { console.warn("[bumpStartDate] no programmeId"); return false; }
     const { data: prog, error: e1 } = await supabase
       .from("programmes")
-      .select("programme_start_date, start_date, uploaded_at, rest_days_count, reported_days_count")
+      .select("skipped_dates, rest_days_count, reported_days_count")
       .eq("id", programmeId)
       .maybeSingle();
     if (e1 || !prog) { console.warn("[bumpStartDate] read failed:", e1?.message, e1?.code); return false; }
 
-    // On bump UNIQUEMENT start_date (référence du calendrier training_days).
-    // programme_start_date est la date officielle de début (countdown initial),
-    // elle ne doit JAMAIS être modifiée après le démarrage du programme —
-    // sinon l'app croit que le programme n'a pas encore commencé.
-    const base = prog.start_date || prog.uploaded_at;
-    const next = new Date(new Date(base).getTime() + 86400000).toISOString().split("T")[0];
+    // Au lieu de bumper start_date globalement (effet domino), on AJOUTE la
+    // date du jour à skipped_dates. Le calcul du calendrier saute cette date
+    // → la session du jour passe en rest, et la prochaine training day prend
+    // la session prévue aujourd'hui.
+    const today = new Date().toISOString().slice(0, 10);
+    const existing = prog.skipped_dates || [];
+    if (existing.includes(today)) return true; // déjà skippée, no-op
+
     const counters = logRest
       ? { rest_days_count: (prog.rest_days_count || 0) + 1 }
       : { reported_days_count: (prog.reported_days_count || 0) + 1 };
@@ -93,7 +95,7 @@ export function useProgrammeOverrides({ clientId, programmeId }) {
     const { error: e2 } = await supabase
       .from("programmes")
       .update({
-        start_date: next,
+        skipped_dates: [...existing, today],
         ...counters,
       })
       .eq("id", programmeId);
