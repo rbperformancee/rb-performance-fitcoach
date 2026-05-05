@@ -72,13 +72,13 @@ export function useProgrammeOverrides({ clientId, programmeId }) {
 
   /** Reporter ou Repos = pousse start_date d'1 jour. */
   const bumpStartDate = useCallback(async ({ logRest = false } = {}) => {
-    if (!programmeId) return false;
+    if (!programmeId) { console.warn("[bumpStartDate] no programmeId"); return false; }
     const { data: prog, error: e1 } = await supabase
       .from("programmes")
       .select("programme_start_date, start_date, uploaded_at, rest_days_count, reported_days_count")
       .eq("id", programmeId)
       .maybeSingle();
-    if (e1 || !prog) return false;
+    if (e1 || !prog) { console.warn("[bumpStartDate] read failed:", e1?.message, e1?.code); return false; }
 
     // Décale les 2 dates de référence : ancienne (programme_start_date,
     // utilisée par ProgrammeCountdown) ET nouvelle (start_date, utilisée par
@@ -99,6 +99,7 @@ export function useProgrammeOverrides({ clientId, programmeId }) {
       })
       .eq("id", programmeId);
 
+    if (e2) console.warn("[bumpStartDate] update failed:", e2.message, e2.code, e2.details);
     return !e2;
   }, [programmeId]);
 
@@ -124,6 +125,7 @@ export function useProgrammeOverrides({ clientId, programmeId }) {
       .from("programme_overrides")
       .upsert(payload, { onConflict: "client_id,programme_id,week_index,session_index" });
 
+    if (error) console.warn("[substituteExercise] failed:", error.message, error.code, error.details);
     if (!error) await fetchAll();
     return !error;
   }, [clientId, programmeId, byKey, fetchAll]);
@@ -144,6 +146,7 @@ export function useProgrammeOverrides({ clientId, programmeId }) {
     const { error } = await supabase
       .from("programme_overrides")
       .upsert(payload, { onConflict: "client_id,programme_id,week_index,session_index" });
+    if (error) console.warn("[reorderExercises] failed:", error.message, error.code, error.details);
     if (!error) await fetchAll();
     return !error;
   }, [clientId, programmeId, byKey, fetchAll]);
