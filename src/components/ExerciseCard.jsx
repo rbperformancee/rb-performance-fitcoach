@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Sparkline } from "./Sparkline";
 import { RestTimer, parseRestSeconds } from "./RestTimer";
 import haptic from "../lib/haptic";
@@ -205,7 +205,28 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
+  // showTimer persiste en localStorage : si l'utilisateur quitte la PWA pendant
+  // le rest timer (iOS kill du JS thread), le timer doit reapparaitre au retour.
+  // RestTimer lui-même reprend où il en était grâce à son propre localStorage.
+  const showTimerKey = "rb_rest_active_" + weekIdx + "_" + sessionIdx + "_" + exIdx;
+  const [showTimer, setShowTimer] = useState(() => {
+    try {
+      const v = localStorage.getItem(showTimerKey);
+      if (v) {
+        const ts = parseInt(v) || 0;
+        // Garde le timer si moins de 10min écoulées depuis le start
+        if (Date.now() - ts < 10 * 60 * 1000) return true;
+      }
+    } catch {}
+    return false;
+  });
+  useEffect(() => {
+    try {
+      if (showTimer) localStorage.setItem(showTimerKey, String(Date.now()));
+      else localStorage.removeItem(showTimerKey);
+    } catch {}
+    // eslint-disable-line
+  }, [showTimer, showTimerKey]);
 
   const today = new Date().toISOString().slice(0, 10);
   const storageKey = "sets_done_" + weekIdx + "_" + sessionIdx + "_" + exIdx + "_" + today;

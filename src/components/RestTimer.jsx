@@ -152,8 +152,26 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
   const [extra, setExtra] = useState(0);          // secondes ajoutées manuellement
   const [phase, setPhase] = useState("rest");     // "rest" | "done"
   const intervalRef = useRef(null);
-  const startRef = useRef(Date.now());
-  const totalRef = useRef(restSeconds);
+
+  // Persistence localStorage : si on quitte la PWA puis on revient, le timer
+  // reprend pile où il en était (start + total figés en timestamp).
+  const STORAGE_KEY = "rb_rest_timer_active";
+  const initial = (() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      if (s.start && s.total && Date.now() - s.start < (s.total + 60) * 1000) {
+        return { start: s.start, total: s.total };
+      }
+    } catch {}
+    return { start: Date.now(), total: restSeconds };
+  })();
+  const startRef = useRef(initial.start);
+  const totalRef = useRef(initial.total);
+
+  // Persiste l'état au mount + à chaque ajout d'extra
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ start: startRef.current, total: totalRef.current })); } catch {}
+  }, []);
 
   // Vibration à la fin (si supporté)
   const vibrate = useCallback(() => {
@@ -223,6 +241,13 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
     }
   }, [running, exName]);
 
+  const persist = () => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ start: startRef.current, total: totalRef.current })); } catch {}
+  };
+  const clearPersist = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  };
+
   const addTime = (secs) => {
     totalRef.current += secs;
     setExtra(e => e + secs);
@@ -233,12 +258,12 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
       totalRef.current = secs;
       setTimeLeft(secs);
     }
+    persist();
   };
 
   const pause = () => {
     if (running) {
       clearInterval(intervalRef.current);
-      // Figer le temps restant
       const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
       totalRef.current = totalRef.current - elapsed;
       startRef.current = Date.now();
@@ -247,6 +272,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
       startRef.current = Date.now();
       setRunning(true);
     }
+    persist();
   };
 
   const progress = phase === "done" ? 0 : timeLeft / totalRef.current;
@@ -426,7 +452,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
 
         {/* C'est parti / Terminer */}
         <button
-          onClick={onDismiss}
+          onClick={() => { clearPersist(); onDismiss?.(); }}
           style={{
             flex: phase === "done" ? 1 : 1.2,
             padding: "13px",
