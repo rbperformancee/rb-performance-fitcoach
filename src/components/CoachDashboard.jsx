@@ -2503,13 +2503,19 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
     let audioUrl = null;
 
     if (audioBlob) {
-      const fileName = `flash_${clientId}_${Date.now()}.webm`;
-      const { data: uploadData } = await supabase.storage
+      const ext = (audioBlob.type || "").includes("mp4") ? "m4a" : "webm";
+      const fileName = `flash_${clientId}_${Date.now()}.${ext}`;
+      const { data: uploadData, error: uploadErr } = await supabase.storage
         .from("audio-messages")
         .upload(fileName, audioBlob, { contentType: audioBlob.type || "audio/webm" });
+      if (uploadErr) {
+        console.error("[flash audio upload] FAILED:", uploadErr.message, uploadErr);
+        toast.error("Upload vocal échoué : " + (uploadErr.message || "voir console"));
+      }
       if (uploadData) {
         const { data: urlData } = supabase.storage.from("audio-messages").getPublicUrl(fileName);
         audioUrl = urlData?.publicUrl;
+        console.log("[flash audio upload] OK:", audioUrl);
       }
     }
 
