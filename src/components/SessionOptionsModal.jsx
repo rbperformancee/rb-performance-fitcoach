@@ -355,12 +355,14 @@ function ReorderView({ exercises, weekIndex, sessionIndex, ovApi, onBack, onDone
         </SortableContext>
       </DndContext>
 
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={reset} disabled={saving} style={{ ...ghostBtn, flex: "0 0 auto" }}>
-          {t("som.btn_default")}
-        </button>
-        <button onClick={save} disabled={saving} style={primaryBtn}>
+      {/* Bouton principal Enregistrer en pleine largeur, par-dessus de tout
+          (Défaut en dessous) — sur mobile il était caché à droite avant. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <button onClick={save} disabled={saving} style={{ ...primaryBtn, width: "100%" }}>
           {saving ? t("som.btn_saving") : t("som.btn_save")}
+        </button>
+        <button onClick={reset} disabled={saving} style={{ ...ghostBtn, width: "100%" }}>
+          {t("som.btn_default")}
         </button>
       </div>
     </>
