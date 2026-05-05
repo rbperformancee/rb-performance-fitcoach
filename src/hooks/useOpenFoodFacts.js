@@ -11,8 +11,13 @@ import { searchLocalFoods } from "../lib/foodDatabase";
 // 3. OpenFoodFacts v2 API (3M produits de marque europeens, scan code-barre)
 //    -> affichage de la marque sans badge specifique
 //
-// Les 3 sources sont appelees en parallele et mergees. La locale est affichee
-// instantanement (sync), puis les 2 APIs s'ajoutent quand elles repondent.
+// Edamam tier gratuit = 5 hits/min. On évite les appels inutiles via :
+//   - cache module-level (50 dernières queries identiques)
+//   - skip Edamam+OFF si la base locale a >= 6 résultats (rice, pates, etc.)
+//   - debounce 600ms côté consumer (pas ici)
+
+const CACHE_MAX = 50;
+const queryCache = new Map(); // query.toLowerCase() → results[]
 
 export function useOpenFoodFacts() {
   const [results, setResults] = useState([]);
@@ -23,6 +28,12 @@ export function useOpenFoodFacts() {
       setResults([]);
       return;
     }
+    const cacheKey = query.toLowerCase().trim();
+    if (queryCache.has(cacheKey)) {
+      setResults(queryCache.get(cacheKey));
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     // ========== ETAGE 1 : LOCAL (synchrone, instantane) ==========
@@ -30,6 +41,17 @@ export function useOpenFoodFacts() {
       .slice(0, 12)
       .map((f) => ({ ...f, _source: "local" }));
     setResults(localResults);
+
+    // Si la base locale a déjà 6+ résultats, on évite le hit Edamam (limit 5/min)
+    if (localResults.length >= 6) {
+      queryCache.set(cacheKey, localResults);
+      if (queryCache.size > CACHE_MAX) {
+        const firstKey = queryCache.keys().next().value;
+        queryCache.delete(firstKey);
+      }
+      setLoading(false);
+      return;
+    }
 
     // ========== ETAGE 2 et 3 : Edamam + OpenFoodFacts en parallele ==========
     const edamamPromise = fetch(`/api/food-search?q=${encodeURIComponent(query)}`)
@@ -108,7 +130,13 @@ export function useOpenFoodFacts() {
     }
 
     // Cap a 40 resultats max pour ne pas surcharger l'UI
-    setResults(merged.slice(0, 40));
+    const final = merged.slice(0, 40);
+    queryCache.set(cacheKey, final);
+    if (queryCache.size > CACHE_MAX) {
+      const firstKey = queryCache.keys().next().value;
+      queryCache.delete(firstKey);
+    }
+    setResults(final);
     setLoading(false);
   }, []);
 

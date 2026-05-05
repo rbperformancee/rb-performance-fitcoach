@@ -511,7 +511,7 @@ export default function FuelPage({ client, appData }) {
     setQuery(q);
     setSelectedFood(null);
     clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => search(q), 400);
+    searchTimeout.current = setTimeout(() => search(q), 600);
   }, [search]);
 
   const handleAddFood = async () => {
