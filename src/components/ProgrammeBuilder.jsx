@@ -208,7 +208,7 @@ const TEMPLATES = [
     name: "Vierge",
     desc: "1 semaine, 1 séance, 1 exercice. Pour partir de zéro.",
     iconKey: "blank",
-    build: () => ({ name: "", clientName: "", duration: "", tagline: "", objective: "", weeks: [newWeek(1)] }),
+    build: () => ({ name: "", clientName: "", duration: "", tagline: "", objective: "", startDate: "", trainingDays: [1], weeks: [newWeek(1)] }),
   },
   {
     id: "ppl-hypertrophie-4",
@@ -1391,6 +1391,8 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         html_content: html,
         is_active: true,
         uploaded_by: email,
+        start_date: programme.startDate || new Date().toISOString().slice(0, 10),
+        training_days: (programme.trainingDays && programme.trainingDays.length) ? programme.trainingDays : [1],
       });
       if (error) throw error;
       clearDraft();
@@ -1720,6 +1722,58 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             <TextField label="Objectif" value={programme.objective} onChange={(v) => update("objective", v)} placeholder="prise-de-masse" />
             <div style={{ gridColumn: "span 2" }}>
               <TextField label="Tagline" value={programme.tagline} onChange={(v) => update("tagline", v)} placeholder="ex : LA DISCIPLINE EST LA CLÉ DU SUCCÈS" />
+            </div>
+          </div>
+
+          {/* === CALENDRIER === */}
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 12 }}>Calendrier</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+            <div>
+              <label style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: 6 }}>Date de démarrage</label>
+              <input
+                type="date"
+                value={programme.startDate || ""}
+                onChange={(e) => update("startDate", e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#fff", fontSize: 13, fontFamily: "inherit", outline: "none" }}
+              />
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Vide = aujourd'hui</div>
+            </div>
+            <div>
+              <label style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: 6 }}>Jours d'entraînement</label>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[
+                  { d: 1, l: "L" }, { d: 2, l: "M" }, { d: 3, l: "M" },
+                  { d: 4, l: "J" }, { d: 5, l: "V" }, { d: 6, l: "S" }, { d: 7, l: "D" },
+                ].map(({ d, l }) => {
+                  const days = programme.trainingDays || [1];
+                  const active = days.includes(d);
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => {
+                        const cur = new Set(programme.trainingDays || [1]);
+                        if (cur.has(d)) cur.delete(d); else cur.add(d);
+                        const next = Array.from(cur).sort((a, b) => a - b);
+                        update("trainingDays", next.length ? next : [1]);
+                      }}
+                      style={{
+                        flex: 1, height: 36, borderRadius: 8,
+                        border: active ? "1px solid rgba(2,209,186,0.6)" : "1px solid rgba(255,255,255,0.08)",
+                        background: active ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.03)",
+                        color: active ? "#02d1ba" : "rgba(255,255,255,0.4)",
+                        fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                        transition: "all 0.12s",
+                      }}
+                    >
+                      {l}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
+                {programme.trainingDays?.length || 1} jour{(programme.trainingDays?.length || 1) > 1 ? "s" : ""} / sem · vide = lundi
+              </div>
             </div>
           </div>
 
