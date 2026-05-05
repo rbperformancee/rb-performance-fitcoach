@@ -477,9 +477,11 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   const rawCurrentSession = currentWeek?.sessions?.[activeSession];
 
   // Overrides client (substitutions / reordering)
+  // programmeMeta.id vient du row DB (programmes.id), c'est l'id qu'attend le hook.
+  // programme.id n'existait pas (programme = HTML parsé, pas le row DB).
   const ovApi = useProgrammeOverrides({
     clientId: client?.id,
-    programmeId: programme?.id || programme?.programme_id,
+    programmeId: programmeMeta?.id || programme?.id || programme?.programme_id,
   });
   const currentSession = useMemo(
     () => ovApi.applyToSession(rawCurrentSession, activeWeek, activeSession),
