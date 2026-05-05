@@ -10,6 +10,7 @@ const FuelPage = lazy(() => import("./components/FuelPage"));
 const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
 const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
+const ClientFirstLoginFlow = lazy(() => import("./components/ClientFirstLoginFlow"));
 const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
 const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
@@ -1041,10 +1042,12 @@ function AppInner() {
     };
     return <Suspense fallback={null}><OnboardingFlow client={client || { email: user.email, id: null }} onComplete={exitQA} /></Suspense>;
   }
-  // Pour reactiver l'onboarding pour tous les nouveaux users :
-  // if (!isClientDemo && user && !isCoach && !authLoading && client?.onboarding_done !== true) {
-  //   return <OnboardingFlow client={client || { email: user.email, id: null }} onComplete={() => window.location.reload()} />;
-  // }
+  // Onboarding lite (3 étapes : photo + poids + objectif) au premier login
+  // d'un client. Cible : clients high-ticket validés hors-app, OU tout client
+  // qui n'a pas encore client.onboarding_done === true. Un coach ne le voit jamais.
+  if (!isClientDemo && user && !isCoach && !authLoading && client && client.onboarding_done !== true) {
+    return <Suspense fallback={null}><ClientFirstLoginFlow client={client} user={user} onComplete={() => window.location.reload()} /></Suspense>;
+  }
 
   // ── Coach → Dashboard admin ──
   // ── Programme avec date de debut future → Countdown ──

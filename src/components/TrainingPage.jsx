@@ -274,6 +274,25 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   });
   const intervalRef = useRef(null);
 
+  // Détecte un nouveau programme : clear les complétions de séance et chrono
+  // finisher en localStorage (sinon les anciennes complétions persistent par index).
+  useEffect(() => {
+    const progId = programme?.id || programme?.programme_id;
+    if (!progId) return;
+    const key = "rb_current_prog_id";
+    const stored = localStorage.getItem(key);
+    if (stored && stored !== String(progId)) {
+      try {
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith("rb_c_") || k.startsWith("rb_finisher_")) {
+            localStorage.removeItem(k);
+          }
+        });
+      } catch {}
+    }
+    try { localStorage.setItem(key, String(progId)); } catch {}
+  }, [programme?.id, programme?.programme_id]);
+
   // Un seul effet - relit le timestamp a chaque tick
   useEffect(() => {
     clearInterval(intervalRef.current);

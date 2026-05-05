@@ -862,6 +862,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         onConfirm={async () => {
           const progId = confirmDelete.progId;
           setConfirmDelete(null);
+          // Reset les completions de séance liées à ce client (sinon elles
+          // ressortiront avec le prochain programme uploadé sur les mêmes index).
+          if (client?.id) {
+            await supabase.from('session_completions').delete().eq('client_id', client.id);
+          }
           const { error } = await supabase.from('programmes').delete().eq('id', progId);
           if (error) { console.error(error); toast.error("Erreur : " + error.message); return; }
           toast.success("Programme supprimé");
@@ -2820,6 +2825,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       // Desactiver l'ancien programme
       await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
 
+      // Reset les completions de séance de l'ancien programme : sinon les
+      // index (week_idx, session_idx) du nouveau programme matchent les
+      // anciens et les séances apparaissent comme déjà validées.
+      await supabase.from("session_completions").delete().eq("client_id", client.id);
+
       // Inserer le nouveau programme
       const { error } = await supabase.from("programmes").insert({
         client_id: client.id, html_content: html, programme_name: displayName,
@@ -3414,7 +3424,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {selected && (
         <ErrorBoundary name="ClientPanel">
-          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }} />
+          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); loadClients(); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }} />
         </ErrorBoundary>
       )}
       {showPipeline && (
