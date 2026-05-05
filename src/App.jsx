@@ -99,9 +99,16 @@ const HelpPage = lazy(() => import("./components/HelpPage"));
 import Spinner from "./components/Spinner";
 
 // Fallback minimal pour Suspense (pas de flash blanc)
-const LazyFallback = () => (
-  <div style={{ position: "fixed", inset: 0, background: "#080C14", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
-    <Spinner variant="dots" size={36} />
+// Fallback transparent : pas d'overlay sombre qui flashe pendant les ~200ms de
+// chargement d'un chunk lazy. Le bg de l'app (#050505) reste visible, ainsi
+// que la nav bar fixe → transition perçue comme instantanée.
+const LazyFallback = () => null;
+
+// Fallback localisé pour les pages client : keeps the page background visible,
+// petit indicateur de chargement discret au centre.
+const PageFallback = () => (
+  <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <Spinner variant="dots" size={28} />
   </div>
 );
 
@@ -486,6 +493,16 @@ function AppInner() {
     import("./components/MovePage");
     import("./components/ProfilePage");
   }, [isDemo, isClientDemo]);
+
+  // Préchargement pour les CLIENTS standards (pas demo) dès qu'ils sont loggés.
+  // Évite l'écran noir d'une demi-seconde au premier swipe entre les onglets.
+  React.useEffect(() => {
+    if (!user || isDemo || isClientDemo) return;
+    import("./components/TrainingPage");
+    import("./components/FuelPage");
+    import("./components/MovePage");
+    import("./components/ProfilePage");
+  }, [user, isDemo, isClientDemo]);
 
   // Auto-login demo COACH — bascule en OTP via /api/demo-coach (zero password
   // exposé dans le bundle JS public). Le mot de passe demo a été retiré pour
@@ -1448,30 +1465,32 @@ function AppInner() {
         }>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {isClientDemo && <div style={{height:52}} />}
-          {page === "training" ? (
-            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
-              <TrainingPage
-                client={client}
-                programme={programme}
-                activeWeek={activeWeek}
-                setActiveWeek={setActiveWeek}
-                activeSession={activeSession}
-                setActiveSession={setActiveSession}
-                getHistory={getHistory}
-                getLatest={getLatest}
-                saveLog={saveLog}
-                getDelta={getDelta}
-                onStartSession={setSessionStarted}
-              />
-          ) : page === "move" ? (
-              <MovePage key={page} client={client} appData={appData} />
-          ) : page === "fuel" ? (
-              <FuelPage key={page} client={client} appData={appData} />
-          ) : page === "profile" ? (
-              <ProfilePage key={page} client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Desactive en mode demo") : () => supabase.auth.signOut().then(() => { window.location.href = "/login"; })} supabase={supabase} appData={appData} />
-          ) : (
-            <WeightChart key={page} clientId={client?.id} client={client} appData={appData} />
-          )}
+          <Suspense fallback={<PageFallback />}>
+            {page === "training" ? (
+              !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
+                <TrainingPage
+                  client={client}
+                  programme={programme}
+                  activeWeek={activeWeek}
+                  setActiveWeek={setActiveWeek}
+                  activeSession={activeSession}
+                  setActiveSession={setActiveSession}
+                  getHistory={getHistory}
+                  getLatest={getLatest}
+                  saveLog={saveLog}
+                  getDelta={getDelta}
+                  onStartSession={setSessionStarted}
+                />
+            ) : page === "move" ? (
+                <MovePage key={page} client={client} appData={appData} />
+            ) : page === "fuel" ? (
+                <FuelPage key={page} client={client} appData={appData} />
+            ) : page === "profile" ? (
+                <ProfilePage key={page} client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Desactive en mode demo") : () => supabase.auth.signOut().then(() => { window.location.href = "/login"; })} supabase={supabase} appData={appData} />
+            ) : (
+              <WeightChart key={page} clientId={client?.id} client={client} appData={appData} />
+            )}
+          </Suspense>
 
           {showRPE && client && <RPEModal clientId={client.id} sessionName={session?.name} onClose={() => setShowRPE(false)} />}
 
