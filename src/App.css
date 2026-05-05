@@ -806,9 +806,14 @@ input[type=number] { -moz-appearance: textfield; }
   outline: none !important;
 }
 
-/* Safe area global */
+/* Safe area iOS : on garde le padding-top pour que le contenu commence sous
+ * la status bar, ET on remplace le fond noir uni par un gradient vertical
+ * subtil qui fond progressivement vers la couleur de la page. La status bar
+ * iOS (translucent) laisse passer ce gradient → effet "fondu" sans bande noire. */
 body {
   padding-top: env(safe-area-inset-top, 0px);
+  background: linear-gradient(180deg, #0a0a0a 0%, #060606 60%, #050505 100%) #050505;
+  background-attachment: fixed;
 }
 
 @keyframes checkPulse {
