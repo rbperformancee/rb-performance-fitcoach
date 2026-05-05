@@ -73,7 +73,7 @@ export function useAuth() {
         .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).maybeSingle();
       if (progData?.html_content) {
         setProgramme(progData.html_content);
-        setProgrammeMeta({ id: progData.id, programme_name: progData.programme_name, programme_accepted_at: progData.programme_accepted_at, programme_start_date: progData.programme_start_date, accepted_by: progData.accepted_by });
+        setProgrammeMeta({ id: progData.id, programme_name: progData.programme_name, programme_accepted_at: progData.programme_accepted_at, programme_start_date: progData.programme_start_date, accepted_by: progData.accepted_by, start_date: progData.start_date, training_days: progData.training_days });
         // Cache programme pour acces offline
         if (navigator.serviceWorker?.controller) {
           navigator.serviceWorker.controller.postMessage({ type: "CACHE_PROGRAMME", html: progData.html_content });

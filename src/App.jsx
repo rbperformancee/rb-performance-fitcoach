@@ -1468,6 +1468,7 @@ function AppInner() {
                 <TrainingPage
                   client={client}
                   programme={programme}
+                  programmeMeta={programmeMeta}
                   activeWeek={activeWeek}
                   setActiveWeek={setActiveWeek}
                   activeSession={activeSession}

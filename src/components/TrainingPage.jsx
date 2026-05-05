@@ -206,7 +206,39 @@ function FinisherCard({ finisher, weekIdx, sessionIdx, label }) {
   );
 }
 
-export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta, onStartSession }) {
+// Compute today's expected session based on programme start date + training days.
+// Returns:
+//   { type: "session", week, session } when today is a training day with a session available
+//   { type: "rest" } when today is a rest day (not in training_days)
+//   { type: "not_started", daysUntil } when today < start_date
+//   { type: "finished" } when programme has ended
+//   null when meta is incomplete (no start_date or training_days)
+function computeTodaysSession(programmeMeta, programme) {
+  if (!programmeMeta?.start_date || !programmeMeta?.training_days?.length || !programme?.weeks?.length) {
+    return null;
+  }
+  const start = new Date(programmeMeta.start_date + "T00:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const daysSinceStart = Math.floor((today.getTime() - start.getTime()) / msPerDay);
+  if (daysSinceStart < 0) return { type: "not_started", daysUntil: -daysSinceStart };
+
+  // weekday: 1=Mon..7=Sun (ISO)
+  const weekday = ((today.getDay() + 6) % 7) + 1;
+  const trainingDays = programmeMeta.training_days.slice().sort((a, b) => a - b);
+  if (!trainingDays.includes(weekday)) return { type: "rest" };
+
+  const sessionsPerWeek = trainingDays.length;
+  const weekIdx = Math.floor(daysSinceStart / 7);
+  const sessionIdx = trainingDays.indexOf(weekday);
+  if (weekIdx >= programme.weeks.length) return { type: "finished" };
+  const sessionsInWeek = programme.weeks[weekIdx]?.sessions?.length || 0;
+  if (sessionIdx >= sessionsInWeek) return { type: "rest" };
+  return { type: "session", week: weekIdx, session: sessionIdx, sessionsPerWeek };
+}
+
+export default function TrainingPage({ client, programme, programmeMeta, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta, onStartSession }) {
   const t = useT();
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
@@ -219,11 +251,15 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
     } catch (e) { return false; }
   }, []);
 
+  // Calcul de la séance prévue AUJOURD'HUI selon programme.start_date + training_days
+  const todaysSession = useMemo(
+    () => computeTodaysSession(programmeMeta, programme),
+    [programmeMeta?.start_date, programmeMeta?.training_days, programme?.weeks?.length]
+  );
+
   // ==== HYDRATATION CLOUD ====
-  // Au premier mount, on rapatrie TOUTES les session_completions du client
-  // depuis Supabase et on les hydrate en localStorage. Sans ça, après une
-  // réinstall de la PWA, les séances déjà validées disparaissaient de l'UI.
-  // Bonus : auto-positionnement sur la première séance non complétée.
+  // Au premier mount : fetch session_completions du client + auto-position
+  // sur la séance d'aujourd'hui (selon le calendrier) ou la 1re non-complétée.
   useEffect(() => {
     if (!client?.id || hydratedFromCloud) return;
     let cancelled = false;
@@ -248,26 +284,29 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         completed.add(`${c.week_idx}_${c.session_idx}`);
       });
 
-      // Auto-position : trouve la 1re séance non complétée
-      const weeks = programme?.weeks || [];
+      // Priorité 1 : si on a un calendrier ET qu'aujourd'hui est un training day → on y va
+      // Priorité 2 : 1re séance non-complétée
       let target = null;
-      outer: for (let w = 0; w < weeks.length; w++) {
-        const sessions = weeks[w].sessions || [];
-        for (let s = 0; s < sessions.length; s++) {
-          if (!completed.has(`${w}_${s}`)) { target = { w, s }; break outer; }
+      if (todaysSession?.type === "session") {
+        target = { w: todaysSession.week, s: todaysSession.session };
+      } else {
+        const weeks = programme?.weeks || [];
+        outer: for (let w = 0; w < weeks.length; w++) {
+          const sessions = weeks[w].sessions || [];
+          for (let s = 0; s < sessions.length; s++) {
+            if (!completed.has(`${w}_${s}`)) { target = { w, s }; break outer; }
+          }
         }
       }
       if (target && (target.w !== activeWeek || target.s !== activeSession)) {
         setActiveWeek(target.w);
         setActiveSession(target.s);
       }
-      // Compte les séances "ratées" (skip) pour notice utilisateur
-      // = séances avant la cible qui ne sont pas complétées (rare avec auto-position)
       setHydratedFromCloud(true);
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line
-  }, [client?.id, programme?.weeks?.length]);
+  }, [client?.id, programme?.weeks?.length, todaysSession?.type]);
   // Ref pour la rangee horizontale des seances (auto-scroll vers la seance active)
   const sessionsRowRef = useRef(null);
 
@@ -487,6 +526,43 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>{t("train.no_programme")}</div>
     </div>
   );
+
+  // Écran "Repos" si aujourd'hui n'est pas un training day OU programme pas démarré
+  if (todaysSession?.type === "rest" || todaysSession?.type === "not_started" || todaysSession?.type === "finished") {
+    const isRest = todaysSession.type === "rest";
+    const isNotStarted = todaysSession.type === "not_started";
+    const isFinished = todaysSession.type === "finished";
+    return (
+      <div style={{ minHeight: "100dvh", background: "linear-gradient(180deg, #060606 0%, #050505 60%)", color: "#fff", fontFamily: "-apple-system, Inter, sans-serif", padding: "calc(env(safe-area-inset-top, 0px) + 60px) 24px 120px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+        <div style={{ fontSize: 10, color: G, letterSpacing: "4px", textTransform: "uppercase", fontWeight: 700, marginBottom: 24, opacity: 0.7 }}>
+          {isRest ? "Aujourd'hui" : isNotStarted ? "Programme à venir" : "Programme terminé"}
+        </div>
+        <div style={{ fontSize: 64, marginBottom: 24, lineHeight: 1 }}>
+          {isRest ? "🛌" : isNotStarted ? "🗓" : "🏆"}
+        </div>
+        <div style={{ fontSize: 38, fontWeight: 900, lineHeight: 1.1, marginBottom: 16, letterSpacing: "-1.5px" }}>
+          {isRest ? <>Jour <span style={{ color: G }}>repos</span>.</> :
+           isNotStarted ? <>Démarre dans <span style={{ color: G }}>{todaysSession.daysUntil}</span> jour{todaysSession.daysUntil > 1 ? "s" : ""}.</> :
+           <>Cycle <span style={{ color: G }}>terminé</span>.</>}
+        </div>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, maxWidth: 360, marginBottom: 36 }}>
+          {isRest && "Profite. Hydrate-toi, mange propre, dors bien. Le corps progresse pendant le repos."}
+          {isNotStarted && "Ton programme commence bientôt. Reviens à la date prévue pour démarrer."}
+          {isFinished && "Tu as terminé ton cycle. Bilan avec ton coach pour la suite."}
+        </div>
+        {isRest && (
+          <button onClick={() => {
+            const next = (programme.weeks || []).flatMap((w, wi) =>
+              (w.sessions || []).map((_, si) => ({ wi, si }))
+            ).find(({ wi, si }) => !isSessionValidee(wi, si));
+            if (next) { setActiveWeek(next.wi); setActiveSession(next.si); }
+          }} style={{ padding: "13px 26px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer" }}>
+            Voir le programme quand même
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)" }}>
