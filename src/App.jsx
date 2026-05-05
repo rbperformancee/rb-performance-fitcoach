@@ -915,16 +915,11 @@ function AppInner() {
   }
 
   // ── Écran de chargement ──
-  if (authLoading) {
-    return (
-      <div style={{
-        minHeight: "100dvh", background: "#050505",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      }}>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.12em", color: "rgba(255,255,255,0.15)" }}>RB<span style={{ color: "rgba(2,209,186,0.3)" }}>PERFORM</span></div>
-      </div>
-    );
-  }
+  // Rien à rendre : le splash inline de index.html (bolt animé + bar) reste
+  // visible tant que React n'a rien à afficher. Background body = #050505,
+  // donc même si le splash s'auto-retire à 1.7s et que l'auth est encore en
+  // cours, l'écran reste dans le bon ton (pas de flash blanc).
+  if (authLoading) return null;
 
   // ── Demo client en cours de connexion → loading premium avec progress ──
   if (!user && isClientDemo) {
