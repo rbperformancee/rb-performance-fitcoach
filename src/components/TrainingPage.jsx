@@ -24,123 +24,181 @@ function StatusDot({ status }) {
   return <div style={{ width: 8, height: 8, borderRadius: "50%", background: colors[status] || colors.neutral, flexShrink: 0 }} />;
 }
 
-// Convertit "1234" → "12:34", "12:34" → "12:34", "1:23:45" → "1:23:45"
-function formatTimeInput(raw) {
-  if (!raw) return "";
-  const digits = String(raw).replace(/[^\d:]/g, "");
-  if (digits.includes(":")) return digits;
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return digits.slice(0, -2) + ":" + digits.slice(-2);
-  return digits.slice(0, -4) + ":" + digits.slice(-4, -2) + ":" + digits.slice(-2);
-}
+// FinisherCard premium avec chrono persistant (timestamp-based, survit close PWA)
+const fmtTime = (s) => {
+  const ss = Math.max(0, Math.floor(s));
+  return String(Math.floor(ss / 60)).padStart(2, "0") + ":" + String(ss % 60).padStart(2, "0");
+};
 
-function FinisherCard({ finisher, weekIdx, sessionIdx, time, setTime, saved, setSaved, label }) {
-  const storageKey = `rb_finisher_${weekIdx}_${sessionIdx}`;
-  // Charge le temps existant à chaque changement de séance
+function FinisherCard({ finisher, weekIdx, sessionIdx, label }) {
+  const KEY = `rb_finisher_${weekIdx}_${sessionIdx}`;
+
+  // État chrono : { start: timestamp ms, total?: seconds (figé au stop), done?: bool }
+  const readState = useCallback(() => {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
+  }, [KEY]);
+
+  const [seconds, setSeconds] = useState(() => {
+    const s = readState();
+    if (s.done) return s.total || 0;
+    if (s.start) return Math.floor((Date.now() - s.start) / 1000);
+    return 0;
+  });
+  const [running, setRunning] = useState(() => {
+    const s = readState();
+    return !!(s.start && !s.done);
+  });
+  const [done, setDone] = useState(() => !!readState().done);
+  const tickRef = useRef(null);
+
+  // Reset l'état UI quand on change de séance
   useEffect(() => {
-    try {
-      const v = localStorage.getItem(storageKey) || "";
-      setTime(v);
-      setSaved(!!v);
-    } catch { setTime(""); setSaved(false); }
-  }, [weekIdx, sessionIdx, storageKey, setTime, setSaved]);
+    const s = readState();
+    if (s.done) { setSeconds(s.total || 0); setRunning(false); setDone(true); }
+    else if (s.start) { setSeconds(Math.floor((Date.now() - s.start) / 1000)); setRunning(true); setDone(false); }
+    else { setSeconds(0); setRunning(false); setDone(false); }
+  }, [weekIdx, sessionIdx, readState]);
 
-  const handleChange = (e) => {
-    setTime(formatTimeInput(e.target.value));
-    setSaved(false);
+  // Tick + resync au retour de l'app (visibilitychange)
+  useEffect(() => {
+    clearInterval(tickRef.current);
+    if (!running) return;
+    tickRef.current = setInterval(() => {
+      const s = readState();
+      if (s.start && !s.done) setSeconds(Math.floor((Date.now() - s.start) / 1000));
+    }, 1000);
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      const s = readState();
+      if (s.start && !s.done) setSeconds(Math.floor((Date.now() - s.start) / 1000));
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(tickRef.current); document.removeEventListener("visibilitychange", onVisible); };
+  }, [running, readState]);
+
+  const start = () => {
+    try { localStorage.setItem(KEY, JSON.stringify({ start: Date.now() })); } catch {}
+    setSeconds(0); setRunning(true); setDone(false);
   };
-  const handleSave = () => {
-    try {
-      if (time.trim()) {
-        localStorage.setItem(storageKey, time.trim());
-        setSaved(true);
-      } else {
-        localStorage.removeItem(storageKey);
-        setSaved(false);
-      }
-    } catch {}
+  const stop = () => {
+    const s = readState();
+    const total = s.start ? Math.floor((Date.now() - s.start) / 1000) : seconds;
+    try { localStorage.setItem(KEY, JSON.stringify({ start: s.start || Date.now(), total, done: true })); } catch {}
+    setSeconds(total); setRunning(false); setDone(true);
   };
+  const reset = () => {
+    try { localStorage.removeItem(KEY); } catch {}
+    setSeconds(0); setRunning(false); setDone(false);
+  };
+
+  const tColor = done ? G : (running ? "#fff" : "rgba(255,255,255,0.35)");
+  const tStateLabel = done ? "TON TEMPS — VALIDÉ" : (running ? "CHRONO EN COURS" : "PRÊT À DÉMARRER");
+  const display = (seconds > 0 || running || done) ? fmtTime(seconds) : "--:--";
 
   return (
-    <div style={{ padding: "0 20px", marginTop: 24 }}>
+    <div style={{ padding: "0 20px", marginTop: 28 }}>
       <div style={{
-        background: "linear-gradient(180deg, rgba(239,68,68,0.07) 0%, rgba(239,68,68,0.015) 100%)",
-        border: "1px solid rgba(239,68,68,0.22)",
-        borderRadius: 18,
-        padding: "20px 22px 18px",
+        background: "linear-gradient(160deg, rgba(239,68,68,0.10) 0%, rgba(15,15,15,0.55) 60%, rgba(0,0,0,0.7) 100%)",
+        border: "1px solid rgba(239,68,68,0.28)",
+        borderRadius: 22,
+        padding: "26px 24px 24px",
         position: "relative",
         overflow: "hidden",
-        boxShadow: "0 4px 18px rgba(239,68,68,0.06)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
       }}>
-        {/* accent top line */}
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 2,
-          background: "linear-gradient(90deg, rgba(239,68,68,1) 0%, rgba(239,68,68,0.5) 50%, rgba(239,68,68,0) 100%)",
-        }} />
-        {/* glow */}
-        <div style={{
-          position: "absolute", top: -40, right: -40, width: 120, height: 120,
-          background: "radial-gradient(circle, rgba(239,68,68,0.18) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
+        {/* Accent line top */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2,
+          background: "linear-gradient(90deg, rgba(239,68,68,1) 0%, rgba(239,68,68,0.6) 40%, rgba(239,68,68,0) 100%)" }} />
+        {/* Glow halo */}
+        <div style={{ position: "absolute", top: -80, right: -80, width: 220, height: 220,
+          background: "radial-gradient(circle, rgba(239,68,68,0.22) 0%, transparent 65%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -90, left: -60, width: 220, height: 220,
+          background: "radial-gradient(circle, rgba(239,68,68,0.10) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12, position: "relative" }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(239,68,68,0.95)" style={{ flexShrink: 0 }}>
-            <polygon points="13,2 3,14 11,14 11,22 21,10 13,10" />
-          </svg>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(239,68,68,0.95)" }}>
-            {label || "Finisher"}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, position: "relative" }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(239,68,68,0.18)",
+            display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(239,68,68,0.4)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444">
+              <polygon points="13,2 3,14 11,14 11,22 21,10 13,10" />
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "3.5px", textTransform: "uppercase", color: "#ef4444" }}>
+              {label || "Finisher"}
+            </div>
+            <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+              Bonus de fin de séance
+            </div>
           </div>
         </div>
 
         {/* Description */}
-        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, whiteSpace: "pre-wrap", marginBottom: 18, position: "relative" }}>
+        <div style={{ fontSize: 14.5, color: "rgba(255,255,255,0.94)", lineHeight: 1.6, whiteSpace: "pre-wrap", marginBottom: 22, position: "relative", fontWeight: 500 }}>
           {finisher}
         </div>
 
-        {/* Time input */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 10, paddingTop: 14,
-          borderTop: "1px solid rgba(255,255,255,0.06)", position: "relative",
-        }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>
-            Ton temps
+        {/* Chrono display */}
+        <div style={{ paddingTop: 18, borderTop: "1px solid rgba(255,255,255,0.07)", position: "relative", textAlign: "center" }}>
+          <div style={{
+            fontSize: 56, fontWeight: 100, color: tColor, letterSpacing: "-3px",
+            fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+            lineHeight: 1, marginBottom: 8,
+            textShadow: done ? `0 0 30px ${G}55` : (running ? "0 0 20px rgba(239,68,68,0.3)" : "none"),
+            transition: "color 0.2s, text-shadow 0.2s",
+          }}>
+            {display.split(":")[0]}
+            <span style={{ color: "rgba(255,255,255,0.2)" }}>:</span>
+            {display.split(":")[1]}
           </div>
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="--:--"
-            value={time}
-            onChange={handleChange}
-            onBlur={handleSave}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } }}
-            style={{
-              flex: 1,
-              background: "rgba(0,0,0,0.35)",
-              border: `1px solid ${saved ? "rgba(2,209,186,0.4)" : "rgba(255,255,255,0.1)"}`,
-              borderRadius: 10,
-              color: "white",
-              padding: "10px 14px",
-              fontSize: 17,
-              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-              fontWeight: 700,
-              outline: "none",
-              textAlign: "center",
-              letterSpacing: "2px",
-              transition: "border-color 0.15s",
+          <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "2.5px", textTransform: "uppercase",
+            color: done ? G : "rgba(255,255,255,0.35)", marginBottom: 18, transition: "color 0.2s" }}>
+            {tStateLabel}{done && " ✓"}
+          </div>
+
+          {/* Buttons */}
+          {!running && !done && (
+            <button onClick={start} style={{
+              background: "#ef4444", color: "white", border: "none", borderRadius: 12,
+              padding: "13px 30px", fontSize: 12, fontWeight: 800, letterSpacing: "2px",
+              textTransform: "uppercase", cursor: "pointer", width: "100%",
+              boxShadow: "0 4px 18px rgba(239,68,68,0.35)",
+              transition: "transform 0.1s, box-shadow 0.15s",
             }}
-          />
-          {saved && (
-            <div style={{
-              fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase",
-              color: G, display: "flex", alignItems: "center", gap: 4,
-            }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              OK
+              onTouchStart={(e) => e.currentTarget.style.transform = "scale(0.98)"}
+              onTouchEnd={(e) => e.currentTarget.style.transform = ""}>
+              Démarrer le chrono
+            </button>
+          )}
+          {running && (
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={stop} style={{
+                flex: 1, background: "#ef4444", color: "white", border: "none", borderRadius: 12,
+                padding: "13px 20px", fontSize: 12, fontWeight: 800, letterSpacing: "2px",
+                textTransform: "uppercase", cursor: "pointer",
+                boxShadow: "0 4px 18px rgba(239,68,68,0.35)",
+              }}>
+                Stop
+              </button>
+              <button onClick={reset} style={{
+                background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)",
+                border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12,
+                padding: "13px 20px", fontSize: 11, fontWeight: 700, letterSpacing: "1.5px",
+                textTransform: "uppercase", cursor: "pointer",
+              }}>
+                Reset
+              </button>
             </div>
+          )}
+          {done && (
+            <button onClick={reset} style={{
+              background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)",
+              border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12,
+              padding: "11px 24px", fontSize: 11, fontWeight: 700, letterSpacing: "1.5px",
+              textTransform: "uppercase", cursor: "pointer",
+            }}>
+              Refaire
+            </button>
           )}
         </div>
       </div>
@@ -152,8 +210,6 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const t = useT();
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
-  const [finisherTime, setFinisherTime] = useState("");
-  const [finisherSaved, setFinisherSaved] = useState(false);
   // Helper : verifier si une seance (week, sessionIdx) est validee via localStorage
   const isSessionValidee = useCallback((wIdx, sIdx) => {
     try {
@@ -571,16 +627,12 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         })()}
       </div>
 
-      {/* FINISHER — premium card avec input temps */}
+      {/* FINISHER — premium card avec chrono persistant */}
       {currentSession.finisher && currentSession.finisher.trim().length > 0 && (
         <FinisherCard
           finisher={currentSession.finisher}
           weekIdx={activeWeek}
           sessionIdx={activeSession}
-          time={finisherTime}
-          setTime={setFinisherTime}
-          saved={finisherSaved}
-          setSaved={setFinisherSaved}
           label={t("train.finisher_label")}
         />
       )}
