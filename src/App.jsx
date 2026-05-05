@@ -163,7 +163,7 @@ function SessionTab({ session, active, onClick, weekIdx, sessionIdx, getHistory,
   );
 }
 
-function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook, coachName = "Ton coach" }) {
+function TrainLocked({ client, sessionsDone = 0, onContact, onBook, coachName = "Ton coach" }) {
   const [booking, setBooking] = React.useState(null);
   const [firstSessionDate, setFirstSessionDate] = React.useState(null);
 
@@ -283,36 +283,9 @@ function TrainLocked({ client, sessionsDone = 0, onRenew, onContact, onBook, coa
             </div>
           </div>
 
-          {/* CTAs — 3 actions en-app, theme Cycle accompli */}
+          {/* CTAs — 2 actions en-app, theme Cycle accompli */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 360, margin: "0 auto", animation: "tlFadeUp 0.6s ease 0.65s both" }}>
-            {/* Primary : voir les formules */}
-            <button
-              type="button"
-              onClick={onRenew}
-              style={{
-                display: "block",
-                width: "100%",
-                textAlign: "center",
-                padding: 18,
-                background: "linear-gradient(135deg, #02d1ba, #0891b2)",
-                color: "#000",
-                border: "none",
-                borderRadius: 16,
-                fontSize: 14,
-                fontWeight: 800,
-                cursor: "pointer",
-                letterSpacing: "0.5px",
-                textTransform: "uppercase",
-                boxShadow: "0 10px 36px rgba(2,209,186,0.35)",
-                WebkitTapHighlightColor: "transparent",
-                WebkitAppearance: "none",
-                fontFamily: "-apple-system,Inter,sans-serif",
-              }}
-            >
-              Voir les formules →
-            </button>
-
-            {/* Secondary : reserver un appel direct */}
+            {/* Primary : reserver un appel direct */}
             <button
               type="button"
               onClick={onBook}
@@ -1435,7 +1408,7 @@ function AppInner() {
           : {minHeight:'100dvh', background:'#050505', position:'relative', width:'100%', overflowX:'hidden'}
         }>
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
-          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
+          {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
@@ -1469,7 +1442,7 @@ function AppInner() {
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
           {isClientDemo && <div style={{height:52}} />}
           {page === "training" ? (
-            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onRenew={() => setShowSubscribe(true)} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
+            !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
               <TrainingPage
                 client={client}
                 programme={programme}
