@@ -806,13 +806,13 @@ input[type=number] { -moz-appearance: textfield; }
   outline: none !important;
 }
 
-/* Safe area iOS : on garde le padding-top pour que le contenu commence sous
- * la status bar, ET on remplace le fond noir uni par un gradient vertical
- * subtil qui fond progressivement vers la couleur de la page. La status bar
- * iOS (translucent) laisse passer ce gradient → effet "fondu" sans bande noire. */
+/* Safe area iOS : padding pour que le contenu reste visible sous la status bar.
+ * Le gradient se TERMINE exactement à la frontière de la safe area sur #050505
+ * — la couleur du body au point de raccord matche pile celle des pages → aucun
+ * seam visible. Le top, lui, est légèrement plus clair pour éviter le pur noir. */
 body {
   padding-top: env(safe-area-inset-top, 0px);
-  background: linear-gradient(180deg, #0a0a0a 0%, #060606 60%, #050505 100%) #050505;
+  background: linear-gradient(180deg, #0a0a0a 0%, #050505 env(safe-area-inset-top, 50px)) #050505;
   background-attachment: fixed;
 }
 
