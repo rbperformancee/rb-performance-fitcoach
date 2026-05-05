@@ -6,10 +6,36 @@
 <meta name="theme-color" content="#030303">
 <meta name="color-scheme" content="dark" />
 <script>
-// PWA standalone : si l'utilisateur ouvre l'app depuis l'écran d'accueil iOS
-// mais tombe sur la landing (start_url ignoré ou cache iOS), on redirige
-// immédiatement vers /app.html avant tout rendu.
+// Recovery hatch : ?reset=1 purge SW + caches + localStorage et reload propre.
+// À donner à l'utilisateur en cas d'écran blanc PWA persistant.
 (function () {
+  try {
+    if (new URLSearchParams(location.search).get('reset') === '1') {
+      Promise.resolve()
+        .then(function () {
+          if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+            return navigator.serviceWorker.getRegistrations().then(function (rs) {
+              return Promise.all(rs.map(function (r) { return r.unregister(); }));
+            });
+          }
+        })
+        .then(function () {
+          if (window.caches && caches.keys) {
+            return caches.keys().then(function (ks) {
+              return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+            });
+          }
+        })
+        .then(function () {
+          try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+          location.replace(location.origin + '/app.html?source=pwa');
+        });
+      return;
+    }
+  } catch (e) {}
+  // PWA standalone : si l'utilisateur ouvre l'app depuis l'écran d'accueil iOS
+  // mais tombe sur la landing (start_url ignoré ou cache iOS), on redirige
+  // immédiatement vers /app.html avant tout rendu.
   try {
     var standalone =
       (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
