@@ -127,6 +127,114 @@ function ConfirmDeleteProgramme({ progName, onCancel, onConfirm }) {
   );
 }
 
+// ProgrammeCalendarSection — affiche les infos calendrier du programme actif :
+// start_date, training_days configurés, jours reportés / repos pris,
+// total séances complétées, mini-calendrier des 14 derniers jours.
+function ProgrammeCalendarSection({ programmeId, clientId }) {
+  const [data, setData] = React.useState(null);
+  const [completions, setCompletions] = React.useState([]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [{ data: prog }, { data: comps }] = await Promise.all([
+        supabase.from("programmes")
+          .select("start_date, training_days, rest_days_count, reported_days_count, uploaded_at")
+          .eq("id", programmeId).maybeSingle(),
+        supabase.from("session_completions")
+          .select("week_idx, session_idx, validated_at")
+          .eq("client_id", clientId).order("validated_at", { ascending: false }).limit(50),
+      ]);
+      if (cancelled) return;
+      setData(prog);
+      setCompletions(comps || []);
+    })();
+    return () => { cancelled = true; };
+  }, [programmeId, clientId]);
+
+  if (!data) return null;
+
+  const labels = { 1: "Lun", 2: "Mar", 3: "Mer", 4: "Jeu", 5: "Ven", 6: "Sam", 7: "Dim" };
+  const td = (data.training_days || []).slice().sort((a, b) => a - b);
+
+  // Mini-calendrier 14 jours rétrospectifs
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = new Date((data.start_date || data.uploaded_at) + "T00:00:00");
+  const msDay = 86400000;
+  const days14 = Array.from({ length: 14 }).map((_, i) => {
+    const date = new Date(today.getTime() - (13 - i) * msDay);
+    const daysSinceStart = Math.floor((date - start) / msDay);
+    const weekday = ((date.getDay() + 6) % 7) + 1;
+    if (daysSinceStart < 0) return { date, status: "before" };
+    if (!td.includes(weekday)) return { date, status: "rest" };
+    const wIdx = Math.floor(daysSinceStart / 7);
+    const sIdx = td.indexOf(weekday);
+    const validated = completions.some(c => c.week_idx === wIdx && c.session_idx === sIdx);
+    if (validated) return { date, status: "done" };
+    if (date.getTime() === today.getTime()) return { date, status: "today" };
+    return { date, status: "missed" };
+  });
+
+  return (
+    <div style={{ marginTop: 18, padding: "14px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, animation: "cpFadeUp 0.4s ease 0.42s both" }}>
+      <div style={{ fontSize: 9, letterSpacing: "2.5px", color: "rgba(2,209,186,0.7)", textTransform: "uppercase", fontWeight: 800, marginBottom: 12 }}>
+        Calendrier programme
+      </div>
+
+      {/* Stats grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+        <Stat label="Démarré le" value={data.start_date ? new Date(data.start_date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "—"} />
+        <Stat label="Séances" value={completions.length} valueColor="#02d1ba" />
+        <Stat label="Reportées" value={data.reported_days_count || 0} valueColor={data.reported_days_count > 0 ? "#f97316" : "rgba(255,255,255,0.5)"} />
+        <Stat label="Repos pris" value={data.rest_days_count || 0} valueColor={data.rest_days_count > 0 ? "#a78bfa" : "rgba(255,255,255,0.5)"} />
+      </div>
+
+      {/* Jours d'entraînement configurés */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
+        {[1, 2, 3, 4, 5, 6, 7].map(d => {
+          const active = td.includes(d);
+          return (
+            <div key={d} style={{ flex: 1, height: 26, borderRadius: 6, background: active ? "rgba(2,209,186,0.18)" : "rgba(255,255,255,0.03)", border: `1px solid ${active ? "rgba(2,209,186,0.4)" : "rgba(255,255,255,0.05)"}`, color: active ? "#02d1ba" : "rgba(255,255,255,0.25)", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", letterSpacing: "0.5px" }}>
+              {labels[d].slice(0, 1)}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mini-calendrier 14 jours */}
+      <div style={{ display: "flex", gap: 3, marginBottom: 6 }}>
+        {days14.map((d, i) => {
+          const colors = {
+            done: "rgba(2,209,186,0.7)", today: "#02d1ba",
+            missed: "#f97316", rest: "rgba(255,255,255,0.08)",
+            before: "rgba(255,255,255,0.04)",
+          };
+          const isToday = d.status === "today";
+          return (
+            <div key={i} title={d.date.toLocaleDateString("fr-FR")} style={{
+              flex: 1, height: 24, borderRadius: 4,
+              background: colors[d.status],
+              border: isToday ? "1.5px solid #02d1ba" : "none",
+            }} />
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.3px", marginTop: 4 }}>
+        ← 14 jours · ✅ fait · 🟧 raté · ⬜ repos · ⌧ aujourd'hui
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, valueColor }) {
+  return (
+    <div style={{ background: "rgba(0,0,0,0.25)", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 800, color: valueColor || "#fff", letterSpacing: "-0.5px" }}>{value}</div>
+    </div>
+  );
+}
+
 // ProgrammesHistorySection — liste tous les programmes (actifs + archivés) du
 // client avec dates et actions Re-utiliser / Éditer / Comparer.
 function ProgrammesHistorySection({ client, onEdit, onReuse }) {
@@ -1303,6 +1411,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               )}
             </div>
           )}
+
+          {/* CALENDRIER PROGRAMME ACTIF */}
+          {prog && <ProgrammeCalendarSection programmeId={prog.id} clientId={client.id} />}
 
           {/* HISTORIQUE PROGRAMMES — affiché si plus de 1 programme dans l'historique */}
           <ProgrammesHistorySection client={client} onEdit={async (progId) => {
