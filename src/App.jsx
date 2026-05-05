@@ -4,13 +4,16 @@ import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
 import { ToastProvider, toast } from "./components/Toast";
 import { useAppData } from "./hooks/useAppData";
 import { useTheme } from "./hooks/useTheme";
+// NON lazy : ce flow s'affiche au tout premier render après login. Si lazy avec
+// fallback null, l'utilisateur voit un écran blanc pendant le téléchargement
+// du chunk → import direct.
+import ClientFirstLoginFlow from "./components/ClientFirstLoginFlow";
 
 // ===== Lazy-loaded : composants charges a la demande =====
 const FuelPage = lazy(() => import("./components/FuelPage"));
 const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
 const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
-const ClientFirstLoginFlow = lazy(() => import("./components/ClientFirstLoginFlow"));
 const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
 const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
@@ -1044,9 +1047,11 @@ function AppInner() {
   }
   // Onboarding lite (3 étapes : photo + poids + objectif) au premier login
   // d'un client. Cible : clients high-ticket validés hors-app, OU tout client
-  // qui n'a pas encore client.onboarding_done === true. Un coach ne le voit jamais.
-  if (!isClientDemo && user && !isCoach && !authLoading && client && client.onboarding_done !== true) {
-    return <Suspense fallback={null}><ClientFirstLoginFlow client={client} user={user} onComplete={() => window.location.reload()} /></Suspense>;
+  // qui n'a pas encore client.onboarding_done === true.
+  // IMPORTANT : userKind === "client" garantit que la résolution coach/client
+  // est terminée — sinon l'écran clignote pour les coachs au cold-start.
+  if (!isClientDemo && user && userKind === "client" && !authLoading && client && client.onboarding_done !== true) {
+    return <ClientFirstLoginFlow client={client} user={user} onComplete={() => window.location.reload()} />;
   }
 
   // ── Coach → Dashboard admin ──
