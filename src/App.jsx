@@ -958,7 +958,14 @@ function AppInner() {
 
   // ── Pas connecté → Landing publique / SubscribePage / Login ──
   if (!user) {
-    if (showLogin) {
+    // En mode PWA standalone, on NE redirige PAS vers la landing : sinon le
+    // script de redirection inverse dans landing.html renvoie sur /app.html →
+    // boucle infinie → écran blanc. On affiche directement le login.
+    const isStandalonePWA = typeof window !== "undefined" && (
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+      window.navigator.standalone === true
+    );
+    if (showLogin || isStandalonePWA) {
       return <LoginScreen onBack={() => setShowLogin(false)} />;
     }
     // Cas par defaut : visiteur non-loggue arrivant sur /app.html → redirect
