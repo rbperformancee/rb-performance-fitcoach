@@ -210,6 +210,7 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
   const t = useT();
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
+  const [hydratedFromCloud, setHydratedFromCloud] = useState(false);
   // Helper : verifier si une seance (week, sessionIdx) est validee via localStorage
   const isSessionValidee = useCallback((wIdx, sIdx) => {
     try {
@@ -217,6 +218,56 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
       return !!s.validee;
     } catch (e) { return false; }
   }, []);
+
+  // ==== HYDRATATION CLOUD ====
+  // Au premier mount, on rapatrie TOUTES les session_completions du client
+  // depuis Supabase et on les hydrate en localStorage. Sans ça, après une
+  // réinstall de la PWA, les séances déjà validées disparaissaient de l'UI.
+  // Bonus : auto-positionnement sur la première séance non complétée.
+  useEffect(() => {
+    if (!client?.id || hydratedFromCloud) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("session_completions")
+        .select("week_idx, session_idx, validated_at, chrono_seconds")
+        .eq("client_id", client.id);
+      if (cancelled) return;
+      const completed = new Set();
+      (data || []).forEach((c) => {
+        const ckey = `rb_c_${c.week_idx}_${c.session_idx}`;
+        try {
+          const cur = JSON.parse(localStorage.getItem(ckey) || "{}");
+          localStorage.setItem(ckey, JSON.stringify({
+            ...cur,
+            validee: true,
+            done: true,
+            total: c.chrono_seconds || cur.total || 0,
+          }));
+        } catch {}
+        completed.add(`${c.week_idx}_${c.session_idx}`);
+      });
+
+      // Auto-position : trouve la 1re séance non complétée
+      const weeks = programme?.weeks || [];
+      let target = null;
+      outer: for (let w = 0; w < weeks.length; w++) {
+        const sessions = weeks[w].sessions || [];
+        for (let s = 0; s < sessions.length; s++) {
+          if (!completed.has(`${w}_${s}`)) { target = { w, s }; break outer; }
+        }
+      }
+      if (target && (target.w !== activeWeek || target.s !== activeSession)) {
+        setActiveWeek(target.w);
+        setActiveSession(target.s);
+      }
+      // Compte les séances "ratées" (skip) pour notice utilisateur
+      // = séances avant la cible qui ne sont pas complétées (rare avec auto-position)
+      setHydratedFromCloud(true);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line
+  }, [client?.id, programme?.weeks?.length]);
   // Ref pour la rangee horizontale des seances (auto-scroll vers la seance active)
   const sessionsRowRef = useRef(null);
 
