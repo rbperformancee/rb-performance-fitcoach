@@ -2452,11 +2452,13 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
     if (isDemo) { if (demoLive) setIsLive(true); return; }
     // Verifier si le client est en seance live
     const check = async () => {
-      const { data } = await supabase.from("session_live")
+      const { data, error } = await supabase.from("session_live")
         .select("active, session_name, started_at")
         .eq("client_id", clientId)
-        .single();
+        .maybeSingle();
+      console.log("[coach-poll]", clientId, "data:", data, "error:", error?.message || error);
       if (data?.active) setIsLive(true);
+      else setIsLive(false);
     };
     check();
     const interval = setInterval(check, 10000);
