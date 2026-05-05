@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#030303">
 <meta name="color-scheme" content="dark" />
+<script>
+// PWA standalone : si l'utilisateur ouvre l'app depuis l'écran d'accueil iOS
+// mais tombe sur la landing (start_url ignoré ou cache iOS), on redirige
+// immédiatement vers /app.html avant tout rendu.
+(function () {
+  try {
+    var standalone =
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+      window.navigator.standalone === true;
+    if (standalone && (location.pathname === '/' || location.pathname === '/index.html' || location.pathname === '')) {
+      location.replace('/app.html?source=pwa');
+    }
+  } catch (e) {}
+})();
+</script>
 <title>RB Perform — La performance sans compromis</title>
 <meta name="description" content="La plateforme SaaS qui transforme chaque coach sportif en CEO. Dashboard business, anti-churn IA, programme builder, automatisations. 0% commission.">
 <meta name="robots" content="index, follow, max-image-preview:large">
