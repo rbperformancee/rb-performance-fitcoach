@@ -1371,9 +1371,9 @@ const fr = {
     // SessionOptionsModal
     "som.title": "Options",
     "som.session_fallback": "Seance courante",
-    "som.btn_report": "Reporter",
+    "som.btn_report": "Sauter cette séance",
     "som.btn_report_confirm": "Confirmer ?",
-    "som.btn_report_sub": "Au lendemain",
+    "som.btn_report_sub": "Décale tout le programme d'1 jour",
     "som.btn_confirm_sub": "Tap pour valider",
     "som.btn_rest": "Jour de repos",
     "som.btn_rest_sub": "Decale d'un jour",
