@@ -43,8 +43,7 @@ function FinisherCard({ finisher, weekIdx, sessionIdx, time, setTime, saved, set
       setTime(v);
       setSaved(!!v);
     } catch { setTime(""); setSaved(false); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weekIdx, sessionIdx]);
+  }, [weekIdx, sessionIdx, storageKey, setTime, setSaved]);
 
   const handleChange = (e) => {
     setTime(formatTimeInput(e.target.value));
