@@ -105,6 +105,18 @@ self.addEventListener("message", (e) => {
     });
   }
 
+  if (e.data?.type === "CLOSE_MESSAGE_NOTIFS") {
+    // Ferme toutes les notifs push de type "message" — déclenché par la
+    // PWA cliente quand l'utilisateur ouvre le chat. Évite que la notif
+    // système persiste après lecture.
+    self.registration.getNotifications().then(notifs => {
+      notifs.forEach(n => {
+        const isMsg = n.data?.type === "message" || (n.tag && n.tag.includes("msg"));
+        if (isMsg) n.close();
+      });
+    });
+  }
+
   if (e.data?.type === "GET_CACHED_PROGRAMME") {
     caches.open(DATA_CACHE).then((cache) => {
       cache.match("/offline-programme").then((res) => {

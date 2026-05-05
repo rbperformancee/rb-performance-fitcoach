@@ -33,6 +33,24 @@ export default function ClientMessages({ client, coach, accent, user }) {
         setMessages(data || []);
         setLoading(false);
         setTimeout(() => scrollToBottom(), 50);
+        // Marque automatiquement les messages du coach comme lus → la bannière
+        // MessageBanner et les éventuelles notifs push système disparaîtront.
+        const unreadIds = (data || [])
+          .filter(m => m.from_coach && !m.read)
+          .map(m => m.id);
+        if (unreadIds.length > 0) {
+          supabase.from("messages").update({ read: true }).in("id", unreadIds);
+          // Signal au Service Worker de fermer les notifs push système
+          // qui correspondent à ces messages (Mac/iOS notification center).
+          try {
+            if (navigator.serviceWorker?.controller) {
+              navigator.serviceWorker.controller.postMessage({
+                type: "CLOSE_MESSAGE_NOTIFS",
+                clientId: client.id,
+              });
+            }
+          } catch {}
+        }
       }
     })();
 
