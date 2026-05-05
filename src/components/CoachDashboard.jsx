@@ -2737,10 +2737,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     if (error) { showToast(error.code === "23505" ? t("cd.toast_email_used") : error.message, "err"); return; }
     // Envoyer l'email de bienvenue via Vercel API (Zoho SMTP)
     // Auth Bearer requise — vérifie que coach connecté + recipient est son client
+    let welcomeSent = true;
+    let welcomeReason = "";
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const jwt = session?.access_token;
-      await fetch("/api/send-welcome", {
+      const r = await fetch("/api/send-welcome", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -2748,10 +2750,22 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         },
         body: JSON.stringify({ email, full_name: fullName }),
       });
+      if (!r.ok) {
+        welcomeSent = false;
+        const data = await r.json().catch(() => ({}));
+        welcomeReason = `${r.status} ${data.reason || data.error || ""}`.trim();
+        console.warn("[send-welcome] échec :", welcomeReason);
+      }
     } catch (e) {
+      welcomeSent = false;
+      welcomeReason = e.message || "network";
       console.warn("Email de bienvenue non envoye:", e);
     }
-    showToast(fillTpl(t("cd.toast_added_email"), { email }));
+    if (welcomeSent) {
+      showToast(fillTpl(t("cd.toast_added_email"), { email }));
+    } else {
+      showToast(`${email} ajouté — email de bienvenue ÉCHEC (${welcomeReason}). À envoyer manuellement.`, "err");
+    }
     setNewEmail(""); setNewName(""); setShowAdd(false);
     loadClients();
   };
