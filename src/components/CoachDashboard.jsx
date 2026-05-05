@@ -1219,6 +1219,33 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   <Icon name="document" size={14} />
                   {t("cp.btn_generate_invoice")}
                 </button>
+                <button onClick={async () => {
+                  if (!client?.email) return;
+                  const btn = "Renvoyer email de bienvenue";
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const jwt = session?.access_token;
+                    const r = await fetch("/api/send-welcome", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+                      },
+                      body: JSON.stringify({ email: client.email, full_name: client.full_name || null }),
+                    });
+                    if (r.ok) {
+                      toast.success(`Email de bienvenue envoyé à ${client.email}`);
+                    } else {
+                      const data = await r.json().catch(() => ({}));
+                      toast.error(`${btn} : ÉCHEC (${r.status} ${data.reason || data.error || ""})`);
+                    }
+                  } catch (e) {
+                    toast.error(`${btn} : ${e.message}`);
+                  }
+                }} style={{ flex: "1 1 140px", padding: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 10, color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <Icon name="message" size={14} />
+                  Renvoyer email
+                </button>
               </div>
             </div>
           )}
