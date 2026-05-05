@@ -494,16 +494,6 @@ function AppInner() {
     import("./components/ProfilePage");
   }, [isDemo, isClientDemo]);
 
-  // Préchargement pour les CLIENTS standards (pas demo) dès qu'ils sont loggés.
-  // Évite l'écran noir d'une demi-seconde au premier swipe entre les onglets.
-  React.useEffect(() => {
-    if (!user || isDemo || isClientDemo) return;
-    import("./components/TrainingPage");
-    import("./components/FuelPage");
-    import("./components/MovePage");
-    import("./components/ProfilePage");
-  }, [user, isDemo, isClientDemo]);
-
   // Auto-login demo COACH — bascule en OTP via /api/demo-coach (zero password
   // exposé dans le bundle JS public). Le mot de passe demo a été retiré pour
   // fixer la faille CRIT-2 (audit sécurité 2 mai 2026).
@@ -567,6 +557,17 @@ function AppInner() {
     authLoading: sendingLink, error: authError, magicSent,
     sendMagicLink, signOut,
   } = useAuth();
+
+  // Préchargement pour les CLIENTS standards (pas demo) dès qu'ils sont loggés.
+  // Évite l'écran noir d'une demi-seconde au premier swipe entre les onglets.
+  // IMPORTANT : doit être APRÈS useAuth() qui déclare `user` — sinon TDZ.
+  React.useEffect(() => {
+    if (!user || isDemo || isClientDemo) return;
+    import("./components/TrainingPage");
+    import("./components/FuelPage");
+    import("./components/MovePage");
+    import("./components/ProfilePage");
+  }, [user, isDemo, isClientDemo]);
 
   // ===== ROUTING COACH vs CLIENT =====
   // Check si l'utilisateur connecte est un coach (table `coaches`) OU un
