@@ -22,11 +22,16 @@ export function SeanceVivante({ clientId, sessionName }) {
       session_name: sessionName || t("svc.session_fallback"),
       started_at: new Date().toISOString(),
       active: true,
-    }, { onConflict: "client_id" });
+    }, { onConflict: "client_id" }).then(({ error }) => {
+      if (error) console.warn("[session_live] upsert START failed:", error.message, error.code, error.details);
+      else console.log("[session_live] upsert START ok");
+    });
     return () => {
       supabase.from("session_live").upsert({
         client_id: clientId, active: false,
-      }, { onConflict: "client_id" });
+      }, { onConflict: "client_id" }).then(({ error }) => {
+        if (error) console.warn("[session_live] upsert STOP failed:", error.message, error.code);
+      });
     };
   }, [clientId, sessionName]);
 
