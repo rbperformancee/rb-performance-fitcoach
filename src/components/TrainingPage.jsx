@@ -24,10 +24,137 @@ function StatusDot({ status }) {
   return <div style={{ width: 8, height: 8, borderRadius: "50%", background: colors[status] || colors.neutral, flexShrink: 0 }} />;
 }
 
+// Convertit "1234" → "12:34", "12:34" → "12:34", "1:23:45" → "1:23:45"
+function formatTimeInput(raw) {
+  if (!raw) return "";
+  const digits = String(raw).replace(/[^\d:]/g, "");
+  if (digits.includes(":")) return digits;
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return digits.slice(0, -2) + ":" + digits.slice(-2);
+  return digits.slice(0, -4) + ":" + digits.slice(-4, -2) + ":" + digits.slice(-2);
+}
+
+function FinisherCard({ finisher, weekIdx, sessionIdx, time, setTime, saved, setSaved, label }) {
+  const storageKey = `rb_finisher_${weekIdx}_${sessionIdx}`;
+  // Charge le temps existant à chaque changement de séance
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(storageKey) || "";
+      setTime(v);
+      setSaved(!!v);
+    } catch { setTime(""); setSaved(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekIdx, sessionIdx]);
+
+  const handleChange = (e) => {
+    setTime(formatTimeInput(e.target.value));
+    setSaved(false);
+  };
+  const handleSave = () => {
+    try {
+      if (time.trim()) {
+        localStorage.setItem(storageKey, time.trim());
+        setSaved(true);
+      } else {
+        localStorage.removeItem(storageKey);
+        setSaved(false);
+      }
+    } catch {}
+  };
+
+  return (
+    <div style={{ padding: "0 20px", marginTop: 24 }}>
+      <div style={{
+        background: "linear-gradient(180deg, rgba(239,68,68,0.07) 0%, rgba(239,68,68,0.015) 100%)",
+        border: "1px solid rgba(239,68,68,0.22)",
+        borderRadius: 18,
+        padding: "20px 22px 18px",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 4px 18px rgba(239,68,68,0.06)",
+      }}>
+        {/* accent top line */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 2,
+          background: "linear-gradient(90deg, rgba(239,68,68,1) 0%, rgba(239,68,68,0.5) 50%, rgba(239,68,68,0) 100%)",
+        }} />
+        {/* glow */}
+        <div style={{
+          position: "absolute", top: -40, right: -40, width: 120, height: 120,
+          background: "radial-gradient(circle, rgba(239,68,68,0.18) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12, position: "relative" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(239,68,68,0.95)" style={{ flexShrink: 0 }}>
+            <polygon points="13,2 3,14 11,14 11,22 21,10 13,10" />
+          </svg>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(239,68,68,0.95)" }}>
+            {label || "Finisher"}
+          </div>
+        </div>
+
+        {/* Description */}
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, whiteSpace: "pre-wrap", marginBottom: 18, position: "relative" }}>
+          {finisher}
+        </div>
+
+        {/* Time input */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, paddingTop: 14,
+          borderTop: "1px solid rgba(255,255,255,0.06)", position: "relative",
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>
+            Ton temps
+          </div>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="--:--"
+            value={time}
+            onChange={handleChange}
+            onBlur={handleSave}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } }}
+            style={{
+              flex: 1,
+              background: "rgba(0,0,0,0.35)",
+              border: `1px solid ${saved ? "rgba(2,209,186,0.4)" : "rgba(255,255,255,0.1)"}`,
+              borderRadius: 10,
+              color: "white",
+              padding: "10px 14px",
+              fontSize: 17,
+              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+              fontWeight: 700,
+              outline: "none",
+              textAlign: "center",
+              letterSpacing: "2px",
+              transition: "border-color 0.15s",
+            }}
+          />
+          {saved && (
+            <div style={{
+              fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase",
+              color: G, display: "flex", alignItems: "center", gap: 4,
+            }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              OK
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TrainingPage({ client, programme, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta, onStartSession }) {
   const t = useT();
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
+  const [finisherTime, setFinisherTime] = useState("");
+  const [finisherSaved, setFinisherSaved] = useState(false);
   // Helper : verifier si une seance (week, sessionIdx) est validee via localStorage
   const isSessionValidee = useCallback((wIdx, sIdx) => {
     try {
@@ -445,24 +572,18 @@ export default function TrainingPage({ client, programme, activeWeek, setActiveW
         })()}
       </div>
 
-      {/* FINISHER */}
+      {/* FINISHER — premium card avec input temps */}
       {currentSession.finisher && currentSession.finisher.trim().length > 0 && (
-        <div style={{ padding: "0 20px", marginTop: 18 }}>
-          <div style={{
-            background: "rgba(239,68,68,0.04)",
-            border: "1px solid rgba(239,68,68,0.18)",
-            borderLeft: "3px solid rgba(239,68,68,0.6)",
-            borderRadius: 14,
-            padding: "14px 16px",
-          }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2.5px", textTransform: "uppercase", color: "rgba(239,68,68,0.85)", marginBottom: 8 }}>
-              {t("train.finisher_label")}
-            </div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-              {currentSession.finisher}
-            </div>
-          </div>
-        </div>
+        <FinisherCard
+          finisher={currentSession.finisher}
+          weekIdx={activeWeek}
+          sessionIdx={activeSession}
+          time={finisherTime}
+          setTime={setFinisherTime}
+          saved={finisherSaved}
+          setSaved={setFinisherSaved}
+          label={t("train.finisher_label")}
+        />
       )}
 
       {/* RUNS PRESCRITS DE LA SEANCE */}
