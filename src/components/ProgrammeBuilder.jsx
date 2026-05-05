@@ -164,9 +164,13 @@ function weeklyVolumeByGroup(week) {
   (week.sessions || []).forEach((s) => {
     (s.exercises || []).forEach((ex) => {
       const grp = classifyExercise(ex.name);
-      // Parse les sets depuis "4X8-10" ou "5X5"
-      const m = String(ex.reps || "").match(/^(\d+)\s*[xX×]/);
-      const sets = m ? parseInt(m[1], 10) : 0;
+      // Parse les sets depuis "4X8-10", "5X5", "12-10-8", "8-10"
+      const r = String(ex.reps || "").trim();
+      let sets = 0;
+      const mX = r.match(/^(\d+)\s*[xX×]/);
+      if (mX) sets = parseInt(mX[1], 10);
+      else if (/^\d+(\s*[-–]\s*\d+)+$/.test(r)) sets = r.split(/\s*[-–]\s*/).filter(Boolean).length;
+      else if (/^\d+$/.test(r)) sets = 1;
       groups[grp] = (groups[grp] || 0) + sets;
     });
   });

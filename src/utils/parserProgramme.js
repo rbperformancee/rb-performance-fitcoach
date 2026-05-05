@@ -48,6 +48,15 @@ export function parseReps(raw) {
   }
 
   if (blocks.length === 0) {
+    // Pyramide / progression : "8-10", "12-10-8", "10-6-4-12" — chaque valeur = une série
+    if (/^\d+(\s*[-–]\s*\d+)+$/.test(trimmed)) {
+      const count = trimmed.split(/\s*[-–]\s*/).filter(Boolean).length;
+      return { sets: count, reps: trimmed, rawReps: raw };
+    }
+    // Nombre seul "5" → 1 série
+    if (/^\d+$/.test(trimmed)) {
+      return { sets: 1, reps: trimmed, rawReps: raw };
+    }
     return { sets: null, reps: trimmed, rawReps: raw };
   }
 
