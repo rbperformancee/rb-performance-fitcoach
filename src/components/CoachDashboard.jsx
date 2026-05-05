@@ -730,6 +730,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [showPrevalidate, setShowPrevalidate] = useState(false);
   const [prevalidWeek, setPrevalidWeek] = useState(1);
   const [prevalidSession, setPrevalidSession] = useState(1);
+  const [prevalidWhen, setPrevalidWhen] = useState(""); // datetime-local ISO local string
   // Hook B : modal "logger paiement" pour ce client (déclenchée manuellement
   // depuis la fiche client via le bouton "Logger un paiement reçu")
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -1257,7 +1258,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               {showPrevalidate && (
                 <div style={{ marginTop: 12, padding: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
-                    Marque une séance comme déjà faite (le client la verra avec un ✓ mais elle restera visible dans son programme).
+                    Marque une séance comme déjà faite. Tu peux préciser la date/heure réelle (utile si le client l'a faite avant d'avoir accès à l'app).
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <label style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", gap: 6 }}>
@@ -1268,16 +1269,32 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       Séance
                       <input type="number" min="1" value={prevalidSession} onChange={e => setPrevalidSession(Math.max(1, parseInt(e.target.value) || 1))} style={{ width: 56, padding: "6px 8px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#fff", fontSize: 12, fontFamily: "inherit", textAlign: "center" }} />
                     </label>
+                    <label style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", gap: 6 }}>
+                      Le
+                      <input type="datetime-local" value={prevalidWhen} onChange={e => setPrevalidWhen(e.target.value)} style={{ padding: "6px 8px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#fff", fontSize: 11, fontFamily: "inherit" }} />
+                    </label>
                     <button onClick={async () => {
                       if (!client?.id) return;
                       const wIdx = Math.max(0, (parseInt(prevalidWeek) || 1) - 1);
                       const sIdx = Math.max(0, (parseInt(prevalidSession) || 1) - 1);
-                      const { error } = await supabase.from("session_completions").upsert({
+                      const payload = {
                         client_id: client.id, week_idx: wIdx, session_idx: sIdx,
                         chrono_seconds: 0,
-                      }, { onConflict: "client_id,week_idx,session_idx" });
+                      };
+                      if (prevalidWhen) {
+                        // datetime-local renvoie "YYYY-MM-DDTHH:mm" sans timezone
+                        // → on le considère comme local et le convertit en ISO UTC
+                        const dt = new Date(prevalidWhen);
+                        if (!isNaN(dt.getTime())) payload.validated_at = dt.toISOString();
+                      }
+                      const { error } = await supabase.from("session_completions").upsert(payload, { onConflict: "client_id,week_idx,session_idx" });
                       if (error) toast.error("Erreur : " + error.message);
-                      else { toast.success(`Séance S${prevalidWeek}/${prevalidSession} pré-validée`); setShowPrevalidate(false); }
+                      else {
+                        const whenLabel = prevalidWhen ? ` (${new Date(prevalidWhen).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })})` : "";
+                        toast.success(`Séance S${prevalidWeek}/${prevalidSession} pré-validée${whenLabel}`);
+                        setShowPrevalidate(false);
+                        setPrevalidWhen("");
+                      }
                     }} style={{ padding: "8px 16px", background: G, color: "#000", border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase", fontFamily: "inherit" }}>
                       Valider
                     </button>
