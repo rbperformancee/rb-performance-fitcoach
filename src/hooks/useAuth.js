@@ -54,11 +54,11 @@ export function useAuth() {
   const loadClientData = useCallback(async (authUser) => {
     try {
       if (!authUser) return;
-      // Check if user is a coach first (case-insensitive sur email)
-      const { data: coachCheck } = await supabase.from("coaches").select("id").ilike("email", authUser.email).maybeSingle();
+      // Check if user is a coach first
+      const { data: coachCheck } = await supabase.from("coaches").select("id").eq("email", authUser.email).maybeSingle();
       if (coachCheck) return; // Coach — skip client loading
       const { data: clientData } = await supabase
-        .from("clients").select("*").ilike("email", authUser.email).maybeSingle();
+        .from("clients").select("*").eq("email", authUser.email).maybeSingle();
       setClient(clientData || null);
       if (!clientData) return;
       // Fetch coach branding for this client
