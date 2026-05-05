@@ -85,23 +85,27 @@ export function SeanceVivante({ clientId, sessionName }) {
 
   const playAudio = async () => {
     if (message?.audio_url) {
+      // HTML5 <audio> natif : gère mieux les codecs cross-browser que Web Audio API
+      // (iOS Safari ne décode PAS webm/opus via decodeAudioData mais joue mp4 nativement).
       try {
-        // Web Audio API - bypass restrictions iOS Safari
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioCtx();
-        await ctx.resume();
-        const resp = await fetch(message.audio_url);
-        const arrayBuffer = await resp.arrayBuffer();
-        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-        const source = ctx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(ctx.destination);
-        source.onended = () => setPlaying(false);
-        source.start(0);
+        if (!audioRef.current) {
+          audioRef.current = new Audio();
+          audioRef.current.preload = "auto";
+          audioRef.current.crossOrigin = "anonymous";
+        }
+        const a = audioRef.current;
+        a.src = message.audio_url;
+        a.onended = () => setPlaying(false);
+        a.onerror = (e) => {
+          console.warn("[flash audio] play error, fallback to speech:", a.error?.code, a.error?.message, e);
+          setPlaying(false);
+          speakText();
+        };
+        await a.play();
         setPlaying(true);
         return;
-      } catch(e) {
-        console.log("Web Audio failed, fallback speech:", e);
+      } catch (e) {
+        console.warn("[flash audio] play() rejected, fallback to speech:", e?.message || e);
         speakText();
       }
     } else {
