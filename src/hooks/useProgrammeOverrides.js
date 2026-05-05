@@ -80,11 +80,11 @@ export function useProgrammeOverrides({ clientId, programmeId }) {
       .maybeSingle();
     if (e1 || !prog) { console.warn("[bumpStartDate] read failed:", e1?.message, e1?.code); return false; }
 
-    // Décale les 2 dates de référence : ancienne (programme_start_date,
-    // utilisée par ProgrammeCountdown) ET nouvelle (start_date, utilisée par
-    // le calendrier training_days). Le client voit ainsi sa séance "reportée"
-    // ou son repos pris en compte côté UI.
-    const base = prog.start_date || prog.programme_start_date || prog.uploaded_at;
+    // On bump UNIQUEMENT start_date (référence du calendrier training_days).
+    // programme_start_date est la date officielle de début (countdown initial),
+    // elle ne doit JAMAIS être modifiée après le démarrage du programme —
+    // sinon l'app croit que le programme n'a pas encore commencé.
+    const base = prog.start_date || prog.uploaded_at;
     const next = new Date(new Date(base).getTime() + 86400000).toISOString().split("T")[0];
     const counters = logRest
       ? { rest_days_count: (prog.rest_days_count || 0) + 1 }
@@ -93,7 +93,6 @@ export function useProgrammeOverrides({ clientId, programmeId }) {
     const { error: e2 } = await supabase
       .from("programmes")
       .update({
-        programme_start_date: next,
         start_date: next,
         ...counters,
       })
