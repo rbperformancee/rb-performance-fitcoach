@@ -585,13 +585,14 @@ function AppInner() {
     (async () => {
       // Check coach par id ET par email (certains comptes sont lies par email)
       // + check super_admin en parallele. Un seul match = route coach.
+      // Email match en case-insensitive (ilike sans wildcards = lookup =/= sensible).
       const [coachById, coachByEmail, adminByEmail] = await Promise.all([
         supabase.from("coaches").select("id").eq("id", user.id).maybeSingle(),
         user.email
-          ? supabase.from("coaches").select("id").eq("email", user.email).maybeSingle()
+          ? supabase.from("coaches").select("id").ilike("email", user.email).maybeSingle()
           : Promise.resolve({ data: null }),
         user.email
-          ? supabase.from("super_admins").select("id").eq("email", user.email).maybeSingle()
+          ? supabase.from("super_admins").select("id").ilike("email", user.email).maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
       if (cancelled) return;
@@ -643,10 +644,10 @@ function AppInner() {
       setIsCoach(false); setCoachId(null); setIsSuperAdmin(false);
       return;
     }
-    // Check coach + super admin en parallele
+    // Check coach + super admin en parallele (case-insensitive sur email)
     Promise.all([
-      supabase.from("coaches").select("*").eq("email", user.email).maybeSingle(),
-      supabase.from("super_admins").select("id").eq("email", user.email).maybeSingle(),
+      supabase.from("coaches").select("*").ilike("email", user.email).maybeSingle(),
+      supabase.from("super_admins").select("id").ilike("email", user.email).maybeSingle(),
     ]).then(([coachRes, adminRes]) => {
       const cData = coachRes.data || null;
       setCoachData(cData);
