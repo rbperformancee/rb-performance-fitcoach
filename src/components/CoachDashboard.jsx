@@ -727,6 +727,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [uploadProgWeeks, setUploadProgWeeks] = useState(6);
   const [showBuilder, setShowBuilder] = useState(false); // duree du programme en semaines
   const [builderEditing, setBuilderEditing] = useState(null); // programme pour edit mode
+  const [showPrevalidate, setShowPrevalidate] = useState(false);
+  const [prevalidWeek, setPrevalidWeek] = useState(1);
+  const [prevalidSession, setPrevalidSession] = useState(1);
   // Hook B : modal "logger paiement" pour ce client (déclenchée manuellement
   // depuis la fiche client via le bouton "Logger un paiement reçu")
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -1246,7 +1249,41 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   <Icon name="message" size={14} />
                   Renvoyer email
                 </button>
+                <button onClick={() => setShowPrevalidate(v => !v)} style={{ flex: "1 1 140px", padding: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "rgba(255,255,255,0.75)", fontSize: 12, fontWeight: 700, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <Icon name="check" size={14} />
+                  Pré-valider séance
+                </button>
               </div>
+              {showPrevalidate && (
+                <div style={{ marginTop: 12, padding: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+                    Marque une séance comme déjà faite (le client la verra avec un ✓ mais elle restera visible dans son programme).
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <label style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", gap: 6 }}>
+                      Semaine
+                      <input type="number" min="1" value={prevalidWeek} onChange={e => setPrevalidWeek(Math.max(1, parseInt(e.target.value) || 1))} style={{ width: 56, padding: "6px 8px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#fff", fontSize: 12, fontFamily: "inherit", textAlign: "center" }} />
+                    </label>
+                    <label style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", gap: 6 }}>
+                      Séance
+                      <input type="number" min="1" value={prevalidSession} onChange={e => setPrevalidSession(Math.max(1, parseInt(e.target.value) || 1))} style={{ width: 56, padding: "6px 8px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#fff", fontSize: 12, fontFamily: "inherit", textAlign: "center" }} />
+                    </label>
+                    <button onClick={async () => {
+                      if (!client?.id) return;
+                      const wIdx = Math.max(0, (parseInt(prevalidWeek) || 1) - 1);
+                      const sIdx = Math.max(0, (parseInt(prevalidSession) || 1) - 1);
+                      const { error } = await supabase.from("session_completions").upsert({
+                        client_id: client.id, week_idx: wIdx, session_idx: sIdx,
+                        chrono_seconds: 0,
+                      }, { onConflict: "client_id,week_idx,session_idx" });
+                      if (error) toast.error("Erreur : " + error.message);
+                      else { toast.success(`Séance S${prevalidWeek}/${prevalidSession} pré-validée`); setShowPrevalidate(false); }
+                    }} style={{ padding: "8px 16px", background: G, color: "#000", border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase", fontFamily: "inherit" }}>
+                      Valider
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
