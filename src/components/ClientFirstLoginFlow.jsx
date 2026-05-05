@@ -165,17 +165,47 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
 
         {step === 4 && (
           <>
-            <div style={{ textAlign: "center", padding: "20px 0" }}>
-              <div style={{ fontSize: 64, marginBottom: 18 }}>⚡</div>
-              <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.15, marginBottom: 14, letterSpacing: "-1px" }}>
-                C'est parti.
+            <div style={{ textAlign: "center", padding: "12px 0", position: "relative" }}>
+              {/* Halo lumineux derrière le bolt */}
+              <div style={{
+                position: "absolute", top: -20, left: "50%", transform: "translateX(-50%)",
+                width: 220, height: 220, pointerEvents: "none",
+                background: `radial-gradient(circle, ${G}33 0%, transparent 60%)`,
+                filter: "blur(8px)",
+              }} />
+
+              {/* Bolt SVG premium animé (draw + fill) */}
+              <div style={{ position: "relative", display: "inline-flex", marginBottom: 28 }}>
+                <svg width="110" height="110" viewBox="0 0 512 512" aria-hidden="true" style={{ filter: `drop-shadow(0 0 24px ${G}66)` }}>
+                  <polygon
+                    points="300,60 180,280 248,280 210,450 340,220 268,220 300,60"
+                    fill={G}
+                    style={{
+                      strokeDasharray: 1200,
+                      strokeDashoffset: 1200,
+                      stroke: G,
+                      strokeWidth: 6,
+                      animation: "boltDraw 1s cubic-bezier(0.22,1,0.36,1) 0.1s forwards, boltFill 0.4s ease 1s forwards",
+                      fillOpacity: 0,
+                    }}
+                  />
+                </svg>
               </div>
-              <div style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 40, maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
-                Tu es dans la place. Ton dashboard est prêt — programme, suivi, et moi en face de toi quand tu en as besoin.
+
+              <div style={{ fontSize: 10, color: G, letterSpacing: "4px", textTransform: "uppercase", fontWeight: 700, marginBottom: 14, opacity: 0, animation: "fadeUp 0.5s ease 1.3s forwards" }}>
+                Bienvenue dans RB Perform
               </div>
-              <button onClick={finish} disabled={saving} style={btnPrimary(!saving)}>
-                {saving ? "..." : "Accéder à mon espace"}
-              </button>
+              <div style={{ fontSize: 38, fontWeight: 900, lineHeight: 1.1, marginBottom: 16, letterSpacing: "-1.5px", opacity: 0, animation: "fadeUp 0.5s ease 1.45s forwards" }}>
+                C'est <span style={{ color: G }}>parti</span>.
+              </div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, marginBottom: 40, maxWidth: 340, marginLeft: "auto", marginRight: "auto", opacity: 0, animation: "fadeUp 0.5s ease 1.6s forwards" }}>
+                Ton espace est prêt. Programme, suivi, et moi en face de toi quand tu en as besoin.
+              </div>
+              <div style={{ opacity: 0, animation: "fadeUp 0.5s ease 1.75s forwards" }}>
+                <button onClick={finish} disabled={saving} style={btnPrimary(!saving)}>
+                  {saving ? "..." : "Accéder à mon espace"}
+                </button>
+              </div>
             </div>
           </>
         )}
@@ -184,6 +214,8 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
       <style>{`
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes boltDraw { to { stroke-dashoffset: 0; } }
+        @keyframes boltFill { from { fill-opacity: 0; } to { fill-opacity: 1; stroke-width: 0; } }
       `}</style>
     </div>
   );
