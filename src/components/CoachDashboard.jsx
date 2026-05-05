@@ -2468,11 +2468,17 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Priorite absolue mp4 pour compatibilite iOS Safari
+      // Priorite absolue mp4 pour compatibilite iOS Safari (Chrome sur Mac
+      // ne supporte PAS mp4 en MediaRecorder → on tombe sur webm/opus, que
+      // iOS Safari ne sait PAS décoder. Warning explicite au coach.)
       let mimeType = "audio/webm";
-      if (MediaRecorder.isTypeSupported("audio/mp4")) mimeType = "audio/mp4";
-      else if (MediaRecorder.isTypeSupported("audio/mp4;codecs=avc1")) mimeType = "audio/mp4;codecs=avc1";
+      let mp4Supported = false;
+      if (MediaRecorder.isTypeSupported("audio/mp4")) { mimeType = "audio/mp4"; mp4Supported = true; }
+      else if (MediaRecorder.isTypeSupported("audio/mp4;codecs=avc1")) { mimeType = "audio/mp4;codecs=avc1"; mp4Supported = true; }
       else if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) mimeType = "audio/webm;codecs=opus";
+      if (!mp4Supported) {
+        toast.error("⚠ Tes clients iOS ne pourront pas écouter (codec webm). Utilise Safari Mac pour les vocaux.");
+      }
       mediaRef.current = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => chunksRef.current.push(e.data);
