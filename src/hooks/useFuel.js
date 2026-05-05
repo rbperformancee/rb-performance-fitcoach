@@ -33,6 +33,26 @@ export function useFuel(clientId, dateOverride) {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Sync temps réel : si le coach modifie les objectifs depuis son dashboard,
+  // le client voit les nouvelles valeurs sans refresh manuel.
+  useEffect(() => {
+    if (!clientId) return;
+    const channel = supabase
+      .channel(`nutrition_goals_${clientId}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "nutrition_goals",
+        filter: `client_id=eq.${clientId}`,
+      }, payload => {
+        if (payload.new && Object.keys(payload.new).length > 0) {
+          setGoals(payload.new);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [clientId]);
+
   const addFood = async (item) => {
     if (!clientId) return { ok: false, error: "Pas connecté" };
     const payload = {
