@@ -257,6 +257,43 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     [programmeMeta?.start_date, programmeMeta?.training_days, programme?.weeks?.length]
   );
 
+  // Mini-calendrier hebdo : pour chaque jour de la semaine en cours (Lun-Dim)
+  // → status (rest / todo / done / today / future)
+  const weekStrip = useMemo(() => {
+    if (!programmeMeta?.start_date || !programmeMeta?.training_days?.length) return null;
+    const start = new Date(programmeMeta.start_date + "T00:00:00");
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const td = programmeMeta.training_days.slice().sort((a, b) => a - b);
+    const msDay = 86400000;
+    // Trouve le lundi de la semaine actuelle
+    const dow = ((today.getDay() + 6) % 7); // 0=Mon..6=Sun
+    const monday = new Date(today.getTime() - dow * msDay);
+    return Array.from({ length: 7 }).map((_, i) => {
+      const date = new Date(monday.getTime() + i * msDay);
+      const weekday = i + 1;
+      const daysSinceStart = Math.floor((date - start) / msDay);
+      const isFuture = date > today;
+      const isToday = date.getTime() === today.getTime();
+      const isPast = !isFuture && !isToday;
+      if (daysSinceStart < 0) return { weekday, status: "future", date };
+      if (!td.includes(weekday)) return { weekday, status: "rest", date };
+      const wIdx = Math.floor(daysSinceStart / 7);
+      const sIdx = td.indexOf(weekday);
+      const validated = isSessionValidee(wIdx, sIdx);
+      let status;
+      if (validated) status = "done";
+      else if (isToday) status = "today";
+      else if (isPast) status = "missed";
+      else status = "future_training";
+      return { weekday, status, date, wIdx, sIdx };
+    });
+  }, [programmeMeta?.start_date, programmeMeta?.training_days, isSessionValidee, programme?.weeks?.length]);
+
+  const missedCount = useMemo(
+    () => (weekStrip || []).filter(d => d.status === "missed").length,
+    [weekStrip]
+  );
+
   // ==== HYDRATATION CLOUD ====
   // Au premier mount : fetch session_completions du client + auto-position
   // sur la séance d'aujourd'hui (selon le calendrier) ou la 1re non-complétée.
@@ -566,6 +603,44 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
 
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)" }}>
+
+      {/* BANNER : séances ratées */}
+      {missedCount > 0 && (
+        <div style={{ margin: "8px 20px 0", padding: "10px 14px", background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.22)", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 16 }}>⚠️</div>
+          <div style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
+            {missedCount === 1
+              ? <>Tu as raté <strong style={{ color: "#f97316" }}>1 séance</strong> cette semaine. Pas grave — reprends aujourd'hui.</>
+              : <>Tu as raté <strong style={{ color: "#f97316" }}>{missedCount} séances</strong> cette semaine. On reprend aujourd'hui.</>}
+          </div>
+        </div>
+      )}
+
+      {/* MINI-CALENDRIER HEBDO */}
+      {weekStrip && (
+        <div style={{ margin: "12px 20px 4px", display: "flex", justifyContent: "space-between", gap: 4 }}>
+          {weekStrip.map((d, i) => {
+            const labels = ["L", "M", "M", "J", "V", "S", "D"];
+            const colors = {
+              done: { bg: "rgba(2,209,186,0.18)", dot: G, txt: G },
+              today: { bg: "rgba(2,209,186,0.06)", dot: G, txt: "#fff", ring: G },
+              missed: { bg: "rgba(249,115,22,0.1)", dot: "#f97316", txt: "rgba(255,255,255,0.7)" },
+              future_training: { bg: "rgba(255,255,255,0.03)", dot: "rgba(255,255,255,0.25)", txt: "rgba(255,255,255,0.45)" },
+              rest: { bg: "rgba(255,255,255,0.015)", dot: "rgba(255,255,255,0.1)", txt: "rgba(255,255,255,0.25)" },
+              future: { bg: "rgba(255,255,255,0.015)", dot: "rgba(255,255,255,0.06)", txt: "rgba(255,255,255,0.2)" },
+            };
+            const c = colors[d.status] || colors.rest;
+            const isToday = d.status === "today";
+            return (
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "6px 0", borderRadius: 8, background: c.bg, border: isToday ? `1px solid ${c.ring}` : "1px solid transparent" }}>
+                <div style={{ fontSize: 9, color: c.txt, fontWeight: 700, letterSpacing: "0.5px" }}>{labels[i]}</div>
+                <div style={{ fontSize: 11, color: c.txt, fontWeight: isToday ? 800 : 500 }}>{d.date.getDate()}</div>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot }} />
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* HERO */}
       <div style={{ padding: "0px 20px 16px" }}>
