@@ -2476,9 +2476,8 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
       if (MediaRecorder.isTypeSupported("audio/mp4")) { mimeType = "audio/mp4"; mp4Supported = true; }
       else if (MediaRecorder.isTypeSupported("audio/mp4;codecs=avc1")) { mimeType = "audio/mp4;codecs=avc1"; mp4Supported = true; }
       else if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) mimeType = "audio/webm;codecs=opus";
-      if (!mp4Supported) {
-        toast.error("⚠ Tes clients iOS ne pourront pas écouter (codec webm). Utilise Safari Mac pour les vocaux.");
-      }
+      // Note : pas de warning ici — on transcode en MP3 client-side après
+      // l'enregistrement (cf. sendMessage), donc tous les codecs marchent.
       mediaRef.current = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
       mediaRef.current.ondataavailable = e => chunksRef.current.push(e.data);
@@ -2509,11 +2508,45 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
     let audioUrl = null;
 
     if (audioBlob) {
-      const ext = (audioBlob.type || "").includes("mp4") ? "m4a" : "webm";
+      // Transcode webm/mp4 → MP3 client-side via lamejs : MP3 lit nativement
+      // partout (iOS Safari inclus), donc plus besoin que le coach utilise
+      // Safari pour enregistrer.
+      let mp3Blob;
+      try {
+        const lamejs = (await import("lamejs")).default || (await import("lamejs"));
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const samples = audioBuffer.getChannelData(0); // mono
+        const sampleRate = audioBuffer.sampleRate;
+        // Float32 (-1..1) → Int16 PCM
+        const pcm = new Int16Array(samples.length);
+        for (let i = 0; i < samples.length; i++) {
+          pcm[i] = Math.max(-1, Math.min(1, samples[i])) * 32767;
+        }
+        const Mp3Encoder = lamejs.Mp3Encoder || lamejs.default?.Mp3Encoder;
+        const encoder = new Mp3Encoder(1, sampleRate, 96); // mono, 96kbps
+        const blockSize = 1152;
+        const mp3Chunks = [];
+        for (let i = 0; i < pcm.length; i += blockSize) {
+          const chunk = pcm.subarray(i, i + blockSize);
+          const enc = encoder.encodeBuffer(chunk);
+          if (enc.length > 0) mp3Chunks.push(enc);
+        }
+        const tail = encoder.flush();
+        if (tail.length > 0) mp3Chunks.push(tail);
+        mp3Blob = new Blob(mp3Chunks, { type: "audio/mpeg" });
+        console.log("[flash audio] transcoded to MP3:", mp3Blob.size, "bytes");
+      } catch (e) {
+        console.warn("[flash audio] MP3 transcoding failed, fallback to original:", e);
+        mp3Blob = audioBlob;
+      }
+
+      const ext = mp3Blob.type === "audio/mpeg" ? "mp3" : ((audioBlob.type || "").includes("mp4") ? "m4a" : "webm");
       const fileName = `flash_${clientId}_${Date.now()}.${ext}`;
       const { data: uploadData, error: uploadErr } = await supabase.storage
         .from("audio-messages")
-        .upload(fileName, audioBlob, { contentType: audioBlob.type || "audio/webm" });
+        .upload(fileName, mp3Blob, { contentType: mp3Blob.type });
       if (uploadErr) {
         console.error("[flash audio upload] FAILED:", uploadErr.message, uploadErr);
         toast.error("Upload vocal échoué : " + (uploadErr.message || "voir console"));
