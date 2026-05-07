@@ -586,6 +586,48 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
     return ins;
   }, [mrr, mrrGoal, newCl30, avgPerCoach, subs, sessionLogs, nutritionLogs, exerciseLogs, weightLogs, runLogs, dailyTracking, pulse, pushReachable, subscriptionsExpiring30, bestCoach, revenue30dActual, payments]);
 
+  // ===== OPERATOR DATA — vue SaaS opérationnelle (au lieu du dataviz) =====
+
+  // MoM delta : revenue payé sur 30j vs 30j précédents
+  const revenue30to60 = payments.filter(p => !p.void && new Date(p.received_date) > new Date(Date.now() - 60 * 86400000) && new Date(p.received_date) <= new Date(Date.now() - 30 * 86400000)).reduce((s, p) => s + parseFloat(p.amount_eur || 0), 0);
+  const mrrDeltaPct = revenue30to60 > 0 ? Math.round(((revenue30dActual - revenue30to60) / revenue30to60) * 100) : (revenue30dActual > 0 ? 100 : 0);
+
+  // Net new ce mois-ci : nouveaux clients - churn (subscription_end_date passée ce mois)
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const newThisMonth = allClients.filter(c => new Date(c.created_at) >= monthStart).length;
+  const churnedThisMonth = allClients.filter(c => c.subscription_end_date && new Date(c.subscription_end_date) >= monthStart && new Date(c.subscription_end_date) < new Date()).length;
+  const netNewMonth = newThisMonth - churnedThisMonth;
+
+  // Renouvellements imminents (14j)
+  const renewals14 = useMemo(() => allClients.filter(c => c.subscription_end_date && new Date(c.subscription_end_date) > new Date() && new Date(c.subscription_end_date) < new Date(Date.now() + 14 * 86400000)), [allClients]);
+
+  // Subs silencieux (aucune activité 7j+)
+  const silentSubs = useMemo(() => {
+    const cutoff = Date.now() - 7 * 86400000;
+    const ids = new Set();
+    sessionLogs.forEach(l => { if (new Date(l.logged_at).getTime() > cutoff) ids.add(l.client_id); });
+    nutritionLogs.forEach(l => { if (new Date(l.logged_at || l.date).getTime() > cutoff) ids.add(l.client_id); });
+    exerciseLogs.forEach(l => { if (new Date(l.logged_at || l.date).getTime() > cutoff) ids.add(l.client_id); });
+    weightLogs.forEach(l => { if (new Date(l.date).getTime() > cutoff) ids.add(l.client_id); });
+    runLogs.forEach(l => { if (new Date(l.date).getTime() > cutoff) ids.add(l.client_id); });
+    dailyTracking.forEach(l => { if (new Date(l.date).getTime() > cutoff) ids.add(l.client_id); });
+    return subs.filter(c => !ids.has(c.id));
+  }, [subs, sessionLogs, nutritionLogs, exerciseLogs, weightLogs, runLogs, dailyTracking]);
+
+  // Coachs avec clients mais zero session loggée 30j (alerte managériale)
+  const inactiveCoaches = enriched.filter(c => c.is_active && c._total > 0 && c._sessions === 0);
+
+  // Action items prioritaires triés par urgence
+  const actionItems = [];
+  if (renewals14.length > 0) actionItems.push({ label: `${renewals14.length} renouvellement${renewals14.length > 1 ? "s" : ""} dans 14j`, count: renewals14.length, color: AMBER, target: "clients" });
+  if (silentSubs.length > 0) actionItems.push({ label: `${silentSubs.length} abonné${silentSubs.length > 1 ? "s" : ""} silencieux 7j+`, count: silentSubs.length, color: ORANGE, target: "clients" });
+  if (inactiveCoaches.length > 0) actionItems.push({ label: `${inactiveCoaches.length} coach${inactiveCoaches.length > 1 ? "s" : ""} sans session 30j`, count: inactiveCoaches.length, color: ORANGE, target: "coachs" });
+  const expiring15to30 = subscriptionsExpiring30 - renewals14.length;
+  if (expiring15to30 > 0) actionItems.push({ label: `${expiring15to30} renouvellement${expiring15to30 > 1 ? "s" : ""} 15-30j`, count: expiring15to30, color: BLUE, target: "clients" });
+
+  // Activité récente : reuse liveEvents mais on ne l'animera plus en ticker
+  const recentActivity = liveEvents.slice(0, 12);
+
   const card = { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" };
 
   if (loading) return (
@@ -661,466 +703,134 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* LIVE TICKER — Bloomberg-style stream of recent events           */}
+        {/* HERO STRIP — 4 chiffres, ce qui compte vraiment                  */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {liveEvents.length > 0 && (
-          <div style={{
-            position: "relative",
-            margin: "0 -24px 24px",
-            padding: "8px 0",
-            background: "rgba(255,255,255,0.015)",
-            borderBottom: "1px solid rgba(255,255,255,0.04)",
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-          }}>
-            <div className="scan-shine" />
-            <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: 6, zIndex: 2, background: "#030303", paddingRight: 14, fontFamily: MONO, fontSize: 9, fontWeight: 800, letterSpacing: "2px", color: G }}>
-              <span className="live-dot" /> LIVE · {liveEvents.length}
-            </div>
-            <div style={{ paddingLeft: 100 }}>
-              <div className="ticker-track">
-                {[...liveEvents, ...liveEvents].map((ev, i) => (
-                  <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 11 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: ev.color, boxShadow: `0 0 6px ${ev.color}` }} />
-                    <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 9, letterSpacing: "1px", textTransform: "uppercase" }}>{ev.type}</span>
-                    <span style={{ color: ev.color, fontWeight: 700 }}>{ev.detail}</span>
-                    <span style={{ color: "rgba(255,255,255,0.6)" }}>· {ev.label}</span>
-                    <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 9 }}>{rel(ev.ts)}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* HERO MRR avec sparkline 30j                                     */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div style={{ marginBottom: 36, animation: "cF 0.4s ease both" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 360px", minWidth: 0 }}>
-              <div style={{ fontFamily: CEO_FONT, fontSize: 72, color: IVORY, letterSpacing: "2px", lineHeight: 0.9 }}>
-                <AnimNum value={mrr} suffix=" €" />
-              </div>
-              <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: "rgba(240,236,228,0.4)", marginTop: 10, fontWeight: 500 }}>{fillTpl(t("sad.mrr_subtitle") || "MRR · {subs} active subs · {coachs} active coachs", { subs: subs.length, coachs: active.length })}</div>
-              <div style={{ fontFamily: CEO_FONT, fontSize: 22, color: "rgba(240,236,228,0.25)", letterSpacing: "2px", marginTop: 4 }}>ARR {arr.toLocaleString()} €</div>
-            </div>
-            {/* MRR trajectory sparkline */}
-            <div style={{ flex: "0 0 auto", textAlign: "right" }}>
-              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>Revenue 30d</div>
-              <Sparkline data={mrrTrajectory.map(b => b.amount)} width={220} height={60} color={BLUE} fill={true} />
-              <div style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: BLUE, marginTop: 4, fontVariantNumeric: "tabular-nums" }}>{revenue30dActual.toLocaleString()} €</div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>actual paid · 30d</div>
-            </div>
-          </div>
-
-          {/* Inline mini-stats */}
-          <div style={{ display: "flex", gap: 14, marginTop: 18, flexWrap: "wrap" }}>
-            {[
-              { v: total, l: "clients" },
-              { v: ret + "%", l: "retention", c: ret >= 80 ? G : ret >= 60 ? ORANGE : RED },
-              { v: "+" + newCl30, l: "30d", c: newCl30 > 0 ? G : "rgba(255,255,255,0.35)" },
-              { v: newToday, l: "today", c: newToday > 0 ? BLUE : "rgba(255,255,255,0.35)" },
-              { v: dauToday, l: "DAU", c: dauToday > 0 ? VIOLET : "rgba(255,255,255,0.35)" },
-              { v: pushReachable, l: "push subs", c: AMBER },
-            ].map((s, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                <span style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: s.c || "#fff", fontVariantNumeric: "tabular-nums" }}>{s.v}</span>
-                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "1px" }}>{s.l}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* MRR goal progress */}
-          <div onClick={() => { const v = window.prompt(t("sad.prompt_mrr_goal") || "MRR goal (€):", String(mrrGoal)); if (v && !isNaN(parseInt(v))) { setMrrGoal(parseInt(v)); localStorage.setItem("ceo_mrr_goal", v); } }} style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-            <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: mrrPct + "%", background: BLUE, borderRadius: 2, transition: "width 0.6s ease", boxShadow: `0 0 10px ${BLUE}88` }} />
-            </div>
-            <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: BLUE, fontVariantNumeric: "tabular-nums" }}>{mrrPct}%</span>
-            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)" }}>of {mrrGoal.toLocaleString()}€ goal</span>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* METRIC CARDS — 6 KPI cards avec micro-sparkline interne          */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 32, animation: "cF 0.4s ease 0.1s both" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 1, marginTop: 28, marginBottom: 24, background: "rgba(255,255,255,0.06)", borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
           {[
-            { k: "mrr", l: "Revenue", v: mrr.toLocaleString() + " €", ic: "chart", bg: "linear-gradient(135deg, #1e1b4b, #312e81)", ac: "#818cf8", sub: `${avgPerCoach}€ / coach`, spark: mrrTrajectory.map(b => b.amount) },
-            { k: "clients", l: "Clients", v: total, ic: "users", bg: "linear-gradient(135deg, #0c4a6e, #075985)", ac: "#38bdf8", sub: `${subs.length} subs`, spark: pulse.dau.map(b => b.count) },
-            { k: "retention", l: "Retention", v: ret + "%", ic: "check", bg: ret >= 80 ? "linear-gradient(135deg, #064e3b, #065f46)" : "linear-gradient(135deg, #431407, #7c2d12)", ac: ret >= 80 ? "#34d399" : "#fb923c", sub: `${subs.length}/${onb.length}`, spark: pulse.weights.map(b => b.count) },
-            { k: "coachs", l: "Active Coachs", v: active.length, ic: "flame", bg: "linear-gradient(135deg, #2e1065, #4c1d95)", ac: "#a78bfa", sub: `${coaches.length} total`, spark: enriched.map(c => c._mrr) },
-            { k: "growth", l: "Growth 30d", v: "+" + newCl30, ic: "trending", bg: newCl30 > 0 ? "linear-gradient(135deg, #052e16, #14532d)" : "linear-gradient(135deg, #171717, #262626)", ac: newCl30 > 0 ? "#4ade80" : "#525252", sub: "new clients", spark: pulse.sessions.map(b => b.count) },
-            { k: "churn", l: "Churn Risk", v: churn.length, ic: "alert", bg: churn.length > 0 ? "linear-gradient(135deg, #450a0a, #7f1d1d)" : "linear-gradient(135deg, #052e16, #14532d)", ac: churn.length > 0 ? "#f87171" : "#4ade80", sub: churn.length > 0 ? "action required" : "all healthy", spark: enriched.map(c => 100 - c._health) },
+            { label: "MRR", value: <><AnimNum value={mrr} />€</>, sub: revenue30to60 > 0 ? `${mrrDeltaPct >= 0 ? "+" : ""}${mrrDeltaPct}% MoM` : "premier mois", subColor: mrrDeltaPct >= 0 ? G : RED, color: BLUE },
+            { label: "Cash 30j", value: <><AnimNum value={Math.round(revenue30dActual)} />€</>, sub: `${payments.filter(p => !p.void).length} paiement${payments.filter(p => !p.void).length > 1 ? "s" : ""}`, color: G },
+            { label: "Active subs", value: <AnimNum value={subs.length} />, sub: newToday > 0 ? `+${newToday} aujourd'hui` : (newCl30 > 0 ? `+${newCl30} sur 30j` : "stable"), subColor: newToday > 0 || newCl30 > 0 ? G : "rgba(255,255,255,0.4)", color: VIOLET },
+            { label: "Net new (mois)", value: <span>{netNewMonth >= 0 ? "+" : ""}<AnimNum value={Math.abs(netNewMonth)} /></span>, sub: `${newThisMonth} new · ${churnedThisMonth} churn`, subColor: netNewMonth >= 0 ? G : RED, color: AMBER },
           ].map((m, i) => (
-            <div key={m.k} className="sa-c" onClick={() => { haptic.selection(); setDetailView(m.k); }} style={{
-              background: m.bg,
-              border: `1px solid ${m.ac}18`,
-              borderRadius: 18, padding: "20px 18px",
-              cursor: "pointer", transition: "transform 0.2s, box-shadow 0.2s",
-              boxShadow: `0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 ${m.ac}12`,
-              position: "relative", overflow: "hidden",
-              animation: `cF ${0.15 + i * 0.04}s ease both`,
-            }}>
-              <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, background: `radial-gradient(circle, ${m.ac}15, transparent 70%)`, pointerEvents: "none" }} />
-              <div style={{ position: "relative" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: m.ac, opacity: 0.7 }}>{m.l}</span>
-                  <Ic name={m.ic} size={13} color={m.ac} />
-                </div>
-                <div style={{ fontFamily: CEO_FONT, fontSize: 32, color: IVORY, letterSpacing: "1px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{m.v}</div>
-                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginTop: 12, gap: 8 }}>
-                  <div style={{ fontSize: 10, color: "rgba(240,236,228,0.45)", fontWeight: 500, flex: 1 }}>{m.sub}</div>
-                  <div style={{ flex: "0 0 auto", opacity: 0.85 }}>
-                    <Sparkline data={m.spark.length >= 2 ? m.spark : [0, 0]} width={70} height={20} color={m.ac} fill={false} dot={false} />
-                  </div>
-                </div>
-              </div>
+            <div key={i} style={{ padding: "26px 28px", background: "#0a0a0a", position: "relative", animation: `cF ${0.15 + i * 0.05}s ease both` }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: m.color, opacity: 0.55 }} />
+              <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 10 }}>{m.label}</div>
+              <div style={{ fontFamily: CEO_FONT, fontSize: 44, color: IVORY, letterSpacing: "1px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{m.value}</div>
+              <div style={{ fontSize: 11, color: m.subColor || "rgba(255,255,255,0.4)", marginTop: 10, fontFamily: MONO, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{m.sub}</div>
             </div>
           ))}
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* ENGAGEMENT PULSE — 4 sparklines : DAU, sessions, meals, weights */}
+        {/* MRR GOAL                                                         */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div style={{ marginBottom: 32, animation: "cF 0.4s ease 0.15s both" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <Ic name="pulse" size={14} color={BLUE} />
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(129,140,248,0.6)" }}>Engagement Pulse</span>
-            <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(129,140,248,0.2), transparent)" }} />
-            <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "1px" }}>30D · DAILY</span>
+        <div onClick={() => { const v = window.prompt("Objectif MRR (€) :", String(mrrGoal)); if (v && !isNaN(parseInt(v))) { setMrrGoal(parseInt(v)); localStorage.setItem("ceo_mrr_goal", v); } }} style={{ marginBottom: 28, display: "flex", alignItems: "center", gap: 14, cursor: "pointer", padding: "12px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Objectif</span>
+          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: mrrPct + "%", background: BLUE, borderRadius: 2, transition: "width 0.6s ease", boxShadow: `0 0 10px ${BLUE}88` }} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            {[
-              { l: "DAU", v: dauToday, sub: `avg7 ${dauAvg7}`, color: VIOLET, data: pulse.dau.map(b => b.count), prev: dauAvg7prev, cur: dauAvg7, suffix: "" },
-              { l: "Sessions", v: sessions7, sub: "last 7d", color: BLUE, data: pulse.sessions.map(b => b.count), prev: sessions7prev, cur: sessions7, suffix: "" },
-              { l: "Meals logged", v: meals7, sub: "last 7d", color: ORANGE, data: pulse.meals.map(b => b.count), prev: meals7prev, cur: meals7, suffix: "" },
-              { l: "Weighings", v: weights7, sub: "last 7d", color: G, data: pulse.weights.map(b => b.count), prev: weights7prev, cur: weights7, suffix: "" },
-            ].map((s, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 18px", position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: 0, left: 0, width: 2, bottom: 0, background: s.color, opacity: 0.6 }} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: s.color, opacity: 0.7 }}>{s.l}</div>
-                    <div style={{ fontFamily: CEO_FONT, fontSize: 28, color: IVORY, lineHeight: 1, marginTop: 4, letterSpacing: "1px", fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
+          <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: BLUE, fontVariantNumeric: "tabular-nums" }}>{mrr.toLocaleString()}€ <span style={{ color: "rgba(255,255,255,0.3)" }}>/ {mrrGoal.toLocaleString()}€</span></span>
+          <span style={{ fontFamily: MONO, fontSize: 11, color: BLUE, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{mrrPct}%</span>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* OPERATOR ROW — activité récente (gauche) + actions + top (droite) */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.5fr) minmax(0, 1fr)", gap: 16, marginBottom: 24, animation: "cF 0.4s ease 0.2s both" }} className="op-row">
+
+          {/* ACTIVITÉ RÉCENTE */}
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" }}>Activité récente</span>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "1px" }}>48H</span>
+            </div>
+            <div>
+              {recentActivity.length === 0 ? (
+                <div style={{ padding: "32px 20px", textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Aucune activité dans les dernières 48h.</div>
+              ) : (
+                recentActivity.map((ev, i) => (
+                  <div key={i} style={{ padding: "11px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: i < recentActivity.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none", transition: "background 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.015)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: ev.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 9, fontFamily: MONO, letterSpacing: "1px", color: "rgba(255,255,255,0.4)", width: 56, textTransform: "uppercase", fontWeight: 700 }}>{ev.type}</span>
+                    <span style={{ flex: 1, fontSize: 13, color: "#fff", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.label}</span>
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{ev.detail}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,255,255,0.3)", width: 38, textAlign: "right", flexShrink: 0 }}>{rel(ev.ts)}</span>
                   </div>
-                  <Delta current={s.cur} previous={s.prev} suffix="%" />
-                </div>
-                <div style={{ marginTop: 8 }}>
-                  <MicroBars data={s.data} width={180} height={30} color={s.color} />
-                </div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 6, fontFamily: MONO }}>{s.sub}</div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* COLONNE DROITE : actions + top coachs */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+            {/* ACTION ITEMS */}
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" }}>À faire</span>
+                {actionItems.length > 0 && <span style={{ fontFamily: MONO, fontSize: 9, color: AMBER, letterSpacing: "1px", fontWeight: 700 }}>{actionItems.length}</span>}
               </div>
-            ))}
+              {actionItems.length === 0 ? (
+                <div style={{ padding: "24px 20px", textAlign: "center", fontSize: 12, color: G, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <Ic name="check" size={14} color={G} /> Tout est en ordre
+                </div>
+              ) : (
+                actionItems.map((a, i) => (
+                  <button key={i} onClick={() => { haptic.selection(); setDetailView(a.target); }} style={{ width: "100%", padding: "12px 20px", background: "transparent", border: "none", display: "flex", alignItems: "center", gap: 12, borderBottom: i < actionItems.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", color: "inherit", transition: "background 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: a.color, boxShadow: `0 0 8px ${a.color}aa`, flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: 12, color: "#fff", fontWeight: 500 }}>{a.label}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: a.color, fontVariantNumeric: "tabular-nums" }}>{a.count}</span>
+                    <Ic name="arrow-right" size={11} color="rgba(255,255,255,0.25)" />
+                  </button>
+                ))
+              )}
+            </div>
+
+            {/* TOP COACHS COMPACT */}
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" }}>Top coachs</span>
+                <button onClick={() => { haptic.selection(); setDetailView("coachs"); }} style={{ background: "none", border: "none", color: "rgba(129,140,248,0.7)", fontSize: 9, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit" }}>Tout →</button>
+              </div>
+              {enriched.filter(c => c._mrr > 0).length === 0 ? (
+                <div style={{ padding: "20px", textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Aucun coach actif.</div>
+              ) : (
+                enriched.filter(c => c._mrr > 0).slice(0, 5).map((c, i) => (
+                  <button key={c.id} onClick={() => { haptic.selection(); setExpandedCoach(c.id); setDetailView("coachs"); }} style={{ width: "100%", padding: "11px 20px", background: "transparent", border: "none", display: "flex", alignItems: "center", gap: 10, borderBottom: i < Math.min(4, enriched.filter(c2 => c2._mrr > 0).length - 1) ? "1px solid rgba(255,255,255,0.03)" : "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", color: "inherit", transition: "background 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: i === 0 ? AMBER : "rgba(255,255,255,0.3)", fontWeight: 700, width: 14 }}>{i + 1}</span>
+                    <span style={{ flex: 1, fontSize: 12, color: "#fff", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.full_name?.split(" ")[0] || c.email?.split("@")[0]}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: c._ret >= 80 ? G : c._ret >= 50 ? AMBER : RED, fontVariantNumeric: "tabular-nums", width: 32, textAlign: "right" }}>{c._ret}%</span>
+                    <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: BLUE, fontVariantNumeric: "tabular-nums", width: 48, textAlign: "right" }}>{c._mrr}€</span>
+                  </button>
+                ))
+              )}
+            </div>
+
           </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* AI INTEL — auto-generated insights, signal feed                  */}
+        {/* FOOTER STRIP — system + broadcast                                */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {aiInsights.length > 0 && (
-          <div style={{ marginBottom: 32, animation: "cF 0.4s ease 0.18s both" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <Ic name="lightning" size={14} color={AMBER} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(251,191,36,0.7)" }}>Intel</span>
-              <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(251,191,36,0.2), transparent)" }} />
-              <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{aiInsights.length} {aiInsights.length === 1 ? "SIGNAL" : "SIGNALS"}</span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 10 }}>
-              {aiInsights.map((ins, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, padding: "14px 16px", background: "rgba(255,255,255,0.02)", border: `1px solid ${ins.color}22`, borderLeft: `3px solid ${ins.color}`, borderRadius: 12, animation: `cF ${0.2 + i * 0.04}s ease both` }}>
-                  <div style={{ flexShrink: 0, paddingTop: 1 }}>
-                    <Ic name={ins.icon} size={16} color={ins.color} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: ins.color, opacity: 0.85 }}>{ins.label}</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 4, lineHeight: 1.45 }}>{ins.detail}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "14px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, flexWrap: "wrap", animation: "cF 0.4s ease 0.3s both" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span className="live-dot" />
+            <span style={{ fontSize: 10, fontFamily: MONO, color: G, letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700 }}>System OK</span>
           </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* REVENUE MIX — donut + breakdown par plan                        */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {mrr > 0 && (
-          <div style={{ marginBottom: 32, animation: "cF 0.4s ease 0.2s both" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <Ic name="dollar" size={14} color={BLUE} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(129,140,248,0.6)" }}>Revenue Mix</span>
-              <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(129,140,248,0.2), transparent)" }} />
-              <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>BY PLAN</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 28, padding: "22px 24px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, flexWrap: "wrap" }}>
-              <div style={{ position: "relative", flexShrink: 0 }}>
-                <Donut data={Object.entries(planBreakdown).filter(([, v]) => v.count > 0).map(([k, v]) => ({ value: v.mrr, color: v.color, label: k }))} size={130} thickness={18} />
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ fontFamily: MONO, fontSize: 18, fontWeight: 700, color: IVORY, fontVariantNumeric: "tabular-nums" }}>{mrr}€</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>MRR</div>
-                </div>
-              </div>
-              <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 12 }}>
-                {Object.entries(planBreakdown).map(([plan, v]) => {
-                  const pct = mrr > 0 ? Math.round((v.mrr / mrr) * 100) : 0;
-                  return (
-                    <div key={plan} style={{ opacity: v.count === 0 ? 0.3 : 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                        <div style={{ width: 9, height: 9, borderRadius: 2, background: v.color, flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", flex: 1 }}>{v.label}<span style={{ marginLeft: 8, fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>· {v.count} {v.count <= 1 ? "abo" : "abos"}</span></span>
-                        <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: v.color, fontVariantNumeric: "tabular-nums" }}>{v.mrr}€</span>
-                        <span style={{ fontFamily: MONO, fontSize: 11, color: "rgba(255,255,255,0.4)", width: 36, textAlign: "right" }}>{pct}%</span>
-                      </div>
-                      <div style={{ height: 3, background: "rgba(255,255,255,0.04)", borderRadius: 2, marginLeft: 19, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: pct + "%", background: v.color, opacity: 0.6, transition: "width 0.6s ease" }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* COHORT RETENTION — 6 derniers mois × M0..M5                     */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {cohorts.some(c => c.total > 0) && (
-          <div style={{ marginBottom: 32, animation: "cF 0.4s ease 0.22s both" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <Ic name="users" size={14} color={G} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)" }}>Cohorts</span>
-              <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(2,209,186,0.2), transparent)" }} />
-              <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>RETENTION %</span>
-            </div>
-            <div style={{ padding: "20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflowX: "auto" }}>
-              {/* col headers M0..M5 */}
-              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 8 }}>
-                <div style={{ width: 84, fontSize: 8, color: "rgba(255,255,255,0.3)", fontFamily: MONO, letterSpacing: "1px", textTransform: "uppercase", textAlign: "right", paddingRight: 8 }}>cohort · n</div>
-                {[0, 1, 2, 3, 4, 5].map(m => (
-                  <div key={m} style={{ width: 42, textAlign: "center", fontSize: 9, color: "rgba(255,255,255,0.4)", fontFamily: MONO, letterSpacing: "1px", fontWeight: 700 }}>M{m}</div>
-                ))}
-              </div>
-              {cohorts.map(c => (
-                <div key={c.key} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-                  <div style={{ width: 84, fontSize: 10, color: "rgba(255,255,255,0.5)", fontFamily: MONO, display: "flex", justifyContent: "space-between", paddingRight: 8 }}>
-                    <span>{c.label}</span>
-                    <span style={{ color: "rgba(255,255,255,0.3)", fontVariantNumeric: "tabular-nums" }}>{c.total}</span>
-                  </div>
-                  {[0, 1, 2, 3, 4, 5].map(m => {
-                    const v = c.retention[m];
-                    if (v == null) return <div key={m} style={{ width: 42, height: 30 }} />;
-                    return (
-                      <div key={m} style={{ width: 42, height: 30, borderRadius: 4, background: v > 0 ? G : "rgba(255,255,255,0.04)", opacity: v === 0 ? 1 : 0.18 + (v / 100) * 0.82, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: 10, fontWeight: 700, color: v >= 50 ? "#0a0a0a" : v > 0 ? IVORY : "rgba(255,255,255,0.3)", fontVariantNumeric: "tabular-nums" }}>{v}</div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* HOUR-OF-DAY ACTIVITY HEATMAP                                    */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {hourMax > 1 && (
-          <div style={{ marginBottom: 32, animation: "cF 0.4s ease 0.24s both" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <Ic name="clock" size={14} color={VIOLET} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(167,139,250,0.7)" }}>When they engage</span>
-              <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(167,139,250,0.2), transparent)" }} />
-              <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>HOUR × DAY · 30D</span>
-            </div>
-            <div style={{ padding: "20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflowX: "auto" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: 30, marginBottom: 4 }}>
-                {Array(24).fill(0).map((_, h) => (
-                  <div key={h} style={{ width: 16, textAlign: "center", fontSize: 8, color: h % 6 === 0 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.15)", fontFamily: MONO }}>{h % 6 === 0 ? `${h}h` : "·"}</div>
-                ))}
-              </div>
-              {["LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM"].map((day, di) => (
-                <div key={day} style={{ display: "flex", gap: 2, marginBottom: 2, alignItems: "center" }}>
-                  <div style={{ width: 26, fontSize: 9, color: "rgba(255,255,255,0.4)", fontFamily: MONO, fontWeight: 700, letterSpacing: "1px" }}>{day}</div>
-                  {hourOfDay[di].map((v, hi) => (
-                    <HeatCell key={hi} value={v} max={hourMax} color={VIOLET} size={16} gap={0} />
-                  ))}
-                </div>
-              ))}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: MONO, letterSpacing: "1px" }}>
-                <span>moins</span>
-                {[0, 0.25, 0.5, 0.75, 1].map((o, i) => (
-                  <div key={i} style={{ width: 14, height: 14, borderRadius: 2, background: o === 0 ? "rgba(255,255,255,0.04)" : VIOLET, opacity: o === 0 ? 1 : 0.18 + o * 0.82 }} />
-                ))}
-                <span>plus</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* TOP PERFORMERS — leaderboard coachs + clients                    */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: 16, marginBottom: 32, animation: "cF 0.4s ease 0.2s both" }}>
-          {/* TOP COACHS */}
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "18px 20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <Ic name="crown" size={14} color={AMBER} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(251,191,36,0.7)" }}>Top Coachs</span>
-              <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(251,191,36,0.2), transparent)" }} />
-              <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>BY MRR</span>
-            </div>
-            {enriched.slice(0, 5).map((c, i) => (
-              <div key={c.id} onClick={() => { haptic.selection(); setDetailView("coachs"); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.04)" : "none", cursor: "pointer" }}>
-                <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: i === 0 ? AMBER : i === 1 ? "rgba(255,255,255,0.6)" : i === 2 ? ORANGE : "rgba(255,255,255,0.3)", width: 18 }}>{i + 1}</div>
-                <Ring score={c._health} size={36} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.full_name || c.email}</div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{c._total} clients · {c._sessions || 0} sessions · {c._paid30 ? `${c._paid30}€ paid` : "—"}</div>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 200, color: BLUE, fontVariantNumeric: "tabular-nums" }}>{c._mrr}€</div>
-                  <div style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{c._ret}%</div>
-                </div>
-              </div>
-            ))}
-            {enriched.length === 0 && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", padding: "16px 0", textAlign: "center" }}>No coaches yet.</div>}
-          </div>
-
-          {/* TOP CLIENTS */}
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "18px 20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <Ic name="flame" size={14} color={RED} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(239,68,68,0.7)" }}>Most Engaged</span>
-              <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(239,68,68,0.2), transparent)" }} />
-              <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>30D ACTIVITY</span>
-            </div>
-            {topClients.map((c, i) => (
-              <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < topClients.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: i === 0 ? G : i === 1 ? "rgba(255,255,255,0.6)" : i === 2 ? VIOLET : "rgba(255,255,255,0.3)", width: 18 }}>{i + 1}</div>
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: c.avatar_url ? "transparent" : "rgba(2,209,186,0.1)",
-                  backgroundImage: c.avatar_url ? `url(${c.avatar_url})` : "none",
-                  backgroundSize: "cover", backgroundPosition: "center",
-                  border: "1px solid rgba(2,209,186,0.25)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontWeight: 800, fontSize: 13, color: G, flexShrink: 0, overflow: "hidden",
-                }}>
-                  {!c.avatar_url && (c.full_name || c.email || "?")[0].toUpperCase()}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.full_name || c.email}</div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{c._coach}</div>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: G, fontVariantNumeric: "tabular-nums" }}>{c._score}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>activity</div>
-                </div>
-              </div>
-            ))}
-            {topClients.length === 0 && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", padding: "16px 0", textAlign: "center" }}>No activity in last 30 days.</div>}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* SYSTEM VITALS + BROADCAST                                       */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: 16, marginBottom: 32, animation: "cF 0.4s ease 0.25s both" }}>
-          {/* VITALS STRIP */}
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "18px 20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <Ic name="cpu" size={14} color={G} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)" }}>System Vitals</span>
-              <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(2,209,186,0.2), transparent)" }} />
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: MONO, fontSize: 9, color: G, letterSpacing: "1px" }}>
-                <span className="live-dot" /> ONLINE
-              </span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {[
-                { l: "Push subs", v: pushReachable, sub: pushReachable === 0 ? "no devices" : pushReachable === 1 ? "1 device" : `${pushReachable} devices`, c: pushReachable > 0 ? G : "rgba(255,255,255,0.4)" },
-                { l: "Data points", v: totalDataPoints, sub: "30d total", c: BLUE },
-                { l: "Notifs sent", v: notifs7d, sub: "last 7d", c: AMBER },
-                { l: "Expiring", v: subscriptionsExpiring30, sub: "in 30d", c: subscriptionsExpiring30 > 0 ? ORANGE : G },
-                { l: "Programmes", v: programmes.length, sub: programmes.filter(p => p.is_active).length + " active", c: VIOLET },
-                { l: "Coachs", v: active.length, sub: `${coaches.length - active.length} dormant`, c: G },
-              ].map((s, i) => (
-                <div key={i} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>{s.l}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 18, fontWeight: 200, color: s.c, marginTop: 4, fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2, fontFamily: MONO }}>{s.sub}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* BROADCAST CTA */}
-          <div style={{ background: "linear-gradient(135deg, rgba(129,140,248,0.06), rgba(167,139,250,0.06))", border: "1px solid rgba(129,140,248,0.18)", borderRadius: 16, padding: "18px 20px", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: -40, right: -40, width: 140, height: 140, background: `radial-gradient(circle, rgba(129,140,248,0.15), transparent 65%)`, pointerEvents: "none" }} />
-            <div style={{ position: "relative" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                <Ic name="radio" size={14} color={BLUE} />
-                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(129,140,248,0.8)" }}>Broadcast</span>
-              </div>
-              <div style={{ fontFamily: CEO_FONT, fontSize: 22, color: IVORY, letterSpacing: "1px", marginBottom: 8 }}>Push to all</div>
-              <div style={{ fontSize: 12, color: "rgba(240,236,228,0.5)", marginBottom: 18, lineHeight: 1.5 }}>
-                Send a single push notification to every client with a registered device. Reach <span style={{ color: BLUE, fontFamily: MONO, fontWeight: 700 }}>{pushReachable}</span> {pushReachable === 1 ? "device" : "devices"} instantly.
-              </div>
-              <button
-                onClick={() => { haptic.medium(); setShowBroadcast(true); }}
-                disabled={pushReachable === 0}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "12px 18px",
-                  background: pushReachable > 0 ? BLUE : "rgba(255,255,255,0.04)",
-                  color: pushReachable > 0 ? "#0a0a0a" : "rgba(255,255,255,0.3)",
-                  border: "none", borderRadius: 10,
-                  fontSize: 12, fontWeight: 800, letterSpacing: "1px", textTransform: "uppercase",
-                  cursor: pushReachable > 0 ? "pointer" : "not-allowed",
-                  fontFamily: BODY_FONT,
-                  boxShadow: pushReachable > 0 ? `0 8px 24px rgba(129,140,248,0.3)` : "none",
-                  transition: "transform 0.15s",
-                }}
-                onMouseEnter={(e) => { if (pushReachable > 0) e.currentTarget.style.transform = "translateY(-1px)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
-              >
-                <Ic name="send" size={12} color={pushReachable > 0 ? "#0a0a0a" : "rgba(255,255,255,0.3)"} />
-                Compose broadcast
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* COACH DETAIL — full grid                                        */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div style={{ animation: "cF 0.4s ease 0.3s both" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <Ic name="users" size={14} color={BLUE} />
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(129,140,248,0.6)" }}>Coachs</span>
-            <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(129,140,248,0.2), transparent)" }} />
-            <button onClick={() => { haptic.selection(); setDetailView("coachs"); }} style={{ background: "transparent", border: "none", color: BLUE, fontSize: 10, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", cursor: "pointer", fontFamily: BODY_FONT }}>View all →</button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 10 }}>
-            {enriched.slice(0, 6).map(c => (
-              <div key={c.id} onClick={() => { haptic.selection(); setExpandedCoach(c.id); setDetailView("coachs"); }} style={{ padding: "14px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, cursor: "pointer" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <Ring score={c._health} size={40} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {c.full_name || c.email}
-                      {bestCoach?.id === c.id && enriched.length > 1 && <span style={{ marginLeft: 6, fontSize: 7, fontWeight: 800, color: AMBER, background: "rgba(251,191,36,0.1)", border: `1px solid rgba(251,191,36,0.3)`, borderRadius: 100, padding: "1px 7px", verticalAlign: "middle", letterSpacing: "0.5px" }}>TOP</span>}
-                    </div>
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{c._total} clients · {c._mrr}€ MRR · {c._ret}% ret</div>
-                  </div>
-                  <Ic name="arrow-right" size={12} color="rgba(255,255,255,0.25)" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)" }} />
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: MONO, fontVariantNumeric: "tabular-nums" }}><span style={{ color: pushReachable > 0 ? G : "rgba(255,255,255,0.3)", fontWeight: 700 }}>{pushReachable}</span> push</span>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: MONO, fontVariantNumeric: "tabular-nums" }}><span style={{ color: "#fff", fontWeight: 700 }}>{totalDataPoints}</span> data 30j</span>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: MONO, fontVariantNumeric: "tabular-nums" }}><span style={{ color: "#fff", fontWeight: 700 }}>{programmes.length}</span> programmes</span>
+          {notifs7d > 0 && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: MONO, fontVariantNumeric: "tabular-nums" }}><span style={{ color: AMBER, fontWeight: 700 }}>{notifs7d}</span> notifs 7j</span>}
+          <div style={{ flex: 1 }} />
+          <button onClick={() => { haptic.medium(); setShowBroadcast(true); }} disabled={pushReachable === 0} style={{ padding: "8px 14px", background: pushReachable > 0 ? "rgba(129,140,248,0.08)" : "rgba(255,255,255,0.03)", color: pushReachable > 0 ? BLUE : "rgba(255,255,255,0.3)", border: `1px solid ${pushReachable > 0 ? "rgba(129,140,248,0.25)" : "rgba(255,255,255,0.06)"}`, borderRadius: 8, fontSize: 11, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", cursor: pushReachable > 0 ? "pointer" : "not-allowed", fontFamily: "inherit", display: "inline-flex", alignItems: "center", gap: 6, transition: "all 0.15s" }} onMouseEnter={(e) => { if (pushReachable > 0) { e.currentTarget.style.background = "rgba(129,140,248,0.15)"; e.currentTarget.style.borderColor = "rgba(129,140,248,0.4)"; } }} onMouseLeave={(e) => { e.currentTarget.style.background = pushReachable > 0 ? "rgba(129,140,248,0.08)" : "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = pushReachable > 0 ? "rgba(129,140,248,0.25)" : "rgba(255,255,255,0.06)"; }}>
+            <Ic name="send" size={11} color={pushReachable > 0 ? BLUE : "rgba(255,255,255,0.3)"} />
+            Broadcast
+          </button>
         </div>
 
       </div>
+
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* DETAIL VIEWS (drill-down full screen)                           */}
