@@ -42,7 +42,7 @@ export function useScheduledRuns(clientId) {
 
     const { data: prog } = await supabase
       .from("programmes")
-      .select("id, html_content, programme_start_date, uploaded_at, validated_until_week")
+      .select("id, html_content, start_date, programme_start_date, uploaded_at, validated_until_week")
       .eq("client_id", clientId)
       .eq("is_active", true)
       .order("uploaded_at", { ascending: false })
@@ -57,7 +57,12 @@ export function useScheduledRuns(clientId) {
     let parsed = null;
     try { parsed = parseProgrammeHTML(prog.html_content); } catch (_) {}
 
-    const startDate = prog.programme_start_date
+    // start_date est la colonne canonique (saisie par le coach dans la builder).
+    // programme_start_date est un alias historique. uploaded_at est le dernier
+    // recours - utilise pour les programmes uploades sans calendrier configure.
+    const startDate = prog.start_date
+      ? new Date(prog.start_date + "T00:00:00")
+      : prog.programme_start_date
       ? new Date(prog.programme_start_date)
       : new Date(prog.uploaded_at);
 

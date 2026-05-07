@@ -46,7 +46,8 @@ export function LoginScreen({ onBack }) {
         // shouldCreateUser: false — un client ne peut pas s'inscrire seul.
         // Seul le coach peut creer un compte client via "Inviter" dans le
         // dashboard. Si l'email n'existe pas, Supabase renvoie l'erreur
-        // "Signups not allowed for otp" → on affiche le message no_account.
+        // "Signups not allowed for otp" → on affiche le message no_account
+        // OU on detecte une invitation pending et on offre le lien /join.
         options: { shouldCreateUser: false },
       });
       if (error) throw error;
@@ -54,9 +55,44 @@ export function LoginScreen({ onBack }) {
       setSuccess(t('login.code_sent_success') + ' ' + email);
       setTimeout(() => otpRef.current?.focus(), 100);
     } catch (e) {
-      setError(e.message === 'Signups not allowed for otp'
-        ? t('login.no_account')
-        : e.message || t('login.send_error'));
+      if (e.message === 'Signups not allowed for otp') {
+        // Pas d'auth.users mais peut-etre une row clients (le coach a ajoute
+        // le client via le dashboard mais aucun auth.users n'a ete cree —
+        // cas frequent puisque addClient INSERT clients sans creer auth).
+        // L'endpoint cree auth.users a la volee si clients existe ; on
+        // retente immediatement signInWithOtp pour envoyer le code.
+        try {
+          const r = await fetch('/api/auth/check-invitation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.trim().toLowerCase() }),
+          });
+          if (r.ok) {
+            const data = await r.json();
+            if (data.status === 'ready') {
+              const { error: retryErr } = await supabase.auth.signInWithOtp({
+                email: email.trim().toLowerCase(),
+                options: { shouldCreateUser: false },
+              });
+              if (!retryErr) {
+                setStep('otp');
+                setSuccess(t('login.code_sent_success') + ' ' + email);
+                setTimeout(() => otpRef.current?.focus(), 100);
+                setLoading(false);
+                return;
+              }
+              // Si meme apres creation auth ca echoue, message generique
+              setError(retryErr.message || t('login.send_error'));
+              setLoading(false);
+              return;
+            }
+            // status: 'unknown' → vraiment pas de compte
+          }
+        } catch { /* fallback to no_account error */ }
+        setError(t('login.no_account'));
+      } else {
+        setError(e.message || t('login.send_error'));
+      }
     }
     setLoading(false);
   };

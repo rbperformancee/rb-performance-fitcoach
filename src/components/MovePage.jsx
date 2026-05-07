@@ -14,15 +14,11 @@ const RED = "#ef4444";
 export default function MovePage({ client, appData }) {
   const t = useT();
   const [runs, setRuns] = useState(appData?.runs || []);
-  const [dailySteps, setDailySteps] = useState(appData?.dailyTracking?.pas || 0);
-  const [stepsGoal, setStepsGoal] = useState(appData?.nutritionGoals?.pas || 8000);
   const [weekRuns, setWeekRuns] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(!appData || appData.loading);
   const [form, setForm] = useState({ distance: "", heures: "0", minutes: "", note: "" });
   const [saving, setSaving] = useState(false);
-  const [showSteps, setShowSteps] = useState(false);
-  const [tempSteps, setTempSteps] = useState(appData?.dailyTracking?.pas || 0);
   // Run prescrit en cours de log (pre-remplit le form + tag programme)
   const [pendingPrescribed, setPendingPrescribed] = useState(null);
 
@@ -34,15 +30,8 @@ export default function MovePage({ client, appData }) {
   const fetchAll = useCallback(async () => {
     if (!client?.id) return;
     setLoading(true);
-    const [runsRes, trackingRes, goalsRes] = await Promise.all([
-      supabase.from("run_logs").select("*").eq("client_id", client.id).order("date", { ascending: false }).limit(10),
-      supabase.from("daily_tracking").select("*").eq("client_id", client.id).eq("date", today).maybeSingle(),
-      supabase.from("nutrition_goals").select("pas").eq("client_id", client.id).maybeSingle(),
-    ]);
+    const runsRes = await supabase.from("run_logs").select("*").eq("client_id", client.id).order("date", { ascending: false }).limit(10);
     setRuns(runsRes.data || []);
-    setDailySteps(trackingRes.data?.pas || 0);
-    setTempSteps(trackingRes.data?.pas || 0);
-    setStepsGoal(goalsRes.data?.pas || 8000);
 
     // Calcul km cette semaine
     const weekAgo = new Date();
@@ -53,25 +42,6 @@ export default function MovePage({ client, appData }) {
   }, [client?.id, today]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
-
-  const saveSteps = async (steps) => {
-    setDailySteps(steps);
-    // Recupere les autres champs pour ne pas les ecraser a 0
-    const { data: existing } = await supabase
-      .from("daily_tracking")
-      .select("eau_ml, sommeil_h")
-      .eq("client_id", client.id)
-      .eq("date", today)
-      .maybeSingle();
-    const { error } = await supabase.from("daily_tracking").upsert({
-      client_id: client.id,
-      date: today,
-      pas: steps,
-      eau_ml: existing?.eau_ml ?? 0,
-      sommeil_h: existing?.sommeil_h ?? 0,
-    }, { onConflict: "client_id,date" });
-    if (error) console.error("[saveSteps] failed", error);
-  };
 
   const addRun = async () => {
     const dist = parseFloat(form.distance) || 0;
@@ -182,7 +152,6 @@ export default function MovePage({ client, appData }) {
     setShowAdd(true);
   };
 
-  const stepsPct = Math.min(Math.round((dailySteps / stepsGoal) * 100), 100);
   const weekKm = weekRuns.reduce((a, r) => a + (r.distance_km || 0), 0);
   const avgAllure = runs.length > 0 ? runs[0].allure_min_km : "--";
 
@@ -227,20 +196,8 @@ export default function MovePage({ client, appData }) {
           </div>
         </div>
 
-        {/* PAS HERO */}
-        <div style={{ padding: "0 24px", marginBottom: 20 }} onClick={() => setShowSteps(true)}>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 6 }}>{t("move.steps_today")}</div>
-          <div style={{ fontSize: 72, fontWeight: 100, color: "#fff", letterSpacing: "-4px", lineHeight: 1, marginBottom: 6, cursor: "pointer" }}>
-            {dailySteps.toLocaleString()}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>{t("move.goal")} {stepsGoal.toLocaleString()}</div>
-            <div style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{stepsPct}%</div>
-          </div>
-          <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
-            <div style={{ height: "100%", width: stepsPct + "%", background: `linear-gradient(90deg, ${GREEN}, #02d1ba)`, borderRadius: 2, transition: "width 0.8s ease" }} />
-          </div>
-        </div>
+        {/* Pas du jour : deplaces vers la page Body (metrique corporelle quotidienne).
+            Run reste focus sur la course : km, allure, sorties, prescript coach. */}
 
         {/* STATS TESLA */}
         <div style={{ padding: "0 24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 4 }}>
@@ -271,7 +228,37 @@ export default function MovePage({ client, appData }) {
             <div className="skeleton" style={{ height: 80, width: "100%", borderRadius: 14 }} />
           </div>
         )}
-        {!scheduled.loading && scheduled.totalWeeks > 0 && (
+        {/* Variante compacte : aucun run prescrit cette semaine — on n'inflige
+            pas un grand bloc vide. Une ligne avec navigation hebdo suffit. */}
+        {!scheduled.loading && scheduled.totalWeeks > 0 && scheduled.runs.length === 0 && (
+          <div style={{ padding: "0 24px", marginBottom: 20 }}>
+            <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 800, marginBottom: 8 }}>{t("move.coach_prescribed")}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12 }}>
+              {scheduled.totalWeeks > 1 && (
+                <button
+                  onClick={() => scheduled.canGoPrev && scheduled.setViewWeek(scheduled.viewWeek - 1)}
+                  disabled={!scheduled.canGoPrev}
+                  aria-label="Semaine precedente"
+                  style={{ width: 24, height: 24, borderRadius: 100, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: scheduled.canGoPrev ? "#fff" : "rgba(255,255,255,0.18)", cursor: scheduled.canGoPrev ? "pointer" : "not-allowed", flexShrink: 0, fontFamily: "inherit", fontSize: 12, lineHeight: 1, padding: 0 }}
+                >‹</button>
+              )}
+              <div style={{ flex: 1, minWidth: 0, fontSize: 12, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ color: "#fff", fontWeight: 700 }}>{t("move.week_label")} {scheduled.viewWeek}<span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>/{scheduled.totalWeeks}</span></span>
+                <span style={{ marginLeft: 8, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>— aucun run prescrit</span>
+              </div>
+              {scheduled.totalWeeks > 1 && (
+                <button
+                  onClick={() => scheduled.canGoNext && scheduled.setViewWeek(scheduled.viewWeek + 1)}
+                  disabled={!scheduled.canGoNext}
+                  aria-label="Semaine suivante"
+                  style={{ width: 24, height: 24, borderRadius: 100, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: scheduled.canGoNext ? "#fff" : "rgba(255,255,255,0.18)", cursor: scheduled.canGoNext ? "pointer" : "not-allowed", flexShrink: 0, fontFamily: "inherit", fontSize: 12, lineHeight: 1, padding: 0 }}
+                >›</button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!scheduled.loading && scheduled.totalWeeks > 0 && scheduled.runs.length > 0 && (
           <div style={{ padding: "0 24px", marginBottom: 28 }}>
             {/* Header + week selector */}
             <div style={{ marginBottom: 14 }}>
@@ -339,12 +326,7 @@ export default function MovePage({ client, appData }) {
             </div>
 
             {/* Liste des runs prescrits */}
-            {scheduled.runs.length === 0 ? (
-              <div style={{ padding: "20px 16px", textAlign: "center", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)", borderRadius: 14, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-                {t("move.no_runs_week")}
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {scheduled.runs.map((r, i) => {
                   const accent = r.done ? "rgba(2,209,186,0.6)" : RED;
                   return (
@@ -423,8 +405,7 @@ export default function MovePage({ client, appData }) {
                     </button>
                   );
                 })}
-              </div>
-            )}
+            </div>
 
             {/* CTA Valider la semaine — visible uniquement quand semaine terminee + sur la viewWeek = currentWeek + pas la derniere */}
             {scheduled.weekFullyDone
@@ -645,30 +626,6 @@ export default function MovePage({ client, appData }) {
                 </button>
               );
             })()}
-          </div>
-        </div>
-      )}
-
-      {/* MODAL PAS */}
-      {showSteps && (
-        <div onClick={e => { if (e.target === e.currentTarget) setShowSteps(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <div style={{ background: "#111", borderRadius: 24, padding: 24, width: "100%", maxWidth: 360 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>{t("move.steps_label")}</div>
-            <div style={{ fontSize: 52, fontWeight: 100, color: GREEN, textAlign: "center", marginBottom: 20, letterSpacing: "-2px" }}>
-              {tempSteps.toLocaleString()}
-            </div>
-            <input type="range" min="0" max="20000" step="100" value={tempSteps}
-              onChange={e => setTempSteps(parseInt(e.target.value))}
-              style={{ width: "100%", marginBottom: 16, accentColor: GREEN }} />
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 20 }}>
-              <span>0</span><span>10 000</span><span>20 000</span>
-            </div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-              {[1000, 2000, 5000, 10000].map(v => (
-                <button key={v} onClick={() => setTempSteps(Math.min(tempSteps + v, 20000))} style={{ flex: 1, padding: "10px 0", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.2)", borderRadius: 10, color: GREEN, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>+{v >= 1000 ? v/1000 + "k" : v}</button>
-              ))}
-            </div>
-            <button onClick={() => { saveSteps(tempSteps); setShowSteps(false); }} style={{ width: "100%", padding: 14, background: GREEN, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t("move.steps_save")}</button>
           </div>
         </div>
       )}

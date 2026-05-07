@@ -256,6 +256,9 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
   const [hydratedFromCloud, setHydratedFromCloud] = useState(false);
+  // Bypass de l'ecran "Jour de repos" via le bouton "Voir le programme quand
+  // meme" : sans ce state l'early-return (l. ~583) renvoie tjs l'ecran repos.
+  const [forceShowProgramme, setForceShowProgramme] = useState(false);
   // Helper : verifier si une seance (week, sessionIdx) est validee via localStorage
   const isSessionValidee = useCallback((wIdx, sIdx) => {
     try {
@@ -580,7 +583,8 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   );
 
   // Écran "Repos" si aujourd'hui n'est pas un training day OU programme pas démarré
-  if (todaysSession?.type === "rest" || todaysSession?.type === "not_started" || todaysSession?.type === "finished") {
+  // (bypass via setForceShowProgramme — bouton "Voir le programme quand meme")
+  if (!forceShowProgramme && (todaysSession?.type === "rest" || todaysSession?.type === "not_started" || todaysSession?.type === "finished")) {
     const isRest = todaysSession.type === "rest";
     const isNotStarted = todaysSession.type === "not_started";
     const isFinished = todaysSession.type === "finished";
@@ -589,8 +593,51 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         <div style={{ fontSize: 10, color: G, letterSpacing: "4px", textTransform: "uppercase", fontWeight: 700, marginBottom: 24, opacity: 0.7 }}>
           {isRest ? "Aujourd'hui" : isNotStarted ? "Programme à venir" : "Programme terminé"}
         </div>
-        <div style={{ fontSize: 64, marginBottom: 24, lineHeight: 1 }}>
-          {isRest ? "🛌" : isNotStarted ? "🗓" : "🏆"}
+        {/* Pictogramme custom — design premium teal/glow, evite l'emoji OS qui detonne */}
+        <div style={{ marginBottom: 28, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {isRest && (
+            <div style={{
+              width: 96, height: 96, borderRadius: "50%",
+              background: "radial-gradient(circle at 30% 30%, rgba(2,209,186,0.18), rgba(2,209,186,0.04) 60%, transparent 80%)",
+              border: "1px solid rgba(2,209,186,0.18)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 60px rgba(2,209,186,0.12), inset 0 0 30px rgba(2,209,186,0.06)",
+            }}>
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </div>
+          )}
+          {isNotStarted && (
+            <div style={{
+              width: 96, height: 96, borderRadius: "50%",
+              background: "radial-gradient(circle at 30% 30%, rgba(2,209,186,0.18), rgba(2,209,186,0.04) 60%, transparent 80%)",
+              border: "1px solid rgba(2,209,186,0.18)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 60px rgba(2,209,186,0.12), inset 0 0 30px rgba(2,209,186,0.06)",
+            }}>
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+          )}
+          {isFinished && (
+            <div style={{
+              width: 96, height: 96, borderRadius: "50%",
+              background: "radial-gradient(circle at 30% 30%, rgba(2,209,186,0.22), rgba(2,209,186,0.05) 60%, transparent 80%)",
+              border: "1px solid rgba(2,209,186,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 60px rgba(2,209,186,0.18), inset 0 0 30px rgba(2,209,186,0.08)",
+            }}>
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="6" />
+                <path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5" />
+              </svg>
+            </div>
+          )}
         </div>
         <div style={{ fontSize: 38, fontWeight: 900, lineHeight: 1.1, marginBottom: 16, letterSpacing: "-1.5px" }}>
           {isRest ? <>Jour <span style={{ color: G }}>repos</span>.</> :
@@ -608,7 +655,8 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
               (w.sessions || []).map((_, si) => ({ wi, si }))
             ).find(({ wi, si }) => !isSessionValidee(wi, si));
             if (next) { setActiveWeek(next.wi); setActiveSession(next.si); }
-          }} style={{ padding: "13px 26px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer" }}>
+            setForceShowProgramme(true);
+          }} style={{ padding: "13px 26px", borderRadius: 12, border: "1px solid rgba(2,209,186,0.25)", background: "rgba(2,209,186,0.06)", color: G, fontSize: 12, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer" }}>
             Voir le programme quand même
           </button>
         )}

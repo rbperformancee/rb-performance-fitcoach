@@ -775,7 +775,8 @@ function AppInner() {
   const programme = useMemo(() => rawHtml ? parseProgrammeHTML(rawHtml) : null, [rawHtml]);
 
   const { getHistory, getLatest, saveLog, getDelta } = useLogs(
-    client ? `client_${client.id}` : programme?.name
+    client ? `client_${client.id}` : programme?.name,
+    client?.id || null
   );
 
   const handleLocalImport = useCallback(async (e) => {

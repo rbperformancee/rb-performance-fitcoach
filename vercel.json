@@ -38,6 +38,14 @@
     {
       "path": "/api/cron-demo-reset",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron-client-daily-reminder?kind=evening",
+      "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/cron-client-daily-reminder?kind=morning",
+      "schedule": "0 6 * * *"
     }
   ],
   "redirects": [

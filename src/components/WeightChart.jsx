@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
+import { supabase } from "../lib/supabase";
 import { useT } from "../lib/i18n";
 import EmptyState from "./EmptyState";
 import haptic from "../lib/haptic";
@@ -24,6 +25,40 @@ export default function WeightChart({ clientId, client, programme, appData }) {
   const [localGoal, setLocalGoal] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const _wg = localGoal != null ? localGoal : (client && client.weight_goal ? parseFloat(client.weight_goal) : null);
+
+  // Pas du jour — etait dans Run, deplace ici (Body) car les pas sont une
+  // metrique corporelle quotidienne, pas une metrique de course.
+  const [dailySteps, setDailySteps] = useState(appData?.dailyTracking?.pas || 0);
+  const [stepsGoal, setStepsGoal] = useState(appData?.nutritionGoals?.pas || 8000);
+  const [showSteps, setShowSteps] = useState(false);
+  const [tempSteps, setTempSteps] = useState(appData?.dailyTracking?.pas || 0);
+  // Garde le state local en phase avec appData (au refresh ou changement de jour).
+  useEffect(() => {
+    if (appData?.dailyTracking?.pas != null) setDailySteps(appData.dailyTracking.pas);
+    if (appData?.nutritionGoals?.pas != null) setStepsGoal(appData.nutritionGoals.pas);
+  }, [appData?.dailyTracking?.pas, appData?.nutritionGoals?.pas]);
+
+  const saveSteps = async (steps) => {
+    setDailySteps(steps);
+    if (!clientId) return;
+    const today = new Date().toISOString().split("T")[0];
+    // Recupere les autres champs pour ne pas les ecraser a 0.
+    const { data: existing } = await supabase
+      .from("daily_tracking")
+      .select("eau_ml, sommeil_h")
+      .eq("client_id", clientId)
+      .eq("date", today)
+      .maybeSingle();
+    const { error } = await supabase.from("daily_tracking").upsert({
+      client_id: clientId,
+      date: today,
+      pas: steps,
+      eau_ml: existing?.eau_ml ?? 0,
+      sommeil_h: existing?.sommeil_h ?? 0,
+    }, { onConflict: "client_id,date" });
+    if (error) console.error("[saveSteps] failed", error);
+  };
+  const stepsPct = Math.min(Math.round((dailySteps / Math.max(stepsGoal, 1)) * 100), 100);
 
   const handleAdd = async () => {
     if (!newWeight || isNaN(parseFloat(newWeight))) return;
@@ -383,6 +418,40 @@ export default function WeightChart({ clientId, client, programme, appData }) {
         </div>
       </div>
 
+      {/* PAS DU JOUR — deplace de Run vers Body (metrique corporelle quotidienne) */}
+      <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
+      <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Pas aujourd'hui</div>
+        <button
+          type="button"
+          onClick={() => { setTempSteps(dailySteps); setShowSteps(true); }}
+          style={{
+            width: "100%", display: "block", textAlign: "left",
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 16, padding: "16px 18px",
+            color: "inherit", fontFamily: "inherit", cursor: "pointer",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ fontSize: 44, fontWeight: 100, letterSpacing: "-2px", lineHeight: 1, color: "#fff" }}>
+              {(dailySteps || 0).toLocaleString()}
+            </div>
+            <div style={{ fontSize: 9, color: GREEN, letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 3 3L12 15l-4 1 1-4z"/></svg>
+              Modifier
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Objectif {(stepsGoal || 8000).toLocaleString()}</div>
+            <div style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{stepsPct}%</div>
+          </div>
+          <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+            <div style={{ height: "100%", width: stepsPct + "%", background: GREEN, borderRadius: 2, transition: "width 0.8s ease" }} />
+          </div>
+        </button>
+      </div>
+
       <div style={{ padding: "0 24px", position: "relative", zIndex: 1 }}>
         {showInput ? (
           <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
@@ -404,6 +473,30 @@ export default function WeightChart({ clientId, client, programme, appData }) {
           </button>
         )}
       </div>
+
+      {/* MODAL PAS — slider + presets, identique a celle de Run mais ancree dans Body */}
+      {showSteps && (
+        <div onClick={e => { if (e.target === e.currentTarget) setShowSteps(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ background: "#111", borderRadius: 24, padding: 24, width: "100%", maxWidth: 360 }}>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Pas aujourd'hui</div>
+            <div style={{ fontSize: 52, fontWeight: 100, color: GREEN, textAlign: "center", marginBottom: 20, letterSpacing: "-2px" }}>
+              {tempSteps.toLocaleString()}
+            </div>
+            <input type="range" min="0" max="20000" step="100" value={tempSteps}
+              onChange={e => setTempSteps(parseInt(e.target.value))}
+              style={{ width: "100%", marginBottom: 16, accentColor: GREEN }} />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 20 }}>
+              <span>0</span><span>10 000</span><span>20 000</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              {[1000, 2000, 5000, 10000].map(v => (
+                <button key={v} onClick={() => setTempSteps(Math.min(tempSteps + v, 20000))} style={{ flex: 1, padding: "10px 0", background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 10, color: GREEN, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>+{v >= 1000 ? v/1000 + "k" : v}</button>
+              ))}
+            </div>
+            <button onClick={() => { saveSteps(tempSteps); setShowSteps(false); }} style={{ width: "100%", padding: 14, background: GREEN, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -206,5 +206,16 @@ export function useFuel(clientId, dateOverride) {
     return true;
   };
 
-  return { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score: calcScore(), fetchAll };
+  // Append des rows pre-inserees (utilise par add-to-meal pour update instant
+  // sans re-fetch — le re-fetch est un fallback en parallele).
+  const appendLogs = useCallback((rows) => {
+    if (!Array.isArray(rows) || rows.length === 0) return;
+    setLogs((prev) => {
+      const ids = new Set(prev.map((l) => l.id));
+      const fresh = rows.filter((r) => r && r.id && !ids.has(r.id));
+      return fresh.length ? [...prev, ...fresh] : prev;
+    });
+  }, []);
+
+  return { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score: calcScore(), fetchAll, appendLogs };
 }

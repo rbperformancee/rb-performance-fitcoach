@@ -511,7 +511,147 @@ export const LOCAL_FOODS = [
   f("Guacamole", 160, 2, 9, 14, ["guacamole"]),
   f("Tapenade", 250, 2, 5, 25, ["tapenade"]),
   f("Caviar d'aubergine", 80, 1.5, 6, 5, ["caviar aubergine"]),
+
+  // ============= SUPPLEMENTS / PROTEINES EN POUDRE =============
+  f("Whey protéine", 370, 80, 6, 5, ["whey", "proteine", "whey isolat", "whey concentrate", "isolate", "protein powder"]),
+  f("Whey isolate", 380, 90, 1, 1, ["whey", "isolate", "isolat", "whey iso"]),
+  f("Caséine", 360, 80, 5, 2, ["caseine", "casein", "micellaire"]),
+  f("Protéine vegan", 370, 75, 7, 6, ["proteine vegan", "vegan protein", "pea protein", "rice protein", "proteine pois", "proteine riz", "proteine vegetale"]),
+  f("Mass gainer", 400, 25, 65, 5, ["gainer", "mass gainer", "weight gainer"]),
+  f("Créatine monohydrate", 0, 0, 0, 0, ["creatine", "monohydrate"]),
+  f("BCAA poudre", 0, 0, 0, 0, ["bcaa", "branched", "amino"]),
+  f("EAA poudre", 0, 0, 0, 0, ["eaa", "essential amino"]),
+  f("Glutamine", 0, 0, 0, 0, ["glutamine"]),
+  f("Pre-workout", 5, 0, 1, 0, ["pre workout", "pre-workout", "preworkout"]),
+
+  // ============= FRUITS ROUGES & BAIES =============
+  f("Myrtilles", 57, 0.7, 14, 0.3, ["myrtille", "blueberry", "blueberries"]),
+  f("Framboises", 52, 1.2, 12, 0.6, ["framboise", "raspberry", "raspberries"]),
+  f("Fraises", 32, 0.7, 7.7, 0.3, ["fraise", "strawberry", "strawberries"]),
+  f("Mûres", 43, 1.4, 9.6, 0.5, ["mure", "blackberry", "blackberries"]),
+  f("Cassis", 63, 1.4, 15, 0.4, ["cassis", "blackcurrant"]),
+  f("Groseilles", 56, 1.4, 14, 0.2, ["groseille", "redcurrant"]),
+  f("Cerises", 63, 1, 16, 0.2, ["cerise", "cherry", "cherries"]),
+  f("Fruits rouges mélange", 50, 1, 12, 0.5, ["fruits rouges", "mixed berries", "berries", "fruit rouge surgele"]),
+  f("Cranberries séchées", 308, 0.2, 82, 1.4, ["cranberry", "canneberge"]),
+  f("Goji baies", 349, 14, 78, 0.4, ["goji", "goji berry"]),
+  f("Açaï", 70, 1, 4, 5, ["acai"]),
+  f("Grenade", 83, 1.7, 19, 1.2, ["grenade", "pomegranate"]),
+
+  // ============= AUTRES FRUITS COURANTS =============
+  f("Pomme", 52, 0.3, 14, 0.2, ["pomme", "apple"]),
+  f("Poire", 57, 0.4, 15, 0.1, ["poire", "pear"]),
+  f("Orange", 47, 0.9, 12, 0.1, ["orange"]),
+  f("Clémentine", 47, 0.9, 12, 0.2, ["clementine", "mandarine", "mandarin"]),
+  f("Mangue", 60, 0.8, 15, 0.4, ["mangue", "mango"]),
+  f("Ananas", 50, 0.5, 13, 0.1, ["ananas", "pineapple"]),
+  f("Pêche", 39, 0.9, 10, 0.3, ["peche", "peach"]),
+  f("Abricot", 48, 1.4, 11, 0.4, ["abricot", "apricot"]),
+  f("Avocat", 160, 2, 9, 15, ["avocat", "avocado"]),
+
+  // ============= EPICES & AROMATES =============
+  f("Cumin moulu", 375, 18, 44, 22, ["cumin"]),
+  f("Paprika", 282, 14, 54, 13, ["paprika"]),
+  f("Curry en poudre", 325, 14, 55, 14, ["curry"]),
+  f("Chili en poudre", 282, 12, 50, 17, ["chili", "piment", "chili powder"]),
+  f("Coriandre moulue", 298, 12, 55, 18, ["coriandre", "coriander", "cilantro"]),
+  f("Cannelle", 247, 4, 81, 1, ["cannelle", "cinnamon"]),
+  f("Curcuma", 354, 8, 65, 10, ["curcuma", "turmeric"]),
+  f("Gingembre poudre", 335, 9, 71, 4, ["gingembre", "ginger"]),
+  f("Origan séché", 265, 9, 69, 4, ["origan", "oregano"]),
+  f("Thym séché", 276, 9, 64, 7, ["thym", "thyme"]),
+  f("Basilic séché", 251, 23, 61, 4, ["basilic seche", "basilic", "basil"]),
+  f("Persil frais", 36, 3, 6, 0.8, ["persil", "parsley"]),
+  f("Coriandre fraîche", 23, 2, 4, 0.5, ["coriandre fraiche", "coriandre"]),
+  f("Ail en poudre", 331, 17, 73, 0.7, ["ail poudre", "garlic powder"]),
+  f("Oignon en poudre", 341, 10, 79, 1, ["oignon poudre", "onion powder"]),
+  f("Sel", 0, 0, 0, 0, ["sel", "salt"]),
+  f("Poivre noir moulu", 255, 11, 64, 3, ["poivre", "pepper"]),
+  f("Sauce soja", 53, 8, 5, 0.6, ["soja", "soy sauce", "shoyu"]),
+  f("Vinaigre balsamique", 88, 0.5, 17, 0, ["vinaigre balsamique", "balsamic"]),
+  f("Vinaigre de cidre", 22, 0, 0.9, 0, ["vinaigre cidre", "apple cider vinegar"]),
+
+  // ============= AUTRES BEURRES & PATES =============
+  f("Beurre d'amande", 614, 21, 19, 56, ["beurre amande", "almond butter"]),
+  f("Beurre de cajou", 587, 18, 28, 47, ["beurre cajou", "cashew butter"]),
+  f("Tahin", 595, 17, 21, 54, ["tahin", "tahini", "pate sesame"]),
+  f("Beurre de coco", 670, 7, 24, 65, ["beurre coco", "coconut butter"]),
+
+  // ============= AUTRES VARIANTS =============
+  f("Œuf entier cuit", 155, 13, 1.1, 11, ["oeuf", "oeufs", "egg", "eggs", "cuit"]),
+  f("Banane mûre", 89, 1.1, 23, 0.3, ["banane", "banana", "ripe"]),
 ];
+
+// Poids moyen par piece pour les aliments qui se comptent en unites.
+// Cle = nom slugifie (lowercase, accents stripped, "-" pour espaces).
+// Le seed script applique ces valeurs sur la colonne typical_weight_g.
+export const TYPICAL_WEIGHTS_PER_PIECE = {
+  // Œufs
+  "oeuf-entier-cru": 50,
+  "oeuf-entier-cuit": 50,
+  "oeuf-dur": 50,
+  "oeuf-au-plat": 50,
+  "oeuf-brouille": 50,
+  "blanc-d-oeuf": 35,
+  "jaune-d-oeuf": 17,
+
+  // Fruits
+  "banane": 120,
+  "banane-mure": 120,
+  "pomme": 180,
+  "poire": 170,
+  "orange": 130,
+  "clementine": 70,
+  "kiwi": 75,
+  "abricot": 35,
+  "peche": 150,
+  "nectarine": 140,
+  "prune": 60,
+  "figue": 50,
+  "avocat": 200,
+  "citron": 80,
+  "lime": 60,
+  "tomate": 120,
+  "tomate-cerise": 15,
+  "mangue": 200,
+  "ananas": 900,
+
+  // Légumes
+  "oignon": 110,
+  "oignon-rouge": 100,
+  "echalote": 30,
+  "gousse-d-ail": 5,
+  "carotte": 80,
+  "courgette": 200,
+  "concombre": 250,
+  "poivron": 150,
+  "champignon": 15,
+  "champignons-de-paris-cuits": 15,
+  "radis": 10,
+  "pomme-de-terre-cuite": 150,
+  "patate-douce-cuite": 200,
+
+  // Pain / boulangerie
+  "tranche-de-pain-blanc": 30,
+  "tranche-de-pain-complet": 30,
+  "tranche-de-pain-de-mie": 25,
+  "pain-au-chocolat": 70,
+  "croissant": 60,
+  "biscotte": 8,
+
+  // Yaourts / laitages
+  "yaourt-nature": 125,
+  "yaourt-grec": 150,
+  "fromage-blanc-3": 100,
+  "petit-suisse": 60,
+
+  // Autres
+  "tortilla": 60,
+  "wrap": 60,
+  "galette-de-riz": 8,
+  "barre-de-cereales": 30,
+  "barre-proteinee": 60,
+};
 
 // Recherche dans la base locale.
 // Match : tous les mots de la query (split sur espace) doivent apparaitre

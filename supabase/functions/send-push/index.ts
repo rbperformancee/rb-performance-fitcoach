@@ -19,13 +19,13 @@ serve(async (req) => {
     const res = await fetch(`${sUrl}/rest/v1/push_subscriptions?client_id=eq.${client_id}`,{headers:{apikey:sKey,Authorization:`Bearer ${sKey}`}})
     const subs = await res.json()
     let sent = 0, dead = 0
+    const errors: Array<{status?:number; message?:string; body?:string}> = []
     await Promise.all(subs.map(async (r:any) => {
       try {
         await webpush.sendNotification(r.subscription, JSON.stringify({title, body, url: url || '/'}))
         sent++
       } catch (e:any) {
         const status = e?.statusCode
-        // 410 Gone / 404 = subscription invalide → cleanup pour ne pas pourrir la base
         if (status === 410 || status === 404) {
           dead++
           const endpoint = r.endpoint || r.subscription?.endpoint
@@ -36,10 +36,11 @@ serve(async (req) => {
             }).catch(() => {})
           }
         } else {
-          console.error('push send failed:', status, e?.message)
+          console.error('push send failed:', status, e?.message, e?.body)
+          errors.push({ status, message: String(e?.message || ''), body: String(e?.body || '').slice(0, 300) })
         }
       }
     }))
-    return new Response(JSON.stringify({sent, total: subs.length, dead}), {headers: cors})
+    return new Response(JSON.stringify({sent, total: subs.length, dead, errors}), {headers: cors})
   } catch(e) { return new Response(JSON.stringify({error:String(e)}),{status:500,headers:cors}) }
 })

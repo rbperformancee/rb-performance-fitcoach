@@ -19,7 +19,7 @@ export function usePushNotifications(clientId) {
   const [subscribed, setSubscribed] = useState(false);
   const subscribe = useCallback(async () => {
     try {
-      if (!VAPID_PUBLIC_KEY) return;
+      if (!VAPID_PUBLIC_KEY || !clientId) return;
       const reg = await navigator.serviceWorker.ready;
       const expectedKey = urlB64ToUint8Array(VAPID_PUBLIC_KEY);
       let sub = await reg.pushManager.getSubscription();
@@ -35,10 +35,16 @@ export function usePushNotifications(clientId) {
         sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: expectedKey });
       }
       // onConflict (client_id, endpoint) — multi-device support
-      await supabase.from('push_subscriptions').upsert(
+      const { error: upsertErr } = await supabase.from('push_subscriptions').upsert(
         { client_id: clientId, endpoint: sub.endpoint, subscription: sub.toJSON() },
         { onConflict: 'client_id,endpoint' }
       );
+      if (upsertErr) {
+        // Le RLS pouvait bloquer si client_id != auth.uid() (cas frequent
+        // car clients.id != auth.users.id). On log mais on continue : la
+        // subscription navigateur est creee, juste pas persistee.
+        console.warn('[push] subscription upsert failed:', upsertErr.message);
+      }
       setSubscribed(true);
     } catch(e) { console.error('Push:', e); }
   }, [clientId]);

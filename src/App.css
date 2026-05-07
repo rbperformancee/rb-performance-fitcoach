@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@200;300;400;700&display=swap');
 
 html, body, #root {
-  background: #080C14 !important;
+  background: #050505 !important;
   font-family: 'DM Sans', -apple-system,
     BlinkMacSystemFont, sans-serif !important;
   -webkit-font-smoothing: antialiased;
@@ -807,12 +807,11 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 /* Safe area iOS : padding pour que le contenu reste visible sous la status bar.
- * Le gradient se TERMINE exactement à la frontière de la safe area sur #050505
- * — la couleur du body au point de raccord matche pile celle des pages → aucun
- * seam visible. Le top, lui, est légèrement plus clair pour éviter le pur noir. */
+ * Body uni #050505 (meme couleur que les pages) — pas de bande lighter au top
+ * pour que le status bar zone se confonde avec le reste du contenu. */
 body {
   padding-top: env(safe-area-inset-top, 0px);
-  background: linear-gradient(180deg, #0a0a0a 0%, #050505 env(safe-area-inset-top, 50px)) #050505;
+  background: #050505;
   background-attachment: fixed;
 }
 

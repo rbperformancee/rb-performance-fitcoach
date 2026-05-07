@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
 import { findFallbackVideo, FALLBACK_VIDEOS } from "../data/fallbackVideos";
 import LogPaymentModal, { checkPaymentNeeded } from "./coach/LogPaymentModal";
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { exportProgrammePDF } from "../utils/exportPDF";
@@ -16,6 +16,31 @@ const G_DIM = "rgba(2,209,186,0.1)";
 const BG = "#0a0a0a";
 const BG_2 = "#111";
 const BORDER = "rgba(255,255,255,0.06)";
+
+// Detection mobile partagee : breakpoint 768. Utilisee dans le composant
+// principal ET dans ExerciseRow / SortableSession qui sont definis hors
+// scope (et n'ont donc pas acces au state du parent).
+function useIsMobile() {
+  const [m, setM] = useState(
+    typeof window !== "undefined" && window.innerWidth < 768
+  );
+  useEffect(() => {
+    const onResize = () => setM(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return m;
+}
+
+// Sensors @dnd-kit partages : Pointer pour desktop (drag immediat apres 8px
+// pour distinguer click), Touch pour mobile (delai 250ms tolerance 5px pour
+// que le scroll natural ne declenche pas un drag).
+function useDragSensors() {
+  return useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+  );
+}
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const escAttr = (s) => String(s ?? "").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -450,7 +475,7 @@ function ExercisePicker({ value, onChange, onPickFull }) {
   }, [query]);
 
   return (
-    <div ref={ref} style={{ position: "relative", flex: 1 }}>
+    <div ref={ref} style={{ position: "relative", flex: 1, minWidth: 0 }}>
       <input
         type="text"
         value={query}
@@ -560,6 +585,7 @@ function SortableExercise({ ex, idx, total, onUpdate, onRemove, onMove, onDuplic
 
 function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps }) {
   const update = (k, v) => onUpdate({ ...ex, [k]: v });
+  const isMobile = useIsMobile();
   const iconBtn = { width: 24, height: 24, borderRadius: 6, border: "1px solid " + BORDER, background: "transparent", color: "rgba(255,255,255,0.45)", cursor: "pointer", fontSize: 11, flexShrink: 0, fontFamily: "inherit" };
   const [showCustomUrl, setShowCustomUrl] = useState(false);
   const [customUrlDraft, setCustomUrlDraft] = useState("");
@@ -578,10 +604,10 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
       background: "rgba(255,255,255,0.025)", border: "1px solid " + BORDER,
       borderRadius: 12, padding: 12, marginBottom: 10,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 6, marginBottom: 10, minWidth: 0 }}>
         {dragHandleProps ? (
           <button type="button" {...dragHandleProps}
-            style={{ width: 16, height: 24, cursor: "grab", color: "rgba(255,255,255,0.3)", background: "transparent", border: "none", padding: 0, fontSize: 12, flexShrink: 0 }}
+            style={{ width: isMobile ? 22 : 16, height: isMobile ? 32 : 24, cursor: "grab", color: "rgba(255,255,255,0.3)", background: "transparent", border: "none", padding: 0, fontSize: isMobile ? 14 : 12, flexShrink: 0, touchAction: "none" }}
             title="Glisser"
           >⋮⋮</button>
         ) : null}
@@ -595,18 +621,18 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
           onChange={(v) => update("name", v)}
           onPickFull={({ name, vidUrl }) => onUpdate({ ...ex, name, vidUrl })}
         />
-        {idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter" style={iconBtn}>↑</button>}
-        {idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre" style={iconBtn}>↓</button>}
+        {!isMobile && idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter" style={iconBtn}>↑</button>}
+        {!isMobile && idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre" style={iconBtn}>↓</button>}
         <button type="button" onClick={onDuplicate} title="Dupliquer" style={{ ...iconBtn, background: G_DIM, borderColor: "rgba(2,209,186,0.25)", color: G }}>⎘</button>
         <button type="button" onClick={onRemove} title="Supprimer" style={{ ...iconBtn, fontSize: 14 }}>×</button>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 6 }}>
         <SuggestField label="Reps" value={ex.reps} onChange={(v) => update("reps", v)} placeholder="4X8-10" suggestions={REPS_SUGGESTIONS} />
         <SuggestField label="Tempo" value={ex.tempo} onChange={(v) => update("tempo", v)} placeholder="3010" suggestions={TEMPO_SUGGESTIONS} />
         <SuggestField label="RIR" value={ex.rir} onChange={(v) => update("rir", v)} placeholder="1" suggestions={RIR_SUGGESTIONS} />
         <SuggestField label="Repos" value={ex.rest} onChange={(v) => update("rest", v)} placeholder="2'" suggestions={REST_SUGGESTIONS} />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 6, marginTop: 6 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: 6, marginTop: 6 }}>
         <TextField label="Groupe" value={ex.group} onChange={(v) => update("group", v)} placeholder="A1, A2…" />
         <TextField label="🎥 Vidéo URL" value={ex.vidUrl} onChange={(v) => update("vidUrl", v)} placeholder="Auto-rempli si tu choisis depuis la liste" />
       </div>
@@ -698,6 +724,8 @@ function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDu
 
 function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps }) {
   const update = (k, v) => onUpdate({ ...session, [k]: v });
+  const isMobile = useIsMobile();
+  const sensors = useDragSensors();
   const updateExercise = (exIdx, ex) => onUpdate({ ...session, exercises: session.exercises.map((e, i) => i === exIdx ? ex : e) });
   const addExercise = () => onUpdate({ ...session, exercises: [...session.exercises, newExercise()] });
   const removeExercise = (exIdx) => onUpdate({ ...session, exercises: session.exercises.filter((_, i) => i !== exIdx) });
@@ -721,50 +749,51 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
       background: BG_2, border: "1px solid " + BORDER, borderRadius: 14,
       padding: 16, marginBottom: 14,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, marginBottom: 14, minWidth: 0, flexWrap: "wrap" }}>
         {dragHandleProps ? (
           <button type="button" {...dragHandleProps}
-            style={{ width: 24, height: 24, cursor: "grab", color: "rgba(255,255,255,0.3)", background: "transparent", border: "none", padding: 0, fontSize: 16 }}
+            style={{ width: isMobile ? 28 : 24, height: isMobile ? 32 : 24, cursor: "grab", color: "rgba(255,255,255,0.3)", background: "transparent", border: "none", padding: 0, fontSize: 16, flexShrink: 0, touchAction: "none" }}
             title="Glisser pour réorganiser"
           >⋮⋮</button>
         ) : null}
-        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase" }}>Séance {idx + 1}</span>
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", flexShrink: 0 }}>Séance {idx + 1}</span>
         <input
           type="text"
           value={session.name || ""}
           onChange={(e) => update("name", e.target.value)}
           placeholder="Nom (Push, Pull, Legs…)"
           style={{
-            flex: 1, padding: "6px 10px", background: "transparent", border: "1px solid " + BORDER,
+            flex: 1, minWidth: 0, padding: "6px 10px", background: "transparent", border: "1px solid " + BORDER,
             borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit", outline: "none",
           }}
         />
-        {idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter la séance"
-          style={{ padding: "6px 8px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
+        {!isMobile && idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter la séance"
+          style={{ padding: "6px 8px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
         >↑</button>}
-        {idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre la séance"
-          style={{ padding: "6px 8px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
+        {!isMobile && idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre la séance"
+          style={{ padding: "6px 8px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
         >↓</button>}
         <button type="button" onClick={onDuplicate} title="Dupliquer la séance"
-          style={{ padding: "6px 10px", background: G_DIM, border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+          style={{ padding: "6px 10px", background: G_DIM, border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
         >⎘</button>
         <button
           type="button"
           onClick={onRemove}
           style={{
             padding: "6px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)",
-            borderRadius: 8, color: "#c0392b", fontSize: 11, cursor: "pointer", fontFamily: "inherit",
+            borderRadius: 8, color: "#c0392b", fontSize: 11, cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
           }}
-        >Supprimer</button>
+        >{isMobile ? "×" : "Supprimer"}</button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 14 }}>
         <TextArea label="Description" value={session.description} onChange={(v) => update("description", v)} placeholder="Pectoraux, épaules, triceps…" />
         <TextArea label="Finisher" value={session.finisher} onChange={(v) => update("finisher", v)} placeholder="3 séries de pompes lestées AMRAP…" />
       </div>
 
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 10 }}>Exercices</div>
       <DndContext
+        sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={(event) => {
           const { active, over } = event;
@@ -820,6 +849,8 @@ function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplica
 
 function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove, dragHandleProps }) {
   const update = (k, v) => onUpdate({ ...week, [k]: v });
+  const isMobile = useIsMobile();
+  const sensors = useDragSensors();
   const updateSession = (sIdx, s) => onUpdate({ ...week, sessions: week.sessions.map((x, i) => i === sIdx ? s : x) });
   const addSession = () => onUpdate({ ...week, sessions: [...week.sessions, newSession(week.sessions.length + 1)] });
   const removeSession = (sIdx) => {
@@ -845,14 +876,14 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
 
   return (
     <div style={{
-      marginBottom: 24, padding: 18,
+      marginBottom: 24, padding: isMobile ? 12 : 18,
       background: "linear-gradient(180deg, rgba(2,209,186,0.04), transparent)",
       border: "1px solid " + BORDER, borderRadius: 18,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10, marginBottom: 16, minWidth: 0, flexWrap: "wrap" }}>
         {dragHandleProps ? (
           <button type="button" {...dragHandleProps}
-            style={{ width: 24, height: 36, cursor: "grab", color: "rgba(255,255,255,0.4)", background: "transparent", border: "none", padding: 0, fontSize: 18 }}
+            style={{ width: isMobile ? 28 : 24, height: isMobile ? 40 : 36, cursor: "grab", color: "rgba(255,255,255,0.4)", background: "transparent", border: "none", padding: 0, fontSize: 18, flexShrink: 0, touchAction: "none" }}
             title="Glisser pour réorganiser la semaine"
           >⋮⋮</button>
         ) : null}
@@ -867,42 +898,43 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
           onChange={(e) => update("name", e.target.value)}
           placeholder={"Semaine " + (weekIdx + 1)}
           style={{
-            flex: 1, padding: "8px 12px", background: "transparent", border: "1px solid " + BORDER,
+            flex: 1, minWidth: 0, padding: "8px 12px", background: "transparent", border: "1px solid " + BORDER,
             borderRadius: 10, color: "#fff", fontSize: 16, fontWeight: 800, fontFamily: "inherit", outline: "none",
           }}
         />
-        {weekIdx > 0 && (
+        {!isMobile && weekIdx > 0 && (
           <button type="button" onClick={() => onMove(-1)} title="Monter cette semaine"
-            style={{ padding: "8px 10px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ padding: "8px 10px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
           >↑</button>
         )}
-        {weekIdx < totalWeeks - 1 && (
+        {!isMobile && weekIdx < totalWeeks - 1 && (
           <button type="button" onClick={() => onMove(1)} title="Descendre cette semaine"
-            style={{ padding: "8px 10px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ padding: "8px 10px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
           >↓</button>
         )}
         <button
           type="button"
           onClick={onDuplicate}
           style={{
-            padding: "8px 14px", background: G_DIM, border: "1px solid rgba(2,209,186,0.3)",
+            padding: isMobile ? "8px 10px" : "8px 14px", background: G_DIM, border: "1px solid rgba(2,209,186,0.3)",
             borderRadius: 10, color: G, fontSize: 11, fontWeight: 700, cursor: "pointer",
-            fontFamily: "inherit", letterSpacing: 0.5,
+            fontFamily: "inherit", letterSpacing: 0.5, flexShrink: 0,
           }}
           title="Dupliquer cette semaine"
-        >⎘ Dupliquer</button>
+        >{isMobile ? "⎘" : "⎘ Dupliquer"}</button>
         <button
           type="button"
           onClick={onRemove}
           style={{
-            padding: "8px 14px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)",
+            padding: isMobile ? "8px 10px" : "8px 14px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)",
             borderRadius: 10, color: "#c0392b", fontSize: 11, fontWeight: 700, cursor: "pointer",
-            fontFamily: "inherit", letterSpacing: 0.5,
+            fontFamily: "inherit", letterSpacing: 0.5, flexShrink: 0,
           }}
-        >Supprimer</button>
+        >{isMobile ? "×" : "Supprimer"}</button>
       </div>
 
       <DndContext
+        sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={(event) => {
           const { active, over } = event;
@@ -1153,7 +1185,18 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         const ParserMod = require("../utils/parserProgramme");
         const parsed = ParserMod.parseProgrammeHTML(existingProgramme.html_content);
         const restored = fromParsed(parsed);
-        if (restored && restored.weeks && restored.weeks.length > 0) return restored;
+        if (restored && restored.weeks && restored.weeks.length > 0) {
+          // start_date / training_days vivent dans des colonnes DB séparées
+          // (pas dans le HTML). Sans ça, l'utilisateur voit les champs vides
+          // a chaque réouverture → impression que "ça ne sauvegarde pas".
+          return {
+            ...restored,
+            startDate: existingProgramme.start_date || "",
+            trainingDays: Array.isArray(existingProgramme.training_days) && existingProgramme.training_days.length
+              ? existingProgramme.training_days
+              : [1],
+          };
+        }
       } catch (e) { console.warn("[ProgrammeBuilder] parse existing failed:", e); }
     }
     // Tente de restaurer un draft localStorage (mode création)
@@ -1193,6 +1236,12 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   const [tplName, setTplName] = useState("");
   const [tplDesc, setTplDesc] = useState("");
   const [savingTpl, setSavingTpl] = useState(false);
+
+  // Mobile responsive : breakpoint 768px ; on bascule en single-pane avec
+  // tabs Edit/Preview (sinon le split 50/50 = ~190px chacun sur iPhone).
+  const isMobile = useIsMobile();
+  const [mobileView, setMobileView] = useState("edit"); // "edit" | "preview"
+  const dragSensors = useDragSensors();
 
   // Autosave debounce 800ms (uniquement mode création, pas edit)
   useEffect(() => {
@@ -1382,7 +1431,11 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
     setSaving(true);
     try {
       const html = buildHTML(programme);
-      await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
+      // On supprime les programmes precedents au lieu de les desactiver :
+      // historique pas affiche dans l'UI, accumulation = bruit. run_logs.programme_id
+      // passe a NULL (ON DELETE SET NULL), exercise_logs / session_completions
+      // referencent client_id donc preserves.
+      await supabase.from("programmes").delete().eq("client_id", client.id);
       const userResp = await supabase.auth.getUser();
       const email = userResp && userResp.data && userResp.data.user ? userResp.data.user.email : null;
       const { error } = await supabase.from("programmes").insert({
@@ -1424,7 +1477,19 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   };
 
   return (
-    <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, background: BG, color: "#fff", fontFamily: "Inter,-apple-system,sans-serif", display: "flex", flexDirection: "column" }}>
+    <div style={{
+      position: "absolute", top: 0, right: 0, bottom: 0, left: 0,
+      background: BG, color: "#fff", fontFamily: "Inter,-apple-system,sans-serif",
+      display: "flex", flexDirection: "column",
+      // Safe-area iOS : sans ça, sur iPhone avec notch/Dynamic Island, le
+      // bouton Retour passe derriere la zone système et devient incliquable.
+      paddingTop: "env(safe-area-inset-top)",
+      paddingBottom: "env(safe-area-inset-bottom)",
+      // Empeche le swipe horizontal global (un input large quelque part dans
+      // l'arborescence pousse le viewport — on contient à la racine).
+      overflowX: "hidden",
+      maxWidth: "100vw",
+    }}>
       {showSaveTemplate ? (
         <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
           <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 460, width: "100%", padding: 28 }}>
@@ -1570,39 +1635,43 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "14px 22px", borderBottom: "1px solid " + BORDER, background: BG_2, flexShrink: 0,
+        padding: isMobile ? "10px 12px" : "14px 22px", borderBottom: "1px solid " + BORDER, background: BG_2, flexShrink: 0,
+        gap: 8,
+        overflow: "hidden",
+        maxWidth: "100%",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 14, minWidth: 0 }}>
           <button
             type="button"
             onClick={onClose}
             style={{
-              padding: "8px 14px", background: "transparent", border: "1px solid " + BORDER,
+              padding: isMobile ? "8px 10px" : "8px 14px", background: "transparent", border: "1px solid " + BORDER,
               borderRadius: 10, color: "rgba(255,255,255,0.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+              flexShrink: 0,
             }}
-          >← Retour</button>
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase" }}>Programme Builder</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Pour <strong>{(client && client.full_name) || "—"}</strong></div>
+          >←{isMobile ? "" : " Retour"}</button>
+          <div style={{ minWidth: 0, overflow: "hidden" }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase" }}>{isMobile ? "Builder" : "Programme Builder"}</div>
+            <div style={{ fontSize: isMobile ? 11 : 13, color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Pour <strong>{(client && client.full_name) || "—"}</strong></div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Status indicator — point pulsé discret (pas de texte qui surcharge) */}
-          {!editMode && !savedFlash && autosavedAt > 0 ? (
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10, flexShrink: 0 }}>
+          {/* Status indicator — caché sur mobile pour économiser la largeur */}
+          {!isMobile && !editMode && !savedFlash && autosavedAt > 0 ? (
             <span title="Brouillon auto-sauvegardé" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
               Brouillon
             </span>
           ) : null}
-          {savedFlash ? (
+          {!isMobile && savedFlash ? (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10, color: G, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: G, boxShadow: `0 0 8px ${G}` }} />
               Enregistré
             </span>
           ) : null}
 
-          {/* Boutons secondaires — icon-first, label visible mais discret */}
-          {!editMode && (
+          {/* Boutons secondaires — caches sur mobile pour ne pas wrapper */}
+          {!isMobile && !editMode && (
             <button
               type="button"
               onClick={() => setShowTemplates(true)}
@@ -1618,104 +1687,153 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               <span>Templates</span>
             </button>
           )}
-          <button
-            type="button"
-            onClick={async () => {
-              try { await exportProgrammePDF(programme); }
-              catch (e) { console.error(e); alert("Erreur PDF : " + e.message); }
-            }}
-            title="Export PDF"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              padding: "8px 12px", background: "rgba(255,255,255,0.03)",
-              border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
-              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            <ToolbarIcon name="pdf" />
-            <span>PDF</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              try {
-                const json = JSON.stringify(programme, null, 2);
-                const blob = new Blob([json], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `programme-${(programme.name || "rb-perform").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}.json`;
-                document.body.appendChild(a); a.click(); a.remove();
-                URL.revokeObjectURL(url);
-              } catch (e) { alert("Erreur export JSON : " + e.message); }
-            }}
-            title="Export JSON (pour outil PDF standalone)"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              padding: "8px 12px", background: "rgba(255,255,255,0.03)",
-              border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
-              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <text x="6" y="17" fontSize="6" fill="currentColor" stroke="none" fontFamily="monospace" fontWeight="bold">{ }</text>
-            </svg>
-            <span>JSON</span>
-          </button>
-          <button
-            type="button"
-            onClick={openApplyMulti}
-            title="Appliquer à plusieurs clients"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              padding: "8px 12px", background: "rgba(255,255,255,0.03)",
-              border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
-              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            <ToolbarIcon name="users" />
-            <span>Multi-clients</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowSaveTemplate(true)}
-            title="Sauver comme template"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              padding: "8px 12px", background: "rgba(255,255,255,0.03)",
-              border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
-              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            <ToolbarIcon name="star" />
-            <span>Template</span>
-          </button>
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={async () => {
+                try { await exportProgrammePDF(programme); }
+                catch (e) { console.error(e); alert("Erreur PDF : " + e.message); }
+              }}
+              title="Export PDF"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "8px 12px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+                fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              <ToolbarIcon name="pdf" />
+              <span>PDF</span>
+            </button>
+          )}
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  const json = JSON.stringify(programme, null, 2);
+                  const blob = new Blob([json], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `programme-${(programme.name || "rb-perform").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}.json`;
+                  document.body.appendChild(a); a.click(); a.remove();
+                  URL.revokeObjectURL(url);
+                } catch (e) { alert("Erreur export JSON : " + e.message); }
+              }}
+              title="Export JSON (pour outil PDF standalone)"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "8px 12px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+                fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <text x="6" y="17" fontSize="6" fill="currentColor" stroke="none" fontFamily="monospace" fontWeight="bold">{ }</text>
+              </svg>
+              <span>JSON</span>
+            </button>
+          )}
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={openApplyMulti}
+              title="Appliquer à plusieurs clients"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "8px 12px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+                fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              <ToolbarIcon name="users" />
+              <span>Multi-clients</span>
+            </button>
+          )}
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={() => setShowSaveTemplate(true)}
+              title="Sauver comme template"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "8px 12px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.7)",
+                fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              <ToolbarIcon name="star" />
+              <span>Template</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
             style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "10px 18px",
+              padding: isMobile ? "8px 12px" : "10px 18px",
               background: "linear-gradient(135deg, " + G + ", #0891b2)",
               border: "none", borderRadius: 10, color: "#000",
-              fontSize: 12, fontWeight: 800, cursor: saving ? "wait" : "pointer",
+              fontSize: isMobile ? 11 : 12, fontWeight: 800, cursor: saving ? "wait" : "pointer",
               fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase",
               boxShadow: "0 6px 20px rgba(2,209,186,0.25)",
             }}
           >
             {!saving && <ToolbarIcon name="save" size={14} />}
-            <span>{saving ? "Sauvegarde…" : "Sauvegarder"}</span>
+            <span>{saving ? (isMobile ? "…" : "Sauvegarde…") : (isMobile ? "OK" : "Sauvegarder")}</span>
           </button>
         </div>
       </div>
 
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 0, overflow: "hidden" }}>
-        <div style={{ overflowY: "auto", padding: 22, borderRight: "1px solid " + BORDER }}>
+      {/* Tabs Edit/Preview — uniquement mobile */}
+      {isMobile && (
+        <div style={{ display: "flex", borderBottom: "1px solid " + BORDER, background: BG_2, flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={() => setMobileView("edit")}
+            style={{
+              flex: 1, padding: "10px 0", background: "transparent",
+              border: "none", borderBottom: "2px solid " + (mobileView === "edit" ? G : "transparent"),
+              color: mobileView === "edit" ? G : "rgba(255,255,255,0.5)",
+              fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase",
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >Édition</button>
+          <button
+            type="button"
+            onClick={() => setMobileView("preview")}
+            style={{
+              flex: 1, padding: "10px 0", background: "transparent",
+              border: "none", borderBottom: "2px solid " + (mobileView === "preview" ? G : "transparent"),
+              color: mobileView === "preview" ? G : "rgba(255,255,255,0.5)",
+              fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase",
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >Aperçu</button>
+        </div>
+      )}
+
+      <div style={{
+        flex: 1,
+        display: isMobile ? "block" : "grid",
+        gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+        gap: 0, overflow: "hidden", position: "relative",
+      }}>
+        <div style={{
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: isMobile ? 14 : 22,
+          borderRight: isMobile ? "none" : "1px solid " + BORDER,
+          display: isMobile && mobileView !== "edit" ? "none" : "block",
+          height: isMobile ? "100%" : "auto",
+          maxWidth: "100%",
+        }}>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 12 }}>Informations</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 22 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 22 }}>
             <TextField label="Nom du programme" value={programme.name} onChange={(v) => update("name", v)} placeholder="ex : PRISE DE MASSE 12 SEM." />
             <TextField label="Client" value={programme.clientName} onChange={(v) => update("clientName", v)} placeholder="Prénom Nom" />
             <TextField label="Durée" value={programme.duration} onChange={(v) => update("duration", v)} placeholder="ex : 12" />
@@ -1727,7 +1845,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
           {/* === CALENDRIER === */}
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 12 }}>Calendrier</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: 6 }}>Date de démarrage</label>
               <input
@@ -1779,6 +1897,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 12 }}>Structure</div>
           <DndContext
+            sensors={dragSensors}
             collisionDetection={closestCenter}
             onDragEnd={(event) => {
               const { active, over } = event;
@@ -1824,7 +1943,16 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           >+ Ajouter une semaine</button>
         </div>
 
-        <div style={{ overflowY: "auto", padding: 22, background: BG_2, position: "relative" }}>
+        <div style={{
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: isMobile ? 14 : 22,
+          background: BG_2,
+          position: "relative",
+          display: isMobile && mobileView !== "preview" ? "none" : "block",
+          height: isMobile ? "100%" : "auto",
+          maxWidth: "100%",
+        }}>
           {/* Toggle Aperçu / Analytics */}
           <div style={{ display: "flex", gap: 4, padding: 4, background: "rgba(255,255,255,0.04)", border: "1px solid " + BORDER, borderRadius: 100, width: "fit-content", marginBottom: 14 }}>
             <button type="button" onClick={() => setShowAnalytics(false)}

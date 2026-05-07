@@ -4,7 +4,7 @@
 // programme cache proactivement pour acces offline.
 
 const CACHE_VERSION = "rbperf-v" + (self.registration?.scope || "") + "-" + Date.now();
-const STATIC_CACHE = "rbperf-static-v8";
+const STATIC_CACHE = "rbperf-static-v10";
 const DATA_CACHE = "rbperf-data-v1";
 
 // App shell : fichiers critiques pre-caches a l'installation

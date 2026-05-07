@@ -102,87 +102,35 @@ export default function JoinPage() {
 
     setSubmitting(true);
     try {
-      // Cree le compte client
-      const { data: signRes, error: signErr } = await supabase.auth.signUp({
-        email: invitation.email,
-        password,
-        options: {
-          data: { full_name: prenom.trim(), invited_by_coach: invitation.coach_id },
-        },
+      // Tout le boulot (auth + clients + programme + invitation accepted) est
+      // fait cote serveur par /api/auth/redeem-invitation avec le service-role.
+      // Plus robuste que le flow signUp() + insert manuel : pas d'echec RLS
+      // silencieux si Supabase est en mode "Confirm email" ON.
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+
+      const r = await fetch("/api/auth/redeem-invitation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password, prenom: prenom.trim() }),
       });
-      if (signErr) throw signErr;
 
-      const userId = signRes?.user?.id;
-
-      // Cree la ligne clients liee au coach
-      if (userId) {
-        const clientInsert = {
-          id: userId,
-          user_id: userId,
-          coach_id: invitation.coach_id,
-          email: invitation.email,
-          full_name: prenom.trim(),
-          status: "active",
-          subscription_start_date: new Date().toISOString(),
-        };
-        const { error: cliErr } = await supabase.from("clients").insert(clientInsert);
-        if (cliErr && cliErr.code !== "23505") {
-          // 23505 = duplicate (client deja cree via trigger eventuel)
-          console.warn("[JoinPage] client insert:", cliErr);
-        }
-
-        // Assigne le programme si fourni
-        if (invitation.programme_id) {
-          try {
-            // Clone le programme source vers le nouveau client_id
-            const { data: srcProg, error: fetchErr } = await supabase
-              .from("programmes")
-              .select("html_content, programme_name")
-              .eq("id", invitation.programme_id)
-              .maybeSingle();
-            if (fetchErr) throw fetchErr;
-            if (!srcProg) {
-              console.warn("[JoinPage] Programme source introuvable :", invitation.programme_id);
-            } else {
-              const { error: insErr } = await supabase.from("programmes").insert({
-                client_id: userId,
-                html_content: srcProg.html_content,
-                programme_name: srcProg.programme_name,
-                is_active: true,
-                uploaded_by: "invitation",
-              });
-              if (insErr) throw insErr;
-            }
-          } catch (e) {
-            // Le programme n'a pas pu être cloné — on log et on alerte le coach
-            // par notif côté client (toast). L'inscription continue : le coach
-            // pourra réassigner depuis son dashboard.
-            console.warn("[JoinPage] Clone programme échoué :", e?.message || e);
-            try {
-              if (typeof window !== "undefined" && window.__SENTRY__) {
-                window.__SENTRY__.hub?.getClient()?.captureException?.(
-                  new Error(`JoinPage clone programme failed: ${e?.message}`),
-                  { extra: { invitation_id: invitation.id, programme_id: invitation.programme_id, user_id: userId } },
-                );
-              }
-            } catch (_) {}
-          }
-        }
-
-        // Marque invitation comme acceptee
-        await supabase
-          .from("invitations")
-          .update({ status: "accepted", accepted_at: new Date().toISOString() })
-          .eq("id", invitation.id);
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || t("jp.signup_error"));
       }
 
-      // Si signUp renvoie une session immediatement → redirect
-      if (signRes?.session) {
-        window.location.href = "/";
-      } else {
-        // Sinon confirmation email (si Supabase est en mode double-opt-in)
-        setInvitation({ ...invitation, _sentConfirm: true });
-      }
+      const { email } = await r.json();
+
+      // Le user existe maintenant en base + clients row + programme clone.
+      // On ouvre une session avec le password fraichement defini.
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInErr) throw signInErr;
+
+      window.location.href = "/";
     } catch (e) {
       setFormError(e.message || t("jp.signup_error"));
       setSubmitting(false);

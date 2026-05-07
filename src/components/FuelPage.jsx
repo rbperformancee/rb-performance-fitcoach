@@ -9,6 +9,7 @@ import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
 import EmptyState from "./EmptyState";
 import Spinner from "./Spinner";
 import { toast } from "./Toast";
+import ClientRecipesBrowser, { preloadRecipes } from "./client/ClientRecipesBrowser";
 
 // ===== Scanner code-barre via BarcodeDetector API native =====
 // Marche sur : iOS Safari 17+ (donc iOS 18), Chrome Android 83+, Chrome desktop, Edge.
@@ -426,6 +427,12 @@ export default function FuelPage({ client, appData }) {
   const [quantite, setQuantite] = useState(100);
   const [showWater, setShowWater] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
+  const [showRecipes, setShowRecipes] = useState(false);
+  // Preload recettes en background des qu'on entre dans Fuel : le modal
+  // s'ouvre instant avec la liste deja remplie (plus de "Chargement...").
+  useEffect(() => {
+    preloadRecipes().catch(() => {});
+  }, []);
   const [showScan, setShowScan] = useState(false);
   const [recording, setRecording] = useState(false);
   const [voiceText, setVoiceText] = useState("");
@@ -839,12 +846,12 @@ export default function FuelPage({ client, appData }) {
           </div>
         </div>
 
-        {/* TABS */}
+        {/* TABS — l'onglet Objectifs est retire cote client : c'est le coach
+            qui les fixe depuis son dashboard, le client n'a pas a les modifier. */}
         <div style={{ display: "flex", gap: 4, margin: "32px 24px 0", overflow: "hidden" }}>
           {[
             { id: "nutrition", label: t("fuel.tab_nutrition") },
             { id: "supplements", label: t("fuel.tab_supplements") },
-            { id: "objectifs", label: t("fuel.tab_goals") },
           ].map((tab) => (
             <button key={tab.id} onClick={() => setFuelTab(tab.id)} style={{
               padding: "8px 18px", borderRadius: 100, border: "none", cursor: "pointer",
@@ -857,9 +864,6 @@ export default function FuelPage({ client, appData }) {
 
         {/* ===== SUPPLEMENTS TAB ===== */}
         {fuelTab === "supplements" && <SupplementsTab clientId={client?.id} />}
-
-        {/* ===== OBJECTIFS TAB ===== */}
-        {fuelTab === "objectifs" && <ObjectifsTab goals={goals} onSave={fuelData.updateGoals} />}
 
         <div style={{ display: fuelTab === "nutrition" ? "block" : "none" }}>
         {/* SCORE ENERGIE */}
@@ -951,6 +955,16 @@ export default function FuelPage({ client, appData }) {
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
                   <path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14" />
+                </svg>
+              </button>
+              <button
+                onClick={() => { setShowRecipes(true); }}
+                aria-label="Choisir une recette"
+                style={{ background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 14, width: 42, height: 42, color: GREEN, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 </svg>
               </button>
               <button onClick={() => { setShowAdd(true); setSelectedRepas("Dejeuner"); }} style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#000", border: "none", borderRadius: 14, padding: "10px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px" }}>{t("fuel.add_food")}</button>
@@ -1314,6 +1328,22 @@ export default function FuelPage({ client, appData }) {
             )}
           </div>
         </div>
+      )}
+
+      {/* MODAL RECETTES — browse + add to meal */}
+      {showRecipes && (
+        <ClientRecipesBrowser
+          defaultDate={dateSel.date}
+          defaultMealType="Dejeuner"
+          onClose={() => setShowRecipes(false)}
+          onAdded={(result) => {
+            setShowRecipes(false);
+            if (result?.inserted_logs?.length) {
+              fuelData.appendLogs?.(result.inserted_logs);
+            }
+            fuelData.fetchAll?.();
+          }}
+        />
       )}
 
       {/* MODAL SCAN code-barre */}

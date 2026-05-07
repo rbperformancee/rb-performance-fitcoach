@@ -16,8 +16,9 @@ const TABS = [
   { id: "overview",    num: "01", label: "Overview" },
   { id: "business",    num: "02", label: "Business" },
   { id: "clients",     num: "03", label: "Clients" },
-  { id: "analytics",   num: "04", label: "Analytics" },
-  { id: "achievements",num: "05", label: "Achievements" },
+  { id: "recipes",     num: "04", label: "Recettes" },
+  { id: "analytics",   num: "05", label: "Analytics" },
+  { id: "achievements",num: "06", label: "Achievements" },
 ];
 
 export default function DashboardTabs({ active, onChange, alerts = 0 }) {

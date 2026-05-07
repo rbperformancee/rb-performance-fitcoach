@@ -34,6 +34,7 @@ import TagManager, { TagBadge } from "./coach/TagManager";
 import ActivityTimeline from "./coach/ActivityTimeline";
 import AnalyticsSection from "./coach/AnalyticsSection";
 import AchievementsSection from "./coach/AchievementsSection";
+import RecipesSection from "./coach/RecipesSection";
 import TransformationView from "./coach/TransformationView";
 import AIAnalyze from "./coach/AIAnalyze";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
@@ -471,16 +472,21 @@ function activityColor(lastSeen) {
   if (d <= 7) return "rgba(255,255,255,0.4)";
   return "#ff6b6b";
 }
-function Avatar({ name, size = 40, active }) {
+function Avatar({ name, size = 40, active, src }) {
+  // Si le client a uploade une photo (clients.avatar_url), on l'affiche.
+  // Sinon fallback sur l'initiale du prenom (ancien comportement).
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: active ? G_DIM : "rgba(255,255,255,0.04)",
+      background: src ? "transparent" : (active ? G_DIM : "rgba(255,255,255,0.04)"),
+      backgroundImage: src ? `url(${src})` : "none",
+      backgroundSize: "cover", backgroundPosition: "center",
       border: `2px solid ${active ? G_BORDER : "rgba(255,255,255,0.08)"}`,
       display: "flex", alignItems: "center", justifyContent: "center",
       fontWeight: 700, fontSize: size * 0.38, color: active ? G : "#666",
+      overflow: "hidden",
     }}>
-      {(name || "?")[0].toUpperCase()}
+      {!src && (name || "?")[0].toUpperCase()}
     </div>
   );
 }
@@ -809,6 +815,135 @@ function CoachSupplementsPanel({ clientId }) {
   );
 }
 
+/* ── Modal détail séance : poids/reps par exercice, RPE, durée ── */
+function SessionDetailModal({ data, onClose }) {
+  const { session, dayExs } = data;
+  const date = new Date(session.logged_at);
+  const durationMin = session.duration_seconds ? Math.round(session.duration_seconds / 60) : null;
+  // Grouper exercise_logs par ex_key + tri chronologique pour que les sets
+  // d'un meme exo restent groupes dans l'ordre d'execution
+  const grouped = {};
+  dayExs.slice().sort((a, b) => new Date(a.logged_at) - new Date(b.logged_at)).forEach((e) => {
+    const key = e.ex_key || "—";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(e);
+  });
+  const exercises = Object.entries(grouped);
+  const G_LOCAL = "#02d1ba";
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 20, overflowY: "auto",
+      }}
+    >
+      <div style={{
+        background: "#0e0e0e", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18,
+        maxWidth: 560, width: "100%", padding: 24, maxHeight: "90vh",
+        display: "flex", flexDirection: "column", fontFamily: "-apple-system,'Inter',sans-serif",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 18 }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G_LOCAL, textTransform: "uppercase", marginBottom: 5 }}>
+              Détail séance
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: -0.3 }}>
+              {session.session_name || session.programme_name || "Séance"}
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+              {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {durationMin != null && <span> · {durationMin} min</span>}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer"
+            style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}
+          >×</button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+          {exercises.length === 0 ? (
+            <div style={{
+              padding: "44px 24px", textAlign: "center",
+              background: "linear-gradient(180deg, rgba(2,209,186,0.025), rgba(255,255,255,0.01))",
+              border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14,
+              display: "flex", flexDirection: "column", alignItems: "center",
+            }}>
+              {/* Pictogramme custom (haltère) — meme aesthetic que les autres ecrans */}
+              <div style={{
+                width: 72, height: 72, borderRadius: "50%",
+                background: "radial-gradient(circle at 30% 30%, rgba(2,209,186,0.16), rgba(2,209,186,0.03) 60%, transparent 80%)",
+                border: "1px solid rgba(2,209,186,0.16)",
+                boxShadow: "0 0 40px rgba(2,209,186,0.08), inset 0 0 20px rgba(2,209,186,0.04)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 18,
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={G_LOCAL} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.4 14.4 9.6 9.6" />
+                  <path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z" />
+                  <path d="m21.5 21.5-1.4-1.4" />
+                  <path d="M3.9 3.9 2.5 2.5" />
+                  <path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z" />
+                </svg>
+              </div>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G_LOCAL, textTransform: "uppercase", marginBottom: 8, opacity: 0.7 }}>
+                Sans détail
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 10, letterSpacing: "-0.4px" }}>
+                Séance validée sans tracking
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, maxWidth: 340 }}>
+                Le client a marqué la séance comme terminée sans saisir le poids ni les reps de chaque set. Rappelle-lui de logger ses charges directement dans l'app pendant la séance.
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {exercises.map(([key, sets], i) => {
+                const name = key.split("_").slice(-1)[0] || key;
+                const maxW = Math.max(...sets.map((s) => s.weight || 0));
+                const totalReps = sets.reduce((sum, s) => sum + (s.reps || 0), 0);
+                return (
+                  <div key={i} style={{
+                    background: "rgba(255,255,255,0.025)",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    borderRadius: 12, padding: "12px 14px",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", textTransform: "capitalize" }}>{name}</div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>
+                        {sets.length} set{sets.length > 1 ? "s" : ""} · max {maxW}kg · {totalReps} reps
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 6 }}>
+                      {sets.map((s, j) => (
+                        <div key={j} style={{
+                          padding: "6px 8px",
+                          background: "rgba(2,209,186,0.05)",
+                          border: "1px solid rgba(2,209,186,0.15)",
+                          borderRadius: 8,
+                          fontSize: 11, textAlign: "center",
+                        }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL }}>{s.weight || 0}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 1 }}>kg</span></div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>×{s.reps || 0}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
 function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [], onWantInvoice }) {
   const t = useT();
@@ -827,6 +962,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
   const [exLogs, setExLogs] = useState([]);
+  const [sessionDetail, setSessionDetail] = useState(null); // { session, dayExs }
   const [coachNotes, setCoachNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
@@ -987,7 +1123,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       />
     )}
 
-    {/* Programme Builder plein ecran — z-index > demo banner (9999) */}
+    {/* Programme Builder plein ecran — z-index > demo banner (9999).
+        Sur mobile (<768px), App.css force left:0 via .coach-overlay-panel. */}
     {showBuilder && (
       <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 10000 }}>
         <ProgrammeBuilder
@@ -1040,7 +1177,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
           {/* Identite + statut */}
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
-            <Avatar name={client.full_name || client.email} size={60} active={!!prog} />
+            <Avatar name={client.full_name || client.email} size={60} active={!!prog} src={client.avatar_url} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <h1 style={{ fontSize: "clamp(28px, 7vw, 36px)", fontWeight: 800, letterSpacing: "-0.05em", color: "#fff", margin: 0, lineHeight: 0.95, wordBreak: "break-word" }}>
                 {client.full_name || <span style={{ color: "rgba(255,255,255,0.35)" }}>{t("cp.no_name")}</span>}
@@ -1202,7 +1339,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                         try {
                           const { data, error } = await supabase
                             .from("programmes")
-                            .select("id, programme_name, html_content")
+                            .select("id, programme_name, html_content, start_date, training_days")
                             .eq("id", prog.id)
                             .maybeSingle();
                           if (error || !data) { toast.error("Impossible de charger le programme"); return; }
@@ -1493,49 +1630,118 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
               {t("cp.no_nutrition_week")}
             </div>
-          ) : (
-            <div style={card}>
-              {/* Barres de kcal par jour */}
-              <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 100, marginBottom: 12 }}>
-                {nutDays.map(([date, d], i) => {
-                  const pct = Math.max(4, (d.kcal / maxKcal) * 100);
-                  const goalKcal = nutGoals?.calories || 2000;
-                  const overGoal = d.kcal > goalKcal * 1.1;
-                  const underGoal = d.kcal < goalKcal * 0.7;
-                  const barColor = overGoal ? ORANGE : underGoal ? RED : G;
-                  const dayLabel = new Date(date + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "short" }).slice(0, 3);
-                  return (
-                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: barColor, fontFamily: "'JetBrains Mono',monospace" }}>{d.kcal}</div>
-                      <div style={{ width: "100%", height: `${pct}%`, minHeight: 4, background: `linear-gradient(to top, ${barColor}50, ${barColor})`, borderRadius: 4 }} />
-                      <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 700 }}>{dayLabel}</div>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Macros moyenne */}
-              {nutDays.length > 0 && (() => {
-                const avg = { kcal: 0, prot: 0, gluc: 0, lip: 0 };
-                nutDays.forEach(([, d]) => { avg.kcal += d.kcal; avg.prot += d.prot; avg.gluc += d.gluc; avg.lip += d.lip; });
-                const n = nutDays.length;
-                return (
-                  <div style={{ display: "flex", gap: 12, justifyContent: "center", paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                    {[
-                      { l: t("cp.macro_avg_day"), v: Math.round(avg.kcal / n), u: t("cp.unit_kcal"), c: ORANGE },
-                      { l: t("cp.macro_prot"), v: Math.round(avg.prot / n), u: t("cp.unit_g"), c: G },
-                      { l: t("cp.macro_gluc"), v: Math.round(avg.gluc / n), u: t("cp.unit_g"), c: "#60a5fa" },
-                      { l: t("cp.macro_lip"), v: Math.round(avg.lip / n), u: t("cp.unit_g"), c: VIOLET },
-                    ].map((m, i) => (
-                      <div key={i} style={{ textAlign: "center" }}>
-                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: m.c }}>{m.v}<span style={{ fontSize: 9, fontWeight: 500, color: "rgba(255,255,255,0.3)" }}>{m.u}</span></div>
-                        <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 2 }}>{m.l}</div>
-                      </div>
-                    ))}
+          ) : (() => {
+            // Construire les 7 derniers jours avec placeholders si pas de log
+            const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+            const msDay = 86400000;
+            const dataMap = Object.fromEntries(nutDays);
+            const last7 = Array.from({ length: 7 }).map((_, i) => {
+              const date = new Date(today0.getTime() - (6 - i) * msDay);
+              const key = date.toISOString().slice(0, 10);
+              const d = dataMap[key];
+              return { date, key, d, isToday: i === 6 };
+            });
+            const goalKcal = nutGoals?.calories || 2000;
+            const maxKcalLocal = Math.max(goalKcal * 0.6, ...last7.map(x => x.d?.kcal || 0));
+            const loggedCount = last7.filter(x => x.d).length;
+            // Moyenne sur les jours réellement loggés (sinon zéro fausse la lecture)
+            const logged = last7.filter(x => x.d);
+            const avg = logged.reduce((acc, x) => ({
+              kcal: acc.kcal + x.d.kcal,
+              prot: acc.prot + x.d.prot,
+              gluc: acc.gluc + x.d.gluc,
+              lip: acc.lip + x.d.lip,
+            }), { kcal: 0, prot: 0, gluc: 0, lip: 0 });
+            const n = Math.max(1, logged.length);
+            return (
+              <div style={{ ...card, padding: "18px 18px 20px" }}>
+                {/* Header : compliance loggée */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700 }}>
+                    Objectif {goalKcal} kcal · {loggedCount}/7 jours loggés
                   </div>
-                );
-              })()}
-            </div>
-          )}
+                </div>
+
+                {/* Barres de kcal par jour avec ligne d'objectif */}
+                <div style={{ position: "relative", height: 110, marginBottom: 18, display: "flex", gap: 4, alignItems: "flex-end", paddingTop: 16 }}>
+                  {/* Ligne objectif (en pointillés) */}
+                  {(() => {
+                    const goalPct = Math.min(95, (goalKcal / maxKcalLocal) * 100);
+                    return (
+                      <div style={{
+                        position: "absolute",
+                        left: 0, right: 0,
+                        bottom: `calc(${goalPct}% + 16px)`,
+                        height: 1,
+                        background: "repeating-linear-gradient(to right, rgba(255,255,255,0.18) 0 4px, transparent 4px 8px)",
+                        pointerEvents: "none",
+                      }} />
+                    );
+                  })()}
+                  {last7.map((x, i) => {
+                    const labels = ["L", "M", "M", "J", "V", "S", "D"];
+                    const dow = (x.date.getDay() + 6) % 7;
+                    const dayLabel = labels[dow];
+                    if (!x.d) {
+                      return (
+                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, height: "100%" }}>
+                          <div style={{ width: "100%", height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2 }} />
+                          <div style={{ fontSize: 9, color: x.isToday ? G : "rgba(255,255,255,0.25)", fontWeight: 700, letterSpacing: "0.5px" }}>{dayLabel}</div>
+                          <div style={{ fontSize: 7, color: "rgba(255,255,255,0.18)", letterSpacing: "0.3px" }}>—</div>
+                        </div>
+                      );
+                    }
+                    const pct = Math.max(6, (x.d.kcal / maxKcalLocal) * 100);
+                    const overGoal = x.d.kcal > goalKcal * 1.1;
+                    const underGoal = x.d.kcal < goalKcal * 0.7;
+                    const barColor = overGoal ? ORANGE : underGoal ? "#f97316" : G;
+                    return (
+                      <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, height: "100%" }}>
+                        <div style={{
+                          width: "100%",
+                          height: `${pct}%`,
+                          minHeight: 6,
+                          background: `linear-gradient(to top, ${barColor}30, ${barColor})`,
+                          borderRadius: 4,
+                          position: "relative",
+                          boxShadow: x.isToday ? `0 0 12px ${barColor}40` : "none",
+                        }} />
+                        <div style={{ fontSize: 9, color: x.isToday ? G : "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "0.5px" }}>{dayLabel}</div>
+                        <div style={{ fontSize: 9, color: barColor, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{x.d.kcal}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Macros moyenne — grid 4 colonnes avec dots couleur */}
+                <div style={{
+                  display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8,
+                  paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)",
+                }}>
+                  {[
+                    { l: "Kcal/j", v: Math.round(avg.kcal / n), u: "", c: ORANGE },
+                    { l: "Protéines", v: Math.round(avg.prot / n), u: "g", c: G },
+                    { l: "Glucides", v: Math.round(avg.gluc / n), u: "g", c: "#60a5fa" },
+                    { l: "Lipides", v: Math.round(avg.lip / n), u: "g", c: VIOLET },
+                  ].map((m, i) => (
+                    <div key={i} style={{
+                      padding: "10px 8px",
+                      background: `${m.c}08`,
+                      border: `1px solid ${m.c}1F`,
+                      borderRadius: 10,
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                    }}>
+                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: m.c, marginBottom: 2 }} />
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px", lineHeight: 1 }}>
+                        {m.v}<span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.4)", marginLeft: 1 }}>{m.u}</span>
+                      </div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700 }}>{m.l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* ===== ACTIVITE QUOTIDIENNE 7J (pas, eau, sommeil) ===== */}
@@ -1648,18 +1854,33 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         {panelTab === "programme" && (<>
 
         {/* ===== HISTORIQUE SEANCES — avec detail poids souleves ===== */}
+        {(() => {
+          // Dedupe : si le client a valide la meme seance plusieurs fois le
+          // meme jour (test, double-click, etc.), on garde seulement le 1er
+          // log par (date + session_name). Le compteur du titre utilise
+          // la liste dedupee pour ne pas afficher "(7)" quand seule 1 carte
+          // distincte sera rendue.
+          const seen = new Set();
+          const dedupedSessions = sessions.filter((s) => {
+            const dateStr = new Date(s.logged_at).toISOString().split("T")[0];
+            const key = `${dateStr}__${s.session_name || s.programme_name || "—"}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          return (
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.22s both" }}>
           <div style={sectionTitle}>
             <Icon name="flame" size={14} color={G} />
-            {t("cp.session_history_title")}{sessions.length > 0 ? ` (${sessions.length})` : ""}
+            {t("cp.session_history_title")}{dedupedSessions.length > 0 ? ` (${dedupedSessions.length})` : ""}
           </div>
-          {sessions.length === 0 ? (
+          {dedupedSessions.length === 0 ? (
             <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
               {t("cp.no_sessions")}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {sessions.slice(0, 12).map((s, i) => {
+              {dedupedSessions.slice(0, 12).map((s, i) => {
                 const date = new Date(s.logged_at);
                 const dateStr = date.toISOString().split("T")[0];
                 const durationMin = s.duration_seconds ? Math.round(s.duration_seconds / 60) : null;
@@ -1676,7 +1897,13 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 const topExos = Object.entries(exSummary).sort((a, b) => b[1].w - a[1].w).slice(0, 4);
 
                 return (
-                  <div key={i} style={{ ...card, padding: "14px 16px" }}>
+                  <div
+                    key={i}
+                    onClick={() => setSessionDetail({ session: s, dayExs })}
+                    style={{ ...card, padding: "14px 16px", cursor: "pointer", transition: "background .12s, border-color .12s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.04)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.18)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = card.background || "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = card.border ? card.border.split(" ").slice(2).join(" ") : "rgba(255,255,255,0.05)"; }}
+                  >
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: topExos.length > 0 ? 10 : 0 }}>
                       <div style={{ width: 38, height: 38, borderRadius: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: G, flexShrink: 0 }}>
                         <Icon name="check" size={15} />
@@ -1689,13 +1916,17 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                           {date.toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
                           {durationMin != null && <span> · {fillTpl(t("cp.minutes_short"), { n: durationMin })}</span>}
                           {s.exercises_count > 0 && <span> · {fillTpl(t("cp.exos_count"), { n: s.exercises_count })}</span>}
+                          <span> · {dayExs.length > 0 ? `${dayExs.length} sets` : "Aucun set"}</span>
                         </div>
                       </div>
-                      {durationMin != null && (
-                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: G, flexShrink: 0 }}>
-                          {durationMin}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>min</span>
-                        </div>
-                      )}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                        {durationMin != null && (
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 200, color: G }}>
+                            {durationMin}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>min</span>
+                          </div>
+                        )}
+                        <Icon name="arrow-right" size={14} color="rgba(255,255,255,0.3)" />
+                      </div>
                     </div>
                     {/* Detail poids souleves par exercice */}
                     {topExos.length > 0 && (
@@ -1722,6 +1953,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             </div>
           )}
         </div>
+          );
+        })()}
 
         {/* (historique poids complet supprime : accessible via le drawer sur la card poids) */}
 
@@ -2256,6 +2489,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </>)}
 
       </div>
+
+      {/* Détail séance : monté hors panelTab pour rester accessible quel que
+          soit l'onglet actif (sinon ouvert depuis "programme" mais rendu sous
+          "suivi" → la modal n'apparait jamais). */}
+      {sessionDetail && (
+        <SessionDetailModal
+          data={sessionDetail}
+          onClose={() => setSessionDetail(null)}
+        />
+      )}
 
       {/* ===== TRANSFORMATION VIEW (overlay) ===== */}
       {showTransformation && (
@@ -2974,6 +3217,19 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     if (coachId) insertData.coach_id = coachId;
     const { error } = await supabase.from("clients").insert(insertData);
     if (error) { showToast(error.code === "23505" ? t("cd.toast_email_used") : error.message, "err"); return; }
+    // Crée l'auth.users associé (email_confirm=true, sans password) pour
+    // que le client puisse se connecter par OTP du premier coup.
+    // Sans ça, signInWithOtp(shouldCreateUser:false) renvoie "Signups not
+    // allowed for otp" → "Compte inexistant" cote login.
+    try {
+      await fetch("/api/auth/check-invitation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } catch (e) {
+      console.warn("[addClient] auth.users prep failed (non-blocking):", e?.message);
+    }
     // Envoyer l'email de bienvenue via Vercel API (Zoho SMTP)
     // Auth Bearer requise — vérifie que coach connecté + recipient est son client
     let welcomeSent = true;
@@ -3029,8 +3285,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const uploadProg = async (client, file, planId, progWeeks) => {
     if (isDemo) { toast.info(t("cd.toast_demo_upload_disabled")); return; }
     // ===== VALIDATION FICHIER =====
-    // 1. Taille max 5MB
-    const MAX_SIZE = 5 * 1024 * 1024;
+    // 1. Taille max 25MB — l'HTML va directement dans programmes.html_content
+    // (TEXT Postgres, capacite TOAST ~1GB), donc pas de contrainte storage.
+    // 25MB couvre largement les programmes avec images base64 embarquees.
+    const MAX_SIZE = 25 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       toast.error(fillTpl(t("cd.toast_file_too_large"), { size: (file.size / 1024 / 1024).toFixed(1) }));
       return;
@@ -3045,6 +3303,40 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     setUploading(true);
     try {
       let html = await file.text();
+      // ===== Sauvegarder les URLs videos AVANT DOMPurify =====
+      // Si l'HTML contient des <iframe src="youtube..."> ou <a href="youtube...">
+      // pour une démo d'exercice, DOMPurify les supprime (FORBID iframe). Or le
+      // parser cherche les vidéos uniquement dans <input id="ev-XXX">. Donc on
+      // récupère les URLs avant et on les écrit dans les inputs vides.
+      try {
+        const _doc = new DOMParser().parseFromString(html, "text/html");
+        const isVideoUrl = (u) => /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(u || "");
+        _doc.querySelectorAll(".exercise-item").forEach((exEl) => {
+          const eid = (exEl.id || "").replace(/^ex-/, "");
+          if (!eid) return;
+          const evInput = _doc.getElementById(`ev-${eid}`);
+          if (!evInput) return;
+          const cur = (evInput.getAttribute("value") || "").trim();
+          if (cur) return; // deja rempli, on ne touche pas
+          let foundUrl = null;
+          // 1. iframe direct
+          const iframe = exEl.querySelector("iframe[src]");
+          if (iframe && isVideoUrl(iframe.getAttribute("src"))) {
+            foundUrl = iframe.getAttribute("src");
+          }
+          // 2. anchor avec href youtube
+          if (!foundUrl) {
+            const a = Array.from(exEl.querySelectorAll("a[href]"))
+              .find((el) => isVideoUrl(el.getAttribute("href")));
+            if (a) foundUrl = a.getAttribute("href");
+          }
+          if (foundUrl) evInput.setAttribute("value", foundUrl);
+        });
+        html = "<!DOCTYPE html>\n" + _doc.documentElement.outerHTML;
+      } catch (e) {
+        console.warn("[upload] video URL extraction failed (non-blocking):", e?.message);
+      }
+
       // 3. Sanitation via DOMPurify : strip <script>, event handlers, javascript:
       //    + tout vecteur XSS connu (svg onload, srcdoc, mutation XSS, etc.).
       //    Le HTML programme est ensuite rendu dans un iframe sandbox="" cote
@@ -3075,8 +3367,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       const weeks = parseInt(progWeeks) || 6;
       const displayName = progName + (progName.toLowerCase().includes("sem") ? "" : ` (${weeks} sem)`);
 
-      // Desactiver l'ancien programme
-      await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
+      // Supprimer les anciens programmes (historique non affiche dans l'UI,
+      // accumulation = bruit). run_logs.programme_id passe a NULL via FK.
+      await supabase.from("programmes").delete().eq("client_id", client.id);
 
       // Reset les completions de séance de l'ancien programme : sinon les
       // index (week_idx, session_idx) du nouveau programme matchent les
@@ -3966,6 +4259,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             <AchievementsSection coachData={coachData} clients={clients} />
           )}
 
+          {/* ========== RECETTES (PDF parsing + review IA) ========== */}
+          {!showClientList && activeTab === "recipes" && coachId && (
+            <RecipesSection coachId={coachId} />
+          )}
+
           {/* ========== ANALYTICS (placeholder, ouvre le full overlay) ========== */}
           {!showClientList && activeTab === "analytics" && clients.length > 0 && (
             <div style={{ marginBottom: 28 }}>
@@ -4119,7 +4417,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
                         {/* Avatar */}
                         <div style={{ position: "relative", flexShrink: 0 }}>
-                          <Avatar name={c.full_name || c.email} size={46} active={!!prog} />
+                          <Avatar name={c.full_name || c.email} size={46} active={!!prog} src={c.avatar_url} />
                           {c._inactive && hasProg && (
                             <div style={{ position: "absolute", top: -2, right: -2, width: 11, height: 11, borderRadius: "50%", background: RED, border: "2px solid #080C14", animation: "pulseDot 2s infinite" }} />
                           )}

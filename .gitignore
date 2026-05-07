@@ -19,3 +19,4 @@ playwright/.cache/
 backup-*.sql
 supabase/.temp/
 AUDIT-*.md
+.env*.local

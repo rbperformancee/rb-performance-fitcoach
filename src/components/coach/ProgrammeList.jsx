@@ -13,19 +13,23 @@ const fillTpl = (s, vars) => {
 };
 
 // Avatar inline (simple, utilise pour eviter import circulaire avec CoachDashboard)
-function Avatar({ name, size = 28 }) {
+// src = clients.avatar_url (photo uploadee par le client). Fallback initiales.
+function Avatar({ name, size = 28, src }) {
   const initials = (name || "?").split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: "rgba(2,209,186,0.08)",
+      background: src ? "transparent" : "rgba(2,209,186,0.08)",
+      backgroundImage: src ? `url(${src})` : "none",
+      backgroundSize: "cover", backgroundPosition: "center",
       border: "1px solid rgba(2,209,186,0.15)",
       display: "flex", alignItems: "center", justifyContent: "center",
       fontFamily: "'Syne', sans-serif",
       fontSize: size * 0.36, fontWeight: 900,
       color: "#02d1ba",
       flexShrink: 0,
-    }}>{initials}</div>
+      overflow: "hidden",
+    }}>{!src && initials}</div>
   );
 }
 
@@ -286,7 +290,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
                   onClick={() => handleEdit(prog)}
                   style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: ".5px solid rgba(255,255,255,.04)", cursor: "pointer" }}
                 >
-                  <Avatar name={clientName} size={28} />
+                  <Avatar name={clientName} size={28} src={client?.avatar_url} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,.8)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {clientName}
