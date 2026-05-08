@@ -49,7 +49,7 @@ async function notifyCoachPR(clientId, liftName, priorMax, newMax) {
     }
     const name = client.full_name || "Client";
     const fmt = (w) => Number.isInteger(w) ? String(w) : (Math.round(w * 10) / 10).toString();
-    const summary = `🏆 ${name} a battu son record sur ${liftName} : ${fmt(priorMax)}kg → ${fmt(newMax)}kg (+${fmt(newMax - priorMax)}kg)`;
+    const summary = `${name} a battu son record sur ${liftName} : ${fmt(priorMax)}kg → ${fmt(newMax)}kg (+${fmt(newMax - priorMax)}kg)`;
     await supabase.from("coach_activity_log").insert({
       coach_id: client.coach_id,
       client_id: clientId,
@@ -68,7 +68,7 @@ async function notifyCoachPR(clientId, liftName, priorMax, newMax) {
           headers: { "Content-Type": "application/json", apikey: ANON },
           body: JSON.stringify({
             coach_id: client.coach_id,
-            title: `🏆 ${name} a battu un record`,
+            title: `Record battu · ${name}`,
             body: `${liftName} : ${fmt(priorMax)}kg → ${fmt(newMax)}kg (+${fmt(newMax - priorMax)}kg)`,
             url: `/coach?client=${clientId}`,
           }),

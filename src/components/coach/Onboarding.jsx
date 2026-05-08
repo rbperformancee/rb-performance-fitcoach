@@ -37,11 +37,12 @@ const ACCENT_COLORS = [
 // Templates de programmes pré-faits qu'on peut copier au coach. Clé = type
 // de programme, valeur = nom affiché. Le seed réel viendra plus tard ; pour
 // l'onboarding on capture juste l'intention pour pré-remplir le builder.
+// Initiales (2 lettres) au lieu d'emoji — premium.
 const PROGRAMME_TEMPLATES = [
-  { id: "ppl",       label: "Push / Pull / Legs", desc: "6 séances/sem · hypertrophie", emoji: "🔁" },
-  { id: "fullbody",  label: "Full Body 3x",       desc: "3 séances/sem · débutants",    emoji: "💪" },
-  { id: "powerlift", label: "Powerlifting",       desc: "4 séances/sem · force pure",   emoji: "🏋️" },
-  { id: "hybrid",    label: "Hybrid Athlete",     desc: "Force + Cardio mixés",         emoji: "⚡" },
+  { id: "ppl",       label: "Push / Pull / Legs", desc: "6 séances/sem · hypertrophie", code: "PPL" },
+  { id: "fullbody",  label: "Full Body 3x",       desc: "3 séances/sem · débutants",    code: "FB" },
+  { id: "powerlift", label: "Powerlifting",       desc: "4 séances/sem · force pure",   code: "PL" },
+  { id: "hybrid",    label: "Hybrid Athlete",     desc: "Force + Cardio mixés",         code: "HY" },
 ];
 
 /**
@@ -760,12 +761,24 @@ export default function Onboarding({ coach, onComplete }) {
               display: "flex", flexDirection: "column", gap: 10,
             }}>
               {[
-                { emoji: "🏆", title: "Marc a battu un record", body: "Squat : 100kg → 105kg (+5kg)", color: accentColor },
-                { emoji: "🔥", title: "Sarah a fini sa séance", body: "Jambes · 47 min · RPE 8", color: "rgba(255,255,255,0.6)" },
-                { emoji: "⚠️", title: "Thomas n'a pas log depuis 3j", body: "Relance recommandée", color: "rgba(255,170,0,0.7)" },
+                {
+                  // Trophy SVG line icon
+                  icon: <path d="M6 4h12v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V4Zm0 0H3v2a3 3 0 0 0 3 3m12-5h3v2a3 3 0 0 1-3 3M9 17h6m-3-6v6m-2 4h4" />,
+                  title: "Marc a battu un record", body: "Squat : 100kg → 105kg (+5kg)", color: accentColor,
+                },
+                {
+                  // Activity / pulse line icon
+                  icon: <path d="M22 12h-4l-3 9L9 3l-3 9H2" />,
+                  title: "Sarah a fini sa séance", body: "Jambes · 47 min · RPE 8", color: "rgba(255,255,255,0.7)",
+                },
+                {
+                  // Warning triangle line icon
+                  icon: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>,
+                  title: "Thomas n'a pas log depuis 3j", body: "Relance recommandée", color: "rgba(255,170,0,0.85)",
+                },
               ].map((n, i) => (
                 <div key={i} style={{
-                  display: "flex", gap: 12, alignItems: "flex-start",
+                  display: "flex", gap: 12, alignItems: "center",
                   padding: "12px 14px",
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.06)",
@@ -773,7 +786,17 @@ export default function Onboarding({ coach, onComplete }) {
                   textAlign: "left",
                   animation: `onbFade .5s ease ${0.2 + i * 0.15}s both`,
                 }}>
-                  <div style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{n.emoji}</div>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: `${n.color === accentColor ? accentColor : n.color === "rgba(255,170,0,0.85)" ? "rgba(255,170,0,1)" : "rgba(255,255,255,0.7)"}10`,
+                    border: `1px solid ${n.color}30`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={n.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      {n.icon}
+                    </svg>
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: n.color, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</div>
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.4 }}>{n.body}</div>
@@ -853,9 +876,12 @@ export default function Onboarding({ coach, onComplete }) {
                       width: 44, height: 44, borderRadius: 11,
                       background: selected ? `${accentColor}25` : "rgba(255,255,255,0.05)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 22, flexShrink: 0,
-                      transition: "background .2s",
-                    }}>{tpl.emoji}</div>
+                      fontSize: 13, fontWeight: 800, letterSpacing: 0.5,
+                      color: selected ? accentColor : "rgba(255,255,255,0.55)",
+                      fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
+                      flexShrink: 0,
+                      transition: "background .2s, color .2s",
+                    }}>{tpl.code}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: selected ? accentColor : "#fff", marginBottom: 2 }}>{tpl.label}</div>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{tpl.desc}</div>
@@ -982,7 +1008,7 @@ export default function Onboarding({ coach, onComplete }) {
                   </>
                 ) : (
                   <>
-                    <span className="onboarding-recap-icon skip">⏭</span>
+                    <span className="onboarding-recap-icon skip">—</span>
                     <span>Notifications à activer plus tard</span>
                   </>
                 )}
@@ -995,7 +1021,7 @@ export default function Onboarding({ coach, onComplete }) {
                   </>
                 ) : (
                   <>
-                    <span className="onboarding-recap-icon skip">⏭</span>
+                    <span className="onboarding-recap-icon skip">—</span>
                     <span>Programme à créer plus tard</span>
                   </>
                 )}
@@ -1008,7 +1034,7 @@ export default function Onboarding({ coach, onComplete }) {
                   </>
                 ) : (
                   <>
-                    <span className="onboarding-recap-icon skip">⏭</span>
+                    <span className="onboarding-recap-icon skip">—</span>
                     <span>{t("onb.recap_invite_skipped")}</span>
                   </>
                 )}

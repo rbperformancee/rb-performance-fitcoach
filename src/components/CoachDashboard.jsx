@@ -368,7 +368,7 @@ function ProgrammeCompareModal({ data, onClose }) {
       <div style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, maxWidth: 900, width: "100%", maxHeight: "90vh", padding: 28, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: "#02d1ba", textTransform: "uppercase", marginBottom: 6 }}>📊 Comparateur</div>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: "#02d1ba", textTransform: "uppercase", marginBottom: 6 }}>Comparateur</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>Comparaison de programmes</div>
           </div>
           <button type="button" onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
@@ -1050,7 +1050,11 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
             fontSize: 11, color: "rgba(255,200,100,0.8)",
             display: "flex", alignItems: "center", gap: 8,
           }}>
-            <span style={{ fontSize: 13 }}>✦</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4" />
+              <path d="M12 16h.01" />
+            </svg>
             <span>Première séance loggée pour ces exercices — pas encore de comparaison disponible.</span>
           </div>
         )}
@@ -1154,12 +1158,20 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
                       </button>
                       {isPR && (
                         <span style={{
-                          fontSize: 9, fontWeight: 800, letterSpacing: 1.2, padding: "4px 8px",
+                          fontSize: 9, fontWeight: 800, letterSpacing: 1.4, padding: "4px 8px",
                           background: "rgba(2,209,186,0.18)", color: G_LOCAL, borderRadius: 6,
                           textTransform: "uppercase", flexShrink: 0,
                           border: "1px solid rgba(2,209,186,0.3)",
+                          display: "inline-flex", alignItems: "center", gap: 5,
                         }}>
-                          🏆 Record battu
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={G_LOCAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M6 4h12v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V4Z" />
+                            <path d="M6 4H3v2a3 3 0 0 0 3 3" />
+                            <path d="M18 4h3v2a3 3 0 0 1-3 3" />
+                            <path d="M9 17h6" />
+                            <path d="M12 11v6" />
+                          </svg>
+                          Record battu
                         </span>
                       )}
                     </div>
