@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { useT } from "../../lib/i18n";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 const G = "#02d1ba";
 
@@ -18,6 +19,29 @@ const SPECIALITIES = [
   "Seche", "Force", "Performance",
   "Remise en forme", "Running",
   "Arts martiaux", "Nutrition",
+];
+
+// Couleurs d'accent premium pour la brand du coach. Choisi pour bien
+// passer en UI dark mode (suffisamment saturées pour ressortir).
+const ACCENT_COLORS = [
+  { id: "teal",    hex: "#02d1ba", label: "Teal" },
+  { id: "violet",  hex: "#a78bfa", label: "Violet" },
+  { id: "rose",    hex: "#f472b6", label: "Rose" },
+  { id: "amber",   hex: "#fbbf24", label: "Ambre" },
+  { id: "orange",  hex: "#fb923c", label: "Orange" },
+  { id: "emerald", hex: "#34d399", label: "Émeraude" },
+  { id: "sky",     hex: "#38bdf8", label: "Ciel" },
+  { id: "red",     hex: "#ef4444", label: "Rouge" },
+];
+
+// Templates de programmes pré-faits qu'on peut copier au coach. Clé = type
+// de programme, valeur = nom affiché. Le seed réel viendra plus tard ; pour
+// l'onboarding on capture juste l'intention pour pré-remplir le builder.
+const PROGRAMME_TEMPLATES = [
+  { id: "ppl",       label: "Push / Pull / Legs", desc: "6 séances/sem · hypertrophie", emoji: "🔁" },
+  { id: "fullbody",  label: "Full Body 3x",       desc: "3 séances/sem · débutants",    emoji: "💪" },
+  { id: "powerlift", label: "Powerlifting",       desc: "4 séances/sem · force pure",   emoji: "🏋️" },
+  { id: "hybrid",    label: "Hybrid Athlete",     desc: "Force + Cardio mixés",         emoji: "⚡" },
 ];
 
 /**
@@ -52,9 +76,28 @@ export default function Onboarding({ coach, onComplete }) {
   const [inviteSent, setInviteSent] = useState(false);
   const [inviteSkipped, setInviteSkipped] = useState(false);
 
+  // ── Brand step ──
+  const [brandName, setBrandName] = useState(coach?.brand_name || "");
+  const [accentColor, setAccentColor] = useState(coach?.accent_color || "#02d1ba");
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(coach?.logo_url || null);
+  const [brandSaving, setBrandSaving] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // ── Push step ──
+  const { permission: pushPerm, requestPermission: requestPush } = usePushNotifications({ coachId: coach?.id });
+  const [pushAttempted, setPushAttempted] = useState(false);
+
+  // ── Programme step ──
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
+
+  // Total steps = 7 : 0 intro, 1 identité, 2 brand, 3 push, 4 programme,
+  // 5 invite, 6 recap
+  const TOTAL_STEPS = 6; // dénominateur de progress (intro non comptée)
 
   // Etape 0 → 1 automatique apres 2s
   useEffect(() => {
@@ -91,12 +134,104 @@ export default function Onboarding({ coach, onComplete }) {
         })
         .eq("id", coach.id);
       if (error) throw error;
+      // Pré-remplit brandName avec le prénom si vide (peut être édité)
+      if (!brandName) setBrandName(firstName.trim());
       setDirection("forward");
       setStep(2);
     } catch (e) {
       setError(e.message || t("onb.error_save"));
     }
     setSaving(false);
+  }
+
+  // Handler upload logo : compresse via FileReader (base64 inline → bucket
+  // serait plus propre mais évite la dep Storage pendant l'onboarding).
+  function pickLogo(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 500 * 1024) {
+      setError("Logo trop lourd (max 500 Ko). Pour l'instant, choisis une image plus petite.");
+      return;
+    }
+    setError("");
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setLogoPreview(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function saveBrand() {
+    setError("");
+    haptic.selection();
+    setBrandSaving(true);
+    try {
+      const updates = {
+        brand_name: brandName.trim() || null,
+        accent_color: accentColor,
+      };
+      // Si logo uploadé, on stocke le base64 inline dans logo_url. Pas
+      // optimal pour de gros logos mais robuste & sans dep Storage.
+      if (logoFile && logoPreview) {
+        updates.logo_url = logoPreview;
+      }
+      const { error } = await supabase.from("coaches").update(updates).eq("id", coach.id);
+      if (error) throw error;
+      setDirection("forward");
+      setStep(3);
+    } catch (e) {
+      setError(e.message || "Erreur sauvegarde brand");
+    }
+    setBrandSaving(false);
+  }
+
+  function skipBrand() {
+    haptic.light();
+    setDirection("forward");
+    setStep(3);
+  }
+
+  async function activatePush() {
+    haptic.selection();
+    setPushAttempted(true);
+    try {
+      await requestPush();
+    } catch { /* user denied or error */ }
+    // On avance dans tous les cas (granted, denied ou erreur) — pas de blocage
+    setTimeout(() => {
+      setDirection("forward");
+      setStep(4);
+    }, 600);
+  }
+
+  function skipPush() {
+    haptic.light();
+    setDirection("forward");
+    setStep(4);
+  }
+
+  function pickTemplate(id) {
+    haptic.selection();
+    setSelectedTemplate(id === selectedTemplate ? null : id);
+  }
+
+  async function saveTemplate() {
+    haptic.selection();
+    // Pour l'instant on stocke juste l'intention — le seed réel des templates
+    // sera fait plus tard. On enregistre dans coaches.preferred_template
+    // pour réutiliser dans le programme builder à l'ouverture.
+    if (selectedTemplate) {
+      try {
+        await supabase.from("coaches").update({ preferred_template: selectedTemplate }).eq("id", coach.id);
+      } catch { /* colonne peut ne pas exister, non critique */ }
+    }
+    setDirection("forward");
+    setStep(5);
+  }
+
+  function skipTemplate() {
+    haptic.light();
+    setDirection("forward");
+    setStep(5);
   }
 
   async function sendInvite() {
@@ -136,7 +271,7 @@ export default function Onboarding({ coach, onComplete }) {
       toast.success(fillTpl(t("onb.toast_invite_sent"), { email: mail }));
       setInviteSent(true);
       setDirection("forward");
-      setTimeout(() => setStep(3), 400); // transition naturelle apres succes
+      setTimeout(() => setStep(6), 400); // transition naturelle apres succes
     } catch (e) {
       setError(e.message || t("onb.error_invite_send"));
     }
@@ -147,7 +282,7 @@ export default function Onboarding({ coach, onComplete }) {
     haptic.light();
     setInviteSkipped(true);
     setDirection("forward");
-    setStep(3);
+    setStep(6);
   }
 
   async function finishOnboarding() {
@@ -169,8 +304,9 @@ export default function Onboarding({ coach, onComplete }) {
     }
   }
 
-  // Progression bar % (1/3 pour etape 1, 2/3 etape 2, 100% etape 3)
-  const progressPct = step === 0 ? 0 : step === 1 ? 33 : step === 2 ? 66 : 100;
+  // Progression bar % — 6 étapes (intro non comptée). Affiche 100% sur le
+  // recap (step 6) qui marque la complétion finale.
+  const progressPct = step === 0 ? 0 : Math.min(100, Math.round((step / TOTAL_STEPS) * 100));
 
   return (
     <div className="onboarding-overlay">
@@ -388,6 +524,11 @@ export default function Onboarding({ coach, onComplete }) {
           animation: drawCheck .6s cubic-bezier(.22,1,.36,1) .2s forwards;
         }
         @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+        /* Confetti rain pour la step finale */
+        @keyframes confettiFall {
+          0%   { transform: translateY(-20vh) rotate(0deg);   opacity: 1; }
+          100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
+        }
       `}</style>
 
       {/* ===== HEADER ===== */}
@@ -484,8 +625,264 @@ export default function Onboarding({ coach, onComplete }) {
           </div>
         )}
 
-        {/* ========== ETAPE 2 — PREMIER CLIENT ========== */}
+        {/* ========== ETAPE 2 — BRAND ========== */}
         {step === 2 && (
+          <div className="onb-step">
+            <div className="onboarding-eyebrow">Étape 2 sur {TOTAL_STEPS} · Identité visuelle</div>
+            <h1 className="onboarding-title">Ton studio.</h1>
+            <p className="onboarding-sub">
+              Voici comment tes clients verront ton app. Tu peux changer plus tard.
+            </p>
+
+            {/* PREVIEW LIVE — c'est le moment dopamine : voir son brand prendre vie */}
+            <div style={{
+              width: "100%",
+              padding: "20px 18px",
+              background: `linear-gradient(180deg, ${accentColor}10 0%, rgba(255,255,255,0.02) 100%)`,
+              border: `1px solid ${accentColor}40`,
+              borderRadius: 16,
+              marginBottom: 24,
+              display: "flex", alignItems: "center", gap: 14,
+              transition: "border-color .3s, background .3s",
+            }}>
+              {logoPreview ? (
+                <img src={logoPreview} alt="logo" style={{
+                  width: 48, height: 48, borderRadius: 12, objectFit: "cover",
+                  border: `1px solid ${accentColor}40`, flexShrink: 0,
+                }} />
+              ) : (
+                <div style={{
+                  width: 48, height: 48, borderRadius: 12,
+                  background: `${accentColor}15`,
+                  border: `1px solid ${accentColor}40`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 22, fontWeight: 900, color: accentColor,
+                  fontFamily: "'Syne',sans-serif", flexShrink: 0,
+                }}>
+                  {(brandName || firstName || "C").trim().charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 4 }}>
+                  Coaching by
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: accentColor, letterSpacing: -0.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {brandName || firstName || "Ton studio"}
+                </div>
+              </div>
+            </div>
+
+            <div className="onboarding-field">
+              <input
+                type="text"
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+                placeholder={`Nom de marque (ex: ${firstName || "Coach"} Performance)`}
+                className="onboarding-input"
+                maxLength={50}
+              />
+            </div>
+
+            <div className="onboarding-sep">Couleur d'accent</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 8, width: "100%", marginBottom: 20 }}>
+              {ACCENT_COLORS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => { haptic.selection(); setAccentColor(c.hex); }}
+                  aria-label={c.label}
+                  title={c.label}
+                  style={{
+                    height: 36, borderRadius: 10,
+                    background: c.hex,
+                    border: accentColor === c.hex ? "2px solid #fff" : "2px solid rgba(255,255,255,0.08)",
+                    boxShadow: accentColor === c.hex ? `0 0 0 3px ${c.hex}40, 0 6px 20px ${c.hex}40` : "none",
+                    cursor: "pointer",
+                    transition: "transform .15s, box-shadow .2s, border-color .2s",
+                    transform: accentColor === c.hex ? "scale(1.08)" : "scale(1)",
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="onboarding-sep">Logo (optionnel)</div>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={pickLogo}
+              style={{ display: "none" }}
+            />
+            <button
+              type="button"
+              onClick={() => { haptic.light(); fileInputRef.current?.click(); }}
+              style={{
+                width: "100%", padding: "14px 16px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px dashed rgba(255,255,255,0.15)",
+                borderRadius: 10,
+                color: "rgba(255,255,255,0.7)",
+                fontSize: 13, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+                marginBottom: 20,
+              }}
+            >
+              {logoFile ? `✓ ${logoFile.name}` : "Choisir un logo (PNG / JPG, max 500 Ko)"}
+            </button>
+
+            {error && <div className="onboarding-error">{error}</div>}
+
+            <button
+              onClick={saveBrand}
+              disabled={brandSaving}
+              className="onboarding-btn"
+              style={{ background: accentColor, boxShadow: `0 16px 40px ${accentColor}40`, textTransform: "uppercase" }}
+            >
+              {brandSaving ? "..." : "Continuer"}
+            </button>
+            <button onClick={skipBrand} className="onboarding-skip">Configurer plus tard</button>
+          </div>
+        )}
+
+        {/* ========== ETAPE 3 — PUSH NOTIFS ========== */}
+        {step === 3 && (
+          <div className="onb-step" style={{ textAlign: "center" }}>
+            <div className="onboarding-eyebrow">Étape 3 sur {TOTAL_STEPS} · Notifications</div>
+            <h1 className="onboarding-title">Sois alerté en direct.</h1>
+            <p className="onboarding-sub">
+              Quand un client bat un record, abandonne, ou termine un programme — ton téléphone vibre. Tu réagis avant qu'il décroche.
+            </p>
+
+            {/* Visual : pile de notif teaser */}
+            <div style={{
+              width: "100%", maxWidth: 360,
+              margin: "0 auto 24px",
+              display: "flex", flexDirection: "column", gap: 10,
+            }}>
+              {[
+                { emoji: "🏆", title: "Marc a battu un record", body: "Squat : 100kg → 105kg (+5kg)", color: accentColor },
+                { emoji: "🔥", title: "Sarah a fini sa séance", body: "Jambes · 47 min · RPE 8", color: "rgba(255,255,255,0.6)" },
+                { emoji: "⚠️", title: "Thomas n'a pas log depuis 3j", body: "Relance recommandée", color: "rgba(255,170,0,0.7)" },
+              ].map((n, i) => (
+                <div key={i} style={{
+                  display: "flex", gap: 12, alignItems: "flex-start",
+                  padding: "12px 14px",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 12,
+                  textAlign: "left",
+                  animation: `onbFade .5s ease ${0.2 + i * 0.15}s both`,
+                }}>
+                  <div style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{n.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: n.color, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.4 }}>{n.body}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {pushPerm === "granted" && pushAttempted ? (
+              <div style={{
+                width: "100%", padding: "14px 18px",
+                background: `${accentColor}15`,
+                border: `1px solid ${accentColor}40`,
+                borderRadius: 10,
+                color: accentColor,
+                fontSize: 13, fontWeight: 700,
+                marginBottom: 16,
+              }}>
+                ✓ Notifications activées
+              </div>
+            ) : pushPerm === "denied" && pushAttempted ? (
+              <div style={{
+                width: "100%", padding: "14px 18px",
+                background: "rgba(255,170,0,0.08)",
+                border: "1px solid rgba(255,170,0,0.25)",
+                borderRadius: 10,
+                color: "rgba(255,200,100,0.9)",
+                fontSize: 12, fontWeight: 600,
+                marginBottom: 16,
+                lineHeight: 1.5,
+              }}>
+                Permission refusée. Tu peux la réactiver dans les réglages du navigateur quand tu veux.
+              </div>
+            ) : null}
+
+            <button
+              onClick={activatePush}
+              disabled={pushPerm === "granted" && pushAttempted}
+              className="onboarding-btn"
+              style={{ background: accentColor, boxShadow: `0 16px 40px ${accentColor}40`, textTransform: "uppercase" }}
+            >
+              {pushPerm === "granted" && pushAttempted ? "Continuer" : "Activer les notifications"}
+            </button>
+            <button onClick={skipPush} className="onboarding-skip">Plus tard</button>
+          </div>
+        )}
+
+        {/* ========== ETAPE 4 — TEMPLATE PROGRAMME ========== */}
+        {step === 4 && (
+          <div className="onb-step">
+            <div className="onboarding-eyebrow">Étape 4 sur {TOTAL_STEPS} · Bibliothèque</div>
+            <h1 className="onboarding-title">Ton premier programme.</h1>
+            <p className="onboarding-sub">
+              Pars d'un template prêt à l'emploi ou crée le tien from scratch. Tu peux tout modifier après.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", marginBottom: 20 }}>
+              {PROGRAMME_TEMPLATES.map((tpl) => {
+                const selected = selectedTemplate === tpl.id;
+                return (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => pickTemplate(tpl.id)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 14,
+                      padding: "14px 16px",
+                      background: selected ? `${accentColor}10` : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${selected ? accentColor + "60" : "rgba(255,255,255,0.06)"}`,
+                      borderRadius: 12,
+                      cursor: "pointer", fontFamily: "inherit",
+                      textAlign: "left",
+                      transition: "all .15s",
+                    }}
+                  >
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 11,
+                      background: selected ? `${accentColor}25` : "rgba(255,255,255,0.05)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 22, flexShrink: 0,
+                      transition: "background .2s",
+                    }}>{tpl.emoji}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: selected ? accentColor : "#fff", marginBottom: 2 }}>{tpl.label}</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{tpl.desc}</div>
+                    </div>
+                    {selected && (
+                      <div style={{ color: accentColor, fontSize: 18, flexShrink: 0 }}>✓</div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {error && <div className="onboarding-error">{error}</div>}
+
+            <button
+              onClick={saveTemplate}
+              className="onboarding-btn"
+              style={{ background: accentColor, boxShadow: `0 16px 40px ${accentColor}40`, textTransform: "uppercase" }}
+            >
+              {selectedTemplate ? "Utiliser ce template" : "Continuer sans template"}
+            </button>
+            <button onClick={skipTemplate} className="onboarding-skip">Je le ferai plus tard</button>
+          </div>
+        )}
+
+        {/* ========== ETAPE 5 — PREMIER CLIENT ========== */}
+        {step === 5 && (
           <div className="onb-step">
             <div className="onboarding-eyebrow">{t("onb.step2_eyebrow")}</div>
             <h1 className="onboarding-title">{t("onb.step2_title")}</h1>
@@ -533,9 +930,32 @@ export default function Onboarding({ coach, onComplete }) {
           </div>
         )}
 
-        {/* ========== ETAPE 3 — PRET ========== */}
-        {step === 3 && (
-          <div className="onb-step" style={{ textAlign: "center", width: "100%" }}>
+        {/* ========== ETAPE 6 — PRET ========== */}
+        {step === 6 && (
+          <div className="onb-step" style={{ textAlign: "center", width: "100%", position: "relative" }}>
+            {/* Confetti rain — DOM only, pure CSS animation */}
+            <div aria-hidden="true" style={{ position: "absolute", inset: -24, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
+              {Array.from({ length: 24 }).map((_, i) => {
+                const colors = [accentColor, "#fbbf24", "#f472b6", "#a78bfa", "#34d399"];
+                const c = colors[i % colors.length];
+                const left = (i * 4.2) % 100;
+                const delay = (i % 8) * 0.15;
+                const dur = 2 + (i % 5) * 0.25;
+                return (
+                  <span key={i} style={{
+                    position: "absolute",
+                    top: -20,
+                    left: `${left}%`,
+                    width: 8, height: 12,
+                    background: c,
+                    borderRadius: 2,
+                    opacity: 0.85,
+                    animation: `confettiFall ${dur}s linear ${delay}s infinite`,
+                    transform: `rotate(${(i * 23) % 360}deg)`,
+                  }} />
+                );
+              })}
+            </div>
             {/* Checkmark anime */}
             <svg className="onboarding-check" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="32" cy="32" r="30" />
@@ -545,16 +965,46 @@ export default function Onboarding({ coach, onComplete }) {
             <div className="onboarding-eyebrow">{t("onb.step3_eyebrow")}</div>
             <h1 className="onboarding-title">{t("onb.step3_title")}</h1>
 
-            <div className="onboarding-recap">
+            <div className="onboarding-recap" style={{ position: "relative", zIndex: 1 }}>
               <div className="onboarding-recap-item">
-                <span className="onboarding-recap-icon done">✓</span>
+                <span className="onboarding-recap-icon done" style={{ color: accentColor }}>✓</span>
                 <span>{t("onb.recap_profile")}</span>
+              </div>
+              <div className="onboarding-recap-item">
+                <span className="onboarding-recap-icon done" style={{ color: accentColor }}>✓</span>
+                <span>Studio "<strong style={{ color: accentColor }}>{brandName || firstName || "Coach"}</strong>" configuré</span>
+              </div>
+              <div className="onboarding-recap-item">
+                {pushPerm === "granted" ? (
+                  <>
+                    <span className="onboarding-recap-icon done" style={{ color: accentColor }}>✓</span>
+                    <span>Notifications activées</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="onboarding-recap-icon skip">⏭</span>
+                    <span>Notifications à activer plus tard</span>
+                  </>
+                )}
+              </div>
+              <div className="onboarding-recap-item">
+                {selectedTemplate ? (
+                  <>
+                    <span className="onboarding-recap-icon done" style={{ color: accentColor }}>✓</span>
+                    <span>Template <strong style={{ color: accentColor }}>{(PROGRAMME_TEMPLATES.find(p => p.id === selectedTemplate) || {}).label}</strong> sélectionné</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="onboarding-recap-icon skip">⏭</span>
+                    <span>Programme à créer plus tard</span>
+                  </>
+                )}
               </div>
               <div className="onboarding-recap-item">
                 {inviteSent ? (
                   <>
-                    <span className="onboarding-recap-icon done">✓</span>
-                    <span>{t("onb.recap_invite_sent")} <strong style={{ color: G }}>{clientEmail}</strong></span>
+                    <span className="onboarding-recap-icon done" style={{ color: accentColor }}>✓</span>
+                    <span>{t("onb.recap_invite_sent")} <strong style={{ color: accentColor }}>{clientEmail}</strong></span>
                   </>
                 ) : (
                   <>
@@ -562,10 +1012,6 @@ export default function Onboarding({ coach, onComplete }) {
                     <span>{t("onb.recap_invite_skipped")}</span>
                   </>
                 )}
-              </div>
-              <div className="onboarding-recap-item">
-                <span className="onboarding-recap-icon todo">○</span>
-                <span>{t("onb.recap_dashboard")}</span>
               </div>
             </div>
 
