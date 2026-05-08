@@ -836,7 +836,7 @@ function epley1rm(w, r) {
   return Math.round(Number(w) * (1 + Number(r) / 30) * 10) / 10;
 }
 function SessionDetailModal({ data, onClose }) {
-  const { session, dayExs, exNameByKey, allExLogs } = data;
+  const { session, dayExs, resolveExName, allExLogs } = data;
   const date = new Date(session.logged_at);
   const sessionDateStr = (session.logged_at || "").slice(0, 10);
   const durationMin = session.duration_seconds ? Math.round(session.duration_seconds / 60) : null;
@@ -1010,7 +1010,7 @@ function SessionDetailModal({ data, onClose }) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {exercises.map(([key, sets], i) => {
-                const name = (exNameByKey && exNameByKey[key]) || prettyExName(key);
+                const name = (resolveExName && resolveExName(session, key)) || prettyExName(key);
                 // Sets "réellement loggés" = au moins un poids OU des reps. Le
                 // reste (weight=0 + reps=0) = artefacts du bouton Terminer sans
                 // saisie → on les compte à part pour ne pas fausser max/total.
@@ -1183,6 +1183,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
   const [exLogs, setExLogs] = useState([]);
+  // HTML content de TOUS les programmes du client (actif + archivés). Loadé
+  // séparément car loadClients() ne sélectionne que les métadonnées (sinon
+  // ~25MB par programme × N clients exploserait le listing initial).
+  const [programmesContent, setProgrammesContent] = useState([]);
   const [sessionDetail, setSessionDetail] = useState(null); // { session, dayExs }
   const [coachNotes, setCoachNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
@@ -1219,25 +1223,51 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const fileRef = useRef();
 
   const prog = client.programmes?.find(p => p.is_active);
-  // Parse le programme actif une seule fois pour pouvoir résoudre ex_key
-  // (programme__w0_s0_e2) → vrai nom d'exo (ex: "Squat", "Leg Press")
-  // dans la modale détail séance. Si parse échoue, fallback "Exercice N".
-  const exNameByKey = React.useMemo(() => {
-    if (!prog?.html_content) return {};
-    try {
-      const parsed = parseProgrammeHTML(prog.html_content);
-      const slug = (prog.programme_name || "prog").toLowerCase().replace(/\s+/g, "_");
-      const map = {};
-      (parsed?.weeks || []).forEach((w, wi) => {
-        (w.sessions || []).forEach((s, si) => {
-          (s.exercises || []).forEach((e, ei) => {
-            map[`${slug}__w${wi}_s${si}_e${ei}`] = e.name;
+  // Parse TOUS les programmes du client (actif + archivés) pour résoudre
+  // ex_key → vrai nom d'exo, même pour des séances loggées sous un ancien
+  // programme. Si conflit de slug entre 2 programmes (rare : même nom), le
+  // plus récent (celui parsé en dernier) gagne — c'est ok, l'archivé sera
+  // moins consulté. Fallback "Exercice N" si pas de match.
+  // Resolution des noms d'exos = double clé : programme_name (de session_logs)
+  // + indices "wX_sY_eZ" extraits de ex_key. Les ex_key cloud ont le préfixe
+  // "client_<uuid>__" qui n'aide pas à identifier le programme : c'est le
+  // session_logs.programme_name qui désambiguise quand un client a eu
+  // plusieurs programmes successifs avec des indices recyclés.
+  const exNamesByProg = React.useMemo(() => {
+    if (!Array.isArray(programmesContent) || programmesContent.length === 0) return {};
+    const out = {};
+    // Archivés d'abord, actif en dernier → si 2 programmes ont le même nom
+    // (renommage/dup), l'actif gagne sur l'archivé.
+    const sorted = [...programmesContent].sort((a, b) => (a.is_active ? 1 : 0) - (b.is_active ? 1 : 0));
+    for (const p of sorted) {
+      if (!p?.html_content || !p.programme_name) continue;
+      try {
+        const parsed = parseProgrammeHTML(p.html_content);
+        const sub = {};
+        (parsed?.weeks || []).forEach((w, wi) => {
+          (w.sessions || []).forEach((s, si) => {
+            (s.exercises || []).forEach((e, ei) => {
+              sub[`w${wi}_s${si}_e${ei}`] = e.name;
+            });
           });
         });
-      });
-      return map;
-    } catch { return {}; }
-  }, [prog?.html_content, prog?.programme_name]);
+        out[p.programme_name] = sub;
+        if (p.is_active) out.__active__ = sub; // fallback si session.programme_name absent
+      } catch { /* prog corrompu, on continue */ }
+    }
+    return out;
+  }, [programmesContent]);
+  // Helper : résout (session, ex_key) → vrai nom d'exo, ou null si introuvable
+  const resolveExName = React.useCallback((session, exKey) => {
+    if (!exKey) return null;
+    const m = String(exKey).match(/_(w\d+_s\d+_e\d+)$/);
+    if (!m) return null;
+    const idx = m[1];
+    const byProg = exNamesByProg[session?.programme_name];
+    if (byProg && byProg[idx]) return byProg[idx];
+    // Fallback : programme actif (utile pour sessions sans programme_name)
+    return exNamesByProg.__active__?.[idx] || null;
+  }, [exNamesByProg]);
   const logs = client._logs || [];
   const weights = client._weights || [];
   const lastWeight = weights[0];
@@ -1295,6 +1325,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
       .order("date", { ascending: false }).limit(500)
       .then(({ data }) => setAllWeights(data || []));
+    // Charge le HTML de tous les programmes du client pour résoudre les
+    // ex_key (programme__w0_s0_e2) en vrais noms ("Squat", "Leg Press") dans
+    // la modale détail séance — même pour des sessions loggées sous d'anciens
+    // programmes archivés.
+    supabase.from("programmes")
+      .select("id, programme_name, html_content, is_active")
+      .eq("client_id", client.id)
+      .then(({ data }) => setProgrammesContent(data || []));
   }, [client.id, d7str]);
 
   // ===== Agregation nutrition par jour =====
@@ -2131,7 +2169,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 // fallback "Exercice N".
                 const exSummary = {};
                 dayExs.forEach(e => {
-                  const name = exNameByKey[e.ex_key] || prettyExName(e.ex_key);
+                  const name = resolveExName(s, e.ex_key) || prettyExName(e.ex_key);
                   if (!exSummary[name] || (Number(e.weight) || 0) > exSummary[name].w) {
                     exSummary[name] = { w: Number(e.weight) || 0, r: e.reps, s: e.sets };
                   }
@@ -2141,7 +2179,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 return (
                   <div
                     key={i}
-                    onClick={() => setSessionDetail({ session: s, dayExs, exNameByKey, allExLogs: exLogs })}
+                    onClick={() => setSessionDetail({ session: s, dayExs, resolveExName, allExLogs: exLogs })}
                     style={{ ...card, padding: "14px 16px", cursor: "pointer", transition: "background .12s, border-color .12s" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.04)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.18)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = card.background || "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = card.border ? card.border.split(" ").slice(2).join(" ") : "rgba(255,255,255,0.05)"; }}
