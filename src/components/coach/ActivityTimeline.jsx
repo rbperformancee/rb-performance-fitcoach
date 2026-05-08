@@ -72,6 +72,7 @@ export default function ActivityTimeline({ clientId, coachId }) {
       case "pipeline": return { icon: "target", color: "#f97316" };
       case "tag": return { icon: "sparkles", color: "#818cf8" };
       case "call": return { icon: "bell", color: "#ef4444" };
+      case "client_pr": return { icon: "sparkles", color: "#02d1ba" };
       default: return { icon: "activity", color: "rgba(255,255,255,0.5)" };
     }
   };

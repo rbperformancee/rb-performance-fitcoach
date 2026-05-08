@@ -8,6 +8,46 @@ function buildExKey(programmeName, weekIdx, sessionIdx, exIdx) {
   return `${base}__w${weekIdx}_s${sessionIdx}_e${exIdx}`;
 }
 
+// Reconnait les 3 mouvements polyarticulaires majeurs (powerlifting "big 3").
+// Renvoie le nom canonique pour le notif coach, ou null si l'exo n'est pas
+// un main lift — on ne veut PAS notifier le coach pour un PR sur curl biceps.
+// Volontairement strict : exclut split squat / goblet squat / etc. qui sont
+// accessoires plutôt que mouvement principal.
+function canonicalMainLift(name) {
+  const n = String(name || "").toLowerCase().trim();
+  if (!n) return null;
+  // Squat (back/front/box/pause/high-bar/low-bar) — exclut les variantes accessoires
+  if (/\bsquat\b/.test(n) && !/split|bulgar|goblet|pistol|sissy|hack|single|jump|sumo squat/.test(n)) return "Squat";
+  // Développé couché : DC, bench press, incline/decline bench
+  if (/d[eé]velopp[eé]\s*couch[eé]/.test(n) || /\bbench(?:\s*press)?\b/.test(n) || /^dc\b|\sdc\b/.test(n)) return "Développé couché";
+  // Deadlift / Soulevé de terre / SDT
+  if (/deadlift/.test(n) || /soulev[eé]\s*de\s*terre/.test(n) || /^sdt\b|\ssdt\b/.test(n)) return "Deadlift";
+  return null;
+}
+
+// Insert dans coach_activity_log si PR détecté sur un main lift. Best-effort
+// (try/catch silencieux) : la perf de la séance ne doit pas être bloquée par
+// un échec de notif. RLS coach_activity_log autorise insert si coach_id existe.
+async function notifyCoachPR(clientId, liftName, priorMax, newMax) {
+  try {
+    const { data: client } = await supabase
+      .from("clients")
+      .select("coach_id, full_name")
+      .eq("id", clientId)
+      .maybeSingle();
+    if (!client?.coach_id) return;
+    const name = client.full_name || "Client";
+    const fmt = (w) => Number.isInteger(w) ? String(w) : (Math.round(w * 10) / 10).toString();
+    const summary = `🏆 ${name} a battu son record sur ${liftName} : ${fmt(priorMax)}kg → ${fmt(newMax)}kg (+${fmt(newMax - priorMax)}kg)`;
+    await supabase.from("coach_activity_log").insert({
+      coach_id: client.coach_id,
+      client_id: clientId,
+      activity_type: "client_pr",
+      details: summary,
+    });
+  } catch { /* silent — pas critique */ }
+}
+
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -87,8 +127,10 @@ export function useLogs(programmeName, clientId = null) {
   // setsArr : tableau optionnel { weight, reps } détaillé set-par-set,
   // persisté en JSONB via la migration 046. Si non fourni, on retombe sur
   // l'aggrégation legacy (weight=moyenne, reps=dernière série).
+  // exName : nom de l'exercice — utilisé pour détecter un PR sur un main
+  // lift (squat/bench/deadlift) et notifier le coach.
   const saveLog = useCallback(
-    (weekIdx, sessionIdx, exIdx, weight, reps, setsArr = null) => {
+    (weekIdx, sessionIdx, exIdx, weight, reps, setsArr = null, exName = null) => {
       const key = buildExKey(programmeName, weekIdx, sessionIdx, exIdx);
       const today = new Date().toISOString().slice(0, 10);
       const w = parseFloat(weight) || 0;
@@ -103,6 +145,27 @@ export function useLogs(programmeName, clientId = null) {
             }))
             .filter((s) => s.weight > 0 || (s.reps !== "" && Number(s.reps) > 0))
         : null;
+
+      // ── Détection PR (avant le setLogs car on a besoin de l'historique
+      // antérieur, hors séance courante). Best-effort, silencieux.
+      const lift = canonicalMainLift(exName);
+      if (lift && clientId) {
+        const newMax = normalizedSets && normalizedSets.length > 0
+          ? Math.max(...normalizedSets.map((s) => Number(s.weight) || 0))
+          : w;
+        const priorEntries = (logs[key] || []).filter((e) => e.date !== today);
+        const priorMax = Math.max(0, ...priorEntries.map((h) =>
+          Array.isArray(h.sets) && h.sets.length > 0
+            ? Math.max(...h.sets.map((s) => Number(s.weight) || 0))
+            : Number(h.weight) || 0
+        ));
+        // Nécessite un priorMax > 0 pour éviter de "PR" sur la 1ère séance
+        // de l'exo (techniquement c'est un PR mais ça spam le coach pour
+        // chaque nouveau client).
+        if (newMax > priorMax && priorMax > 0) {
+          notifyCoachPR(clientId, lift, priorMax, newMax);
+        }
+      }
 
       setLogs((prev) => {
         const existing = prev[key] || [];
@@ -140,7 +203,7 @@ export function useLogs(programmeName, clientId = null) {
         })();
       }
     },
-    [programmeName, clientId]
+    [programmeName, clientId, logs]
   );
 
   // Delta entre la dernière et l'avant-dernière entrée

@@ -277,7 +277,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     haptic.medium(); // Set valide
     if (n >= setsCount) {
       const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
-      saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n - 1].reps, completedSetsRef.current);
+      saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n - 1].reps, completedSetsRef.current, ex.name);
       haptic.success(); // Exercice termine
       if (restSecs) setTimeout(() => setShowTimer(true), 600);
     } else if (restSecs) {
