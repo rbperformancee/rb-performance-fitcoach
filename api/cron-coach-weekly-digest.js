@@ -310,7 +310,7 @@ export default async function handler(req, res) {
             coach_id: coach.id,
             title: `Ta semaine · Score ${businessScore}`,
             body: pushBody,
-            url: "/dashboard",
+            url: "/login",
           }),
         });
       } catch (_) { /* push optionnel */ }

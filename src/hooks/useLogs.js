@@ -70,7 +70,7 @@ async function notifyCoachPR(clientId, liftName, priorMax, newMax) {
             coach_id: client.coach_id,
             title: `Record battu · ${name}`,
             body: `${liftName} : ${fmt(priorMax)}kg → ${fmt(newMax)}kg (+${fmt(newMax - priorMax)}kg)`,
-            url: `/coach?client=${clientId}`,
+            url: "/login",
           }),
         });
       }

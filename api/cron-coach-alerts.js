@@ -43,7 +43,7 @@ async function sbFetch(path, options = {}) {
   return res.json();
 }
 
-async function sendCoachPush(coachId, title, body, url = "/dashboard") {
+async function sendCoachPush(coachId, title, body, url = "/login") {
   try {
     await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
       method: "POST",
@@ -132,7 +132,9 @@ export default async function handler(req, res) {
         });
 
         // Push notif coach (best-effort)
-        await sendCoachPush(coach.id, pushTitle, pushBody, `/coach?client=${client.id}`);
+        // Deep-link client pas encore implémenté côté CoachDashboard, on
+        // route vers /login (= dashboard coach) en attendant.
+        await sendCoachPush(coach.id, pushTitle, pushBody, "/login");
         alertCount++;
       }
     }
