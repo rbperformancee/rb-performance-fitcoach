@@ -22,9 +22,7 @@ const BODY_FONT = "'DM Sans',-apple-system,Inter,sans-serif";
 const MONO = "'JetBrains Mono','SF Mono',monospace";
 const G = "#02d1ba";
 const RED = "#ef4444";
-const ORANGE = "#f97316";
 const AMBER = "#fbbf24";
-const VIOLET = "#a78bfa";
 const PLAN_PRICES = { "3m": 120, "6m": 110, "12m": 100 };
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -84,7 +82,7 @@ function Clock() {
 // Ring de score 0-100 — rouge / orange / vert
 function Ring({ score, size = 48 }) {
   const r = (size - 6) / 2, circ = 2 * Math.PI * r, off = circ * (1 - score / 100);
-  const c = score >= 70 ? G : score >= 40 ? ORANGE : RED;
+  const c = score >= 70 ? G : score >= 40 ? AMBER : RED;
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -96,21 +94,23 @@ function Ring({ score, size = 48 }) {
   );
 }
 
-// Sparkline path — line chart minuscule sans axes
-// data = array of numbers. Rendu en SVG, taille flexible.
+// Sparkline — line chart minuscule sans axes. Supporte width="100%" pour responsive
+// (viewBox interne fixe à 1000, SVG s'étire au container avec preserveAspectRatio=none).
 function Sparkline({ data, width = 120, height = 32, color = BLUE, fill = true, dot = true }) {
-  if (!data || data.length < 2) return <div style={{ width, height, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "rgba(255,255,255,0.2)", fontFamily: MONO }}>—</div>;
+  if (!data || data.length < 2) return <div style={{ width: width === "100%" ? "100%" : width, height, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "rgba(255,255,255,0.2)", fontFamily: MONO }}>—</div>;
+  const isFlex = width === "100%";
+  const w = isFlex ? 1000 : width;
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
   const range = max - min || 1;
-  const step = width / (data.length - 1);
+  const step = w / (data.length - 1);
   const pts = data.map((v, i) => `${i * step},${height - ((v - min) / range) * (height - 4) - 2}`);
   const path = "M" + pts.join(" L");
-  const area = fill ? `${path} L${width},${height} L0,${height} Z` : null;
+  const area = fill ? `${path} L${w},${height} L0,${height} Z` : null;
   const lastY = height - ((data[data.length - 1] - min) / range) * (height - 4) - 2;
   const gradId = `spkg-${color.replace(/[^a-z0-9]/gi, "")}`;
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: "visible" }}>
+    <svg width={isFlex ? "100%" : width} height={height} viewBox={`0 0 ${w} ${height}`} preserveAspectRatio={isFlex ? "none" : "xMidYMid meet"} style={{ overflow: "visible", display: "block" }}>
       {fill && (
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -120,11 +120,11 @@ function Sparkline({ data, width = 120, height = 32, color = BLUE, fill = true, 
         </defs>
       )}
       {fill && <path d={area} fill={`url(#${gradId})`} />}
-      <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={path} fill="none" stroke={color} strokeWidth={isFlex ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       {dot && (
         <>
-          <circle cx={width} cy={lastY} r="4" fill={color} opacity={0.18} />
-          <circle cx={width} cy={lastY} r="2" fill={color} />
+          <circle cx={w} cy={lastY} r="4" fill={color} opacity={0.18} />
+          <circle cx={w} cy={lastY} r="2" fill={color} />
         </>
       )}
     </svg>
@@ -296,6 +296,36 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Live updates : Supabase Realtime sur les events qui bougent vraiment les
+  // chiffres (paiements, signups, sessions). On refetch en silencieux —
+  // l'AnimNum joue la transition. Nécessite Realtime activé en prod sur ces tables.
+  // Debounce 800ms pour éviter de refetch en rafale si plusieurs events arrivent.
+  const refetchTimer = useRef(null);
+  const scheduleRefetch = useCallback(() => {
+    if (refetchTimer.current) clearTimeout(refetchTimer.current);
+    refetchTimer.current = setTimeout(() => loadData(true), 800);
+  }, [loadData]);
+
+  useEffect(() => {
+    let channel;
+    try {
+      channel = supabase.channel("ceo-cockpit-live")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "client_payments" }, scheduleRefetch)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "clients" }, scheduleRefetch)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "clients" }, scheduleRefetch)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "session_logs" }, scheduleRefetch)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "weight_logs" }, scheduleRefetch)
+        .subscribe();
+    } catch (e) {
+      // Realtime peut ne pas être activé sur certaines tables — on ignore silencieusement.
+      console.warn("[ceo-cockpit] realtime subscribe failed", e);
+    }
+    return () => {
+      if (refetchTimer.current) clearTimeout(refetchTimer.current);
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [scheduleRefetch]);
+
   const toggleCoach = async (coach) => {
     await supabase.from("coaches").update({ is_active: !coach.is_active }).eq("id", coach.id);
     setCoaches(prev => prev.map(c => c.id === coach.id ? { ...c, is_active: !c.is_active } : c));
@@ -399,11 +429,11 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
     });
     nutritionLogs.forEach(n => {
       const ts = new Date(n.logged_at || n.date).getTime();
-      if (ts > ago48) evs.push({ ts, type: "meal", color: ORANGE, label: clientName(n.client_id), detail: n.aliment || "Repas" });
+      if (ts > ago48) evs.push({ ts, type: "meal", color: AMBER, label: clientName(n.client_id), detail: n.aliment || "Repas" });
     });
     weightLogs.forEach(w => {
       const ts = new Date(w.date).getTime();
-      if (ts > ago48) evs.push({ ts, type: "weight", color: VIOLET, label: clientName(w.client_id), detail: `${w.weight}kg` });
+      if (ts > ago48) evs.push({ ts, type: "weight", color: BLUE, label: clientName(w.client_id), detail: `${w.weight}kg` });
     });
     runLogs.forEach(r => {
       const ts = new Date(r.date).getTime();
@@ -458,7 +488,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const planBreakdown = useMemo(() => {
     const breakdown = {
       "3m": { count: 0, mrr: 0, color: BLUE, label: "3 mois" },
-      "6m": { count: 0, mrr: 0, color: VIOLET, label: "6 mois" },
+      "6m": { count: 0, mrr: 0, color: BLUE, label: "6 mois" },
       "12m": { count: 0, mrr: 0, color: G, label: "12 mois" },
     };
     subs.forEach(s => {
@@ -554,7 +584,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
     dailyTracking.forEach(l => { if (new Date(l.date).getTime() > cutoff) activeIds.add(l.client_id); });
     const silentSubs = subs.filter(c => !activeIds.has(c.id)).length;
     if (silentSubs > 0) {
-      ins.push({ icon: "alert", color: ORANGE, label: "Silent subs", detail: `${silentSubs} abonné${silentSubs > 1 ? "s" : ""} actif${silentSubs > 1 ? "s" : ""} sans aucune activité depuis 7j` });
+      ins.push({ icon: "alert", color: AMBER, label: "Silent subs", detail: `${silentSubs} abonné${silentSubs > 1 ? "s" : ""} actif${silentSubs > 1 ? "s" : ""} sans aucune activité depuis 7j` });
     }
     // 3. Best activity day in 30d
     const dayTotals = pulse.dau.map(b => b.count);
@@ -568,7 +598,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
     if (subs.length > 0 && pushReachable < subs.length) {
       const missing = subs.length - pushReachable;
       const subscribedRate = Math.round((pushReachable / subs.length) * 100);
-      ins.push({ icon: "bell", color: missing > 5 ? RED : ORANGE, label: "Push reach", detail: `${pushReachable}/${subs.length} subs joignables (${subscribedRate}%) — ${missing} doi${missing > 1 ? "vent" : "t"} activer les notifs` });
+      ins.push({ icon: "bell", color: missing > 5 ? RED : AMBER, label: "Push reach", detail: `${pushReachable}/${subs.length} subs joignables (${subscribedRate}%) — ${missing} doi${missing > 1 ? "vent" : "t"} activer les notifs` });
     }
     // 5. Expiring soon
     if (subscriptionsExpiring30 > 0) {
@@ -626,8 +656,8 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   };
   const actionItems = [];
   if (renewals14.length > 0) actionItems.push({ label: `${renewals14.length} renouvellement${renewals14.length > 1 ? "s" : ""} dans 14j`, names: examples(renewals14), count: renewals14.length, color: AMBER, target: "clients" });
-  if (silentSubs.length > 0) actionItems.push({ label: `${silentSubs.length} abonné${silentSubs.length > 1 ? "s" : ""} silencieux 7j+`, names: examples(silentSubs), count: silentSubs.length, color: ORANGE, target: "clients" });
-  if (inactiveCoaches.length > 0) actionItems.push({ label: `${inactiveCoaches.length} coach${inactiveCoaches.length > 1 ? "s" : ""} sans session 30j`, names: examples(inactiveCoaches), count: inactiveCoaches.length, color: ORANGE, target: "coachs" });
+  if (silentSubs.length > 0) actionItems.push({ label: `${silentSubs.length} abonné${silentSubs.length > 1 ? "s" : ""} silencieux 7j+`, names: examples(silentSubs), count: silentSubs.length, color: AMBER, target: "clients" });
+  if (inactiveCoaches.length > 0) actionItems.push({ label: `${inactiveCoaches.length} coach${inactiveCoaches.length > 1 ? "s" : ""} sans session 30j`, names: examples(inactiveCoaches), count: inactiveCoaches.length, color: AMBER, target: "coachs" });
   const expiring15to30List = allClients.filter(c => c.subscription_end_date && new Date(c.subscription_end_date) >= new Date(Date.now() + 14 * 86400000) && new Date(c.subscription_end_date) < new Date(Date.now() + 30 * 86400000));
   if (expiring15to30List.length > 0) actionItems.push({ label: `${expiring15to30List.length} renouvellement${expiring15to30List.length > 1 ? "s" : ""} 15-30j`, names: examples(expiring15to30List), count: expiring15to30List.length, color: BLUE, target: "clients" });
 
@@ -636,12 +666,54 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
 
   const card = { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" };
 
-  if (loading) return (
-    <div style={{ minHeight: "100dvh", background: "#030303", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
-      <Spinner variant="dots" size={40} color={BLUE} />
-      <div style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "2px", textTransform: "uppercase" }}>Loading cockpit...</div>
-    </div>
-  );
+  if (loading) {
+    // Skeleton qui mime la structure réelle — perception de vitesse.
+    const sk = (w, h, r = 8, mb = 0, ml = 0) => <div style={{ width: w, height: h, borderRadius: r, marginBottom: mb, marginLeft: ml, background: "linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)", backgroundSize: "200% 100%", animation: "skShimmer 1.4s ease-in-out infinite" }} />;
+    return (
+      <div style={{ minHeight: "100dvh", background: "#030303", fontFamily: BODY_FONT, color: IVORY }}>
+        <style>{`@keyframes skShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 50% -20%, rgba(129,140,248,0.06), transparent 55%)", pointerEvents: "none" }} />
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1080, margin: "0 auto", padding: "0 24px 100px" }}>
+          {/* header skeleton */}
+          <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 16px)", paddingBottom: 18, marginBottom: 0, borderBottom: "1px solid rgba(240,236,228,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              {sk(8, 8, 100)}
+              <div>{sk(80, 8, 4, 6)}{sk(140, 14, 4)}</div>
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>{sk(50, 13, 4)}{sk(34, 34, 10)}</div>
+          </div>
+          {/* hero skeleton */}
+          <div style={{ marginTop: 36, marginBottom: 32 }}>
+            {sk(220, 11, 4, 18)}
+            {sk(380, 84, 12, 14)}
+            {sk(280, 13, 4, 14)}
+            {sk(180, 28, 100, 28)}
+            {sk("100%", 80, 12, 28)}
+            <div style={{ display: "flex", gap: 28, paddingTop: 22, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{ flex: 1 }}>{sk(70, 8, 4, 10)}{sk(110, 28, 6, 8)}{sk(140, 11, 4)}</div>
+              ))}
+            </div>
+          </div>
+          {/* operator row skeleton */}
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.5fr) minmax(0, 1fr)", gap: 16, marginBottom: 24 }}>
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: 20 }}>
+              {sk(140, 11, 4, 18)}
+              {[0, 1, 2, 3, 4].map(i => <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>{sk(8, 8, 100)}{sk(60, 9, 4)}<div style={{ flex: 1 }}>{sk("100%", 12, 4)}</div>{sk(50, 11, 4)}</div>)}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {[0, 1].map(i => (
+                <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: 20 }}>
+                  {sk(80, 11, 4, 16)}
+                  {[0, 1, 2].map(j => <div key={j} style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "center" }}>{sk(8, 8, 100)}<div style={{ flex: 1 }}>{sk("100%", 11, 4)}</div>{sk(30, 11, 4)}</div>)}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100dvh", background: "#030303", fontFamily: BODY_FONT, color: IVORY }}>
@@ -754,7 +826,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           </div>
 
           <div style={{ position: "relative", height: 80, marginBottom: 28, opacity: 0.92 }}>
-            <Sparkline data={mrrTrajectory.map(b => b.amount)} width={1032} height={80} color={BLUE} fill={true} dot={true} />
+            <Sparkline data={mrrTrajectory.map(b => b.amount)} width="100%" height={80} color={BLUE} fill={true} dot={true} />
             <div style={{ position: "absolute", top: 6, left: 6, fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>Cash flow · 30j</div>
             <div style={{ position: "absolute", top: 6, right: 6, fontSize: 11, fontFamily: MONO, fontWeight: 700, color: BLUE, fontVariantNumeric: "tabular-nums" }}>{Math.round(revenue30dActual).toLocaleString()}€</div>
           </div>
@@ -762,7 +834,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           <div style={{ display: "flex", gap: 0, paddingTop: 22, paddingBottom: 6, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             {[
               { label: "Cash 30j", value: `${Math.round(revenue30dActual).toLocaleString()}€`, sub: `${payments.filter(p => !p.void).length} paiement${payments.filter(p => !p.void).length > 1 ? "s" : ""}`, color: G },
-              { label: "Active subs", value: subs.length, sub: newToday > 0 ? `+${newToday} aujourd'hui` : (newCl30 > 0 ? `+${newCl30} sur 30j` : "stable"), color: VIOLET },
+              { label: "Active subs", value: subs.length, sub: newToday > 0 ? `+${newToday} aujourd'hui` : (newCl30 > 0 ? `+${newCl30} sur 30j` : "stable"), color: BLUE },
               { label: "Net new (mois)", value: `${netNewMonth >= 0 ? "+" : ""}${netNewMonth}`, sub: `${newThisMonth} new · ${churnedThisMonth} churn`, color: netNewMonth >= 0 ? G : RED },
             ].map((m, i) => (
               <div key={i} style={{ flex: 1, paddingLeft: i > 0 ? 28 : 0, borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none", paddingRight: 28 }}>
@@ -957,7 +1029,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                         </div>
                         <div style={{ textAlign: "right", flexShrink: 0 }}>
                           {cl.subscription_plan && <div style={{ fontSize: 10, fontWeight: 700, color: BLUE }}>{cl.subscription_plan}</div>}
-                          {dl !== null && <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.35)", marginTop: 2 }}>{dl <= 0 ? "expired" : dl + "d"}</div>}
+                          {dl !== null && <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: dl <= 0 ? RED : dl <= 14 ? AMBER : "rgba(255,255,255,0.35)", marginTop: 2 }}>{dl <= 0 ? "expired" : dl + "d"}</div>}
                         </div>
                       </div>
                     </div>
@@ -970,7 +1042,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             {detailView === "retention" && (
               <div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
-                  {[{ l: "Active", v: subs.length, c: G }, { l: "Inactive", v: onb.length - subs.length, c: ORANGE }, { l: "Rate", v: ret + "%", c: ret >= 80 ? G : ORANGE }].map((s, i) => (
+                  {[{ l: "Active", v: subs.length, c: G }, { l: "Inactive", v: onb.length - subs.length, c: AMBER }, { l: "Rate", v: ret + "%", c: ret >= 80 ? G : AMBER }].map((s, i) => (
                     <div key={i} style={{ ...card, textAlign: "center", cursor: "default", padding: 20 }}>
                       <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 200, color: s.c, fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
                       <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "1px", marginTop: 8, fontWeight: 700 }}>{s.l}</div>
@@ -1000,7 +1072,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                       </div>
                       <div style={{ display: "flex", gap: 16, flexShrink: 0 }}>
                         <div style={{ textAlign: "center" }}><div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 200, color: BLUE, fontVariantNumeric: "tabular-nums" }}>{c._mrr}€</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>MRR</div></div>
-                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 200, color: c._ret >= 80 ? G : ORANGE, fontVariantNumeric: "tabular-nums" }}>{c._ret}%</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>RET</div></div>
+                        <div style={{ textAlign: "center" }}><div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 200, color: c._ret >= 80 ? G : AMBER, fontVariantNumeric: "tabular-nums" }}>{c._ret}%</div><div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>RET</div></div>
                       </div>
                     </div>
                     {expandedCoach === c.id && (
@@ -1021,7 +1093,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                               return (
                                 <div key={cl.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255,255,255,0.015)", borderRadius: 8, fontSize: 11 }}>
                                   <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>{cl.full_name || cl.email}</span>
-                                  <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: dl !== null ? (dl <= 0 ? RED : dl <= 14 ? ORANGE : "rgba(255,255,255,0.3)") : "rgba(255,255,255,0.2)" }}>{dl !== null ? (dl <= 0 ? "expired" : dl + "d") : "—"}</span>
+                                  <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: dl !== null ? (dl <= 0 ? RED : dl <= 14 ? AMBER : "rgba(255,255,255,0.3)") : "rgba(255,255,255,0.2)" }}>{dl !== null ? (dl <= 0 ? "expired" : dl + "d") : "—"}</span>
                                 </div>
                               );
                             })}
