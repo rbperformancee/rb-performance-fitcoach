@@ -107,6 +107,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [detailCoach, setDetailCoach] = useState(null);
+  const [funnelDialog, setFunnelDialog] = useState(null); // { step: 'created'|'setup'|'activated'|'engaged'|'paying', label, list }
 
   const loadData = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true); else setLoading(true);
@@ -380,25 +381,45 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             {payingCoaches.length} coach{payingCoaches.length > 1 ? "s" : ""} payant{payingCoaches.length > 1 ? "s" : ""}{stripeReady ? "" : " trackable"} · {totalCoaches} coach{totalCoaches > 1 ? "s" : ""} créé{totalCoaches > 1 ? "s" : ""} · ARR {arr.toLocaleString()}€
           </div>
 
-          {/* Activation funnel */}
-          <div style={{ display: "flex", gap: 0, padding: "16px 0", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            {[
-              { label: "Créés", value: stepCreated, color: "rgba(255,255,255,0.6)" },
-              { label: "Setup", value: stepSetup, color: BLUE },
-              { label: "Activés", value: stepActivated, color: BLUE },
-              { label: "Engagés", value: stepEngaged, color: G },
-              { label: "Payants", value: stepPaying, color: AMBER },
-            ].map((s, i, arr) => (
-              <div key={s.label} style={{ flex: 1, paddingLeft: i > 0 ? 20 : 0, paddingRight: 20, borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>{s.label}</div>
-                <div style={{ fontFamily: DISPLAY, fontSize: 26, fontWeight: 800, color: s.value > 0 ? s.color : "rgba(255,255,255,0.25)", letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
-                {i < arr.length - 1 && stepCreated > 0 && (
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: MONO, marginTop: 4 }}>
-                    {arr[i + 1].value > 0 ? Math.round((arr[i + 1].value / s.value) * 100) + "% →" : "—"}
-                  </div>
-                )}
-              </div>
-            ))}
+          {/* Activation funnel — scroll horizontal sur mobile pour ne pas écraser */}
+          <div style={{ display: "flex", gap: 12, padding: "18px 0", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+            <style>{`.funnel-row::-webkit-scrollbar{display:none}`}</style>
+            {(() => {
+              const steps = [
+                { key: "created", label: "Créés", value: stepCreated, color: "rgba(255,255,255,0.6)", list: enriched },
+                { key: "setup", label: "Setup", value: stepSetup, color: BLUE, list: enriched.filter(c => c._isSetup) },
+                { key: "activated", label: "Activés", value: stepActivated, color: BLUE, list: enriched.filter(c => c._isActivated) },
+                { key: "engaged", label: "Engagés", value: stepEngaged, color: G, list: enriched.filter(c => c._isEngaged) },
+                { key: "paying", label: "Payants", value: stepPaying, color: AMBER, list: payingCoaches },
+              ];
+              return steps.map((s, i) => {
+                const next = steps[i + 1];
+                const conv = i < steps.length - 1 && s.value > 0 ? Math.round((next.value / s.value) * 100) : null;
+                return (
+                  <button
+                    key={s.key}
+                    onClick={() => { haptic.selection(); setFunnelDialog({ step: s.key, label: s.label, color: s.color, list: s.list }); }}
+                    style={{
+                      flex: "1 1 110px", minWidth: 110, padding: "4px 14px",
+                      background: "transparent", border: "none", cursor: "pointer",
+                      fontFamily: "inherit", color: "inherit", textAlign: "left",
+                      borderRight: i < steps.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                      transition: "background 0.15s", borderRadius: 6,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8, whiteSpace: "nowrap" }}>{s.label}</div>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 28, fontWeight: 800, color: s.value > 0 ? s.color : "rgba(255,255,255,0.22)", letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums", marginBottom: 6 }}>{s.value}</div>
+                    {conv !== null && (
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: MONO, whiteSpace: "nowrap" }}>
+                        {next.value > 0 ? `${conv}% →` : "→"}
+                      </div>
+                    )}
+                  </button>
+                );
+              });
+            })()}
           </div>
         </div>
 
@@ -588,6 +609,15 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
         ))}
       </nav>
 
+      {/* ═══════ FUNNEL DIALOG — liste des coachs d'une étape ═══════ */}
+      {funnelDialog && (
+        <FunnelDialog
+          dialog={funnelDialog}
+          onSelectCoach={(c) => { setFunnelDialog(null); setDetailCoach(c); }}
+          onClose={() => setFunnelDialog(null)}
+        />
+      )}
+
       {/* ═══════ DRILL-DOWN COACH (full screen) ═══════ */}
       {detailCoach && (
         <CoachDetail
@@ -598,6 +628,116 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           onClose={() => setDetailCoach(null)}
         />
       )}
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  FunnelDialog — modal listant les coachs d'une étape du funnel
+// ───────────────────────────────────────────────────────────────────────────
+function FunnelDialog({ dialog, onSelectCoach, onClose }) {
+  const { label, color, list } = dialog;
+  // Lock scroll body pendant le modal
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const explanations = {
+    created: "Tous les coachs qui ont un compte (table coaches).",
+    setup: "Coachs qui ont validé leur onboarding business (objectif mensuel défini).",
+    activated: "Coachs qui ont au moins 1 athlète invité.",
+    engaged: "Coachs dont l'athlète a au moins 1 activité loggée OU 1 programme actif.",
+    paying: "Coachs avec un abonnement Stripe actif (payent RB Perform).",
+  };
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 250,
+        background: "rgba(0,0,0,0.78)",
+        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 20, fontFamily: BODY, color: IVORY,
+        animation: "cF 0.2s ease",
+      }}
+    >
+      <div style={{
+        width: "100%", maxWidth: 540, maxHeight: "85vh",
+        background: "#0a0a0a",
+        border: `1px solid ${color}33`,
+        borderRadius: 16,
+        boxShadow: `0 24px 64px rgba(0,0,0,0.6), 0 0 80px ${color}10`,
+        display: "flex", flexDirection: "column",
+        overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.25em", textTransform: "uppercase", color: color, opacity: 0.85 }}>{label}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 26, fontWeight: 900, color: IVORY, letterSpacing: "-0.02em", marginTop: 4, lineHeight: 1 }}>
+              {list.length} coach{list.length > 1 ? "s" : ""}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Ic name="x" size={14} />
+          </button>
+        </div>
+
+        {/* Explanation */}
+        <div style={{ padding: "12px 22px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+          {explanations[dialog.step]}
+        </div>
+
+        {/* List */}
+        <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+          {list.length === 0 ? (
+            <div style={{ padding: "40px 24px", textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>
+              Aucun coach à cette étape.
+            </div>
+          ) : (
+            list.map((c, i) => (
+              <button
+                key={c.id}
+                onClick={() => onSelectCoach(c)}
+                className="row-hover"
+                style={{
+                  width: "100%", padding: "14px 22px",
+                  display: "flex", alignItems: "center", gap: 14,
+                  borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none",
+                  background: "transparent", border: "none", cursor: "pointer",
+                  fontFamily: "inherit", color: "inherit", textAlign: "left",
+                  transition: "background 0.15s",
+                }}
+              >
+                <div style={{
+                  width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                  background: c.logo_url ? "transparent" : "rgba(2,209,186,0.08)",
+                  backgroundImage: c.logo_url ? `url(${c.logo_url})` : "none",
+                  backgroundSize: "cover", backgroundPosition: "center",
+                  border: "1px solid rgba(2,209,186,0.18)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 800, fontSize: 15, color: G, overflow: "hidden",
+                }}>
+                  {!c.logo_url && (c.full_name || c.email || "?")[0].toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.full_name || c.email}</span>
+                    {c._mrr > 0 && <span style={{ fontSize: 8, fontWeight: 800, color: AMBER, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 100, padding: "2px 7px", letterSpacing: "0.5px", textTransform: "uppercase" }}>{c._plan}</span>}
+                  </div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontFamily: MONO }}>
+                    {c._athletes} ath. · {c._activeProgs}/{c._programmes} prog · {c._totalActivity} activités · {c._lastActivityTs ? `vu ${rel(c._lastActivityTs)}` : "jamais actif"}
+                  </div>
+                </div>
+                <Ic name="arrowRight" size={11} color="rgba(255,255,255,0.3)" />
+              </button>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
