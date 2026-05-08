@@ -883,11 +883,17 @@ function SessionDetailModal({ data, onClose }) {
         const prevBest1rm = Math.max(0, ...prevSets.map((r) => epley1rm(r.weight, r.reps) || 0));
         prevByKey[k] = { date: prevDate, maxW: prevMaxW, best1rm: prevBest1rm };
       }
-      // Max historique = tous les sets HORS séance courante
-      const others = rows.filter((r) => !(r.logged_at || "").startsWith(sessionDateStr));
-      histMaxByKey[k] = Math.max(0, ...others.map((r) => Number(r.weight) || 0));
+      // Max historique = max poids sur sets HORS séance courante avec poids>0.
+      // null si aucun antécédent → empêche le faux 🏆 PR sur la 1ère séance
+      // (le PR n'a de sens que s'il y avait quelque chose à battre).
+      const others = rows.filter((r) => !(r.logged_at || "").startsWith(sessionDateStr) && Number(r.weight) > 0);
+      histMaxByKey[k] = others.length > 0 ? Math.max(...others.map((r) => Number(r.weight) || 0)) : null;
     });
   }
+  // Vrai si AUCUN exercice de la séance n'a d'historique antérieur. Permet
+  // d'afficher une bannière unique en haut au lieu de "1ère séance" dupliqué
+  // sur chaque carte (visuellement plus propre).
+  const allFirstTime = exercises.length > 0 && exercises.every(([k]) => !prevByKey[k]);
 
   // ── Stats agrégées de la séance (header) ──
   const allRealSets = [];
@@ -911,68 +917,100 @@ function SessionDetailModal({ data, onClose }) {
       }}
     >
       <div style={{
-        background: "#0e0e0e", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18,
-        maxWidth: 560, width: "100%", padding: 24, maxHeight: "90vh",
+        background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
+        maxWidth: 600, width: "100%", maxHeight: "90vh",
         display: "flex", flexDirection: "column", fontFamily: "-apple-system,'Inter',sans-serif",
+        overflow: "hidden",
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 18 }}>
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G_LOCAL, textTransform: "uppercase", marginBottom: 5 }}>
+        {/* Header : eyebrow + titre + date sur 2 lignes, croix à droite. Padding
+            généreux pour un feeling premium, separator subtil entre header et corps. */}
+        <div style={{
+          padding: "26px 28px 22px",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          background: "linear-gradient(180deg, rgba(2,209,186,0.025) 0%, transparent 100%)",
+          display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16,
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3.5, color: G_LOCAL, textTransform: "uppercase", marginBottom: 8 }}>
               Détail séance
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: -0.3 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 6 }}>
               {session.session_name || session.programme_name || "Séance"}
             </div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
-              {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-              {durationMin != null && <span> · {durationMin} min</span>}
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ textTransform: "capitalize" }}>
+                {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              </span>
+              {durationMin != null && (
+                <>
+                  <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.7)" }}>{durationMin} min</span>
+                </>
+              )}
+              {allRealSets.length > 0 && (
+                <>
+                  <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.7)" }}>{allRealSets.length} sets loggés</span>
+                </>
+              )}
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}
+            style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 18, lineHeight: 1, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           >×</button>
         </div>
 
-        {/* Stats agrégées de la séance — vue Bloomberg : 4 KPIs en grille
-            monospace pour donner un coup d'oeil rapide avant le détail. */}
+        {/* KPIs séance : 4 colonnes égales avec dividers internes plutôt que
+            grille remplie. Numeros gros & monospace pour le côté Bloomberg. */}
         {allRealSets.length > 0 && (
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 1,
-            background: "rgba(2,209,186,0.06)",
-            border: "1px solid rgba(2,209,186,0.18)",
-            borderRadius: 12,
-            overflow: "hidden",
-            marginBottom: 16,
+            background: "rgba(2,209,186,0.03)",
+            borderBottom: "1px solid rgba(255,255,255,0.05)",
           }}>
             {[
-              { label: "Volume", value: `${Math.round(sessionVolume).toLocaleString("fr-FR")}`, suffix: "kg" },
+              { label: "Volume total", value: `${Math.round(sessionVolume).toLocaleString("fr-FR")}`, suffix: "kg" },
               { label: "Charge max", value: fmtKg(sessionMaxW), suffix: "kg" },
-              { label: "Reps", value: sessionTotalReps, suffix: "" },
+              { label: "Reps total", value: sessionTotalReps, suffix: "" },
               { label: "1RM est. max", value: fmtKg(sessionBest1rm), suffix: "kg" },
-            ].map((kpi, i) => (
+            ].map((kpi, i, arr) => (
               <div key={i} style={{
-                padding: "10px 8px",
-                background: "rgba(0,0,0,0.4)",
+                padding: "16px 8px",
                 textAlign: "center",
+                borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
               }}>
-                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>
+                <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1.8, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>
                   {kpi.label}
                 </div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL, fontSize: 15 }}>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL, fontSize: 18, letterSpacing: -0.5 }}>
                   {kpi.value}
-                  {kpi.suffix && <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>{kpi.suffix}</span>}
+                  {kpi.suffix && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 3, fontWeight: 500 }}>{kpi.suffix}</span>}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+        {/* Bannière 1ère séance : montrée UNE fois si tous les exos sont
+            inédits, plutôt que dupliquée sur chaque carte. */}
+        {allFirstTime && (
+          <div style={{
+            padding: "10px 28px",
+            background: "rgba(255,170,0,0.04)",
+            borderBottom: "1px solid rgba(255,170,0,0.12)",
+            fontSize: 11, color: "rgba(255,200,100,0.8)",
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <span style={{ fontSize: 13 }}>✦</span>
+            <span>Première séance loggée pour ces exercices — pas encore de comparaison disponible.</span>
+          </div>
+        )}
+
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px 28px" }}>
           {exercises.length === 0 ? (
             <div style={{
               padding: "44px 24px", textAlign: "center",
@@ -1008,7 +1046,14 @@ function SessionDetailModal({ data, onClose }) {
               </div>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <>
+            <div style={{
+              fontSize: 9, fontWeight: 800, letterSpacing: 3, textTransform: "uppercase",
+              color: "rgba(255,255,255,0.35)", marginBottom: 14,
+            }}>
+              Exercices · {exercises.length}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {exercises.map(([key, sets], i) => {
                 const name = (resolveExName && resolveExName(session, key)) || prettyExName(key);
                 // Sets "réellement loggés" = au moins un poids OU des reps. Le
@@ -1028,109 +1073,167 @@ function SessionDetailModal({ data, onClose }) {
                   : deltaW === 0 ? "= identique" : `${deltaW > 0 ? "▲ +" : "▼ "}${fmtKg(Math.abs(deltaW))}kg`;
                 return (
                   <div key={i} style={{
-                    background: "rgba(255,255,255,0.025)",
-                    border: `1px solid ${isPR ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.05)"}`,
-                    borderRadius: 12, padding: "12px 14px",
-                    boxShadow: isPR ? "0 0 0 1px rgba(2,209,186,0.15) inset, 0 0 24px rgba(2,209,186,0.06)" : "none",
+                    background: isPR
+                      ? "linear-gradient(180deg, rgba(2,209,186,0.06) 0%, rgba(255,255,255,0.015) 100%)"
+                      : "rgba(255,255,255,0.02)",
+                    border: `1px solid ${isPR ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.05)"}`,
+                    borderRadius: 14,
+                    padding: 16,
+                    boxShadow: isPR ? "0 0 32px rgba(2,209,186,0.06)" : "none",
+                    transition: "border-color .15s",
                   }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 10 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
-                        {isPR && (
-                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, padding: "2px 6px", background: "rgba(2,209,186,0.15)", color: G_LOCAL, borderRadius: 4, textTransform: "uppercase", flexShrink: 0 }}>
-                            🏆 PR
-                          </span>
-                        )}
+                    {/* Header carte : numéro d'exo + nom à gauche, badge PR à droite */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 10, flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: "rgba(255,255,255,0.3)",
+                          fontFamily: "'JetBrains Mono',monospace", flexShrink: 0,
+                        }}>
+                          {String(i + 1).padStart(2, "0")}
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", letterSpacing: -0.2, lineHeight: 1.3, wordBreak: "break-word" }}>{name}</div>
                       </div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, textAlign: "right", flexShrink: 0 }}>
-                        {realSets.length > 0
-                          ? `${realSets.length} set${realSets.length > 1 ? "s" : ""} · max ${fmtKg(maxW)}kg · ${totalReps} reps`
-                          : "Aucun set loggé"}
-                        {emptyCount > 0 && realSets.length > 0 && (
-                          <span style={{ color: "rgba(255,255,255,0.25)" }}> · {emptyCount} vide{emptyCount > 1 ? "s" : ""}</span>
-                        )}
-                      </div>
+                      {isPR && (
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, letterSpacing: 1.2, padding: "4px 8px",
+                          background: "rgba(2,209,186,0.18)", color: G_LOCAL, borderRadius: 6,
+                          textTransform: "uppercase", flexShrink: 0,
+                          border: "1px solid rgba(2,209,186,0.3)",
+                        }}>
+                          🏆 Record battu
+                        </span>
+                      )}
                     </div>
-                    {/* Référence séance précédente (delta poids max) */}
-                    {prev && realSets.length > 0 && (
+                    {/* Ligne résumé : sets · max · reps. Sobre, sous le titre. */}
+                    <div style={{
+                      fontSize: 10, color: "rgba(255,255,255,0.5)", fontWeight: 600,
+                      letterSpacing: 0.5, marginBottom: 12,
+                      fontFamily: "'JetBrains Mono',monospace",
+                    }}>
+                      {realSets.length > 0 ? (
+                        <>
+                          <span>{realSets.length} série{realSets.length > 1 ? "s" : ""}</span>
+                          <span style={{ color: "rgba(255,255,255,0.2)", margin: "0 8px" }}>·</span>
+                          <span>max {fmtKg(maxW)}kg</span>
+                          <span style={{ color: "rgba(255,255,255,0.2)", margin: "0 8px" }}>·</span>
+                          <span>{totalReps} reps</span>
+                          {emptyCount > 0 && (
+                            <>
+                              <span style={{ color: "rgba(255,255,255,0.2)", margin: "0 8px" }}>·</span>
+                              <span style={{ color: "rgba(255,170,0,0.6)" }}>{emptyCount} non loggée{emptyCount > 1 ? "s" : ""}</span>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <span style={{ color: "rgba(255,170,0,0.6)" }}>Aucun set loggé</span>
+                      )}
+                    </div>
+                    {/* Référence séance précédente : ligne dédiée seulement si on a un précédent */}
+                    {prev && realSets.length > 0 && maxW > 0 && (
                       <div style={{
-                        display: "flex", alignItems: "center", gap: 8,
-                        fontSize: 10, color: "rgba(255,255,255,0.45)",
-                        padding: "4px 0 10px",
-                        borderBottom: "1px dashed rgba(255,255,255,0.05)",
-                        marginBottom: 8,
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "8px 12px",
+                        marginBottom: 12,
+                        background: "rgba(0,0,0,0.25)",
+                        border: "1px solid rgba(255,255,255,0.04)",
+                        borderRadius: 8,
+                        fontSize: 11,
                       }}>
                         <span style={{ color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, fontSize: 9 }}>
                           Vs {new Date(prev.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
                         </span>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace" }}>{fmtKg(prev.maxW)}kg</span>
-                        <span style={{ color: "rgba(255,255,255,0.25)" }}>→</span>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "#fff" }}>{fmtKg(maxW)}kg</span>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.55)" }}>{fmtKg(prev.maxW)}kg</span>
+                        <span style={{ color: "rgba(255,255,255,0.2)" }}>→</span>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "#fff", fontWeight: 700 }}>{fmtKg(maxW)}kg</span>
                         {deltaLabel && (
-                          <span style={{ color: deltaColor, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", marginLeft: "auto" }}>
+                          <span style={{ color: deltaColor, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", marginLeft: "auto", fontSize: 11 }}>
                             {deltaLabel}
                           </span>
                         )}
                       </div>
                     )}
-                    {!prev && realSets.length > 0 && (
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, padding: "2px 0 8px" }}>
-                        1<sup>ère</sup> séance loggée pour cet exo
-                      </div>
-                    )}
-                    {/* Détail par série : 1 ligne = 1 set, avec volume + 1RM
-                        estimé (Epley : w × (1 + reps/30)). Donne au coach
-                        toutes les infos sans cliquer ailleurs. */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {/* Tableau des séries — header fin + lignes alignées en
+                        colonnes monospace pour ressembler à un terminal de
+                        trading. Pas de bordure par ligne (trop bruyant) :
+                        séparateurs hairline horizontaux à la place. */}
+                    <div style={{
+                      background: "rgba(0,0,0,0.25)",
+                      border: "1px solid rgba(255,255,255,0.04)",
+                      borderRadius: 10,
+                      overflow: "hidden",
+                    }}>
                       <div style={{
                         display: "grid",
-                        gridTemplateColumns: "60px 1fr auto auto",
-                        gap: 10, alignItems: "center",
-                        fontSize: 9, fontWeight: 700, letterSpacing: 1.5,
+                        gridTemplateColumns: "44px 1fr 80px 80px",
+                        gap: 8, alignItems: "center",
+                        fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
                         textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
-                        padding: "0 10px 4px",
+                        padding: "10px 14px",
+                        background: "rgba(255,255,255,0.02)",
+                        borderBottom: "1px solid rgba(255,255,255,0.04)",
                       }}>
-                        <div>Série</div>
+                        <div>Sér.</div>
                         <div>Charge × reps</div>
                         <div style={{ textAlign: "right" }}>Volume</div>
-                        <div style={{ textAlign: "right", minWidth: 52 }}>1RM est.</div>
+                        <div style={{ textAlign: "right" }}>1RM est.</div>
                       </div>
                       {sets.map((s, j) => {
                         const w = Number(s.weight) || 0;
                         const r = Number(s.reps) || 0;
                         const isEmpty = w === 0 && r === 0;
+                        const repsMissing = !isEmpty && r === 0;
                         const volume = w > 0 && r > 0 ? Math.round(w * r * 10) / 10 : null;
-                        const oneRm = w > 0 && r > 0 ? Math.round(w * (1 + r / 30) * 10) / 10 : null;
+                        const oneRm = epley1rm(w, r);
                         const time = s.logged_at ? new Date(s.logged_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : null;
                         return (
                           <div key={j} style={{
                             display: "grid",
-                            gridTemplateColumns: "60px 1fr auto auto",
-                            gap: 10, alignItems: "center",
-                            padding: "8px 10px",
-                            background: isEmpty ? "rgba(255,255,255,0.015)" : "rgba(2,209,186,0.04)",
-                            border: `1px solid ${isEmpty ? "rgba(255,255,255,0.04)" : "rgba(2,209,186,0.12)"}`,
-                            borderRadius: 8,
-                            fontSize: 12,
-                            opacity: isEmpty ? 0.55 : 1,
+                            gridTemplateColumns: "44px 1fr 80px 80px",
+                            gap: 8, alignItems: "center",
+                            padding: "12px 14px",
+                            borderTop: j === 0 ? "none" : "1px solid rgba(255,255,255,0.03)",
+                            opacity: isEmpty ? 0.5 : 1,
                           }}>
-                            <div style={{ fontWeight: 700, color: isEmpty ? "rgba(255,255,255,0.4)" : "#fff", fontSize: 11 }}>
-                              N°{j + 1}
-                              {time && <span style={{ display: "block", fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 500, marginTop: 1 }}>{time}</span>}
-                            </div>
-                            <div style={{ fontFamily: "'JetBrains Mono',monospace", color: isEmpty ? "rgba(255,255,255,0.4)" : G_LOCAL, fontWeight: 700 }}>
-                              {fmtKg(w)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>
-                              <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 6px", fontWeight: 400 }}>×</span>
-                              <span style={{ color: isEmpty ? "rgba(255,255,255,0.4)" : "#fff" }}>{r}</span>
-                              {!isEmpty && r === 0 && (
-                                <span style={{ marginLeft: 6, fontSize: 9, color: "rgba(255,170,0,0.7)", fontFamily: "-apple-system", fontWeight: 600 }}>reps non saisis</span>
+                            <div>
+                              <div style={{
+                                fontFamily: "'JetBrains Mono',monospace",
+                                fontWeight: 700, fontSize: 11,
+                                color: isEmpty ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.85)",
+                              }}>
+                                {String(j + 1).padStart(2, "0")}
+                              </div>
+                              {time && (
+                                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>{time}</div>
                               )}
                             </div>
-                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
-                              {volume != null ? `${volume} kg` : <span style={{ color: "rgba(255,255,255,0.2)" }}>—</span>}
+                            <div>
+                              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>
+                                <span style={{ color: isEmpty ? "rgba(255,255,255,0.35)" : G_LOCAL }}>
+                                  {fmtKg(w)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2, fontWeight: 500 }}>kg</span>
+                                </span>
+                                <span style={{ color: "rgba(255,255,255,0.25)", margin: "0 8px", fontWeight: 400 }}>×</span>
+                                <span style={{ color: isEmpty ? "rgba(255,255,255,0.35)" : "#fff" }}>{r}</span>
+                              </div>
+                              {repsMissing && (
+                                <div style={{
+                                  display: "inline-flex", alignItems: "center", gap: 4,
+                                  marginTop: 4, padding: "1px 6px",
+                                  background: "rgba(255,170,0,0.08)",
+                                  border: "1px solid rgba(255,170,0,0.18)",
+                                  borderRadius: 4,
+                                  fontSize: 9, fontWeight: 700,
+                                  color: "rgba(255,200,100,0.85)",
+                                  textTransform: "uppercase", letterSpacing: 0.5,
+                                }}>
+                                  ⚠ Reps non saisis
+                                </div>
+                              )}
                             </div>
-                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.6)", minWidth: 52 }}>
-                              {oneRm != null ? `${fmtKg(oneRm)} kg` : <span style={{ color: "rgba(255,255,255,0.2)" }}>—</span>}
+                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: volume != null ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
+                              {volume != null ? <>{volume}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2 }}>kg</span></> : "—"}
+                            </div>
+                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: oneRm != null ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
+                              {oneRm != null ? <>{fmtKg(oneRm)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2 }}>kg</span></> : "—"}
                             </div>
                           </div>
                         );
@@ -1140,15 +1243,18 @@ function SessionDetailModal({ data, onClose }) {
                         return (
                           <div style={{
                             display: "grid",
-                            gridTemplateColumns: "60px 1fr auto auto",
-                            gap: 10, alignItems: "center",
-                            padding: "6px 10px 0",
+                            gridTemplateColumns: "44px 1fr 80px 80px",
+                            gap: 8, alignItems: "center",
+                            padding: "10px 14px",
+                            background: "rgba(2,209,186,0.04)",
+                            borderTop: "1px solid rgba(2,209,186,0.12)",
                             fontSize: 10,
-                            color: "rgba(255,255,255,0.4)",
                           }}>
                             <div></div>
-                            <div style={{ textAlign: "right", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Volume total</div>
-                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL }}>{totalVol} kg</div>
+                            <div style={{ fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase", color: "rgba(255,255,255,0.5)", fontSize: 9 }}>Volume total exercice</div>
+                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL, fontSize: 12 }}>
+                              {totalVol.toLocaleString("fr-FR")}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>
+                            </div>
                             <div></div>
                           </div>
                         );
@@ -1158,6 +1264,7 @@ function SessionDetailModal({ data, onClose }) {
                 );
               })}
             </div>
+            </>
           )}
         </div>
       </div>
