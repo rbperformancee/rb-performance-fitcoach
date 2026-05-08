@@ -421,7 +421,7 @@ export default function CoachingApplicationLanding() {
         </button>
 
         <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.62)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.8s both" }}>
-          Aucun paiement · Je te recontacte sous 24h
+          0€ aujourd'hui · Paiement uniquement après validation appel
         </div>
       </div>
     </main>
