@@ -381,9 +381,9 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             {payingCoaches.length} coach{payingCoaches.length > 1 ? "s" : ""} payant{payingCoaches.length > 1 ? "s" : ""}{stripeReady ? "" : " trackable"} · {totalCoaches} coach{totalCoaches > 1 ? "s" : ""} créé{totalCoaches > 1 ? "s" : ""} · ARR {arr.toLocaleString()}€
           </div>
 
-          {/* Activation funnel — scroll horizontal sur mobile pour ne pas écraser */}
-          <div style={{ display: "flex", gap: 12, padding: "18px 0", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
-            <style>{`.funnel-row::-webkit-scrollbar{display:none}`}</style>
+          {/* Activation funnel — grid auto-fit qui wrap au lieu de squasher.
+              Sur desktop : 5 colonnes égales. Sur mobile : 2-3 par ligne. */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, padding: "20px 0", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             {(() => {
               const steps = [
                 { key: "created", label: "Créés", value: stepCreated, color: "rgba(255,255,255,0.6)", list: enriched },
@@ -400,19 +400,21 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
                     key={s.key}
                     onClick={() => { haptic.selection(); setFunnelDialog({ step: s.key, label: s.label, color: s.color, list: s.list }); }}
                     style={{
-                      flex: "1 1 110px", minWidth: 110, padding: "4px 14px",
-                      background: "transparent", border: "none", cursor: "pointer",
+                      padding: "8px 14px",
+                      background: "transparent", border: "1px solid rgba(255,255,255,0.04)",
+                      cursor: "pointer",
                       fontFamily: "inherit", color: "inherit", textAlign: "left",
-                      borderRight: i < steps.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
-                      transition: "background 0.15s", borderRadius: 6,
+                      transition: "all 0.15s", borderRadius: 10,
+                      minHeight: 86,
+                      display: "flex", flexDirection: "column", justifyContent: "space-between",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; e.currentTarget.style.borderColor = `${s.color}33`; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)"; }}
                   >
-                    <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8, whiteSpace: "nowrap" }}>{s.label}</div>
-                    <div style={{ fontFamily: DISPLAY, fontSize: 28, fontWeight: 800, color: s.value > 0 ? s.color : "rgba(255,255,255,0.22)", letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums", marginBottom: 6 }}>{s.value}</div>
+                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>{s.label}</div>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 30, fontWeight: 800, color: s.value > 0 ? s.color : "rgba(255,255,255,0.22)", letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
                     {conv !== null && (
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: MONO, whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: MONO, marginTop: 8 }}>
                         {next.value > 0 ? `${conv}% →` : "→"}
                       </div>
                     )}
@@ -585,6 +587,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
       {/* ═══════ FLOATING PILL — quick actions ═══════ */}
       <nav style={{ position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0, background: "rgba(15,15,15,0.78)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 100, padding: 5, zIndex: 100, WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)", boxShadow: "0 16px 48px rgba(0,0,0,0.5)" }}>
         {[
+          { id: "refresh", icon: "refresh", color: refreshing ? BLUE : "rgba(255,255,255,0.6)", onClick: () => { haptic.selection(); loadData(true); }, title: "Refresh", active: refreshing, activeBg: BLUE_DIM },
           { id: "coach", icon: "users", color: G, onClick: () => { haptic.medium(); onSwitchToCoach?.(); }, title: "Vue coach", hoverBg: "rgba(2,209,186,0.1)" },
         ].map((b) => (
           <button
