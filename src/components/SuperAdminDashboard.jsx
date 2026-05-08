@@ -17,8 +17,10 @@ const BLUE = "#818cf8";
 const BLUE_DIM = "rgba(129,140,248,0.08)";
 const BLUE_BORDER = "rgba(129,140,248,0.2)";
 const IVORY = "#f0ece4";
-const CEO_FONT = "'Bebas Neue','DM Sans',-apple-system,sans-serif";
-const BODY_FONT = "'DM Sans',-apple-system,Inter,sans-serif";
+// Polices alignées avec le reste de l'app (CoachDashboard, client) :
+// Syne pour le display, Inter pour le body, JetBrains Mono pour les chiffres.
+const CEO_FONT = "'Syne',-apple-system,sans-serif";
+const BODY_FONT = "-apple-system,'Inter',sans-serif";
 const MONO = "'JetBrains Mono','SF Mono',monospace";
 const G = "#02d1ba";
 const RED = "#ef4444";
@@ -673,7 +675,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
       <div style={{ minHeight: "100dvh", background: "#030303", fontFamily: BODY_FONT, color: IVORY }}>
         <style>{`@keyframes skShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "35%", background: "radial-gradient(ellipse at 50% -20%, rgba(129,140,248,0.06), transparent 55%)", pointerEvents: "none" }} />
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1080, margin: "0 auto", padding: "0 24px 100px" }}>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1080, margin: "0 auto", padding: "0 24px 140px" }}>
           {/* header skeleton */}
           <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 16px)", paddingBottom: 18, marginBottom: 0, borderBottom: "1px solid rgba(240,236,228,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -735,49 +737,36 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1080, margin: "0 auto", padding: "0 24px 100px" }}>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* HEADER PREMIUM CEO                                              */}
+        {/* HEADER LVMH — wordmark + chapitre numéroté style DashboardTabs   */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 16px)", paddingBottom: 18, marginBottom: 0, borderBottom: "1px solid rgba(240,236,228,0.05)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ paddingTop: "calc(env(safe-area-inset-top, 8px) + 18px)", paddingBottom: 16, borderBottom: "1px solid rgba(240,236,228,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+              <span style={{ fontFamily: CEO_FONT, fontSize: 14, fontWeight: 900, letterSpacing: "0.2em", color: IVORY, textTransform: "uppercase" }}>RB Perform</span>
+              <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.12)", alignSelf: "center" }} />
+              <span style={{ fontFamily: MONO, fontSize: 10, color: BLUE, letterSpacing: "0.05em", fontWeight: 400 }}>01</span>
+              <span style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#fff", textTransform: "uppercase" }}>Cockpit CEO</span>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ position: "relative", width: 8, height: 8 }}>
-                <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: BLUE, boxShadow: `0 0 12px ${BLUE}` }} />
-                <div style={{ position: "absolute", inset: -3, borderRadius: "50%", background: BLUE, opacity: 0.3, animation: "ceoPulse 2s ease-in-out infinite" }} />
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <div style={{ fontSize: 8, letterSpacing: "4px", color: "rgba(129,140,248,0.7)", fontWeight: 700, textTransform: "uppercase" }}>{t("sad.live_cockpit") || "Live Cockpit"}</div>
-                <div style={{ fontFamily: CEO_FONT, fontSize: 15, letterSpacing: "3px", color: IVORY, textTransform: "uppercase" }}>{t("sad.ceo_dashboard") || "CEO Dashboard"}</div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <div style={{ position: "relative", width: 6, height: 6 }}>
+                  <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: BLUE, boxShadow: `0 0 10px ${BLUE}` }} />
+                  <div style={{ position: "absolute", inset: -3, borderRadius: "50%", background: BLUE, opacity: 0.3, animation: "ceoPulse 2s ease-in-out infinite" }} />
+                </div>
+                <span style={{ fontSize: 9, fontFamily: MONO, color: "rgba(255,255,255,0.45)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>{refreshing ? "syncing" : "live"}</span>
               </div>
               {onlineNow > 0 && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.22)", borderRadius: 100, fontFamily: MONO, fontSize: 9, fontWeight: 700, color: G, letterSpacing: "1.5px", textTransform: "uppercase" }}>
-                  <span className="live-dot" /> {onlineNow} online
-                </div>
+                <>
+                  <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.08)" }} />
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.22)", borderRadius: 100, fontFamily: MONO, fontSize: 9, fontWeight: 700, color: G, letterSpacing: "1.2px", textTransform: "uppercase" }}>
+                    <span className="live-dot" /> {onlineNow} online
+                  </div>
+                </>
               )}
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 300, color: "rgba(240,236,228,0.5)", letterSpacing: "1px" }}>
+              <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.08)" }} />
+              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 300, color: "rgba(240,236,228,0.5)", letterSpacing: "0.05em" }}>
                 <Clock />
-              </div>
-              <button
-                onClick={() => { haptic.selection(); loadData(true); }}
-                title="Refresh"
-                style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", color: refreshing ? BLUE : "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-              >
-                <Ic name="refresh" size={12} color={refreshing ? BLUE : "rgba(255,255,255,0.4)"} />
-              </button>
-              <div style={{ width: 1, height: 20, background: "rgba(240,236,228,0.08)" }} />
-              <button
-                onClick={() => { haptic.medium(); onSwitchToCoach?.(); }}
-                title={t("sad.switch_coach_title") || "Switch to coach view"}
-                style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(2,209,186,0.04)", border: `1px solid rgba(2,209,186,0.15)`, color: G, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.1)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.35)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.04)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.15)"; }}
-              >
-                <Ic name="users" size={14} color={G} />
-              </button>
+              </span>
             </div>
-          </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
@@ -799,7 +788,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           </div>
 
           <div style={{ display: "flex", alignItems: "flex-end", gap: 18, flexWrap: "wrap", marginBottom: 6 }}>
-            <div style={{ fontFamily: CEO_FONT, fontSize: 96, lineHeight: 0.85, color: IVORY, letterSpacing: "-1px", fontVariantNumeric: "tabular-nums" }}>
+            <div style={{ fontFamily: CEO_FONT, fontSize: 88, fontWeight: 900, lineHeight: 0.9, color: IVORY, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>
               <AnimNum value={mrr} />€
             </div>
             {revenue30to60 > 0 && (
@@ -839,7 +828,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             ].map((m, i) => (
               <div key={i} style={{ flex: 1, paddingLeft: i > 0 ? 28 : 0, borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none", paddingRight: 28 }}>
                 <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>{m.label}</div>
-                <div style={{ fontFamily: CEO_FONT, fontSize: 32, color: IVORY, letterSpacing: "0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{m.value}</div>
+                <div style={{ fontFamily: CEO_FONT, fontSize: 30, fontWeight: 800, color: IVORY, letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{m.value}</div>
                 <div style={{ fontSize: 11, color: m.color || "rgba(255,255,255,0.4)", fontFamily: MONO, marginTop: 6, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{m.sub}</div>
               </div>
             ))}
@@ -968,6 +957,37 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
 
       </div>
 
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* FLOATING PILL — quick actions, mood client app                   */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <nav style={{ position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0, background: "rgba(15,15,15,0.78)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 100, padding: 5, zIndex: 100, WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)", boxShadow: "0 16px 48px rgba(0,0,0,0.5)" }}>
+        {[
+          { id: "refresh", icon: "refresh", color: refreshing ? BLUE : "rgba(255,255,255,0.6)", onClick: () => { haptic.selection(); loadData(true); }, title: "Refresh", active: refreshing, activeBg: BLUE_DIM },
+          { id: "broadcast", icon: "send", color: pushReachable > 0 ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.25)", onClick: () => { haptic.medium(); setShowBroadcast(true); }, title: "Broadcast push", disabled: pushReachable === 0, hoverBg: BLUE_DIM },
+          { id: "coach", icon: "users", color: G, onClick: () => { haptic.medium(); onSwitchToCoach?.(); }, title: "Vue coach", hoverBg: "rgba(2,209,186,0.1)" },
+          { id: "exit", icon: "x", color: "rgba(255,255,255,0.45)", onClick: () => { haptic.medium(); onExit?.(); }, title: "Quitter", hoverBg: "rgba(239,68,68,0.08)" },
+        ].map((b) => (
+          <button
+            key={b.id}
+            onClick={b.disabled ? undefined : b.onClick}
+            disabled={b.disabled}
+            title={b.title}
+            style={{
+              width: 46, height: 46, borderRadius: 100, border: "none",
+              background: b.active ? b.activeBg : "transparent",
+              cursor: b.disabled ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)",
+              opacity: b.disabled ? 0.4 : 1,
+              fontFamily: "inherit",
+            }}
+            onMouseEnter={(e) => { if (!b.disabled && !b.active) e.currentTarget.style.background = b.hoverBg || "rgba(255,255,255,0.05)"; }}
+            onMouseLeave={(e) => { if (!b.active) e.currentTarget.style.background = "transparent"; }}
+          >
+            <Ic name={b.icon} size={16} color={b.color} />
+          </button>
+        ))}
+      </nav>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* DETAIL VIEWS (drill-down full screen)                           */}
