@@ -115,6 +115,18 @@ Valeurs de reference frequentes (pour 100g, valeurs CIQUAL) :
 - Lentilles cuites : 116 kcal, 9g prot, 20g gluc, 0.4g lip
 - Amandes : 580 kcal, 21g prot, 22g gluc, 50g lip (1 poignee = 30g)
 
+Liquides courants (valeurs pour 100ml) :
+- Eau : 0 kcal, 0g prot, 0g gluc, 0g lip (verre = 200ml, bouteille = 500ml ou 1.5L)
+- Jus d'orange : 45 kcal, 0.7g prot, 10g gluc, 0g lip (verre = 200ml)
+- Lait demi-ecreme : 47 kcal, 3.3g prot, 4.7g gluc, 1.6g lip (verre = 200ml, bol = 250ml)
+- Cafe noir : 1 kcal, 0g prot, 0g gluc, 0g lip (espresso = 30ml, tasse = 200ml)
+- The : 0 kcal, 0g prot, 0g gluc, 0g lip
+- Coca-Cola : 42 kcal, 0g prot, 10.6g gluc, 0g lip (cannette = 330ml)
+- Biere blonde 5% : 43 kcal, 0.5g prot, 3.5g gluc, 0g lip (demi = 250ml, pinte = 500ml)
+- Vin rouge : 85 kcal, 0.1g prot, 0.4g gluc, 0g lip (verre = 125ml)
+- Smoothie fruits : 50 kcal, 0.6g prot, 12g gluc, 0.2g lip
+- Boisson proteine whey + eau : depend du dosage (1 dose 30g whey = 110 kcal, 24g prot)
+
 Conversions utiles :
 - Pates seches -> cuites : multiplie le poids sec par 2.5 environ
 - Riz sec -> cuit : multiplie par 3
@@ -126,8 +138,9 @@ Format de reponse OBLIGATOIRE : un objet JSON valide, sans markdown, avec exacte
   "ingredients": [
     {
       "nom": "<nom court de l'ingredient en francais>",
-      "quantite_g": <nombre, grammes>,
-      "kcal_par_100g": <nombre, kcal pour 100g>,
+      "quantite_g": <nombre, valeur numerique de la quantite>,
+      "unit": "<g pour solide OU ml pour liquide/boisson>",
+      "kcal_par_100g": <nombre, kcal pour 100g/100ml>,
       "calories": <nombre, kcal pour la quantite>,
       "proteines": <nombre, g pour la quantite, 1 decimale>,
       "glucides": <nombre, g pour la quantite, 1 decimale>,
@@ -139,17 +152,22 @@ Format de reponse OBLIGATOIRE : un objet JSON valide, sans markdown, avec exacte
   "proteines": <nombre, somme 1 decimale>,
   "glucides": <nombre, somme 1 decimale>,
   "lipides": <nombre, somme 1 decimale>,
-  "quantite_g": <nombre, somme totale en grammes>
+  "quantite_g": <nombre, somme totale (grammes pour solides, ml pour liquides)>
 }
+
+REGLE IMPORTANTE pour le champ "unit" :
+- "g" pour TOUT solide ou semi-solide : pates, riz, viande, fruits, yaourt, fromage, oeuf, soupe (oui meme la soupe).
+- "ml" pour TOUT ce qui est liquide bu : eau, jus, lait nature dans un verre, cafe, the, soda, biere, vin, smoothie, shake proteine.
+- En cas de doute, "g" par defaut.
 
 EXEMPLES :
 
 Exemple 1 - Repas : "un bol de pates au saumon environ 250g avec une cuillere d huile d olive"
 {
   "ingredients": [
-    { "nom": "Pates cuites", "quantite_g": 200, "kcal_par_100g": 158, "calories": 316, "proteines": 11, "glucides": 62, "lipides": 1.8 },
-    { "nom": "Saumon cuit", "quantite_g": 80, "kcal_par_100g": 200, "calories": 160, "proteines": 17.6, "glucides": 0, "lipides": 9.6 },
-    { "nom": "Huile d'olive", "quantite_g": 14, "kcal_par_100g": 884, "calories": 124, "proteines": 0, "glucides": 0, "lipides": 14 }
+    { "nom": "Pates cuites", "quantite_g": 200, "unit": "g", "kcal_par_100g": 158, "calories": 316, "proteines": 11, "glucides": 62, "lipides": 1.8 },
+    { "nom": "Saumon cuit", "quantite_g": 80, "unit": "g", "kcal_par_100g": 200, "calories": 160, "proteines": 17.6, "glucides": 0, "lipides": 9.6 },
+    { "nom": "Huile d'olive", "quantite_g": 14, "unit": "g", "kcal_par_100g": 884, "calories": 124, "proteines": 0, "glucides": 0, "lipides": 14 }
   ],
   "aliment": "Pates au saumon, huile d'olive",
   "calories": 600,
@@ -162,9 +180,9 @@ Exemple 1 - Repas : "un bol de pates au saumon environ 250g avec une cuillere d 
 Exemple 2 - Repas : "150g de poulet grille avec 200g de riz basmati et des brocolis"
 {
   "ingredients": [
-    { "nom": "Blanc de poulet cuit", "quantite_g": 150, "kcal_par_100g": 165, "calories": 248, "proteines": 46.5, "glucides": 0, "lipides": 5.4 },
-    { "nom": "Riz basmati cuit", "quantite_g": 200, "kcal_par_100g": 130, "calories": 260, "proteines": 5.4, "glucides": 56, "lipides": 0.6 },
-    { "nom": "Brocolis cuits", "quantite_g": 150, "kcal_par_100g": 35, "calories": 53, "proteines": 3.6, "glucides": 10.5, "lipides": 0.6 }
+    { "nom": "Blanc de poulet cuit", "quantite_g": 150, "unit": "g", "kcal_par_100g": 165, "calories": 248, "proteines": 46.5, "glucides": 0, "lipides": 5.4 },
+    { "nom": "Riz basmati cuit", "quantite_g": 200, "unit": "g", "kcal_par_100g": 130, "calories": 260, "proteines": 5.4, "glucides": 56, "lipides": 0.6 },
+    { "nom": "Brocolis cuits", "quantite_g": 150, "unit": "g", "kcal_par_100g": 35, "calories": 53, "proteines": 3.6, "glucides": 10.5, "lipides": 0.6 }
   ],
   "aliment": "Poulet grille, riz basmati, brocolis",
   "calories": 561,
@@ -174,12 +192,26 @@ Exemple 2 - Repas : "150g de poulet grille avec 200g de riz basmati et des broco
   "quantite_g": 500
 }
 
+Exemple 3bis - Repas : "un grand verre de jus d'orange et un cafe noir"
+{
+  "ingredients": [
+    { "nom": "Jus d'orange", "quantite_g": 250, "unit": "ml", "kcal_par_100g": 45, "calories": 113, "proteines": 1.8, "glucides": 25, "lipides": 0 },
+    { "nom": "Cafe noir", "quantite_g": 200, "unit": "ml", "kcal_par_100g": 1, "calories": 2, "proteines": 0, "glucides": 0, "lipides": 0 }
+  ],
+  "aliment": "Jus d'orange + cafe",
+  "calories": 115,
+  "proteines": 1.8,
+  "glucides": 25,
+  "lipides": 0,
+  "quantite_g": 450
+}
+
 Exemple 3 - Repas : "deux oeufs brouilles avec une tranche de pain complet et un avocat"
 {
   "ingredients": [
-    { "nom": "Oeufs entiers", "quantite_g": 100, "kcal_par_100g": 155, "calories": 155, "proteines": 13, "glucides": 1, "lipides": 11 },
-    { "nom": "Pain complet", "quantite_g": 35, "kcal_par_100g": 230, "calories": 81, "proteines": 3.2, "glucides": 14.4, "lipides": 1.1 },
-    { "nom": "Avocat", "quantite_g": 100, "kcal_par_100g": 160, "calories": 160, "proteines": 2, "glucides": 9, "lipides": 15 }
+    { "nom": "Oeufs entiers", "quantite_g": 100, "unit": "g", "kcal_par_100g": 155, "calories": 155, "proteines": 13, "glucides": 1, "lipides": 11 },
+    { "nom": "Pain complet", "quantite_g": 35, "unit": "g", "kcal_par_100g": 230, "calories": 81, "proteines": 3.2, "glucides": 14.4, "lipides": 1.1 },
+    { "nom": "Avocat", "quantite_g": 100, "unit": "g", "kcal_par_100g": 160, "calories": 160, "proteines": 2, "glucides": 9, "lipides": 15 }
   ],
   "aliment": "Oeufs brouilles, pain complet, avocat",
   "calories": 396,

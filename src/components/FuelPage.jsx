@@ -613,6 +613,7 @@ export default function FuelPage({ client, appData }) {
           glucides: parseFloat((ing.glucides || 0).toFixed(1)),
           lipides: parseFloat((ing.lipides || 0).toFixed(1)),
           quantite_g: ing.quantite_g || 0,
+          unit: ing.unit === "ml" ? "ml" : "g",
         });
         if (r?.ok) added++; else { failed++; lastError = r?.error; }
       }
@@ -625,6 +626,7 @@ export default function FuelPage({ client, appData }) {
         glucides: voiceResult.glucides,
         lipides: voiceResult.lipides,
         quantite_g: voiceResult.quantite_g,
+        unit: voiceResult.unit === "ml" ? "ml" : "g",
       });
       if (r?.ok) added++; else { failed++; lastError = r?.error; }
     }
@@ -1293,7 +1295,7 @@ export default function FuelPage({ client, appData }) {
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:12,gap:8}}>
                     <div style={{fontSize:15,fontWeight:700,color:"#fff",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{voiceResult.aliment}</div>
                     {typeof voiceResult.quantite_g === "number" && (
-                      <div style={{fontSize:11,color:"rgba(2,209,186,0.7)",fontWeight:600,flexShrink:0}}>{voiceResult.quantite_g}g</div>
+                      <div style={{fontSize:11,color:"rgba(2,209,186,0.7)",fontWeight:600,flexShrink:0}}>{voiceResult.quantite_g}{voiceResult.unit === "ml" ? "ml" : "g"}</div>
                     )}
                   </div>
                   <div style={{display:"flex",gap:8}}>
@@ -1315,7 +1317,7 @@ export default function FuelPage({ client, appData }) {
                         <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",fontSize:11,gap:8}}>
                           <div style={{flex:1,color:"rgba(255,255,255,0.7)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                             {ing.nom}
-                            <span style={{color:"rgba(255,255,255,0.3)",marginLeft:6}}>{ing.quantite_g}g</span>
+                            <span style={{color:"rgba(255,255,255,0.3)",marginLeft:6}}>{ing.quantite_g}{ing.unit === "ml" ? "ml" : "g"}</span>
                           </div>
                           <div style={{color:"rgba(2,209,186,0.7)",fontWeight:600,flexShrink:0}}>
                             {ing.calories} kcal
