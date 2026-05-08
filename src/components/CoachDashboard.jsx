@@ -816,19 +816,36 @@ function CoachSupplementsPanel({ clientId }) {
 }
 
 /* ── Modal détail séance : poids/reps par exercice, RPE, durée ── */
+// Formatte un poids : null → "—", entier → "80", décimal → "22.3" (1 déc max).
+// Gère le cas "22.333333333333332" (artefact d'arrondi flottant à l'import).
+function fmtKg(w) {
+  if (w == null || w === "" || isNaN(w)) return "—";
+  const n = Number(w);
+  return Number.isInteger(n) ? String(n) : (Math.round(n * 10) / 10).toString();
+}
+// ex_key = "programme__w0_s0_e2" → "Exercice 3" (lisible, 1-indexé). Le vrai
+// nom (Squat, Leg Press…) vit dans le HTML du programme — TODO si besoin.
+function prettyExName(key) {
+  const m = String(key || "").match(/_e(\d+)$/i);
+  return m ? `Exercice ${parseInt(m[1], 10) + 1}` : (key || "—");
+}
 function SessionDetailModal({ data, onClose }) {
   const { session, dayExs } = data;
   const date = new Date(session.logged_at);
   const durationMin = session.duration_seconds ? Math.round(session.duration_seconds / 60) : null;
-  // Grouper exercise_logs par ex_key + tri chronologique pour que les sets
-  // d'un meme exo restent groupes dans l'ordre d'execution
+  // Grouper exercise_logs par ex_key + tri par index e<n> (ordre du programme)
+  // pour que E1 vienne avant E2 même si l'ordre de logging était différent.
   const grouped = {};
   dayExs.slice().sort((a, b) => new Date(a.logged_at) - new Date(b.logged_at)).forEach((e) => {
     const key = e.ex_key || "—";
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(e);
   });
-  const exercises = Object.entries(grouped);
+  const exercises = Object.entries(grouped).sort((a, b) => {
+    const ai = parseInt((a[0].match(/_e(\d+)$/i) || [])[1] || 999, 10);
+    const bi = parseInt((b[0].match(/_e(\d+)$/i) || [])[1] || 999, 10);
+    return ai - bi;
+  });
   const G_LOCAL = "#02d1ba";
   return (
     <div
@@ -904,34 +921,106 @@ function SessionDetailModal({ data, onClose }) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {exercises.map(([key, sets], i) => {
-                const name = key.split("_").slice(-1)[0] || key;
-                const maxW = Math.max(...sets.map((s) => s.weight || 0));
-                const totalReps = sets.reduce((sum, s) => sum + (s.reps || 0), 0);
+                const name = prettyExName(key);
+                // Sets "réellement loggés" = au moins un poids OU des reps. Le
+                // reste (weight=0 + reps=0) = artefacts du bouton Terminer sans
+                // saisie → on les compte à part pour ne pas fausser max/total.
+                const realSets = sets.filter((s) => (Number(s.weight) > 0) || (Number(s.reps) > 0));
+                const emptyCount = sets.length - realSets.length;
+                const maxW = realSets.length > 0 ? Math.max(...realSets.map((s) => Number(s.weight) || 0)) : 0;
+                const totalReps = realSets.reduce((sum, s) => sum + (Number(s.reps) || 0), 0);
                 return (
                   <div key={i} style={{
                     background: "rgba(255,255,255,0.025)",
                     border: "1px solid rgba(255,255,255,0.05)",
                     borderRadius: 12, padding: "12px 14px",
                   }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", textTransform: "capitalize" }}>{name}</div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>
-                        {sets.length} set{sets.length > 1 ? "s" : ""} · max {maxW}kg · {totalReps} reps
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 10 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{name}</div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, textAlign: "right" }}>
+                        {realSets.length > 0
+                          ? `${realSets.length} set${realSets.length > 1 ? "s" : ""} · max ${fmtKg(maxW)}kg · ${totalReps} reps`
+                          : "Aucun set loggé"}
+                        {emptyCount > 0 && realSets.length > 0 && (
+                          <span style={{ color: "rgba(255,255,255,0.25)" }}> · {emptyCount} vide{emptyCount > 1 ? "s" : ""}</span>
+                        )}
                       </div>
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 6 }}>
-                      {sets.map((s, j) => (
-                        <div key={j} style={{
-                          padding: "6px 8px",
-                          background: "rgba(2,209,186,0.05)",
-                          border: "1px solid rgba(2,209,186,0.15)",
-                          borderRadius: 8,
-                          fontSize: 11, textAlign: "center",
-                        }}>
-                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL }}>{s.weight || 0}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 1 }}>kg</span></div>
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>×{s.reps || 0}</div>
-                        </div>
-                      ))}
+                    {/* Détail par série : 1 ligne = 1 set, avec volume + 1RM
+                        estimé (Epley : w × (1 + reps/30)). Donne au coach
+                        toutes les infos sans cliquer ailleurs. */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "60px 1fr auto auto",
+                        gap: 10, alignItems: "center",
+                        fontSize: 9, fontWeight: 700, letterSpacing: 1.5,
+                        textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+                        padding: "0 10px 4px",
+                      }}>
+                        <div>Série</div>
+                        <div>Charge × reps</div>
+                        <div style={{ textAlign: "right" }}>Volume</div>
+                        <div style={{ textAlign: "right", minWidth: 52 }}>1RM est.</div>
+                      </div>
+                      {sets.map((s, j) => {
+                        const w = Number(s.weight) || 0;
+                        const r = Number(s.reps) || 0;
+                        const isEmpty = w === 0 && r === 0;
+                        const volume = w > 0 && r > 0 ? Math.round(w * r * 10) / 10 : null;
+                        const oneRm = w > 0 && r > 0 ? Math.round(w * (1 + r / 30) * 10) / 10 : null;
+                        const time = s.logged_at ? new Date(s.logged_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : null;
+                        return (
+                          <div key={j} style={{
+                            display: "grid",
+                            gridTemplateColumns: "60px 1fr auto auto",
+                            gap: 10, alignItems: "center",
+                            padding: "8px 10px",
+                            background: isEmpty ? "rgba(255,255,255,0.015)" : "rgba(2,209,186,0.04)",
+                            border: `1px solid ${isEmpty ? "rgba(255,255,255,0.04)" : "rgba(2,209,186,0.12)"}`,
+                            borderRadius: 8,
+                            fontSize: 12,
+                            opacity: isEmpty ? 0.55 : 1,
+                          }}>
+                            <div style={{ fontWeight: 700, color: isEmpty ? "rgba(255,255,255,0.4)" : "#fff", fontSize: 11 }}>
+                              N°{j + 1}
+                              {time && <span style={{ display: "block", fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 500, marginTop: 1 }}>{time}</span>}
+                            </div>
+                            <div style={{ fontFamily: "'JetBrains Mono',monospace", color: isEmpty ? "rgba(255,255,255,0.4)" : G_LOCAL, fontWeight: 700 }}>
+                              {fmtKg(w)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>
+                              <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 6px", fontWeight: 400 }}>×</span>
+                              <span style={{ color: isEmpty ? "rgba(255,255,255,0.4)" : "#fff" }}>{r}</span>
+                              {!isEmpty && r === 0 && (
+                                <span style={{ marginLeft: 6, fontSize: 9, color: "rgba(255,170,0,0.7)", fontFamily: "-apple-system", fontWeight: 600 }}>reps non saisis</span>
+                              )}
+                            </div>
+                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
+                              {volume != null ? `${volume} kg` : <span style={{ color: "rgba(255,255,255,0.2)" }}>—</span>}
+                            </div>
+                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.6)", minWidth: 52 }}>
+                              {oneRm != null ? `${fmtKg(oneRm)} kg` : <span style={{ color: "rgba(255,255,255,0.2)" }}>—</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {realSets.length > 1 && (() => {
+                        const totalVol = Math.round(realSets.reduce((s, x) => s + (Number(x.weight) || 0) * (Number(x.reps) || 0), 0) * 10) / 10;
+                        return (
+                          <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "60px 1fr auto auto",
+                            gap: 10, alignItems: "center",
+                            padding: "6px 10px 0",
+                            fontSize: 10,
+                            color: "rgba(255,255,255,0.4)",
+                          }}>
+                            <div></div>
+                            <div style={{ textAlign: "right", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Volume total</div>
+                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL }}>{totalVol} kg</div>
+                            <div></div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
