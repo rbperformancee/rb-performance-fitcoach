@@ -22,14 +22,15 @@ export default function ActivityTimeline({ clientId, coachId }) {
 
   useEffect(() => {
     if (!clientId) return;
+    let cancelled = false;
     const loadFeed = async () => {
-      setLoading(true);
       const [logRes, msgRes, progRes, noteRes] = await Promise.all([
         supabase.from("coach_activity_log").select("*").eq("client_id", clientId).order("created_at", { ascending: false }).limit(20),
         supabase.from("messages").select("id, content, from_coach, created_at").eq("client_id", clientId).order("created_at", { ascending: false }).limit(20),
         supabase.from("programmes").select("id, programme_name, uploaded_at").eq("client_id", clientId).order("uploaded_at", { ascending: false }).limit(10),
         supabase.from("coach_notes").select("id, content, created_at").eq("client_id", clientId).order("created_at", { ascending: false }).limit(20),
       ]);
+      if (cancelled) return;
 
       const feed = [];
       (logRes.data || []).forEach((a) => feed.push({
@@ -61,7 +62,43 @@ export default function ActivityTimeline({ clientId, coachId }) {
       setItems(feed.slice(0, 25));
       setLoading(false);
     };
+    setLoading(true);
     loadFeed();
+
+    // Realtime : refetch debounced à chaque event sur les tables qui
+    // alimentent la timeline. Coalesce les bursts (typique : programme
+    // uploadé = 2-3 events back-to-back).
+    let refreshTimer = null;
+    const scheduleReload = () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => loadFeed(), 800);
+    };
+    let ch;
+    try {
+      ch = supabase.channel(`activity-timeline-${clientId}`)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "coach_activity_log",
+          filter: `client_id=eq.${clientId}`,
+        }, scheduleReload)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "messages",
+          filter: `client_id=eq.${clientId}`,
+        }, scheduleReload)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "coach_notes",
+          filter: `client_id=eq.${clientId}`,
+        }, scheduleReload)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "programmes",
+          filter: `client_id=eq.${clientId}`,
+        }, scheduleReload)
+        .subscribe();
+    } catch { /* realtime peut etre desactive */ }
+    return () => {
+      cancelled = true;
+      if (refreshTimer) clearTimeout(refreshTimer);
+      if (ch) supabase.removeChannel(ch);
+    };
   }, [clientId]);
 
   const iconFor = (type) => {

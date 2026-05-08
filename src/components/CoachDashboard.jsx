@@ -1699,6 +1699,47 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       .then(({ data }) => setProgrammesContent(data || []));
   }, [client.id, d7str]);
 
+  // ===== REALTIME : refetch ciblé quand le client agit (séance, set, pesée) =====
+  // Le coach voit live l'activité du client en cours de visualisation. Un set
+  // logué = la modal détail séance se met à jour si elle est ouverte. Pas
+  // intrusif : juste les listes qui se rafraichissent en place.
+  useEffect(() => {
+    if (!client?.id) return;
+    const refetchSessions = () => {
+      supabase.from("session_logs").select("*")
+        .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(20)
+        .then(({ data }) => setSessions(data || []));
+    };
+    const refetchExLogs = () => {
+      supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps,sets")
+        .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(100)
+        .then(({ data }) => setExLogs(data || []));
+    };
+    const refetchWeights = () => {
+      supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
+        .order("date", { ascending: false }).limit(500)
+        .then(({ data }) => setAllWeights(data || []));
+    };
+    let ch;
+    try {
+      ch = supabase.channel(`client-live-${client.id}`)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "session_logs",
+          filter: `client_id=eq.${client.id}`,
+        }, refetchSessions)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "exercise_logs",
+          filter: `client_id=eq.${client.id}`,
+        }, refetchExLogs)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "weight_logs",
+          filter: `client_id=eq.${client.id}`,
+        }, refetchWeights)
+        .subscribe();
+    } catch { /* realtime peut etre desactive */ }
+    return () => { if (ch) supabase.removeChannel(ch); };
+  }, [client?.id]);
+
   // ===== Agregation nutrition par jour =====
   const nutByDay = {};
   nutLogs7d.forEach(n => {
@@ -3864,6 +3905,44 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
+
+  // ===== REALTIME : push live updates au coach quand ses clients agissent =====
+  // Le polling 60s reste comme filet de sécurité, mais Supabase Realtime
+  // donne une visibilité instantanée. Debounce 1s : si un burst arrive
+  // (ex: 5 sets en 10s), on fait UN refetch au lieu de 5.
+  const realtimeRefreshTimer = useRef(null);
+  useEffect(() => {
+    if (!coachId) return;
+    const scheduleRefresh = () => {
+      if (realtimeRefreshTimer.current) clearTimeout(realtimeRefreshTimer.current);
+      realtimeRefreshTimer.current = setTimeout(() => loadClients(), 1000);
+    };
+    let ch;
+    try {
+      ch = supabase.channel(`coach-live-${coachId}`)
+        // Activity log filtré par ce coach (PR clients, alertes inactivité…)
+        .on("postgres_changes", {
+          event: "INSERT", schema: "public", table: "coach_activity_log",
+          filter: `coach_id=eq.${coachId}`,
+        }, scheduleRefresh)
+        // Clients du coach : nouveau, désabonnement, status change
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "clients",
+          filter: `coach_id=eq.${coachId}`,
+        }, scheduleRefresh)
+        // Session_logs / exercise_logs (sans filtre coach_id qui n'existe pas
+        // sur ces tables) : RLS bloquera ce qui ne nous concerne pas. Le
+        // refresh global recompute les stats de chaque client.
+        .on("postgres_changes", {
+          event: "INSERT", schema: "public", table: "session_logs",
+        }, scheduleRefresh)
+        .subscribe();
+    } catch { /* realtime peut être désactivé sur certaines tables */ }
+    return () => {
+      if (realtimeRefreshTimer.current) clearTimeout(realtimeRefreshTimer.current);
+      if (ch) supabase.removeChannel(ch);
+    };
+  }, [coachId]);
 
 
   // Pull-to-refresh mobile (desactive pendant les overlays full-screen)
