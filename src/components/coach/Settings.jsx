@@ -590,7 +590,7 @@ function PublicProfileSection({ coachData, isDemo }) {
           style={{ ...input, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
         />
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 6, lineHeight: 1.6 }}>
-          💡 Ce champ accepte plusieurs formats — auto-conversion à l'enregistrement :
+          Ce champ accepte plusieurs formats — auto-conversion à l'enregistrement :
           <ul style={{ margin: "6px 0 0 14px", padding: 0, listStyle: "disc" }}>
             <li><code style={{ color: G, fontSize: 11 }}>0612345678</code> ou <code style={{ color: G, fontSize: 11 }}>+33612345678</code> → téléphone (ouvre le dialer)</li>
             <li><code style={{ color: G, fontSize: 11 }}>@ton_insta</code> → ton profil Instagram</li>

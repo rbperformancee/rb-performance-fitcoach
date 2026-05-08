@@ -214,7 +214,10 @@ export default async function handler(req, res) {
       if (coach.unsub_all === true) continue;
       if (coach.unsub_weekly_digest === true) continue;
 
-      const clients = await sbFetch(`/rest/v1/clients?coach_id=eq.${coach.id}&select=id,email,full_name,subscription_end_date,subscription_status,subscription_price,last_active_at`);
+      // last_active_at n'existe pas — la bonne colonne est last_seen_at (migration 026).
+      // subscription_price aussi inexistant : MRR sera 0 jusqu'à ce qu'on
+      // joigne sur coach_plans (TODO post-launch). Le digest reste utile sans.
+      const clients = await sbFetch(`/rest/v1/clients?coach_id=eq.${coach.id}&select=id,email,full_name,subscription_end_date,subscription_status,last_seen_at`);
       if (!Array.isArray(clients) || clients.length === 0) continue;
 
       const ids = clients.map((c) => `"${c.id}"`).join(",");
@@ -253,12 +256,14 @@ export default async function handler(req, res) {
       const topClientId = Object.entries(sessionsByClient).sort((a, b) => b[1] - a[1])[0]?.[0];
       const topClient = topClientId ? { ...clients.find((c) => c.id === topClientId), _sessions: sessionsByClient[topClientId] } : null;
 
-      // Clients churn risque (inactifs 7j+ avec abo actif)
+      // Clients churn risque (inactifs 7j+ avec abo actif). On lit last_seen_at
+      // mais on fallback sur le dernier exercise_log si dispo (plus précis car
+      // last_seen_at trace le login auth, pas l'activité réelle de séance).
       const churnRiskClients = clients
         .filter((c) => !activeIds.has(c.id) && c.subscription_status === "active")
         .slice(0, 3)
         .map((c) => {
-          const last = c.last_active_at ? new Date(c.last_active_at) : null;
+          const last = c.last_seen_at ? new Date(c.last_seen_at) : null;
           const _days = last ? Math.floor((Date.now() - last.getTime()) / 86400000) : 8;
           return { ...c, _days };
         });

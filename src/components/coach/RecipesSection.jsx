@@ -543,7 +543,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
         {/* Variantes IA */}
         <div style={{ marginTop: 20, padding: 14, borderRadius: 12, background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.15)" }}>
           <div style={{ fontSize: 11, color: "rgba(167,139,250,0.9)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>
-            ✨ Generer une variante (IA)
+            Générer une variante · IA
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {['low-carb', 'vegan', 'gluten-free', 'high-protein', 'lactose-free'].map((vt) => (

@@ -222,8 +222,20 @@ function ProgrammeCalendarSection({ programmeId, clientId }) {
           );
         })}
       </div>
-      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.3px", marginTop: 4 }}>
-        ← 14 jours · ✅ fait · 🟧 raté · ⬜ repos · ⌧ aujourd'hui
+      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.3px", marginTop: 4, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span>← 14 jours</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 2, background: "#02d1ba", display: "inline-block" }} /> fait
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 2, background: "#f97316", display: "inline-block" }} /> raté
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(255,255,255,0.15)", display: "inline-block" }} /> repos
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 2, border: "1px solid #02d1ba", display: "inline-block" }} /> aujourd'hui
+        </span>
       </div>
     </div>
   );
@@ -289,7 +301,7 @@ function ProgrammesHistorySection({ client, onEdit, onReuse }) {
         style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "transparent", border: "none", color: "#fff", padding: 0, cursor: "pointer", fontFamily: "inherit" }}
       >
         <div>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.55)", textTransform: "uppercase", marginBottom: 4 }}>📜 Historique programmes</div>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.55)", textTransform: "uppercase", marginBottom: 4 }}>Historique programmes</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>{archived.length} programme{archived.length > 1 ? "s" : ""} archivé{archived.length > 1 ? "s" : ""}</div>
         </div>
         <span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)" }}>{expanded ? "−" : "+"}</span>
