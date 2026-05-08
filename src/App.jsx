@@ -649,7 +649,6 @@ function AppInner() {
       supabase.from("super_admins").select("id").eq("email", user.email).maybeSingle(),
     ]).then(([coachRes, adminRes]) => {
       const cData = coachRes.data || null;
-      console.log("[role-check] user.email:", JSON.stringify(user.email), "user.id:", user.id, "coachRes:", coachRes.data, "coachErr:", coachRes.error?.message, "adminRes:", adminRes.data);
       setCoachData(cData);
       setCoachId(cData?.id || null);
       setIsCoach(!!cData);

@@ -24,7 +24,6 @@ export function SeanceVivante({ clientId, sessionName }) {
       active: true,
     }, { onConflict: "client_id" }).then(({ error }) => {
       if (error) console.warn("[session_live] upsert START failed:", error.message, error.code, error.details);
-      else console.log("[session_live] upsert START ok");
     });
     return () => {
       supabase.from("session_live").upsert({

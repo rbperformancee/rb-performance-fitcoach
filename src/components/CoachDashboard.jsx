@@ -837,8 +837,8 @@ function fmtKg(w) {
   const n = Number(w);
   return Number.isInteger(n) ? String(n) : (Math.round(n * 10) / 10).toString();
 }
-// ex_key = "programme__w0_s0_e2" → "Exercice 3" (lisible, 1-indexé). Le vrai
-// nom (Squat, Leg Press…) vit dans le HTML du programme — TODO si besoin.
+// ex_key = "programme__w0_s0_e2" → "Exercice 3" (lisible, 1-indexé). Fallback
+// si resolveExName ne trouve rien dans le HTML programme parsé.
 function prettyExName(key) {
   const m = String(key || "").match(/_e(\d+)$/i);
   return m ? `Exercice ${parseInt(m[1], 10) + 1}` : (key || "—");
@@ -3523,11 +3523,10 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
     if (isDemo) { if (demoLive) setIsLive(true); return; }
     // Verifier si le client est en seance live
     const check = async () => {
-      const { data, error } = await supabase.from("session_live")
+      const { data } = await supabase.from("session_live")
         .select("active, session_name, started_at")
         .eq("client_id", clientId)
         .maybeSingle();
-      console.log("[coach-poll]", clientId, "data:", data, "error:", error?.message || error);
       if (data?.active) setIsLive(true);
       else setIsLive(false);
     };
@@ -3607,7 +3606,6 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
         const tail = encoder.flush();
         if (tail.length > 0) mp3Chunks.push(tail);
         mp3Blob = new Blob(mp3Chunks, { type: "audio/mpeg" });
-        console.log("[flash audio] transcoded to MP3:", mp3Blob.size, "bytes");
       } catch (e) {
         console.warn("[flash audio] MP3 transcoding failed, fallback to original:", e);
         mp3Blob = audioBlob;
@@ -3625,7 +3623,6 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
       if (uploadData) {
         const { data: urlData } = supabase.storage.from("audio-messages").getPublicUrl(fileName);
         audioUrl = urlData?.publicUrl;
-        console.log("[flash audio upload] OK:", audioUrl);
       }
     }
 

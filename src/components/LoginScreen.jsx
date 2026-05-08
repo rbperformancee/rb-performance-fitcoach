@@ -123,7 +123,6 @@ export function LoginScreen({ onBack }) {
         // Succes → Supabase met a jour la session, App.jsx detecte et redirige.
         // On lock la verification pour empecher tout retry qui ferait 403 sur
         // le token deja consomme.
-        console.log('[OTP] success, redirecting...');
         verifiedRef.current = true;
         setSuccess(t('login.success_redirect'));
         // Filet de securite : si onAuthStateChange ne redirige pas en 1.5s,
