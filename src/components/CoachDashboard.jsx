@@ -847,7 +847,7 @@ function epley1rm(w, r) {
   if (!(Number(w) > 0) || !(Number(r) > 0)) return null;
   return Math.round(Number(w) * (1 + Number(r) / 30) * 10) / 10;
 }
-function SessionDetailModal({ data, onClose }) {
+function SessionDetailModal({ data, onClose, onShowProgression }) {
   const { session, dayExs, resolveExName, allExLogs } = data;
   const date = new Date(session.logged_at);
   const sessionDateStr = (session.logged_at || "").slice(0, 10);
@@ -1126,17 +1126,31 @@ function SessionDetailModal({ data, onClose }) {
                     boxShadow: isPR ? "0 0 32px rgba(2,209,186,0.06)" : "none",
                     transition: "border-color .15s",
                   }}>
-                    {/* Header carte : numéro d'exo + nom à gauche, badge PR à droite */}
+                    {/* Header carte : numéro + nom (cliquable → progression),
+                        badge PR à droite. */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 10, flex: 1, minWidth: 0 }}>
+                      <button
+                        type="button"
+                        onClick={() => onShowProgression && onShowProgression({ exKey: key, exName: name })}
+                        style={{
+                          display: "flex", alignItems: "baseline", gap: 10, flex: 1, minWidth: 0,
+                          background: "transparent", border: "none", padding: 0,
+                          cursor: onShowProgression ? "pointer" : "default", textAlign: "left",
+                          color: "inherit", font: "inherit",
+                        }}
+                        title={onShowProgression ? "Voir la progression de cet exercice" : ""}
+                      >
                         <div style={{
                           fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: "rgba(255,255,255,0.3)",
                           fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", flexShrink: 0,
                         }}>
                           {String(i + 1).padStart(2, "0")}
                         </div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", letterSpacing: -0.2, lineHeight: 1.3, wordBreak: "break-word" }}>{name}</div>
-                      </div>
+                        <div style={{
+                          fontSize: 14, fontWeight: 700, color: "#fff", letterSpacing: -0.2, lineHeight: 1.3, wordBreak: "break-word",
+                          textDecoration: onShowProgression ? "underline" : "none", textDecorationColor: "rgba(2,209,186,0.3)", textDecorationThickness: 1, textUnderlineOffset: 4,
+                        }}>{name}</div>
+                      </button>
                       {isPR && (
                         <span style={{
                           fontSize: 9, fontWeight: 800, letterSpacing: 1.2, padding: "4px 8px",
@@ -1316,6 +1330,190 @@ function SessionDetailModal({ data, onClose }) {
   );
 }
 
+/* ── Modal progression d'un exercice : courbe poids max + volume + 1RM est.
+   sur toutes les séances historiques de cet exo. Ouverte au clic sur le nom
+   d'un exo dans SessionDetailModal. ── */
+function ExerciseProgressionModal({ data, onClose }) {
+  const { exKey, exName, allExLogs } = data;
+  const G_LOCAL = "#02d1ba";
+  // Reconstruit l'historique : 1 entrée par date avec maxW, totalVolume, best1rm
+  const history = React.useMemo(() => {
+    if (!Array.isArray(allExLogs)) return [];
+    const rows = allExLogs.filter((l) => l.ex_key === exKey);
+    const byDate = {};
+    rows.forEach((r) => {
+      const d = (r.logged_at || "").slice(0, 10);
+      if (!d) return;
+      if (!byDate[d]) byDate[d] = { date: d, maxW: 0, totalVolume: 0, best1rm: 0, sets: 0 };
+      const sets = Array.isArray(r.sets) && r.sets.length > 0
+        ? r.sets
+        : [{ weight: r.weight, reps: r.reps }];
+      sets.forEach((s) => {
+        const w = Number(s?.weight) || 0;
+        const reps = Number(s?.reps) || 0;
+        byDate[d].maxW = Math.max(byDate[d].maxW, w);
+        byDate[d].totalVolume += w * reps;
+        const onerm = epley1rm(w, reps);
+        if (onerm) byDate[d].best1rm = Math.max(byDate[d].best1rm, onerm);
+        byDate[d].sets += 1;
+      });
+    });
+    return Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+  }, [allExLogs, exKey]);
+
+  const lastEntry = history[history.length - 1];
+  const firstEntry = history[0];
+  const allTimeMax = history.reduce((m, h) => Math.max(m, h.maxW), 0);
+  const allTimeBest1rm = history.reduce((m, h) => Math.max(m, h.best1rm), 0);
+  const totalSessions = history.length;
+  const deltaW = lastEntry && firstEntry ? Math.round((lastEntry.maxW - firstEntry.maxW) * 10) / 10 : null;
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1100,
+        background: "rgba(0,0,0,0.78)", backdropFilter: "blur(10px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 20, overflowY: "auto",
+      }}
+    >
+      <div style={{
+        background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
+        maxWidth: 640, width: "100%", maxHeight: "90vh",
+        display: "flex", flexDirection: "column",
+        fontFamily: "-apple-system,'Inter',sans-serif", overflow: "hidden",
+      }}>
+        <div style={{
+          padding: "26px 28px 22px",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          background: "linear-gradient(180deg, rgba(2,209,186,0.025) 0%, transparent 100%)",
+          display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16,
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3.5, color: G_LOCAL, textTransform: "uppercase", marginBottom: 8 }}>
+              Progression
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 6, wordBreak: "break-word" }}>
+              {exName}
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", ...numStyle }}>
+              {totalSessions} séance{totalSessions > 1 ? "s" : ""} · première {firstEntry ? new Date(firstEntry.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer"
+            style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 18, lineHeight: 1, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >×</button>
+        </div>
+
+        {/* KPIs all-time */}
+        {history.length > 0 && (
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+            background: "rgba(2,209,186,0.03)",
+            borderBottom: "1px solid rgba(255,255,255,0.05)",
+          }}>
+            {[
+              { label: "Charge actuelle", value: fmtKg(lastEntry?.maxW || 0), suffix: "kg" },
+              { label: "Record poids", value: fmtKg(allTimeMax), suffix: "kg" },
+              { label: "1RM est. max", value: fmtKg(allTimeBest1rm), suffix: "kg" },
+              { label: "Δ depuis 1ère", value: deltaW != null ? `${deltaW > 0 ? "+" : ""}${fmtKg(deltaW)}` : "—", suffix: deltaW != null ? "kg" : "", color: deltaW == null ? null : deltaW > 0 ? G_LOCAL : deltaW < 0 ? "#ff6b6b" : null },
+            ].map((kpi, i, arr) => (
+              <div key={i} style={{
+                padding: "16px 8px", textAlign: "center",
+                borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+              }}>
+                <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1.8, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>
+                  {kpi.label}
+                </div>
+                <div style={{ ...numStyle, fontWeight: 700, color: kpi.color || G_LOCAL, fontSize: 18, letterSpacing: -0.5 }}>
+                  {kpi.value}
+                  {kpi.suffix && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 3, fontWeight: 500 }}>{kpi.suffix}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px 28px" }}>
+          {history.length < 2 ? (
+            <div style={{
+              padding: "36px 24px", textAlign: "center",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14,
+              fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6,
+            }}>
+              {history.length === 0
+                ? "Aucune donnée historique trouvée pour cet exercice."
+                : "Une seule séance loggée — la courbe s'affichera dès la 2e."}
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 14 }}>
+                Évolution charge max
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px 8px 8px", marginBottom: 24 }}>
+                <LineGraph
+                  data={history.map((h) => ({ date: h.date, weight: h.maxW }))}
+                  color={G_LOCAL}
+                  height={200}
+                  unit="kg"
+                  valueKey="weight"
+                />
+              </div>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 14 }}>
+                Détail par séance
+              </div>
+              <div style={{
+                background: "rgba(0,0,0,0.25)",
+                border: "1px solid rgba(255,255,255,0.04)",
+                borderRadius: 10, overflow: "hidden",
+              }}>
+                <div style={{
+                  display: "grid", gridTemplateColumns: "1fr 70px 80px 70px",
+                  gap: 8, padding: "10px 14px",
+                  background: "rgba(255,255,255,0.02)",
+                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                  fontSize: 9, fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+                }}>
+                  <div>Date</div>
+                  <div style={{ textAlign: "right" }}>Max</div>
+                  <div style={{ textAlign: "right" }}>Volume</div>
+                  <div style={{ textAlign: "right" }}>1RM est.</div>
+                </div>
+                {[...history].reverse().map((h, i) => (
+                  <div key={i} style={{
+                    display: "grid", gridTemplateColumns: "1fr 70px 80px 70px",
+                    gap: 8, padding: "12px 14px",
+                    borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.03)",
+                    fontSize: 12,
+                  }}>
+                    <div style={{ ...numStyle, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
+                      {new Date(h.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "2-digit" })}
+                    </div>
+                    <div style={{ ...numStyle, textAlign: "right", color: G_LOCAL, fontWeight: 700 }}>
+                      {fmtKg(h.maxW)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2, fontWeight: 500 }}>kg</span>
+                    </div>
+                    <div style={{ ...numStyle, textAlign: "right", color: h.totalVolume > 0 ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
+                      {h.totalVolume > 0 ? <>{Math.round(h.totalVolume).toLocaleString("fr-FR")}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2 }}>kg</span></> : "—"}
+                    </div>
+                    <div style={{ ...numStyle, textAlign: "right", color: h.best1rm > 0 ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
+                      {h.best1rm > 0 ? <>{fmtKg(h.best1rm)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2 }}>kg</span></> : "—"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
 function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [], onWantInvoice }) {
   const t = useT();
@@ -1339,6 +1537,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   // ~25MB par programme × N clients exploserait le listing initial).
   const [programmesContent, setProgrammesContent] = useState([]);
   const [sessionDetail, setSessionDetail] = useState(null); // { session, dayExs }
+  const [exProgression, setExProgression] = useState(null); // { exKey, exName }
   const [coachNotes, setCoachNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
@@ -2499,30 +2698,40 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           {/* ClientAnalytics supprime de la section Progression — les donnees
               poids et pas sont accessibles via leurs cards cliquables dediees */}
 
-          {/* Top exercices avec sparkline */}
+          {/* Top exercices avec sparkline — clic ouvre la progression complète */}
           {topEx.length > 0 && (
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>{t("cp.top_exercises")}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 10 }}>
                 {topEx.map(([key, data], i) => {
-                  const name = key.split("_").slice(-1)[0] || key;
+                  // resolveExName prend une session ; ici on n'en a pas, donc on
+                  // tape directement le map du programme actif via __active__.
+                  const idxMatch = String(key).match(/_(w\d+_s\d+_e\d+)$/);
+                  const idx = idxMatch ? idxMatch[1] : null;
+                  const name = (idx && exNamesByProg.__active__?.[idx]) || prettyExName(key);
                   const latest = data[data.length - 1];
                   const first = data[0];
                   const delta = latest.weight - first.weight;
                   const max = Math.max(...data.map(d => d.weight));
                   return (
-                    <div key={i} style={card}>
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setExProgression({ exKey: key, exName: name })}
+                      style={{ ...card, cursor: "pointer", textAlign: "left", color: "inherit", font: "inherit", width: "100%" }}
+                      title="Voir la progression complète"
+                    >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2, textTransform: "capitalize" }}>{name}</div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
                           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{fillTpl(t("cp.exercise_summary"), { n: data.length, max })}</div>
                         </div>
-                        <div style={{ fontSize: 12, fontWeight: 800, color: delta >= 0 ? G : RED }}>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: delta >= 0 ? G : RED, flexShrink: 0, marginLeft: 8 }}>
                           {delta >= 0 ? "+" : ""}{delta.toFixed(1)} kg
                         </div>
                       </div>
                       <MiniSparkline data={data} color={delta >= 0 ? G : RED} w={200} h={32} />
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -2929,6 +3138,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         <SessionDetailModal
           data={sessionDetail}
           onClose={() => setSessionDetail(null)}
+          onShowProgression={({ exKey, exName }) => setExProgression({ exKey, exName })}
+        />
+      )}
+
+      {/* Modal progression d'un exo : ouvert depuis le clic sur un nom d'exo
+          dans SessionDetailModal. z-index plus élevé pour passer au-dessus. */}
+      {exProgression && (
+        <ExerciseProgressionModal
+          data={{ ...exProgression, allExLogs: exLogs }}
+          onClose={() => setExProgression(null)}
         />
       )}
 

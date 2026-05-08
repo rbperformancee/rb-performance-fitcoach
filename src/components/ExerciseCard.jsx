@@ -143,10 +143,13 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
 function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive }) {
   const [w, setW] = useState(defaultW || "");
   const [r, setR] = useState(defaultR || "");
+  // Reps valides = nombre entier > 0. Évite que le client valide juste après
+  // avoir saisi le poids (sans toucher reps), ce qui produisait des lignes
+  // en DB avec reps=0 → coach voyait "⚠ reps non saisis" partout.
+  const repsValid = /^\d+$/.test(String(r).trim()) && parseInt(r, 10) > 0;
+  const canValidate = !!w && repsValid && !done && isActive;
   const validate = () => {
-    // Bloque la validation si la serie n est pas done OU si ce n est PAS la serie active.
-    // Garantit l ordre sequentiel : on ne peut pas "sauter" une serie pour valider l exo.
-    if (!w || done || !isActive) return;
+    if (!canValidate) return;
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
     onDone(w, r, index);
   };
@@ -187,13 +190,13 @@ function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive
           width: "100%", boxSizing: "border-box",
         }}
       />
-      <button onClick={validate} disabled={done || !w} style={{
-        width: 48, height: 48, borderRadius: 14, border: "none", cursor: done || !w ? "not-allowed" : "pointer",
-        background: done ? "rgba(2,209,186,0.08)" : w ? GREEN : "rgba(255,255,255,0.03)",
+      <button onClick={validate} disabled={!canValidate && !done} style={{
+        width: 48, height: 48, borderRadius: 14, border: "none", cursor: canValidate || done ? "pointer" : "not-allowed",
+        background: done ? "rgba(2,209,186,0.08)" : canValidate ? GREEN : "rgba(255,255,255,0.03)",
         display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         transition: "all 0.2s", transform: done ? "scale(0.95)" : "scale(1)",
-      }}>
-        <svg viewBox="0 0 24 24" fill="none" stroke={done ? GREEN : w ? "#050505" : "rgba(255,255,255,0.08)"} strokeWidth="3" strokeLinecap="round" style={{ width: 16, height: 16 }}>
+      }} title={!canValidate && !done ? (w && !repsValid ? "Saisis le nombre de reps" : "Saisis le poids") : ""}>
+        <svg viewBox="0 0 24 24" fill="none" stroke={done ? GREEN : canValidate ? "#050505" : "rgba(255,255,255,0.08)"} strokeWidth="3" strokeLinecap="round" style={{ width: 16, height: 16 }}>
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       </button>
