@@ -830,6 +830,18 @@ function prettyExName(key) {
   const m = String(key || "").match(/_e(\d+)$/i);
   return m ? `Exercice ${parseInt(m[1], 10) + 1}` : (key || "—");
 }
+// Style unique pour TOUS les chiffres affichés dans la modale détail.
+// On vire JetBrains Mono (s'affichait en Courier sur certains devices) au
+// profit d'une stack native + tabular-nums : SF Pro / Inter / Roboto avec
+// alignement parfait des colonnes via OpenType "tnum" et "ss01" pour les
+// formes alternatives plus sobres. Slashed-zero pour distinguer 0 de O.
+const NUM_FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif";
+const numStyle = {
+  fontFamily: NUM_FONT,
+  fontVariantNumeric: "tabular-nums slashed-zero",
+  fontFeatureSettings: "'tnum' 1, 'zero' 1, 'ss01' 1",
+  letterSpacing: "-0.01em",
+};
 // Calcule un 1RM Epley : w × (1 + reps/30), arrondi à 1 décimale.
 function epley1rm(w, r) {
   if (!(Number(w) > 0) || !(Number(r) > 0)) return null;
@@ -842,11 +854,26 @@ function SessionDetailModal({ data, onClose }) {
   const durationMin = session.duration_seconds ? Math.round(session.duration_seconds / 60) : null;
   // Grouper exercise_logs par ex_key + tri par index e<n> (ordre du programme)
   // pour que E1 vienne avant E2 même si l'ordre de logging était différent.
+  // EXPANSION : si la ligne a `sets` (jsonb migration 046), on déroule chaque
+  // série en une ligne distincte ; sinon (ancienne ligne agrégée), une seule
+  // ligne avec weight=moyenne / reps=dernière série.
   const grouped = {};
   dayExs.slice().sort((a, b) => new Date(a.logged_at) - new Date(b.logged_at)).forEach((e) => {
     const key = e.ex_key || "—";
     if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(e);
+    if (Array.isArray(e.sets) && e.sets.length > 0) {
+      e.sets.forEach((s, idx) => {
+        grouped[key].push({
+          weight: s.weight,
+          reps: s.reps,
+          logged_at: e.logged_at,
+          _setIndex: idx,
+          _expanded: true,
+        });
+      });
+    } else {
+      grouped[key].push(e);
+    }
   });
   const exercises = Object.entries(grouped).sort((a, b) => {
     const ai = parseInt((a[0].match(/_e(\d+)$/i) || [])[1] || 999, 10);
@@ -871,6 +898,22 @@ function SessionDetailModal({ data, onClose }) {
       if (!byKey[k]) byKey[k] = [];
       byKey[k].push(l);
     });
+    // Renvoie le poids max d'une ligne — déroule sets[] jsonb si dispo
+    // (sinon retombe sur weight agrégé). Sans ça : un client qui fait
+    // 60→70→80kg verrait son max stocké comme avg≈70 → faux PR à chaque
+    // séance répétée à charges identiques.
+    const rowMaxW = (r) => {
+      if (Array.isArray(r.sets) && r.sets.length > 0) {
+        return Math.max(0, ...r.sets.map((s) => Number(s?.weight) || 0));
+      }
+      return Number(r.weight) || 0;
+    };
+    const rowBest1rm = (r) => {
+      if (Array.isArray(r.sets) && r.sets.length > 0) {
+        return Math.max(0, ...r.sets.map((s) => epley1rm(s?.weight, s?.reps) || 0));
+      }
+      return epley1rm(r.weight, r.reps) || 0;
+    };
     Object.entries(byKey).forEach(([k, rows]) => {
       // Précédente = plus récente date STRICTEMENT antérieure à la séance courante
       const priorDates = [...new Set(rows
@@ -879,15 +922,16 @@ function SessionDetailModal({ data, onClose }) {
       if (priorDates.length > 0) {
         const prevDate = priorDates[0];
         const prevSets = rows.filter((r) => (r.logged_at || "").startsWith(prevDate));
-        const prevMaxW = Math.max(0, ...prevSets.map((r) => Number(r.weight) || 0));
-        const prevBest1rm = Math.max(0, ...prevSets.map((r) => epley1rm(r.weight, r.reps) || 0));
+        const prevMaxW = Math.max(0, ...prevSets.map(rowMaxW));
+        const prevBest1rm = Math.max(0, ...prevSets.map(rowBest1rm));
         prevByKey[k] = { date: prevDate, maxW: prevMaxW, best1rm: prevBest1rm };
       }
       // Max historique = max poids sur sets HORS séance courante avec poids>0.
       // null si aucun antécédent → empêche le faux 🏆 PR sur la 1ère séance
       // (le PR n'a de sens que s'il y avait quelque chose à battre).
-      const others = rows.filter((r) => !(r.logged_at || "").startsWith(sessionDateStr) && Number(r.weight) > 0);
-      histMaxByKey[k] = others.length > 0 ? Math.max(...others.map((r) => Number(r.weight) || 0)) : null;
+      const others = rows.filter((r) => !(r.logged_at || "").startsWith(sessionDateStr));
+      const otherMax = others.length > 0 ? Math.max(...others.map(rowMaxW)) : 0;
+      histMaxByKey[k] = otherMax > 0 ? otherMax : null;
     });
   }
   // Vrai si AUCUN exercice de la séance n'a d'historique antérieur. Permet
@@ -944,13 +988,13 @@ function SessionDetailModal({ data, onClose }) {
               {durationMin != null && (
                 <>
                   <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
-                  <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.7)" }}>{durationMin} min</span>
+                  <span style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", color: "rgba(255,255,255,0.7)" }}>{durationMin} min</span>
                 </>
               )}
               {allRealSets.length > 0 && (
                 <>
                   <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
-                  <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.7)" }}>{allRealSets.length} sets loggés</span>
+                  <span style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", color: "rgba(255,255,255,0.7)" }}>{allRealSets.length} sets loggés</span>
                 </>
               )}
             </div>
@@ -986,7 +1030,7 @@ function SessionDetailModal({ data, onClose }) {
                 <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1.8, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>
                   {kpi.label}
                 </div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL, fontSize: 18, letterSpacing: -0.5 }}>
+                <div style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontWeight: 700, color: G_LOCAL, fontSize: 18, letterSpacing: -0.5 }}>
                   {kpi.value}
                   {kpi.suffix && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 3, fontWeight: 500 }}>{kpi.suffix}</span>}
                 </div>
@@ -1087,7 +1131,7 @@ function SessionDetailModal({ data, onClose }) {
                       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flex: 1, minWidth: 0 }}>
                         <div style={{
                           fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: "rgba(255,255,255,0.3)",
-                          fontFamily: "'JetBrains Mono',monospace", flexShrink: 0,
+                          fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", flexShrink: 0,
                         }}>
                           {String(i + 1).padStart(2, "0")}
                         </div>
@@ -1108,7 +1152,7 @@ function SessionDetailModal({ data, onClose }) {
                     <div style={{
                       fontSize: 10, color: "rgba(255,255,255,0.5)", fontWeight: 600,
                       letterSpacing: 0.5, marginBottom: 12,
-                      fontFamily: "'JetBrains Mono',monospace",
+                      fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1",
                     }}>
                       {realSets.length > 0 ? (
                         <>
@@ -1142,11 +1186,11 @@ function SessionDetailModal({ data, onClose }) {
                         <span style={{ color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, fontSize: 9 }}>
                           Vs {new Date(prev.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
                         </span>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.55)" }}>{fmtKg(prev.maxW)}kg</span>
+                        <span style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", color: "rgba(255,255,255,0.55)" }}>{fmtKg(prev.maxW)}kg</span>
                         <span style={{ color: "rgba(255,255,255,0.2)" }}>→</span>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "#fff", fontWeight: 700 }}>{fmtKg(maxW)}kg</span>
+                        <span style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", color: "#fff", fontWeight: 700 }}>{fmtKg(maxW)}kg</span>
                         {deltaLabel && (
-                          <span style={{ color: deltaColor, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", marginLeft: "auto", fontSize: 11 }}>
+                          <span style={{ color: deltaColor, fontWeight: 700, fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", marginLeft: "auto", fontSize: 11 }}>
                             {deltaLabel}
                           </span>
                         )}
@@ -1196,18 +1240,18 @@ function SessionDetailModal({ data, onClose }) {
                           }}>
                             <div>
                               <div style={{
-                                fontFamily: "'JetBrains Mono',monospace",
+                                fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1",
                                 fontWeight: 700, fontSize: 11,
                                 color: isEmpty ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.85)",
                               }}>
                                 {String(j + 1).padStart(2, "0")}
                               </div>
                               {time && (
-                                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>{time}</div>
+                                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2, fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1" }}>{time}</div>
                               )}
                             </div>
                             <div>
-                              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>
+                              <div style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>
                                 <span style={{ color: isEmpty ? "rgba(255,255,255,0.35)" : G_LOCAL }}>
                                   {fmtKg(w)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2, fontWeight: 500 }}>kg</span>
                                 </span>
@@ -1229,10 +1273,10 @@ function SessionDetailModal({ data, onClose }) {
                                 </div>
                               )}
                             </div>
-                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: volume != null ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
+                            <div style={{ textAlign: "right", fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontSize: 11, color: volume != null ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
                               {volume != null ? <>{volume}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2 }}>kg</span></> : "—"}
                             </div>
-                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: oneRm != null ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
+                            <div style={{ textAlign: "right", fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontSize: 11, color: oneRm != null ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
                               {oneRm != null ? <>{fmtKg(oneRm)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2 }}>kg</span></> : "—"}
                             </div>
                           </div>
@@ -1252,7 +1296,7 @@ function SessionDetailModal({ data, onClose }) {
                           }}>
                             <div></div>
                             <div style={{ fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase", color: "rgba(255,255,255,0.5)", fontSize: 9 }}>Volume total exercice</div>
-                            <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL, fontSize: 12 }}>
+                            <div style={{ textAlign: "right", fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontWeight: 700, color: G_LOCAL, fontSize: 12 }}>
                               {totalVol.toLocaleString("fr-FR")}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>
                             </div>
                             <div></div>
@@ -1423,9 +1467,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     supabase.from("coach_notes").select("id,content,created_at").eq("client_id", client.id)
       .order("created_at", { ascending: false }).limit(20)
       .then(({ data }) => setCoachNotes(data || []));
-    // Exercise logs recents (pour afficher les poids souleves par seance)
-    // NOTE : pas de colonne "sets", on lit reps/weight/ex_key/logged_at
-    supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps")
+    // Exercise logs recents (pour afficher les poids souleves par seance).
+    // sets est jsonb (migration 046) — détail set-par-set quand dispo,
+    // sinon NULL pour les vieilles lignes pré-046 et on retombe sur weight/reps.
+    supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps,sets")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(100)
       .then(({ data }) => setExLogs(data || []));
     // Historique poids complet (TOUS depuis le debut de l'abonnement)

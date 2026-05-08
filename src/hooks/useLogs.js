@@ -83,19 +83,32 @@ export function useLogs(programmeName, clientId = null) {
     [getHistory]
   );
 
-  // Ajouter / mettre à jour une entrée pour aujourd'hui
+  // Ajouter / mettre à jour une entrée pour aujourd'hui.
+  // setsArr : tableau optionnel { weight, reps } détaillé set-par-set,
+  // persisté en JSONB via la migration 046. Si non fourni, on retombe sur
+  // l'aggrégation legacy (weight=moyenne, reps=dernière série).
   const saveLog = useCallback(
-    (weekIdx, sessionIdx, exIdx, weight, reps) => {
+    (weekIdx, sessionIdx, exIdx, weight, reps, setsArr = null) => {
       const key = buildExKey(programmeName, weekIdx, sessionIdx, exIdx);
       const today = new Date().toISOString().slice(0, 10);
       const w = parseFloat(weight) || 0;
       const r = reps || "";
+      // Normalise le tableau : on ne garde que weight (number) + reps (number/string)
+      // et on filtre les sets vides (rien à montrer au coach).
+      const normalizedSets = Array.isArray(setsArr)
+        ? setsArr
+            .map((s) => ({
+              weight: parseFloat(s?.weight) || 0,
+              reps: s?.reps != null ? s.reps : "",
+            }))
+            .filter((s) => s.weight > 0 || (s.reps !== "" && Number(s.reps) > 0))
+        : null;
 
       setLogs((prev) => {
         const existing = prev[key] || [];
         // Si entrée du jour déjà présente → on la met à jour
         const filtered = existing.filter((e) => e.date !== today);
-        const newEntry = { date: today, weight: w, reps: r };
+        const newEntry = { date: today, weight: w, reps: r, sets: normalizedSets };
         return { ...prev, [key]: [...filtered, newEntry] };
       });
 
@@ -118,6 +131,7 @@ export function useLogs(programmeName, clientId = null) {
               date: today,
               weight: w,
               reps: r,
+              sets: normalizedSets,
               logged_at: new Date().toISOString(),
             });
           } catch (e) {
