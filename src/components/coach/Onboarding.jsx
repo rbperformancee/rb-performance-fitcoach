@@ -741,7 +741,7 @@ export default function Onboarding({ coach, onComplete }) {
             >
               {brandSaving ? "..." : "Continuer"}
             </button>
-            <button onClick={skipBrand} className="onboarding-skip">Configurer plus tard</button>
+            <button type="button" onClick={skipBrand} className="onboarding-skip">Configurer plus tard</button>
           </div>
         )}
 
@@ -840,7 +840,7 @@ export default function Onboarding({ coach, onComplete }) {
             >
               {pushPerm === "granted" && pushAttempted ? "Continuer" : "Activer les notifications"}
             </button>
-            <button onClick={skipPush} className="onboarding-skip">Plus tard</button>
+            <button type="button" onClick={skipPush} className="onboarding-skip">Plus tard</button>
           </div>
         )}
 
@@ -903,7 +903,7 @@ export default function Onboarding({ coach, onComplete }) {
             >
               {selectedTemplate ? "Utiliser ce template" : "Continuer sans template"}
             </button>
-            <button onClick={skipTemplate} className="onboarding-skip">Je le ferai plus tard</button>
+            <button type="button" onClick={skipTemplate} className="onboarding-skip">Je le ferai plus tard</button>
           </div>
         )}
 
@@ -950,7 +950,7 @@ export default function Onboarding({ coach, onComplete }) {
               {inviteLoading ? t("onb.btn_invite_sending") : inviteSent ? t("onb.btn_invite_sent") : t("onb.btn_invite_send")}
             </button>
 
-            <button onClick={skipInvite} className="onboarding-skip">
+            <button type="button" onClick={skipInvite} className="onboarding-skip">
               {t("onb.btn_skip")}
             </button>
           </div>
