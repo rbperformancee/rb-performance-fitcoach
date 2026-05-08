@@ -55,7 +55,7 @@ async function sendEmail(to, subject, html) {
 
 function buildDigestHtml({ coach, clients, weekStats }) {
   const coachName = coach.full_name?.split(" ")[0] || "Coach";
-  const { totalSessions, newWeights, activeCount, inactiveCount, expiringSoon, mrr, retentionPct, businessScore, scoreDelta, topClient, churnRiskClients } = weekStats;
+  const { totalSessions, newWeights, prCount, activeCount, inactiveCount, expiringSoon, mrr, retentionPct, businessScore, scoreDelta, topClient, churnRiskClients } = weekStats;
   const deltaSign = scoreDelta > 0 ? "↑" : scoreDelta < 0 ? "↓" : "·";
   const deltaColor = scoreDelta > 0 ? "#02d1ba" : scoreDelta < 0 ? "#ef4444" : "rgba(255,255,255,0.4)";
   const churnRows = (churnRiskClients || []).slice(0, 3).map((c) => `<tr>
@@ -122,31 +122,36 @@ function buildDigestHtml({ coach, clients, weekStats }) {
 
     ${churnRows ? `
     <div style="margin-bottom:16px;">
-      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#ef4444;font-weight:700;margin-bottom:10px">● A contacter maintenant</div>
+      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#ef4444;font-weight:700;margin-bottom:10px">À contacter maintenant</div>
       <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.18);border-radius:12px;overflow:hidden;">${churnRows}</table>
     </div>` : ""}
 
     ${topClient ? `
     <div style="margin-bottom:16px;padding:14px 16px;background:rgba(2,209,186,0.05);border:1px solid rgba(2,209,186,0.15);border-radius:12px">
-      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(2,209,186,0.7);font-weight:700;margin-bottom:4px">⭐ Meilleur client</div>
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(2,209,186,0.7);font-weight:700;margin-bottom:4px">Meilleur client</div>
       <div style="font-size:13px;font-weight:600;color:#fff">${topClient.full_name || topClient.email} <span style="color:rgba(255,255,255,0.4);font-weight:400">— ${topClient._sessions} seance${topClient._sessions > 1 ? "s" : ""} cette semaine</span></div>
     </div>` : ""}
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px;">
       <tr>
-        <td style="padding:12px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.2);border-radius:12px;width:33%">
+        <td style="padding:10px 8px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.2);border-radius:12px;width:25%">
           <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(2,209,186,0.7);font-weight:700">Seances</div>
-          <div style="font-family:'Courier',monospace;font-size:22px;font-weight:800;color:#fff;margin-top:4px">${totalSessions}</div>
+          <div style="font-family:'Courier',monospace;font-size:20px;font-weight:800;color:#fff;margin-top:4px">${totalSessions}</div>
         </td>
-        <td style="padding:0 4px"></td>
-        <td style="padding:12px;background:rgba(129,140,248,0.06);border:1px solid rgba(129,140,248,0.2);border-radius:12px;width:33%">
+        <td style="padding:0 3px"></td>
+        <td style="padding:10px 8px;background:rgba(2,209,186,0.06);border:1px solid rgba(2,209,186,0.25);border-radius:12px;width:25%">
+          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(2,209,186,0.85);font-weight:700">Records</div>
+          <div style="font-family:'Courier',monospace;font-size:20px;font-weight:800;color:#02d1ba;margin-top:4px">${prCount}</div>
+        </td>
+        <td style="padding:0 3px"></td>
+        <td style="padding:10px 8px;background:rgba(129,140,248,0.06);border:1px solid rgba(129,140,248,0.2);border-radius:12px;width:25%">
           <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(129,140,248,0.85);font-weight:700">Pesees</div>
-          <div style="font-family:'Courier',monospace;font-size:22px;font-weight:800;color:#fff;margin-top:4px">${newWeights}</div>
+          <div style="font-family:'Courier',monospace;font-size:20px;font-weight:800;color:#fff;margin-top:4px">${newWeights}</div>
         </td>
-        <td style="padding:0 4px"></td>
-        <td style="padding:12px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:12px;width:33%">
+        <td style="padding:0 3px"></td>
+        <td style="padding:10px 8px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:12px;width:25%">
           <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(249,115,22,0.85);font-weight:700">Inactifs</div>
-          <div style="font-family:'Courier',monospace;font-size:22px;font-weight:800;color:#fff;margin-top:4px">${inactiveCount}</div>
+          <div style="font-family:'Courier',monospace;font-size:20px;font-weight:800;color:#fff;margin-top:4px">${inactiveCount}</div>
         </td>
       </tr>
     </table>
@@ -158,7 +163,7 @@ function buildDigestHtml({ coach, clients, weekStats }) {
     ${expiringSoon.length > 0 ? `
     <div style="margin-bottom:16px;">
       <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(249,115,22,0.85);font-weight:700;margin-bottom:10px">
-        ⚠ Abonnements expirants
+        Abonnements expirants
       </div>
       <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(249,115,22,0.04);border:1px solid rgba(249,115,22,0.15);border-radius:12px;overflow:hidden;">
         ${expiringRows}
@@ -213,10 +218,14 @@ export default async function handler(req, res) {
       if (!Array.isArray(clients) || clients.length === 0) continue;
 
       const ids = clients.map((c) => `"${c.id}"`).join(",");
-      const [sessionsData, weightsData] = await Promise.all([
+      const [sessionsData, weightsData, prData] = await Promise.all([
         sbFetch(`/rest/v1/session_logs?client_id=in.(${ids})&logged_at=gte.${weekAgo}&select=client_id`),
         sbFetch(`/rest/v1/weight_logs?client_id=in.(${ids})&date=gte.${weekAgo.split("T")[0]}&select=client_id`),
+        // Records battus cette semaine pour ce coach (notifyCoachPR insère
+        // activity_type=client_pr dans coach_activity_log).
+        sbFetch(`/rest/v1/coach_activity_log?coach_id=eq.${coach.id}&activity_type=eq.client_pr&created_at=gte.${weekAgo}&select=id`),
       ]);
+      const prCount = Array.isArray(prData) ? prData.length : 0;
 
       // Inactifs : pas de session depuis 7j
       const activeIds = new Set((sessionsData || []).map((s) => s.client_id));
@@ -263,12 +272,14 @@ export default async function handler(req, res) {
       const deltaTxt = scoreDelta > 0 ? `↑ +${scoreDelta} pts` : scoreDelta < 0 ? `↓ ${scoreDelta} pts` : "· stable";
       const subject = `Ta semaine RB Perform · Score ${businessScore} · ${deltaTxt}`;
 
+      const totalSessions = Array.isArray(sessionsData) ? sessionsData.length : 0;
       const html = buildDigestHtml({
         coach,
         clients,
         weekStats: {
-          totalSessions: Array.isArray(sessionsData) ? sessionsData.length : 0,
+          totalSessions,
           newWeights: Array.isArray(weightsData) ? weightsData.length : 0,
+          prCount,
           activeCount,
           inactiveCount,
           expiringSoon,
@@ -282,6 +293,22 @@ export default async function handler(req, res) {
       });
 
       await sendEmail(coach.email, subject, html);
+
+      // Push companion : iPhone vibre en même temps que l'email arrive.
+      // Best-effort, n'altère pas le résultat global du cron si fail.
+      try {
+        const pushBody = `${activeCount}/${clients.length} clients actifs · ${totalSessions} séances · ${prCount} record${prCount > 1 ? "s" : ""}`;
+        await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_KEY}` },
+          body: JSON.stringify({
+            coach_id: coach.id,
+            title: `Ta semaine · Score ${businessScore}`,
+            body: pushBody,
+            url: "/dashboard",
+          }),
+        });
+      } catch (_) { /* push optionnel */ }
       // Persister le score pour comparer la semaine prochaine (best-effort)
       try {
         await fetch(`${SUPABASE_URL}/rest/v1/coaches?id=eq.${coach.id}`, {
