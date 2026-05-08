@@ -28,14 +28,25 @@ function canonicalMainLift(name) {
 // Insert dans coach_activity_log si PR détecté sur un main lift. Best-effort
 // (try/catch silencieux) : la perf de la séance ne doit pas être bloquée par
 // un échec de notif. RLS coach_activity_log autorise insert si coach_id existe.
+//
+// Garde-fou "lune de miel" : on ne notifie PAS pendant les 4 premières
+// semaines du client. Pendant cette période d'adaptation neurale, chaque
+// séance bat techniquement le record précédent — ça spammerait le coach
+// avec du bruit. Au-delà de J+28, les vrais PR ressortent.
+const HONEYMOON_DAYS = 28;
 async function notifyCoachPR(clientId, liftName, priorMax, newMax) {
   try {
     const { data: client } = await supabase
       .from("clients")
-      .select("coach_id, full_name")
+      .select("coach_id, full_name, created_at")
       .eq("id", clientId)
       .maybeSingle();
     if (!client?.coach_id) return;
+    if (client.created_at) {
+      const ageMs = Date.now() - new Date(client.created_at).getTime();
+      const ageDays = ageMs / 86400000;
+      if (ageDays < HONEYMOON_DAYS) return; // silence pendant l'adaptation
+    }
     const name = client.full_name || "Client";
     const fmt = (w) => Number.isInteger(w) ? String(w) : (Math.round(w * 10) / 10).toString();
     const summary = `🏆 ${name} a battu son record sur ${liftName} : ${fmt(priorMax)}kg → ${fmt(newMax)}kg (+${fmt(newMax - priorMax)}kg)`;
