@@ -14,12 +14,20 @@ function arraysEqual(a, b) {
   for (let i = 0; i < va.length; i++) if (va[i] !== vb[i]) return false;
   return true;
 }
-export function usePushNotifications(clientId) {
+// Hook unifié : prend EITHER un clientId OR un coachId. Persiste la sub
+// dans push_subscriptions avec le bon champ (cf. CHECK constraint migration
+// 048 : exactement un des deux est set).
+export function usePushNotifications(arg) {
+  // Rétrocompatibilité : si on passe une string, c'est un clientId.
+  // Sinon objet { clientId } ou { coachId }.
+  const clientId = typeof arg === 'string' ? arg : arg?.clientId || null;
+  const coachId = typeof arg === 'object' && arg ? arg.coachId || null : null;
   const [permission, setPermission] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
   const [subscribed, setSubscribed] = useState(false);
   const subscribe = useCallback(async () => {
     try {
-      if (!VAPID_PUBLIC_KEY || !clientId) return;
+      if (!VAPID_PUBLIC_KEY) return;
+      if (!clientId && !coachId) return;
       const reg = await navigator.serviceWorker.ready;
       const expectedKey = urlB64ToUint8Array(VAPID_PUBLIC_KEY);
       let sub = await reg.pushManager.getSubscription();
@@ -34,22 +42,18 @@ export function usePushNotifications(clientId) {
       if (!sub) {
         sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: expectedKey });
       }
-      // onConflict (client_id, endpoint) — multi-device support
-      const { error: upsertErr } = await supabase.from('push_subscriptions').upsert(
-        { client_id: clientId, endpoint: sub.endpoint, subscription: sub.toJSON() },
-        { onConflict: 'client_id,endpoint' }
-      );
+      const row = coachId
+        ? { coach_id: coachId, client_id: null, endpoint: sub.endpoint, subscription: sub.toJSON() }
+        : { client_id: clientId, coach_id: null, endpoint: sub.endpoint, subscription: sub.toJSON() };
+      const onConflict = coachId ? 'coach_id,endpoint' : 'client_id,endpoint';
+      const { error: upsertErr } = await supabase.from('push_subscriptions').upsert(row, { onConflict });
       if (upsertErr) {
-        // Le RLS pouvait bloquer si client_id != auth.uid() (cas frequent
-        // car clients.id != auth.users.id). On log mais on continue : la
-        // subscription navigateur est creee, juste pas persistee.
         console.warn('[push] subscription upsert failed:', upsertErr.message);
       }
       setSubscribed(true);
     } catch(e) { console.error('Push:', e); }
-  }, [clientId]);
+  }, [clientId, coachId]);
   const requestPermission = useCallback(async () => {
-    // iOS Safari (WebKit) n'expose pas toujours Notification — guard avant acces.
     if (typeof window === 'undefined' || !('Notification' in window)) {
       setPermission('denied');
       return 'denied';
@@ -59,6 +63,8 @@ export function usePushNotifications(clientId) {
     if (perm === 'granted') await subscribe();
     return perm;
   }, [subscribe]);
-  useEffect(() => { if (permission === 'granted' && clientId) subscribe(); }, [clientId, permission, subscribe]);
+  useEffect(() => {
+    if (permission === 'granted' && (clientId || coachId)) subscribe();
+  }, [clientId, coachId, permission, subscribe]);
   return { permission, subscribed, requestPermission };
 }

@@ -11,6 +11,7 @@ import { generateInvoicePDF } from "../utils/invoicePDF";
 import ProgrammeBuilder from "./ProgrammeBuilder";
 import { useClientRelance } from "../hooks/useClientRelance";
 import { useCoachPlans } from "../hooks/useCoachPlans";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 import { LOGO_B64 } from "../utils/logo";
 import ErrorBoundary from "./ErrorBoundary";
 import InvitationPanel from "./InvitationPanel";
@@ -3677,6 +3678,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showCoachHome, setShowCoachHome] = useState(true);
   const homeScreenDismissed = useRef(false);
   const { plans: coachPlans } = useCoachPlans(coachId);
+  // Souscription push notifs coach : auto-subscribe si la permission est
+  // déjà accordée (sinon on attend une CTA explicite). Notifie sur PR
+  // client + autres events futurs.
+  usePushNotifications({ coachId });
 
   // Deep-link: /dashboard/mon-compte?tab=abonnement (retour Stripe Customer Portal)
   // ou /app.html?view=mon-compte&tab=... → ouvre MonCompte sur l'onglet demandé.

@@ -56,6 +56,25 @@ async function notifyCoachPR(clientId, liftName, priorMax, newMax) {
       activity_type: "client_pr",
       details: summary,
     });
+    // Push notif sur le téléphone du coach (au-delà du activity log).
+    // Best-effort : si le coach n'a pas encore activé les push, le filtre
+    // dans push_subscriptions renvoie 0 row et l'Edge function no-op.
+    try {
+      const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+      const ANON = process.env.REACT_APP_SUPABASE_ANON_KEY;
+      if (SUPABASE_URL && ANON) {
+        await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: ANON },
+          body: JSON.stringify({
+            coach_id: client.coach_id,
+            title: `🏆 ${name} a battu un record`,
+            body: `${liftName} : ${fmt(priorMax)}kg → ${fmt(newMax)}kg (+${fmt(newMax - priorMax)}kg)`,
+            url: `/coach?client=${clientId}`,
+          }),
+        });
+      }
+    } catch { /* push best-effort */ }
   } catch { /* silent — pas critique */ }
 }
 

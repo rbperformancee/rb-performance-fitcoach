@@ -13,10 +13,17 @@ const cors = {'Access-Control-Allow-Origin':'*','Content-Type':'application/json
 serve(async (req) => {
   if (req.method==='OPTIONS') return new Response('ok',{headers:cors})
   try {
-    const {client_id,title,body,url} = await req.json()
+    const {client_id, coach_id, title, body, url} = await req.json()
+    if (!client_id && !coach_id) {
+      return new Response(JSON.stringify({error:'client_id or coach_id required'}), {status:400, headers:cors})
+    }
     const sUrl = Deno.env.get('SUPABASE_URL')!
     const sKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const res = await fetch(`${sUrl}/rest/v1/push_subscriptions?client_id=eq.${client_id}`,{headers:{apikey:sKey,Authorization:`Bearer ${sKey}`}})
+    // Filtre exclusif : on cible soit les subs client soit les subs coach
+    const filter = coach_id
+      ? `coach_id=eq.${coach_id}`
+      : `client_id=eq.${client_id}`
+    const res = await fetch(`${sUrl}/rest/v1/push_subscriptions?${filter}`,{headers:{apikey:sKey,Authorization:`Bearer ${sKey}`}})
     const subs = await res.json()
     let sent = 0, dead = 0
     const errors: Array<{status?:number; message?:string; body?:string}> = []
