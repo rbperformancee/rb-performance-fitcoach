@@ -1480,9 +1480,9 @@ export default function FuelPage({ client, appData }) {
                 {/* Selecteur de quantite */}
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{t("fuel.quantity")}</div>
-                  {/* Quick amounts */}
+                  {/* Quick amounts — adapte les valeurs et l'unité selon liquide ou solide */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-                    {[50, 100, 150, 200, 250, 300].map(q => (
+                    {(scannedFood.unit === "ml" ? [150, 200, 250, 330, 500, 750] : [50, 100, 150, 200, 250, 300]).map(q => (
                       <button
                         key={q}
                         onClick={() => setScanQuantite(q)}
@@ -1498,7 +1498,7 @@ export default function FuelPage({ client, appData }) {
                           transition: "all 0.15s",
                         }}
                       >
-                        {q}g
+                        {q}{scannedFood.unit || "g"}
                       </button>
                     ))}
                   </div>
@@ -1515,7 +1515,7 @@ export default function FuelPage({ client, appData }) {
                         onChange={e => setScanQuantite(Math.max(1, parseInt(e.target.value) || 100))}
                         style={{ flex: 1, textAlign: "center", padding: "12px", background: "transparent", border: "none", color: "#fff", fontSize: 20, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }}
                       />
-                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", paddingRight: 14 }}>g</span>
+                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", paddingRight: 14 }}>{scannedFood?.unit || "g"}</span>
                     </div>
                     <button
                       onClick={() => setScanQuantite(scanQuantite + 10)}

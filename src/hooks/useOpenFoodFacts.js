@@ -146,6 +146,14 @@ export function useOpenFoodFacts() {
       const data = await res.json();
       if (data.status === 1 && data.product) {
         const p = data.product;
+        // Détecte liquide : nutrition_data_per est "100ml", OU categories include
+        // beverages/waters/juices/milks/etc. OFF normalise toutes les valeurs dans
+        // les clés "_100g" même pour les liquides — c'est juste l'affichage qui change.
+        const perUnit = (p.nutrition_data_per || "").toLowerCase();
+        const catTags = Array.isArray(p.categories_tags) ? p.categories_tags : [];
+        const isLiquid =
+          perUnit === "100ml" ||
+          catTags.some((t) => t === "en:beverages" || t === "en:waters" || t === "en:non-alcoholic-beverages" || t === "en:alcoholic-beverages" || t === "en:milks" || t === "en:juices" || t === "en:plant-based-beverages" || t === "en:sodas" || t === "en:teas" || t === "en:coffees");
         return {
           name: p.product_name,
           brand: p.brands || "",
@@ -153,6 +161,7 @@ export function useOpenFoodFacts() {
           proteines: parseFloat((p.nutriments?.["proteins_100g"] || 0).toFixed(1)),
           glucides: parseFloat((p.nutriments?.["carbohydrates_100g"] || 0).toFixed(1)),
           lipides: parseFloat((p.nutriments?.["fat_100g"] || 0).toFixed(1)),
+          unit: isLiquid ? "ml" : "g",
         };
       }
       return null;
