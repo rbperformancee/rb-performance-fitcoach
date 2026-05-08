@@ -18,6 +18,7 @@ import EmptyState from "./EmptyState";
 import { SkeletonList } from "./Skeleton";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
+import { parseProgrammeHTML } from "../utils/parserProgramme";
 import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
 import ProgrammeDuplicateModal from "./coach/ProgrammeDuplicateModal";
@@ -829,9 +830,15 @@ function prettyExName(key) {
   const m = String(key || "").match(/_e(\d+)$/i);
   return m ? `Exercice ${parseInt(m[1], 10) + 1}` : (key || "—");
 }
+// Calcule un 1RM Epley : w × (1 + reps/30), arrondi à 1 décimale.
+function epley1rm(w, r) {
+  if (!(Number(w) > 0) || !(Number(r) > 0)) return null;
+  return Math.round(Number(w) * (1 + Number(r) / 30) * 10) / 10;
+}
 function SessionDetailModal({ data, onClose }) {
-  const { session, dayExs } = data;
+  const { session, dayExs, exNameByKey, allExLogs } = data;
   const date = new Date(session.logged_at);
+  const sessionDateStr = (session.logged_at || "").slice(0, 10);
   const durationMin = session.duration_seconds ? Math.round(session.duration_seconds / 60) : null;
   // Grouper exercise_logs par ex_key + tri par index e<n> (ordre du programme)
   // pour que E1 vienne avant E2 même si l'ordre de logging était différent.
@@ -847,6 +854,52 @@ function SessionDetailModal({ data, onClose }) {
     return ai - bi;
   });
   const G_LOCAL = "#02d1ba";
+
+  // ── Comparaison vs séance précédente du même exo ──
+  // allExLogs = tous les logs récents du client (table exercise_logs). Pour
+  // chaque ex_key on isole les sessions ANTÉRIEURES (date < sessionDateStr) et
+  // on prend la plus récente comme référence "séance précédente".
+  const prevByKey = {};
+  // PR all-time = max poids historique (sets antérieurs OU postérieurs hors
+  // séance courante). Si la séance courante bat ce max → 🏆.
+  const histMaxByKey = {};
+  if (Array.isArray(allExLogs)) {
+    const byKey = {};
+    allExLogs.forEach((l) => {
+      const k = l.ex_key;
+      if (!k) return;
+      if (!byKey[k]) byKey[k] = [];
+      byKey[k].push(l);
+    });
+    Object.entries(byKey).forEach(([k, rows]) => {
+      // Précédente = plus récente date STRICTEMENT antérieure à la séance courante
+      const priorDates = [...new Set(rows
+        .map((r) => (r.logged_at || "").slice(0, 10))
+        .filter((d) => d && d < sessionDateStr))].sort().reverse();
+      if (priorDates.length > 0) {
+        const prevDate = priorDates[0];
+        const prevSets = rows.filter((r) => (r.logged_at || "").startsWith(prevDate));
+        const prevMaxW = Math.max(0, ...prevSets.map((r) => Number(r.weight) || 0));
+        const prevBest1rm = Math.max(0, ...prevSets.map((r) => epley1rm(r.weight, r.reps) || 0));
+        prevByKey[k] = { date: prevDate, maxW: prevMaxW, best1rm: prevBest1rm };
+      }
+      // Max historique = tous les sets HORS séance courante
+      const others = rows.filter((r) => !(r.logged_at || "").startsWith(sessionDateStr));
+      histMaxByKey[k] = Math.max(0, ...others.map((r) => Number(r.weight) || 0));
+    });
+  }
+
+  // ── Stats agrégées de la séance (header) ──
+  const allRealSets = [];
+  exercises.forEach(([, sets]) => {
+    sets.forEach((s) => {
+      if ((Number(s.weight) > 0) || (Number(s.reps) > 0)) allRealSets.push(s);
+    });
+  });
+  const sessionVolume = allRealSets.reduce((sum, s) => sum + (Number(s.weight) || 0) * (Number(s.reps) || 0), 0);
+  const sessionMaxW = allRealSets.length > 0 ? Math.max(...allRealSets.map((s) => Number(s.weight) || 0)) : 0;
+  const sessionTotalReps = allRealSets.reduce((sum, s) => sum + (Number(s.reps) || 0), 0);
+  const sessionBest1rm = allRealSets.reduce((m, s) => Math.max(m, epley1rm(s.weight, s.reps) || 0), 0);
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -882,6 +935,42 @@ function SessionDetailModal({ data, onClose }) {
             style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}
           >×</button>
         </div>
+
+        {/* Stats agrégées de la séance — vue Bloomberg : 4 KPIs en grille
+            monospace pour donner un coup d'oeil rapide avant le détail. */}
+        {allRealSets.length > 0 && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 1,
+            background: "rgba(2,209,186,0.06)",
+            border: "1px solid rgba(2,209,186,0.18)",
+            borderRadius: 12,
+            overflow: "hidden",
+            marginBottom: 16,
+          }}>
+            {[
+              { label: "Volume", value: `${Math.round(sessionVolume).toLocaleString("fr-FR")}`, suffix: "kg" },
+              { label: "Charge max", value: fmtKg(sessionMaxW), suffix: "kg" },
+              { label: "Reps", value: sessionTotalReps, suffix: "" },
+              { label: "1RM est. max", value: fmtKg(sessionBest1rm), suffix: "kg" },
+            ].map((kpi, i) => (
+              <div key={i} style={{
+                padding: "10px 8px",
+                background: "rgba(0,0,0,0.4)",
+                textAlign: "center",
+              }}>
+                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>
+                  {kpi.label}
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G_LOCAL, fontSize: 15 }}>
+                  {kpi.value}
+                  {kpi.suffix && <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>{kpi.suffix}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
           {exercises.length === 0 ? (
@@ -921,7 +1010,7 @@ function SessionDetailModal({ data, onClose }) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {exercises.map(([key, sets], i) => {
-                const name = prettyExName(key);
+                const name = (exNameByKey && exNameByKey[key]) || prettyExName(key);
                 // Sets "réellement loggés" = au moins un poids OU des reps. Le
                 // reste (weight=0 + reps=0) = artefacts du bouton Terminer sans
                 // saisie → on les compte à part pour ne pas fausser max/total.
@@ -929,15 +1018,31 @@ function SessionDetailModal({ data, onClose }) {
                 const emptyCount = sets.length - realSets.length;
                 const maxW = realSets.length > 0 ? Math.max(...realSets.map((s) => Number(s.weight) || 0)) : 0;
                 const totalReps = realSets.reduce((sum, s) => sum + (Number(s.reps) || 0), 0);
+                // Comparaison vs séance précédente (delta poids max)
+                const prev = prevByKey[key];
+                const deltaW = prev && maxW > 0 ? Math.round((maxW - prev.maxW) * 10) / 10 : null;
+                const isPR = realSets.length > 0 && histMaxByKey[key] != null && maxW > histMaxByKey[key];
+                const deltaColor = deltaW == null ? "rgba(255,255,255,0.3)" : deltaW > 0 ? "#02d1ba" : deltaW < 0 ? "#ff6b6b" : "rgba(255,255,255,0.4)";
+                const deltaLabel = deltaW == null
+                  ? null
+                  : deltaW === 0 ? "= identique" : `${deltaW > 0 ? "▲ +" : "▼ "}${fmtKg(Math.abs(deltaW))}kg`;
                 return (
                   <div key={i} style={{
                     background: "rgba(255,255,255,0.025)",
-                    border: "1px solid rgba(255,255,255,0.05)",
+                    border: `1px solid ${isPR ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.05)"}`,
                     borderRadius: 12, padding: "12px 14px",
+                    boxShadow: isPR ? "0 0 0 1px rgba(2,209,186,0.15) inset, 0 0 24px rgba(2,209,186,0.06)" : "none",
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 10 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{name}</div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, textAlign: "right" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
+                        {isPR && (
+                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, padding: "2px 6px", background: "rgba(2,209,186,0.15)", color: G_LOCAL, borderRadius: 4, textTransform: "uppercase", flexShrink: 0 }}>
+                            🏆 PR
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, textAlign: "right", flexShrink: 0 }}>
                         {realSets.length > 0
                           ? `${realSets.length} set${realSets.length > 1 ? "s" : ""} · max ${fmtKg(maxW)}kg · ${totalReps} reps`
                           : "Aucun set loggé"}
@@ -946,6 +1051,33 @@ function SessionDetailModal({ data, onClose }) {
                         )}
                       </div>
                     </div>
+                    {/* Référence séance précédente (delta poids max) */}
+                    {prev && realSets.length > 0 && (
+                      <div style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        fontSize: 10, color: "rgba(255,255,255,0.45)",
+                        padding: "4px 0 10px",
+                        borderBottom: "1px dashed rgba(255,255,255,0.05)",
+                        marginBottom: 8,
+                      }}>
+                        <span style={{ color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, fontSize: 9 }}>
+                          Vs {new Date(prev.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
+                        </span>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace" }}>{fmtKg(prev.maxW)}kg</span>
+                        <span style={{ color: "rgba(255,255,255,0.25)" }}>→</span>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "#fff" }}>{fmtKg(maxW)}kg</span>
+                        {deltaLabel && (
+                          <span style={{ color: deltaColor, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", marginLeft: "auto" }}>
+                            {deltaLabel}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {!prev && realSets.length > 0 && (
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, padding: "2px 0 8px" }}>
+                        1<sup>ère</sup> séance loggée pour cet exo
+                      </div>
+                    )}
                     {/* Détail par série : 1 ligne = 1 set, avec volume + 1RM
                         estimé (Epley : w × (1 + reps/30)). Donne au coach
                         toutes les infos sans cliquer ailleurs. */}
@@ -1087,6 +1219,25 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const fileRef = useRef();
 
   const prog = client.programmes?.find(p => p.is_active);
+  // Parse le programme actif une seule fois pour pouvoir résoudre ex_key
+  // (programme__w0_s0_e2) → vrai nom d'exo (ex: "Squat", "Leg Press")
+  // dans la modale détail séance. Si parse échoue, fallback "Exercice N".
+  const exNameByKey = React.useMemo(() => {
+    if (!prog?.html_content) return {};
+    try {
+      const parsed = parseProgrammeHTML(prog.html_content);
+      const slug = (prog.programme_name || "prog").toLowerCase().replace(/\s+/g, "_");
+      const map = {};
+      (parsed?.weeks || []).forEach((w, wi) => {
+        (w.sessions || []).forEach((s, si) => {
+          (s.exercises || []).forEach((e, ei) => {
+            map[`${slug}__w${wi}_s${si}_e${ei}`] = e.name;
+          });
+        });
+      });
+      return map;
+    } catch { return {}; }
+  }, [prog?.html_content, prog?.programme_name]);
   const logs = client._logs || [];
   const weights = client._weights || [];
   const lastWeight = weights[0];
@@ -1975,12 +2126,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 const durationMin = s.duration_seconds ? Math.round(s.duration_seconds / 60) : null;
                 // Exercices de cette seance (meme jour)
                 const dayExs = exLogs.filter(e => e.logged_at && e.logged_at.startsWith(dateStr));
-                // Grouper par exercice et prendre le max poids
+                // Grouper par exercice et prendre le max poids. Le label
+                // privilégie le vrai nom (parsé depuis le programme), sinon
+                // fallback "Exercice N".
                 const exSummary = {};
                 dayExs.forEach(e => {
-                  const name = (e.ex_key || "").split("_").slice(-1)[0] || e.ex_key;
-                  if (!exSummary[name] || e.weight > exSummary[name].w) {
-                    exSummary[name] = { w: e.weight, r: e.reps, s: e.sets };
+                  const name = exNameByKey[e.ex_key] || prettyExName(e.ex_key);
+                  if (!exSummary[name] || (Number(e.weight) || 0) > exSummary[name].w) {
+                    exSummary[name] = { w: Number(e.weight) || 0, r: e.reps, s: e.sets };
                   }
                 });
                 const topExos = Object.entries(exSummary).sort((a, b) => b[1].w - a[1].w).slice(0, 4);
@@ -1988,7 +2141,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 return (
                   <div
                     key={i}
-                    onClick={() => setSessionDetail({ session: s, dayExs })}
+                    onClick={() => setSessionDetail({ session: s, dayExs, exNameByKey, allExLogs: exLogs })}
                     style={{ ...card, padding: "14px 16px", cursor: "pointer", transition: "background .12s, border-color .12s" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.04)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.18)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = card.background || "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = card.border ? card.border.split(" ").slice(2).join(" ") : "rgba(255,255,255,0.05)"; }}
@@ -2029,8 +2182,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                             fontSize: 10,
                             display: "flex", alignItems: "center", gap: 5,
                           }}>
-                            <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600, textTransform: "capitalize" }}>{name}</span>
-                            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G }}>{d.w}kg</span>
+                            <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>{name}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, color: G }}>{fmtKg(d.w)}kg</span>
                             {d.r > 0 && <span style={{ color: "rgba(255,255,255,0.3)" }}>x{d.r}</span>}
                           </div>
                         ))}
