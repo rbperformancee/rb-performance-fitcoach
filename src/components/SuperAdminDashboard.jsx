@@ -617,13 +617,19 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   // Coachs avec clients mais zero session loggée 30j (alerte managériale)
   const inactiveCoaches = enriched.filter(c => c.is_active && c._total > 0 && c._sessions === 0);
 
-  // Action items prioritaires triés par urgence
+  // Action items prioritaires triés par urgence — avec exemples de noms
+  const firstName = (c) => c?.full_name?.split(" ")[0] || c?.email?.split("@")[0] || "?";
+  const examples = (arr, n = 3) => {
+    const names = arr.slice(0, n).map(firstName);
+    if (arr.length > n) return names.join(", ") + ` +${arr.length - n}`;
+    return names.join(", ");
+  };
   const actionItems = [];
-  if (renewals14.length > 0) actionItems.push({ label: `${renewals14.length} renouvellement${renewals14.length > 1 ? "s" : ""} dans 14j`, count: renewals14.length, color: AMBER, target: "clients" });
-  if (silentSubs.length > 0) actionItems.push({ label: `${silentSubs.length} abonné${silentSubs.length > 1 ? "s" : ""} silencieux 7j+`, count: silentSubs.length, color: ORANGE, target: "clients" });
-  if (inactiveCoaches.length > 0) actionItems.push({ label: `${inactiveCoaches.length} coach${inactiveCoaches.length > 1 ? "s" : ""} sans session 30j`, count: inactiveCoaches.length, color: ORANGE, target: "coachs" });
-  const expiring15to30 = subscriptionsExpiring30 - renewals14.length;
-  if (expiring15to30 > 0) actionItems.push({ label: `${expiring15to30} renouvellement${expiring15to30 > 1 ? "s" : ""} 15-30j`, count: expiring15to30, color: BLUE, target: "clients" });
+  if (renewals14.length > 0) actionItems.push({ label: `${renewals14.length} renouvellement${renewals14.length > 1 ? "s" : ""} dans 14j`, names: examples(renewals14), count: renewals14.length, color: AMBER, target: "clients" });
+  if (silentSubs.length > 0) actionItems.push({ label: `${silentSubs.length} abonné${silentSubs.length > 1 ? "s" : ""} silencieux 7j+`, names: examples(silentSubs), count: silentSubs.length, color: ORANGE, target: "clients" });
+  if (inactiveCoaches.length > 0) actionItems.push({ label: `${inactiveCoaches.length} coach${inactiveCoaches.length > 1 ? "s" : ""} sans session 30j`, names: examples(inactiveCoaches), count: inactiveCoaches.length, color: ORANGE, target: "coachs" });
+  const expiring15to30List = allClients.filter(c => c.subscription_end_date && new Date(c.subscription_end_date) >= new Date(Date.now() + 14 * 86400000) && new Date(c.subscription_end_date) < new Date(Date.now() + 30 * 86400000));
+  if (expiring15to30List.length > 0) actionItems.push({ label: `${expiring15to30List.length} renouvellement${expiring15to30List.length > 1 ? "s" : ""} 15-30j`, names: examples(expiring15to30List), count: expiring15to30List.length, color: BLUE, target: "clients" });
 
   // Activité récente : reuse liveEvents mais on ne l'animera plus en ticker
   const recentActivity = liveEvents.slice(0, 12);
@@ -703,37 +709,71 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* HERO STRIP — 4 chiffres, ce qui compte vraiment                  */}
+        {/* HERO — un seul chiffre qui compte + sparkline + secondary stats */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 1, marginTop: 28, marginBottom: 24, background: "rgba(255,255,255,0.06)", borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
-          {[
-            { label: "MRR", value: <><AnimNum value={mrr} />€</>, sub: revenue30to60 > 0 ? `${mrrDeltaPct >= 0 ? "+" : ""}${mrrDeltaPct}% MoM` : "premier mois", subColor: mrrDeltaPct >= 0 ? G : RED, color: BLUE },
-            { label: "Cash 30j", value: <><AnimNum value={Math.round(revenue30dActual)} />€</>, sub: `${payments.filter(p => !p.void).length} paiement${payments.filter(p => !p.void).length > 1 ? "s" : ""}`, color: G },
-            { label: "Active subs", value: <AnimNum value={subs.length} />, sub: newToday > 0 ? `+${newToday} aujourd'hui` : (newCl30 > 0 ? `+${newCl30} sur 30j` : "stable"), subColor: newToday > 0 || newCl30 > 0 ? G : "rgba(255,255,255,0.4)", color: VIOLET },
-            { label: "Net new (mois)", value: <span>{netNewMonth >= 0 ? "+" : ""}<AnimNum value={Math.abs(netNewMonth)} /></span>, sub: `${newThisMonth} new · ${churnedThisMonth} churn`, subColor: netNewMonth >= 0 ? G : RED, color: AMBER },
-          ].map((m, i) => (
-            <div key={i} style={{ padding: "26px 28px", background: "#0a0a0a", position: "relative", animation: `cF ${0.15 + i * 0.05}s ease both` }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: m.color, opacity: 0.55 }} />
-              <div style={{ fontSize: 9, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 10 }}>{m.label}</div>
-              <div style={{ fontFamily: CEO_FONT, fontSize: 44, color: IVORY, letterSpacing: "1px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{m.value}</div>
-              <div style={{ fontSize: 11, color: m.subColor || "rgba(255,255,255,0.4)", marginTop: 10, fontFamily: MONO, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{m.sub}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* MRR GOAL                                                         */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div onClick={() => { const v = window.prompt("Objectif MRR (€) :", String(mrrGoal)); if (v && !isNaN(parseInt(v))) { setMrrGoal(parseInt(v)); localStorage.setItem("ceo_mrr_goal", v); } }} style={{ marginBottom: 28, display: "flex", alignItems: "center", gap: 14, cursor: "pointer", padding: "12px 20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Objectif</span>
-          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: mrrPct + "%", background: BLUE, borderRadius: 2, transition: "width 0.6s ease", boxShadow: `0 0 10px ${BLUE}88` }} />
+        <div style={{ marginTop: 36, marginBottom: 32, animation: "cF 0.4s ease both" }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: BODY_FONT, fontWeight: 500, letterSpacing: "0.3px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ textTransform: "capitalize" }}>{new Date().toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}</span>
+            <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
+            <span style={{ color: payments.filter(p => !p.void && new Date(p.received_date).toISOString().split("T")[0] === new Date().toISOString().split("T")[0]).reduce((s, p) => s + parseFloat(p.amount_eur || 0), 0) > 0 ? G : "rgba(255,255,255,0.45)", fontWeight: 600 }}>
+              {(() => {
+                const todayPaid = payments.filter(p => !p.void && new Date(p.received_date).toISOString().split("T")[0] === new Date().toISOString().split("T")[0]).reduce((s, p) => s + parseFloat(p.amount_eur || 0), 0);
+                if (todayPaid > 0) return `${todayPaid.toLocaleString()}€ encaissés aujourd'hui`;
+                if (newToday > 0) return `${newToday} nouveau client aujourd'hui`;
+                if (recentActivity.length > 0) return `${recentActivity.length} événement${recentActivity.length > 1 ? "s" : ""} récent${recentActivity.length > 1 ? "s" : ""}`;
+                return "calme plat aujourd'hui";
+              })()}
+            </span>
           </div>
-          <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: BLUE, fontVariantNumeric: "tabular-nums" }}>{mrr.toLocaleString()}€ <span style={{ color: "rgba(255,255,255,0.3)" }}>/ {mrrGoal.toLocaleString()}€</span></span>
-          <span style={{ fontFamily: MONO, fontSize: 11, color: BLUE, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{mrrPct}%</span>
+
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 18, flexWrap: "wrap", marginBottom: 6 }}>
+            <div style={{ fontFamily: CEO_FONT, fontSize: 96, lineHeight: 0.85, color: IVORY, letterSpacing: "-1px", fontVariantNumeric: "tabular-nums" }}>
+              <AnimNum value={mrr} />€
+            </div>
+            {revenue30to60 > 0 && (
+              <div style={{ paddingBottom: 14, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: mrrDeltaPct >= 0 ? G : RED, letterSpacing: "0.5px" }}>
+                  {mrrDeltaPct >= 0 ? "▲" : "▼"} {Math.abs(mrrDeltaPct)}%
+                </span>
+                <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,255,255,0.4)" }}>vs 30j préc.</span>
+              </div>
+            )}
+          </div>
+
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontFamily: BODY_FONT, marginBottom: 8, fontWeight: 500 }}>
+            MRR · {subs.length} abonnement{subs.length > 1 ? "s" : ""} actif{subs.length > 1 ? "s" : ""} · ARR {arr.toLocaleString()}€
+          </div>
+
+          <div onClick={() => { const v = window.prompt("Objectif MRR (€) :", String(mrrGoal)); if (v && !isNaN(parseInt(v))) { setMrrGoal(parseInt(v)); localStorage.setItem("ceo_mrr_goal", v); } }} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "6px 14px", background: "rgba(129,140,248,0.05)", border: "1px solid rgba(129,140,248,0.18)", borderRadius: 100, marginTop: 10, marginBottom: 26, cursor: "pointer", transition: "all 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(129,140,248,0.1)"; e.currentTarget.style.borderColor = "rgba(129,140,248,0.3)"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(129,140,248,0.05)"; e.currentTarget.style.borderColor = "rgba(129,140,248,0.18)"; }}>
+            <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: BLUE }}>Goal</span>
+            <span style={{ fontFamily: MONO, fontSize: 10, color: "#fff", fontVariantNumeric: "tabular-nums" }}>{mrr.toLocaleString()}/{mrrGoal.toLocaleString()}€</span>
+            <div style={{ width: 50, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: mrrPct + "%", background: BLUE, borderRadius: 2 }} />
+            </div>
+            <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: BLUE, fontVariantNumeric: "tabular-nums" }}>{mrrPct}%</span>
+          </div>
+
+          <div style={{ position: "relative", height: 80, marginBottom: 28, opacity: 0.92 }}>
+            <Sparkline data={mrrTrajectory.map(b => b.amount)} width={1032} height={80} color={BLUE} fill={true} dot={true} />
+            <div style={{ position: "absolute", top: 6, left: 6, fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>Cash flow · 30j</div>
+            <div style={{ position: "absolute", top: 6, right: 6, fontSize: 11, fontFamily: MONO, fontWeight: 700, color: BLUE, fontVariantNumeric: "tabular-nums" }}>{Math.round(revenue30dActual).toLocaleString()}€</div>
+          </div>
+
+          <div style={{ display: "flex", gap: 0, paddingTop: 22, paddingBottom: 6, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            {[
+              { label: "Cash 30j", value: `${Math.round(revenue30dActual).toLocaleString()}€`, sub: `${payments.filter(p => !p.void).length} paiement${payments.filter(p => !p.void).length > 1 ? "s" : ""}`, color: G },
+              { label: "Active subs", value: subs.length, sub: newToday > 0 ? `+${newToday} aujourd'hui` : (newCl30 > 0 ? `+${newCl30} sur 30j` : "stable"), color: VIOLET },
+              { label: "Net new (mois)", value: `${netNewMonth >= 0 ? "+" : ""}${netNewMonth}`, sub: `${newThisMonth} new · ${churnedThisMonth} churn`, color: netNewMonth >= 0 ? G : RED },
+            ].map((m, i) => (
+              <div key={i} style={{ flex: 1, paddingLeft: i > 0 ? 28 : 0, borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none", paddingRight: 28 }}>
+                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>{m.label}</div>
+                <div style={{ fontFamily: CEO_FONT, fontSize: 32, color: IVORY, letterSpacing: "0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{m.value}</div>
+                <div style={{ fontSize: 11, color: m.color || "rgba(255,255,255,0.4)", fontFamily: MONO, marginTop: 6, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{m.sub}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
         {/* OPERATOR ROW — activité récente (gauche) + actions + top (droite) */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.5fr) minmax(0, 1fr)", gap: 16, marginBottom: 24, animation: "cF 0.4s ease 0.2s both" }} className="op-row">
@@ -747,17 +787,39 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             <div>
               {recentActivity.length === 0 ? (
                 <div style={{ padding: "32px 20px", textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Aucune activité dans les dernières 48h.</div>
-              ) : (
-                recentActivity.map((ev, i) => (
-                  <div key={i} style={{ padding: "11px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: i < recentActivity.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none", transition: "background 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.015)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: ev.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 9, fontFamily: MONO, letterSpacing: "1px", color: "rgba(255,255,255,0.4)", width: 56, textTransform: "uppercase", fontWeight: 700 }}>{ev.type}</span>
-                    <span style={{ flex: 1, fontSize: 13, color: "#fff", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.label}</span>
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{ev.detail}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,255,255,0.3)", width: 38, textAlign: "right", flexShrink: 0 }}>{rel(ev.ts)}</span>
-                  </div>
-                ))
-              )}
+              ) : (() => {
+                // Group by day: today / yesterday / older
+                const todayStr = new Date().toISOString().split("T")[0];
+                const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+                const groups = {};
+                recentActivity.forEach(ev => {
+                  const d = new Date(ev.ts).toISOString().split("T")[0];
+                  if (!groups[d]) groups[d] = [];
+                  groups[d].push(ev);
+                });
+                const sortedKeys = Object.keys(groups).sort().reverse();
+                return sortedKeys.map((dKey, gi) => {
+                  const label = dKey === todayStr ? "Aujourd'hui" : dKey === yesterdayStr ? "Hier" : new Date(dKey).toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "short" });
+                  const evs = groups[dKey];
+                  return (
+                    <div key={dKey}>
+                      <div style={{ padding: "10px 20px", borderTop: gi > 0 ? "1px solid rgba(255,255,255,0.03)" : "none", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.012)" }}>
+                        <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: dKey === todayStr ? G : "rgba(255,255,255,0.4)" }}>{label}</span>
+                        <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{evs.length}</span>
+                      </div>
+                      {evs.map((ev, i) => (
+                        <div key={i} style={{ padding: "11px 20px", display: "flex", alignItems: "center", gap: 12, borderTop: "1px solid rgba(255,255,255,0.025)", transition: "background 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.015)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: ev.color, flexShrink: 0 }} />
+                          <span style={{ fontSize: 9, fontFamily: MONO, letterSpacing: "1px", color: "rgba(255,255,255,0.4)", width: 56, textTransform: "uppercase", fontWeight: 700 }}>{ev.type}</span>
+                          <span style={{ flex: 1, fontSize: 13, color: "#fff", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.label}</span>
+                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{ev.detail}</span>
+                          <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,255,255,0.3)", width: 38, textAlign: "right", flexShrink: 0 }}>{rel(ev.ts)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
 
@@ -777,8 +839,11 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
               ) : (
                 actionItems.map((a, i) => (
                   <button key={i} onClick={() => { haptic.selection(); setDetailView(a.target); }} style={{ width: "100%", padding: "12px 20px", background: "transparent", border: "none", display: "flex", alignItems: "center", gap: 12, borderBottom: i < actionItems.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", color: "inherit", transition: "background 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: a.color, boxShadow: `0 0 8px ${a.color}aa`, flexShrink: 0 }} />
-                    <span style={{ flex: 1, fontSize: 12, color: "#fff", fontWeight: 500 }}>{a.label}</span>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: a.color, boxShadow: `0 0 8px ${a.color}aa`, flexShrink: 0, marginTop: 4 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, color: "#fff", fontWeight: 500 }}>{a.label}</div>
+                      {a.names && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 3, fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.names}</div>}
+                    </div>
                     <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: a.color, fontVariantNumeric: "tabular-nums" }}>{a.count}</span>
                     <Ic name="arrow-right" size={11} color="rgba(255,255,255,0.25)" />
                   </button>
