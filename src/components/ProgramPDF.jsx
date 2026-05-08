@@ -88,7 +88,7 @@ export default function ProgramPDFButton({ client, programme }) {
       onMouseEnter={e => e.currentTarget.style.background = 'rgba(2,209,186,0.18)'}
       onMouseLeave={e => e.currentTarget.style.background = 'rgba(2,209,186,0.1)'}
     >
-      📄 {t('ppdf.btn_export')}
+      {t('ppdf.btn_export')}
     </button>
   );
 }

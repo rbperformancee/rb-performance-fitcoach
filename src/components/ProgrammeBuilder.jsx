@@ -634,7 +634,7 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
       </div>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: 6, marginTop: 6 }}>
         <TextField label="Groupe" value={ex.group} onChange={(v) => update("group", v)} placeholder="A1, A2…" />
-        <TextField label="🎥 Vidéo URL" value={ex.vidUrl} onChange={(v) => update("vidUrl", v)} placeholder="Auto-rempli si tu choisis depuis la liste" />
+        <TextField label="Vidéo URL" value={ex.vidUrl} onChange={(v) => update("vidUrl", v)} placeholder="Auto-rempli si tu choisis depuis la liste" />
       </div>
 
       {/* Indicateur source vidéo + CTA remplacer si fallback externe */}
@@ -1085,7 +1085,7 @@ function AnalyticsPanel({ programme }) {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Suggestions</div>
           {alerts.map((a, i) => (
             <div key={i} style={{ padding: 10, marginBottom: 6, background: a.level === "warn" ? "rgba(239,68,68,0.06)" : "rgba(2,209,186,0.04)", border: "1px solid " + (a.level === "warn" ? "rgba(239,68,68,0.2)" : "rgba(2,209,186,0.15)"), borderRadius: 8, fontSize: 11, color: a.level === "warn" ? "#ff8888" : "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
-              {a.level === "warn" ? "⚠ " : "💡 "}{a.msg}
+              <span style={{ marginRight: 6, fontWeight: 700, color: a.level === "warn" ? "#ff8888" : G }}>{a.level === "warn" ? "⚠" : "·"}</span>{a.msg}
             </div>
           ))}
         </>
@@ -1101,7 +1101,7 @@ function Preview({ programme, showAnalytics }) {
   if (showAnalytics) {
     return (
       <div style={{ background: "#050505", borderRadius: 16, padding: 24, height: "100%", overflowY: "auto" }}>
-        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 3, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 16 }}>📊 Analytics programme</div>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 3, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 16 }}>Analytics programme</div>
         <AnalyticsPanel programme={programme} />
       </div>
     );
@@ -1162,7 +1162,7 @@ function Preview({ programme, showAnalytics }) {
               })}
               {s.finisher ? (
                 <div style={{ marginTop: 10, padding: "8px 10px", background: "rgba(239,68,68,0.05)", borderLeft: "2px solid rgba(239,68,68,0.5)", borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
-                  🔥 <strong>Finisher :</strong> {s.finisher}
+                  <strong style={{ color: "rgba(239,68,68,0.85)" }}>Finisher</strong>{" — "}{s.finisher}
                 </div>
               ) : null}
             </div>
@@ -1960,7 +1960,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             >Aperçu</button>
             <button type="button" onClick={() => setShowAnalytics(true)}
               style={{ padding: "6px 14px", borderRadius: 100, border: "none", background: showAnalytics ? G : "transparent", color: showAnalytics ? "#000" : "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}
-            >📊 Analytics</button>
+            >Analytics</button>
           </div>
           <Preview programme={programme} showAnalytics={showAnalytics} />
         </div>
