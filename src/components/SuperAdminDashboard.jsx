@@ -585,9 +585,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
       {/* ═══════ FLOATING PILL — quick actions ═══════ */}
       <nav style={{ position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0, background: "rgba(15,15,15,0.78)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 100, padding: 5, zIndex: 100, WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)", boxShadow: "0 16px 48px rgba(0,0,0,0.5)" }}>
         {[
-          { id: "refresh", icon: "refresh", color: refreshing ? BLUE : "rgba(255,255,255,0.6)", onClick: () => { haptic.selection(); loadData(true); }, title: "Refresh", active: refreshing, activeBg: BLUE_DIM },
           { id: "coach", icon: "users", color: G, onClick: () => { haptic.medium(); onSwitchToCoach?.(); }, title: "Vue coach", hoverBg: "rgba(2,209,186,0.1)" },
-          { id: "exit", icon: "x", color: "rgba(255,255,255,0.45)", onClick: () => { haptic.medium(); onExit?.(); }, title: "Quitter", hoverBg: "rgba(239,68,68,0.08)" },
         ].map((b) => (
           <button
             key={b.id}
