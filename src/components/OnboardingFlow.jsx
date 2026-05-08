@@ -171,6 +171,9 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [bookedSlot, setBookedSlot] = useState(null);
+  // Mode application : qualification investissement avant soumission.
+  // Filtre les leads qui pensent que c'est gratuit. null = pas répondu, 'yes' = OK, 'no' = bloqué.
+  const [ackInvest, setAckInvest] = useState(null);
 
   const [form, setForm] = useState(() => {
     const empty = {
@@ -741,10 +744,65 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
             ))}
           </div>
 
+          {/* Qualification investissement — filtre les leads qui pensent que c'est gratuit */}
+          <div style={{ marginTop: 32, marginBottom: 24, padding: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)", lineHeight: 1.6, marginBottom: 14 }}>
+              Cet accompagnement représente un investissement sérieux (gamme 200-400€/mois selon profil).<br/>
+              Es-tu prêt à investir dans cette gamme pour atteindre tes objectifs ?
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setAckInvest("yes")}
+                style={{
+                  padding: "12px 16px",
+                  background: ackInvest === "yes" ? GREEN : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${ackInvest === "yes" ? GREEN : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 100,
+                  color: ackInvest === "yes" ? "#000" : "#fff",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: "0.3px",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  fontFamily: "-apple-system,Inter,sans-serif",
+                  textAlign: "left",
+                }}
+              >
+                Oui, je suis prêt à investir
+              </button>
+              <button
+                type="button"
+                onClick={() => setAckInvest("no")}
+                style={{
+                  padding: "12px 16px",
+                  background: ackInvest === "no" ? "rgba(255,87,87,0.15)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${ackInvest === "no" ? "rgba(255,87,87,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 100,
+                  color: ackInvest === "no" ? "rgba(255,200,200,0.95)" : "#fff",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: "0.3px",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  fontFamily: "-apple-system,Inter,sans-serif",
+                  textAlign: "left",
+                }}
+              >
+                Non, je cherche un accompagnement gratuit ou moins cher
+              </button>
+            </div>
+            {ackInvest === "no" && (
+              <div style={{ marginTop: 14, padding: 12, background: "rgba(255,87,87,0.08)", border: "1px solid rgba(255,87,87,0.2)", borderRadius: 8, fontSize: 12, color: "rgba(255,200,200,0.9)", lineHeight: 1.5 }}>
+                Pas de souci — cet accompagnement n'est pas pour toi en l'état. Reviens quand tu seras prêt à investir dans ta transformation. Aucune candidature ne sera enregistrée.
+              </div>
+            )}
+          </div>
+
           <button
-            style={S.btn(selected.length === 3)}
+            style={S.btn(selected.length === 3 && ackInvest === "yes")}
             onClick={nextStep}
-            disabled={saving || selected.length !== 3}
+            disabled={saving || selected.length !== 3 || ackInvest !== "yes"}
           >
             {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Envoi…</span>) : "Envoyer ma candidature →"}
           </button>
