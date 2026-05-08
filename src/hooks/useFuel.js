@@ -65,6 +65,7 @@ export function useFuel(clientId, dateOverride) {
       glucides: item.glucides,
       lipides: item.lipides,
       quantite_g: item.quantite_g,
+      unit: item.unit || "g",
     };
     const { data, error } = await supabase.from("nutrition_logs").insert(payload).select().single();
     if (error) {
@@ -90,6 +91,7 @@ export function useFuel(clientId, dateOverride) {
         glucides: updates.glucides,
         lipides: updates.lipides,
         quantite_g: updates.quantite_g,
+        ...(updates.unit ? { unit: updates.unit } : {}),
       })
       .eq("id", id)
       .select()

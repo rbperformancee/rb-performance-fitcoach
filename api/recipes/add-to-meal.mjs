@@ -123,7 +123,8 @@ export default async function handler(req, res) {
       proteines: Number(((i.proteines || 0) * finalRatio).toFixed(2)),
       glucides: Number(((i.glucides || 0) * finalRatio).toFixed(2)),
       lipides: Number(((i.lipides || 0) * finalRatio).toFixed(2)),
-      quantite_g: i.unit === 'g' ? Number((overrideQty * ratio).toFixed(1)) : null,
+      quantite_g: i.unit === 'g' || i.unit === 'ml' ? Number((overrideQty * ratio).toFixed(1)) : null,
+      unit: i.unit === 'ml' ? 'ml' : 'g',
     };
   }).filter((r) => r.calories > 0); // skip ingredients à 0g
 

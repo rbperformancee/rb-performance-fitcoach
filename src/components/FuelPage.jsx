@@ -494,6 +494,7 @@ export default function FuelPage({ client, appData }) {
       glucides: parseFloat(editGluc) || 0,
       lipides: parseFloat(editLip) || 0,
       quantite_g: parseInt(editQuantite) || editingFood.quantite_g,
+      unit: editingFood.unit || "g",
     });
     setEditingFood(null);
     if (navigator.vibrate) navigator.vibrate(30);
@@ -533,6 +534,7 @@ export default function FuelPage({ client, appData }) {
       glucides: parseFloat((selectedFood.glucides * factor).toFixed(1)),
       lipides: parseFloat((selectedFood.lipides * factor).toFixed(1)),
       quantite_g: qty,
+      unit: selectedFood.unit || "g",
     });
     setShowAdd(false);
     setQuery("");
@@ -788,6 +790,7 @@ export default function FuelPage({ client, appData }) {
       glucides: parseFloat((scannedFood.glucides * factor).toFixed(1)),
       lipides: parseFloat((scannedFood.lipides * factor).toFixed(1)),
       quantite_g: scanQuantite,
+      unit: scannedFood.unit || "g",
     });
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
     setShowScan(false);
@@ -1011,7 +1014,7 @@ export default function FuelPage({ client, appData }) {
                           <div style={{ flex: 1, paddingLeft: 4 }}>
                             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 500, marginBottom: 3 }}>{log.aliment}</div>
                             <div style={{ display: "flex", gap: 8 }}>
-                              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{log.quantite_g}g</span>
+                              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{log.quantite_g}{log.unit || "g"}</span>
                               <span style={{ fontSize: 10, color: GREEN + "99" }}>P {log.proteines}g</span>
                               <span style={{ fontSize: 10, color: ORANGE + "99" }}>G {log.glucides}g</span>
                               <span style={{ fontSize: 10, color: BLUE + "99" }}>L {log.lipides}g</span>
@@ -1218,7 +1221,7 @@ export default function FuelPage({ client, appData }) {
                         <button onClick={() => setQuantite(Math.max(10, quantite - 10))} style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                         <div style={{ flex: 1, display: "flex", alignItems: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, overflow: "hidden" }}>
                           <input type="number" inputMode="numeric" value={quantite} onChange={e => setQuantite(parseInt(e.target.value) || 100)} style={{ flex: 1, textAlign: "center", padding: "12px", background: "transparent", border: "none", color: "#fff", fontSize: 20, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }} />
-                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", paddingRight: 14 }}>g</span>
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", paddingRight: 14 }}>{selectedFood?.unit || "g"}</span>
                         </div>
                         <button onClick={() => setQuantite(quantite + 10)} style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                       </div>
@@ -1676,13 +1679,13 @@ export default function FuelPage({ client, appData }) {
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>{t("fuel.edit_quantity_hint")}</div>
               </div>
               <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-                {[50, 100, 150, 200, 250, 300].map(q => (
+                {(editingFood?.unit === "ml" ? [150, 200, 250, 330, 500, 750] : [50, 100, 150, 200, 250, 300]).map(q => (
                   <button
                     key={q}
                     onClick={() => handleEditQuantiteChange(q)}
                     style={{ flexShrink: 0, padding: "7px 12px", borderRadius: 100, border: `1px solid ${editQuantite === q ? ORANGE : "rgba(255,255,255,0.08)"}`, background: editQuantite === q ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: editQuantite === q ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
                   >
-                    {q}g
+                    {q}{editingFood?.unit || "g"}
                   </button>
                 ))}
               </div>
@@ -1698,7 +1701,7 @@ export default function FuelPage({ client, appData }) {
                     onChange={e => handleEditQuantiteChange(e.target.value)}
                     style={{ flex: 1, textAlign: "center", padding: "10px", background: "transparent", border: "none", color: "#fff", fontSize: 18, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", minWidth: 0 }}
                   />
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingRight: 12 }}>g</span>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", paddingRight: 12 }}>{editingFood?.unit || "g"}</span>
                 </div>
                 <button
                   onClick={() => handleEditQuantiteChange(editQuantite + 10)}
