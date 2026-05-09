@@ -30,6 +30,7 @@ import BulkInviteCSV from "./coach/BulkInviteCSV";
 import HelpMigrationGuide from "./coach/HelpMigrationGuide";
 import HabitsManager from "./coach/HabitsManager";
 import ActivityFeedToday from "./coach/ActivityFeedToday";
+import HabitsHeatmap7d from "./coach/HabitsHeatmap7d";
 import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
@@ -2865,6 +2866,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 </>
               )}
             </div>
+            {/* Heatmap 7 jours par habit */}
+            <HabitsHeatmap7d clientId={client.id} />
           </div>
 
           {/* BILANS HEBDOMADAIRES — données structurées du client (migration 057) */}
