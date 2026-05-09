@@ -13,6 +13,25 @@
 
 BEGIN;
 
+-- Legacy : une table weekly_checkins partielle existait sur certains
+-- environnements (créée à la main via Studio dans un sprint précédent).
+-- Schema différent du nôtre → on la drop si vide, sinon on s'arrête net.
+DO $$
+DECLARE
+  cnt int;
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'weekly_checkins'
+  ) THEN
+    EXECUTE 'SELECT count(*) FROM public.weekly_checkins' INTO cnt;
+    IF cnt > 0 THEN
+      RAISE EXCEPTION 'weekly_checkins existe avec % lignes — migration manuelle requise', cnt;
+    END IF;
+    EXECUTE 'DROP TABLE public.weekly_checkins CASCADE';
+  END IF;
+END$$;
+
 CREATE TABLE IF NOT EXISTS public.weekly_checkins (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
