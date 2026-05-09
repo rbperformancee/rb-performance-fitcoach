@@ -31,6 +31,8 @@ import HelpMigrationGuide from "./coach/HelpMigrationGuide";
 import HabitsManager from "./coach/HabitsManager";
 import ActivityFeedToday from "./coach/ActivityFeedToday";
 import HabitsHeatmap7d from "./coach/HabitsHeatmap7d";
+import EmptyStateNewCoach from "./coach/EmptyStateNewCoach";
+import { computeClientRisk } from "../lib/clientRisk";
 import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
@@ -4560,6 +4562,17 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       if (filter === "active") return c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7;
       if (filter === "noprog") return !c.programmes?.some(p => p.is_active);
       if (filter === "inactive") return c._inactive && c.programmes?.some(p => p.is_active);
+      if (filter === "atrisk") {
+        // Risk: no activity > 7d AND has active programme (le client a abandonné en cours)
+        if (!c.programmes?.some(p => p.is_active)) return false;
+        if (!c._lastActivity) return false;
+        const days = Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000);
+        return days >= 7;
+      }
+      if (filter?.startsWith("tag:")) {
+        const wantTag = filter.slice(4).toLowerCase();
+        return (c.tags || []).some((t) => String(t).toLowerCase() === wantTag);
+      }
       return true;
     })
     .sort((a, b) => {
@@ -5234,6 +5247,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             </div>
           </div>
 
+          {/* ========== EMPTY STATE NOUVEAU COACH (0 clients) ========== */}
+          {clients.length === 0 && !loading && (
+            <EmptyStateNewCoach
+              coachFirstName={coachData?.full_name?.split(" ")[0]}
+              onInvite={() => setShowInvite(true)}
+              onBuilder={() => setActiveTab("programmes")}
+              onMigrate={() => setShowHelpMigration(true)}
+            />
+          )}
+
           {/* ========== ACTIVITY FEED LIVE (events clients 24h) ========== */}
           {clients.length > 0 && (
             <ActivityFeedToday coachId={coachId} clientsById={clientsById} />
@@ -5511,10 +5534,35 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 <input className="inp-focus" placeholder={t("coach.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: "100%", padding: "12px 14px 12px 38px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, color: "#fff", fontFamily: "inherit", fontSize: 16, outline: "none", boxSizing: "border-box" }} />
               </div>
               <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
-                {[["all", t("coach.filter_all"), total], ["active", t("coach.filter_active"), activeWeek], ["noprog", t("coach.filter_noprog"), total - withProg], ["inactive", t("coach.filter_alerts"), inactiveAlerts]].map(([k, l, n]) => {
-                  const on = filter === k;
-                  return <button key={k} onClick={() => setFilter(k)} style={{ padding: "7px 12px", fontSize: 11, fontWeight: 700, background: on ? G_DIM : "transparent", border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.06)"}`, borderRadius: 100, color: on ? G : "rgba(255,255,255,0.4)", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit", flexShrink: 0 }}>{l} <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, opacity: 0.7 }}>{n}</span></button>;
-                })}
+                {(() => {
+                  // À-risque : programme actif + dernière activité > 7j
+                  const atRiskCount = clients.filter((c) => {
+                    if (!c.programmes?.some((p) => p.is_active)) return false;
+                    if (!c._lastActivity) return false;
+                    return Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) >= 7;
+                  }).length;
+                  // Tags uniques (max 5 plus fréquents)
+                  const tagCounts = new Map();
+                  clients.forEach((c) => (c.tags || []).forEach((tag) => {
+                    if (!tag) return;
+                    const k = String(tag).toLowerCase();
+                    tagCounts.set(k, (tagCounts.get(k) || 0) + 1);
+                  }));
+                  const topTags = Array.from(tagCounts.entries())
+                    .sort((a, b) => b[1] - a[1]).slice(0, 5);
+                  const items = [
+                    ["all",      t("coach.filter_all"),      total],
+                    ["active",   t("coach.filter_active"),   activeWeek],
+                    ["noprog",   t("coach.filter_noprog"),   total - withProg],
+                    ["inactive", t("coach.filter_alerts"),   inactiveAlerts],
+                    ...(atRiskCount > 0 ? [["atrisk", "À risque", atRiskCount]] : []),
+                    ...topTags.map(([tag, n]) => [`tag:${tag}`, `#${tag}`, n]),
+                  ];
+                  return items.map(([k, l, n]) => {
+                    const on = filter === k;
+                    return <button key={k} onClick={() => setFilter(k)} style={{ padding: "7px 12px", fontSize: 11, fontWeight: 700, background: on ? G_DIM : "transparent", border: `1px solid ${on ? G_BORDER : "rgba(255,255,255,0.06)"}`, borderRadius: 100, color: on ? G : "rgba(255,255,255,0.4)", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit", flexShrink: 0 }}>{l} <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, opacity: 0.7 }}>{n}</span></button>;
+                  });
+                })()}
               </div>
             </div>
 
@@ -5548,6 +5596,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   const dStr = daysAgo(c._lastActivity);
                   const inDays = c._lastActivity ? Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) : null;
                   const hasProg = c.programmes?.some((p) => p.is_active);
+                  const risk = computeClientRisk({ client: c, hasActiveProgramme: hasProg });
 
                   return (
                     <div
@@ -5556,13 +5605,27 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                       style={{
                         padding: "18px 20px",
                         background: "rgba(255,255,255,0.025)",
-                        border: c._inactive && hasProg ? "1px solid rgba(255,107,107,0.2)" : "1px solid rgba(255,255,255,0.06)",
+                        border: risk.level === "high" ? "1px solid rgba(239,68,68,0.35)" : c._inactive && hasProg ? "1px solid rgba(255,107,107,0.2)" : "1px solid rgba(255,255,255,0.06)",
                         borderRadius: 18,
                         cursor: "pointer",
                         transition: "all 0.2s",
                         animation: `fadeUp ${0.15 + i * 0.03}s ease both`,
                       }}
                     >
+                      {risk.level === "high" && (
+                        <div style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "2px 8px",
+                          background: "rgba(239,68,68,0.15)",
+                          border: "1px solid rgba(239,68,68,0.35)",
+                          borderRadius: 6,
+                          fontSize: 9, fontWeight: 800, letterSpacing: "1px", textTransform: "uppercase",
+                          color: "#ef4444",
+                          marginBottom: 8,
+                        }}>
+                          ⚠ À risque · {risk.reasons[0]}
+                        </div>
+                      )}
                       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
                         {/* Avatar */}
                         <div style={{ position: "relative", flexShrink: 0 }}>
