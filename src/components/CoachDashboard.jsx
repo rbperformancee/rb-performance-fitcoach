@@ -32,6 +32,8 @@ import HabitsManager from "./coach/HabitsManager";
 import ActivityFeedToday from "./coach/ActivityFeedToday";
 import HabitsHeatmap7d from "./coach/HabitsHeatmap7d";
 import EmptyStateNewCoach from "./coach/EmptyStateNewCoach";
+import CelebrationModal, { isMilestoneCelebrated, markMilestoneCelebrated } from "./coach/CelebrationModal";
+import BulkAssignProgramme from "./coach/BulkAssignProgramme";
 import { computeClientRisk } from "../lib/clientRisk";
 import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
@@ -3955,6 +3957,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showInvite, setShowInvite] = useState(false);
   const [showBulkInvite, setShowBulkInvite] = useState(false);
   const [showHelpMigration, setShowHelpMigration] = useState(false);
+  const [showBulkAssign, setShowBulkAssign] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
@@ -3984,6 +3987,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const isFoundingCoach = coachData?.founding_coach === true || coachData?.subscription_plan === "founding";
   const hasSentinelAccess = isFoundingCoach || SENTINEL_PLANS.includes(coachData?.subscription_plan);
   const [activeTab, setActiveTab] = useState("overview");
+  const [celebMilestone, setCelebMilestone] = useState(null);
   // Map clientId → name pour ActivityFeedToday (évite re-fetch des noms)
   const clientsById = React.useMemo(() => {
     const m = new Map();
@@ -4154,6 +4158,33 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   useEffect(() => { loadClients(); }, []);
+
+  // Détection milestones (celebration confetti) — flags localStorage par coach.
+  // Pas de polling : juste reactif au state qui change après loadClients.
+  useEffect(() => {
+    if (!coachId || loading || celebMilestone) return;
+    // 1er client (au moins 1 dans clients[])
+    if (clients.length >= 1 && !isMilestoneCelebrated(coachId, "first_client")) {
+      markMilestoneCelebrated(coachId, "first_client");
+      setCelebMilestone("first_client");
+      return;
+    }
+    // 1ère séance loggée (au moins 1 client avec _logs.length > 0)
+    if (clients.some((c) => Array.isArray(c._logs) && c._logs.length > 0) && !isMilestoneCelebrated(coachId, "first_session")) {
+      markMilestoneCelebrated(coachId, "first_session");
+      setCelebMilestone("first_session");
+      return;
+    }
+  }, [coachId, clients, loading, celebMilestone]);
+
+  // Detection 1er checkin reçu — via engagementSummary.checkinsThisWeek > 0
+  useEffect(() => {
+    if (!coachId || celebMilestone) return;
+    if (engagementSummary.checkinsThisWeek >= 1 && !isMilestoneCelebrated(coachId, "first_checkin")) {
+      markMilestoneCelebrated(coachId, "first_checkin");
+      setCelebMilestone("first_checkin");
+    }
+  }, [coachId, engagementSummary.checkinsThisWeek, celebMilestone]);
 
   // Engagement summary : bilans hebdo soumis + habitudes du jour (toutes clients)
   useEffect(() => {
@@ -5083,6 +5114,22 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         onOpenDataExport={() => { setMonCompteInitialTab("donnees"); setShowMonCompte(true); }}
       />
 
+      {celebMilestone && (
+        <CelebrationModal
+          milestone={celebMilestone}
+          onClose={() => setCelebMilestone(null)}
+          accent={accent}
+        />
+      )}
+
+      <BulkAssignProgramme
+        open={showBulkAssign}
+        onClose={() => setShowBulkAssign(false)}
+        clients={clients}
+        coachId={coachId}
+        onDone={() => loadClients()}
+      />
+
       {showSettings && (
         <Settings
           coachData={coachData}
@@ -5506,6 +5553,18 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                   </h1>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
+                  {clients.length >= 2 && (
+                    <button
+                      onClick={() => { haptic.selection(); setShowBulkAssign(true); }}
+                      title="Bulk · assigner programme"
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, background: "rgba(255,255,255,.04)", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 100, color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .15s" }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    </button>
+                  )}
                   <button onClick={() => { haptic.selection(); setShowInvite(true); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, background: "rgba(255,255,255,.04)", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 100, color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .15s" }}>
                     <Icon name="message" size={14} color="rgba(255,255,255,.75)" />
                   </button>
