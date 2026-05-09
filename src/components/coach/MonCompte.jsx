@@ -275,7 +275,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
             <div style={card}>
               <div style={{ fontSize: 10, color: `${G}88`, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>{t("mc.subscription_current")}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-1px" }}>
-                {coachData?.plan === "founding" ? t("mc.plan_founding") : coachData?.plan === "starter" ? t("mc.plan_starter") : coachData?.plan === "elite" ? t("mc.plan_elite") : t("mc.plan_pro")}
+                {(coachData?.subscription_plan || coachData?.plan) === "founding" ? t("mc.plan_founding") : (coachData?.subscription_plan || coachData?.plan) === "starter" ? t("mc.plan_starter") : (coachData?.subscription_plan || coachData?.plan) === "elite" ? t("mc.plan_elite") : t("mc.plan_pro")}
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
                 {coachData?.locked_price ? fillTpl(t("mc.locked_price"), { price: coachData.locked_price }) : ""}

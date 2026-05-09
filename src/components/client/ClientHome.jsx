@@ -37,10 +37,10 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
             .eq("client_id", client.id)
             .order("started_at", { ascending: false })
             .limit(5),
-          supabase.from("client_measurements")
-            .select("weight_kg, measured_at")
+          supabase.from("weight_logs")
+            .select("weight, date")
             .eq("client_id", client.id)
-            .order("measured_at", { ascending: false })
+            .order("date", { ascending: false })
             .limit(30),
         ]);
 

@@ -27,12 +27,13 @@ export default function ClientSuivi({ client, accent }) {
 
   async function loadMeasurements() {
     const { data } = await supabase
-      .from("client_measurements")
-      .select("id, weight_kg, measured_at")
+      .from("weight_logs")
+      .select("id, weight, date")
       .eq("client_id", client.id)
-      .order("measured_at", { ascending: true })
+      .order("date", { ascending: true })
       .limit(50);
-    setMeasurements(data || []);
+    // Adapte au format historique attendu : weight → weight_kg, date → measured_at
+    setMeasurements((data || []).map(r => ({ id: r.id, weight_kg: r.weight, measured_at: r.date })));
   }
 
   async function saveWeight() {
@@ -49,8 +50,8 @@ export default function ClientSuivi({ client, accent }) {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("client_measurements")
-        .insert({ client_id: client.id, weight_kg: w });
+        .from("weight_logs")
+        .insert({ client_id: client.id, weight: w, date: new Date().toISOString().slice(0,10) });
       if (error) throw error;
       setWeight("");
       setSuccess(true);

@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
   // (l'app frontend bloque deja en mode demo via isClientDemoMode(), mais
   // si quelqu'un bypasse ou si la prod RLS laisse passer, on purge ici).
   const tablesToReset = [
-    'client_measurements',
+    'weight_logs',
     'sessions',
     'session_sets',
     'client_badges',
@@ -51,17 +51,17 @@ module.exports = async (req, res) => {
     stats[table] = { deleted: count || 0, error: error?.message || null };
   }
 
-  // 2. Re-seed les pesees (30 jours, perte progressive)
+  // 2. Re-seed les pesees (30 jours, perte progressive) — schema réel weight_logs
   const measurements = [];
   for (let i = 1; i <= 30; i++) {
     const weight = 78.2 - (i * 0.1) + (Math.random() * 0.8 - 0.4);
     measurements.push({
       client_id: DEMO_CLIENT_ID,
-      weight_kg: Math.round(weight * 10) / 10,
-      created_at: new Date(Date.now() - (30 - i) * 86400000).toISOString(),
+      weight: Math.round(weight * 10) / 10,
+      date: new Date(Date.now() - (30 - i) * 86400000).toISOString().slice(0, 10),
     });
   }
-  const { error: mErr } = await supabase.from('client_measurements').insert(measurements);
+  const { error: mErr } = await supabase.from('weight_logs').upsert(measurements, { onConflict: 'client_id,date' });
   stats.measurements_inserted = { count: measurements.length, error: mErr?.message || null };
 
   // 3. Re-seed sessions (12 sur 30 jours)
