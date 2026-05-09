@@ -14,6 +14,7 @@ const FuelPage = lazy(() => import("./components/FuelPage"));
 const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
 const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
+const BaselineMaxesForm = lazy(() => import("./components/client/BaselineMaxesForm"));
 const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
 const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
@@ -1046,6 +1047,24 @@ function AppInner() {
   // est terminée — sinon l'écran clignote pour les coachs au cold-start.
   if (!isClientDemo && user && userKind === "client" && !authLoading && client && client.onboarding_done !== true) {
     return <ClientFirstLoginFlow client={client} user={user} onComplete={() => window.location.reload()} />;
+  }
+
+  // Baseline 1RM (squat / bench / deadlift) au 1er login après onboarding —
+  // utile pour les clients qui migrent depuis Trainerize/Hexfit (le coach a
+  // besoin d'une charge de départ pour calibrer le programme), et pour
+  // amorcer la détection PR future. Posé une fois et flagué via
+  // clients.baseline_form_shown_at (migration 055).
+  if (!isClientDemo && user && userKind === "client" && !authLoading
+      && client && client.onboarding_done === true && !client.baseline_form_shown_at) {
+    return (
+      <Suspense fallback={null}>
+        <BaselineMaxesForm
+          open={true}
+          clientId={client.id}
+          onDone={() => window.location.reload()}
+        />
+      </Suspense>
+    );
   }
 
   // ── Coach → Dashboard admin ──
