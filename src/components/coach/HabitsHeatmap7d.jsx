@@ -53,6 +53,29 @@ export default function HabitsHeatmap7d({ clientId }) {
 
   if (loading || habits.length === 0) return null;
 
+  // Streak par habit (jours consécutifs jusqu'à aujourd'hui ou hier)
+  function computeStreak(datesSet) {
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+    let streak = 0;
+    let cur = new Date(today);
+    if (!datesSet.has(todayStr)) {
+      if (!datesSet.has(yesterdayStr)) return 0;
+      cur = yesterday;
+    }
+    while (true) {
+      const s = cur.toISOString().slice(0, 10);
+      if (datesSet.has(s)) {
+        streak++;
+        cur.setDate(cur.getDate() - 1);
+      } else break;
+    }
+    return streak;
+  }
+
   // 7 derniers jours du plus ancien (gauche) au plus récent (droite, today)
   const days = [];
   for (let i = 6; i >= 0; i--) {
@@ -112,6 +135,7 @@ export default function HabitsHeatmap7d({ clientId }) {
         {habits.map((h) => {
           const set = logsByHabit[h.id] || new Set();
           const c = h.color || G;
+          const streak = computeStreak(set);
           return (
             <div key={h.id} style={{ display: "grid", gridTemplateColumns: "minmax(110px, 1fr) repeat(7, 22px)", gap: 4, marginBottom: 4, alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
@@ -124,7 +148,17 @@ export default function HabitsHeatmap7d({ clientId }) {
                     flexShrink: 0,
                   }}>{h.icon}</span>
                 )}
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{h.name}</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>{h.name}</span>
+                {streak >= 2 && (
+                  <span style={{
+                    fontSize: 8, fontWeight: 800, letterSpacing: "0.3px",
+                    color: streak >= 7 ? "#fbbf24" : c,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    flexShrink: 0,
+                  }}>
+                    {streak}j
+                  </span>
+                )}
               </div>
               {days.map((d) => {
                 const checked = set.has(d.date);

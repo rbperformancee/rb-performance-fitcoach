@@ -14,9 +14,37 @@ const G = "#02d1ba";
  *
  * Affiché si le client a au moins 1 habitude active. Sinon retourne null.
  */
+// Calcule le streak actuel (jours consécutifs cochés depuis aujourd'hui ou
+// hier en remontant). Si aujourd'hui n'est pas coché, on regarde si hier
+// l'est — l'utilisateur n'a pas encore coché aujourd'hui mais le streak
+// reste vivant. Si hier ni aujourd'hui ne sont cochés, streak = 0.
+function computeStreak(datesSet) {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+  let streak = 0;
+  // Point de départ : aujourd'hui si coché, sinon hier (laisser le bénéfice du doute)
+  let cur = new Date(today);
+  if (!datesSet.has(todayStr)) {
+    if (!datesSet.has(yesterdayStr)) return 0;
+    cur = yesterday;
+  }
+  while (true) {
+    const s = cur.toISOString().slice(0, 10);
+    if (datesSet.has(s)) {
+      streak++;
+      cur.setDate(cur.getDate() - 1);
+    } else break;
+  }
+  return streak;
+}
+
 export default function HabitsCard({ clientId }) {
   const [habits, setHabits] = useState([]);
   const [todayLogs, setTodayLogs] = useState({}); // { habit_id: log_id }
+  const [streaks, setStreaks] = useState({}); // habit_id → streak count
   const [loading, setLoading] = useState(true);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -25,7 +53,10 @@ export default function HabitsCard({ clientId }) {
     if (!clientId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: hs }, { data: lgs }] = await Promise.all([
+      const since = new Date();
+      since.setDate(since.getDate() - 60); // 60j max streak window
+      const sinceStr = since.toISOString().slice(0, 10);
+      const [{ data: hs }, { data: lgs }, { data: histLogs }] = await Promise.all([
         supabase.from("habits")
           .select("id, name, icon, color, ordre")
           .eq("client_id", clientId)
@@ -35,12 +66,27 @@ export default function HabitsCard({ clientId }) {
           .select("id, habit_id")
           .eq("client_id", clientId)
           .eq("date", today),
+        supabase.from("habit_logs")
+          .select("habit_id, date")
+          .eq("client_id", clientId)
+          .gte("date", sinceStr),
       ]);
       if (cancelled) return;
       setHabits(hs || []);
       const map = {};
       (lgs || []).forEach((l) => { map[l.habit_id] = l.id; });
       setTodayLogs(map);
+      // Calcule streak par habit
+      const datesByHabit = {};
+      (histLogs || []).forEach((l) => {
+        if (!datesByHabit[l.habit_id]) datesByHabit[l.habit_id] = new Set();
+        datesByHabit[l.habit_id].add(l.date);
+      });
+      const streakMap = {};
+      (hs || []).forEach((h) => {
+        streakMap[h.id] = computeStreak(datesByHabit[h.id] || new Set());
+      });
+      setStreaks(streakMap);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -57,6 +103,8 @@ export default function HabitsCard({ clientId }) {
       const { error } = await supabase.from("habit_logs").delete().eq("id", existingLogId);
       if (error) { toast.error("Erreur"); return; }
       setTodayLogs((m) => { const x = { ...m }; delete x[habit.id]; return x; });
+      // Streak peut chuter — recalc local optimiste : si yesterday = streak base, garder, sinon -1
+      setStreaks((s) => ({ ...s, [habit.id]: Math.max(0, (s[habit.id] || 0) - 1) }));
     } else {
       // Cocher
       haptic.medium();
@@ -67,6 +115,7 @@ export default function HabitsCard({ clientId }) {
       }).select("id").single();
       if (error) { toast.error("Erreur"); return; }
       setTodayLogs((m) => ({ ...m, [habit.id]: data.id }));
+      setStreaks((s) => ({ ...s, [habit.id]: (s[habit.id] || 0) + 1 }));
     }
   }
 
@@ -163,6 +212,22 @@ export default function HabitsCard({ clientId }) {
               }}>
                 {h.name}
               </div>
+              {/* Streak */}
+              {streaks[h.id] >= 2 && (
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 3,
+                  padding: "2px 7px",
+                  background: streaks[h.id] >= 7 ? "rgba(251,191,36,0.15)" : `${c}15`,
+                  border: `1px solid ${streaks[h.id] >= 7 ? "rgba(251,191,36,0.35)" : c + "30"}`,
+                  borderRadius: 6,
+                  fontSize: 9, fontWeight: 800, letterSpacing: "0.5px",
+                  color: streaks[h.id] >= 7 ? "#fbbf24" : c,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  flexShrink: 0,
+                }}>
+                  {streaks[h.id]}j
+                </div>
+              )}
             </button>
           );
         })}
