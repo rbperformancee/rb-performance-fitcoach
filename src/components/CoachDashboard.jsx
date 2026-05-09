@@ -29,6 +29,7 @@ import InviteClient from "./coach/InviteClient";
 import BulkInviteCSV from "./coach/BulkInviteCSV";
 import HelpMigrationGuide from "./coach/HelpMigrationGuide";
 import HabitsManager from "./coach/HabitsManager";
+import ActivityFeedToday from "./coach/ActivityFeedToday";
 import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
@@ -3978,6 +3979,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const isFoundingCoach = coachData?.founding_coach === true || coachData?.subscription_plan === "founding";
   const hasSentinelAccess = isFoundingCoach || SENTINEL_PLANS.includes(coachData?.subscription_plan);
   const [activeTab, setActiveTab] = useState("overview");
+  // Map clientId → name pour ActivityFeedToday (évite re-fetch des noms)
+  const clientsById = React.useMemo(() => {
+    const m = new Map();
+    clients.forEach((c) => m.set(c.id, c.full_name || c.email || "Client"));
+    return m;
+  }, [clients]);
   // Engagement metrics overview (migration 057+058) — bilans hebdo + habitudes
   const [engagementSummary, setEngagementSummary] = useState({
     checkinsThisWeek: 0,
@@ -5223,6 +5230,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               ))}
             </div>
           </div>
+
+          {/* ========== ACTIVITY FEED LIVE (events clients 24h) ========== */}
+          {clients.length > 0 && (
+            <ActivityFeedToday coachId={coachId} clientsById={clientsById} />
+          )}
 
           {/* ========== ENGAGEMENT (bilans hebdo + habits) ========== */}
           {clients.length > 0 && (
