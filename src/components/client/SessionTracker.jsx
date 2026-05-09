@@ -42,6 +42,9 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
   const [chrono, setChrono]   = useState(0);
   const [showRpe, setShowRpe] = useState(false);
   const [rpe, setRpe] = useState(7);
+  const [mood, setMood] = useState(null);
+  const [injury, setInjury] = useState("");
+  const [feedbackNote, setFeedbackNote] = useState("");
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
   const startedAt = useRef(Date.now());
@@ -124,7 +127,24 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
         rpe_moyen: rpe,
         sets_completes: completedSets,
         status: "completed",
+        mood: mood || null,
+        injury: injury.trim() || null,
+        feedback_note: feedbackNote.trim() || null,
       }).eq("id", sessionId);
+
+      // Mirror dans session_logs (table que le coach lit). Cf. comment 011.
+      try {
+        await supabase.from("session_logs").insert({
+          client_id: client.id,
+          session_name: programme?.programme_name || t("stk.session_default"),
+          programme_name: programme?.programme_name || null,
+          logged_at: new Date().toISOString(),
+          rpe,
+          mood: mood || null,
+          injury: injury.trim() || null,
+          feedback_note: feedbackNote.trim() || null,
+        });
+      } catch (e) { console.warn("[SessionTracker] session_logs mirror", e); }
     } catch (e) {
       console.warn("[SessionTracker] finish", e);
     }
@@ -157,35 +177,104 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
     );
   }
 
-  // ===== RPE FINAL =====
+  // ===== FEEDBACK FINAL (RPE + ressenti + blessure + note) =====
   if (showRpe) {
+    const MOODS = [
+      { id: "great", label: "Au top",     emoji: "✓✓" },
+      { id: "good",  label: "Bien",       emoji: "✓"  },
+      { id: "ok",    label: "Correct",    emoji: "—"  },
+      { id: "tough", label: "Dure",       emoji: "↓"  },
+      { id: "bad",   label: "Catastrophe", emoji: "✕" },
+    ];
     return (
       <div style={overlay}>
-        <div style={{ padding: 32, maxWidth: 380, textAlign: "center" }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 14 }}>{t("stk.rpe_final")}</div>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 8 }}>
+        <div style={{ padding: "28px 22px calc(env(safe-area-inset-bottom, 0px) + 22px)", maxWidth: 440, width: "100%", overflowY: "auto", maxHeight: "100vh" }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 12, textAlign: "center" }}>{t("stk.rpe_final")}</div>
+          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 6, textAlign: "center" }}>
             {t("stk.how_was_session")}
           </div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", marginBottom: 32 }}>{t("stk.rpe_scale")}</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 24, textAlign: "center" }}>{t("stk.rpe_scale")}</div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, marginBottom: 32 }}>
+          {/* RPE 1-10 */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 22 }}>
             {[1,2,3,4,5,6,7,8,9,10].map((n) => (
               <button
                 key={n}
                 onClick={() => setRpe(n)}
                 style={{
-                  padding: "16px 0",
+                  padding: "14px 0",
                   background: rpe === n ? accent : "rgba(255,255,255,.04)",
                   border: ".5px solid rgba(255,255,255,.08)",
                   borderRadius: 10,
                   color: rpe === n ? "#000" : "rgba(255,255,255,.65)",
                   fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 18, fontWeight: 600,
+                  fontSize: 16, fontWeight: 600,
                   cursor: "pointer", transition: "all .12s",
                 }}
               >{n}</button>
             ))}
           </div>
+
+          {/* MOOD */}
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.35)", marginBottom: 10 }}>Ressenti</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 22 }}>
+            {MOODS.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMood(mood === m.id ? null : m.id)}
+                style={{
+                  padding: "10px 4px",
+                  background: mood === m.id ? `${accent}20` : "rgba(255,255,255,.03)",
+                  border: `.5px solid ${mood === m.id ? accent + "60" : "rgba(255,255,255,.06)"}`,
+                  borderRadius: 10,
+                  color: mood === m.id ? accent : "rgba(255,255,255,.55)",
+                  fontFamily: "inherit",
+                  fontSize: 9, fontWeight: 700,
+                  cursor: "pointer", transition: "all .12s",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                }}
+              >
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>{m.emoji}</span>
+                <span style={{ letterSpacing: ".05em", textTransform: "uppercase" }}>{m.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* INJURY */}
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.35)", marginBottom: 10 }}>Douleur / blessure (optionnel)</div>
+          <input
+            type="text"
+            value={injury}
+            onChange={(e) => setInjury(e.target.value)}
+            placeholder="Ex : épaule droite, lombaires…"
+            style={{
+              width: "100%", padding: "12px 14px",
+              background: "rgba(255,255,255,.03)",
+              border: ".5px solid rgba(255,255,255,.08)",
+              borderRadius: 10,
+              color: "#fff", fontSize: 13, fontFamily: "inherit",
+              outline: "none", boxSizing: "border-box",
+              marginBottom: 16,
+            }}
+          />
+
+          {/* NOTE */}
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.35)", marginBottom: 10 }}>Note pour le coach (optionnel)</div>
+          <textarea
+            value={feedbackNote}
+            onChange={(e) => setFeedbackNote(e.target.value)}
+            placeholder="Comment t'es senti ? Quelque chose à signaler ?"
+            rows={3}
+            style={{
+              width: "100%", padding: "12px 14px",
+              background: "rgba(255,255,255,.03)",
+              border: ".5px solid rgba(255,255,255,.08)",
+              borderRadius: 10,
+              color: "#fff", fontSize: 13, fontFamily: "inherit",
+              outline: "none", boxSizing: "border-box", resize: "none",
+              marginBottom: 22,
+            }}
+          />
 
           <button
             onClick={finishSession}

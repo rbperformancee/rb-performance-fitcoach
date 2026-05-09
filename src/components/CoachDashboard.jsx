@@ -2709,32 +2709,74 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   // Trouver RPE du même jour
                   const dateStr = date.toISOString().split("T")[0];
                   const dayRpe = rpeData.find(r => r.date === dateStr);
+                  // Feedback structuré (migration 056)
+                  const MOOD_LABELS = { great: "Au top", good: "Bien", ok: "Correct", tough: "Dure", bad: "Catastrophe" };
+                  const MOOD_COLORS = { great: "#34d399", good: "#a3e635", ok: "#fbbf24", tough: "#fb923c", bad: "#ef4444" };
+                  const hasFeedback = s.mood || s.injury || s.feedback_note;
                   return (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div key={i} style={{ display: "flex", alignItems: "stretch", gap: 12 }}>
                       {/* Timeline dot + line */}
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 20, flexShrink: 0 }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 20, flexShrink: 0, paddingTop: 12 }}>
                         <div style={{ width: 8, height: 8, borderRadius: "50%", background: G, boxShadow: i === 0 ? `0 0 10px ${G}` : "none" }} />
-                        {i < Math.min(sessions.length, 10) - 1 && <div style={{ width: 1, height: 28, background: "rgba(255,255,255,0.06)", marginTop: 4 }} />}
+                        {i < Math.min(sessions.length, 10) - 1 && <div style={{ flex: 1, width: 1, background: "rgba(255,255,255,0.06)", marginTop: 4 }} />}
                       </div>
                       {/* Content */}
-                      <div style={{ flex: 1, padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{s.session_name || t("cp.session_fallback")}</div>
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
-                            {date.toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
-                            {durationMin != null && <span> · {fillTpl(t("cp.minutes_short"), { n: durationMin })}</span>}
-                            {s.exercises_count > 0 && <span> · {fillTpl(t("cp.exos_count"), { n: s.exercises_count })}</span>}
+                      <div style={{ flex: 1, padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{s.session_name || t("cp.session_fallback")}</div>
+                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                              {date.toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
+                              {durationMin != null && <span> · {fillTpl(t("cp.minutes_short"), { n: durationMin })}</span>}
+                              {s.exercises_count > 0 && <span> · {fillTpl(t("cp.exos_count"), { n: s.exercises_count })}</span>}
+                            </div>
                           </div>
+                          {dayRpe && (
+                            <div style={{
+                              padding: "4px 10px", borderRadius: 100,
+                              background: RPE_COLORS[dayRpe.rpe] + "15",
+                              border: "1px solid " + RPE_COLORS[dayRpe.rpe] + "30",
+                              fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700,
+                              color: RPE_COLORS[dayRpe.rpe],
+                              flexShrink: 0,
+                            }}>
+                              RPE {dayRpe.rpe}
+                            </div>
+                          )}
                         </div>
-                        {dayRpe && (
-                          <div style={{
-                            padding: "4px 10px", borderRadius: 100,
-                            background: RPE_COLORS[dayRpe.rpe] + "15",
-                            border: "1px solid " + RPE_COLORS[dayRpe.rpe] + "30",
-                            fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700,
-                            color: RPE_COLORS[dayRpe.rpe],
-                          }}>
-                            RPE {dayRpe.rpe}
+                        {hasFeedback && (
+                          <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px dashed rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", gap: 6 }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                              {s.mood && (
+                                <span style={{
+                                  padding: "2px 8px",
+                                  background: (MOOD_COLORS[s.mood] || "#888") + "18",
+                                  border: `1px solid ${(MOOD_COLORS[s.mood] || "#888")}40`,
+                                  borderRadius: 6,
+                                  fontSize: 9, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
+                                  color: MOOD_COLORS[s.mood] || "#888",
+                                }}>
+                                  {MOOD_LABELS[s.mood] || s.mood}
+                                </span>
+                              )}
+                              {s.injury && (
+                                <span style={{
+                                  padding: "2px 8px",
+                                  background: "rgba(239,68,68,0.12)",
+                                  border: "1px solid rgba(239,68,68,0.35)",
+                                  borderRadius: 6,
+                                  fontSize: 9, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase",
+                                  color: "#ef4444",
+                                }}>
+                                  Douleur · {s.injury}
+                                </span>
+                              )}
+                            </div>
+                            {s.feedback_note && (
+                              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.5, fontStyle: "italic" }}>
+                                « {s.feedback_note} »
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
