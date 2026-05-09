@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { useT } from "../../lib/i18n";
+import DataExportSection from "./DataExportSection";
 
 const G = "#02d1ba";
 const RED = "#ff6b6b";
@@ -55,6 +56,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
     { id: "profil", label: t("mc.tab_profil") },
     { id: "abonnement", label: t("mc.tab_abonnement") },
     { id: "facturation", label: t("mc.tab_facturation") },
+    { id: "donnees", label: "Données" },
     { id: "securite", label: t("mc.tab_securite") },
   ];
 
@@ -348,6 +350,11 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
               <button style={outlineBtn}>{t("mc.btn_invoices")}</button>
             </div>
           </div>
+        )}
+
+        {/* ===== DONNÉES (export CSV portability) ===== */}
+        {tab === "donnees" && (
+          <DataExportSection coachId={coachData?.id} isDemo={isDemo} />
         )}
 
         {/* ===== SÉCURITÉ ===== */}
