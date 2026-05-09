@@ -92,7 +92,7 @@ import { supabase } from "./lib/supabase";
 import ErrorBoundaryApp from "./components/ErrorBoundary";
 import { setSentryRole } from "./lib/sentry";
 const SuperAdminDashboard = lazy(() => import("./components/SuperAdminDashboard"));
-const CoachOnboarding = lazy(() => import("./components/CoachOnboarding"));
+const CoachOnboarding = lazy(() => import("./components/coach/Onboarding"));
 import ProgrammeSignature from "./components/ProgrammeSignature";
 import ProgrammeCountdown from "./components/ProgrammeCountdown";
 const CoachCodeGate = lazy(() => import("./components/CoachCodeGate"));
@@ -1232,7 +1232,7 @@ function AppInner() {
   if (isCoach && coachData && !coachData.brand_name && showCoachDash) {
     return (
       <CoachOnboarding
-        coachData={coachData}
+        coach={coachData}
         onComplete={() => window.location.reload()}
       />
     );
