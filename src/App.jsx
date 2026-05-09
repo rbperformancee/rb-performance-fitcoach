@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo, Suspense, lazy } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense, lazy } from "react";
 import { RB_SUPPORT_EMAIL } from "./lib/branding";
 import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
 import { ToastProvider, toast } from "./components/Toast";
