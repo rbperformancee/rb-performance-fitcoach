@@ -394,6 +394,13 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
+  // Feedback structuré post-séance (cohérence avec SessionTracker — migration 056)
+  const [sessionLogId, setSessionLogId] = useState(null);
+  const [feedbackMood, setFeedbackMood] = useState(null);
+  const [feedbackInjury, setFeedbackInjury] = useState("");
+  const [feedbackNote, setFeedbackNote] = useState("");
+  const [showFeedbackExtra, setShowFeedbackExtra] = useState(false);
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
   const CKEY = `rb_c_${activeWeek}_${activeSession}`;
   const [chrono, setChrono] = useState(() => {
     try {
@@ -531,13 +538,14 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     if (!client?.id) return;
     stopChrono(chrono);
 
-    // 1. Logger la seance
-    await supabase.from("session_logs").insert({
+    // 1. Logger la seance — on capture l'id pour UPDATE feedback ensuite
+    const { data: logRow } = await supabase.from("session_logs").insert({
       client_id: client.id,
       session_name: currentSession?.name || "Seance",
       programme_name: programme?.name || "Programme",
       logged_at: new Date().toISOString(),
-    });
+    }).select("id").single();
+    setSessionLogId(logRow?.id || null);
 
     // 2. Compter le nombre de seances completees pour les badges
     const { data: logs } = await supabase
@@ -573,7 +581,36 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       rpe: idx + 1,
       date: new Date().toISOString().split("T")[0],
     });
+    // Mirror RPE 1-5 → session_logs.rpe (échelle 1-10 mais on garde 1-5 ici
+    // pour cohérence avec session_rpe — la rendering coach affiche bien)
+    if (sessionLogId) {
+      try {
+        await supabase.from("session_logs").update({ rpe: idx + 1 }).eq("id", sessionLogId);
+      } catch (e) { /* best-effort */ }
+    }
     // Ne pas fermer automatiquement - laisser l utilisateur voir le recap
+  };
+
+  // Submit feedback étendu (mood + injury + note) après le RPE
+  const submitFeedbackExtra = async () => {
+    if (!sessionLogId) { setShowFeedbackExtra(false); return; }
+    setFeedbackSaving(true);
+    try {
+      await supabase.from("session_logs").update({
+        mood: feedbackMood || null,
+        injury: feedbackInjury.trim() || null,
+        feedback_note: feedbackNote.trim() || null,
+      }).eq("id", sessionLogId);
+      // Push au coach si signal critique
+      try {
+        const { notifyCoachSessionFeedback } = await import("../lib/notifyCoach");
+        notifyCoachSessionFeedback(client.id, { mood: feedbackMood, injury: feedbackInjury.trim() });
+      } catch (e) { /* best-effort */ }
+    } catch (e) {
+      console.warn("[TrainingPage] feedback extra update", e);
+    }
+    setFeedbackSaving(false);
+    setShowFeedbackExtra(false);
   };
 
   if (!programme || !currentWeek || !currentSession) return (
@@ -1104,32 +1141,160 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                   </div>
                 </div>
 
-                <button onClick={() => {
-                    setShowRessenti(false);
-                    setSessionValidee(true);
-                    // Fermer SeanceVivante (session_live -> active=false via cleanup)
-                    if (typeof onStartSession === "function") onStartSession(false);
-                    // Sauvegarder dans localStorage
-                    try {
-                      const ckey = `rb_c_${activeWeek}_${activeSession}`;
-                      const s = JSON.parse(localStorage.getItem(ckey) || "{}");
-                      localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
-                    } catch(e) {}
-                    // Sauvegarder dans Supabase
-                    if (client?.id) {
-                      supabase.from("session_completions").upsert({
-                        client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
-                        validated_at: new Date().toISOString(),
-                        chrono_seconds: chrono,
-                        rpe: selectedRessenti + 1
-                      }, { onConflict: "client_id,week_idx,session_idx" });
-                    }
-                  }} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
+                <button onClick={() => setShowFeedbackExtra(true)} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
                   {t("train.finish_check")}
                 </button>
               </>
             )}
           </div>
+
+          {/* ETAPE FEEDBACK ETENDU (mood + injury + note) — overlay sur le recap */}
+          {showFeedbackExtra && (() => {
+            const MOODS = [
+              { id: "great", label: "Au top",      emoji: "✓✓" },
+              { id: "good",  label: "Bien",        emoji: "✓"  },
+              { id: "ok",    label: "Correct",     emoji: "—"  },
+              { id: "tough", label: "Dure",        emoji: "↓"  },
+              { id: "bad",   label: "Catastrophe", emoji: "✕"  },
+            ];
+            return (
+              <div style={{ position: "absolute", inset: 0, background: "#0a0a0a", borderRadius: "28px 28px 0 0", padding: "26px 22px calc(env(safe-area-inset-bottom,0px) + 22px)", overflowY: "auto" }}>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "3px", color: G, textTransform: "uppercase", marginBottom: 8 }}>
+                  Feedback détaillé
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-.4px", marginBottom: 18, lineHeight: 1.2 }}>
+                  Ton ressenti précis ?
+                </div>
+
+                {/* MOOD */}
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 8 }}>Ressenti séance</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 18 }}>
+                  {MOODS.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setFeedbackMood(feedbackMood === m.id ? null : m.id)}
+                      style={{
+                        padding: "10px 4px",
+                        background: feedbackMood === m.id ? `${G}20` : "rgba(255,255,255,.03)",
+                        border: `1px solid ${feedbackMood === m.id ? G + "60" : "rgba(255,255,255,.06)"}`,
+                        borderRadius: 10,
+                        color: feedbackMood === m.id ? G : "rgba(255,255,255,.55)",
+                        fontFamily: "inherit", fontSize: 9, fontWeight: 700,
+                        cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                      }}
+                    >
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>{m.emoji}</span>
+                      <span style={{ letterSpacing: ".05em", textTransform: "uppercase" }}>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* INJURY */}
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 8 }}>Douleur / blessure (optionnel)</div>
+                <input
+                  type="text"
+                  value={feedbackInjury}
+                  onChange={(e) => setFeedbackInjury(e.target.value)}
+                  placeholder="Ex : épaule droite, lombaires…"
+                  style={{
+                    width: "100%", padding: "11px 14px",
+                    background: "rgba(255,255,255,.03)",
+                    border: "1px solid rgba(255,255,255,.08)",
+                    borderRadius: 10, color: "#fff", fontSize: 13,
+                    fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+                    marginBottom: 16,
+                  }}
+                />
+
+                {/* NOTE */}
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 8 }}>Note pour le coach (optionnel)</div>
+                <textarea
+                  value={feedbackNote}
+                  onChange={(e) => setFeedbackNote(e.target.value)}
+                  placeholder="Comment t'es senti ? Quelque chose à signaler ?"
+                  rows={3}
+                  style={{
+                    width: "100%", padding: "11px 14px",
+                    background: "rgba(255,255,255,.03)",
+                    border: "1px solid rgba(255,255,255,.08)",
+                    borderRadius: 10, color: "#fff", fontSize: 13,
+                    fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+                    resize: "none", marginBottom: 18,
+                  }}
+                />
+
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      // Skip = on valide direct la séance sans feedback
+                      setShowFeedbackExtra(false);
+                      setShowRessenti(false);
+                      setSessionValidee(true);
+                      if (typeof onStartSession === "function") onStartSession(false);
+                      try {
+                        const ckey = `rb_c_${activeWeek}_${activeSession}`;
+                        const s = JSON.parse(localStorage.getItem(ckey) || "{}");
+                        localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
+                      } catch(e) {}
+                      if (client?.id) {
+                        supabase.from("session_completions").upsert({
+                          client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
+                          validated_at: new Date().toISOString(),
+                          chrono_seconds: chrono,
+                          rpe: selectedRessenti + 1
+                        }, { onConflict: "client_id,week_idx,session_idx" });
+                      }
+                    }}
+                    style={{
+                      padding: "14px 18px",
+                      background: "rgba(255,255,255,.04)",
+                      border: "1px solid rgba(255,255,255,.08)",
+                      borderRadius: 12,
+                      color: "rgba(255,255,255,.5)",
+                      fontSize: 12, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Passer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await submitFeedbackExtra();
+                      setShowRessenti(false);
+                      setSessionValidee(true);
+                      if (typeof onStartSession === "function") onStartSession(false);
+                      try {
+                        const ckey = `rb_c_${activeWeek}_${activeSession}`;
+                        const s = JSON.parse(localStorage.getItem(ckey) || "{}");
+                        localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
+                      } catch(e) {}
+                      if (client?.id) {
+                        supabase.from("session_completions").upsert({
+                          client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
+                          validated_at: new Date().toISOString(),
+                          chrono_seconds: chrono,
+                          rpe: selectedRessenti + 1
+                        }, { onConflict: "client_id,week_idx,session_idx" });
+                      }
+                    }}
+                    disabled={feedbackSaving}
+                    style={{
+                      flex: 1,
+                      padding: "14px 18px",
+                      background: G, color: "#000", border: "none",
+                      borderRadius: 12, fontSize: 13, fontWeight: 800,
+                      cursor: feedbackSaving ? "wait" : "pointer",
+                      fontFamily: "inherit", letterSpacing: ".05em", textTransform: "uppercase",
+                    }}
+                  >
+                    {feedbackSaving ? "Envoi…" : "Envoyer"}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
