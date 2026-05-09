@@ -21,7 +21,7 @@ const G = "#02d1ba";
  *   coachId: uuid
  *   onInvited: (invitation) => void  // appele apres envoi OK
  */
-export default function InviteClient({ open, onClose, coachId, onInvited }) {
+export default function InviteClient({ open, onClose, coachId, onInvited, onBulkImport }) {
   const t = useT();
   const [email, setEmail]   = useState("");
   const [prenom, setPrenom] = useState("");
@@ -262,6 +262,35 @@ export default function InviteClient({ open, onClose, coachId, onInvited }) {
         >
           {sending ? t("iv.btn_sending") : t("iv.btn_send")}
         </button>
+
+        {/* Bulk import — entrée discrète pour les coachs qui migrent
+            depuis Trainerize/Hexfit/Eklo avec 10+ clients à inviter. */}
+        {onBulkImport && (
+          <button
+            type="button"
+            onClick={onBulkImport}
+            disabled={sending}
+            style={{
+              width: "100%", marginTop: 12,
+              padding: "10px 16px",
+              background: "transparent",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 10,
+              color: "rgba(255,255,255,0.55)",
+              fontSize: 12, fontWeight: 600,
+              cursor: sending ? "not-allowed" : "pointer",
+              fontFamily: "inherit",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Importer une liste CSV (Trainerize, Hexfit…)
+          </button>
+        )}
 
         <div style={{
           marginTop: 12,

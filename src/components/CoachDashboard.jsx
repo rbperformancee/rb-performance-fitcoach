@@ -25,6 +25,7 @@ import ProgrammeList from "./coach/ProgrammeList";
 import ProgrammeDuplicateModal from "./coach/ProgrammeDuplicateModal";
 import Onboarding from "./coach/Onboarding";
 import InviteClient from "./coach/InviteClient";
+import BulkInviteCSV from "./coach/BulkInviteCSV";
 import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
@@ -3707,6 +3708,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [search,    setSearch]    = useState("");
   const [showAdd,   setShowAdd]   = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [showBulkInvite, setShowBulkInvite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
@@ -4755,6 +4757,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         onClose={() => setShowInvite(false)}
         coachId={coachId}
         onInvited={() => { loadClients(); }}
+        onBulkImport={() => { setShowInvite(false); setShowBulkInvite(true); }}
+      />
+
+      <BulkInviteCSV
+        open={showBulkInvite}
+        onClose={() => setShowBulkInvite(false)}
+        coachId={coachId}
+        onDone={() => { loadClients(); }}
       />
 
       {showSettings && (
