@@ -18,11 +18,12 @@
  */
 
 const { captureException } = require("./_sentry");
+const nodemailer = require("nodemailer");
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || "RB Perform <noreply@rbperform.app>";
+const SMTP_USER = process.env.ZOHO_SMTP_USER || "rayan@rbperform.app";
+const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
 
 function isAuthorizedCron(req) {
   const cronSecret = process.env.CRON_SECRET;
@@ -118,21 +119,29 @@ function buildEmail({ firstName, accentColor, sessions7d, sessionsPrev7d, prCoun
 }
 
 async function sendEmail(to, subject, html) {
-  if (!RESEND_API_KEY) {
-    console.warn("[weekly-email] RESEND_API_KEY missing — skip");
+  if (!SMTP_PASS) {
+    console.warn("[weekly-email] ZOHO_SMTP_PASS missing — skip");
     return false;
   }
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    console.warn("[weekly-email] Resend failed", res.status, text);
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.zoho.eu",
+      port: 465,
+      secure: true,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+    await transporter.sendMail({
+      from: `RB Perform <${SMTP_USER}>`,
+      to,
+      replyTo: SMTP_USER,
+      subject,
+      html,
+    });
+    return true;
+  } catch (e) {
+    console.warn("[weekly-email] Zoho send failed", e?.message);
     return false;
   }
-  return true;
 }
 
 module.exports = async (req, res) => {

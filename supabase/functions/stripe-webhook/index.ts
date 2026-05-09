@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import Stripe from "https://esm.sh/stripe@14.12.0?target=deno"
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
 
-const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? ""
+const SMTP_USER = Deno.env.get("ZOHO_SMTP_USER") ?? "rayan@rbperform.app"
+const SMTP_PASS = Deno.env.get("ZOHO_SMTP_PASS") ?? ""
+const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? `RB Perform <${SMTP_USER}>`
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://pwkajyrpldhlybavmopd.supabase.co"
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET_KEY") ?? ""
@@ -20,11 +23,29 @@ const corsHeaders = {
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: "RB Perform <noreply@rbperform.com>", to: [to], subject, html }),
+  if (!SMTP_PASS) return
+  const smtpClient = new SMTPClient({
+    connection: {
+      hostname: "smtp.zoho.eu",
+      port: 465,
+      tls: true,
+      auth: { username: SMTP_USER, password: SMTP_PASS },
+    },
   })
+  try {
+    await smtpClient.send({
+      from: EMAIL_FROM,
+      to,
+      replyTo: SMTP_USER,
+      subject,
+      content: "auto",
+      html,
+    })
+  } catch (e: any) {
+    console.error("[stripe-webhook] SMTP send failed", e?.message || e)
+  } finally {
+    try { await smtpClient.close() } catch { /* noop */ }
+  }
 }
 
 async function sendTypedEmail(email: string, fullName: string, type: string, extra: Record<string, any> = {}) {

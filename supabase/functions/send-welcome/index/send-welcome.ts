@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")
+const SMTP_USER = Deno.env.get("ZOHO_SMTP_USER") ?? "rayan@rbperform.app"
+const SMTP_PASS = Deno.env.get("ZOHO_SMTP_PASS") ?? ""
 const APP_URL = Deno.env.get("APP_BASE_URL") ?? "https://rbperform.app"
+const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? `RB Perform <${SMTP_USER}>`
 
 // ===== DESIGN TOKENS =====
 const BG = "#0a0a0a"
@@ -261,22 +264,33 @@ serve(async (req) => {
 
     subject = (SUBJECTS[type] || SUBJECTS.welcome)(name, body)
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
+    if (!SMTP_PASS) {
+      return new Response(JSON.stringify({ error: "ZOHO_SMTP_PASS missing" }), { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } })
+    }
+    const smtpClient = new SMTPClient({
+      connection: {
+        hostname: "smtp.zoho.eu",
+        port: 465,
+        tls: true,
+        auth: { username: SMTP_USER, password: SMTP_PASS },
       },
-      body: JSON.stringify({
-        from: Deno.env.get("EMAIL_FROM") ?? "RB Perform <noreply@rbperform.app>",
-        to: [email],
-        subject,
-        html,
-      }),
     })
-
-    const data = await res.json()
-    return new Response(JSON.stringify(data), {
+    try {
+      await smtpClient.send({
+        from: EMAIL_FROM,
+        to: email,
+        replyTo: SMTP_USER,
+        subject,
+        content: "auto",
+        html,
+      })
+    } catch (smtpErr: any) {
+      console.error("[send-welcome] SMTP error", smtpErr?.message || smtpErr)
+      return new Response(JSON.stringify({ error: "Email provider error" }), { status: 502, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } })
+    } finally {
+      try { await smtpClient.close() } catch { /* noop */ }
+    }
+    return new Response(JSON.stringify({ success: true, sent_to: email }), {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     })
   } catch (e: any) {
