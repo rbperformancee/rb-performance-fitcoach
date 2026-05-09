@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { notifyCoachWeeklyCheckin } from "../../lib/notifyCoach";
 
 const G = "#02d1ba";
 
@@ -96,6 +97,8 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
         .from("weekly_checkins")
         .upsert(payload, { onConflict: "client_id,week_start" });
       if (error) throw error;
+      // Push au coach si le client a écrit une note
+      notifyCoachWeeklyCheckin(clientId, { hasNote: !!payload.note });
       toast.success("Bilan envoyé à ton coach");
       onDone?.();
       onClose?.();

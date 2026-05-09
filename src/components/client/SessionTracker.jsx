@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
 import { isClientDemoMode } from "../../lib/demoMode";
+import { notifyCoachSessionFeedback } from "../../lib/notifyCoach";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -145,6 +146,9 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
           feedback_note: feedbackNote.trim() || null,
         });
       } catch (e) { console.warn("[SessionTracker] session_logs mirror", e); }
+
+      // Push au coach si signal critique (mood dégradé ou blessure)
+      notifyCoachSessionFeedback(client.id, { mood, injury: injury.trim() });
     } catch (e) {
       console.warn("[SessionTracker] finish", e);
     }

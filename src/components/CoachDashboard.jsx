@@ -3978,6 +3978,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const isFoundingCoach = coachData?.founding_coach === true || coachData?.subscription_plan === "founding";
   const hasSentinelAccess = isFoundingCoach || SENTINEL_PLANS.includes(coachData?.subscription_plan);
   const [activeTab, setActiveTab] = useState("overview");
+  // Engagement metrics overview (migration 057+058) — bilans hebdo + habitudes
+  const [engagementSummary, setEngagementSummary] = useState({
+    checkinsThisWeek: 0,
+    totalClients: 0,
+    habitsClients: 0,
+    habitsDoneToday: 0,
+    habitsTotalToday: 0,
+  });
   const [pillVisible, setPillVisible] = useState(true);
   const [showCoachHome, setShowCoachHome] = useState(true);
   const homeScreenDismissed = useRef(false);
@@ -4134,6 +4142,43 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   };
 
   useEffect(() => { loadClients(); }, []);
+
+  // Engagement summary : bilans hebdo soumis + habitudes du jour (toutes clients)
+  useEffect(() => {
+    if (!coachId) return;
+    let cancelled = false;
+    (async () => {
+      const { data: cls } = await supabase.from("clients").select("id").eq("coach_id", coachId);
+      if (cancelled || !cls) return;
+      const ids = cls.map((c) => c.id);
+      if (ids.length === 0) {
+        setEngagementSummary({ checkinsThisWeek: 0, totalClients: 0, habitsClients: 0, habitsDoneToday: 0, habitsTotalToday: 0 });
+        return;
+      }
+      // Lundi de la semaine en cours
+      const d = new Date();
+      const day = d.getDay();
+      const diff = day === 0 ? 6 : day - 1;
+      d.setDate(d.getDate() - diff);
+      const weekStart = d.toISOString().slice(0, 10);
+      const today = new Date().toISOString().slice(0, 10);
+      const [{ data: checkins }, { data: habits }, { data: habitLogs }] = await Promise.all([
+        supabase.from("weekly_checkins").select("client_id").in("client_id", ids).eq("week_start", weekStart),
+        supabase.from("habits").select("id, client_id").in("client_id", ids).eq("active", true),
+        supabase.from("habit_logs").select("habit_id").in("client_id", ids).eq("date", today),
+      ]);
+      if (cancelled) return;
+      const habitsClientsSet = new Set((habits || []).map((h) => h.client_id));
+      setEngagementSummary({
+        checkinsThisWeek: (checkins || []).length,
+        totalClients: ids.length,
+        habitsClients: habitsClientsSet.size,
+        habitsDoneToday: (habitLogs || []).length,
+        habitsTotalToday: (habits || []).length,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [coachId, clients.length]);
   // Auto-refresh clients toutes les 60s pour tracking activite en temps reel.
   // Suspendu quand l'onglet est inactif (battery + bandwidth + Supabase quota).
   useEffect(() => {
@@ -5178,6 +5223,81 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               ))}
             </div>
           </div>
+
+          {/* ========== ENGAGEMENT (bilans hebdo + habits) ========== */}
+          {clients.length > 0 && (
+            <div style={{ margin: "0 24px 20px" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>
+                Engagement
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {/* Bilans hebdo */}
+                <div style={{
+                  padding: "14px 16px",
+                  background: "rgba(255,255,255,0.025)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 14,
+                }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: G, marginBottom: 6 }}>
+                    Bilan cette semaine
+                  </div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <div style={{ fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
+                      {engagementSummary.checkinsThisWeek}
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                      / {engagementSummary.totalClients} clients
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 8, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{
+                      width: `${engagementSummary.totalClients > 0 ? Math.round((engagementSummary.checkinsThisWeek / engagementSummary.totalClients) * 100) : 0}%`,
+                      height: "100%",
+                      background: G,
+                      borderRadius: 2,
+                      transition: "width .3s",
+                    }} />
+                  </div>
+                </div>
+                {/* Habits compliance aujourd'hui */}
+                <div style={{
+                  padding: "14px 16px",
+                  background: "rgba(255,255,255,0.025)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 14,
+                }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: G, marginBottom: 6 }}>
+                    Habits aujourd'hui
+                  </div>
+                  {engagementSummary.habitsTotalToday === 0 ? (
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.4 }}>
+                      Aucun client avec habitudes assignées
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                        <div style={{ fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
+                          {Math.round((engagementSummary.habitsDoneToday / engagementSummary.habitsTotalToday) * 100)}%
+                        </div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+                          ({engagementSummary.habitsDoneToday}/{engagementSummary.habitsTotalToday})
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 8, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{
+                          width: `${Math.round((engagementSummary.habitsDoneToday / engagementSummary.habitsTotalToday) * 100)}%`,
+                          height: "100%",
+                          background: engagementSummary.habitsDoneToday === engagementSummary.habitsTotalToday ? "#34d399" : G,
+                          borderRadius: 2,
+                          transition: "width .3s",
+                        }} />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ========== ANALYSE CONTEXTUELLE (comme panel client) ========== */}
           {clients.length > 0 && (

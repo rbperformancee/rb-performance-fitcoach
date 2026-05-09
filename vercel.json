@@ -54,6 +54,10 @@
     {
       "path": "/api/cron-weekly-checkin-prompt",
       "schedule": "0 19 * * 0"
+    },
+    {
+      "path": "/api/cron-habit-daily-reminder",
+      "schedule": "0 18 * * *"
     }
   ],
   "redirects": [
