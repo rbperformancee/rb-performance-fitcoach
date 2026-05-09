@@ -8,26 +8,43 @@
 --
 -- Fix : pattern email/uid utilisé partout depuis la 034.
 
+-- Idempotent : on ne touche que si la table existe (cas où migration 013
+-- n'a pas été appliquée — le bulk invite ne marchera pas mais la migration
+-- ne plante plus).
+
 BEGIN;
 
-DROP POLICY IF EXISTS invitations_coach_all ON public.invitations;
-CREATE POLICY invitations_coach_all ON public.invitations
-  FOR ALL TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.coaches c
-      WHERE c.id = invitations.coach_id
-        AND (auth.uid()::text = c.id::text
-             OR auth.jwt()->>'email' = c.email)
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.coaches c
-      WHERE c.id = invitations.coach_id
-        AND (auth.uid()::text = c.id::text
-             OR auth.jwt()->>'email' = c.email)
-    )
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'invitations'
+  ) THEN
+    RAISE NOTICE 'Table public.invitations absente — migration 013 à appliquer avant cette 053. Skip.';
+    RETURN;
+  END IF;
+
+  EXECUTE 'DROP POLICY IF EXISTS invitations_coach_all ON public.invitations';
+  EXECUTE $POL$
+    CREATE POLICY invitations_coach_all ON public.invitations
+      FOR ALL TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.coaches c
+          WHERE c.id = invitations.coach_id
+            AND (auth.uid()::text = c.id::text
+                 OR auth.jwt()->>'email' = c.email)
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM public.coaches c
+          WHERE c.id = invitations.coach_id
+            AND (auth.uid()::text = c.id::text
+                 OR auth.jwt()->>'email' = c.email)
+        )
+      )
+  $POL$;
+END$$;
 
 COMMIT;

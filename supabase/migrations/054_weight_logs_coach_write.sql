@@ -8,27 +8,39 @@
 
 BEGIN;
 
--- Garde la policy SELECT existante. Ajoute INSERT/UPDATE/DELETE.
-DROP POLICY IF EXISTS weight_logs_coach_write ON public.weight_logs;
-CREATE POLICY weight_logs_coach_write ON public.weight_logs
-  FOR ALL TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.coaches c
-      JOIN public.clients cl ON cl.coach_id = c.id
-      WHERE cl.id = weight_logs.client_id
-        AND (auth.uid()::text = c.id::text
-             OR LOWER(auth.jwt()->>'email') = LOWER(c.email))
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.coaches c
-      JOIN public.clients cl ON cl.coach_id = c.id
-      WHERE cl.id = weight_logs.client_id
-        AND (auth.uid()::text = c.id::text
-             OR LOWER(auth.jwt()->>'email') = LOWER(c.email))
-    )
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'weight_logs'
+  ) THEN
+    RAISE NOTICE 'Table public.weight_logs absente — skip cette migration.';
+    RETURN;
+  END IF;
+
+  EXECUTE 'DROP POLICY IF EXISTS weight_logs_coach_write ON public.weight_logs';
+  EXECUTE $POL$
+    CREATE POLICY weight_logs_coach_write ON public.weight_logs
+      FOR ALL TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.coaches c
+          JOIN public.clients cl ON cl.coach_id = c.id
+          WHERE cl.id = weight_logs.client_id
+            AND (auth.uid()::text = c.id::text
+                 OR LOWER(auth.jwt()->>'email') = LOWER(c.email))
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM public.coaches c
+          JOIN public.clients cl ON cl.coach_id = c.id
+          WHERE cl.id = weight_logs.client_id
+            AND (auth.uid()::text = c.id::text
+                 OR LOWER(auth.jwt()->>'email') = LOWER(c.email))
+        )
+      )
+  $POL$;
+END$$;
 
 COMMIT;
