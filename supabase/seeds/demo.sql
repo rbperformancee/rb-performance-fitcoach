@@ -28,9 +28,8 @@
 -- table publique coaches.
 
 INSERT INTO public.coaches (
-  id, email, full_name, brand_name, coach_slug, coaching_name,
-  is_active, onboarding_done, founding_coach, subscription_plan,
-  created_at
+  id, email, full_name, brand_name, coach_slug,
+  is_active, onboarding_completed_at, accent_color, created_at
 )
 SELECT
   u.id,
@@ -38,25 +37,23 @@ SELECT
   'Demo Coach',
   'RB Perform Demo',
   'demo',
-  'Coach Demo',
   true,
-  true,
-  true,
-  'founding',
+  now(),
+  '#02d1ba',
   now()
 FROM auth.users u
 WHERE u.email = 'demo@rbperform.app'
 ON CONFLICT (email) DO UPDATE SET
   brand_name = EXCLUDED.brand_name,
   is_active = true,
-  onboarding_done = true,
-  founding_coach = true;
+  onboarding_completed_at = COALESCE(public.coaches.onboarding_completed_at, now()),
+  accent_color = COALESCE(public.coaches.accent_color, '#02d1ba');
 
 -- =========================================================
 -- 2. CLIENT DEMO — Lucas Bernard
 -- =========================================================
 INSERT INTO public.clients (
-  id, email, full_name, coach_id, status, created_at
+  id, email, full_name, coach_id, subscription_status, onboarding_done, created_at
 )
 SELECT
   '5f5cb37c-728b-47a9-b7ae-43d3aa643d65'::uuid,
@@ -64,25 +61,27 @@ SELECT
   'Lucas Bernard',
   c.id,
   'active',
+  true,
   now() - interval '45 days'
 FROM public.coaches c WHERE c.email = 'demo@rbperform.app'
-ON CONFLICT (id) DO UPDATE SET
+ON CONFLICT (email) DO UPDATE SET
   full_name = EXCLUDED.full_name,
-  status = 'active';
+  subscription_status = 'active',
+  onboarding_done = true;
 
 -- =========================================================
--- 3. PESEES — historique 30 jours, perte progressive 78 → 75
+-- 3. PESEES Lucas — historique 30 jours sur weight_logs
 -- =========================================================
-DELETE FROM public.client_measurements
+DELETE FROM public.weight_logs
 WHERE client_id = '5f5cb37c-728b-47a9-b7ae-43d3aa643d65'::uuid;
 
-INSERT INTO public.client_measurements (client_id, weight_kg, created_at)
+INSERT INTO public.weight_logs (client_id, date, weight)
 SELECT
   '5f5cb37c-728b-47a9-b7ae-43d3aa643d65'::uuid,
-  -- Pertes ~3kg sur 30 jours avec bruit ±0.4kg
-  78.2 - (n * 0.1) + (random() * 0.8 - 0.4),
-  now() - (interval '1 day' * (30 - n))
-FROM generate_series(1, 30) n;
+  (now() - (interval '1 day' * (30 - n)))::date,
+  78.2 - (n * 0.1) + (random() * 0.8 - 0.4)
+FROM generate_series(1, 30) n
+ON CONFLICT DO NOTHING;
 
 -- =========================================================
 -- 4. SESSIONS COMPLETED — 12 seances sur 30 jours
@@ -153,7 +152,7 @@ BEGIN
   IF demo_coach_id IS NULL THEN RETURN; END IF;
 
   -- 9 clients fictifs (le 1er = Lucas est déjà inséré section 2)
-  INSERT INTO public.clients (id, email, full_name, coach_id, status, onboarding_done, created_at, last_seen_at)
+  INSERT INTO public.clients (id, email, full_name, coach_id, subscription_status, onboarding_done, created_at, last_seen_at)
   VALUES
     ('11111111-1111-1111-1111-111111110001', 'thomas.demo@rbperform.app',  'Thomas Reynaud',  demo_coach_id, 'active', true, now() - interval '90 days', now() - interval '12 hours'),
     ('11111111-1111-1111-1111-111111110002', 'sophie.demo@rbperform.app',  'Sophie Lambert',  demo_coach_id, 'active', true, now() - interval '60 days', now() - interval '2 days'),
@@ -162,12 +161,12 @@ BEGIN
     ('11111111-1111-1111-1111-111111110005', 'pierre.demo@rbperform.app',  'Pierre Roussel',  demo_coach_id, 'active', true, now() - interval '30 days', now() - interval '6 hours'),
     ('11111111-1111-1111-1111-111111110006', 'laetitia.demo@rbperform.app','Laetitia Mouret', demo_coach_id, 'active', true, now() - interval '15 days', now() - interval '3 days'),
     ('11111111-1111-1111-1111-111111110007', 'antoine.demo@rbperform.app', 'Antoine Beaufort',demo_coach_id, 'active', true, now() - interval '180 days', now() - interval '4 hours'),
-    ('11111111-1111-1111-1111-111111110008', 'celia.demo@rbperform.app',   'Célia Vasseur',   demo_coach_id, 'active', true, now() - interval '75 days', now() - interval '20 days'),  -- inactif/à risque
+    ('11111111-1111-1111-1111-111111110008', 'celia.demo@rbperform.app',   'Célia Vasseur',   demo_coach_id, 'active', true, now() - interval '75 days', now() - interval '20 days'),
     ('11111111-1111-1111-1111-111111110009', 'nicolas.demo@rbperform.app', 'Nicolas Bertin',  demo_coach_id, 'active', true, now() - interval '20 days', now() - interval '2 hours')
   ON CONFLICT (id) DO UPDATE SET
     full_name = EXCLUDED.full_name,
     last_seen_at = EXCLUDED.last_seen_at,
-    status = 'active';
+    subscription_status = 'active';
 
   -- Tags CRM (cohorts) — pour valoriser les nouveaux filtres
   UPDATE public.clients SET tags = ARRAY['perf','force']    WHERE id = '11111111-1111-1111-1111-111111110001';
