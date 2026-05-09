@@ -5203,6 +5203,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             } catch { showToast(t("cd.toast_copy_failed")); }
           }},
           { id: "action_refresh", label: t("cd.cmd_refresh"), group: t("cd.cmd_group_actions"), icon: "refresh", run: () => loadClients() },
+          ...(clients.length >= 2 ? [{ id: "action_bulk_assign", label: "Bulk · assigner programme à plusieurs clients", desc: "Dupliquer un programme actif vers N clients", group: t("cd.cmd_group_actions"), icon: "document", run: () => setShowBulkAssign(true) }] : []),
+          { id: "action_migration_help", label: "Aide · migrer depuis une autre app", desc: "Trainerize, Hexfit, Eklo, Hapyo", group: t("cd.cmd_group_actions"), icon: "info", run: () => setShowHelpMigration(true) },
+          { id: "action_data_export", label: "Mes données · export CSV", desc: "Anti-lock-in, exportable n'importe quand", group: t("cd.cmd_group_actions"), icon: "download", run: () => { setMonCompteInitialTab("donnees"); setShowMonCompte(true); } },
           ...(onSwitchToSuperAdmin ? [{ id: "nav_superadmin", label: t("cd.cmd_superadmin"), group: t("cd.cmd_group_navigation"), icon: "chart", run: () => onSwitchToSuperAdmin() }] : []),
           { id: "action_exit", label: t("cd.cmd_exit"), group: t("cd.cmd_group_actions"), icon: "arrow-left", run: () => onExit?.() },
         ]}

@@ -5,6 +5,7 @@ import haptic from "../../lib/haptic";
 import { useT } from "../../lib/i18n";
 import DataExportSection from "./DataExportSection";
 import HelpMigrationGuide from "./HelpMigrationGuide";
+import CoachReferralSection from "./CoachReferralSection";
 
 const G = "#02d1ba";
 const RED = "#ff6b6b";
@@ -60,6 +61,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
     { id: "profil", label: t("mc.tab_profil") },
     { id: "abonnement", label: t("mc.tab_abonnement") },
     { id: "facturation", label: t("mc.tab_facturation") },
+    { id: "parrainage", label: "Parrainage" },
     { id: "donnees", label: "Données" },
     { id: "securite", label: t("mc.tab_securite") },
   ];
@@ -354,6 +356,11 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
               <button style={outlineBtn}>{t("mc.btn_invoices")}</button>
             </div>
           </div>
+        )}
+
+        {/* ===== PARRAINAGE COACH→COACH ===== */}
+        {tab === "parrainage" && (
+          <CoachReferralSection coachData={coachData} isDemo={isDemo} />
         )}
 
         {/* ===== DONNÉES (export CSV portability) ===== */}

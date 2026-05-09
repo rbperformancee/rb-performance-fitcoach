@@ -58,6 +58,10 @@
     {
       "path": "/api/cron-habit-daily-reminder",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron-client-weekly-email",
+      "schedule": "0 8 * * 1"
     }
   ],
   "redirects": [
@@ -79,6 +83,7 @@
     { "source": "/comparison", "destination": "/comparison.html" },
     { "source": "/legal", "destination": "/legal.html" },
     { "source": "/coach/:slug", "destination": "/api/coach-vitrine?slug=:slug" },
+    { "source": "/coaches", "destination": "/api/coaches-directory" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap.xml" },
     { "source": "/candidature", "destination": "/app.html?candidature=true" },
     { "source": "/((?!api/|_next/|static/|videos/|images/|_vercel/|.*\\..*).*)", "destination": "/404.html" }
