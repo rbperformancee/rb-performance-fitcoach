@@ -24,6 +24,7 @@ import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
 import ProgrammeDuplicateModal from "./coach/ProgrammeDuplicateModal";
 import Onboarding from "./coach/Onboarding";
+import BulkWeightImportCSV from "./coach/BulkWeightImportCSV";
 import InviteClient from "./coach/InviteClient";
 import BulkInviteCSV from "./coach/BulkInviteCSV";
 import LogPaymentModal from "./coach/LogPaymentModal";
@@ -1596,6 +1597,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   React.useEffect(() => { reloadLastPayment(); }, [reloadLastPayment]);
   const [confirmDelete, setConfirmDelete] = useState(null); // { progId, progName } pour modal confirm
   const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
+  const [showWeightImport, setShowWeightImport] = useState(false);
   const fileRef = useRef();
 
   const prog = client.programmes?.find(p => p.is_active);
@@ -3218,6 +3220,20 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         />
       )}
 
+      {/* Migration : import CSV pesées historiques pour ce client */}
+      <BulkWeightImportCSV
+        open={showWeightImport}
+        onClose={() => setShowWeightImport(false)}
+        clientId={client?.id}
+        clientName={client?.full_name?.split(" ")[0]}
+        onDone={() => {
+          // Refetch les pesées (le Realtime gère normalement, mais juste au cas où)
+          supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
+            .order("date", { ascending: false }).limit(500)
+            .then(({ data }) => setAllWeights(data || []));
+        }}
+      />
+
       {/* ===== TRANSFORMATION VIEW (overlay) ===== */}
       {showTransformation && (
         <ErrorBoundary name="TransformationView">
@@ -3254,7 +3270,33 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
                 {drawer === "poids" ? t("cp.drawer_weight_title") : drawer === "eau" ? t("cp.drawer_water_title") : drawer === "pas" ? t("cp.drawer_steps_title") : t("cp.drawer_sleep_title")}
               </div>
-              <button onClick={() => setDrawer(null)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {drawer === "poids" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowWeightImport(true)}
+                    title="Importer l'historique pesées (CSV)"
+                    style={{
+                      background: "rgba(2,209,186,0.08)",
+                      border: "1px solid rgba(2,209,186,0.25)",
+                      borderRadius: 8,
+                      padding: "6px 10px",
+                      color: "rgba(2,209,186,0.85)",
+                      fontSize: 11, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit",
+                      display: "flex", alignItems: "center", gap: 5,
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Import CSV
+                  </button>
+                )}
+                <button onClick={() => setDrawer(null)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
             </div>
 
             <div style={{ flex: 1, overflowY: "auto", padding: "8px 22px 28px", WebkitOverflowScrolling: "touch" }}>
