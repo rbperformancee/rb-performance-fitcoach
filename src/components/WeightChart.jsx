@@ -5,6 +5,7 @@ import { useT } from "../lib/i18n";
 import EmptyState from "./EmptyState";
 import haptic from "../lib/haptic";
 import Spinner from "./Spinner";
+import HabitsCard from "./client/HabitsCard";
 
 export default function WeightChart({ clientId, client, programme, appData }) {
   const t = useT();
@@ -226,6 +227,9 @@ export default function WeightChart({ clientId, client, programme, appData }) {
           />
         )}
       </div>
+
+      {/* HABITUDES QUOTIDIENNES — checklist assignée par le coach */}
+      <HabitsCard clientId={clientId} />
 
       {/* CTA Bilan hebdomadaire — accessible n'importe quand depuis le Body tab */}
       <div style={{ padding: "0 24px 20px", position: "relative", zIndex: 1 }}>

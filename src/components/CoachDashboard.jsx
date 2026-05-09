@@ -28,6 +28,7 @@ import BulkWeightImportCSV from "./coach/BulkWeightImportCSV";
 import InviteClient from "./coach/InviteClient";
 import BulkInviteCSV from "./coach/BulkInviteCSV";
 import HelpMigrationGuide from "./coach/HelpMigrationGuide";
+import HabitsManager from "./coach/HabitsManager";
 import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
@@ -1561,6 +1562,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [allWeights, setAllWeights] = useState([]);
   const [exLogs, setExLogs] = useState([]);
   const [weeklyCheckins, setWeeklyCheckins] = useState([]);
+  const [showHabitsManager, setShowHabitsManager] = useState(false);
+  const [clientHabitsCompliance, setClientHabitsCompliance] = useState({ active: 0, doneToday: 0 });
   // HTML content de TOUS les programmes du client (actif + archivés). Loadé
   // séparément car loadClients() ne sélectionne que les métadonnées (sinon
   // ~25MB par programme × N clients exploserait le listing initial).
@@ -1710,6 +1713,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     supabase.from("weekly_checkins").select("*").eq("client_id", client.id)
       .order("week_start", { ascending: false }).limit(20)
       .then(({ data }) => setWeeklyCheckins(data || []));
+    // Compliance habitudes du jour (migration 058)
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const [{ data: hs }, { data: lgs }] = await Promise.all([
+        supabase.from("habits").select("id").eq("client_id", client.id).eq("active", true),
+        supabase.from("habit_logs").select("habit_id").eq("client_id", client.id).eq("date", today),
+      ]);
+      setClientHabitsCompliance({
+        active: (hs || []).length,
+        doneToday: (lgs || []).length,
+      });
+    })();
     // Charge le HTML de tous les programmes du client pour résoudre les
     // ex_key (programme__w0_s0_e2) en vrais noms ("Squat", "Leg Press") dans
     // la modale détail séance — même pour des sessions loggées sous d'anciens
@@ -2792,6 +2807,65 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             </div>
           )}
 
+          {/* HABITUDES — compliance du jour + bouton gérer */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>
+                Habitudes quotidiennes
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHabitsManager(true)}
+                style={{
+                  padding: "5px 10px",
+                  background: `${G}12`, border: `1px solid ${G}30`,
+                  borderRadius: 7,
+                  color: G, fontSize: 10, fontWeight: 700,
+                  cursor: "pointer", fontFamily: "inherit",
+                  letterSpacing: ".05em", textTransform: "uppercase",
+                }}
+              >
+                Gérer
+              </button>
+            </div>
+            <div style={{
+              padding: "12px 14px",
+              background: "rgba(255,255,255,0.025)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 12,
+              display: "flex", alignItems: "center", gap: 12,
+            }}>
+              {clientHabitsCompliance.active === 0 ? (
+                <div style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+                  Aucune habitude assignée. Clique <strong style={{ color: G }}>Gérer</strong> pour engager ton client les jours OFF.
+                </div>
+              ) : (
+                <>
+                  <div style={{ width: 38, height: 38, position: "relative", flexShrink: 0 }}>
+                    <svg width={38} height={38} viewBox="0 0 38 38">
+                      <circle cx={19} cy={19} r={15} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={3} />
+                      <circle cx={19} cy={19} r={15} fill="none"
+                        stroke={clientHabitsCompliance.doneToday === clientHabitsCompliance.active ? "#34d399" : G}
+                        strokeWidth={3} strokeLinecap="round"
+                        strokeDasharray={94.2}
+                        strokeDashoffset={94.2 * (1 - clientHabitsCompliance.doneToday / Math.max(1, clientHabitsCompliance.active))}
+                        transform="rotate(-90 19 19)"
+                      />
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                      {clientHabitsCompliance.doneToday} / {clientHabitsCompliance.active} aujourd'hui
+                    </div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                      {clientHabitsCompliance.doneToday === clientHabitsCompliance.active && clientHabitsCompliance.active > 0 ? "Tout coché ✓" : "Compliance live"}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* BILANS HEBDOMADAIRES — données structurées du client (migration 057) */}
           {weeklyCheckins.length > 0 && (
             <div style={{ marginBottom: 20 }}>
@@ -3604,6 +3678,13 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </div>
       )}
     </div>
+
+    {/* Modale gestion habitudes du client (migration 058) */}
+    <HabitsManager
+      open={showHabitsManager}
+      onClose={() => setShowHabitsManager(false)}
+      client={client}
+    />
     </>
   );
 }
