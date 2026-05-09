@@ -57,8 +57,9 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const fullName = `${firstName.trim()} ${lastName.trim()}`;
+      const cleanEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         password,
         options: {
           data: { full_name: fullName, first_name: firstName.trim(), last_name: lastName.trim() },
@@ -70,9 +71,36 @@ export default function SignupPage() {
         setLoading(false);
         return;
       }
+      // Crée la row coaches IMMÉDIATEMENT (sinon le coach se retrouve bloqué
+      // après confirm email — pas de row dans coaches → pas isCoach → écran
+      // vide / écran client). UPSERT par email pour idempotence si l'utilisateur
+      // re-signup ou s'il y avait déjà un magic link incomplet.
+      try {
+        const referralCode = (() => {
+          try { return new URL(window.location.href).searchParams.get("ref"); }
+          catch { return null; }
+        })();
+        await supabase.from("coaches").upsert({
+          email: cleanEmail,
+          full_name: fullName,
+          first_name: firstName.trim() || null,
+          last_name: lastName.trim() || null,
+          is_active: true,
+          subscription_plan: "free",
+        }, { onConflict: "email", ignoreDuplicates: false });
+        // Track le parrainage si code fourni dans l'URL
+        if (referralCode && data?.user?.id) {
+          // Le row coaches.id n'est pas encore l'id auth → on link via email + UPDATE id
+          // Mais si l'auth trigger fait pas le lien, on stocke le code pour traitement post-confirm
+          try { localStorage.setItem("rb_signup_ref_code", referralCode); } catch {}
+        }
+      } catch (createErr) {
+        console.warn("[signup] coach row create failed", createErr);
+        // Pas bloquant — l'utilisateur peut toujours confirmer email puis on retentera côté App.jsx
+      }
       // Si auto-confirm est OFF (prod), il faut verifier l'email
       if (data?.user && !data.session) {
-        setSentEmail(email.trim().toLowerCase());
+        setSentEmail(cleanEmail);
         setLoading(false);
         return;
       }
