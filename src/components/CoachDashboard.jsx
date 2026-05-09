@@ -27,6 +27,7 @@ import Onboarding from "./coach/Onboarding";
 import BulkWeightImportCSV from "./coach/BulkWeightImportCSV";
 import InviteClient from "./coach/InviteClient";
 import BulkInviteCSV from "./coach/BulkInviteCSV";
+import HelpMigrationGuide from "./coach/HelpMigrationGuide";
 import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
@@ -3751,6 +3752,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [showAdd,   setShowAdd]   = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [showBulkInvite, setShowBulkInvite] = useState(false);
+  const [showHelpMigration, setShowHelpMigration] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showClientList, setShowClientList] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
@@ -4800,6 +4802,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         coachId={coachId}
         onInvited={() => { loadClients(); }}
         onBulkImport={() => { setShowInvite(false); setShowBulkInvite(true); }}
+        onOpenHelp={() => { setShowInvite(false); setShowHelpMigration(true); }}
       />
 
       <BulkInviteCSV
@@ -4807,6 +4810,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         onClose={() => setShowBulkInvite(false)}
         coachId={coachId}
         onDone={() => { loadClients(); }}
+      />
+
+      <HelpMigrationGuide
+        open={showHelpMigration}
+        onClose={() => setShowHelpMigration(false)}
+        onOpenBulkInvite={() => setShowBulkInvite(true)}
+        onOpenDataExport={() => { setMonCompteInitialTab("donnees"); setShowMonCompte(true); }}
       />
 
       {showSettings && (

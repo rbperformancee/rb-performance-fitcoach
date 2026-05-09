@@ -21,7 +21,7 @@ const G = "#02d1ba";
  *   coachId: uuid
  *   onInvited: (invitation) => void  // appele apres envoi OK
  */
-export default function InviteClient({ open, onClose, coachId, onInvited, onBulkImport }) {
+export default function InviteClient({ open, onClose, coachId, onInvited, onBulkImport, onOpenHelp }) {
   const t = useT();
   const [email, setEmail]   = useState("");
   const [prenom, setPrenom] = useState("");
@@ -289,6 +289,27 @@ export default function InviteClient({ open, onClose, coachId, onInvited, onBulk
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
             Importer une liste CSV (Trainerize, Hexfit…)
+          </button>
+        )}
+
+        {onOpenHelp && (
+          <button
+            type="button"
+            onClick={onOpenHelp}
+            style={{
+              width: "100%", marginTop: 8,
+              padding: "8px 16px",
+              background: "transparent",
+              border: "none",
+              color: "rgba(255,255,255,0.4)",
+              fontSize: 11, fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              textDecoration: "underline",
+              textUnderlineOffset: 3,
+            }}
+          >
+            Comment migrer mes clients existants ?
           </button>
         )}
 

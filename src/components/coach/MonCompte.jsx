@@ -4,6 +4,7 @@ import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { useT } from "../../lib/i18n";
 import DataExportSection from "./DataExportSection";
+import HelpMigrationGuide from "./HelpMigrationGuide";
 
 const G = "#02d1ba";
 const RED = "#ff6b6b";
@@ -51,6 +52,9 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
 
   // Abonnement
   const [loadingPortal, setLoadingPortal] = useState(false);
+
+  // Migration help guide
+  const [showMigrationHelp, setShowMigrationHelp] = useState(false);
 
   const TABS = [
     { id: "profil", label: t("mc.tab_profil") },
@@ -354,7 +358,40 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
 
         {/* ===== DONNÉES (export CSV portability) ===== */}
         {tab === "donnees" && (
-          <DataExportSection coachId={coachData?.id} isDemo={isDemo} />
+          <div>
+            <div style={{
+              marginBottom: 16,
+              padding: "12px 14px",
+              background: "rgba(2,209,186,0.05)",
+              border: "1px solid rgba(2,209,186,0.18)",
+              borderRadius: 12,
+              display: "flex", alignItems: "center", gap: 12,
+            }}>
+              <div style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+                Tu migres depuis <strong style={{ color: "#fff" }}>Trainerize, Hexfit, Eklo, Hapyo</strong> ?
+                Le guide te montre comment importer ta liste clients, leurs pesées et leurs charges en 30 min.
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMigrationHelp(true)}
+                style={{
+                  padding: "7px 12px",
+                  background: "rgba(2,209,186,0.12)",
+                  border: "1px solid rgba(2,209,186,0.3)",
+                  borderRadius: 9,
+                  color: G,
+                  fontSize: 11, fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                Guide migration →
+              </button>
+            </div>
+            <DataExportSection coachId={coachData?.id} isDemo={isDemo} />
+          </div>
         )}
 
         {/* ===== SÉCURITÉ ===== */}
@@ -405,6 +442,11 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
         )}
 
       </div>
+
+      <HelpMigrationGuide
+        open={showMigrationHelp}
+        onClose={() => setShowMigrationHelp(false)}
+      />
     </div>
   );
 }

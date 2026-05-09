@@ -4,6 +4,7 @@ import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { useT } from "../../lib/i18n";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
+import HelpMigrationGuide from "./HelpMigrationGuide";
 
 const G = "#02d1ba";
 
@@ -76,6 +77,7 @@ export default function Onboarding({ coach, onComplete }) {
   const [clientPrenom, setClientPrenom] = useState("");
   const [inviteSent, setInviteSent] = useState(false);
   const [inviteSkipped, setInviteSkipped] = useState(false);
+  const [showMigrationHelp, setShowMigrationHelp] = useState(false);
 
   // ── Brand step ──
   const [brandName, setBrandName] = useState(coach?.brand_name || "");
@@ -953,8 +955,32 @@ export default function Onboarding({ coach, onComplete }) {
             <button type="button" onClick={skipInvite} className="onboarding-skip">
               {t("onb.btn_skip")}
             </button>
+
+            <button
+              type="button"
+              onClick={() => { haptic.light(); setShowMigrationHelp(true); }}
+              style={{
+                marginTop: 14,
+                background: "transparent",
+                border: "none",
+                color: "rgba(255,255,255,0.45)",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                textDecoration: "underline",
+                textUnderlineOffset: 3,
+              }}
+            >
+              Comment migrer mes clients existants ?
+            </button>
           </div>
         )}
+
+        <HelpMigrationGuide
+          open={showMigrationHelp}
+          onClose={() => setShowMigrationHelp(false)}
+        />
 
         {/* ========== ETAPE 6 — PRET ========== */}
         {step === 6 && (
