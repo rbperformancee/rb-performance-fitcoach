@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 
     // Get ALL coaches with clients for benchmark computation
     const allCoaches = await sb(
-      "/rest/v1/coaches?select=id,plan,is_founding,subscription_plan",
+      "/rest/v1/coaches?select=id,founding_coach,subscription_plan",
       { headers: { Prefer: "return=representation" } }
     );
     if (!Array.isArray(allCoaches) || allCoaches.length < 10) {

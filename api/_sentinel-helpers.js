@@ -54,9 +54,10 @@ async function sb(path, options = {}) {
 
 // Get all sentinel-eligible coaches
 async function getSentinelCoaches() {
-  // Founding coaches + Pro/Elite
+  // Founding coaches + Pro/Elite. Schema réel : founding_coach + subscription_plan
+  // (cf. migration 066). Le code legacy référençait is_founding/plan (drift).
   const data = await sb(
-    `/rest/v1/coaches?select=id,full_name,email,plan,is_founding,features,subscription_plan&or=(is_founding.eq.true,subscription_plan.in.(${SENTINEL_PLANS.join(",")}))`,
+    `/rest/v1/coaches?select=id,full_name,email,founding_coach,subscription_plan&or=(founding_coach.eq.true,subscription_plan.in.(${SENTINEL_PLANS.join(",")}))`,
     { headers: { Prefer: "return=representation" } }
   );
   return Array.isArray(data) ? data : [];
