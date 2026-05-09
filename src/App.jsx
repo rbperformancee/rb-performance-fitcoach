@@ -84,6 +84,7 @@ const JoinPage   = lazy(() => import("./components/client/JoinPage"));
 // l'interface complete 5 onglets (Train/Body/Run/Fuel/Profil) dans AppInner.
 import ChatCoach from "./components/ChatCoach";
 import BookingModal from "./components/BookingModal";
+import WeeklyCheckinForm from "./components/client/WeeklyCheckinForm";
 import { CoachDashboard } from "./components/CoachDashboard";
 import { exportProgressPDF } from "./utils/exportPDF";
 import "./App.css";
@@ -727,6 +728,17 @@ function AppInner() {
   const [showSubscribe, setShowSubscribe] = useState(false);
   const [showCoachChat, setShowCoachChat] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showCheckin, setShowCheckin] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URL(window.location.href).searchParams.get("view") === "checkin";
+  });
+  // Listener global pour ouvrir le bilan hebdo depuis n'importe quel composant
+  // sans prop drilling (ex: window.dispatchEvent(new Event('rb:open-checkin'))).
+  useEffect(() => {
+    const onOpen = () => setShowCheckin(true);
+    window.addEventListener("rb:open-checkin", onOpen);
+    return () => window.removeEventListener("rb:open-checkin", onOpen);
+  }, []);
   const [showHome, setShowHome] = useState(true);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
@@ -1375,6 +1387,15 @@ function AppInner() {
           subtitle={`Choisis un creneau avec ${coachName} pour faire le bilan de ton cycle et definir tes prochains objectifs.`}
           onClose={() => setShowBookingModal(false)}
           onBooked={() => { /* reste ouvert sur l'ecran de confirmation */ }}
+        />
+      )}
+
+      {/* ── Overlay : Bilan hebdomadaire (deep link push notif dimanche soir) ── */}
+      {client?.id && (
+        <WeeklyCheckinForm
+          open={showCheckin}
+          onClose={() => setShowCheckin(false)}
+          clientId={client.id}
         />
       )}
 

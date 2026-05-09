@@ -1560,6 +1560,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
   const [exLogs, setExLogs] = useState([]);
+  const [weeklyCheckins, setWeeklyCheckins] = useState([]);
   // HTML content de TOUS les programmes du client (actif + archivés). Loadé
   // séparément car loadClients() ne sélectionne que les métadonnées (sinon
   // ~25MB par programme × N clients exploserait le listing initial).
@@ -1705,6 +1706,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
       .order("date", { ascending: false }).limit(500)
       .then(({ data }) => setAllWeights(data || []));
+    // Bilans hebdo (migration 057) — données structurées du client
+    supabase.from("weekly_checkins").select("*").eq("client_id", client.id)
+      .order("week_start", { ascending: false }).limit(20)
+      .then(({ data }) => setWeeklyCheckins(data || []));
     // Charge le HTML de tous les programmes du client pour résoudre les
     // ex_key (programme__w0_s0_e2) en vrais noms ("Squat", "Leg Press") dans
     // la modale détail séance — même pour des sessions loggées sous d'anciens
@@ -2780,6 +2785,74 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                           </div>
                         )}
                       </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* BILANS HEBDOMADAIRES — données structurées du client (migration 057) */}
+          {weeklyCheckins.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>
+                Bilans hebdomadaires
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {weeklyCheckins.slice(0, 6).map((c) => {
+                  const ws = new Date(c.week_start + "T00:00:00");
+                  const labels = { 1: "Très mauvais", 2: "Mauvais", 3: "Correct", 4: "Bon", 5: "Excellent" };
+                  const labelsStress = { 1: "Zen", 2: "Détendu", 3: "Normal", 4: "Tendu", 5: "Très stressé" };
+                  const mesures = [
+                    c.weight != null && `Poids ${c.weight}kg`,
+                    c.waist_cm != null && `Taille ${c.waist_cm}`,
+                    c.hips_cm != null && `Hanches ${c.hips_cm}`,
+                    c.chest_cm != null && `Poitrine ${c.chest_cm}`,
+                    c.arm_cm != null && `Bras ${c.arm_cm}`,
+                    c.thigh_cm != null && `Cuisse ${c.thigh_cm}`,
+                  ].filter(Boolean);
+                  const ressentis = [
+                    c.energy_level != null && { l: "Énergie", v: c.energy_level, lbl: labels[c.energy_level] },
+                    c.sleep_quality != null && { l: "Sommeil", v: c.sleep_quality, lbl: labels[c.sleep_quality] },
+                    c.stress_level != null && { l: "Stress", v: c.stress_level, lbl: labelsStress[c.stress_level] },
+                    c.motivation_level != null && { l: "Motivation", v: c.motivation_level, lbl: labels[c.motivation_level] },
+                  ].filter(Boolean);
+                  return (
+                    <div key={c.id} style={{
+                      padding: "12px 14px",
+                      background: "rgba(255,255,255,0.025)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      borderRadius: 12,
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+                        Semaine du {ws.toLocaleDateString(intlLocale(), { day: "numeric", month: "long" })}
+                      </div>
+                      {mesures.length > 0 && (
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 6, fontFamily: "'JetBrains Mono', monospace" }}>
+                          {mesures.join(" · ")}
+                        </div>
+                      )}
+                      {ressentis.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: c.note ? 8 : 0 }}>
+                          {ressentis.map((r, i) => (
+                            <span key={i} style={{
+                              padding: "2px 8px",
+                              background: r.v >= 4 ? "rgba(52,211,153,0.12)" : r.v <= 2 ? "rgba(239,68,68,0.12)" : "rgba(251,191,36,0.12)",
+                              border: `1px solid ${r.v >= 4 ? "rgba(52,211,153,0.3)" : r.v <= 2 ? "rgba(239,68,68,0.3)" : "rgba(251,191,36,0.3)"}`,
+                              borderRadius: 6,
+                              fontSize: 9, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase",
+                              color: r.v >= 4 ? "#34d399" : r.v <= 2 ? "#ef4444" : "#fbbf24",
+                            }}>
+                              {r.l} {r.v}/5
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {c.note && (
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.5, fontStyle: "italic", marginTop: 4 }}>
+                          « {c.note} »
+                        </div>
+                      )}
                     </div>
                   );
                 })}

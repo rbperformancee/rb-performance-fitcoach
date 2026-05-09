@@ -227,6 +227,37 @@ export default function WeightChart({ clientId, client, programme, appData }) {
         )}
       </div>
 
+      {/* CTA Bilan hebdomadaire — accessible n'importe quand depuis le Body tab */}
+      <div style={{ padding: "0 24px 20px", position: "relative", zIndex: 1 }}>
+        <button
+          type="button"
+          onClick={() => { haptic.light?.(); window.dispatchEvent(new Event("rb:open-checkin")); }}
+          style={{
+            width: "100%",
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "14px 16px",
+            background: "linear-gradient(135deg, rgba(2,209,186,0.12), rgba(2,209,186,0.04))",
+            border: "1px solid rgba(2,209,186,0.25)",
+            borderRadius: 14,
+            cursor: "pointer", fontFamily: "inherit",
+            textAlign: "left",
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2.5px", color: GREEN, textTransform: "uppercase", marginBottom: 4 }}>
+              Bilan de la semaine
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
+              Poids + mensurations + ressenti · 30 secondes
+            </div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </button>
+      </div>
+
       <div style={{ padding: "0 24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 28, position: "relative", zIndex: 1 }}>
         {[
           { label: "Minimum", value: vals.length ? Math.min(...vals).toFixed(1) : "--", accent: false },
