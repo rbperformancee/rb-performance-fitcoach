@@ -131,6 +131,43 @@ serve(async (req) => {
       })
     }
 
+    // ===== IDEMPOTENCY =====
+    // Stripe retry les webhooks en cas de 5xx ou timeout. Sans dédup,
+    // mêmes emails + comptes recréés N fois. Track via stripe_events
+    // (table partagée avec le webhook Vercel — event_id UNIQUE empêche
+    // les doublons).
+    try {
+      const check = await fetch(SUPABASE_URL + "/rest/v1/stripe_events?event_id=eq." + encodeURIComponent(event.id) + "&select=event_id", {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: "Bearer " + SUPABASE_KEY,
+        },
+      })
+      const rows = await check.json()
+      if (Array.isArray(rows) && rows.length > 0) {
+        console.log("[edge-stripe] Event " + event.id + " already processed — skip")
+        return new Response(JSON.stringify({ received: true, deduped: true }), { headers: corsHeaders })
+      }
+      // Insert AVANT le traitement pour bloquer les races (UNIQUE event_id rejette le 2e)
+      const ins = await fetch(SUPABASE_URL + "/rest/v1/stripe_events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: "Bearer " + SUPABASE_KEY,
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({ event_id: event.id, type: event.type, payload: event }),
+      })
+      if (!ins.ok && ins.status === 409) {
+        console.log("[edge-stripe] Race detected on event " + event.id + " — skip")
+        return new Response(JSON.stringify({ received: true, deduped: true }), { headers: corsHeaders })
+      }
+    } catch (e: any) {
+      // Mode degrade : si la table est down, on continue (eviter de bloquer le webhook)
+      console.error("[edge-stripe] idempotency check failed:", e?.message || e)
+    }
+
     // ===== Nouveau paiement =====
     if (event.type === "checkout.session.completed") {
       const session = event.data.object
