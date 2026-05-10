@@ -431,7 +431,7 @@ export default function FuelPage({ client, appData }) {
   // Preload recettes en background des qu'on entre dans Fuel : le modal
   // s'ouvre instant avec la liste deja remplie (plus de "Chargement...").
   useEffect(() => {
-    preloadRecipes().catch(() => {});
+    preloadRecipes().catch((e) => console.warn("[FuelPage] preloadRecipes failed:", e?.message));
   }, []);
   const [showScan, setShowScan] = useState(false);
   const [recording, setRecording] = useState(false);

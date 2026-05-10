@@ -662,14 +662,19 @@ function CreneauxManager() {
 
   const fetchAll = async () => {
     setLoading(true);
-    const today = new Date().toISOString().split("T")[0];
-    const [slotsRes, bookingsRes] = await Promise.all([
-      supabase.from("coach_slots").select("*").order("date").order("heure"),
-      supabase.from("bookings").select("*, clients(full_name, email)").order("booked_at", { ascending: false })
-    ]);
-    setSlots(slotsRes.data || []);
-    setBookings(bookingsRes.data || []);
-    setLoading(false);
+    try {
+      const [slotsRes, bookingsRes] = await Promise.all([
+        supabase.from("coach_slots").select("*").order("date").order("heure"),
+        supabase.from("bookings").select("*, clients(full_name, email)").order("booked_at", { ascending: false })
+      ]);
+      setSlots(slotsRes.data || []);
+      setBookings(bookingsRes.data || []);
+    } catch (e) {
+      console.error("[CreneauxManager] fetchAll failed:", e);
+      toast.error("Impossible de charger les créneaux");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addSlot = async () => {
@@ -4187,7 +4192,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         .order("created_at", { ascending: false });
       // Si coachId est fourni, on filtre. Sinon (fallback legacy) on charge tout.
       if (coachId) query = query.eq("coach_id", coachId);
-      const { data: clientsData } = await query;
+      const { data: clientsData, error: clientsErr } = await query;
+      if (clientsErr) {
+        console.error("[loadClients] query failed:", clientsErr);
+        toast.error("Impossible de charger tes clients · " + clientsErr.message);
+        return;
+      }
       if (!clientsData) return;
 
       const enriched = await Promise.all(clientsData.map(async (c) => {
