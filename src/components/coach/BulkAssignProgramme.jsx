@@ -97,13 +97,17 @@ export default function BulkAssignProgramme({ open, onClose, clients, coachId, o
         .update({ is_active: false })
         .in("client_id", targetIds)
         .eq("is_active", true);
-      // 2. INSERT N nouveaux programmes
+      // 2. INSERT N nouveaux programmes — published_at = NOW pour qu'ils soient
+      // immédiatement visibles côté client (sinon le filtre `published_at <= now()`
+      // les masque).
+      const nowIso = new Date().toISOString();
       const rows = targetIds.map((cid) => ({
         client_id: cid,
         programme_name: sourceName,
         html_content: sourceHtml,
         is_active: true,
-        uploaded_at: new Date().toISOString(),
+        published_at: nowIso,
+        uploaded_at: nowIso,
       }));
       const { error } = await supabase.from("programmes").insert(rows);
       if (error) throw error;

@@ -102,12 +102,13 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
           .eq("client_id", clientId)
           .eq("is_active", true);
 
-        // insere le nouveau
+        // insere le nouveau — published_at NOW pour visibilité client immédiate
         const { error: insErr } = await supabase.from("programmes").insert({
           client_id: clientId,
           html_content: srcProg.html_content,
           programme_name: finalName,
           is_active: true,
+          published_at: new Date().toISOString(),
           uploaded_by: "duplication",
         });
         if (insErr) {

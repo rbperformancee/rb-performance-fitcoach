@@ -2317,6 +2317,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 programme_name: src.programme_name,
                 html_content: src.html_content,
                 is_active: true,
+                published_at: new Date().toISOString(),
                 uploaded_by: userResp?.data?.user?.email || null,
               });
               if (error) throw error;
@@ -4605,10 +4606,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       // anciens et les séances apparaissent comme déjà validées.
       await supabase.from("session_completions").delete().eq("client_id", client.id);
 
-      // Inserer le nouveau programme
+      // Inserer le nouveau programme — published_at = NOW (upload manuel = publication immédiate)
       const { error } = await supabase.from("programmes").insert({
         client_id: client.id, html_content: html, programme_name: displayName,
-        is_active: true, uploaded_by: (await supabase.auth.getUser()).data.user?.email,
+        is_active: true, published_at: new Date().toISOString(),
+        uploaded_by: (await supabase.auth.getUser()).data.user?.email,
       });
       if (error) throw error;
 

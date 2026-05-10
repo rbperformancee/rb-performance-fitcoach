@@ -1408,12 +1408,14 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
       const email = userResp?.data?.user?.email || null;
       // Désactive les anciens programmes actifs des clients sélectionnés
       await supabase.from("programmes").update({ is_active: false }).in("client_id", selectedClients);
-      // Insert le nouveau pour chaque
+      // Insert le nouveau pour chaque — published_at NOW pour visibilité client
+      const nowIso = new Date().toISOString();
       const inserts = selectedClients.map((clientId) => ({
         client_id: clientId,
         programme_name: programme.name,
         html_content: html,
         is_active: true,
+        published_at: nowIso,
         uploaded_by: email,
       }));
       const { error } = await supabase.from("programmes").insert(inserts);
