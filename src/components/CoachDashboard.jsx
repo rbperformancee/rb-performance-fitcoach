@@ -497,18 +497,28 @@ function activityColor(lastSeen) {
   if (d <= 7) return "rgba(255,255,255,0.4)";
   return "#ff6b6b";
 }
+// Couleur déterministique par nom — hash simple → teinte HSL stable.
+// Permet de distinguer les clients sans photo d'un coup d'œil.
+function avatarHue(name) {
+  const s = String(name || "?");
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h) % 360;
+}
 function Avatar({ name, size = 40, active, src }) {
-  // Si le client a uploade une photo (clients.avatar_url), on l'affiche.
-  // Sinon fallback sur l'initiale du prenom (ancien comportement).
+  const hue = avatarHue(name);
+  const bgFallback = `hsl(${hue}, 55%, 18%)`;
+  const fgFallback = `hsl(${hue}, 65%, 75%)`;
+  const borderFallback = `hsl(${hue}, 50%, 35%)`;
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: src ? "transparent" : (active ? G_DIM : "rgba(255,255,255,0.04)"),
+      background: src ? "transparent" : (active ? G_DIM : bgFallback),
       backgroundImage: src ? `url(${src})` : "none",
       backgroundSize: "cover", backgroundPosition: "center",
-      border: `2px solid ${active ? G_BORDER : "rgba(255,255,255,0.08)"}`,
+      border: `2px solid ${active ? G_BORDER : borderFallback}`,
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontWeight: 700, fontSize: size * 0.38, color: active ? G : "#666",
+      fontWeight: 700, fontSize: size * 0.38, color: active ? G : fgFallback,
       overflow: "hidden",
     }}>
       {!src && (name || "?")[0].toUpperCase()}

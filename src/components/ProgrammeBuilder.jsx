@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
 import { findFallbackVideo, FALLBACK_VIDEOS } from "../data/fallbackVideos";
 import LogPaymentModal, { checkPaymentNeeded } from "./coach/LogPaymentModal";
+import { addBreadcrumb } from "../lib/sentry";
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -1220,6 +1221,18 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   });
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  // Brouillon restauré ? Lu une seule fois au mount.
+  const [draftRestoredAt, setDraftRestoredAt] = useState(() => {
+    if (editMode) return null;
+    try {
+      const raw = localStorage.getItem(`rb_progbuilder_draft_${client?.id || "anon"}`);
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      const ts = d?.savedAt;
+      if (ts && (Date.now() - ts) < 14 * 24 * 3600 * 1000 && d?.weeks?.length > 0) return ts;
+    } catch {}
+    return null;
+  });
   const [showPublishMenu, setShowPublishMenu] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleDate, setScheduleDate] = useState(() => {
@@ -1280,6 +1293,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   const clearDraft = () => {
     try { localStorage.removeItem(draftKey); } catch {}
+    setDraftRestoredAt(null);
   };
 
   // Charge les templates perso du coach (pour les afficher dans la modal Templates)
@@ -1491,6 +1505,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         training_days: (programme.trainingDays && programme.trainingDays.length) ? programme.trainingDays : [1],
       }).select("id").maybeSingle();
       if (error) throw error;
+      addBreadcrumb({ category: "programme", message: `programme_${mode}`, data: { clientId: client.id, hasScheduled: !!scheduledAt }, level: "info" });
       clearDraft();
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 2500);
@@ -1899,6 +1914,38 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           </div>
         </div>
       </div>
+
+      {/* Bannière "brouillon restauré" — non-bloquant, dismissible */}
+      {draftRestoredAt && !editMode && (
+        <div style={{
+          padding: "10px 16px", background: "rgba(2,209,186,0.08)",
+          borderBottom: "1px solid rgba(2,209,186,0.15)",
+          display: "flex", alignItems: "center", gap: 10, flexShrink: 0,
+          fontSize: 12, color: "rgba(255,255,255,0.75)",
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: G, flexShrink: 0 }} />
+          <span style={{ flex: 1 }}>
+            Brouillon récupéré · sauvegardé {(() => {
+              const m = Math.round((Date.now() - draftRestoredAt) / 60000);
+              if (m < 1) return "à l'instant";
+              if (m < 60) return `il y a ${m} min`;
+              const h = Math.round(m / 60);
+              if (h < 24) return `il y a ${h}h`;
+              return `il y a ${Math.round(h / 24)}j`;
+            })()}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm("Supprimer le brouillon ?")) {
+                clearDraft();
+                setProgramme({ name: "", clientName: (client && client.full_name) || "", duration: "", tagline: "", objective: "", weeks: [newWeek(1)] });
+              }
+            }}
+            style={{ padding: "4px 10px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "rgba(255,255,255,0.55)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3, textTransform: "uppercase" }}
+          >Nettoyer</button>
+        </div>
+      )}
 
       {/* Tabs Edit/Preview — uniquement mobile */}
       {isMobile && (

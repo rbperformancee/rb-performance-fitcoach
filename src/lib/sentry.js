@@ -110,3 +110,20 @@ export function setSentryRole(role) {
     bufferedEvents.push({ context: { key: "role", value: role }, type: "tag" });
   }
 }
+
+// Breadcrumbs : trail des actions business clés pour faciliter le debug
+// d'un crash en prod. Catégories standards : "user", "navigation", "http",
+// "info", "error". Level : "info" | "warning" | "error".
+export function addBreadcrumb({ category = "info", message, data = {}, level = "info" } = {}) {
+  if (!message) return;
+  if (SentryRef) {
+    try {
+      SentryRef.addBreadcrumb({
+        category, message, data, level,
+        timestamp: Date.now() / 1000,
+      });
+    } catch { /* noop */ }
+  }
+  // Pas de buffer ici : breadcrumbs = contexte, perdre quelques-uns pendant
+  // le chargement de Sentry est acceptable.
+}

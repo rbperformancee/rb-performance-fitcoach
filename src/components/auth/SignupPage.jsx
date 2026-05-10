@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { AuthVisual, AuthStyles, GoogleIcon } from "./AuthShared";
 import { useT } from "../../lib/i18n";
+import { addBreadcrumb } from "../../lib/sentry";
 
 /**
  * SignupPage — inscription coach email/password.
@@ -55,6 +56,7 @@ export default function SignupPage() {
     }
 
     setLoading(true);
+    addBreadcrumb({ category: "auth", message: "signup_start", level: "info" });
     try {
       const fullName = `${firstName.trim()} ${lastName.trim()}`;
       const cleanEmail = email.trim().toLowerCase();
@@ -67,10 +69,12 @@ export default function SignupPage() {
         },
       });
       if (error) {
+        addBreadcrumb({ category: "auth", message: "signup_failed", data: { reason: error.message }, level: "error" });
         setError(error.message);
         setLoading(false);
         return;
       }
+      addBreadcrumb({ category: "auth", message: "signup_ok", data: { hasUser: !!data?.user?.id }, level: "info" });
       // Crée la row coaches IMMÉDIATEMENT (sinon le coach se retrouve bloqué
       // après confirm email — pas de row dans coaches → pas isCoach → écran
       // vide / écran client). UPSERT par email pour idempotence si l'utilisateur
