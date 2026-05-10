@@ -504,10 +504,12 @@ module.exports = async (req, res) => {
       }
 
       // 3. Créer/updater l'entrée dans la table coaches
+      // NB: la colonne s'appelle `subscription_plan` (migration 062/066),
+      // PAS `plan`. `locked_price` ajouté en migration 072.
       const { error: coachError } = await getSupabase().from('coaches').upsert({
         id: userId,
         email: email.toLowerCase(),
-        plan: plan,
+        subscription_plan: plan,
         stripe_customer_id: customerId,
         stripe_subscription_id: subscriptionId,
         locked_price: lockedPrice,
@@ -590,9 +592,20 @@ module.exports = async (req, res) => {
       const subscription = event.data.object;
       const customerId = subscription.customer;
 
+      // Sync subscription_end_date (= dernière date d'accès payée).
+      // current_period_end est en secondes (UNIX), Postgres timestamptz en ISO.
+      const endIso = subscription.current_period_end
+        ? new Date(subscription.current_period_end * 1000).toISOString()
+        : new Date().toISOString();
+
       const { error } = await getSupabase()
         .from('coaches')
-        .update({ is_active: false })
+        .update({
+          is_active: false,
+          subscription_plan: 'free',
+          stripe_subscription_status: 'canceled',
+          subscription_end_date: endIso,
+        })
         .eq('stripe_customer_id', customerId);
 
       if (error) {
@@ -655,9 +668,35 @@ module.exports = async (req, res) => {
 
       // Sync status + plan metadata best-effort. If new metadata carries
       // a plan, update it; otherwise leave coach row untouched.
+      // NB: la colonne s'appelle `subscription_plan`, pas `plan`.
+      // SECURITÉ : on NE fait PAS confiance à md.plan (manipulable via Stripe
+      // Dashboard ou API). Pour un sync sûr du plan, il faudrait refetch les
+      // line items + whitelist priceId comme dans checkout.session.completed.
+      // Ici on se contente du status (sécurisé via signature webhook).
       const updates = { stripe_subscription_status: status };
       const md = subscription.metadata || {};
-      if (md.plan) updates.plan = md.plan;
+      // Refetch plan from subscription items (priceId whitelist) plutôt que metadata
+      try {
+        const items = subscription.items?.data || [];
+        const priceIds = items.map((it) => it.price?.id).filter(Boolean);
+        const PLAN_BY_PRICE = {
+          [process.env.STRIPE_PRICE_FOUNDING]:     'founding',
+          [process.env.STRIPE_PRICE_FOUNDING_USD]: 'founding',
+          [process.env.STRIPE_PRICE_FOUNDING_GBP]: 'founding',
+          [process.env.STRIPE_PRICE_PRO]:          'pro',
+          [process.env.STRIPE_PRICE_PRO_USD]:      'pro',
+          [process.env.STRIPE_PRICE_PRO_GBP]:      'pro',
+          [process.env.STRIPE_PRICE_ELITE]:        'elite',
+          [process.env.STRIPE_PRICE_ELITE_USD]:    'elite',
+          [process.env.STRIPE_PRICE_ELITE_GBP]:    'elite',
+        };
+        delete PLAN_BY_PRICE[undefined];
+        for (const pid of priceIds) {
+          if (PLAN_BY_PRICE[pid]) { updates.subscription_plan = PLAN_BY_PRICE[pid]; break; }
+        }
+      } catch (e) {
+        console.warn('[webhook] subscription.updated plan resolve failed:', e?.message);
+      }
       if (md.locked_price) updates.locked_price = md.locked_price;
 
       try {
