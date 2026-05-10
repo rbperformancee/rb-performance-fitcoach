@@ -133,6 +133,16 @@ module.exports = async (req, res) => {
 
     console.log(`[COACH_UPDATE_CLIENT_EMAIL_OK] coach=${coach.email} client=${clientId} ${client.email} → ${newEmail} authUpdated=${authUpdated}`);
 
+    // 7. Notification email (best-effort, non bloquant)
+    //    - Ancien email : alerte sécurité "ton adresse a été changée"
+    //    - Nouvel email : confirmation "tu peux te connecter avec ce nouvel email"
+    sendChangeNotifications({
+      oldEmail: client.email,
+      newEmail,
+      clientName: client.full_name,
+      coachEmail: coach.email,
+    }).catch((e) => console.warn("[coach-update-client-email] notif email failed:", e.message));
+
     return res.status(200).json({
       ok: true,
       old_email: client.email,
@@ -145,3 +155,74 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: "Update failed: " + err.message });
   }
 };
+
+async function sendChangeNotifications({ oldEmail, newEmail, clientName, coachEmail }) {
+  const SMTP_USER = process.env.ZOHO_SMTP_USER || "rayan@rbperform.app";
+  const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
+  if (!SMTP_PASS) return;
+
+  const nodemailer = require("nodemailer");
+  const transporter = nodemailer.createTransport({
+    host: "smtp.zoho.eu", port: 465, secure: true,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
+
+  const firstName = (clientName || "").split(" ")[0] || "";
+  const greeting = firstName ? `Bonjour ${firstName},` : "Bonjour,";
+  const fromHeader = `RB Perform <${SMTP_USER}>`;
+
+  // Alerte ancien email — sécurité
+  const oldHtml = `<html><body style="background:#0a0a0a;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;padding:32px;">
+    <div style="max-width:480px;margin:0 auto;">
+      <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:#ef4444;margin-bottom:6px;">Sécurité</div>
+      <div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:16px;letter-spacing:-0.5px;">Ton adresse email a changé</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:20px;">
+        ${greeting}<br><br>
+        Ton coach a modifié l'adresse email associée à ton compte RB Perform.<br><br>
+        <strong>Nouvelle adresse :</strong> ${escapeHtml(newEmail)}<br>
+        À partir de maintenant, tu dois utiliser cette nouvelle adresse pour te connecter.
+      </div>
+      <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5;">
+          Si ce changement n'a pas été fait à ta demande, contacte ton coach (${escapeHtml(coachEmail)}) ou réponds à cet email.
+        </div>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);">— RB Perform</div>
+    </div>
+  </body></html>`;
+
+  // Confirmation nouvel email
+  const newHtml = `<html><body style="background:#0a0a0a;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;padding:32px;">
+    <div style="max-width:480px;margin:0 auto;">
+      <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.7);margin-bottom:6px;">Confirmation</div>
+      <div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:16px;letter-spacing:-0.5px;">Nouvelle adresse email confirmée</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:20px;">
+        ${greeting}<br><br>
+        Ton compte RB Perform est maintenant lié à cette adresse email. Tu peux te connecter avec.<br><br>
+        <strong>Ancienne adresse :</strong> ${escapeHtml(oldEmail)}<br>
+        <strong>Nouvelle adresse :</strong> ${escapeHtml(newEmail)}
+      </div>
+      <a href="https://rbperform.app" style="display:inline-block;background:#02d1ba;color:#000;text-decoration:none;font-weight:800;font-size:13px;padding:12px 24px;border-radius:10px;letter-spacing:0.3px;">Ouvrir RB Perform</a>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:20px;">— RB Perform</div>
+    </div>
+  </body></html>`;
+
+  await Promise.all([
+    transporter.sendMail({
+      from: fromHeader, to: oldEmail, replyTo: SMTP_USER,
+      subject: "Ton email RB Perform a été changé",
+      html: oldHtml,
+    }).catch((e) => console.warn("[coach-update-client-email] old-email send failed:", e.message)),
+    transporter.sendMail({
+      from: fromHeader, to: newEmail, replyTo: SMTP_USER,
+      subject: "Nouvelle adresse confirmée — RB Perform",
+      html: newHtml,
+    }).catch((e) => console.warn("[coach-update-client-email] new-email send failed:", e.message)),
+  ]);
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
