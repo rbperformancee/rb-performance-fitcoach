@@ -1480,7 +1480,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
                        : mode === "schedule"     ? scheduledAt
                        : null;
 
-      const { error } = await supabase.from("programmes").insert({
+      const { data: inserted, error } = await supabase.from("programmes").insert({
         client_id: client.id,
         programme_name: programme.name,
         html_content: html,
@@ -1489,12 +1489,28 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         uploaded_by: email,
         start_date: programme.startDate || new Date().toISOString().slice(0, 10),
         training_days: (programme.trainingDays && programme.trainingDays.length) ? programme.trainingDays : [1],
-      });
+      }).select("id").maybeSingle();
       if (error) throw error;
       clearDraft();
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 2500);
       if (typeof onSaved === "function") onSaved();
+
+      // Notif instantanée "ton programme est dispo" quand on publie maintenant.
+      // Pour les programmes planifiés futur, la cron prend le relais à published_at.
+      if (mode === "publish-now" && inserted?.id) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          fetch("/api/notify-client-programme-published", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session?.access_token || ""}`,
+            },
+            body: JSON.stringify({ programmeId: inserted.id }),
+          }).catch(() => {}); // best-effort, la cron rattrappe au pire
+        } catch (_) { /* noop */ }
+      }
 
       // Hook C : check paiement uniquement quand on publie réellement (pas en draft)
       if (mode !== "draft") {
