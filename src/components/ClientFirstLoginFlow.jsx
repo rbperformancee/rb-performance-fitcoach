@@ -17,6 +17,7 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
   const [poids, setPoids] = useState("");
   const [objectif, setObjectif] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const fileRef = useRef();
 
   const clientId = client?.id;
@@ -39,27 +40,41 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
 
   const finish = async () => {
     if (!clientId) { onComplete?.(); return; }
+    setError("");
     setSaving(true);
     try {
       const today = new Date().toISOString().split("T")[0];
       const w = parseFloat(poids);
+      // Si l'utilisateur a saisi un poids hors limites, on stoppe et on lui dit.
+      // Un champ vide est OK (skippable).
+      if (poids && (isNaN(w) || w <= 20 || w >= 250)) {
+        setError("Le poids doit être entre 20 et 250 kg.");
+        setSaving(false);
+        return;
+      }
       if (w && w > 20 && w < 250) {
-        await supabase.from("weight_logs").upsert(
+        const { error: wErr } = await supabase.from("weight_logs").upsert(
           { client_id: clientId, date: today, weight: w, note: "Poids initial" },
           { onConflict: "client_id,date" }
         );
+        if (wErr) throw wErr;
       }
       if (objectif.trim()) {
-        await supabase.from("onboarding_forms").upsert({
+        const { error: oErr } = await supabase.from("onboarding_forms").upsert({
           client_id: clientId,
           email: client?.email || user?.email,
           objectifs_6mois: objectif.trim(),
         }, { onConflict: "client_id" });
+        if (oErr) throw oErr;
       }
-      await supabase.from("clients").update({ onboarding_done: true }).eq("id", clientId);
+      const { error: cErr } = await supabase.from("clients").update({ onboarding_done: true }).eq("id", clientId);
+      if (cErr) throw cErr;
       haptic.success();
       onComplete?.();
-    } catch (e) { console.error("first-login finish:", e); }
+    } catch (e) {
+      console.error("first-login finish:", e);
+      setError("Impossible de sauvegarder · " + (e?.message || "réessaie ou contacte ton coach"));
+    }
     setSaving(false);
   };
 
@@ -128,6 +143,9 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
               <input
                 type="number"
                 inputMode="decimal"
+                min={20}
+                max={249}
+                step={0.5}
                 value={poids}
                 onChange={(e) => setPoids(e.target.value)}
                 placeholder="75"
@@ -205,6 +223,11 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
                 <button onClick={finish} disabled={saving} style={btnPrimary(!saving)}>
                   {saving ? "..." : "Accéder à mon espace"}
                 </button>
+                {error && (
+                  <div style={{ marginTop: 16, padding: "10px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, color: "#ff6b6b", fontSize: 13, lineHeight: 1.5, maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
+                    {error}
+                  </div>
+                )}
               </div>
             </div>
           </>

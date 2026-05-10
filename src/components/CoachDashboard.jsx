@@ -3558,12 +3558,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
       {/* ===== AI ANALYZE (modal) ===== */}
       {showAIAnalyze && (
-        <AIAnalyze
-          client={client}
-          coachId={coachData?.id}
-          isDemo={isDemo}
-          onClose={() => setShowAIAnalyze(false)}
-        />
+        <ErrorBoundary name="AIAnalyze">
+          <AIAnalyze
+            client={client}
+            coachId={coachData?.id}
+            isDemo={isDemo}
+            onClose={() => setShowAIAnalyze(false)}
+          />
+        </ErrorBoundary>
       )}
 
       {/* ===== DRAWERS DONNEES (Poids / Eau / Sommeil) ===== */}
@@ -5273,28 +5275,34 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         />
       )}
 
-      <BulkAssignProgramme
-        open={showBulkAssign}
-        onClose={() => setShowBulkAssign(false)}
-        clients={clients}
-        coachId={coachId}
-        onDone={() => loadClients()}
-      />
+      <ErrorBoundary name="BulkAssignProgramme">
+        <BulkAssignProgramme
+          open={showBulkAssign}
+          onClose={() => setShowBulkAssign(false)}
+          clients={clients}
+          coachId={coachId}
+          onDone={() => loadClients()}
+        />
+      </ErrorBoundary>
 
       {showSettings && (
-        <Settings
-          coachData={coachData}
-          isDemo={isDemo}
-          onClose={() => setShowSettings(false)}
-        />
+        <ErrorBoundary name="Settings">
+          <Settings
+            coachData={coachData}
+            isDemo={isDemo}
+            onClose={() => setShowSettings(false)}
+          />
+        </ErrorBoundary>
       )}
       {showMonCompte && (
-        <MonCompte
-          coachData={coachData}
-          isDemo={isDemo}
-          initialTab={monCompteInitialTab}
-          onClose={() => setShowMonCompte(false)}
-        />
+        <ErrorBoundary name="MonCompte">
+          <MonCompte
+            coachData={coachData}
+            isDemo={isDemo}
+            initialTab={monCompteInitialTab}
+            onClose={() => setShowMonCompte(false)}
+          />
+        </ErrorBoundary>
       )}
       {showSentinel && hasSentinelAccess && (
         <ErrorBoundary name="Sentinel">
