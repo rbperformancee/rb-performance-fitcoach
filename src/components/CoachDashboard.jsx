@@ -4593,6 +4593,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       if (filter === "active") return c._lastActivity && Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) <= 7;
       if (filter === "noprog") return !c.programmes?.some(p => p.is_active);
       if (filter === "inactive") return c._inactive && c.programmes?.some(p => p.is_active);
+      if (filter === "urgent") {
+        const hasProg = c.programmes?.some(p => p.is_active);
+        if (!hasProg && c.onboarding_done) return true;
+        if (hasProg && c._inactiveDays >= 3) return true;
+        if (c.subscription_end_date) {
+          const dl = Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000);
+          if (dl <= 14) return true;
+        }
+        return false;
+      }
       if (filter === "atrisk") {
         // Risk: no activity > 7d AND has active programme (le client a abandonné en cours)
         if (!c.programmes?.some(p => p.is_active)) return false;
@@ -5418,7 +5428,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== ALERTE URGENTE ========== */}
           {urgentCount > 0 && (
             <div
-              onClick={() => { setShowClientList(true); setActiveTab("clients"); setFilter("inactive"); }}
+              onClick={() => { setShowClientList(true); setActiveTab("clients"); setFilter("urgent"); }}
               className="dash-alert-row"
               style={{
                 display: "flex", alignItems: "center", gap: 12, marginBottom: 32,
