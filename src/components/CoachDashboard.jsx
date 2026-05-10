@@ -4076,7 +4076,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       // ===== MULTI-TENANT : filtrage par coach_id =====
       let query = supabase
         .from("clients")
-        .select("*, programmes(id, programme_name, uploaded_at, is_active)")
+        .select("*, programmes(id, programme_name, uploaded_at, is_active, published_at)")
         .order("created_at", { ascending: false });
       // Si coachId est fourni, on filtre. Sinon (fallback legacy) on charge tout.
       if (coachId) query = query.eq("coach_id", coachId);

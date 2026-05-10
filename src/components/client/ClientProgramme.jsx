@@ -31,10 +31,12 @@ export default function ClientProgramme({ client, accent }) {
     (async () => {
       const { data } = await supabase
         .from("programmes")
-        .select("id, programme_name, html_content, uploaded_at")
+        .select("id, programme_name, html_content, uploaded_at, published_at")
         .eq("client_id", client.id)
         .eq("is_active", true)
-        .order("uploaded_at", { ascending: false })
+        .not("published_at", "is", null)
+        .lte("published_at", new Date().toISOString())
+        .order("published_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (cancelled) return;

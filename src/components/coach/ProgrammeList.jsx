@@ -4,6 +4,7 @@ import { toast } from "../Toast";
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
 import { useT, getLocale, t as tStatic } from "../../lib/i18n";
+import { getProgrammeStatus, formatScheduledDate } from "../../lib/programmeStatus";
 
 const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
 const fillTpl = (s, vars) => {
@@ -70,7 +71,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
         if (clientIds.length === 0) { setProgrammes([]); return; }
         const { data, error } = await supabase
           .from("programmes")
-          .select("id, client_id, programme_name, is_active, uploaded_at, programme_start_date")
+          .select("id, client_id, programme_name, is_active, uploaded_at, programme_start_date, published_at")
           .in("client_id", clientIds)
           .order("uploaded_at", { ascending: false });
         if (error) throw error;
@@ -281,9 +282,26 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
                 </div>
 
                 {/* Nom programme */}
-                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-.3px", marginBottom: 10, lineHeight: 1.2 }}>
+                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-.3px", marginBottom: 6, lineHeight: 1.2 }}>
                   {prog.programme_name || t("prog.no_name")}
                 </div>
+
+                {/* Status badge */}
+                {(() => {
+                  const status = getProgrammeStatus(prog);
+                  if (status === "live") return null;
+                  const config = {
+                    draft:     { label: "Brouillon",                                          bg: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" },
+                    scheduled: { label: `Planifié · ${formatScheduledDate(prog.published_at)}`, bg: "rgba(2,209,186,0.08)",   color: "#02d1ba" },
+                    archived:  { label: "Archivé",                                           bg: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.4)" },
+                  }[status];
+                  if (!config) return null;
+                  return (
+                    <div style={{ display: "inline-block", padding: "3px 8px", marginBottom: 10, fontSize: 9, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: config.bg, color: config.color, borderRadius: 4 }}>
+                      {config.label}
+                    </div>
+                  );
+                })()}
 
                 {/* Client row */}
                 <div

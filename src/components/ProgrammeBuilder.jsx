@@ -1220,6 +1220,14 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   });
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [showPublishMenu, setShowPublishMenu] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(8, 0, 0, 0);
+    return d.toISOString().slice(0, 16);
+  });
   // Hook C : modal "logger paiement" déclenchée après save si la période en
   // cours du client est dépassée OU pas définie. Skippable.
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -1425,24 +1433,59 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
     setProgramme((p) => ({ ...p, weeks: p.weeks.filter((_, i) => i !== idx) }));
   };
 
-  const handleSave = async () => {
+  // mode: "draft" | "publish-now" | "schedule"
+  // scheduledAt: ISO string (only for "schedule")
+  const persistProgramme = async (mode, scheduledAt = null) => {
     if (!programme.name || !programme.name.trim()) { alert("Donne un nom au programme avant de sauvegarder."); return; }
     if (!client || !client.id) { alert("Pas de client cible."); return; }
+    if (mode === "schedule") {
+      if (!scheduledAt) { alert("Choisis une date de publication."); return; }
+      if (new Date(scheduledAt) <= new Date()) { alert("La date doit être dans le futur."); return; }
+    }
     setSaving(true);
     try {
       const html = buildHTML(programme);
-      // On supprime les programmes precedents au lieu de les desactiver :
-      // historique pas affiche dans l'UI, accumulation = bruit. run_logs.programme_id
-      // passe a NULL (ON DELETE SET NULL), exercise_logs / session_completions
-      // referencent client_id donc preserves.
-      await supabase.from("programmes").delete().eq("client_id", client.id);
       const userResp = await supabase.auth.getUser();
       const email = userResp && userResp.data && userResp.data.user ? userResp.data.user.email : null;
+
+      // Cleanup avant insert :
+      //  - draft     : on supprime juste l'ancien brouillon (is_active=false, published_at IS NULL)
+      //                — l'éventuel programme en cours ou planifié reste intact
+      //  - publish   : reset complet (current behavior) — un seul programme actif après
+      //  - schedule  : on supprime brouillons + autres programmes planifiés (futurs).
+      //                On GARDE le programme en cours pour que le client continue à l'avoir
+      //                jusqu'à la date X. Le filtre côté client (`published_at <= NOW()`) prend
+      //                automatiquement le plus récent quand X est passé.
+      if (mode === "draft") {
+        await supabase.from("programmes").delete()
+          .eq("client_id", client.id)
+          .eq("is_active", false)
+          .is("published_at", null);
+      } else if (mode === "publish-now") {
+        await supabase.from("programmes").delete().eq("client_id", client.id);
+      } else if (mode === "schedule") {
+        // Supprime brouillons + autres "scheduled" (published_at futur)
+        await supabase.from("programmes").delete()
+          .eq("client_id", client.id)
+          .eq("is_active", false)
+          .is("published_at", null);
+        await supabase.from("programmes").delete()
+          .eq("client_id", client.id)
+          .eq("is_active", true)
+          .gt("published_at", new Date().toISOString());
+      }
+
+      const isActive = mode !== "draft";
+      const publishedAt = mode === "publish-now" ? new Date().toISOString()
+                       : mode === "schedule"     ? scheduledAt
+                       : null;
+
       const { error } = await supabase.from("programmes").insert({
         client_id: client.id,
         programme_name: programme.name,
         html_content: html,
-        is_active: true,
+        is_active: isActive,
+        published_at: publishedAt,
         uploaded_by: email,
         start_date: programme.startDate || new Date().toISOString().slice(0, 10),
         training_days: (programme.trainingDays && programme.trainingDays.length) ? programme.trainingDays : [1],
@@ -1453,20 +1496,18 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
       setTimeout(() => setSavedFlash(false), 2500);
       if (typeof onSaved === "function") onSaved();
 
-      // Hook C : check si un paiement est nécessaire pour ce client
-      // (aucun paiement loggé OU période dépassée). Skippable, non bloquant.
-      try {
-        const status = await checkPaymentNeeded(client.id);
-        if (status.needs) {
-          // Récupère le coach_id (auth.uid) pour le modal
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.id) {
-            setPaymentCoachId(user.id);
-            setShowPaymentModal(true);
+      // Hook C : check paiement uniquement quand on publie réellement (pas en draft)
+      if (mode !== "draft") {
+        try {
+          const status = await checkPaymentNeeded(client.id);
+          if (status.needs) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.id) {
+              setPaymentCoachId(user.id);
+              setShowPaymentModal(true);
+            }
           }
-        }
-      } catch (_) {
-        // Pas bloquant — le programme est sauvegardé même si on rate le check
+        } catch (_) { /* non bloquant */ }
       }
     } catch (e) {
       console.error("[ProgrammeBuilder] save error:", e);
@@ -1474,6 +1515,18 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveDraft = () => { setShowPublishMenu(false); persistProgramme("draft"); };
+  const handlePublishNow = () => { setShowPublishMenu(false); persistProgramme("publish-now"); };
+  const handleSchedule = () => {
+    setShowPublishMenu(false);
+    setShowScheduleModal(true);
+  };
+  const confirmSchedule = () => {
+    const iso = new Date(scheduleDate).toISOString();
+    setShowScheduleModal(false);
+    persistProgramme("schedule", iso);
   };
 
   return (
@@ -1769,23 +1822,65 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               <span>Template</span>
             </button>
           )}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: isMobile ? "8px 12px" : "10px 18px",
-              background: "linear-gradient(135deg, " + G + ", #0891b2)",
-              border: "none", borderRadius: 10, color: "#000",
-              fontSize: isMobile ? 11 : 12, fontWeight: 800, cursor: saving ? "wait" : "pointer",
-              fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase",
-              boxShadow: "0 6px 20px rgba(2,209,186,0.25)",
-            }}
-          >
-            {!saving && <ToolbarIcon name="save" size={14} />}
-            <span>{saving ? (isMobile ? "…" : "Sauvegarde…") : (isMobile ? "OK" : "Sauvegarder")}</span>
-          </button>
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <button
+              type="button"
+              onClick={() => setShowPublishMenu((v) => !v)}
+              disabled={saving}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: isMobile ? "8px 12px" : "10px 18px",
+                background: "linear-gradient(135deg, " + G + ", #0891b2)",
+                border: "none", borderRadius: 10, color: "#000",
+                fontSize: isMobile ? 11 : 12, fontWeight: 800, cursor: saving ? "wait" : "pointer",
+                fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase",
+                boxShadow: "0 6px 20px rgba(2,209,186,0.25)",
+              }}
+            >
+              {!saving && <ToolbarIcon name="save" size={14} />}
+              <span>{saving ? (isMobile ? "…" : "Sauvegarde…") : (isMobile ? "OK" : "Publier")}</span>
+              <span style={{ fontSize: 9, opacity: 0.7 }}>▾</span>
+            </button>
+            {showPublishMenu && !saving && (
+              <div
+                style={{
+                  position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50,
+                  minWidth: 240, background: "#0a0a0a",
+                  border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12,
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.6)", overflow: "hidden",
+                }}
+                onMouseLeave={() => setShowPublishMenu(false)}
+              >
+                <button
+                  type="button" onClick={handlePublishNow}
+                  style={{ display: "block", width: "100%", textAlign: "left", padding: "12px 14px", background: "transparent", border: "none", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(2,209,186,0.08)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <div>Publier maintenant</div>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>Le client le voit immédiatement</div>
+                </button>
+                <button
+                  type="button" onClick={handleSchedule}
+                  style={{ display: "block", width: "100%", textAlign: "left", padding: "12px 14px", background: "transparent", border: "none", borderTop: "1px solid rgba(255,255,255,0.06)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(2,209,186,0.08)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <div>Planifier la publication</div>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>Bascule auto à une date / heure</div>
+                </button>
+                <button
+                  type="button" onClick={handleSaveDraft}
+                  style={{ display: "block", width: "100%", textAlign: "left", padding: "12px 14px", background: "transparent", border: "none", borderTop: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <div>Enregistrer en brouillon</div>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Pas envoyé au client</div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1975,6 +2070,49 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         coachId={paymentCoachId}
         defaultAmount={300}
       />
+
+      {/* Modal planification — date+heure de bascule */}
+      {showScheduleModal && (
+        <div
+          onClick={() => setShowScheduleModal(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: "100%", maxWidth: 420, background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24 }}
+          >
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 6 }}>Planifier la publication</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18 }}>
+              Le client gardera son programme actuel jusqu'à cette date, puis basculera automatiquement sur celui-ci.
+            </div>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              Date et heure
+            </label>
+            <input
+              type="datetime-local"
+              value={scheduleDate}
+              onChange={(e) => setScheduleDate(e.target.value)}
+              min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+              style={{
+                width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10,
+                color: "#fff", fontSize: 14, fontFamily: "inherit", marginBottom: 18,
+                colorScheme: "dark",
+              }}
+            />
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button
+                type="button" onClick={() => setShowScheduleModal(false)}
+                style={{ padding: "10px 18px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+              >Annuler</button>
+              <button
+                type="button" onClick={confirmSchedule}
+                style={{ padding: "10px 18px", background: "linear-gradient(135deg, " + G + ", #0891b2)", border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3 }}
+              >Confirmer</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
