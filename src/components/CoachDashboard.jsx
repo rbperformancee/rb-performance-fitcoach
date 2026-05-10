@@ -5554,6 +5554,59 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             </div>
           )}
 
+          {/* ========== PROGRAMMES PLANIFIÉS (next 5) ========== */}
+          {(() => {
+            const now = Date.now();
+            const scheduled = [];
+            (clients || []).forEach((c) => {
+              (c.programmes || []).forEach((p) => {
+                if (p.is_active && p.published_at && new Date(p.published_at).getTime() > now) {
+                  scheduled.push({ ...p, _client: c });
+                }
+              });
+            });
+            scheduled.sort((a, b) => new Date(a.published_at) - new Date(b.published_at));
+            const top = scheduled.slice(0, 5);
+            if (top.length === 0) return null;
+            const fmtRel = (iso) => {
+              const ms = new Date(iso) - new Date();
+              const min = Math.round(ms / 60000);
+              if (min < 60) return `dans ${min} min`;
+              const h = Math.round(min / 60);
+              if (h < 24) return `dans ${h}h`;
+              const d = Math.round(h / 24);
+              if (d <= 7) return `dans ${d}j`;
+              return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+            };
+            return (
+              <div style={{ marginBottom: 32, padding: 16, background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.12)", borderRadius: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase" }}>À venir</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{scheduled.length} programme{scheduled.length > 1 ? "s" : ""} planifié{scheduled.length > 1 ? "s" : ""}</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {top.map((p) => (
+                    <div
+                      key={p.id}
+                      onClick={() => { setSelected(p._client); setShowClientList(false); }}
+                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                    >
+                      <Avatar name={p._client.full_name || p._client.email} size={28} src={p._client.avatar_url} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {p.programme_name || "Sans nom"} · <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 400 }}>{p._client.full_name || p._client.email}</span>
+                        </div>
+                        <div style={{ fontSize: 10, color: G, marginTop: 2, fontWeight: 600 }}>{fmtRel(p.published_at)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
 
           {/* ========== ONBOARDING WIZARD (nouveau coach 0 client) ========== */}
           {!showClientList && coachData && !loading && clients.length === 0 && (
