@@ -35,6 +35,7 @@ import EmptyStateNewCoach from "./coach/EmptyStateNewCoach";
 import CelebrationModal, { isMilestoneCelebrated, markMilestoneCelebrated } from "./coach/CelebrationModal";
 import BulkAssignProgramme from "./coach/BulkAssignProgramme";
 import { computeClientRisk } from "../lib/clientRisk";
+import { isProgrammeLive } from "../lib/programmeStatus";
 import LogPaymentModal from "./coach/LogPaymentModal";
 import Settings from "./coach/Settings";
 import ChurnAlertsSection from "./coach/ChurnAlertsSection";
@@ -5662,12 +5663,14 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {filtered.map((c, i) => {
-                  const prog = c.programmes?.find((p) => p.is_active);
+                  const prog = c.programmes?.find(isProgrammeLive);
                   const actCol = activityColor(c._lastActivity);
                   const logsCount = Math.ceil(c._logs.length / 3);
                   const dStr = daysAgo(c._lastActivity);
                   const inDays = c._lastActivity ? Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) : null;
-                  const hasProg = c.programmes?.some((p) => p.is_active);
+                  // hasProg = a un programme EN COURS (pas un brouillon ni un planifié futur)
+                  // → un client avec uniquement un programme planifié n'est pas "à risque"
+                  const hasProg = c.programmes?.some(isProgrammeLive);
                   const risk = computeClientRisk({ client: c, hasActiveProgramme: hasProg });
 
                   return (
