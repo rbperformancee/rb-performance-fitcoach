@@ -82,6 +82,11 @@ Coche au fur et à mesure. Mis à jour automatiquement par chaque commit qui fer
 
 ---
 
+## 🟣 Dette technique — post-launch dédié (gros effort, risque T-16)
+
+- [ ] **CoachDashboard refacto** : 5942 lignes → split en BusinessSection / ClientList / ClientPanel / OverviewSection / NavSidebar. Gain attendu : perf re-render 30%, relisible, isolation des bugs. Session dédiée ~4-6h, à faire après stabilisation post-launch.
+- [ ] **Tests E2E Playwright** : setup framework + suites sur 3 flows critiques (signup → onboarding → dashboard, programme assignment, paiement Stripe). Évite les régressions silencieuses au deploy. ~3-4h pour setup + premières suites.
+
 ## ❌ Items à clarifier avec Rayan (questions ouvertes)
 
 - [ ] **« Stripe 3 » badge** mystérieux : screenshot demandé pour identifier la source

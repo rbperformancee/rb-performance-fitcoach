@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
 import SessionTracker from "./SessionTracker";
+import { SkeletonBox } from "../Skeleton";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -48,8 +49,12 @@ export default function ClientProgramme({ client, accent }) {
 
   if (loading) {
     return (
-      <div style={{ padding: 32, color: "rgba(255,255,255,.3)", textAlign: "center", fontSize: 12 }}>
-        {t("cprg.loading")}
+      <div style={{ padding: "32px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+        <SkeletonBox height={24} width="60%" />
+        <SkeletonBox height={14} width="40%" />
+        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+          {[1, 2, 3].map((i) => <SkeletonBox key={i} height={68} radius={14} />)}
+        </div>
       </div>
     );
   }
