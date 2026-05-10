@@ -1690,7 +1690,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: isMobile ? "10px 12px" : "14px 22px", borderBottom: "1px solid " + BORDER, background: BG_2, flexShrink: 0,
         gap: 8,
-        overflow: "hidden",
+        position: "relative", zIndex: 10,
         maxWidth: "100%",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 14, minWidth: 0 }}>
@@ -1844,7 +1844,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             {showPublishMenu && !saving && (
               <div
                 style={{
-                  position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50,
+                  position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 9999,
                   minWidth: 240, background: "#0a0a0a",
                   border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12,
                   boxShadow: "0 16px 40px rgba(0,0,0,0.6)", overflow: "hidden",
