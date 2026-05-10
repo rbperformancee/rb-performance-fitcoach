@@ -4200,30 +4200,54 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       }
       if (!clientsData) return;
 
-      const enriched = await Promise.all(clientsData.map(async (c) => {
-        const [{ data: logs }, { data: weights }, { data: rpe }] = await Promise.all([
-          supabase.from("exercise_logs").select("*").eq("client_id", c.id).order("logged_at", { ascending: false }).limit(30),
-          supabase.from("weight_logs").select("*").eq("client_id", c.id).order("date", { ascending: false }).limit(10),
-          supabase.from("session_rpe").select("*").eq("client_id", c.id).order("date", { ascending: false }).limit(5),
+      // Fix N+1 : un seul batch de 3 queries au lieu de 3 × N (50 clients = 150 queries → 3).
+      // Récupère les logs des 30 derniers, pesées des 10 derniers, RPE des 5 derniers PAR client
+      // côté JS — limites globales suffisamment large (clients × 30) pour pas tronquer.
+      const allIds = clientsData.map((c) => c.id);
+      let allLogs = [], allWeights = [], allRpe = [];
+      if (allIds.length > 0) {
+        const [logsRes, weightsRes, rpeRes] = await Promise.all([
+          supabase.from("exercise_logs").select("*").in("client_id", allIds).order("logged_at", { ascending: false }).limit(allIds.length * 30),
+          supabase.from("weight_logs").select("*").in("client_id", allIds).order("date", { ascending: false }).limit(allIds.length * 10),
+          supabase.from("session_rpe").select("*").in("client_id", allIds).order("date", { ascending: false }).limit(allIds.length * 5),
         ]);
+        allLogs = logsRes.data || [];
+        allWeights = weightsRes.data || [];
+        allRpe = rpeRes.data || [];
+      }
+      const logsByClient = new Map();
+      const weightsByClient = new Map();
+      const rpeByClient = new Map();
+      const pushLimited = (map, key, value, limit) => {
+        const arr = map.get(key) || [];
+        if (arr.length < limit) { arr.push(value); map.set(key, arr); }
+      };
+      // Les arrays sont déjà ordonnés DESC, on prend les N premiers par client
+      allLogs.forEach((l) => pushLimited(logsByClient, l.client_id, l, 30));
+      allWeights.forEach((w) => pushLimited(weightsByClient, w.client_id, w, 10));
+      allRpe.forEach((r) => pushLimited(rpeByClient, r.client_id, r, 5));
+
+      const enriched = clientsData.map((c) => {
+        const logs = logsByClient.get(c.id) || [];
+        const weights = weightsByClient.get(c.id) || [];
+        const rpe = rpeByClient.get(c.id) || [];
         // _lastActivity = max(log seance, pesee, derniere connexion auth)
-        const candidates = [logs?.[0]?.logged_at, weights?.[0]?.date, c.last_seen_at].filter(Boolean);
+        const candidates = [logs[0]?.logged_at, weights[0]?.date, c.last_seen_at].filter(Boolean);
         const lastActivity = candidates.length > 0
           ? candidates.reduce((a, b) => new Date(a) > new Date(b) ? a : b)
           : null;
         const inactiveDays = lastActivity ? Math.floor((Date.now() - new Date(lastActivity)) / 86400000) : 999;
         return {
           ...c,
-          _logs: logs || [], _weights: weights || [], _rpe: rpe || [],
+          _logs: logs, _weights: weights, _rpe: rpe,
           _lastActivity: lastActivity,
           _inactive: inactiveDays >= 7,
           _inactiveDays: inactiveDays < 999 ? inactiveDays : null,
-          // Dynamic plan pricing (enriched below if coach_plans table exists)
           _plan_price: 0,
           _plan_name: "—",
           _plan_months: null,
         };
-      }));
+      });
       // Enrichissement plan pricing (optionnel — table peut ne pas exister)
       try {
         if (coachPlans.length > 0) {
