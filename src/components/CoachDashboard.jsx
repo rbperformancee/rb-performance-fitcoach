@@ -1551,7 +1551,7 @@ function ExerciseProgressionModal({ data, onClose }) {
 }
 
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
-function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [], onWantInvoice }) {
+function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [], onWantInvoice, onClientUpdated }) {
   const t = useT();
   const [showTransformation, setShowTransformation] = React.useState(false);
   const [showAIAnalyze, setShowAIAnalyze] = React.useState(false);
@@ -1592,6 +1592,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   // Hook B : modal "logger paiement" pour ce client (déclenchée manuellement
   // depuis la fiche client via le bouton "Logger un paiement reçu")
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // Modal "changer l'email du client"
+  const [showEmailEdit, setShowEmailEdit] = useState(false);
+  const [newClientEmail, setNewClientEmail] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
   const [lastPayment, setLastPayment] = useState(null);
   // Reload last payment after a save
   const reloadLastPayment = React.useCallback(async () => {
@@ -3373,6 +3377,17 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           </div>
         </div>
 
+        {/* ===== ADMIN ACTIONS ===== */}
+        <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.35s both", paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+          <button
+            onClick={() => { setNewClientEmail(client.email || ""); setShowEmailEdit(true); }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+          >
+            <Icon name="edit" size={12} />
+            Changer l'email du client
+          </button>
+        </div>
+
         {/* ===== ZONE DANGEREUSE ===== */}
         <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.4s both", paddingTop: 20, borderTop: "1px solid rgba(255,107,107,0.1)" }}>
           <button
@@ -3394,6 +3409,87 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           defaultAmount={300}
           onSaved={reloadLastPayment}
         />
+
+        {/* Modal : changer l'email du client */}
+        {showEmailEdit && (
+          <div
+            onClick={() => { if (!savingEmail) setShowEmailEdit(false); }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: "100%", maxWidth: 440, background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24 }}
+            >
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Changer l'email du client</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 16 }}>
+                Met à jour la connexion + la fiche. Le client devra utiliser le nouvel email pour se connecter.
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>Email actuel</div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginBottom: 16, padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 8 }}>
+                {client.email}
+              </div>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                Nouvel email
+              </label>
+              <input
+                type="email"
+                autoFocus
+                value={newClientEmail}
+                onChange={(e) => setNewClientEmail(e.target.value)}
+                placeholder="nouveau@email.com"
+                disabled={savingEmail}
+                style={{
+                  width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10,
+                  color: "#fff", fontSize: 14, fontFamily: "inherit", marginBottom: 18,
+                  boxSizing: "border-box",
+                }}
+              />
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  disabled={savingEmail}
+                  onClick={() => setShowEmailEdit(false)}
+                  style={{ padding: "10px 18px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, cursor: savingEmail ? "wait" : "pointer", fontFamily: "inherit" }}
+                >Annuler</button>
+                <button
+                  type="button"
+                  disabled={savingEmail || !newClientEmail.trim() || newClientEmail.trim().toLowerCase() === (client.email || "").toLowerCase()}
+                  onClick={async () => {
+                    const trimmed = newClientEmail.trim().toLowerCase();
+                    if (!trimmed) return;
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { toast.error("Email invalide"); return; }
+                    if (!window.confirm(`Confirmer le changement d'email :\n\n${client.email}\n→\n${trimmed}\n\nLe client devra utiliser le nouvel email pour se connecter.`)) return;
+                    setSavingEmail(true);
+                    try {
+                      const { data: { session } } = await supabase.auth.getSession();
+                      const r = await fetch("/api/coach-update-client-email", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${session?.access_token || ""}`,
+                        },
+                        body: JSON.stringify({ clientId: client.id, newEmail: trimmed }),
+                      });
+                      const j = await r.json();
+                      if (!r.ok) throw new Error(j.error || "Erreur inconnue");
+                      toast.success("Email mis à jour");
+                      setShowEmailEdit(false);
+                      setNewClientEmail("");
+                      // Refresh : on injecte localement le nouvel email (pas de full reload)
+                      if (typeof onClientUpdated === "function") onClientUpdated({ ...client, email: trimmed });
+                    } catch (e) {
+                      toast.error(e.message || "Erreur");
+                    } finally {
+                      setSavingEmail(false);
+                    }
+                  }}
+                  style={{ padding: "10px 18px", background: "linear-gradient(135deg, " + G + ", #0891b2)", border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: savingEmail ? "wait" : "pointer", fontFamily: "inherit", letterSpacing: 0.3, opacity: (savingEmail || !newClientEmail.trim()) ? 0.5 : 1 }}
+                >{savingEmail ? "Enregistrement…" : "Confirmer"}</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         </>)}
 
@@ -5078,7 +5174,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {selected && (
         <ErrorBoundary name="ClientPanel">
-          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); loadClients(); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }} />
+          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); loadClients(); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }} onClientUpdated={(updated) => { setSelected(updated); loadClients(); }} />
         </ErrorBoundary>
       )}
       {showPipeline && (
