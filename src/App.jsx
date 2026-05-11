@@ -82,11 +82,16 @@ const SetPasswordPage = lazy(() => import("./components/auth/SetPasswordPage"));
 const JoinPage   = lazy(() => import("./components/client/JoinPage"));
 // ClientApp (version simplifiee 4 onglets) desactive — les clients utilisent
 // l'interface complete 5 onglets (Train/Body/Run/Fuel/Profil) dans AppInner.
-import ChatCoach from "./components/ChatCoach";
-import BookingModal from "./components/BookingModal";
-import WeeklyCheckinForm from "./components/client/WeeklyCheckinForm";
-import { CoachDashboard } from "./components/CoachDashboard";
-import { exportProgressPDF } from "./utils/exportPDF";
+// Charges a la demande — composants lourds ouverts via modal/bouton, pas a
+// la 1ere paint. Lazy-loading sort ~6k lignes (CoachDashboard) + dépendances
+// PDF (jsPDF/html2canvas dans exportProgressPDF) du bundle principal.
+const ChatCoach = lazy(() => import("./components/ChatCoach"));
+const BookingModal = lazy(() => import("./components/BookingModal"));
+const WeeklyCheckinForm = lazy(() => import("./components/client/WeeklyCheckinForm"));
+const CoachDashboard = lazy(() => import("./components/CoachDashboard").then(m => ({ default: m.CoachDashboard })));
+// exportProgressPDF est une fonction (pas un composant) — import dynamique
+// à la demande dans handleExportPDF.
+const loadExportPDF = () => import("./utils/exportPDF").then(m => m.exportProgressPDF);
 import "./App.css";
 import { supabase } from "./lib/supabase";
 import ErrorBoundaryApp from "./components/ErrorBoundary";
@@ -1270,13 +1275,15 @@ function AppInner() {
   if (isCoach && showCoachDash) {
     return (
       <>
-        <CoachDashboard
-          coachId={coachId}
-          coachData={coachData}
-          onExit={() => setShowCoachDash(false)}
-          onSwitchToSuperAdmin={isSuperAdmin ? () => setShowSuperAdmin(true) : null}
-          isDemo={isDemo}
-        />
+        <Suspense fallback={<SkeletonLoader />}>
+          <CoachDashboard
+            coachId={coachId}
+            coachData={coachData}
+            onExit={() => setShowCoachDash(false)}
+            onSwitchToSuperAdmin={isSuperAdmin ? () => setShowSuperAdmin(true) : null}
+            isDemo={isDemo}
+          />
+        </Suspense>
         <ToastProvider />
       </>
     );
@@ -1339,7 +1346,10 @@ function AppInner() {
 
   const handleExportPDF = async () => {
     setExporting(true);
-    try { await exportProgressPDF({ programme, getHistory, entries: [] }); }
+    try {
+      const exportProgressPDF = await loadExportPDF();
+      await exportProgressPDF({ programme, getHistory, entries: [] });
+    }
     finally { setExporting(false); }
   };
 
@@ -1381,22 +1391,26 @@ function AppInner() {
 
       {/* ── Overlay : Reservation d'appel coach (cycle accompli) ── */}
       {showBookingModal && client?.id && (
-        <BookingModal
-          client={client}
-          title="Reserver un appel"
-          subtitle={`Choisis un creneau avec ${coachName} pour faire le bilan de ton cycle et definir tes prochains objectifs.`}
-          onClose={() => setShowBookingModal(false)}
-          onBooked={() => { /* reste ouvert sur l'ecran de confirmation */ }}
-        />
+        <Suspense fallback={null}>
+          <BookingModal
+            client={client}
+            title="Reserver un appel"
+            subtitle={`Choisis un creneau avec ${coachName} pour faire le bilan de ton cycle et definir tes prochains objectifs.`}
+            onClose={() => setShowBookingModal(false)}
+            onBooked={() => { /* reste ouvert sur l'ecran de confirmation */ }}
+          />
+        </Suspense>
       )}
 
       {/* ── Overlay : Bilan hebdomadaire (deep link push notif dimanche soir) ── */}
-      {client?.id && (
-        <WeeklyCheckinForm
-          open={showCheckin}
-          onClose={() => setShowCheckin(false)}
-          clientId={client.id}
-        />
+      {showCheckin && client?.id && (
+        <Suspense fallback={null}>
+          <WeeklyCheckinForm
+            open={showCheckin}
+            onClose={() => setShowCheckin(false)}
+            clientId={client.id}
+          />
+        </Suspense>
       )}
 
       {/* ── Overlay : Chat avec Rayan ── */}
@@ -1421,7 +1435,9 @@ function AppInner() {
             </div>
             {/* Le composant ChatCoach existant */}
             <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-              <ChatCoach clientId={client.id} coachEmail={coachEmail} isCoach={false} coachName={coachName} />
+              <Suspense fallback={null}>
+                <ChatCoach clientId={client.id} coachEmail={coachEmail} isCoach={false} coachName={coachName} />
+              </Suspense>
             </div>
           </div>
         </div>
