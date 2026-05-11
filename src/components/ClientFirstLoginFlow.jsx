@@ -83,7 +83,7 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
   const back = () => { haptic.light(); setStep(s => Math.max(1, s - 1)); };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050505", color: "#fff", padding: "60px 24px 40px", display: "flex", flexDirection: "column", alignItems: "center", fontFamily: "-apple-system, Inter, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#050505", color: "#fff", padding: "max(40px, env(safe-area-inset-top)) 24px max(40px, env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "-apple-system, Inter, sans-serif" }}>
       {/* Step indicator */}
       <div style={{ display: "flex", gap: 6, marginBottom: 36 }}>
         {[1, 2, 3, 4].map(n => (
