@@ -225,7 +225,7 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
                   {saving ? "..." : "Accéder à mon espace"}
                 </button>
                 {error && (
-                  <div style={{ marginTop: 16, padding: "10px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, color: "#ff6b6b", fontSize: 13, lineHeight: 1.5, maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
+                  <div style={{ marginTop: 16, padding: "12px 16px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, color: "#ff6b6b", fontSize: 13, lineHeight: 1.5, maxWidth: 360, marginLeft: "auto", marginRight: "auto", textAlign: "center", wordBreak: "break-word" }}>
                     {error}
                   </div>
                 )}

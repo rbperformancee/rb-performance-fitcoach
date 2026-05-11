@@ -289,9 +289,13 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       setSaving(false);
       return { ok: false, reason: "no_client_id" };
     }
+    // Strip `email` du form : la table onboarding_forms n'a pas de colonne
+    // email (FK client_id). Le champ existe dans le state pour le mode
+    // application (candidature publique) mais ne doit pas être upserté ici.
+    const { email: _unused, ...formNoEmail } = form;
     const { error } = await supabase
       .from("onboarding_forms")
-      .upsert({ client_id: client.id, ...form, is_complete: true, submitted_at: new Date().toISOString() }, { onConflict: "client_id" });
+      .upsert({ client_id: client.id, ...formNoEmail, is_complete: true, submitted_at: new Date().toISOString() }, { onConflict: "client_id" });
     setSaving(false);
     if (error) {
       console.error("[onboarding] saveForm failed:", error.message);
