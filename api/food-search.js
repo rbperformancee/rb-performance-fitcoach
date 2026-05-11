@@ -75,6 +75,18 @@ export default async function handler(req, res) {
       const calories = Math.round(n.ENERC_KCAL || 0);
       if (calories <= 0 || calories > 1000) continue;
 
+      // Edamam fournit des "measures" : tailles de portion typiques
+      // ("1 medium egg" = 50g, "1 cup" = 240g, etc.). On les expose
+      // pour que le client puisse loguer "3 œufs" au lieu de "150g".
+      // On garde uniquement les unités naturelles (compter) — on skip
+      // les masses "Gram", "Ounce", "Kilogram" déjà couvertes par le
+      // toggle grammes par défaut.
+      const SKIP_LABELS = /^(gram|ounce|pound|kilogram|liter|milliliter|fluid ounce)$/i;
+      const measures = (h.measures || [])
+        .filter((m) => m && m.label && m.weight > 0 && !SKIP_LABELS.test(m.label))
+        .slice(0, 8)
+        .map((m) => ({ label: m.label, grams: Math.round(m.weight * 10) / 10 }));
+
       foods.push({
         name: food.label || "",
         brand: food.brand || food.category || "",
@@ -85,6 +97,7 @@ export default async function handler(req, res) {
         lipides: parseFloat((n.FAT || 0).toFixed(1)),
         fibres: parseFloat((n.FIBTG || 0).toFixed(1)),
         image: food.image || null,
+        measures,
       });
       if (foods.length >= 25) break;
     }

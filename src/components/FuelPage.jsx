@@ -425,6 +425,11 @@ export default function FuelPage({ client, appData }) {
   const [query, setQuery] = useState("");
   const [selectedFood, setSelectedFood] = useState(null);
   const [quantite, setQuantite] = useState(100);
+  // Mode unité : "g" (par défaut, grammes) OU un measure label retourné
+  // par l'API food-search ("Whole", "Medium", "Cup", etc.). Quand on
+  // sélectionne une unité, `quantite` représente le NOMBRE d'unités
+  // (ex: 3 œufs) et on calcule les grammes au moment du save.
+  const [selectedUnit, setSelectedUnit] = useState("g");
   const [showWater, setShowWater] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
   const [showRecipes, setShowRecipes] = useState(false);
@@ -524,8 +529,21 @@ export default function FuelPage({ client, appData }) {
 
   const handleAddFood = async () => {
     if (!selectedFood) return;
-    const qty = Math.max(1, quantite);
-    const factor = qty / 100;
+    const qty = Math.max(0.5, Number(quantite) || 1);
+    // Si l'utilisateur a choisi une unité naturelle (ex: "3 œufs"),
+    // on convertit en grammes pour le calcul macro et le stockage.
+    let grams = qty;
+    let displayQty = qty;
+    let displayUnit = "g";
+    if (selectedUnit !== "g") {
+      const m = (selectedFood.measures || []).find((x) => x.label === selectedUnit);
+      if (m && m.grams > 0) {
+        grams = qty * m.grams;
+        displayQty = qty;
+        displayUnit = selectedUnit;
+      }
+    }
+    const factor = grams / 100;
     await addFood({
       repas: selectedRepas,
       aliment: selectedFood.name,
@@ -533,12 +551,15 @@ export default function FuelPage({ client, appData }) {
       proteines: parseFloat((selectedFood.proteines * factor).toFixed(1)),
       glucides: parseFloat((selectedFood.glucides * factor).toFixed(1)),
       lipides: parseFloat((selectedFood.lipides * factor).toFixed(1)),
-      quantite_g: qty,
-      unit: selectedFood.unit || "g",
+      quantite_g: Math.round(grams),
+      // Pour rétro-compat, on stocke "g" sauf si l'utilisateur a choisi une unité.
+      // Display d'origine : "3 × Œuf moyen (≈150g)" si naturelle, sinon "150g".
+      unit: displayUnit === "g" ? "g" : `× ${displayUnit}`,
     });
     setShowAdd(false);
     setQuery("");
     setSelectedFood(null);
+    setSelectedUnit("g");
     setQuantite(100);
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
   };
@@ -1138,7 +1159,20 @@ export default function FuelPage({ client, appData }) {
                       return (
                         <div
                           key={i}
-                          onClick={() => setSelectedFood(food)}
+                          onClick={() => {
+                            setSelectedFood(food);
+                            // Auto-suggère une unité naturelle si dispo (œuf, banane…)
+                            const naturalMeasure = (food.measures || []).find((m) =>
+                              /whole|medium|small|large|piece|unit|item|fruit|each/i.test(m.label)
+                            );
+                            if (naturalMeasure) {
+                              setSelectedUnit(naturalMeasure.label);
+                              setQuantite(1);
+                            } else {
+                              setSelectedUnit("g");
+                              setQuantite(100);
+                            }
+                          }}
                           style={{ padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, cursor: "pointer", transition: "all 0.15s", WebkitTapHighlightColor: "transparent" }}
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6, gap: 8 }}>
@@ -1177,7 +1211,14 @@ export default function FuelPage({ client, appData }) {
                 )}
 
                 {/* Selected food + quantite */}
-                {selectedFood && (
+                {selectedFood && (() => {
+                  // Calcul des grammes effectifs : si unité ≠ "g", on multiplie par le poids de l'unité.
+                  const unitMeasure = selectedUnit !== "g"
+                    ? (selectedFood.measures || []).find((x) => x.label === selectedUnit)
+                    : null;
+                  const effectiveGrams = unitMeasure ? (Number(quantite) || 0) * unitMeasure.grams : (Number(quantite) || 0);
+                  const factor = effectiveGrams / 100;
+                  return (
                   <div>
                     {/* Food card sélectionné */}
                     <div style={{ padding: "16px", background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: 18, marginBottom: 20 }}>
@@ -1191,41 +1232,62 @@ export default function FuelPage({ client, appData }) {
                       {/* Macros live */}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(249,115,22,0.1)", borderRadius: 12 }}>
-                          <div style={{ fontSize: 20, fontWeight: 200, color: ORANGE, letterSpacing: "-1px" }}>{Math.round(selectedFood.calories * quantite / 100)}</div>
+                          <div style={{ fontSize: 20, fontWeight: 200, color: ORANGE, letterSpacing: "-1px" }}>{Math.round(selectedFood.calories * factor)}</div>
                           <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>kcal</div>
                         </div>
                         <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(2,209,186,0.08)", borderRadius: 12 }}>
-                          <div style={{ fontSize: 20, fontWeight: 200, color: GREEN, letterSpacing: "-1px" }}>{(selectedFood.proteines * quantite / 100).toFixed(1)}</div>
+                          <div style={{ fontSize: 20, fontWeight: 200, color: GREEN, letterSpacing: "-1px" }}>{(selectedFood.proteines * factor).toFixed(1)}</div>
                           <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>prot g</div>
                         </div>
                         <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(249,115,22,0.06)", borderRadius: 12 }}>
-                          <div style={{ fontSize: 20, fontWeight: 200, color: ORANGE + "cc", letterSpacing: "-1px" }}>{(selectedFood.glucides * quantite / 100).toFixed(1)}</div>
+                          <div style={{ fontSize: 20, fontWeight: 200, color: ORANGE + "cc", letterSpacing: "-1px" }}>{(selectedFood.glucides * factor).toFixed(1)}</div>
                           <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>gluc g</div>
                         </div>
                         <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "10px 8px", background: "rgba(96,165,250,0.08)", borderRadius: 12 }}>
-                          <div style={{ fontSize: 20, fontWeight: 200, color: BLUE, letterSpacing: "-1px" }}>{(selectedFood.lipides * quantite / 100).toFixed(1)}</div>
+                          <div style={{ fontSize: 20, fontWeight: 200, color: BLUE, letterSpacing: "-1px" }}>{(selectedFood.lipides * factor).toFixed(1)}</div>
                           <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>lip g</div>
                         </div>
                       </div>
                     </div>
 
+                    {/* Toggle unité (g / unités naturelles) — visible si l'aliment a des measures */}
+                    {(selectedFood.measures && selectedFood.measures.length > 0) && (
+                      <div style={{ marginBottom: 14, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <button
+                          onClick={() => { setSelectedUnit("g"); setQuantite(100); }}
+                          style={{ padding: "7px 12px", borderRadius: 100, border: `1px solid ${selectedUnit === "g" ? ORANGE : "rgba(255,255,255,0.08)"}`, background: selectedUnit === "g" ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: selectedUnit === "g" ? ORANGE : "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: 0.3 }}
+                        >Grammes</button>
+                        {selectedFood.measures.slice(0, 6).map((m) => (
+                          <button
+                            key={m.label}
+                            onClick={() => { setSelectedUnit(m.label); setQuantite(1); }}
+                            style={{ padding: "7px 12px", borderRadius: 100, border: `1px solid ${selectedUnit === m.label ? ORANGE : "rgba(255,255,255,0.08)"}`, background: selectedUnit === m.label ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: selectedUnit === m.label ? ORANGE : "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: 0.3 }}
+                            title={`≈ ${m.grams}g`}
+                          >{m.label} <span style={{ opacity: 0.55, fontWeight: 500 }}>({m.grams}g)</span></button>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Quantite selector */}
                     <div style={{ marginBottom: 20 }}>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{t("fuel.quantity")}</div>
-                      {/* Quick amounts */}
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>
+                        {t("fuel.quantity")}
+                        {selectedUnit !== "g" && <span style={{ marginLeft: 8, color: "rgba(255,255,255,0.4)", letterSpacing: 0 }}>· {Math.round(effectiveGrams)}g au total</span>}
+                      </div>
+                      {/* Quick amounts — adapté au mode */}
                       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                        {[50, 100, 150, 200, 250, 300].map(q => (
-                          <button key={q} onClick={() => setQuantite(q)} style={{ padding: "8px 14px", borderRadius: 100, border: `1px solid ${quantite === q ? ORANGE : "rgba(255,255,255,0.08)"}`, background: quantite === q ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: quantite === q ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>{q}g</button>
+                        {(selectedUnit === "g" ? [50, 100, 150, 200, 250, 300] : [1, 2, 3, 4, 5]).map(q => (
+                          <button key={q} onClick={() => setQuantite(q)} style={{ padding: "8px 14px", borderRadius: 100, border: `1px solid ${quantite === q ? ORANGE : "rgba(255,255,255,0.08)"}`, background: quantite === q ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)", color: quantite === q ? ORANGE : "rgba(255,255,255,0.35)", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>{q}{selectedUnit === "g" ? "g" : ""}</button>
                         ))}
                       </div>
                       {/* Input manuel */}
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <button onClick={() => setQuantite(Math.max(10, quantite - 10))} style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                        <button onClick={() => setQuantite(Math.max(selectedUnit === "g" ? 10 : 1, (Number(quantite) || 0) - (selectedUnit === "g" ? 10 : 1)))} style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                         <div style={{ flex: 1, display: "flex", alignItems: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, overflow: "hidden" }}>
-                          <input type="number" inputMode="numeric" value={quantite} onChange={e => setQuantite(parseInt(e.target.value) || 100)} style={{ flex: 1, textAlign: "center", padding: "12px", background: "transparent", border: "none", color: "#fff", fontSize: 20, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }} />
-                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", paddingRight: 14 }}>{selectedFood?.unit || "g"}</span>
+                          <input type="number" inputMode={selectedUnit === "g" ? "numeric" : "decimal"} step={selectedUnit === "g" ? 10 : 0.5} value={quantite} onChange={e => setQuantite(e.target.value === "" ? "" : parseFloat(e.target.value) || 0)} style={{ flex: 1, textAlign: "center", padding: "12px", background: "transparent", border: "none", color: "#fff", fontSize: 20, fontWeight: 300, outline: "none", fontFamily: "-apple-system,Inter,sans-serif" }} />
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", paddingRight: 14 }}>{selectedUnit === "g" ? "g" : `× ${selectedUnit}`}</span>
                         </div>
-                        <button onClick={() => setQuantite(quantite + 10)} style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                        <button onClick={() => setQuantite((Number(quantite) || 0) + (selectedUnit === "g" ? 10 : 1))} style={{ width: 44, height: 44, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                       </div>
                     </div>
 
@@ -1234,7 +1296,8 @@ export default function FuelPage({ client, appData }) {
                       {t("fuel.add_to")} {repasLabel(selectedRepas)}
                     </button>
                   </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </div>
