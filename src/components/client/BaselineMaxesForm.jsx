@@ -120,13 +120,13 @@ export default function BaselineMaxesForm({ open, clientId, onDone }) {
           background: `linear-gradient(180deg, ${G}10 0%, transparent 100%)`,
         }}>
           <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3.5, color: G, textTransform: "uppercase", marginBottom: 10 }}>
-            Bienvenue · 30 secondes
+            Optionnel · 30 secondes
           </div>
           <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 8 }}>
-            Tes charges du moment.
+            Tu connais tes charges ?
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
-            Pas besoin de viser le 1RM exact — un set récent que tu as poussé suffit. Ton coach utilise ces chiffres pour calibrer ton programme.
+            Si oui, donne un set récent que tu as poussé — pas besoin du 1RM exact. Sinon, on calibrera ensemble à la 1ère séance.
           </div>
         </div>
 
@@ -226,15 +226,16 @@ export default function BaselineMaxesForm({ open, clientId, onDone }) {
             onClick={skip}
             disabled={saving}
             style={{
-              background: "transparent", border: "none",
-              color: "rgba(255,255,255,0.4)",
-              fontSize: 12, cursor: "pointer",
+              width: "100%", padding: "12px 16px", borderRadius: 12,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.75)",
+              fontSize: 12, fontWeight: 600,
+              cursor: saving ? "wait" : "pointer",
               fontFamily: "inherit",
-              textDecoration: "underline", textUnderlineOffset: 3,
-              padding: "4px 0",
             }}
           >
-            Je le ferai plus tard
+            Je ne connais pas mes charges — on verra à la 1ère séance
           </button>
         </div>
       </div>
