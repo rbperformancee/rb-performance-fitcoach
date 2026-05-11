@@ -1627,7 +1627,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   }, [client?.id]);
   React.useEffect(() => { reloadLastPayment(); }, [reloadLastPayment]);
   const [confirmDelete, setConfirmDelete] = useState(null); // { progId, progName } pour modal confirm
-  const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas"
+  const [drawer, setDrawer] = useState(null); // null | "poids" | "eau" | "sommeil" | "pas" | "nutrition_day"
+  // Jour sélectionné dans le chart Alimentation 7j (clé "YYYY-MM-DD")
+  const [selectedNutDay, setSelectedNutDay] = useState(null);
   const [showWeightImport, setShowWeightImport] = useState(false);
   const fileRef = useRef();
 
@@ -1703,8 +1705,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
     // ===== NOUVELLES DONNEES =====
     // Nutrition logs 7 jours (kcal par jour)
-    supabase.from("nutrition_logs").select("date,calories,proteines,glucides,lipides").eq("client_id", client.id)
-      .gte("date", d7str).order("date", { ascending: true })
+    // On selectionne aussi repas/aliment/quantite_g/unit/logged_at pour pouvoir
+    // afficher le detail aliment-par-aliment quand le coach clique sur un jour.
+    supabase.from("nutrition_logs").select("id,date,repas,aliment,quantite_g,unit,calories,proteines,glucides,lipides,logged_at").eq("client_id", client.id)
+      .gte("date", d7str).order("logged_at", { ascending: true })
       .then(({ data }) => setNutLogs7d(data || []));
     // Daily tracking 7 jours (pas, eau, sommeil)
     supabase.from("daily_tracking").select("date,pas,eau_ml,sommeil_h").eq("client_id", client.id)
@@ -2453,6 +2457,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     const labels = ["L", "M", "M", "J", "V", "S", "D"];
                     const dow = (x.date.getDay() + 6) % 7;
                     const dayLabel = labels[dow];
+                    const clickable = !!x.d;
+                    const onClick = clickable ? () => { setSelectedNutDay(x.key); setDrawer("nutrition_day"); } : undefined;
                     if (!x.d) {
                       return (
                         <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, height: "100%" }}>
@@ -2467,7 +2473,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     const underGoal = x.d.kcal < goalKcal * 0.7;
                     const barColor = overGoal ? ORANGE : underGoal ? "#f97316" : G;
                     return (
-                      <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, height: "100%" }}>
+                      <div
+                        key={i}
+                        onClick={onClick}
+                        style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, height: "100%", cursor: clickable ? "pointer" : "default" }}
+                      >
                         <div style={{
                           width: "100%",
                           height: `${pct}%`,
@@ -3597,7 +3607,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       {/* ===== DRAWERS DONNEES (Poids / Eau / Sommeil) ===== */}
       {drawer && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setDrawer(null); }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setDrawer(null); setSelectedNutDay(null); } }}
           style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
         >
           <div style={{ width: "100%", maxWidth: 560, maxHeight: "85vh", background: "#0a0a0a", borderRadius: "24px 24px 0 0", border: "1px solid rgba(255,255,255,0.08)", borderBottom: "none", display: "flex", flexDirection: "column", overflow: "hidden", animation: "cpFadeUp 0.3s ease both" }}>
@@ -3606,7 +3616,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 22px 12px" }}>
               <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
-                {drawer === "poids" ? t("cp.drawer_weight_title") : drawer === "eau" ? t("cp.drawer_water_title") : drawer === "pas" ? t("cp.drawer_steps_title") : t("cp.drawer_sleep_title")}
+                {drawer === "poids" ? t("cp.drawer_weight_title")
+                  : drawer === "eau" ? t("cp.drawer_water_title")
+                  : drawer === "pas" ? t("cp.drawer_steps_title")
+                  : drawer === "nutrition_day" ? (selectedNutDay ? new Date(selectedNutDay + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" }) : "Alimentation")
+                  : t("cp.drawer_sleep_title")}
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {drawer === "poids" && (
@@ -3633,7 +3647,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     Import CSV
                   </button>
                 )}
-                <button onClick={() => setDrawer(null)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                <button onClick={() => { setDrawer(null); setSelectedNutDay(null); }} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
               </div>
             </div>
 
@@ -3780,6 +3794,97 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                         </div>
                       ))}
                     </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── DRAWER NUTRITION_DAY — detail aliments d'une journée ── */}
+              {drawer === "nutrition_day" && selectedNutDay && (() => {
+                // Filtre nutLogs7d sur le jour cliqué et groupe par repas.
+                const dayLogs = nutLogs7d.filter((l) => l.date === selectedNutDay);
+                if (dayLogs.length === 0) {
+                  return (
+                    <div style={{ padding: "24px 12px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+                      Aucun aliment loggé ce jour-là.
+                    </div>
+                  );
+                }
+                const totals = dayLogs.reduce((acc, l) => ({
+                  kcal: acc.kcal + (Number(l.calories) || 0),
+                  prot: acc.prot + (Number(l.proteines) || 0),
+                  gluc: acc.gluc + (Number(l.glucides) || 0),
+                  lip:  acc.lip  + (Number(l.lipides)   || 0),
+                }), { kcal: 0, prot: 0, gluc: 0, lip: 0 });
+                // Ordre standard des repas (sinon ordre d'apparition)
+                const REPAS_ORDER = ["Petit-dejeuner", "Petit-déjeuner", "Dejeuner", "Déjeuner", "Collation", "Diner", "Dîner", "Autre"];
+                const grouped = dayLogs.reduce((acc, l) => {
+                  const k = l.repas || "Autre";
+                  if (!acc[k]) acc[k] = [];
+                  acc[k].push(l);
+                  return acc;
+                }, {});
+                const repasKeys = Object.keys(grouped).sort((a, b) => {
+                  const ia = REPAS_ORDER.indexOf(a);
+                  const ib = REPAS_ORDER.indexOf(b);
+                  return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+                });
+                return (
+                  <div>
+                    {/* Totaux du jour */}
+                    <div style={{
+                      display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 18,
+                    }}>
+                      {[
+                        { l: "kcal", v: Math.round(totals.kcal), c: ORANGE },
+                        { l: "prot", v: Math.round(totals.prot) + "g", c: G },
+                        { l: "gluc", v: Math.round(totals.gluc) + "g", c: "#60a5fa" },
+                        { l: "lip",  v: Math.round(totals.lip)  + "g", c: VIOLET },
+                      ].map((m, i) => (
+                        <div key={i} style={{
+                          padding: "10px 6px", background: `${m.c}08`, border: `1px solid ${m.c}1F`, borderRadius: 10,
+                          display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                        }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px", lineHeight: 1 }}>{m.v}</div>
+                          <div style={{ fontSize: 8.5, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", fontWeight: 700 }}>{m.l}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Liste par repas */}
+                    {repasKeys.map((repas) => {
+                      const items = grouped[repas];
+                      const subKcal = items.reduce((s, l) => s + (Number(l.calories) || 0), 0);
+                      return (
+                        <div key={repas} style={{ marginBottom: 18 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "0 4px 6px" }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.55)" }}>{repas}</div>
+                            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: ORANGE, fontWeight: 700 }}>{Math.round(subKcal)} kcal</div>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {items.map((l) => {
+                              // Affichage quantité : "150 g" pour solides, "200 ml" pour liquides,
+                              // "3 unité(s)" si unit est custom.
+                              const qty = l.quantite_g != null && l.quantite_g !== "" ? Number(l.quantite_g) : null;
+                              const unit = l.unit || "g";
+                              const qtyStr = qty != null ? `${qty} ${unit}` : "";
+                              return (
+                                <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10 }}>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 13, color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.aliment || "Aliment"}</div>
+                                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: "'JetBrains Mono',monospace", letterSpacing: 0.3 }}>
+                                      {qtyStr}
+                                      {qtyStr && " · "}
+                                      P {Math.round(Number(l.proteines) || 0)}g · G {Math.round(Number(l.glucides) || 0)}g · L {Math.round(Number(l.lipides) || 0)}g
+                                    </div>
+                                  </div>
+                                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: ORANGE, flexShrink: 0 }}>{Math.round(Number(l.calories) || 0)}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })()}
