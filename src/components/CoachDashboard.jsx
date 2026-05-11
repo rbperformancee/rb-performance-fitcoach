@@ -2395,12 +2395,19 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               {t("cp.no_nutrition_week")}
             </div>
           ) : (() => {
-            // Construire les 7 derniers jours avec placeholders si pas de log
-            const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+            // Construire les 7 derniers jours avec placeholders si pas de log.
+            // Bug timezone : `new Date().setHours(0,0,0,0)` donne minuit LOCAL,
+            // dont l'ISO bascule sur la date UTC précédente en CEST. Or
+            // FuelPage stocke `new Date().toISOString().slice(0,10)` (date UTC)
+            // → mismatch des clés → chart vide tout l'été. On utilise donc la
+            // date UTC partout pour rester aligné avec ce qui est stocké.
+            const todayUtcStr = new Date().toISOString().slice(0, 10);
+            const [ty, tm, td] = todayUtcStr.split("-").map(Number);
+            const todayMs = Date.UTC(ty, tm - 1, td);
             const msDay = 86400000;
             const dataMap = Object.fromEntries(nutDays);
             const last7 = Array.from({ length: 7 }).map((_, i) => {
-              const date = new Date(today0.getTime() - (6 - i) * msDay);
+              const date = new Date(todayMs - (6 - i) * msDay);
               const key = date.toISOString().slice(0, 10);
               const d = dataMap[key];
               return { date, key, d, isToday: i === 6 };
@@ -4339,14 +4346,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     }
   }, [coachId, clients, loading, celebMilestone]);
 
-  // Detection 1er checkin reçu — via engagementSummary.checkinsThisWeek > 0
-  useEffect(() => {
-    if (!coachId || celebMilestone) return;
-    if (engagementSummary.checkinsThisWeek >= 1 && !isMilestoneCelebrated(coachId, "first_checkin")) {
-      markMilestoneCelebrated(coachId, "first_checkin");
-      setCelebMilestone("first_checkin");
-    }
-  }, [coachId, engagementSummary.checkinsThisWeek, celebMilestone]);
+  // Detection 1er checkin reçu — désactivé : retournait à chaque ouverture
+  // pour le coach (jugé spammy). Le bilan reste visible dans la section
+  // "Bilans hebdomadaires" de la fiche client.
 
   // Engagement summary : bilans hebdo soumis + habitudes du jour (toutes clients)
   useEffect(() => {

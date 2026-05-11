@@ -1141,15 +1141,39 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                   </div>
                 </div>
 
-                <button onClick={() => setShowFeedbackExtra(true)} style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}>
+                <button
+                  onClick={async () => {
+                    // Termine direct : pas de 2e étape mood/blessure/note —
+                    // l'utilisateur l'a jugée pesante. RPE suffit comme signal.
+                    setShowRessenti(false);
+                    setSessionValidee(true);
+                    if (typeof onStartSession === "function") onStartSession(false);
+                    try {
+                      const ckey = `rb_c_${activeWeek}_${activeSession}`;
+                      const s = JSON.parse(localStorage.getItem(ckey) || "{}");
+                      localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
+                    } catch(e) {}
+                    if (client?.id) {
+                      supabase.from("session_completions").upsert({
+                        client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
+                        validated_at: new Date().toISOString(),
+                        chrono_seconds: chrono,
+                        rpe: selectedRessenti + 1
+                      }, { onConflict: "client_id,week_idx,session_idx" });
+                    }
+                  }}
+                  style={{ width: "100%", padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}
+                >
                   {t("train.finish_check")}
                 </button>
               </>
             )}
           </div>
 
-          {/* ETAPE FEEDBACK ETENDU (mood + injury + note) — overlay sur le recap */}
-          {showFeedbackExtra && (() => {
+          {/* ETAPE FEEDBACK ETENDU — retirée. RPE suffit comme signal.
+             Garde-fou : si jamais showFeedbackExtra est forcé à true depuis
+             ailleurs, on ne rend rien (le code overlay ci-dessous est mort). */}
+          {false && showFeedbackExtra && (() => {
             const MOODS = [
               { id: "great", label: "Au top",      emoji: "✓✓" },
               { id: "good",  label: "Bien",        emoji: "✓"  },
