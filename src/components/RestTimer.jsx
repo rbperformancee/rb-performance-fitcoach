@@ -11,10 +11,16 @@ const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
 const GREEN_GLOW = "rgba(2,209,186,0.4)";
 
-/* Parse "2 min", "1 min 30", "90s", "3 min", etc. → secondes */
+/* Parse "2 min", "1 min 30", "90s", "2'30", "1'", etc. → secondes */
 function parseRestSeconds(rest) {
   if (!rest) return null;
   const s = String(rest).toLowerCase().trim();
+  // "2'30" ou "2'30s" (notation apostrophe = minutes'secondes — utilisé dans le seed)
+  const apo30 = s.match(/(\d+)\s*[''']\s*(\d+)/);
+  if (apo30) return parseInt(apo30[1]) * 60 + parseInt(apo30[2]);
+  // "2'" (juste minutes)
+  const apo = s.match(/(\d+)\s*[''']\s*$/);
+  if (apo) return parseInt(apo[1]) * 60;
   // "2 min 30" ou "2 min 30s"
   const m30 = s.match(/(\d+)\s*min\s*(\d+)/);
   if (m30) return parseInt(m30[1]) * 60 + parseInt(m30[2]);

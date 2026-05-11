@@ -1782,6 +1782,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         .order("date", { ascending: false }).limit(500)
         .then(({ data }) => setAllWeights(data || []));
     };
+    const refetchNutrition = () => {
+      supabase.from("nutrition_logs").select("date,calories,proteines,glucides,lipides").eq("client_id", client.id)
+        .gte("date", d7str).order("date", { ascending: true })
+        .then(({ data }) => setNutLogs7d(data || []));
+    };
+    const refetchDaily = () => {
+      supabase.from("daily_tracking").select("date,pas,eau_ml,sommeil_h").eq("client_id", client.id)
+        .gte("date", d7str).order("date", { ascending: true })
+        .then(({ data }) => setDaily7d(data || []));
+    };
     let ch;
     try {
       ch = supabase.channel(`client-live-${client.id}`)
@@ -1797,10 +1807,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           event: "*", schema: "public", table: "weight_logs",
           filter: `client_id=eq.${client.id}`,
         }, refetchWeights)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "nutrition_logs",
+          filter: `client_id=eq.${client.id}`,
+        }, refetchNutrition)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "daily_tracking",
+          filter: `client_id=eq.${client.id}`,
+        }, refetchDaily)
         .subscribe();
     } catch { /* realtime peut etre desactive */ }
     return () => { if (ch) supabase.removeChannel(ch); };
-  }, [client?.id]);
+  }, [client?.id, d7str]);
 
   // ===== Agregation nutrition par jour =====
   const nutByDay = {};

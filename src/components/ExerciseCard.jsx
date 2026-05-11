@@ -140,9 +140,15 @@ function VideoCard({ vidUrl, thumbUrl, exName }) {
   );
 }
 
-function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive }) {
-  const [w, setW] = useState(defaultW || "");
-  const [r, setR] = useState(defaultR || "");
+function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placeholder, onDone, isActive }) {
+  // Si la série a déjà été validée dans la session courante (currentW/R fournis
+  // depuis le ref parent persisté en localStorage), on initialise avec ces
+  // valeurs — sinon iOS qui kill le JS thread efface l'état React et la
+  // série affiche "0" (placeholder) à la place du poids tapé.
+  const initW = currentW != null && currentW !== "" ? String(currentW) : (defaultW || "");
+  const initR = currentR != null && currentR !== "" ? String(currentR) : (defaultR || "");
+  const [w, setW] = useState(initW);
+  const [r, setR] = useState(initR);
   // Reps valides = nombre entier > 0. Évite que le client valide juste après
   // avoir saisi le poids (sans toucher reps), ce qui produisait des lignes
   // en DB avec reps=0 → coach voyait "⚠ reps non saisis" partout.
@@ -154,7 +160,9 @@ function SetRow({ index, done, defaultW, defaultR, placeholder, onDone, isActive
     onDone(w, r, index);
   };
 
-  const opacity = done ? 1 : isActive ? 1 : 0.2;
+  // Séries non-actives ni faites : on garde une lisibilité correcte (le user
+  // a demandé que ça ne devienne pas "de plus en plus transparent").
+  const opacity = done ? 1 : isActive ? 1 : 0.55;
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px", gap: 8, marginBottom: 10, alignItems: "center", opacity, transition: "opacity 0.3s" }}>
@@ -233,11 +241,23 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
 
   const today = new Date().toISOString().slice(0, 10);
   const storageKey = "sets_done_" + weekIdx + "_" + sessionIdx + "_" + exIdx + "_" + today;
+  const storageDataKey = "sets_data_" + weekIdx + "_" + sessionIdx + "_" + exIdx + "_" + today;
   const [resetKey, setResetKey] = useState(0);
+  // Hydrate completedSetsRef depuis localStorage AVANT doneCount — sur iOS qui
+  // tue le JS thread, on retrouve les poids tapés et pas juste un compteur.
+  const completedSetsRef = useRef((() => {
+    try {
+      const raw = localStorage.getItem(storageDataKey);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch { return []; }
+  })());
   const [doneCount, setDoneCount] = useState(() => {
+    // Source de vérité = la longueur de completedSetsRef (les vraies données),
+    // fallback sur l'ancien storageKey si seulement le count avait été persisté.
+    if (completedSetsRef.current.length > 0) return completedSetsRef.current.length;
     try { return parseInt(localStorage.getItem(storageKey) || "0"); } catch { return 0; }
   });
-  const completedSetsRef = useRef([]);
   const history = getHistory(weekIdx, sessionIdx, exIdx);
   const latest = getLatest(weekIdx, sessionIdx, exIdx);
   const delta = getDelta(weekIdx, sessionIdx, exIdx);
@@ -273,7 +293,10 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     completedSetsRef.current = [...completedSetsRef.current, { weight, reps, index: idx }];
     const n = completedSetsRef.current.length;
     setDoneCount(n);
-    try { localStorage.setItem(storageKey, String(n)); } catch {}
+    try {
+      localStorage.setItem(storageKey, String(n));
+      localStorage.setItem(storageDataKey, JSON.stringify(completedSetsRef.current));
+    } catch {}
     haptic.medium(); // Set valide
     if (n >= setsCount) {
       const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
@@ -289,7 +312,10 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     completedSetsRef.current = [];
     setDoneCount(0);
     setResetKey(k => k + 1);
-    try { localStorage.removeItem(storageKey); } catch {}
+    try {
+      localStorage.removeItem(storageKey);
+      localStorage.removeItem(storageDataKey);
+    } catch {}
   };
 
   // DESIGN : exercice a venir (pas encore actif, pas complete)
@@ -451,7 +477,15 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               index={i}
               done={i < doneCount}
               isActive={i === doneCount}
-              defaultW={latest?.sets?.[i]?.weight ?? (latest?.weight ? String(latest.weight) : "")}
+              defaultW={(() => {
+                // Ignore les 0 hérités d'anciens logs : 0 ?? X retourne 0 et
+                // useState(0||"") => "" -> placeholder "0" qui ressemble à
+                // une valeur fixée par le coach. On veut un vrai poids > 0.
+                const sw = latest?.sets?.[i]?.weight;
+                if (sw != null && sw !== "" && Number(sw) > 0) return String(sw);
+                if (latest?.weight && Number(latest.weight) > 0) return String(latest.weight);
+                return "";
+              })()}
               defaultR={(() => {
                 // N injecter une defaultR que si c est une vraie valeur numerique loggee.
                 // Les fourchettes type "8-10" venaient du fallback ex.reps -> pollution DB.
@@ -460,6 +494,8 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                 if (/^\d+$/.test(String(r).trim())) return String(r);
                 return "";
               })()}
+              currentW={completedSetsRef.current[i]?.weight}
+              currentR={completedSetsRef.current[i]?.reps}
               placeholder={ex.reps || "—"}
               onDone={handleSetDone}
             />
