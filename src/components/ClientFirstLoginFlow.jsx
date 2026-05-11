@@ -60,9 +60,10 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
         if (wErr) throw wErr;
       }
       if (objectif.trim()) {
+        // onboarding_forms n'a pas de colonne email (client_id est la FK).
+        // L'utiliser causerait "Could not find the 'email' column" en prod.
         const { error: oErr } = await supabase.from("onboarding_forms").upsert({
           client_id: clientId,
-          email: client?.email || user?.email,
           objectifs_6mois: objectif.trim(),
         }, { onConflict: "client_id" });
         if (oErr) throw oErr;
