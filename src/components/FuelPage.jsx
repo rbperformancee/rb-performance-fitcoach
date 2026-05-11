@@ -1067,22 +1067,24 @@ export default function FuelPage({ client, appData }) {
       {/* MODAL AJOUT ALIMENT ULTRA PREMIUM */}
       {showAdd && (
         <div onClick={(e) => { if (e.target === e.currentTarget) { setShowAdd(false); setQuery(""); setSelectedFood(null); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end", WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}>
-          <div style={{ background: "linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)", borderRadius: "28px 28px 0 0", padding: "6px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none" }}>
+          <div style={{ background: "linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)", borderRadius: "28px 28px 0 0", padding: "6px 0 0", height: "92dvh", maxHeight: "92dvh", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none" }}>
             {/* Handle */}
             <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "0 auto 20px" }} />
 
-            <div style={{ padding: "0 24px", overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
-              {/* Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <div>
-                  <div style={{ fontSize: 9, color: "rgba(249,115,22,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>{t("fuel.modal_eyebrow")}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>{t("fuel.modal_log_food")}</div>
+            <div style={{ padding: "0 20px", overflow: "hidden", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+              {/* Header — compact si on a tapé qch (gagne ~50px de hauteur) */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: query.length > 0 ? 12 : 18 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  {query.length === 0 && (
+                    <div style={{ fontSize: 9, color: "rgba(249,115,22,0.5)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 4 }}>{t("fuel.modal_eyebrow")}</div>
+                  )}
+                  <div style={{ fontSize: query.length > 0 ? 15 : 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>{t("fuel.modal_log_food")}</div>
                 </div>
-                <button onClick={() => { setShowAdd(false); setQuery(""); setSelectedFood(null); }} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 44, height: 44, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                <button onClick={() => { setShowAdd(false); setQuery(""); setSelectedFood(null); }} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 40, height: 40, color: "rgba(255,255,255,0.5)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
               </div>
 
-              {/* Repas selector — pills premium */}
-              <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
+              {/* Repas selector — pills premium (collapse en pill row plus serrée si on tape) */}
+              <div style={{ display: "flex", gap: 6, marginBottom: query.length > 0 ? 10 : 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
                 {REPAS.map((id) => {
                   const active = selectedRepas === id;
                   return (
@@ -1114,7 +1116,7 @@ export default function FuelPage({ client, appData }) {
               </div>
 
               {/* Search bar premium */}
-              <div style={{ position: "relative", marginBottom: 16 }}>
+              <div style={{ position: "relative", marginBottom: 12, flexShrink: 0 }}>
                 <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none", display: "flex", alignItems: "center" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8" />
@@ -1125,11 +1127,10 @@ export default function FuelPage({ client, appData }) {
                   type="text"
                   value={query}
                   onChange={e => handleSearch(e.target.value)}
-                  onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: "center", behavior: "smooth" }), 300)}
                   placeholder={t("fuel.search_full_placeholder")}
                   autoFocus
                   enterKeyHint="search"
-                  style={{ width: "100%", padding: "15px 16px 15px 44px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, color: "#fff", fontSize: 16, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", transition: "border 0.2s", WebkitAppearance: "none", WebkitTapHighlightColor: "transparent" }}
+                  style={{ width: "100%", padding: "14px 16px 14px 44px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "#fff", fontSize: 16, outline: "none", fontFamily: "-apple-system,Inter,sans-serif", boxSizing: "border-box", transition: "border 0.2s", WebkitAppearance: "none", WebkitTapHighlightColor: "transparent" }}
                 />
                 {query.length > 0 && (
                   <button onClick={() => { setQuery(""); setSelectedFood(null); }} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 100, width: 24, height: 24, color: "rgba(255,255,255,0.4)", fontSize: 12, cursor: "pointer" }}>×</button>
