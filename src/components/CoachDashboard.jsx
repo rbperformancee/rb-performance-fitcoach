@@ -3604,15 +3604,38 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </ErrorBoundary>
       )}
 
-      {/* ===== DRAWERS DONNEES (Poids / Eau / Sommeil) ===== */}
-      {drawer && (
+      {/* ===== DRAWERS DONNEES (Poids / Eau / Sommeil / Nutrition jour) =====
+         Nutrition_day = modale centrée (sur fond flouté), les autres restent
+         en bottom-sheet. Sur mobile la modale prend 100% - margins, sur
+         desktop elle plafonne à 480px. */}
+      {drawer && (() => {
+        const isCenteredModal = drawer === "nutrition_day";
+        return (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) { setDrawer(null); setSelectedNutDay(null); } }}
-          style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 300,
+            background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)",
+            display: "flex",
+            alignItems: isCenteredModal ? "center" : "flex-end",
+            justifyContent: "center",
+            padding: isCenteredModal ? "16px" : 0,
+          }}
         >
-          <div style={{ width: "100%", maxWidth: 560, maxHeight: "85vh", background: "#0a0a0a", borderRadius: "24px 24px 0 0", border: "1px solid rgba(255,255,255,0.08)", borderBottom: "none", display: "flex", flexDirection: "column", overflow: "hidden", animation: "cpFadeUp 0.3s ease both" }}>
-            {/* Handle */}
-            <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "10px auto 0" }} />
+          <div style={{
+            width: "100%",
+            maxWidth: isCenteredModal ? 480 : 560,
+            maxHeight: isCenteredModal ? "min(85vh, 720px)" : "85vh",
+            background: "#0a0a0a",
+            borderRadius: isCenteredModal ? 20 : "24px 24px 0 0",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderBottom: isCenteredModal ? "1px solid rgba(255,255,255,0.08)" : "none",
+            display: "flex", flexDirection: "column", overflow: "hidden",
+            animation: "cpFadeUp 0.3s ease both",
+            boxShadow: isCenteredModal ? "0 24px 60px rgba(0,0,0,0.6)" : "none",
+          }}>
+            {/* Handle (uniquement pour le bottom-sheet) */}
+            {!isCenteredModal && <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "10px auto 0" }} />}
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 22px 12px" }}>
               <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
@@ -3929,7 +3952,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
 
     {/* Modale gestion habitudes du client (migration 058) */}
