@@ -1796,6 +1796,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         .gte("date", d7str).order("date", { ascending: true })
         .then(({ data }) => setDaily7d(data || []));
     };
+    const refetchMessages = () => {
+      supabase.from("messages").select("*").eq("client_id", client.id)
+        .order("created_at", { ascending: false }).limit(20)
+        .then(({ data }) => setMessages(data || []));
+    };
     let ch;
     try {
       ch = supabase.channel(`client-live-${client.id}`)
@@ -1819,6 +1824,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           event: "*", schema: "public", table: "daily_tracking",
           filter: `client_id=eq.${client.id}`,
         }, refetchDaily)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "messages",
+          filter: `client_id=eq.${client.id}`,
+        }, refetchMessages)
         .subscribe();
     } catch { /* realtime peut etre desactive */ }
     return () => { if (ch) supabase.removeChannel(ch); };
