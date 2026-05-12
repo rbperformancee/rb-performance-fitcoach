@@ -6047,7 +6047,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 {filtered.map((c, i) => {
                   const prog = c.programmes?.find(isProgrammeLive);
                   const actCol = activityColor(c._lastActivity);
-                  const logsCount = Math.ceil(c._logs.length / 3);
+                  // Compteur "séances" = nombre de DATES distinctes dans
+                  // exercise_logs. Avant : Math.ceil(_logs.length/3) qui
+                  // surcomptait dès qu'un client logguait 4+ exos en 1 séance
+                  // (5 exos = "2 sessions"). Cette approximation suppose
+                  // qu'un client log au max ~1x/jour, ce qui est le cas pour
+                  // 99% des programmes.
+                  const logsCount = new Set((c._logs || []).map((l) => l.date).filter(Boolean)).size;
                   const dStr = daysAgo(c._lastActivity);
                   const inDays = c._lastActivity ? Math.floor((Date.now() - new Date(c._lastActivity)) / 86400000) : null;
                   // hasProg = a un programme EN COURS (pas un brouillon ni un planifié futur)

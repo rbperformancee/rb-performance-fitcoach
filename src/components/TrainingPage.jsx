@@ -536,57 +536,66 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
 
   const handleBilan = async () => {
     if (!client?.id) return;
+    // Aucune écriture DB ici : on attend que le client choisisse son RPE
+    // pour insérer session_logs. Avant, on insérait immédiatement et si le
+    // user abandonnait l'étape RPE, la séance était déjà comptée → "Léo a
+    // fait 2 séances" alors qu'une seule était vraiment validée.
     stopChrono(chrono);
-
-    // 1. Logger la seance — on capture l'id pour UPDATE feedback ensuite
-    const { data: logRow } = await supabase.from("session_logs").insert({
-      client_id: client.id,
-      session_name: currentSession?.name || "Seance",
-      programme_name: programme?.name || "Programme",
-      logged_at: new Date().toISOString(),
-    }).select("id").single();
-    setSessionLogId(logRow?.id || null);
-
-    // 2. Compter le nombre de seances completees pour les badges
-    const { data: logs } = await supabase
-      .from("session_logs")
-      .select("id")
-      .eq("client_id", client.id);
-    const totalDone = (logs?.length || 0);
-
-    // 3. Badges automatiques
-    const badges = [];
-    if (totalDone === 1) badges.push({ client_id: client.id, badge_id: "first_session", earned_at: new Date().toISOString() });
-    if (totalDone === 10) badges.push({ client_id: client.id, badge_id: "ten_sessions", earned_at: new Date().toISOString() });
-    if (totalDone === 50) badges.push({ client_id: client.id, badge_id: "fifty_sessions", earned_at: new Date().toISOString() });
-    if (badges.length > 0) {
-      await supabase.from("client_badges").upsert(badges, { onConflict: "client_id,badge_id" });
-    }
-
-    // 4. XP +40 via daily_tracking
-    const today = new Date().toISOString().split("T")[0];
-    const { data: dt } = await supabase.from("daily_tracking").select("xp").eq("client_id", client.id).eq("date", today).maybeSingle();
-    const currentXP = dt?.xp || 0;
-    await supabase.from("daily_tracking").upsert({ client_id: client.id, date: today, xp: currentXP + 40 }, { onConflict: "client_id,date" });
-
     if (navigator.vibrate) navigator.vibrate([50, 30, 100, 30, 150]);
     setShowRessenti(true);
   };
 
   const handleRessenti = async (idx) => {
     setSelectedRessenti(idx);
+    if (!client?.id) return;
+
+    // 1. INSERT session_logs avec RPE inclus dès l'origine (pas d'update
+    //    séparé). C'est ici que la séance devient vraiment "comptée".
+    let logId = sessionLogId;
+    if (!logId) {
+      const { data: logRow } = await supabase.from("session_logs").insert({
+        client_id: client.id,
+        session_name: currentSession?.name || "Seance",
+        programme_name: programme?.name || "Programme",
+        logged_at: new Date().toISOString(),
+        rpe: idx + 1,
+      }).select("id").single();
+      logId = logRow?.id || null;
+      setSessionLogId(logId);
+    } else {
+      // Cas hors-normes : RPE re-sélectionné après un 1er choix
+      await supabase.from("session_logs").update({ rpe: idx + 1 }).eq("id", logId);
+    }
+
+    // 2. session_rpe (historique RPE détaillé, table à part)
     await supabase.from("session_rpe").insert({
-      client_id: client?.id,
+      client_id: client.id,
       session_name: currentSession?.name,
       rpe: idx + 1,
       date: new Date().toISOString().split("T")[0],
     });
-    // Mirror RPE 1-5 → session_logs.rpe (échelle 1-10 mais on garde 1-5 ici
-    // pour cohérence avec session_rpe — la rendering coach affiche bien)
-    if (sessionLogId) {
-      try {
-        await supabase.from("session_logs").update({ rpe: idx + 1 }).eq("id", sessionLogId);
-      } catch (e) { /* best-effort */ }
+
+    // 3. Badges automatiques (n'allume qu'à la 1ère validation, pas à chaque
+    //    re-sélection du RPE)
+    if (logId && !sessionLogId) {
+      const { data: logs } = await supabase
+        .from("session_logs")
+        .select("id")
+        .eq("client_id", client.id);
+      const totalDone = (logs?.length || 0);
+      const badges = [];
+      if (totalDone === 1) badges.push({ client_id: client.id, badge_id: "first_session", earned_at: new Date().toISOString() });
+      if (totalDone === 10) badges.push({ client_id: client.id, badge_id: "ten_sessions", earned_at: new Date().toISOString() });
+      if (totalDone === 50) badges.push({ client_id: client.id, badge_id: "fifty_sessions", earned_at: new Date().toISOString() });
+      if (badges.length > 0) {
+        await supabase.from("client_badges").upsert(badges, { onConflict: "client_id,badge_id" });
+      }
+
+      // 4. XP +40 via daily_tracking (1x par séance validée)
+      const today = new Date().toISOString().split("T")[0];
+      const { data: dt } = await supabase.from("daily_tracking").select("xp").eq("client_id", client.id).eq("date", today).maybeSingle();
+      const currentXP = dt?.xp || 0;
+      await supabase.from("daily_tracking").upsert({ client_id: client.id, date: today, xp: currentXP + 40 }, { onConflict: "client_id,date" });
     }
     // Ne pas fermer automatiquement - laisser l utilisateur voir le recap
   };
