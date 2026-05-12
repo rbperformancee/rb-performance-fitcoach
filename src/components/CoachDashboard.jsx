@@ -4422,10 +4422,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       // Enrichissement pour intelligence predictive (1 volee de queries parallele)
       try {
         const enrichedWithIntel = await enrichClientsForIntelligence(enriched);
-        setClients(enrichedWithIntel);
 
         // Smart pipeline auto-update (1 fois par session, batche)
+        // On calcule les updates AVANT setClients pour pouvoir mettre à jour
+        // la version locale en même temps que la DB — sinon le Kanban affiche
+        // l'ancien statut pour tout le rest de la session (state stale).
         const sentinel = `pipeline_auto_${coachId}_${new Date().toISOString().split("T")[0]}`;
+        let finalClients = enrichedWithIntel;
         if (!sessionStorage.getItem(sentinel)) {
           const updates = [];
           for (const c of enrichedWithIntel) {
@@ -4442,10 +4445,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
                 supabase.from("clients").update({ pipeline_status: u.pipeline_status }).eq("id", u.id)
               ));
             }
+            // Mirror les updates en local pour que le Kanban voit les nouveaux statuts.
+            const updateMap = Object.fromEntries(updates.map((u) => [u.id, u.pipeline_status]));
+            finalClients = enrichedWithIntel.map((c) =>
+              updateMap[c.id] ? { ...c, pipeline_status: updateMap[c.id] } : c
+            );
             console.info(`[pipeline-auto] ${updates.length} client(s) deplaces automatiquement`);
           }
           try { sessionStorage.setItem(sentinel, "1"); } catch {}
         }
+        setClients(finalClients);
       } catch (e) {
         console.warn("[enrichIntelligence]", e);
         setClients(enriched);
@@ -4958,7 +4967,13 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     setShowPipeline(false);
 
     if (id === "analytics") { setShowAnalytics(true); setShowClientList(false); return; }
-    if (id === "pipeline") { setShowPipeline(true); setShowClientList(false); return; }
+    if (id === "pipeline") {
+      setShowPipeline(true); setShowClientList(false);
+      // Refetch à l'ouverture du Kanban — au cas où le coach aurait fait des
+      // updates ailleurs (renouvellement, désabo) qui changent le statut.
+      loadClients();
+      return;
+    }
     if (id === "clients") { setShowClientList(true); setActiveTab("clients"); return; }
 
     setShowClientList(false);
@@ -5172,7 +5187,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       },
     }] : []),
     { icon: "activity", label: t("cd.menu_analytics"), onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
-    { icon: "view",     label: t("cd.menu_pipeline"),  onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); } },
+    { icon: "view",     label: t("cd.menu_pipeline"),  onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); loadClients(); } },
     { type: "separator" },
     { icon: "document", label: t("cd.menu_invoice"), onClick: () => { setShowMoreMenu(false); setShowInvoice(true); } },
     { icon: "flame",    label: t("cd.menu_settings"), onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
@@ -5502,7 +5517,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           { id: "tab_clients", label: t("cd.cmd_clients_list"), group: t("cd.cmd_group_navigation"), icon: "users", run: () => { setShowClientList(true); setActiveTab("clients"); } },
           { id: "tab_analytics", label: t("cd.cmd_analytics"), desc: t("cd.cmd_analytics_desc"), group: t("cd.cmd_group_navigation"), icon: "activity", run: () => setShowAnalytics(true) },
           { id: "tab_achievements", label: t("cd.cmd_achievements"), desc: t("cd.cmd_achievements_desc"), group: t("cd.cmd_group_navigation"), icon: "trophy", run: () => setActiveTab("achievements") },
-          { id: "open_pipeline", label: t("cd.cmd_pipeline"), desc: t("cd.cmd_pipeline_desc"), group: t("cd.cmd_group_actions"), icon: "view", run: () => setShowPipeline(true) },
+          { id: "open_pipeline", label: t("cd.cmd_pipeline"), desc: t("cd.cmd_pipeline_desc"), group: t("cd.cmd_group_actions"), icon: "view", run: () => { setShowPipeline(true); loadClients(); } },
           { id: "action_add_client", label: t("cd.cmd_add_client"), group: t("cd.cmd_group_actions"), icon: "plus", run: () => { setShowClientList(true); setShowAdd(true); } },
           { id: "action_copy_invite", label: t("cd.cmd_copy_invite"), desc: coachData?.coach_slug ? `rbperform.app/rejoindre/${coachData.coach_slug}` : t("cd.cmd_invite_pending"), group: t("cd.cmd_group_actions"), icon: "link", keywords: t("cd.cmd_kw_invite").split(", "), run: async () => {
             const slug = coachData?.coach_slug;
