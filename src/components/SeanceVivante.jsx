@@ -14,7 +14,11 @@ export function SeanceVivante({ clientId, sessionName }) {
   const lastMessageIdRef = useRef(null);
   const mountedAtRef = useRef(new Date().toISOString());
 
-  // Notifier le coach que la seance a commence
+  // Notifier le coach que la seance a commence + cleanup robuste.
+  // iOS qui kill la PWA en arrière-plan saute l'unmount → la row reste active.
+  // On ajoute un listener pagehide (firé même quand la PWA passe en BG) qui
+  // utilise sendBeacon : la requête part garantie avant que le browser kill
+  // le thread, là où un fetch standard serait avorté.
   useEffect(() => {
     if (!clientId) return;
     supabase.from("session_live").upsert({
@@ -25,7 +29,38 @@ export function SeanceVivante({ clientId, sessionName }) {
     }, { onConflict: "client_id" }).then(({ error }) => {
       if (error) console.warn("[session_live] upsert START failed:", error.message, error.code, error.details);
     });
+
+    const markInactive = () => {
+      try {
+        const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+        const ANON = process.env.REACT_APP_SUPABASE_ANON_KEY;
+        const accessToken = supabase.auth?.session?.()?.access_token
+          || JSON.parse(localStorage.getItem("sb-" + new URL(SUPABASE_URL).host.split(".")[0] + "-auth-token") || "{}")?.access_token;
+        if (SUPABASE_URL && ANON && navigator.sendBeacon) {
+          const url = `${SUPABASE_URL}/rest/v1/session_live?client_id=eq.${clientId}`;
+          const body = new Blob([JSON.stringify({ active: false })], { type: "application/json" });
+          // sendBeacon n'accepte pas les headers customs — fallback fetch keepalive.
+          fetch(url, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: ANON,
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+              Prefer: "return=minimal",
+            },
+            body: JSON.stringify({ active: false }),
+            keepalive: true,
+          }).catch(() => {});
+        }
+      } catch (e) { /* best-effort */ }
+    };
+    const onHide = () => { if (document.visibilityState === "hidden") markInactive(); };
+    window.addEventListener("pagehide", markInactive);
+    document.addEventListener("visibilitychange", onHide);
+
     return () => {
+      window.removeEventListener("pagehide", markInactive);
+      document.removeEventListener("visibilitychange", onHide);
       supabase.from("session_live").upsert({
         client_id: clientId, active: false,
       }, { onConflict: "client_id" }).then(({ error }) => {

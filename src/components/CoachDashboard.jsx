@@ -4038,14 +4038,20 @@ function SeanceVivanteCoach({ clientId, clientName, isDemo = false }) {
     if (!clientId) return;
     // En demo on ne fait pas de polling
     if (isDemo) { if (demoLive) setIsLive(true); return; }
-    // Verifier si le client est en seance live
+    // Verifier si le client est en seance live.
+    // Filtre started_at >= now() - 3h : iOS qui kill la PWA empêche le cleanup
+    // unmount → la row reste active=true indéfiniment. Une séance dure rarement
+    // plus d'1h, 3h donne une marge généreuse. Côté UX, on retombe à "pas en
+    // séance" automatiquement sans cron de nettoyage.
     const check = async () => {
+      const cutoff = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase.from("session_live")
         .select("active, session_name, started_at")
         .eq("client_id", clientId)
+        .eq("active", true)
+        .gte("started_at", cutoff)
         .maybeSingle();
-      if (data?.active) setIsLive(true);
-      else setIsLive(false);
+      setIsLive(!!data);
     };
     check();
     const interval = setInterval(check, 10000);
