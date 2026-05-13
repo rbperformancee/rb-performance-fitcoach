@@ -886,11 +886,23 @@ function epley1rm(w, r) {
   if (!(Number(w) > 0) || !(Number(r) > 0)) return null;
   return Math.round(Number(w) * (1 + Number(r) / 30) * 10) / 10;
 }
-function SessionDetailModal({ data, onClose, onShowProgression }) {
-  const { session, dayExs, resolveExName, allExLogs } = data;
+function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) {
+  const { session, dayExs: initialDayExs, resolveExName, allExLogs } = data;
   const date = new Date(session.logged_at);
   const sessionDateStr = (session.logged_at || "").slice(0, 10);
   const durationMin = session.duration_seconds ? Math.round(session.duration_seconds / 60) : null;
+
+  // Etat local des rows pour permettre l'édition coach : on stocke les rows
+  // brutes ici et grouped est recalculé à chaque rendu. Quand le coach modifie
+  // un set, on PATCH supabase + on update ce state → la modale reflète la
+  // correction sans devoir fermer/rouvrir.
+  const [dayExs, setDayExs] = React.useState(initialDayExs || []);
+  // editingId = "<rowId>:<setIndex>" pour les sets expanded, ou "<rowId>:legacy"
+  const [editingId, setEditingId] = React.useState(null);
+  const [editW, setEditW] = React.useState("");
+  const [editR, setEditR] = React.useState("");
+  const [savingEdit, setSavingEdit] = React.useState(false);
+
   // Grouper exercise_logs par ex_key + tri par index e<n> (ordre du programme)
   // pour que E1 vienne avant E2 même si l'ordre de logging était différent.
   // EXPANSION : si la ligne a `sets` (jsonb migration 046), on déroule chaque
@@ -908,12 +920,73 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
           logged_at: e.logged_at,
           _setIndex: idx,
           _expanded: true,
+          _rowId: e.id,
+          _origSets: e.sets,
         });
       });
     } else {
-      grouped[key].push(e);
+      grouped[key].push({ ...e, _rowId: e.id, _expanded: false });
     }
   });
+
+  const startEdit = (cell) => {
+    setEditingId(cell._expanded ? `${cell._rowId}:${cell._setIndex}` : `${cell._rowId}:legacy`);
+    setEditW(String(cell.weight ?? ""));
+    setEditR(String(cell.reps ?? ""));
+  };
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditW(""); setEditR(""); setSavingEdit(false);
+  };
+  const saveEdit = async (cell) => {
+    const newW = parseFloat(editW);
+    const newR = parseInt(editR, 10);
+    if (!Number.isFinite(newW) || newW < 0 || !Number.isFinite(newR) || newR < 0) {
+      toast.error("Valeurs invalides");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      // Trouve la row source dans dayExs (id matching, fallback ex_key+logged_at)
+      const row = dayExs.find((r) => (r.id && r.id === cell._rowId)
+        || (r.ex_key === (Object.entries(grouped).find(([, sets]) => sets.includes(cell)) || [])[0]
+            && r.logged_at === cell.logged_at));
+      if (!row) { toast.error("Ligne introuvable"); setSavingEdit(false); return; }
+      const updates = {};
+      if (cell._expanded) {
+        // Met à jour le set spécifique dans le jsonb
+        const nextSets = (row.sets || []).map((s, idx) =>
+          idx === cell._setIndex ? { weight: newW, reps: newR } : s
+        );
+        updates.sets = nextSets;
+        // Garde weight (moyenne) et reps (dernière série) à jour pour les
+        // requêtes legacy qui ne lisent pas sets[]
+        const avgW = nextSets.reduce((sum, s) => sum + (Number(s.weight) || 0), 0) / nextSets.length;
+        updates.weight = Math.round(avgW * 10) / 10;
+        updates.reps = String(nextSets[nextSets.length - 1]?.reps ?? newR);
+      } else {
+        // Format legacy (pas de sets[])
+        updates.weight = newW;
+        updates.reps = String(newR);
+      }
+      const { data: updated, error } = await supabase
+        .from("exercise_logs")
+        .update(updates)
+        .eq("id", row.id)
+        .select()
+        .single();
+      if (error) throw error;
+      // Update local
+      setDayExs((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...updated } : r)));
+      onSetUpdated?.(updated || { id: row.id, ...updates, ex_key: row.ex_key, logged_at: row.logged_at });
+      toast.success("Modifié");
+      cancelEdit();
+    } catch (e) {
+      console.warn("[edit set]", e);
+      toast.error("Échec de la modification");
+      setSavingEdit(false);
+    }
+  };
   const exercises = Object.entries(grouped).sort((a, b) => {
     const ai = parseInt((a[0].match(/_e(\d+)$/i) || [])[1] || 999, 10);
     const bi = parseInt((b[0].match(/_e(\d+)$/i) || [])[1] || 999, 10);
@@ -1273,7 +1346,7 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
                     }}>
                       <div style={{
                         display: "grid",
-                        gridTemplateColumns: "44px 1fr 80px 80px",
+                        gridTemplateColumns: "44px 1fr 80px 80px 36px",
                         gap: 8, alignItems: "center",
                         fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
                         textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
@@ -1285,6 +1358,7 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
                         <div>Charge × reps</div>
                         <div style={{ textAlign: "right" }}>Volume</div>
                         <div style={{ textAlign: "right" }}>1RM est.</div>
+                        <div></div>
                       </div>
                       {sets.map((s, j) => {
                         const w = Number(s.weight) || 0;
@@ -1294,14 +1368,18 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
                         const volume = w > 0 && r > 0 ? Math.round(w * r * 10) / 10 : null;
                         const oneRm = epley1rm(w, r);
                         const time = s.logged_at ? new Date(s.logged_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : null;
+                        const rowEditId = s._expanded ? `${s._rowId}:${s._setIndex}` : `${s._rowId}:legacy`;
+                        const isEditing = editingId === rowEditId;
+                        const canEdit = !!s._rowId; // ne propose pas l'édition si la row n'a pas d'id (cas dégénéré)
                         return (
                           <div key={j} style={{
                             display: "grid",
-                            gridTemplateColumns: "44px 1fr 80px 80px",
+                            gridTemplateColumns: "44px 1fr 80px 80px 36px",
                             gap: 8, alignItems: "center",
                             padding: "12px 14px",
                             borderTop: j === 0 ? "none" : "1px solid rgba(255,255,255,0.03)",
-                            opacity: isEmpty ? 0.5 : 1,
+                            opacity: isEmpty && !isEditing ? 0.5 : 1,
+                            background: isEditing ? "rgba(2,209,186,0.05)" : "transparent",
                           }}>
                             <div>
                               <div style={{
@@ -1311,38 +1389,84 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
                               }}>
                                 {String(j + 1).padStart(2, "0")}
                               </div>
-                              {time && (
+                              {time && !isEditing && (
                                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2, fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1" }}>{time}</div>
                               )}
                             </div>
-                            <div>
-                              <div style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>
-                                <span style={{ color: isEmpty ? "rgba(255,255,255,0.35)" : G_LOCAL }}>
-                                  {fmtKg(w)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2, fontWeight: 500 }}>kg</span>
-                                </span>
-                                <span style={{ color: "rgba(255,255,255,0.25)", margin: "0 8px", fontWeight: 400 }}>×</span>
-                                <span style={{ color: isEmpty ? "rgba(255,255,255,0.35)" : "#fff" }}>{r}</span>
+                            {isEditing ? (
+                              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                <input
+                                  type="number" inputMode="decimal" step="0.5" min="0"
+                                  value={editW} onChange={(e) => setEditW(e.target.value)}
+                                  placeholder="kg" autoFocus
+                                  style={{ width: 70, padding: "8px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(2,209,186,0.4)", borderRadius: 8, color: "#fff", fontSize: 13, fontFamily: "inherit", outline: "none" }}
+                                />
+                                <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 400 }}>×</span>
+                                <input
+                                  type="number" inputMode="numeric" step="1" min="0"
+                                  value={editR} onChange={(e) => setEditR(e.target.value)}
+                                  placeholder="reps"
+                                  style={{ width: 60, padding: "8px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(2,209,186,0.4)", borderRadius: 8, color: "#fff", fontSize: 13, fontFamily: "inherit", outline: "none" }}
+                                />
                               </div>
-                              {repsMissing && (
-                                <div style={{
-                                  display: "inline-flex", alignItems: "center", gap: 4,
-                                  marginTop: 4, padding: "1px 6px",
-                                  background: "rgba(255,170,0,0.08)",
-                                  border: "1px solid rgba(255,170,0,0.18)",
-                                  borderRadius: 4,
-                                  fontSize: 9, fontWeight: 700,
-                                  color: "rgba(255,200,100,0.85)",
-                                  textTransform: "uppercase", letterSpacing: 0.5,
-                                }}>
-                                  ⚠ Reps non saisis
+                            ) : (
+                              <div>
+                                <div style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>
+                                  <span style={{ color: isEmpty ? "rgba(255,255,255,0.35)" : G_LOCAL }}>
+                                    {fmtKg(w)}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2, fontWeight: 500 }}>kg</span>
+                                  </span>
+                                  <span style={{ color: "rgba(255,255,255,0.25)", margin: "0 8px", fontWeight: 400 }}>×</span>
+                                  <span style={{ color: isEmpty ? "rgba(255,255,255,0.35)" : "#fff" }}>{r}</span>
                                 </div>
-                              )}
-                            </div>
+                                {repsMissing && (
+                                  <div style={{
+                                    display: "inline-flex", alignItems: "center", gap: 4,
+                                    marginTop: 4, padding: "1px 6px",
+                                    background: "rgba(255,170,0,0.08)",
+                                    border: "1px solid rgba(255,170,0,0.18)",
+                                    borderRadius: 4,
+                                    fontSize: 9, fontWeight: 700,
+                                    color: "rgba(255,200,100,0.85)",
+                                    textTransform: "uppercase", letterSpacing: 0.5,
+                                  }}>
+                                    ⚠ Reps non saisis
+                                  </div>
+                                )}
+                              </div>
+                            )}
                             <div style={{ textAlign: "right", fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontSize: 11, color: volume != null ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
                               {volume != null ? <>{volume}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2 }}>kg</span></> : "—"}
                             </div>
                             <div style={{ textAlign: "right", fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontSize: 11, color: oneRm != null ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)" }}>
                               {oneRm != null ? <>{fmtKg(oneRm)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2 }}>kg</span></> : "—"}
+                            </div>
+                            <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                              {isEditing ? (
+                                <>
+                                  <button
+                                    type="button" onClick={() => saveEdit(s)} disabled={savingEdit}
+                                    title="Enregistrer"
+                                    style={{ width: 28, height: 28, borderRadius: 6, background: G_LOCAL, border: "none", color: "#000", cursor: savingEdit ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                  </button>
+                                  <button
+                                    type="button" onClick={cancelEdit} disabled={savingEdit}
+                                    title="Annuler"
+                                    style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", cursor: savingEdit ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}
+                                  >×</button>
+                                </>
+                              ) : canEdit ? (
+                                <button
+                                  type="button" onClick={() => startEdit(s)}
+                                  title="Corriger ce set"
+                                  style={{ width: 28, height: 28, borderRadius: 6, background: "transparent", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.45)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                >
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                  </svg>
+                                </button>
+                              ) : null}
                             </div>
                           </div>
                         );
@@ -1352,7 +1476,7 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
                         return (
                           <div style={{
                             display: "grid",
-                            gridTemplateColumns: "44px 1fr 80px 80px",
+                            gridTemplateColumns: "44px 1fr 80px 80px 36px",
                             gap: 8, alignItems: "center",
                             padding: "10px 14px",
                             background: "rgba(2,209,186,0.04)",
@@ -1364,6 +1488,7 @@ function SessionDetailModal({ data, onClose, onShowProgression }) {
                             <div style={{ textAlign: "right", fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontWeight: 700, color: G_LOCAL, fontSize: 12 }}>
                               {totalVol.toLocaleString("fr-FR")}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>
                             </div>
+                            <div></div>
                             <div></div>
                           </div>
                         );
@@ -1732,7 +1857,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     // Exercise logs recents (pour afficher les poids souleves par seance).
     // sets est jsonb (migration 046) — détail set-par-set quand dispo,
     // sinon NULL pour les vieilles lignes pré-046 et on retombe sur weight/reps.
-    supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps,sets")
+    supabase.from("exercise_logs").select("id,logged_at,ex_key,weight,reps,sets")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(100)
       .then(({ data }) => setExLogs(data || []));
     // Historique poids complet (TOUS depuis le debut de l'abonnement)
@@ -1777,7 +1902,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         .then(({ data }) => setSessions(data || []));
     };
     const refetchExLogs = () => {
-      supabase.from("exercise_logs").select("logged_at,ex_key,weight,reps,sets")
+      supabase.from("exercise_logs").select("id,logged_at,ex_key,weight,reps,sets")
         .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(100)
         .then(({ data }) => setExLogs(data || []));
     };
@@ -3563,6 +3688,16 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           data={sessionDetail}
           onClose={() => setSessionDetail(null)}
           onShowProgression={({ exKey, exName }) => setExProgression({ exKey, exName })}
+          onSetUpdated={(updatedRow) => {
+            // Mirror la row mise à jour dans exLogs local pour que les autres
+            // vues (timeline, max poids, etc.) se rafraichissent instantanément.
+            // Realtime confirmera derrière.
+            setExLogs((prev) => prev.map((l) => {
+              const sameRow = l.id ? l.id === updatedRow.id
+                : (l.ex_key === updatedRow.ex_key && l.logged_at === updatedRow.logged_at);
+              return sameRow ? { ...l, ...updatedRow } : l;
+            }));
+          }}
         />
       )}
 
