@@ -46,7 +46,7 @@ const limit = pLimit(5);
 function buildSmartUnblocker({ upgradeCandidates, planArr }) {
   const topPlan = planArr[planArr.length - 1]; // Most expensive plan
   const clients = upgradeCandidates.slice(0, 5).map((c) => {
-    const upgrade = parseFloat(topPlan?.price_monthly || 0) - c.currentPrice;
+    const upgrade = parseFloat(topPlan?.price_per_month || 0) - c.currentPrice;
     return {
       client_ref: c.ref,
       reason: c.engagementScore >= 80
@@ -89,14 +89,14 @@ export default async function handler(req, res) {
       limit(async () => {
         try {
           const clients = await sb(
-            `/rest/v1/clients?select=id,full_name,last_activity,subscription_end_date,subscription_plan_id,created_at&coach_id=eq.${coach.id}`,
+            `/rest/v1/clients?select=id,full_name,last_seen_at,subscription_end_date,subscription_plan_id,created_at&coach_id=eq.${coach.id}`,
             { headers: { Prefer: "return=representation" } }
           );
           const clientArr = Array.isArray(clients) ? clients : [];
           if (clientArr.length < 2) return;
 
           const plans = await sb(
-            `/rest/v1/coach_plans?select=id,name,price_monthly&coach_id=eq.${coach.id}&is_active=eq.true&order=price_monthly.asc`,
+            `/rest/v1/coach_plans?select=id,name,price_per_month&coach_id=eq.${coach.id}&is_active=eq.true&order=price_per_month.asc`,
             { headers: { Prefer: "return=representation" } }
           );
           const planArr = Array.isArray(plans) ? plans : [];
@@ -104,17 +104,17 @@ export default async function handler(req, res) {
 
           const now = Date.now();
           const sevenDaysAgo = now - 7 * 86400000;
-          const cheapestPrice = Math.min(...planArr.map((p) => parseFloat(p.price_monthly) || 0));
+          const cheapestPrice = Math.min(...planArr.map((p) => parseFloat(p.price_per_month) || 0));
 
           const upgradeCandidates = clientArr
-            .filter((c) => c.last_activity && new Date(c.last_activity).getTime() > sevenDaysAgo)
+            .filter((c) => c.last_seen_at && new Date(c.last_seen_at).getTime() > sevenDaysAgo)
             .map((c) => ({
               ref: anonymizeClient(c),
               clientId: c.id,
               currentPlan: planArr[0]?.name || "Standard",
               currentPrice: cheapestPrice,
               monthsActive: Math.max(1, Math.floor((now - new Date(c.created_at).getTime()) / (30 * 86400000))),
-              engagementScore: c.last_activity ? Math.min(100, Math.round(100 - ((now - new Date(c.last_activity).getTime()) / 86400000) * 10)) : 0,
+              engagementScore: c.last_seen_at ? Math.min(100, Math.round(100 - ((now - new Date(c.last_seen_at).getTime()) / 86400000) * 10)) : 0,
             }))
             .filter((c) => c.engagementScore >= 50)
             .sort((a, b) => b.engagementScore - a.engagementScore)
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
               try {
                 const mrr = clientArr.length * cheapestPrice;
                 const systemPrompt = `Tu es Sentinel, un agent IA business pour coachs sportifs. Tu identifies les clients qui pourraient upgrader. Reponds UNIQUEMENT en JSON valide. Langue: francais.`;
-                const userPrompt = `Plans: ${planArr.map((p) => `${sanitize(p.name)} ${p.price_monthly}EUR`).join(", ")}. MRR: ${Math.round(mrr)}EUR.
+                const userPrompt = `Plans: ${planArr.map((p) => `${sanitize(p.name)} ${p.price_per_month}EUR`).join(", ")}. MRR: ${Math.round(mrr)}EUR.
 Candidats: ${upgradeCandidates.map((c) => `${c.ref}: ${sanitize(c.currentPlan)} ${c.currentPrice}EUR, ${c.monthsActive}mois, engagement ${c.engagementScore}/100`).join("; ")}
 JSON: {title, clients: [{client_ref, reason, suggested_plan, potential_eur, cta_action: open_client_profile|open_message_compose|schedule_call}], total_potential_eur}`;
 

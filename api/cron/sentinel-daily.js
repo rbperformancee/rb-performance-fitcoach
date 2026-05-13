@@ -51,7 +51,7 @@ function buildSmartPlaybook({ activeClients, inactiveClients, expiringClients, c
   // Action 1: Inactive clients
   if (inactiveClients.length > 0) {
     const top = inactiveClients[0];
-    const days = top.last_activity ? Math.floor((now - new Date(top.last_activity).getTime()) / 86400000) : 999;
+    const days = top.last_seen_at ? Math.floor((now - new Date(top.last_seen_at).getTime()) / 86400000) : 999;
     const firstName = top.full_name?.split(" ")[0] || "Un client";
     actions.push({
       text: `${firstName} est inactif depuis ${days}j — envoie-lui un message de relance`,
@@ -141,7 +141,7 @@ export default async function handler(req, res) {
         try {
           // Get coach's clients
           const clients = await sb(
-            `/rest/v1/clients?select=id,full_name,last_activity,subscription_end_date,subscription_plan_id,pipeline_status&coach_id=eq.${coach.id}`,
+            `/rest/v1/clients?select=id,full_name,last_seen_at,subscription_end_date,subscription_plan_id,pipeline_status&coach_id=eq.${coach.id}`,
             { headers: { Prefer: "return=representation" } }
           );
           const clientArr = Array.isArray(clients) ? clients : [];
@@ -149,21 +149,21 @@ export default async function handler(req, res) {
 
           // Get coach plans
           const plans = await sb(
-            `/rest/v1/coach_plans?select=id,name,price_monthly&coach_id=eq.${coach.id}&is_active=eq.true`,
+            `/rest/v1/coach_plans?select=id,name,price_per_month&coach_id=eq.${coach.id}&is_active=eq.true`,
             { headers: { Prefer: "return=representation" } }
           );
           const planArr = Array.isArray(plans) ? plans : [];
           const avgPrice = planArr.length > 0
-            ? planArr.reduce((s, p) => s + (parseFloat(p.price_monthly) || 0), 0) / planArr.length
+            ? planArr.reduce((s, p) => s + (parseFloat(p.price_per_month) || 0), 0) / planArr.length
             : 0;
 
           // Compute metrics
           const now = Date.now();
           const sevenDaysAgo = now - 7 * 86400000;
-          const activeClients = clientArr.filter((c) => c.last_activity && new Date(c.last_activity).getTime() > sevenDaysAgo);
+          const activeClients = clientArr.filter((c) => c.last_seen_at && new Date(c.last_seen_at).getTime() > sevenDaysAgo);
           const inactiveClients = clientArr.filter((c) => {
-            if (!c.last_activity) return true;
-            return (now - new Date(c.last_activity).getTime()) > 5 * 86400000;
+            if (!c.last_seen_at) return true;
+            return (now - new Date(c.last_seen_at).getTime()) > 5 * 86400000;
           });
           const expiringClients = clientArr.filter((c) => {
             if (!c.subscription_end_date) return false;
@@ -185,7 +185,7 @@ export default async function handler(req, res) {
               try {
                 const atRiskClients = inactiveClients.slice(0, 5).map((c) => ({
                   ref: anonymizeClient(c),
-                  inactiveDays: c.last_activity ? Math.floor((now - new Date(c.last_activity).getTime()) / 86400000) : 999,
+                  inactiveDays: c.last_seen_at ? Math.floor((now - new Date(c.last_seen_at).getTime()) / 86400000) : 999,
                   planName: "Standard",
                   planPrice: avgPrice,
                 }));

@@ -50,14 +50,14 @@ export default async function handler(req, res) {
 
     // Get client counts + plan prices per coach
     const clients = await sb(
-      "/rest/v1/clients?select=id,coach_id,last_activity,subscription_end_date,subscription_plan_id",
+      "/rest/v1/clients?select=id,coach_id,last_seen_at,subscription_end_date,subscription_plan_id",
       { headers: { Prefer: "return=representation" } }
     );
     const clientArr = Array.isArray(clients) ? clients : [];
 
     // Get plans for price data
     const plans = await sb(
-      "/rest/v1/coach_plans?select=id,coach_id,price_monthly,is_active&is_active=eq.true",
+      "/rest/v1/coach_plans?select=id,coach_id,price_per_month,is_active&is_active=eq.true",
       { headers: { Prefer: "return=representation" } }
     );
     const planArr = Array.isArray(plans) ? plans : [];
@@ -75,11 +75,11 @@ export default async function handler(req, res) {
     for (const coach of allCoaches) {
       const myClients = clientArr.filter((c) => c.coach_id === coach.id);
       const activeClients = myClients.filter(
-        (c) => c.last_activity && new Date(c.last_activity).getTime() > sevenDaysAgo
+        (c) => c.last_seen_at && new Date(c.last_seen_at).getTime() > sevenDaysAgo
       );
       const myPlans = planMap[coach.id] || [];
       const avgPrice = myPlans.length > 0
-        ? myPlans.reduce((s, p) => s + (parseFloat(p.price_monthly) || 0), 0) / myPlans.length
+        ? myPlans.reduce((s, p) => s + (parseFloat(p.price_per_month) || 0), 0) / myPlans.length
         : 0;
 
       coachMetrics[coach.id] = {
