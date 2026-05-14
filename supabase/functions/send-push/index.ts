@@ -13,12 +13,27 @@ const cors = {'Access-Control-Allow-Origin':'*','Content-Type':'application/json
 serve(async (req) => {
   if (req.method==='OPTIONS') return new Response('ok',{headers:cors})
   try {
+    // Auth interne : on accepte SOIT l'anon key (sb_publishable_* ou JWT
+    // legacy) SOIT la service role (sb_secret_* ou JWT legacy) via le
+    // header apikey OR Authorization Bearer. Le verify_jwt natif Supabase
+    // est désactivé sur cette function (config.toml) car il refuse les
+    // nouveaux opaque tokens sb_*. On gère donc l'auth ici.
+    const ANON = Deno.env.get('SUPABASE_ANON_KEY')!
+    const SR = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const auth = req.headers.get('authorization') || ''
+    const apikey = req.headers.get('apikey') || ''
+    const bearer = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+    const presented = bearer || apikey
+    if (!presented || (presented !== ANON && presented !== SR)) {
+      return new Response(JSON.stringify({error:'unauthorized'}), {status:401, headers:cors})
+    }
+
     const {client_id, coach_id, title, body, url} = await req.json()
     if (!client_id && !coach_id) {
       return new Response(JSON.stringify({error:'client_id or coach_id required'}), {status:400, headers:cors})
     }
     const sUrl = Deno.env.get('SUPABASE_URL')!
-    const sKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const sKey = SR
     // Filtre exclusif : on cible soit les subs client soit les subs coach
     const filter = coach_id
       ? `coach_id=eq.${coach_id}`

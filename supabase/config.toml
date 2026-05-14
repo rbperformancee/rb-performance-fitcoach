@@ -1,0 +1,9 @@
+# Supabase project config (Edge Functions only)
+# Voir docs : https://supabase.com/docs/guides/functions/auth
+
+# send-push : on désactive le verify_jwt natif parce que les nouveaux opaque
+# tokens (sb_publishable_*, sb_secret_*) ne sont pas des JWT et le runtime
+# Supabase les rejette. L'auth est faite à l'intérieur de la function via
+# vérification stricte du header apikey/Authorization (= ANON ou SR).
+[functions.send-push]
+verify_jwt = false
