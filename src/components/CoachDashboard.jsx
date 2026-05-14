@@ -1690,6 +1690,86 @@ function ExerciseProgressionModal({ data, onClose }) {
   );
 }
 
+/* ── Bouton "Demande de pesée" : envoie un push au client pour qu'il
+   logue son poids. Rate-limited côté UI à 1x/jour/client via localStorage
+   pour éviter le harcèlement. ── */
+function WeightNudgeButton({ client }) {
+  const [sending, setSending] = React.useState(false);
+  const [sentToday, setSentToday] = React.useState(() => {
+    try {
+      const k = `weight_nudge_${client?.id}_${new Date().toISOString().slice(0,10)}`;
+      return localStorage.getItem(k) === "1";
+    } catch { return false; }
+  });
+  if (!client?.id) return null;
+  const send = async (e) => {
+    e.stopPropagation(); // ne pas ouvrir le drawer poids
+    if (sending || sentToday) return;
+    setSending(true);
+    try {
+      const firstName = client.full_name?.split(" ")[0] || "Salut";
+      const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+      const ANON = process.env.REACT_APP_SUPABASE_ANON_KEY;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON,
+          Authorization: `Bearer ${ANON}`,
+        },
+        body: JSON.stringify({
+          client_id: client.id,
+          title: "Pèse-toi aujourd'hui",
+          body: `${firstName}, rentre ton poids dans l'app — 10s, ça permet d'ajuster ton suivi.`,
+          url: "/app.html?tab=body",
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && (json.sent || 0) > 0) {
+        toast.success(`Notif envoyée à ${firstName}`);
+        try {
+          localStorage.setItem(`weight_nudge_${client.id}_${new Date().toISOString().slice(0,10)}`, "1");
+        } catch {}
+        setSentToday(true);
+      } else if (res.ok && json.total === 0) {
+        toast.error(`${firstName} n'a pas activé les notifs`);
+      } else {
+        toast.error(`Échec : ${json.error || res.status}`);
+      }
+    } catch (err) {
+      toast.error("Échec d'envoi");
+    } finally {
+      setSending(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={send}
+      disabled={sending || sentToday}
+      title={sentToday ? "Déjà envoyée aujourd'hui" : "Demander au client de logger son poids"}
+      style={{
+        width: 36, height: 36, borderRadius: 10,
+        background: sentToday ? "rgba(2,209,186,0.06)" : "rgba(2,209,186,0.10)",
+        border: `1px solid ${sentToday ? "rgba(2,209,186,0.18)" : "rgba(2,209,186,0.28)"}`,
+        color: G, cursor: sending || sentToday ? "default" : "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0, transition: "all 0.15s",
+        opacity: sending ? 0.5 : 1,
+      }}
+    >
+      {sentToday ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      ) : (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+        </svg>
+      )}
+    </button>
+  );
+}
+
 /* ── Page plein ecran detail client — TOUT visible d'un coup ── */
 function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, isDemo = false, coachPlans = [], onWantInvoice, onClientUpdated }) {
   const t = useT();
@@ -2508,11 +2588,17 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   );
                 })()}
               </div>
-              {weights.length >= 2 && <MiniSparkline data={[...weights].reverse()} color={G} w={120} h={40} />}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {weights.length >= 2 && <MiniSparkline data={[...weights].reverse()} color={G} w={120} h={40} />}
+                <WeightNudgeButton client={client} />
+              </div>
             </div>
           ) : (
-            <div style={{ ...card, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "18px 12px" }}>
-              {t("cp.no_weights")}
+            <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 16px" }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+                {t("cp.no_weights")}
+              </div>
+              <WeightNudgeButton client={client} />
             </div>
           )}
         </div>
