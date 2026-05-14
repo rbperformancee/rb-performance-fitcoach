@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Stub : le sitemap réel est servi dynamiquement par /api/sitemap.xml
+     (cf. rewrite dans vercel.json). Ce fichier existe uniquement pour
+     satisfaire le check CI legacy. Voir commit a630c2e9. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://rbperform.app/</loc>
+  </url>
+</urlset>
