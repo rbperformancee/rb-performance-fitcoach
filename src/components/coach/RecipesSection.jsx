@@ -30,9 +30,6 @@ export default function RecipesSection({ coachId }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [reviewRecipe, setReviewRecipe] = useState(null);
-  // Placeholders optimistes affichés en tête de liste dès clic upload.
-  // Format : { _optimistic: true, _tempId, _startedAt, title, parsing_status: 'parsing' }
-  const [optimistic, setOptimistic] = useState([]);
   const fileInputRef = useRef();
   const pollRef = useRef(null);
 
@@ -54,8 +51,33 @@ export default function RecipesSection({ coachId }) {
     }
   }, []);
 
+  // Polling : pendant qu'une recette est en cours de parse, refresh toutes
+  // les 5s pour voir son statut changer (parsing → needs_review).
   useEffect(() => { load(); }, [load]);
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
+  useEffect(() => {
+    const hasParsing = items.standalone?.some((r) => r.parsing_status === "parsing");
+    if (!hasParsing) {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      return;
+    }
+    if (pollRef.current) return; // déjà actif
+    pollRef.current = setInterval(() => { load(); }, 5000);
+  }, [items.standalone, load]);
+
+  const deleteRecipe = async (recipe) => {
+    if (!recipe?.id) return;
+    if (!window.confirm(`Supprimer "${recipe.title}" ?\nCette action est irréversible.`)) return;
+    haptic.medium();
+    try {
+      const { error } = await supabase.from("recipes").delete().eq("id", recipe.id);
+      if (error) throw error;
+      toast("Recette supprimée", "success");
+      await load();
+    } catch (err) {
+      toast(`Erreur suppression: ${err.message}`, "error");
+    }
+  };
 
   const handleFile = async (file) => {
     if (!file || file.type !== "application/pdf") {
@@ -70,28 +92,6 @@ export default function RecipesSection({ coachId }) {
     setUploading(true);
     setUploadProgress("Upload du PDF...");
 
-    // Placeholder optimiste : visible immédiatement dans la grille
-    const tempId = `temp-${Date.now()}`;
-    const startedAt = new Date().toISOString();
-    const displayTitle = file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ");
-    setOptimistic((prev) => [{ _optimistic: true, _tempId: tempId, _startedAt: startedAt, id: tempId, title: displayTitle, parsing_status: "parsing", scope: "coach" }, ...prev]);
-
-    // Polling de secours : refresh la liste toutes les 4s pendant que le parse tourne.
-    // Si le fetch /api/recipes/create timeout côté front mais réussit côté back,
-    // la nouvelle recette apparaît quand même.
-    if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(async () => {
-      const data = await load();
-      if (data?.standalone?.some((r) => r.created_at >= startedAt)) {
-        setOptimistic((prev) => prev.filter((o) => o._tempId !== tempId));
-        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-      }
-    }, 4000);
-    // Safety : stop polling après 3 min max
-    const pollTimeout = setTimeout(() => {
-      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-    }, 180000);
-
     try {
       // 1. Upload to Storage at recipes/<coach_id>/<timestamp>-<filename>
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -101,9 +101,13 @@ export default function RecipesSection({ coachId }) {
         .upload(path, file, { upsert: false });
       if (upErr) throw upErr;
 
-      // 2. Call /api/recipes/create
+      // 2. Call /api/recipes/create — le backend INSERT un stub
+      // (parsing_status='parsing') immédiatement, puis continue le parse.
+      // On refresh la liste tout de suite pour voir le stub.
       setUploadProgress("Parsing en cours (peut prendre 1-2 min)...");
       const { data: { session } } = await supabase.auth.getSession();
+      // Refresh la liste après ~1s pour attraper le stub backend
+      setTimeout(() => { load(); }, 1500);
       const r = await fetch("/api/recipes/create", {
         method: "POST",
         headers: {
@@ -119,16 +123,13 @@ export default function RecipesSection({ coachId }) {
       const result = await r.json();
       toast(`${result.recipes_count} recette(s) extraite(s)`, "success");
       await load();
-      setOptimistic((prev) => prev.filter((o) => o._tempId !== tempId));
     } catch (err) {
       toast(`Erreur: ${err.message}`, "error");
-      // Garde le placeholder : le polling le retirera s'il finit par apparaître,
-      // sinon on le retire après 3 min via le safety timeout.
+      // Le polling continuera à refresh tant qu'il y a un stub en parsing.
     } finally {
       setUploading(false);
       setUploadProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      clearTimeout(pollTimeout);
     }
   };
 
@@ -195,24 +196,21 @@ export default function RecipesSection({ coachId }) {
             </section>
           )}
 
-          {/* Standalone recipes (avec placeholders optimistes en tête) */}
-          {(items.standalone?.length > 0 || optimistic.length > 0) && (
+          {/* Standalone recipes */}
+          {items.standalone?.length > 0 && (
             <section>
               <h3 style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>
-                Recettes individuelles ({items.standalone.length + optimistic.length})
+                Recettes individuelles ({items.standalone.length})
               </h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
-                {optimistic.map((r) => (
-                  <RecipeCard key={r._tempId} recipe={r} onClick={() => {}} />
-                ))}
                 {items.standalone.map((r) => (
-                  <RecipeCard key={r.id} recipe={r} onClick={() => setReviewRecipe(r)} />
+                  <RecipeCard key={r.id} recipe={r} onClick={() => setReviewRecipe(r)} onDelete={() => deleteRecipe(r)} />
                 ))}
               </div>
             </section>
           )}
 
-          {!items.plans?.length && !items.standalone?.length && !optimistic.length && (
+          {!items.plans?.length && !items.standalone?.length && (
             <div style={{
               padding: 60, textAlign: "center", borderRadius: 16,
               border: "1px dashed rgba(255,255,255,0.1)",
@@ -268,7 +266,7 @@ function PlanCard({ plan, onSelectRecipe }) {
 // =====================================================
 // RecipeCard
 // =====================================================
-function RecipeCard({ recipe, onClick, compact }) {
+function RecipeCard({ recipe, onClick, onDelete, compact }) {
   const status = recipe.parsing_status;
   const statusColor =
     status === "published" ? G :
@@ -285,9 +283,13 @@ function RecipeCard({ recipe, onClick, compact }) {
   const m = recipe.macros_per_serving || {};
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => { haptic.selection(); onClick(); }}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { haptic.selection(); onClick(); } }}
       style={{
+        position: "relative",
         textAlign: "left", padding: compact ? 12 : 14, borderRadius: 12,
         background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
         color: "#fff", cursor: "pointer", fontFamily: "inherit",
@@ -297,15 +299,34 @@ function RecipeCard({ recipe, onClick, compact }) {
       onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-        <div style={{ fontSize: compact ? 13 : 14, fontWeight: 700, lineHeight: 1.2, flex: 1 }}>
+        <div style={{ fontSize: compact ? 13 : 14, fontWeight: 700, lineHeight: 1.2, flex: 1, paddingRight: 6 }}>
           {recipe.title}
         </div>
-        <span style={{
-          fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
-          padding: "3px 7px", borderRadius: 6,
-          color: statusColor, background: `${statusColor}20`, border: `1px solid ${statusColor}40`,
-          flexShrink: 0, marginLeft: 6,
-        }}>{statusLabel}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          <span style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
+            padding: "3px 7px", borderRadius: 6,
+            color: statusColor, background: `${statusColor}20`, border: `1px solid ${statusColor}40`,
+          }}>{statusLabel}</span>
+          {onDelete && (
+            <button
+              type="button"
+              aria-label="Supprimer"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 24, height: 24, borderRadius: 6,
+                background: "transparent", border: "1px solid rgba(255,255,255,0.08)",
+                color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 0,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.4)"; e.currentTarget.style.color = "#ef4444"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+            >
+              <AppIcon name="trash" size={12} />
+            </button>
+          )}
+        </div>
       </div>
       {m.calories != null && (
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -328,7 +349,7 @@ function RecipeCard({ recipe, onClick, compact }) {
           ))}
         </div>
       )}
-    </button>
+    </div>
   );
 }
 
