@@ -7,21 +7,21 @@
 <meta name="theme-color" content="#080C14" />
 <meta name="color-scheme" content="dark" />
 <title>Founding Coach — RB Perform</title>
-<meta name="description" content="Rejoins les 30 premiers coachs. Plan Pro à 199€/mois verrouillé à vie au lieu de 299€.">
+<meta name="description" content="29 places Founding Coach — 199€/mois bloqué à vie jusqu'au 26 mai 2026. Après : 299€/mois. Anti-churn IA, dashboard MRR, 0% commission.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
-<meta property="og:title" content="Founding Coach — 199€/mois verrouillé à vie">
-<meta property="og:description" content="30 places. Plan Pro complet. Anti-churn IA, dashboard MRR, 0% commission. Le prix d'aujourd'hui est ton prix à vie.">
+<meta property="og:title" content="Founding Coach — 199€/mois bloqué à vie (29 places)">
+<meta property="og:description" content="29 places jusqu'au 26 mai. 199€/mois bloqué à vie au lieu de 299€. Anti-churn IA, dashboard MRR, 0% commission.">
 <meta property="og:url" content="https://rbperform.app/founding">
 <meta property="og:image" content="https://rbperform.app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Founding Coach Program — 199€/mois verrouillé à vie, 30 places">
+<meta property="og:image:alt" content="Founding Coach Program — 199€/mois bloqué à vie, 29 places jusqu'au 26 mai">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Founding Coach — RB Perform">
-<meta name="twitter:description" content="30 places. Plan Pro à 199€/mois verrouillé à vie.">
+<meta name="twitter:description" content="29 places à 199€/mois bloqué à vie jusqu'au 26 mai. Après : 299€.">
 <meta name="twitter:image" content="https://rbperform.app/og-image.png">
-<meta name="twitter:image:alt" content="Founding Coach Program — 199€/mois verrouillé à vie, 30 places">
+<meta name="twitter:image:alt" content="Founding Coach Program — 199€/mois bloqué à vie, 29 places jusqu'au 26 mai">
 <link rel="canonical" href="https://rbperform.app/founding">
 <link rel="alternate" hreflang="fr" href="https://rbperform.app/founding">
 <link rel="alternate" hreflang="en" href="https://rbperform.app/founding?lang=en">
@@ -122,6 +122,33 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
 .places-text{font-size:11px;color:rgba(255,255,255,0.3);font-weight:600}
 .places-text strong{color:#00C9A7}
 
+/* Tiers ladder */
+.tiers{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.tier{padding:18px 20px;border-radius:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden}
+.tier-pioneer{background:linear-gradient(135deg,rgba(255,215,0,0.05),rgba(0,201,167,0.04));border-color:rgba(255,215,0,0.2)}
+.tier-founding{background:rgba(0,201,167,0.04);border-color:rgba(0,201,167,0.2)}
+.tier-pro{background:rgba(255,255,255,0.015);border-color:rgba(255,255,255,0.04);opacity:.7}
+.tier-head{display:flex;align-items:center;gap:12px}
+.tier-medal{font-size:22px;flex-shrink:0;line-height:1}
+.tier-head>div:not(.tier-price){flex:1;min-width:0}
+.tier-name{font-size:13px;font-weight:800;color:#fff;letter-spacing:-0.01em;margin-bottom:2px}
+.tier-sub{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.tier-price{text-align:right;flex-shrink:0}
+.tier-price strong{font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.02em}
+.tier-price span{display:block;font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.6px;font-weight:600}
+.tier-pro .tier-price strong{color:rgba(255,255,255,0.6)}
+.tier-progress{width:100%;height:3px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;margin:10px 0 6px}
+.tier-progress-fill{height:100%;background:linear-gradient(90deg,#00C9A7,#FFD700);border-radius:100px;transition:width 1s ease}
+.tier-pioneer .tier-progress-fill{background:linear-gradient(90deg,#FFD700,#FFA500)}
+.tier-founding .tier-progress-fill{background:linear-gradient(90deg,#00C9A7,rgba(0,201,167,0.5))}
+.tier-count{font-size:10px;color:rgba(255,255,255,0.45);font-weight:600}
+.tier-count strong{color:#fff}
+.tier-pioneer .tier-count strong{color:#FFD700}
+.tier-founding .tier-count strong{color:#00C9A7}
+.tier-count-final{margin-top:6px;color:rgba(255,255,255,0.35);font-style:italic}
+.price-card-compact{padding:16px 20px;margin-bottom:32px;text-align:center}
+.price-card-compact::before{display:none}
+
 /* Engagement Founder */
 .engagements{margin-bottom:40px}
 .engagement{padding:18px 20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;text-align:left}
@@ -167,8 +194,8 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
 
     <div class="badge"><span class="dot"></span><span data-i18n="founding.badge">Founding Coach Program</span></div>
 
-    <h1 data-i18n="founding.h1">Le prix d'aujourd'hui<br>est ton prix à vie.</h1>
-    <p class="sub" data-i18n="founding.sub">30 places. Plan Pro complet à 199€/mois au lieu de 299€.<br>Une fois verrouillé, ton prix ne bouge plus — jamais.</p>
+    <h1 data-i18n="founding.h1">199€/mois<br>bloqué à vie.</h1>
+    <p class="sub" data-i18n="founding.sub">29 places Founding jusqu'au 26 mai. Après : 299€/mois.<br>Ton tarif d'aujourd'hui est ton tarif à vie. Définitif.</p>
 
     <!-- Countdown -->
     <div class="countdown">
@@ -181,19 +208,39 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       <div class="cd-block"><div class="cd-num" id="fc-s">00</div><div class="cd-label" data-i18n="founding.cd_sec">Sec</div></div>
     </div>
 
-    <!-- Places restantes -->
-    <div class="places">
-      <div class="places-text" data-i18n="founding.places">Programme limité à <strong>30 fondateurs</strong></div>
+    <!-- Tiers : Founding (now) → Pro (post 26 mai) -->
+    <div class="tiers">
+      <div class="tier tier-founding">
+        <div class="tier-head">
+          <span class="tier-medal">🥇</span>
+          <div>
+            <div class="tier-name" data-i18n="founding.t2_name">Founding Coach</div>
+            <div class="tier-sub" data-i18n="founding.t2_sub">29 places · jusqu'au 26 mai 2026</div>
+          </div>
+          <div class="tier-price"><strong>199€</strong><span>/mois à vie</span></div>
+        </div>
+        <div class="tier-progress"><div class="tier-progress-fill" style="width:0%"></div></div>
+        <div class="tier-count" data-i18n="founding.t2_count"><strong>29 places restantes</strong> · ouvert maintenant</div>
+      </div>
+
+      <div class="tier tier-pro">
+        <div class="tier-head">
+          <span class="tier-medal">📈</span>
+          <div>
+            <div class="tier-name" data-i18n="founding.t3_name">Pro public</div>
+            <div class="tier-sub" data-i18n="founding.t3_sub">à partir du 27 mai 2026</div>
+          </div>
+          <div class="tier-price"><strong>299€</strong><span>/mois</span></div>
+        </div>
+        <div class="tier-count tier-count-final" data-i18n="founding.t3_count">Tarif Pro standard. Plus aucun palier verrouillé à vie.</div>
+      </div>
     </div>
 
-    <!-- Price card -->
-    <div class="price-card">
-      <div class="price-old" data-i18n="founding.price_old">299€ / mois</div>
-      <div class="price-new" data-price="founding">199€</div>
-      <div class="price-period" data-i18n="founding.price_period">Par mois · Verrouillé à vie</div>
+    <!-- Price lock badge unique -->
+    <div class="price-card price-card-compact">
       <div class="price-lock">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        <span data-i18n="founding.price_guarantee">Prix garanti — pas d'augmentation, jamais</span>
+        <span data-i18n="founding.price_guarantee">Prix garanti — pas d'augmentation, jamais. Ton tarif d'aujourd'hui est ton tarif à vie.</span>
       </div>
     </div>
 
@@ -244,7 +291,7 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       <div class="engagement">
         <div class="engagement-body">
           <div class="engagement-title" data-i18n="founding.eng_title">Engagement Prix — à vie</div>
-          <div class="engagement-desc" data-i18n="founding.eng_desc">Tu paies <strong>199€/mois</strong> pour la vie. Quand l'offre passera à <strong>299€/mois</strong> après le lancement, tu économiseras <strong>100€/mois</strong> — soit <strong>1 200€/an</strong> à vie.</div>
+          <div class="engagement-desc" data-i18n="founding.eng_desc">Tu paies <strong>199€/mois</strong> à vie. Après le 26 mai, le tarif passe à <strong>299€/mois</strong>. Ton verrou Founding = <strong>100€/mois d'économie</strong> = <strong>1 200€/an à vie</strong>.</div>
         </div>
       </div>
     </div>
@@ -252,7 +299,7 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
     <!-- Lead capture form (consolidated from /waitlist) -->
     <section class="join-section" id="join">
       <div class="join-eyebrow" data-i18n="founding.join_eyebrow">Bloquer ma place</div>
-      <h2 class="join-title" data-i18n="founding.join_title">Une fois les 30 places prises, c'est fini.</h2>
+      <h2 class="join-title" data-i18n="founding.join_title">Une fois les 29 places prises, c'est fini.</h2>
 
       <div id="formWrap">
         <form class="form" id="waitlistForm" onsubmit="submitWaitlist(event)">
