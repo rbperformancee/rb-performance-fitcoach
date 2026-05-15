@@ -1314,6 +1314,7 @@ const fr = {
     "cd.menu_sentinel": "Sentinel",
     "cd.menu_analytics": "Analytics",
     "cd.menu_pipeline": "Pipeline",
+    "cd.menu_recipes": "Recettes",
     "cd.menu_invoice": "Facture",
     "cd.menu_settings": "Paramètres",
     "cd.menu_my_account": "Mon compte",
