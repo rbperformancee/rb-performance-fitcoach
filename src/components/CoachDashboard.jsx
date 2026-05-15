@@ -1694,6 +1694,7 @@ function ExerciseProgressionModal({ data, onClose }) {
    logue son poids. Rate-limited côté UI à 1x/jour/client via localStorage
    pour éviter le harcèlement. ── */
 function WeightNudgeButton({ client }) {
+  const t = useT();
   const [sending, setSending] = React.useState(false);
   const [sentToday, setSentToday] = React.useState(() => {
     try {
@@ -1719,25 +1720,25 @@ function WeightNudgeButton({ client }) {
         },
         body: JSON.stringify({
           client_id: client.id,
-          title: "Pèse-toi aujourd'hui",
-          body: `${firstName}, rentre ton poids dans l'app — 10s, ça permet d'ajuster ton suivi.`,
+          title: t("coach.weight_nudge_push_title"),
+          body: fillTpl(t("coach.weight_nudge_push_body"), { name: firstName }),
           url: "/app.html?tab=body",
         }),
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok && (json.sent || 0) > 0) {
-        toast.success(`Notif envoyée à ${firstName}`);
+        toast.success(fillTpl(t("coach.weight_nudge_toast_sent"), { name: firstName }));
         try {
           localStorage.setItem(`weight_nudge_${client.id}_${new Date().toISOString().slice(0,10)}`, "1");
         } catch {}
         setSentToday(true);
       } else if (res.ok && json.total === 0) {
-        toast.error(`${firstName} n'a pas activé les notifs`);
+        toast.error(fillTpl(t("coach.weight_nudge_toast_no_subs"), { name: firstName }));
       } else {
-        toast.error(`Échec : ${json.error || res.status}`);
+        toast.error(t("coach.weight_nudge_toast_failed"));
       }
     } catch (err) {
-      toast.error("Échec d'envoi");
+      toast.error(t("coach.weight_nudge_toast_failed"));
     } finally {
       setSending(false);
     }
@@ -1747,7 +1748,7 @@ function WeightNudgeButton({ client }) {
       type="button"
       onClick={send}
       disabled={sending || sentToday}
-      title={sentToday ? "Déjà envoyée aujourd'hui" : "Demander au client de logger son poids"}
+      title={sentToday ? t("coach.weight_nudge_already_sent") : t("coach.weight_nudge_tooltip")}
       style={{
         width: 36, height: 36, borderRadius: 10,
         background: sentToday ? "rgba(2,209,186,0.06)" : "rgba(2,209,186,0.10)",

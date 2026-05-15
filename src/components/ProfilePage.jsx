@@ -263,7 +263,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
               <circle cx="12" cy="12" r="3"/>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
-            Paramètres
+            {t("settings.title")}
           </button>
         </div>
 
@@ -305,9 +305,9 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
     setPushBusy(true);
     try {
       const perm = await requestPush();
-      if (perm === "granted") toast.success("Notifs activées");
-      else if (perm === "denied") toast.error("Refusées. Réglages iOS → Notifications → RB Perform.");
-      else toast.error("Impossible d'activer les notifs");
+      if (perm === "granted") toast.success(t("settings.toast_notifs_on"));
+      else if (perm === "denied") toast.error(t("settings.toast_notifs_denied"));
+      else toast.error(t("settings.toast_notifs_failed"));
     } finally { setPushBusy(false); }
   };
 
@@ -339,13 +339,13 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
       }}>
         <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "10px auto 18px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 22px 18px" }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>Paramètres</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>{t("settings.title")}</div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         </div>
 
         {/* === NOTIFICATIONS === */}
         <div style={{ padding: "0 22px 18px" }}>
-          <div style={sectionLabel}>Notifications</div>
+          <div style={sectionLabel}>{t("settings.section_notifications")}</div>
           <button
             onClick={handleEnableNotifs}
             disabled={pushBusy || pushPerm === "denied"}
@@ -364,12 +364,12 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
               </svg>
               {pushOn
-                ? "Notifications activées"
+                ? t("settings.notifs_on")
                 : pushPerm === "denied"
-                  ? "Notifs bloquées"
+                  ? t("settings.notifs_blocked")
                   : pushBusy
-                    ? "Activation…"
-                    : "Activer les notifications"}
+                    ? t("settings.activating")
+                    : t("settings.activate_notifs")}
             </span>
             {pushOn && (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -377,7 +377,7 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
           </button>
           {pushPerm === "denied" && (
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 6, lineHeight: 1.4, paddingLeft: 4 }}>
-              Va dans Réglages iOS → Notifications → RB Perform → autoriser
+              {t("settings.notifs_help_ios")}
             </div>
           )}
         </div>
@@ -386,7 +386,7 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
         <div style={{ padding: "0 22px 18px" }}>
           <div style={sectionLabel}>{t("profile.language_label")}</div>
           <div style={{ ...rowBase, cursor: "default" }}>
-            <span>Langue de l'app</span>
+            <span>{t("settings.lang_row")}</span>
             <LanguageToggle compact />
           </div>
         </div>
@@ -394,23 +394,23 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
         {/* === LEGAL === */}
         {(onShowPrivacy || onShowMentions || onShowCGU) && (
           <div style={{ padding: "0 22px 18px" }}>
-            <div style={sectionLabel}>Légal</div>
+            <div style={sectionLabel}>{t("settings.section_legal")}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {onShowPrivacy && (
                 <button onClick={() => { haptic.light(); onClose(); onShowPrivacy(); }} style={rowBase}>
-                  <span>Politique de confidentialité</span>
+                  <span>{t("settings.privacy")}</span>
                   <span style={{ color: "rgba(255,255,255,0.3)" }}>›</span>
                 </button>
               )}
               {onShowCGU && (
                 <button onClick={() => { haptic.light(); onClose(); onShowCGU(); }} style={rowBase}>
-                  <span>CGU</span>
+                  <span>{t("settings.cgu")}</span>
                   <span style={{ color: "rgba(255,255,255,0.3)" }}>›</span>
                 </button>
               )}
               {onShowMentions && (
                 <button onClick={() => { haptic.light(); onClose(); onShowMentions(); }} style={rowBase}>
-                  <span>Mentions légales</span>
+                  <span>{t("settings.mentions")}</span>
                   <span style={{ color: "rgba(255,255,255,0.3)" }}>›</span>
                 </button>
               )}
@@ -420,14 +420,14 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
 
         {/* === COMPTE === */}
         <div style={{ padding: "0 22px 22px" }}>
-          <div style={sectionLabel}>Compte</div>
+          <div style={sectionLabel}>{t("settings.section_account")}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {onLogout && (
               <button
                 onClick={() => { haptic.medium(); onClose(); onLogout(); }}
                 style={{ ...rowBase, color: "rgba(255,255,255,0.7)" }}
               >
-                <span>Se déconnecter</span>
+                <span>{t("settings.logout")}</span>
                 <span style={{ color: "rgba(255,255,255,0.3)" }}>›</span>
               </button>
             )}
@@ -436,7 +436,7 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
                 onClick={() => { haptic.medium(); onClose(); onDeleteRequest(); }}
                 style={{ ...rowBase, color: "#ef4444", border: "1px solid rgba(239,68,68,0.15)", background: "rgba(239,68,68,0.04)" }}
               >
-                <span>Supprimer mon compte</span>
+                <span>{t("settings.delete_account")}</span>
                 <span style={{ color: "rgba(239,68,68,0.4)" }}>›</span>
               </button>
             )}

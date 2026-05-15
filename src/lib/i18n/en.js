@@ -2360,6 +2360,39 @@ const en = {
     // ===== SessionTimer =====
     "stm.session_done": "Session done.",
     "stm.great_work": "Great work.",
+
+    // ===== Settings modal (client) =====
+    "settings.title": "Settings",
+    "settings.section_notifications": "Notifications",
+    "settings.notifs_on": "Notifications enabled",
+    "settings.notifs_blocked": "Notifications blocked",
+    "settings.activating": "Activating…",
+    "settings.activate_notifs": "Enable notifications",
+    "settings.notifs_help_ios": "Go to iOS Settings → Notifications → RB Perform → Allow",
+    "settings.toast_notifs_on": "Notifications enabled",
+    "settings.toast_notifs_denied": "Denied. iOS Settings → Notifications → RB Perform.",
+    "settings.toast_notifs_failed": "Couldn't enable notifications",
+    "settings.lang_row": "App language",
+    "settings.section_legal": "Legal",
+    "settings.privacy": "Privacy policy",
+    "settings.cgu": "Terms of service",
+    "settings.mentions": "Legal notice",
+    "settings.section_account": "Account",
+    "settings.logout": "Log out",
+    "settings.delete_account": "Delete my account",
+
+    // ===== Body — weekly check-in CTA =====
+    "body.weekly_checkin_title": "Weekly check-in",
+    "body.weekly_checkin_subtitle": "Weight + measurements + feeling · 30 seconds",
+
+    // ===== Coach — weight nudge button =====
+    "coach.weight_nudge_already_sent": "Already sent today",
+    "coach.weight_nudge_tooltip": "Ask the client to log their weight",
+    "coach.weight_nudge_toast_sent": "Notif sent to {name}",
+    "coach.weight_nudge_toast_no_subs": "{name} hasn't enabled notifications",
+    "coach.weight_nudge_toast_failed": "Send failed",
+    "coach.weight_nudge_push_title": "Weigh-in today",
+    "coach.weight_nudge_push_body": "{name}, log your weight in the app — 10s, helps fine-tune your tracking.",
 };
 
 export default en;

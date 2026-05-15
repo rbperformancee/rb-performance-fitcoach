@@ -279,10 +279,10 @@ export default function WeightChart({ clientId, client, programme, appData }) {
         >
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2.5px", color: GREEN, textTransform: "uppercase", marginBottom: 4 }}>
-              Bilan de la semaine
+              {t("body.weekly_checkin_title")}
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-              Poids + mensurations + ressenti · 30 secondes
+              {t("body.weekly_checkin_subtitle")}
             </div>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>

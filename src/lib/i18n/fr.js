@@ -2360,6 +2360,39 @@ const fr = {
     // ===== SessionTimer =====
     "stm.session_done": "Seance terminee.",
     "stm.great_work": "Excellent travail.",
+
+    // ===== Settings modal (client) =====
+    "settings.title": "Paramètres",
+    "settings.section_notifications": "Notifications",
+    "settings.notifs_on": "Notifications activées",
+    "settings.notifs_blocked": "Notifs bloquées",
+    "settings.activating": "Activation…",
+    "settings.activate_notifs": "Activer les notifications",
+    "settings.notifs_help_ios": "Va dans Réglages iOS → Notifications → RB Perform → autoriser",
+    "settings.toast_notifs_on": "Notifs activées",
+    "settings.toast_notifs_denied": "Refusées. Réglages iOS → Notifications → RB Perform.",
+    "settings.toast_notifs_failed": "Impossible d'activer les notifs",
+    "settings.lang_row": "Langue de l'app",
+    "settings.section_legal": "Légal",
+    "settings.privacy": "Politique de confidentialité",
+    "settings.cgu": "CGU",
+    "settings.mentions": "Mentions légales",
+    "settings.section_account": "Compte",
+    "settings.logout": "Se déconnecter",
+    "settings.delete_account": "Supprimer mon compte",
+
+    // ===== Body — bilan hebdo CTA =====
+    "body.weekly_checkin_title": "Bilan de la semaine",
+    "body.weekly_checkin_subtitle": "Poids + mensurations + ressenti · 30 secondes",
+
+    // ===== Coach — bouton 'Demande de pesée' =====
+    "coach.weight_nudge_already_sent": "Déjà envoyée aujourd'hui",
+    "coach.weight_nudge_tooltip": "Demander au client de logger son poids",
+    "coach.weight_nudge_toast_sent": "Notif envoyée à {name}",
+    "coach.weight_nudge_toast_no_subs": "{name} n'a pas activé les notifs",
+    "coach.weight_nudge_toast_failed": "Échec d'envoi",
+    "coach.weight_nudge_push_title": "Pèse-toi aujourd'hui",
+    "coach.weight_nudge_push_body": "{name}, rentre ton poids dans l'app — 10s, ça permet d'ajuster ton suivi.",
 };
 
 export default fr;
