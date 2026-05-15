@@ -16,30 +16,32 @@ export function SeanceVivante({ clientId, sessionName }) {
 
   // Notifier le coach que la seance a commence + cleanup robuste.
   // iOS qui kill la PWA en arrière-plan saute l'unmount → la row reste active.
-  // On ajoute un listener pagehide (firé même quand la PWA passe en BG) qui
-  // utilise sendBeacon : la requête part garantie avant que le browser kill
-  // le thread, là où un fetch standard serait avorté.
+  // pagehide  : fired quand l'app est tuée pour de bon → marque inactif tout de suite.
+  // hide      : fired aussi quand l'utilisateur verrouille l'écran ou regarde une notif.
+  //             → délai de grâce de 90s avant de marquer inactif, annulé si l'écran
+  //             revient visible entre-temps. Évite le faux positif "Léo n'est plus
+  //             en séance" alors qu'il vient juste de répondre à un SMS.
   useEffect(() => {
     if (!clientId) return;
-    supabase.from("session_live").upsert({
+    const upsertActive = (active) => supabase.from("session_live").upsert({
       client_id: clientId,
       session_name: sessionName || t("svc.session_fallback"),
-      started_at: new Date().toISOString(),
-      active: true,
-    }, { onConflict: "client_id" }).then(({ error }) => {
+      ...(active ? { started_at: new Date().toISOString() } : {}),
+      active,
+    }, { onConflict: "client_id" });
+
+    upsertActive(true).then(({ error }) => {
       if (error) console.warn("[session_live] upsert START failed:", error.message, error.code, error.details);
     });
 
-    const markInactive = () => {
+    const markInactiveBeacon = () => {
       try {
         const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
         const ANON = process.env.REACT_APP_SUPABASE_ANON_KEY;
         const accessToken = supabase.auth?.session?.()?.access_token
           || JSON.parse(localStorage.getItem("sb-" + new URL(SUPABASE_URL).host.split(".")[0] + "-auth-token") || "{}")?.access_token;
-        if (SUPABASE_URL && ANON && navigator.sendBeacon) {
+        if (SUPABASE_URL && ANON) {
           const url = `${SUPABASE_URL}/rest/v1/session_live?client_id=eq.${clientId}`;
-          const body = new Blob([JSON.stringify({ active: false })], { type: "application/json" });
-          // sendBeacon n'accepte pas les headers customs — fallback fetch keepalive.
           fetch(url, {
             method: "PATCH",
             headers: {
@@ -54,16 +56,38 @@ export function SeanceVivante({ clientId, sessionName }) {
         }
       } catch (e) { /* best-effort */ }
     };
-    const onHide = () => { if (document.visibilityState === "hidden") markInactive(); };
-    window.addEventListener("pagehide", markInactive);
-    document.addEventListener("visibilitychange", onHide);
+
+    let pendingTimeout = null;
+    const GRACE_MS = 90 * 1000; // 90s pour notif/verrouillage écran/app switcher
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        // Si pas déjà programmé : démarre le délai de grâce
+        if (!pendingTimeout) {
+          pendingTimeout = setTimeout(() => {
+            markInactiveBeacon();
+            pendingTimeout = null;
+          }, GRACE_MS);
+        }
+      } else if (document.visibilityState === "visible") {
+        // Retour en avant-plan : annule l'éviction + re-marque actif
+        // (si l'app a déjà fait le PATCH, on remet active=true)
+        if (pendingTimeout) { clearTimeout(pendingTimeout); pendingTimeout = null; }
+        upsertActive(true).then(() => {}, () => {});
+      }
+    };
+
+    // pagehide = app vraiment tuée (swipe up + kill, ou iOS reclaim mémoire).
+    // Pas de grâce ici — la row doit être marquée inactive sinon le coach voit
+    // "en séance" coller pendant des heures.
+    window.addEventListener("pagehide", markInactiveBeacon);
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
-      window.removeEventListener("pagehide", markInactive);
-      document.removeEventListener("visibilitychange", onHide);
-      supabase.from("session_live").upsert({
-        client_id: clientId, active: false,
-      }, { onConflict: "client_id" }).then(({ error }) => {
+      if (pendingTimeout) { clearTimeout(pendingTimeout); pendingTimeout = null; }
+      window.removeEventListener("pagehide", markInactiveBeacon);
+      document.removeEventListener("visibilitychange", onVisibility);
+      upsertActive(false).then(({ error }) => {
         if (error) console.warn("[session_live] upsert STOP failed:", error.message, error.code);
       });
     };
