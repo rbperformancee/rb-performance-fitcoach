@@ -30,10 +30,13 @@ export default function RecipesSection({ coachId }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [reviewRecipe, setReviewRecipe] = useState(null);
+  // Placeholders optimistes affichés en tête de liste dès clic upload.
+  // Format : { _optimistic: true, _tempId, _startedAt, title, parsing_status: 'parsing' }
+  const [optimistic, setOptimistic] = useState([]);
   const fileInputRef = useRef();
+  const pollRef = useRef(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const r = await fetch("/api/recipes/list", {
@@ -42,14 +45,17 @@ export default function RecipesSection({ coachId }) {
       if (!r.ok) throw new Error(`list failed ${r.status}`);
       const data = await r.json();
       setItems(data);
+      return data;
     } catch (err) {
       toast(`Erreur: ${err.message}`, "error");
+      return null;
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
   const handleFile = async (file) => {
     if (!file || file.type !== "application/pdf") {
@@ -63,6 +69,28 @@ export default function RecipesSection({ coachId }) {
     haptic.medium();
     setUploading(true);
     setUploadProgress("Upload du PDF...");
+
+    // Placeholder optimiste : visible immédiatement dans la grille
+    const tempId = `temp-${Date.now()}`;
+    const startedAt = new Date().toISOString();
+    const displayTitle = file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ");
+    setOptimistic((prev) => [{ _optimistic: true, _tempId: tempId, _startedAt: startedAt, id: tempId, title: displayTitle, parsing_status: "parsing", scope: "coach" }, ...prev]);
+
+    // Polling de secours : refresh la liste toutes les 4s pendant que le parse tourne.
+    // Si le fetch /api/recipes/create timeout côté front mais réussit côté back,
+    // la nouvelle recette apparaît quand même.
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      const data = await load();
+      if (data?.standalone?.some((r) => r.created_at >= startedAt)) {
+        setOptimistic((prev) => prev.filter((o) => o._tempId !== tempId));
+        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      }
+    }, 4000);
+    // Safety : stop polling après 3 min max
+    const pollTimeout = setTimeout(() => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    }, 180000);
 
     try {
       // 1. Upload to Storage at recipes/<coach_id>/<timestamp>-<filename>
@@ -91,12 +119,16 @@ export default function RecipesSection({ coachId }) {
       const result = await r.json();
       toast(`${result.recipes_count} recette(s) extraite(s)`, "success");
       await load();
+      setOptimistic((prev) => prev.filter((o) => o._tempId !== tempId));
     } catch (err) {
       toast(`Erreur: ${err.message}`, "error");
+      // Garde le placeholder : le polling le retirera s'il finit par apparaître,
+      // sinon on le retire après 3 min via le safety timeout.
     } finally {
       setUploading(false);
       setUploadProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      clearTimeout(pollTimeout);
     }
   };
 
@@ -163,13 +195,16 @@ export default function RecipesSection({ coachId }) {
             </section>
           )}
 
-          {/* Standalone recipes */}
-          {items.standalone?.length > 0 && (
+          {/* Standalone recipes (avec placeholders optimistes en tête) */}
+          {(items.standalone?.length > 0 || optimistic.length > 0) && (
             <section>
               <h3 style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>
-                Recettes individuelles ({items.standalone.length})
+                Recettes individuelles ({items.standalone.length + optimistic.length})
               </h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+                {optimistic.map((r) => (
+                  <RecipeCard key={r._tempId} recipe={r} onClick={() => {}} />
+                ))}
                 {items.standalone.map((r) => (
                   <RecipeCard key={r.id} recipe={r} onClick={() => setReviewRecipe(r)} />
                 ))}
@@ -177,7 +212,7 @@ export default function RecipesSection({ coachId }) {
             </section>
           )}
 
-          {!items.plans?.length && !items.standalone?.length && (
+          {!items.plans?.length && !items.standalone?.length && !optimistic.length && (
             <div style={{
               padding: 60, textAlign: "center", borderRadius: 16,
               border: "1px dashed rgba(255,255,255,0.1)",
