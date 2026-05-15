@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#080C14" />
 <meta name="color-scheme" content="dark" />
 <title>Rayan Bonte — @rb_perform</title>
-<meta name="description" content="Rugbyman semi-pro · Fondateur RB Perform. Coaching perso & outil pour coachs sportifs.">
-<meta property="og:title" content="Rayan Bonte — @rb_perform">
-<meta property="og:description" content="Rugbyman semi-pro · Fondateur RB Perform. L'outil qui transforme chaque coach en CEO.">
+<meta name="description" content="Founder RB Perform · Athlète · Avignon. L'app que les coachs attendaient + coaching perso 1-1.">
+<meta property="og:title" content="Rayan Bonte — Founder RB Perform">
+<meta property="og:description" content="L'app que les coachs attendaient. Founder · Athlète · Avignon.">
 <meta property="og:image" content="https://rbperform.app/og-image.png">
 <meta property="og:url" content="https://rbperform.app/link">
 <meta name="robots" content="noindex">
@@ -17,90 +17,296 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,sans-serif;min-height:100vh;min-height:100dvh}
-.page{display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;padding:48px 24px 32px;max-width:420px;margin:0 auto}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{
+    background:#080C14;
+    color:#fff;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    min-height:100vh;
+    min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+  }
+  body{
+    background:
+      radial-gradient(ellipse 800px 600px at 50% 0%, rgba(20,230,197,0.13) 0%, rgba(20,230,197,0) 60%),
+      radial-gradient(ellipse 600px 500px at 50% 100%, rgba(20,230,197,0.06) 0%, rgba(20,230,197,0) 70%),
+      #080C14;
+    background-attachment: fixed;
+  }
+  .page{
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100vh; min-height:100dvh;
+    padding:56px 24px 40px;
+    max-width:460px; margin:0 auto;
+    position:relative;
+  }
 
-/* Avatar */
-.avatar{width:88px;height:88px;border-radius:50%;border:2px solid rgba(0,201,167,0.3);overflow:hidden;margin-bottom:16px;background:rgba(0,201,167,0.05);display:flex;align-items:center;justify-content:center}
-.avatar-text{font-family:'Syne',sans-serif;font-size:28px;font-weight:900;color:#00C9A7}
+  /* AVATAR */
+  .avatar-wrap{
+    position:relative;
+    margin-bottom:20px;
+  }
+  .avatar-wrap::before{
+    content:''; position:absolute;
+    inset:-6px;
+    border-radius:50%;
+    background: conic-gradient(from 180deg, rgba(20,230,197,0.5), rgba(20,230,197,0), rgba(20,230,197,0.3), rgba(20,230,197,0));
+    filter: blur(8px);
+    z-index:0;
+    opacity:0.5;
+  }
+  .avatar{
+    position:relative; z-index:1;
+    width:104px; height:104px;
+    border-radius:50%;
+    border:2px solid rgba(20,230,197,0.4);
+    overflow:hidden;
+    background:rgba(20,230,197,0.05);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:
+      0 0 0 4px rgba(8,12,20,1),
+      0 12px 40px rgba(0,0,0,0.4),
+      0 0 60px rgba(20,230,197,0.18);
+  }
+  .avatar img{
+    width:100%; height:100%;
+    object-fit:cover; object-position:50% 30%;
+  }
 
-/* Header */
-.name{font-family:'Syne',sans-serif;font-size:18px;font-weight:900;letter-spacing:-0.02em;margin-bottom:4px}
-.name span{color:#00C9A7}
-.handle{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:6px}
-.tagline{font-size:13px;color:rgba(255,255,255,0.45);text-align:center;line-height:1.5;margin-bottom:28px;max-width:300px}
+  /* NAME */
+  .name{
+    font-size:24px; font-weight:900;
+    letter-spacing:-0.03em;
+    line-height:1;
+    margin-bottom:6px;
+  }
+  .name .last{color:#14e6c5}
 
-/* Section label */
-.section-label{font-size:9px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.15);margin-bottom:12px;align-self:flex-start}
+  .handle{
+    font-size:13px; font-weight:600;
+    color:rgba(255,255,255,0.4);
+    letter-spacing:-0.005em;
+    margin-bottom:14px;
+  }
 
-/* Links */
-.link{display:flex;align-items:center;gap:14px;width:100%;padding:16px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;text-decoration:none;color:#fff;margin-bottom:10px;transition:all 0.2s ease}
-.link:hover{border-color:rgba(0,201,167,0.25);background:rgba(0,201,167,0.03);transform:translateY(-1px)}
-.link:active{transform:translateY(0)}
-.link-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.link-icon svg{width:18px;height:18px}
-.link-text{flex:1}
-.link-title{font-size:14px;font-weight:700;letter-spacing:-0.01em}
-.link-sub{font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px}
-.link-arrow{color:rgba(255,255,255,0.15);font-size:16px}
+  /* TAGLINE */
+  .tagline{
+    font-size:14px; font-weight:500;
+    color:rgba(255,255,255,0.65);
+    text-align:center;
+    line-height:1.5;
+    max-width:320px;
+    margin-bottom:36px;
+    letter-spacing:-0.005em;
+  }
+  .tagline .accent{color:#fff; font-weight:600}
 
-/* Highlight link */
-.link.highlight{border-color:rgba(0,201,167,0.2);background:rgba(0,201,167,0.04)}
-.link.highlight .link-icon{background:rgba(0,201,167,0.1)}
-.link.highlight .link-icon svg{color:#00C9A7}
-.link.highlight .link-title{color:#00C9A7}
+  /* SECTION LABEL */
+  .section{
+    width:100%;
+    margin-bottom:14px;
+  }
+  .section + .section{margin-top:24px}
+  .section-label{
+    font-size:10px; font-weight:800;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,0.32);
+    padding:0 4px;
+    margin-bottom:10px;
+  }
 
-/* Badge */
-.badge-new{font-size:8px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,201,167,0.15);color:#00C9A7;padding:2px 8px;border-radius:100px;margin-left:8px}
+  /* LINK CARD */
+  .link{
+    display:flex; align-items:center; gap:16px;
+    width:100%;
+    padding:18px 20px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    text-decoration:none;
+    color:#fff;
+    margin-bottom:10px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position:relative;
+    overflow:hidden;
+  }
+  .link::after{
+    content:''; position:absolute;
+    top:0; left:0; right:0; height:1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  }
+  .link:hover{
+    border-color:rgba(20,230,197,0.3);
+    background:linear-gradient(180deg, rgba(20,230,197,0.05), rgba(20,230,197,0.01));
+    transform:translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25), 0 0 30px rgba(20,230,197,0.08);
+  }
+  .link:active{transform:translateY(0)}
 
-/* Footer */
-.foot{margin-top:auto;padding-top:32px;text-align:center}
-.foot-logo{font-family:'Syne',sans-serif;font-size:11px;font-weight:900;letter-spacing:0.1em;color:rgba(255,255,255,0.15)}
-.foot-logo span{color:rgba(0,201,167,0.3)}
+  .link-icon{
+    width:40px; height:40px;
+    border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .link-icon svg{
+    width:18px; height:18px;
+    color:rgba(255,255,255,0.65);
+  }
+  .link-text{flex:1; min-width:0}
+  .link-title{
+    font-size:15px; font-weight:700;
+    letter-spacing:-0.015em;
+    line-height:1.2;
+    display:flex; align-items:center; gap:8px;
+    flex-wrap:wrap;
+  }
+  .link-sub{
+    font-size:12px; font-weight:500;
+    color:rgba(255,255,255,0.45);
+    margin-top:4px;
+    line-height:1.35;
+    letter-spacing:-0.005em;
+  }
+  .link-arrow{
+    color:rgba(255,255,255,0.25);
+    font-size:18px;
+    flex-shrink:0;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  .link:hover .link-arrow{
+    color:#14e6c5;
+    transform:translateX(2px);
+  }
+
+  /* HIGHLIGHT VARIANT */
+  .link.highlight{
+    background:linear-gradient(180deg, rgba(20,230,197,0.10), rgba(20,230,197,0.03));
+    border-color:rgba(20,230,197,0.3);
+    box-shadow: 0 0 0 1px rgba(20,230,197,0.05), 0 20px 50px rgba(20,230,197,0.06);
+  }
+  .link.highlight .link-icon{
+    background:rgba(20,230,197,0.15);
+    border-color:rgba(20,230,197,0.25);
+  }
+  .link.highlight .link-icon svg{color:#14e6c5}
+  .link.highlight:hover{
+    transform:translateY(-3px);
+    box-shadow: 0 0 0 1px rgba(20,230,197,0.15), 0 20px 60px rgba(20,230,197,0.18);
+  }
+
+  /* BADGE */
+  .badge{
+    font-size:9px; font-weight:800;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:100px;
+    background:rgba(20,230,197,0.15);
+    color:#14e6c5;
+    border:1px solid rgba(20,230,197,0.2);
+  }
+
+  /* FOOTER */
+  .foot{
+    margin-top:48px;
+    text-align:center;
+    padding-bottom:16px;
+  }
+  .foot-logo{
+    font-size:11px; font-weight:800;
+    letter-spacing:0.22em;
+    color:rgba(255,255,255,0.2);
+  }
+  .foot-logo .dot{color:rgba(20,230,197,0.5)}
+  .foot-sub{
+    font-size:10px; font-weight:500;
+    color:rgba(255,255,255,0.15);
+    margin-top:6px;
+    letter-spacing:0.04em;
+  }
+
+  /* MOBILE TUNING */
+  @media (max-width: 380px){
+    .page{padding:40px 18px 32px}
+    .name{font-size:21px}
+    .tagline{font-size:13px}
+    .link{padding:16px}
+    .link-title{font-size:14px}
+  }
 </style>
 </head>
 <body>
 <div class="page">
 
   <!-- Avatar -->
-  <div class="avatar">
-    <img src="rayan-avatar.webp" alt="Rayan Bonte" width="500" height="333" style="width:100%;height:100%;object-fit:cover;object-position:63% 20%">
+  <div class="avatar-wrap">
+    <div class="avatar">
+      <img src="rayan-avatar.webp" alt="Rayan Bonte">
+    </div>
   </div>
 
   <!-- Header -->
-  <div class="name">Rayan <span>Bonte</span></div>
+  <div class="name">Rayan <span class="last">Bonte</span></div>
   <div class="handle">@rb_perform</div>
-  <div class="tagline">Rugbyman semi-pro · Fondateur RB Perform<br>L'outil qui transforme chaque coach en CEO.</div>
+  <div class="tagline">
+    <span class="accent">J'ai codé l'app que les coachs attendaient.</span><br>
+    Founder · Athlète · Avignon.
+  </div>
 
-  <!-- LINKS -->
-  <a href="https://rbperform.app?utm_source=instagram&utm_medium=bio&utm_campaign=waitlist" class="link highlight">
-    <div class="link-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
-    </div>
-    <div class="link-text">
-      <div class="link-title">RB Perform — Waitlist Founding <span class="badge-new">Programme limité</span></div>
-      <div class="link-sub">Lancement mai · 30 places a 199EUR/mois verrouille a vie (au lieu de 299)</div>
-    </div>
-    <span class="link-arrow">→</span>
-  </a>
+  <!-- SECTION: APP -->
+  <div class="section">
+    <div class="section-label">Pour les coachs</div>
+    <a href="https://rbperform.app/?utm_source=instagram&utm_medium=bio&utm_campaign=landing" class="link highlight">
+      <div class="link-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
+      </div>
+      <div class="link-text">
+        <div class="link-title">Découvre l'app RB Perform <span class="badge">Nouveau</span></div>
+        <div class="link-sub">Le SaaS de pilotage business pour coachs sportifs</div>
+      </div>
+      <span class="link-arrow">→</span>
+    </a>
+  </div>
 
-  <a href="https://www.rbperform.com?utm_source=instagram&utm_medium=bio&utm_campaign=coaching" class="link" target="_blank" rel="noopener">
-    <div class="link-icon" style="background:rgba(255,255,255,0.04)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
-    <div class="link-text">
-      <div class="link-title">Accompagnement avec Rayan</div>
-      <div class="link-sub">3 mois · 6 mois · Plan sur mesure</div>
-    </div>
-    <span class="link-arrow">→</span>
-  </a>
+  <!-- SECTION: COACHING + EBOOK -->
+  <div class="section">
+    <div class="section-label">Pour les athlètes</div>
+
+    <a href="https://rbperform.app/candidature?utm_source=instagram&utm_medium=bio&utm_campaign=candidature" class="link">
+      <div class="link-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="link-text">
+        <div class="link-title">Accompagnement perso 1-1 avec moi</div>
+        <div class="link-sub">3, 6 ou 12 mois · candidature requise</div>
+      </div>
+      <span class="link-arrow">→</span>
+    </a>
+
+    <a href="https://www.rbperform.com/programmes?utm_source=instagram&utm_medium=bio&utm_campaign=ebook" class="link" target="_blank" rel="noopener">
+      <div class="link-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div class="link-text">
+        <div class="link-title">Pack Découverte muscu <span class="badge">Offert</span></div>
+        <div class="link-sub">4 semaines structurées · vidéos + guide nutrition</div>
+      </div>
+      <span class="link-arrow">→</span>
+    </a>
+  </div>
 
   <!-- Footer -->
   <div class="foot">
-    <div class="foot-logo">RB<span>PERFORM</span></div>
+    <div class="foot-logo">RB PERFORM<span class="dot">.</span></div>
+    <div class="foot-sub">Avignon · France</div>
   </div>
 
 </div>
