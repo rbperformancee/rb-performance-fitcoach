@@ -14,7 +14,9 @@ const CHECKS = [
   // Public pages
   { name: "Landing",                 method: "GET",  url: "/",                                         expect: 200 },
   { name: "Founding page",           method: "GET",  url: "/founding",                                 expect: 200 },
-  { name: "Waitlist page",           method: "GET",  url: "/waitlist",                                 expect: 200 },
+  // /waitlist redirige (permanent 308) vers /founding depuis la
+  // consolidation du funnel — voir vercel.json redirects.
+  { name: "Waitlist redirect → founding", method: "GET", url: "/waitlist",                              expect: 308 },
   { name: "Legal page",              method: "GET",  url: "/legal.html",                               expect: 200 },
   { name: "Status page",             method: "GET",  url: "/status",                                   expect: 200 },
   // Vercel applies SPA fallback for CRA projects: unknown paths serve the
