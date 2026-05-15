@@ -150,8 +150,7 @@ export default function HabitsCard({ clientId, dailyTracking }) {
     return () => { cancelled = true; };
     // Volontairement pas de `todayLogs` dans deps : on re-évalue uniquement
     // quand habits ou daily_tracking change, pas à chaque toggle.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [habits, dailyTracking, clientId, today]);
+  }, [habits, dailyTracking, clientId, today, todayLogs]);
 
   if (loading) return null;
   if (habits.length === 0) return null;
