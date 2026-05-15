@@ -13,11 +13,29 @@ import LanguageToggle from "./LanguageToggle";
 import HelpPage from "./HelpPage";
 import AppIcon from "./AppIcon";
 import { useT } from "../lib/i18n";
+import { usePushNotifications } from "../hooks/usePushNotifications";
+import { toast } from "./Toast";
 
 const GREEN = "#02d1ba";
 
 export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
   const t = useT();
+  const { permission: pushPerm, requestPermission: requestPush, subscribed: pushSub } = usePushNotifications(client?.id);
+  const [pushBusy, setPushBusy] = useState(false);
+  const handleEnableNotifs = async () => {
+    haptic.light();
+    setPushBusy(true);
+    try {
+      const perm = await requestPush();
+      if (perm === "granted") {
+        toast.success("Notifs activées");
+      } else if (perm === "denied") {
+        toast.error("Notifs refusées par le système. Réglages iOS → Notifications → RB Perform → autoriser.");
+      } else {
+        toast.error("Impossible d'activer les notifs");
+      }
+    } finally { setPushBusy(false); }
+  };
   const [showHelp, setShowHelp] = useState(false);
   const streakData = useStreak(appData ? null : client?.id);
   const streak = appData?.streak ?? streakData.streak;
@@ -239,6 +257,41 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
         <div style={{ padding: "0 24px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 600 }}>{t("profile.language_label")}</span>
           <LanguageToggle compact />
+        </div>
+
+        {/* NOTIFICATIONS PUSH */}
+        <div style={{ padding: "0 24px", marginBottom: 12 }}>
+          <button
+            onClick={handleEnableNotifs}
+            disabled={pushBusy || pushPerm === "denied"}
+            style={{
+              width: "100%", padding: "13px 18px", borderRadius: 14,
+              border: `1px solid ${pushPerm === "granted" && pushSub ? "rgba(2,209,186,0.18)" : "rgba(255,255,255,0.08)"}`,
+              background: pushPerm === "granted" && pushSub ? "rgba(2,209,186,0.04)" : "rgba(255,255,255,0.02)",
+              color: pushPerm === "granted" && pushSub ? "#02d1ba" : "rgba(255,255,255,0.55)",
+              fontSize: 13, fontWeight: 700, cursor: pushBusy ? "wait" : (pushPerm === "denied" ? "not-allowed" : "pointer"),
+              fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              opacity: pushBusy ? 0.6 : 1,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            {pushPerm === "granted" && pushSub
+              ? "Notifications activées"
+              : pushPerm === "denied"
+                ? "Notifs bloquées · Réglages iOS"
+                : pushBusy
+                  ? "Activation…"
+                  : "Activer les notifications"}
+          </button>
+          {pushPerm === "denied" && (
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textAlign: "center", marginTop: 6, lineHeight: 1.4 }}>
+              Va dans Réglages iOS → Notifications → RB Perform → autoriser
+            </div>
+          )}
         </div>
 
         {/* AIDE */}
