@@ -35,17 +35,6 @@ const ACCENT_COLORS = [
   { id: "red",     hex: "#ef4444", label: "Rouge" },
 ];
 
-// Templates de programmes pré-faits qu'on peut copier au coach. Clé = type
-// de programme, valeur = nom affiché. Le seed réel viendra plus tard ; pour
-// l'onboarding on capture juste l'intention pour pré-remplir le builder.
-// Initiales (2 lettres) au lieu d'emoji — premium.
-const PROGRAMME_TEMPLATES = [
-  { id: "ppl",       label: "Push / Pull / Legs", desc: "6 séances/sem · hypertrophie", code: "PPL" },
-  { id: "fullbody",  label: "Full Body 3x",       desc: "3 séances/sem · débutants",    code: "FB" },
-  { id: "powerlift", label: "Powerlifting",       desc: "4 séances/sem · force pure",   code: "PL" },
-  { id: "hybrid",    label: "Hybrid Athlete",     desc: "Force + Cardio mixés",         code: "HY" },
-];
-
 /**
  * Onboarding — modal plein ecran 3 etapes (+ intro) pour nouveau coach.
  * Declenche si coaches.onboarding_done !== true ET pas en mode demo.
@@ -91,16 +80,12 @@ export default function Onboarding({ coach, onComplete }) {
   const { permission: pushPerm, requestPermission: requestPush } = usePushNotifications({ coachId: coach?.id });
   const [pushAttempted, setPushAttempted] = useState(false);
 
-  // ── Programme step ──
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
 
-  // Total steps = 7 : 0 intro, 1 identité, 2 brand, 3 push, 4 programme,
-  // 5 invite, 6 recap
-  const TOTAL_STEPS = 6; // dénominateur de progress (intro non comptée)
+  // Total steps : 0 intro, 1 identité, 2 brand, 3 push, 4 invite, 5 recap
+  const TOTAL_STEPS = 5; // dénominateur de progress (intro non comptée)
 
   // Etape 0 → 1 automatique apres 2s
   useEffect(() => {
@@ -212,31 +197,6 @@ export default function Onboarding({ coach, onComplete }) {
     setStep(4);
   }
 
-  function pickTemplate(id) {
-    haptic.selection();
-    setSelectedTemplate(id === selectedTemplate ? null : id);
-  }
-
-  async function saveTemplate() {
-    haptic.selection();
-    // Pour l'instant on stocke juste l'intention — le seed réel des templates
-    // sera fait plus tard. On enregistre dans coaches.preferred_template
-    // pour réutiliser dans le programme builder à l'ouverture.
-    if (selectedTemplate) {
-      try {
-        await supabase.from("coaches").update({ preferred_template: selectedTemplate }).eq("id", coach.id);
-      } catch { /* colonne peut ne pas exister, non critique */ }
-    }
-    setDirection("forward");
-    setStep(5);
-  }
-
-  function skipTemplate() {
-    haptic.light();
-    setDirection("forward");
-    setStep(5);
-  }
-
   async function sendInvite() {
     const mail = clientEmail.trim().toLowerCase();
     setError("");
@@ -274,7 +234,7 @@ export default function Onboarding({ coach, onComplete }) {
       toast.success(fillTpl(t("onb.toast_invite_sent"), { email: mail }));
       setInviteSent(true);
       setDirection("forward");
-      setTimeout(() => setStep(6), 400); // transition naturelle apres succes
+      setTimeout(() => setStep(5), 400); // transition naturelle apres succes
     } catch (e) {
       setError(e.message || t("onb.error_invite_send"));
     }
@@ -285,7 +245,7 @@ export default function Onboarding({ coach, onComplete }) {
     haptic.light();
     setInviteSkipped(true);
     setDirection("forward");
-    setStep(6);
+    setStep(5);
   }
 
   async function finishOnboarding() {
@@ -527,11 +487,6 @@ export default function Onboarding({ coach, onComplete }) {
           animation: drawCheck .6s cubic-bezier(.22,1,.36,1) .2s forwards;
         }
         @keyframes drawCheck { to { stroke-dashoffset: 0; } }
-        /* Confetti rain pour la step finale */
-        @keyframes confettiFall {
-          0%   { transform: translateY(-20vh) rotate(0deg);   opacity: 1; }
-          100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
-        }
       `}</style>
 
       {/* ===== HEADER ===== */}
@@ -846,71 +801,8 @@ export default function Onboarding({ coach, onComplete }) {
           </div>
         )}
 
-        {/* ========== ETAPE 4 — TEMPLATE PROGRAMME ========== */}
+        {/* ========== ETAPE 4 — PREMIER CLIENT ========== */}
         {step === 4 && (
-          <div className="onb-step">
-            <div className="onboarding-eyebrow">Étape 4 sur {TOTAL_STEPS} · Bibliothèque</div>
-            <h1 className="onboarding-title">Ton premier programme.</h1>
-            <p className="onboarding-sub">
-              Pars d'un template prêt à l'emploi ou crée le tien from scratch. Tu peux tout modifier après.
-            </p>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", marginBottom: 20 }}>
-              {PROGRAMME_TEMPLATES.map((tpl) => {
-                const selected = selectedTemplate === tpl.id;
-                return (
-                  <button
-                    key={tpl.id}
-                    type="button"
-                    onClick={() => pickTemplate(tpl.id)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 14,
-                      padding: "14px 16px",
-                      background: selected ? `${accentColor}10` : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${selected ? accentColor + "60" : "rgba(255,255,255,0.06)"}`,
-                      borderRadius: 12,
-                      cursor: "pointer", fontFamily: "inherit",
-                      textAlign: "left",
-                      transition: "all .15s",
-                    }}
-                  >
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 11,
-                      background: selected ? `${accentColor}25` : "rgba(255,255,255,0.05)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 13, fontWeight: 800, letterSpacing: 0.5,
-                      color: selected ? accentColor : "rgba(255,255,255,0.55)",
-                      fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
-                      flexShrink: 0,
-                      transition: "background .2s, color .2s",
-                    }}>{tpl.code}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: selected ? accentColor : "#fff", marginBottom: 2 }}>{tpl.label}</div>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{tpl.desc}</div>
-                    </div>
-                    {selected && (
-                      <div style={{ color: accentColor, fontSize: 18, flexShrink: 0 }}>✓</div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {error && <div className="onboarding-error">{error}</div>}
-
-            <button
-              onClick={saveTemplate}
-              className="onboarding-btn"
-              style={{ background: accentColor, boxShadow: `0 16px 40px ${accentColor}40`, textTransform: "uppercase" }}
-            >
-              {selectedTemplate ? "Utiliser ce template" : "Continuer sans template"}
-            </button>
-            <button type="button" onClick={skipTemplate} className="onboarding-skip">Je le ferai plus tard</button>
-          </div>
-        )}
-
-        {/* ========== ETAPE 5 — PREMIER CLIENT ========== */}
-        {step === 5 && (
           <div className="onb-step">
             <div className="onboarding-eyebrow">{t("onb.step2_eyebrow")}</div>
             <h1 className="onboarding-title">{t("onb.step2_title")}</h1>
@@ -983,31 +875,8 @@ export default function Onboarding({ coach, onComplete }) {
         />
 
         {/* ========== ETAPE 6 — PRET ========== */}
-        {step === 6 && (
+        {step === 5 && (
           <div className="onb-step" style={{ textAlign: "center", width: "100%", position: "relative" }}>
-            {/* Confetti rain — DOM only, pure CSS animation */}
-            <div aria-hidden="true" style={{ position: "absolute", inset: -24, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
-              {Array.from({ length: 24 }).map((_, i) => {
-                const colors = [accentColor, "#fbbf24", "#f472b6", "#a78bfa", "#34d399"];
-                const c = colors[i % colors.length];
-                const left = (i * 4.2) % 100;
-                const delay = (i % 8) * 0.15;
-                const dur = 2 + (i % 5) * 0.25;
-                return (
-                  <span key={i} style={{
-                    position: "absolute",
-                    top: -20,
-                    left: `${left}%`,
-                    width: 8, height: 12,
-                    background: c,
-                    borderRadius: 2,
-                    opacity: 0.85,
-                    animation: `confettiFall ${dur}s linear ${delay}s infinite`,
-                    transform: `rotate(${(i * 23) % 360}deg)`,
-                  }} />
-                );
-              })}
-            </div>
             {/* Checkmark anime */}
             <svg className="onboarding-check" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="32" cy="32" r="30" />
@@ -1036,19 +905,6 @@ export default function Onboarding({ coach, onComplete }) {
                   <>
                     <span className="onboarding-recap-icon skip">—</span>
                     <span>Notifications à activer plus tard</span>
-                  </>
-                )}
-              </div>
-              <div className="onboarding-recap-item">
-                {selectedTemplate ? (
-                  <>
-                    <span className="onboarding-recap-icon done" style={{ color: accentColor }}>✓</span>
-                    <span>Template <strong style={{ color: accentColor }}>{(PROGRAMME_TEMPLATES.find(p => p.id === selectedTemplate) || {}).label}</strong> sélectionné</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="onboarding-recap-icon skip">—</span>
-                    <span>Programme à créer plus tard</span>
                   </>
                 )}
               </div>

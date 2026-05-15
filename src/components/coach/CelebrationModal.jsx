@@ -67,30 +67,6 @@ export default function CelebrationModal({ milestone, onClose, accent = G }) {
         fontFamily: "-apple-system,'Inter',sans-serif",
       }}
     >
-      {/* Confetti rain */}
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
-        {Array.from({ length: 32 }).map((_, i) => {
-          const colors = [accent, "#fbbf24", "#f472b6", "#a78bfa", "#34d399"];
-          const c = colors[i % colors.length];
-          const left = (i * 3.1) % 100;
-          const delay = (i % 8) * 0.12;
-          const dur = 2.2 + (i % 5) * 0.3;
-          return (
-            <span key={i} style={{
-              position: "absolute",
-              top: -20,
-              left: `${left}%`,
-              width: 8, height: 12,
-              background: c,
-              borderRadius: 2,
-              opacity: 0.9,
-              animation: `celebFall ${dur}s linear ${delay}s infinite`,
-              transform: `rotate(${(i * 23) % 360}deg)`,
-            }} />
-          );
-        })}
-      </div>
-
       <div style={{
         position: "relative", zIndex: 1,
         background: "#0a0a0a",

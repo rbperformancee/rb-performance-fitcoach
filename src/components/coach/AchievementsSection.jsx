@@ -95,9 +95,6 @@ export default function AchievementsSection({ coachData, clients = [] }) {
         ];
         setEarnedBadges(merged);
         haptic.success();
-        // CONFETTI celebration !
-        setShowConfetti(true);
-        setTimeout(() => mounted && setShowConfetti(false), 3000);
         // Toast pour chaque badge debloque (max 3 affiches)
         toUnlock.slice(0, 3).forEach((bid, i) => {
           const badge = BADGES.find((b) => b.id === bid);
@@ -124,7 +121,6 @@ export default function AchievementsSection({ coachData, clients = [] }) {
 
   return (
     <div style={{ marginBottom: 40, animation: "fadeUp 0.4s ease both" }}>
-      <Confetti active={showConfetti} duration={3000} count={50} />
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <AppIcon name="trophy" size={16} color={GOLD} />
