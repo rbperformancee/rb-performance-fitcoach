@@ -84,12 +84,38 @@ export default async function handler(req, res) {
     ? 'global'
     : 'coach';
 
-  // 3. Download PDF from storage
+  // 3a. Insert stub row IMMÉDIATEMENT avec parsing_status='parsing'.
+  // Permet à la liste /api/recipes/list de retourner la recette en cours
+  // dès maintenant — le coach voit une carte grise "Parsing..." même s'il
+  // navigue ailleurs et revient avant la fin du parse.
+  const stubTitle = (titleOverride
+    || pdf_path.split('/').pop()?.replace(/\.pdf$/i, '').replace(/^\d+-/, '').replace(/[_-]+/g, ' ')
+    || 'Analyse en cours');
+  const { data: stub, error: stubErr } = await supabase
+    .from('recipes')
+    .insert({
+      coach_id: scope === 'global' ? null : coach.id,
+      scope,
+      title: stubTitle,
+      pdf_url: pdf_path,
+      source_origin: 'pdf_upload',
+      servings: 1,
+      parsing_status: 'parsing',
+    })
+    .select('id')
+    .single();
+  if (stubErr || !stub) {
+    return res.status(500).json({ error: 'stub_insert_failed', details: stubErr?.message });
+  }
+  const stubId = stub.id;
+
+  // 3b. Download PDF from storage
   const { data: pdfBlob, error: dlErr } = await supabase.storage
     .from('recipes')
     .download(pdf_path);
 
   if (dlErr || !pdfBlob) {
+    await supabase.from('recipes').update({ parsing_status: 'failed', parsing_error: 'pdf_download_failed' }).eq('id', stubId);
     return res.status(500).json({ error: 'pdf_download_failed', details: dlErr?.message });
   }
 
@@ -98,6 +124,7 @@ export default async function handler(req, res) {
   // 4. Parse via Claude Vision (auto-route single/plan)
   const parseResult = await parsePdfAuto(pdfBuffer);
   if (!parseResult.ok) {
+    await supabase.from('recipes').update({ parsing_status: 'failed', parsing_error: parseResult.error?.slice(0, 500) }).eq('id', stubId);
     return res.status(500).json({ error: 'parsing_failed', details: parseResult.error });
   }
 
@@ -131,7 +158,14 @@ export default async function handler(req, res) {
     planId = plan.id;
   }
 
-  // 6. Insert chaque recette + ses ingredients
+  // Si plan : on ne réutilise PAS le stub (il deviendrait une recette
+  // standalone, pas une entrée de plan). On le supprime — le plan + ses
+  // children seront insérés comme avant.
+  if (isPlan) {
+    await supabase.from('recipes').delete().eq('id', stubId);
+  }
+
+  // 6. Insert (ou UPDATE pour la 1ère recette d'un single) chaque recette + ses ingredients
   const insertedRecipes = [];
   for (let r = 0; r < parseResult.recipes.length; r++) {
     const parsed = parseResult.recipes[r];
@@ -166,37 +200,50 @@ export default async function handler(req, res) {
 
     const macrosPerServing = computeRecipeMacros(ingredientRows, parsed.servings);
 
-    // 6b. Insert recipe
-    const { data: recipe, error: insertErr } = await supabase
-      .from('recipes')
-      .insert({
-        coach_id: scope === 'global' ? null : coach.id,
-        scope,
-        parent_plan_id: planId,
-        title: isPlan ? parsed.title : (titleOverride || parsed.title),
-        description: parsed.description ?? null,
-        pdf_url: pdf_path,
-        source_origin: isPlan ? 'pdf_plan' : 'pdf_upload',
-        servings: parsed.servings,
-        prep_time_min: parsed.prep_time_min ?? null,
-        cook_time_min: parsed.cook_time_min ?? null,
-        difficulty: parsed.difficulty ?? null,
-        meal_types: parsed.meal_types ?? [],
-        tags: parsed.tags ?? [],
-        dietary_flags: parsed.dietary_flags ?? [],
-        instructions: parsed.instructions ?? null,
-        macros_per_serving: macrosPerServing,
-        parsing_status: 'needs_review',
-        parsing_metadata: {
-          model: parseResult.model,
-          duration_ms: parseResult.durationMs,
-          ingredient_count: ingredientRows.length,
-          avg_confidence: avgConfidence(ingredientRows),
-          plan_position: isPlan ? r : null,
-        },
-      })
-      .select('id')
-      .single();
+    // 6b. Insert recipe — OU update le stub si c'est un single (r=0, !isPlan)
+    const recipePayload = {
+      coach_id: scope === 'global' ? null : coach.id,
+      scope,
+      parent_plan_id: planId,
+      title: isPlan ? parsed.title : (titleOverride || parsed.title),
+      description: parsed.description ?? null,
+      pdf_url: pdf_path,
+      source_origin: isPlan ? 'pdf_plan' : 'pdf_upload',
+      servings: parsed.servings,
+      prep_time_min: parsed.prep_time_min ?? null,
+      cook_time_min: parsed.cook_time_min ?? null,
+      difficulty: parsed.difficulty ?? null,
+      meal_types: parsed.meal_types ?? [],
+      tags: parsed.tags ?? [],
+      dietary_flags: parsed.dietary_flags ?? [],
+      instructions: parsed.instructions ?? null,
+      macros_per_serving: macrosPerServing,
+      parsing_status: 'needs_review',
+      parsing_metadata: {
+        model: parseResult.model,
+        duration_ms: parseResult.durationMs,
+        ingredient_count: ingredientRows.length,
+        avg_confidence: avgConfidence(ingredientRows),
+        plan_position: isPlan ? r : null,
+      },
+    };
+
+    let recipe, insertErr;
+    if (!isPlan && r === 0 && stubId) {
+      // Single : UPDATE le stub (pas d'INSERT nouveau)
+      ({ data: recipe, error: insertErr } = await supabase
+        .from('recipes')
+        .update(recipePayload)
+        .eq('id', stubId)
+        .select('id')
+        .single());
+    } else {
+      ({ data: recipe, error: insertErr } = await supabase
+        .from('recipes')
+        .insert(recipePayload)
+        .select('id')
+        .single());
+    }
 
     if (insertErr || !recipe) {
       console.error(`[recipes/create] recipe ${r} insert failed:`, insertErr);
