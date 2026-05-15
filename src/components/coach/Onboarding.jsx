@@ -220,15 +220,16 @@ export default function Onboarding({ coach, onComplete }) {
         }
         .onb-header {
           display: flex; align-items: center; justify-content: center;
-          height: 56px; padding: 0 20px;
+          height: 48px; padding: 0 20px;
           flex-shrink: 0;
         }
         .onb-logo {
-          display: flex; align-items: center; gap: 8px;
-          font-family: 'Syne', sans-serif;
-          font-size: 13px; font-weight: 900;
-          letter-spacing: .12em;
-          color: #fff;
+          display: flex; align-items: center; gap: 7px;
+          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-size: 11px; font-weight: 700;
+          letter-spacing: 0.18em;
+          color: rgba(255,255,255,0.6);
+          text-transform: uppercase;
         }
         .onb-logo .teal { color: ${G}; }
         .onboarding-progress {
@@ -261,12 +262,12 @@ export default function Onboarding({ coach, onComplete }) {
           text-align: center;
         }
         .onboarding-title {
-          font-family: 'Syne', sans-serif;
-          font-size: clamp(28px, 5vw, 42px);
-          font-weight: 900; color: #fff;
-          letter-spacing: -1.5px;
-          margin: 0 0 8px;
-          text-align: center; line-height: 1.05;
+          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-size: clamp(22px, 4.2vw, 28px);
+          font-weight: 700; color: #fff;
+          letter-spacing: -0.6px;
+          margin: 0 0 10px;
+          text-align: center; line-height: 1.2;
         }
         .onboarding-sub {
           font-size: 14px; font-weight: 300;
@@ -327,16 +328,16 @@ export default function Onboarding({ coach, onComplete }) {
           background: rgba(2,209,186,.08);
         }
         .onboarding-btn {
-          width: 100%; height: 52px;
+          width: 100%; height: 48px;
           background: ${G}; color: #000;
-          border: none; border-radius: 12px;
-          font-family: 'Syne', sans-serif;
+          border: none; border-radius: 10px;
+          font-family: 'DM Sans', -apple-system, sans-serif;
           font-size: 13px; font-weight: 700;
-          letter-spacing: .1em;
+          letter-spacing: 0.5px;
           cursor: pointer;
-          transition: opacity .2s, transform .15s;
+          transition: opacity .2s, transform .15s, box-shadow .2s;
           margin-top: 8px;
-          box-shadow: 0 16px 40px rgba(2,209,186,.3);
+          box-shadow: 0 8px 24px rgba(2,209,186,.18);
         }
         .onboarding-btn:active { transform: scale(.98); }
         .onboarding-btn:disabled {
