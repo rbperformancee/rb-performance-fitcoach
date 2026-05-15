@@ -54,23 +54,22 @@ export function useAuth() {
   const loadClientData = useCallback(async (authUser) => {
     try {
       if (!authUser) return;
-      // Check if user is a coach first
-      const { data: coachCheck } = await supabase.from("coaches").select("id").eq("email", authUser.email).maybeSingle();
-      if (coachCheck) return; // Coach — skip client loading
-      const { data: clientData } = await supabase
-        .from("clients").select("*").eq("email", authUser.email).maybeSingle();
+      // Coach check + client load en parallèle (les deux dépendent juste du email)
+      const [coachRes, clientRes] = await Promise.all([
+        supabase.from("coaches").select("id").eq("email", authUser.email).maybeSingle(),
+        supabase.from("clients").select("*").eq("email", authUser.email).maybeSingle(),
+      ]);
+      if (coachRes.data) return; // Coach — skip client loading
+      const clientData = clientRes.data;
       setClient(clientData || null);
       if (!clientData) return;
-      // Fetch coach branding for this client
-      if (clientData.coach_id) {
-        const { data: coach } = await supabase
-          .from("coaches").select("full_name,brand_name,accent_color,email,logo_url,coach_code,coach_slug,payment_link")
-          .eq("id", clientData.coach_id).maybeSingle();
-        if (coach) setCoachInfo(coach);
-      }
-      const { data: progData } = await supabase
-        .from("programmes").select("*").eq("client_id", clientData.id)
-        .eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).maybeSingle();
+      // Coach branding + programme en parallèle (les deux ne dépendent que de clientData)
+      const branding = clientData.coach_id
+        ? supabase.from("coaches").select("full_name,brand_name,accent_color,email,logo_url,coach_code,coach_slug,payment_link").eq("id", clientData.coach_id).maybeSingle()
+        : Promise.resolve({ data: null });
+      const prog = supabase.from("programmes").select("*").eq("client_id", clientData.id).eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).maybeSingle();
+      const [{ data: coach }, { data: progData }] = await Promise.all([branding, prog]);
+      if (coach) setCoachInfo(coach);
       if (progData?.html_content) {
         setProgramme(progData.html_content);
         setProgrammeMeta({ id: progData.id, programme_name: progData.programme_name, programme_accepted_at: progData.programme_accepted_at, programme_start_date: progData.programme_start_date, accepted_by: progData.accepted_by, start_date: progData.start_date, training_days: progData.training_days, skipped_dates: progData.skipped_dates || [] });
