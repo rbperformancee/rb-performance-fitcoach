@@ -280,13 +280,6 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
           />
         )}
 
-        {/* LOGOUT */}
-        <div style={{ padding: "0 24px" }}>
-          <button onClick={() => { haptic.medium(); onLogout?.(); }} style={{ width: "100%", padding: "15px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.07)", background: "transparent", color: "rgba(255,255,255,0.18)", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px" }}>
-            {t("profile.logout")}
-          </button>
-        </div>
-
         {/* WHITE LABEL : propulse par RB Perform (seulement clients de coach tiers) */}
         <PoweredByBadge coachInfo={coachInfo} />
 
