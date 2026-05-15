@@ -20,19 +20,13 @@ const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"))
 
 // Texte cyclique pour le splash demo client (3 etapes, 1.5s chacune).
 function DemoLoadingText() {
-  const [idx, setIdx] = React.useState(0);
-  const messages = [
-    "Création de la session sécurisée",
-    "Préparation de ton espace",
-    "Chargement final",
-  ];
-  React.useEffect(() => {
-    const t = setInterval(() => setIdx(i => (i + 1) % messages.length), 1500);
-    return () => clearInterval(t);
-  }, []);
+  // Un seul message rapide — l'ancien cyclait sur 3 lignes à 1.5s chacune
+  // (4.5s minimum de splash) ce qui rendait l'entrée démo lente pour rien.
+  // Maintenant le splash dégage dès que la session est prête (souvent <100ms
+  // avec cache backend).
   return (
     <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600, transition: "opacity 0.3s" }}>
-      {messages[idx]}<span style={{ color: "#02d1ba" }}>…</span>
+      Préparation de la démo<span style={{ color: "#02d1ba" }}>…</span>
     </div>
   );
 }

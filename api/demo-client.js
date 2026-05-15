@@ -23,6 +23,19 @@ const DEMO_EMAIL = "lucas.demo@rbperform.app";
 
 const lastCall = {};
 
+// Cache d'une session demo partagée entre tous les visiteurs.
+// access_token Supabase a un TTL de 1h, on cache 50min pour avoir 10min de
+// marge. Tous les visiteurs récupèrent les MÊMES tokens → 1 seul appel
+// Supabase Auth toutes les 50min au lieu d'un par visiteur. Indispensable
+// pour absorber les pics (story Instagram → 100+ clics simultanés sinon
+// rate limit Supabase Auth ou attente 1-2s par user).
+//
+// Risque sécurité acceptable : tous les visiteurs partagent déjà la même
+// row clients/programmes (lucas.demo). Le token ne donne qu'accès aux
+// données demo. Expiration auto en 1h.
+let _cachedSession = null; // { access_token, refresh_token, fetchedAt }
+const SESSION_CACHE_MS = 50 * 60 * 1000;
+
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store, max-age=0");
 
@@ -47,6 +60,17 @@ module.exports = async (req, res) => {
     return res.status(429).json({ error: "Too fast — retry in a few seconds" });
   }
   lastCall[ip] = now;
+
+  // Fast path : session cachée encore valide → réponse immédiate (<10ms),
+  // pas de hit Supabase Auth. Crucial pour absorber les bursts de trafic
+  // depuis une story Instagram / partage de lien.
+  if (_cachedSession && (now - _cachedSession.fetchedAt) < SESSION_CACHE_MS) {
+    return res.status(200).json({
+      access_token: _cachedSession.access_token,
+      refresh_token: _cachedSession.refresh_token,
+      cached: true,
+    });
+  }
 
   try {
     // 1. Admin client — genere un magic link pour obtenir le OTP
@@ -84,10 +108,16 @@ module.exports = async (req, res) => {
       });
     }
 
-    // 3. Retourne les tokens (le frontend fera setSession)
+    // 3. Caching + retour
+    _cachedSession = {
+      access_token: session.session.access_token,
+      refresh_token: session.session.refresh_token,
+      fetchedAt: Date.now(),
+    };
     return res.status(200).json({
       access_token: session.session.access_token,
       refresh_token: session.session.refresh_token,
+      cached: false,
     });
   } catch (err) {
     console.error("[demo-client] unexpected:", err);
