@@ -18,6 +18,9 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
+  // Pas de cache navigateur — le statut peut changer (parsing → needs_review → published)
+  // et le coach doit voir l'update instantanément.
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
 
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;

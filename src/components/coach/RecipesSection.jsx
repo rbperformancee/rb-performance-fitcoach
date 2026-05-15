@@ -226,7 +226,19 @@ export default function RecipesSection({ coachId }) {
         <RecipeReviewModal
           recipeId={reviewRecipe.id}
           onClose={() => setReviewRecipe(null)}
-          onSaved={async () => { setReviewRecipe(null); await load(); }}
+          onSaved={async (published) => {
+            // Update optimiste : badge passe en vert "Publiée" instantanément
+            if (published) {
+              setItems((prev) => ({
+                ...prev,
+                standalone: (prev.standalone || []).map((r) =>
+                  r.id === reviewRecipe.id ? { ...r, parsing_status: "published", published_at: new Date().toISOString() } : r
+                ),
+              }));
+            }
+            setReviewRecipe(null);
+            await load();
+          }}
         />
       )}
     </div>
@@ -447,7 +459,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
         throw new Error(err.error || `save ${r.status}`);
       }
       toast(publish ? "Recette publiee !" : "Sauvegarde", "success");
-      onSaved();
+      onSaved(publish === true);
     } catch (err) {
       toast(`Erreur: ${err.message}`, "error");
     } finally {
