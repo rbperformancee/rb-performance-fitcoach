@@ -18,25 +18,10 @@ import { toast } from "./Toast";
 
 const GREEN = "#02d1ba";
 
-export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
+export default function ProfilePage({ client, onLogout, appData, coachInfo, onDeleteRequest, onShowPrivacy, onShowMentions, onShowCGU }) {
   const t = useT();
-  const { permission: pushPerm, requestPermission: requestPush, subscribed: pushSub } = usePushNotifications(client?.id);
-  const [pushBusy, setPushBusy] = useState(false);
-  const handleEnableNotifs = async () => {
-    haptic.light();
-    setPushBusy(true);
-    try {
-      const perm = await requestPush();
-      if (perm === "granted") {
-        toast.success("Notifs activées");
-      } else if (perm === "denied") {
-        toast.error("Notifs refusées par le système. Réglages iOS → Notifications → RB Perform → autoriser.");
-      } else {
-        toast.error("Impossible d'activer les notifs");
-      }
-    } finally { setPushBusy(false); }
-  };
   const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const streakData = useStreak(appData ? null : client?.id);
   const streak = appData?.streak ?? streakData.streak;
   const bestStreak = appData?.bestStreak ?? streakData.bestStreak;
@@ -253,56 +238,47 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
           </div>
         </div>
 
-        {/* LANGUE */}
-        <div style={{ padding: "0 24px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 600 }}>{t("profile.language_label")}</span>
-          <LanguageToggle compact />
-        </div>
-
-        {/* NOTIFICATIONS PUSH */}
-        <div style={{ padding: "0 24px", marginBottom: 12 }}>
-          <button
-            onClick={handleEnableNotifs}
-            disabled={pushBusy || pushPerm === "denied"}
-            style={{
-              width: "100%", padding: "13px 18px", borderRadius: 14,
-              border: `1px solid ${pushPerm === "granted" && pushSub ? "rgba(2,209,186,0.18)" : "rgba(255,255,255,0.08)"}`,
-              background: pushPerm === "granted" && pushSub ? "rgba(2,209,186,0.04)" : "rgba(255,255,255,0.02)",
-              color: pushPerm === "granted" && pushSub ? "#02d1ba" : "rgba(255,255,255,0.55)",
-              fontSize: 13, fontWeight: 700, cursor: pushBusy ? "wait" : (pushPerm === "denied" ? "not-allowed" : "pointer"),
-              fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-              opacity: pushBusy ? 0.6 : 1,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-            </svg>
-            {pushPerm === "granted" && pushSub
-              ? "Notifications activées"
-              : pushPerm === "denied"
-                ? "Notifs bloquées · Réglages iOS"
-                : pushBusy
-                  ? "Activation…"
-                  : "Activer les notifications"}
-          </button>
-          {pushPerm === "denied" && (
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textAlign: "center", marginTop: 6, lineHeight: 1.4 }}>
-              Va dans Réglages iOS → Notifications → RB Perform → autoriser
-            </div>
-          )}
-        </div>
-
         {/* AIDE */}
-        <div style={{ padding: "0 24px", marginBottom: 14 }}>
+        <div style={{ padding: "0 24px", marginBottom: 10 }}>
           <button onClick={() => { haptic.light(); setShowHelp(true); }} style={{ width: "100%", padding: "13px 18px", borderRadius: 14, border: "1px solid rgba(2,209,186,0.18)", background: "rgba(2,209,186,0.04)", color: "#02d1ba", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif", letterSpacing: "0.3px", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
             <AppIcon name="alert" size={14} color="#02d1ba" />
             {t("profile.help_center")}
           </button>
         </div>
 
+        {/* PARAMÈTRES */}
+        <div style={{ padding: "0 24px", marginBottom: 14 }}>
+          <button
+            onClick={() => { haptic.light(); setShowSettings(true); }}
+            style={{
+              width: "100%", padding: "13px 18px", borderRadius: 14,
+              border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)",
+              color: "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "-apple-system,Inter,sans-serif",
+              letterSpacing: "0.3px",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Paramètres
+          </button>
+        </div>
+
         {showHelp && <HelpPage onClose={() => setShowHelp(false)} />}
+        {showSettings && (
+          <SettingsModal
+            client={client}
+            onClose={() => setShowSettings(false)}
+            onLogout={onLogout}
+            onDeleteRequest={onDeleteRequest}
+            onShowPrivacy={onShowPrivacy}
+            onShowMentions={onShowMentions}
+            onShowCGU={onShowCGU}
+          />
+        )}
 
         {/* LOGOUT */}
         <div style={{ padding: "0 24px" }}>
@@ -316,6 +292,159 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo }) {
 
       </div>
 
+    </div>
+  );
+}
+
+/* ── Modale Paramètres : regroupe notifs / langue / légal / compte ── */
+function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPrivacy, onShowMentions, onShowCGU }) {
+  const t = useT();
+  const { permission: pushPerm, requestPermission: requestPush, subscribed: pushSub } = usePushNotifications(client?.id);
+  const [pushBusy, setPushBusy] = useState(false);
+
+  const handleEnableNotifs = async () => {
+    haptic.light();
+    setPushBusy(true);
+    try {
+      const perm = await requestPush();
+      if (perm === "granted") toast.success("Notifs activées");
+      else if (perm === "denied") toast.error("Refusées. Réglages iOS → Notifications → RB Perform.");
+      else toast.error("Impossible d'activer les notifs");
+    } finally { setPushBusy(false); }
+  };
+
+  // Empêche le scroll en arrière-plan pendant l'ouverture de la modale
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const sectionLabel = { fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 700, marginBottom: 10, paddingLeft: 4 };
+  const rowBase = { width: "100%", padding: "14px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600, fontFamily: "-apple-system,Inter,sans-serif", cursor: "pointer" };
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1100,
+        background: "rgba(0,0,0,0.85)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
+      }}
+    >
+      <div style={{
+        width: "100%", maxWidth: 480, maxHeight: "90vh", overflow: "auto",
+        background: "#0a0a0a", borderRadius: "24px 24px 0 0",
+        border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none",
+        animation: "fadeInUp 0.25s ease both",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 18px)",
+      }}>
+        <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 2, margin: "10px auto 18px" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 22px 18px" }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>Paramètres</div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 100, width: 30, height: 30, color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+        </div>
+
+        {/* === NOTIFICATIONS === */}
+        <div style={{ padding: "0 22px 18px" }}>
+          <div style={sectionLabel}>Notifications</div>
+          <button
+            onClick={handleEnableNotifs}
+            disabled={pushBusy || pushPerm === "denied"}
+            style={{
+              ...rowBase,
+              border: `1px solid ${pushPerm === "granted" && pushSub ? "rgba(2,209,186,0.22)" : "rgba(255,255,255,0.06)"}`,
+              background: pushPerm === "granted" && pushSub ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.02)",
+              color: pushPerm === "granted" && pushSub ? GREEN : "rgba(255,255,255,0.85)",
+              cursor: pushBusy ? "wait" : pushPerm === "denied" ? "not-allowed" : "pointer",
+              opacity: pushBusy ? 0.6 : 1,
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+              </svg>
+              {pushPerm === "granted" && pushSub
+                ? "Notifications activées"
+                : pushPerm === "denied"
+                  ? "Notifs bloquées"
+                  : pushBusy
+                    ? "Activation…"
+                    : "Activer les notifications"}
+            </span>
+            {pushPerm === "granted" && pushSub && (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            )}
+          </button>
+          {pushPerm === "denied" && (
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 6, lineHeight: 1.4, paddingLeft: 4 }}>
+              Va dans Réglages iOS → Notifications → RB Perform → autoriser
+            </div>
+          )}
+        </div>
+
+        {/* === LANGUE === */}
+        <div style={{ padding: "0 22px 18px" }}>
+          <div style={sectionLabel}>{t("profile.language_label")}</div>
+          <div style={{ ...rowBase, cursor: "default" }}>
+            <span>Langue de l'app</span>
+            <LanguageToggle compact />
+          </div>
+        </div>
+
+        {/* === LEGAL === */}
+        {(onShowPrivacy || onShowMentions || onShowCGU) && (
+          <div style={{ padding: "0 22px 18px" }}>
+            <div style={sectionLabel}>Légal</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {onShowPrivacy && (
+                <button onClick={() => { haptic.light(); onClose(); onShowPrivacy(); }} style={rowBase}>
+                  <span>Politique de confidentialité</span>
+                  <span style={{ color: "rgba(255,255,255,0.3)" }}>›</span>
+                </button>
+              )}
+              {onShowCGU && (
+                <button onClick={() => { haptic.light(); onClose(); onShowCGU(); }} style={rowBase}>
+                  <span>CGU</span>
+                  <span style={{ color: "rgba(255,255,255,0.3)" }}>›</span>
+                </button>
+              )}
+              {onShowMentions && (
+                <button onClick={() => { haptic.light(); onClose(); onShowMentions(); }} style={rowBase}>
+                  <span>Mentions légales</span>
+                  <span style={{ color: "rgba(255,255,255,0.3)" }}>›</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* === COMPTE === */}
+        <div style={{ padding: "0 22px 22px" }}>
+          <div style={sectionLabel}>Compte</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {onLogout && (
+              <button
+                onClick={() => { haptic.medium(); onClose(); onLogout(); }}
+                style={{ ...rowBase, color: "rgba(255,255,255,0.7)" }}
+              >
+                <span>Se déconnecter</span>
+                <span style={{ color: "rgba(255,255,255,0.3)" }}>›</span>
+              </button>
+            )}
+            {onDeleteRequest && (
+              <button
+                onClick={() => { haptic.medium(); onClose(); onDeleteRequest(); }}
+                style={{ ...rowBase, color: "#ef4444", border: "1px solid rgba(239,68,68,0.15)", background: "rgba(239,68,68,0.04)" }}
+              >
+                <span>Supprimer mon compte</span>
+                <span style={{ color: "rgba(239,68,68,0.4)" }}>›</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
