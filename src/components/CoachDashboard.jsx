@@ -5427,7 +5427,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     }] : []),
     { icon: "activity", label: t("cd.menu_analytics"), onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(true); } },
     { icon: "view",     label: t("cd.menu_pipeline"),  onClick: () => { setShowMoreMenu(false); setShowSettings(false); setShowMonCompte(false); setShowAnalytics(false); setShowPipeline(true); loadClients(); } },
-    { icon: "nutrition", label: t("cd.menu_recipes"), onClick: () => { setShowMoreMenu(false); setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setActiveTab("recipes"); } },
+    { icon: "apple", label: t("cd.menu_recipes"), onClick: () => { setShowMoreMenu(false); setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setActiveTab("recipes"); } },
     { type: "separator" },
     { icon: "document", label: t("cd.menu_invoice"), onClick: () => { setShowMoreMenu(false); setShowInvoice(true); } },
     { icon: "flame",    label: t("cd.menu_settings"), onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowMonCompte(false); setShowSettings(true); } },
