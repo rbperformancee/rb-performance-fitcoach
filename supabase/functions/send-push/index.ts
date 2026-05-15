@@ -48,7 +48,17 @@ serve(async (req) => {
         sent++
       } catch (e:any) {
         const status = e?.statusCode
-        if (status === 410 || status === 404) {
+        const errBody = String(e?.body || '')
+        // 410 Gone / 404 Not Found = sub morte côté APNS/FCM → delete
+        // 400 + VapidPkHashMismatch = sub créée avec une ancienne VAPID
+        //   publique qu'on n'a plus la clé privée correspondante. Sans
+        //   delete, on continuerait à spammer Apple inutilement et le
+        //   client ne pourrait jamais recevoir une push tant qu'il rouvre
+        //   pas sa PWA (le hook frontend va re-subscribe avec la bonne
+        //   clé au prochain mount). On la nettoie maintenant.
+        const isDead = status === 410 || status === 404
+        const isVapidMismatch = status === 400 && errBody.includes('VapidPkHashMismatch')
+        if (isDead || isVapidMismatch) {
           dead++
           const endpoint = r.endpoint || r.subscription?.endpoint
           if (endpoint) {
@@ -59,7 +69,7 @@ serve(async (req) => {
           }
         } else {
           console.error('push send failed:', status, e?.message, e?.body)
-          errors.push({ status, message: String(e?.message || ''), body: String(e?.body || '').slice(0, 300) })
+          errors.push({ status, message: String(e?.message || ''), body: errBody.slice(0, 300) })
         }
       }
     }))
