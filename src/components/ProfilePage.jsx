@@ -292,7 +292,12 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
 /* ── Modale Paramètres : regroupe notifs / langue / légal / compte ── */
 function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPrivacy, onShowMentions, onShowCGU }) {
   const t = useT();
-  const { permission: pushPerm, requestPermission: requestPush, subscribed: pushSub } = usePushNotifications(client?.id);
+  const { permission: pushPerm, requestPermission: requestPush } = usePushNotifications(client?.id);
+  // pushOn : on se base sur la permission iOS persistée et NON sur `subscribed`
+  // (qui est un useState resetté à false à chaque remount). Sinon le bouton
+  // re-affichait 'Activer' à chaque réouverture de la PWA alors que la
+  // subscription est déjà active.
+  const pushOn = pushPerm === "granted";
   const [pushBusy, setPushBusy] = useState(false);
 
   const handleEnableNotifs = async () => {
@@ -346,9 +351,9 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
             disabled={pushBusy || pushPerm === "denied"}
             style={{
               ...rowBase,
-              border: `1px solid ${pushPerm === "granted" && pushSub ? "rgba(2,209,186,0.22)" : "rgba(255,255,255,0.06)"}`,
-              background: pushPerm === "granted" && pushSub ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.02)",
-              color: pushPerm === "granted" && pushSub ? GREEN : "rgba(255,255,255,0.85)",
+              border: `1px solid ${pushOn ? "rgba(2,209,186,0.22)" : "rgba(255,255,255,0.06)"}`,
+              background: pushOn ? "rgba(2,209,186,0.05)" : "rgba(255,255,255,0.02)",
+              color: pushOn ? GREEN : "rgba(255,255,255,0.85)",
               cursor: pushBusy ? "wait" : pushPerm === "denied" ? "not-allowed" : "pointer",
               opacity: pushBusy ? 0.6 : 1,
             }}
@@ -358,7 +363,7 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
                 <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
               </svg>
-              {pushPerm === "granted" && pushSub
+              {pushOn
                 ? "Notifications activées"
                 : pushPerm === "denied"
                   ? "Notifs bloquées"
@@ -366,7 +371,7 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
                     ? "Activation…"
                     : "Activer les notifications"}
             </span>
-            {pushPerm === "granted" && pushSub && (
+            {pushOn && (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             )}
           </button>
