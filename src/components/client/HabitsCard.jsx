@@ -41,7 +41,37 @@ function computeStreak(datesSet) {
   return streak;
 }
 
-export default function HabitsCard({ clientId }) {
+/**
+ * Heuristique : parse une habitude type "10k pas", "8h sommeil", "2L eau",
+ * "Marcher 10000 pas" → { metric, threshold }.
+ *
+ * Retourne null si le nom ne matche pas un seuil quantifiable.
+ */
+function parseHabitTarget(name) {
+  if (!name) return null;
+  const lower = name.toLowerCase();
+  const numMatch = lower.match(/(\d+(?:[.,]\d+)?)\s*(k|m)?/);
+  if (!numMatch) return null;
+  const baseNum = parseFloat(numMatch[1].replace(",", "."));
+  const unit = numMatch[2];
+  const num = unit === "k" ? baseNum * 1000 : baseNum;
+  // Pas / steps
+  if (/\bpas\b|\bstep|marche/.test(lower)) {
+    return { metric: "pas", threshold: num };
+  }
+  // Sommeil (heures)
+  if (/sommeil|dormir|sleep|coucher/.test(lower)) {
+    return { metric: "sommeil_h", threshold: num };
+  }
+  // Eau (litres ou ml)
+  if (/eau\b|water|boire|hydra/.test(lower)) {
+    const ml = num >= 50 ? num : num * 1000; // num=2 → 2L → 2000ml, num=2000 → ml direct
+    return { metric: "eau_ml", threshold: ml };
+  }
+  return null;
+}
+
+export default function HabitsCard({ clientId, dailyTracking }) {
   const [habits, setHabits] = useState([]);
   const [todayLogs, setTodayLogs] = useState({}); // { habit_id: log_id }
   const [streaks, setStreaks] = useState({}); // habit_id → streak count
@@ -91,6 +121,37 @@ export default function HabitsCard({ clientId }) {
     })();
     return () => { cancelled = true; };
   }, [clientId, today]);
+
+  // Auto-validation : si une habitude matche un seuil (10k pas, 8h sommeil…)
+  // et que la métrique daily_tracking dépasse ce seuil, on insère un log
+  // automatique pour aujourd'hui. UNIQUE (habit_id, date) protège des doublons.
+  useEffect(() => {
+    if (!dailyTracking || !clientId || habits.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      for (const h of habits) {
+        if (todayLogs[h.id]) continue; // déjà loggé
+        const target = parseHabitTarget(h.name);
+        if (!target) continue;
+        const value = dailyTracking[target.metric];
+        if (value == null || value < target.threshold) continue;
+        const { data, error } = await supabase
+          .from("habit_logs")
+          .upsert({ client_id: clientId, habit_id: h.id, date: today }, { onConflict: "habit_id,date" })
+          .select("id")
+          .single();
+        if (cancelled) return;
+        if (data && !error) {
+          setTodayLogs((m) => ({ ...m, [h.id]: data.id }));
+          setStreaks((s) => ({ ...s, [h.id]: (s[h.id] || 0) + (todayLogs[h.id] ? 0 : 1) }));
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+    // Volontairement pas de `todayLogs` dans deps : on re-évalue uniquement
+    // quand habits ou daily_tracking change, pas à chaque toggle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [habits, dailyTracking, clientId, today]);
 
   if (loading) return null;
   if (habits.length === 0) return null;

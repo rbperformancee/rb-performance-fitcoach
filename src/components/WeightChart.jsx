@@ -2,6 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 import { supabase } from "../lib/supabase";
 import { useT } from "../lib/i18n";
+
+// Petite helper d'interpolation : remplace {key} dans une string i18n.
+const fillTpl = (s, vars) => {
+  let out = String(s || "");
+  Object.entries(vars || {}).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 import EmptyState from "./EmptyState";
 import haptic from "../lib/haptic";
 import Spinner from "./Spinner";
@@ -181,7 +188,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 400, height: 400, background: "radial-gradient(ellipse, rgba(2,209,186,0.08) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
       <div style={{ padding: "0px 24px 0", position: "relative", zIndex: 1 }}>
-        <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>Suivi</div>
+        <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t('wc.tracking_label')}</div>
         <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Body<span style={{ color: "#02d1ba" }}>.</span></div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic", marginBottom: 20 }}>
           {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
@@ -239,24 +246,26 @@ export default function WeightChart({ clientId, client, programme, appData }) {
         ) : vals.length === 1 ? (
           <EmptyState
             icon="scale"
-            title="C'est noté."
-            subtitle="Une nouvelle pesée demain matin et ta courbe commence à se dessiner."
+            title={t('wc.first_weighing_done_title')}
+            subtitle={t('wc.first_weighing_done_sub')}
             size="md"
             style={{ padding: "24px 16px 12px" }}
           />
         ) : (
           <EmptyState
             icon="scale"
-            title="Ta première pesée."
-            subtitle="Pèse-toi ce matin pour voir ton évolution ici."
+            title={t('wc.first_weighing_title')}
+            subtitle={t('wc.first_weighing_sub')}
             size="md"
             style={{ padding: "24px 16px 12px" }}
           />
         )}
       </div>
 
-      {/* HABITUDES QUOTIDIENNES — checklist assignée par le coach */}
-      <HabitsCard clientId={clientId} />
+      {/* HABITUDES QUOTIDIENNES — checklist assignée par le coach.
+          On passe daily_tracking pour permettre l'auto-validation des
+          habitudes type "10k pas" / "8h sommeil" / "2L eau". */}
+      <HabitsCard clientId={clientId} dailyTracking={appData?.dailyTracking} />
 
       {/* CTA Bilan hebdomadaire — visible uniquement dim/lun (jour du
           bilan = dimanche + rattrapage lundi), hidden si déjà soumis pour
@@ -399,7 +408,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
                   <div style={{ fontSize: 24, fontWeight: 200, color: GREEN, letterSpacing: "-1px" }}>± {noise} kg</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 4 }}>Ignorer si</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 4 }}>{t('wc.ignore_if')}</div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{"<"} {noise} kg</div>
                 </div>
               </div>
@@ -407,7 +416,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
                 <div style={{ flex: 1, padding: "12px 14px", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)", borderRadius: 12 }}>
                   <div style={{ fontSize: 9, color: "rgba(239,68,68,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>{t('wc.false_alerts')}</div>
                   <div style={{ fontSize: 22, fontWeight: 200, color: "rgba(239,68,68,0.8)" }}>{fakeAlerts}</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>variations normales</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>{t('wc.normal_variations')}</div>
                 </div>
                 <div style={{ flex: 1, padding: "12px 14px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.12)", borderRadius: 12 }}>
                   <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>{t('wc.real_signals')}</div>
@@ -487,7 +496,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       {/* PAS DU JOUR — deplace de Run vers Body (metrique corporelle quotidienne) */}
       <div style={{ margin: "0 24px 28px", height: 1, background: "rgba(255,255,255,0.06)" }} />
       <div style={{ padding: "0 24px", marginBottom: 28, position: "relative", zIndex: 1 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Pas aujourd'hui</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{t('wc.steps_today')}</div>
         <button
           type="button"
           onClick={() => { setTempSteps(dailySteps); setShowSteps(true); }}
@@ -505,11 +514,11 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             </div>
             <div style={{ fontSize: 9, color: GREEN, letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 3 3L12 15l-4 1 1-4z"/></svg>
-              Modifier
+              {t('wc.steps_modify')}
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Objectif {(stepsGoal || 8000).toLocaleString()}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{fillTpl(t('wc.steps_goal_short'), { n: (stepsGoal || 8000).toLocaleString() })}</div>
             <div style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{stepsPct}%</div>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
@@ -544,7 +553,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       {showSteps && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowSteps(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ background: "#111", borderRadius: 24, padding: 24, width: "100%", maxWidth: 360 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Pas aujourd'hui</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 20 }}>{t('wc.steps_today')}</div>
             <div style={{ fontSize: 52, fontWeight: 100, color: GREEN, textAlign: "center", marginBottom: 20, letterSpacing: "-2px" }}>
               {tempSteps.toLocaleString()}
             </div>
@@ -559,7 +568,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
                 <button key={v} onClick={() => setTempSteps(Math.min(tempSteps + v, 20000))} style={{ flex: 1, padding: "10px 0", background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 10, color: GREEN, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>+{v >= 1000 ? v/1000 + "k" : v}</button>
               ))}
             </div>
-            <button onClick={() => { saveSteps(tempSteps); setShowSteps(false); }} style={{ width: "100%", padding: 14, background: GREEN, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
+            <button onClick={() => { saveSteps(tempSteps); setShowSteps(false); }} style={{ width: "100%", padding: 14, background: GREEN, color: "#000", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t('common.save')}</button>
           </div>
         </div>
       )}
