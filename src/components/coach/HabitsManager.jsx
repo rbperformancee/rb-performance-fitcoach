@@ -28,7 +28,8 @@ const COLORS = ["#02d1ba", "#a78bfa", "#f472b6", "#fbbf24", "#34d399", "#fb923c"
  *
  * Limite soft à 5 habitudes actives (UI hint, pas un check DB).
  */
-export default function HabitsManager({ open, onClose, client }) {
+export default function HabitsManager({ open, onClose, onChange, client }) {
+  const notify = () => { if (typeof onChange === "function") onChange(); };
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -73,6 +74,7 @@ export default function HabitsManager({ open, onClose, client }) {
     setCustomName(""); setCustomIcon("");
     setShowAdd(false);
     toast.success("Habitude ajoutée");
+    notify();
   }
 
   async function toggleActive(habit) {
@@ -81,6 +83,7 @@ export default function HabitsManager({ open, onClose, client }) {
     const { error } = await supabase.from("habits").update({ active: next }).eq("id", habit.id);
     if (error) { toast.error("Erreur"); return; }
     setHabits((hs) => hs.map((h) => h.id === habit.id ? { ...h, active: next } : h));
+    notify();
   }
 
   async function renameHabit(habit, newName) {
@@ -89,6 +92,7 @@ export default function HabitsManager({ open, onClose, client }) {
     const { error } = await supabase.from("habits").update({ name: trimmed }).eq("id", habit.id);
     if (error) { toast.error("Erreur"); return; }
     setHabits((hs) => hs.map((h) => h.id === habit.id ? { ...h, name: trimmed } : h));
+    notify();
   }
 
   async function changeColor(habit, color) {
@@ -96,6 +100,7 @@ export default function HabitsManager({ open, onClose, client }) {
     const { error } = await supabase.from("habits").update({ color }).eq("id", habit.id);
     if (error) { toast.error("Erreur"); return; }
     setHabits((hs) => hs.map((h) => h.id === habit.id ? { ...h, color } : h));
+    notify();
   }
 
   async function deleteHabit(habit) {

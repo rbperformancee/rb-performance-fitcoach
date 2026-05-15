@@ -1791,6 +1791,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [exLogs, setExLogs] = useState([]);
   const [weeklyCheckins, setWeeklyCheckins] = useState([]);
   const [showHabitsManager, setShowHabitsManager] = useState(false);
+  const [habitsVersion, setHabitsVersion] = useState(0); // bump pour refresh HabitsHeatmap7d
   const [clientHabitsCompliance, setClientHabitsCompliance] = useState({ active: 0, doneToday: 0 });
   // HTML content de TOUS les programmes du client (actif + archivés). Loadé
   // séparément car loadClients() ne sélectionne que les métadonnées (sinon
@@ -3148,7 +3149,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               )}
             </div>
             {/* Heatmap 7 jours par habit */}
-            <HabitsHeatmap7d clientId={client.id} />
+            <HabitsHeatmap7d key={habitsVersion} clientId={client.id} />
           </div>
 
           {/* BILANS HEBDOMADAIRES — données structurées du client (migration 057) */}
@@ -4191,6 +4192,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     <HabitsManager
       open={showHabitsManager}
       onClose={() => setShowHabitsManager(false)}
+      onChange={() => setHabitsVersion((v) => v + 1)}
       client={client}
     />
     </>
