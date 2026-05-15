@@ -39,6 +39,33 @@ export default function WeightChart({ clientId, client, programme, appData }) {
     if (appData?.nutritionGoals?.pas != null) setStepsGoal(appData.nutritionGoals.pas);
   }, [appData?.dailyTracking?.pas, appData?.nutritionGoals?.pas]);
 
+  // Bilan hebdo : visible uniquement le jour du bilan (dimanche, jour du
+  // cron prompt 19h UTC) + lundi en rattrapage. Hidden si déjà soumis pour
+  // la semaine en cours pour ne pas spammer le client après son checkin.
+  // Le coach voit toujours la card "Bilans hebdomadaires" dans la fiche
+  // client — ça affecte seulement ce qu'on montre côté client.
+  const [bilanWeekDone, setBilanWeekDone] = useState(false);
+  useEffect(() => {
+    if (!clientId) return;
+    const d = new Date();
+    const day = d.getDay(); // 0=dim, 1=lun, ...
+    if (day !== 0 && day !== 1) return; // pas dans la fenêtre — pas la peine de query
+    // Lundi de la semaine en cours (semaine = lun→dim)
+    const diff = day === 0 ? 6 : day - 1;
+    const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
+    const weekStart = monday.toISOString().slice(0, 10);
+    supabase.from("weekly_checkins")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("week_start", weekStart)
+      .limit(1)
+      .then(({ data }) => setBilanWeekDone(Array.isArray(data) && data.length > 0));
+  }, [clientId]);
+  const showBilanCard = (() => {
+    const day = new Date().getDay();
+    return (day === 0 || day === 1) && !bilanWeekDone;
+  })();
+
   const saveSteps = async (steps) => {
     setDailySteps(steps);
     if (!clientId) return;
@@ -231,7 +258,10 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       {/* HABITUDES QUOTIDIENNES — checklist assignée par le coach */}
       <HabitsCard clientId={clientId} />
 
-      {/* CTA Bilan hebdomadaire — accessible n'importe quand depuis le Body tab */}
+      {/* CTA Bilan hebdomadaire — visible uniquement dim/lun (jour du
+          bilan = dimanche + rattrapage lundi), hidden si déjà soumis pour
+          la semaine en cours. */}
+      {showBilanCard && (
       <div style={{ padding: "0 24px 20px", position: "relative", zIndex: 1 }}>
         <button
           type="button"
@@ -261,6 +291,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
           </svg>
         </button>
       </div>
+      )}
 
       <div style={{ padding: "0 24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 28, position: "relative", zIndex: 1 }}>
         {[
