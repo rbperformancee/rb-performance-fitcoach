@@ -71,7 +71,7 @@ import { LoginScreen } from "./components/LoginScreen";
 // Gros composants : charges a la demande pour booster le TTI cote clients
 const SubscribePage = lazy(() => import("./components/SubscribePage"));
 // LoginPage remplace par LoginScreen unifie
-const SignupPage = lazy(() => import("./components/auth/SignupPage"));
+// SignupPage public désactivée : comptes coach créés via webhook Stripe.
 const SetPasswordPage = lazy(() => import("./components/auth/SetPasswordPage"));
 const JoinPage   = lazy(() => import("./components/client/JoinPage"));
 // ClientApp (version simplifiee 4 onglets) desactive — les clients utilisent
@@ -436,7 +436,13 @@ function AppInner() {
     const p = window.location.pathname;
     const hash = window.location.hash;
     if (p === "/login")  return "login";
-    if (p === "/signup") return "signup";
+    // /signup public désactivé : les comptes coach sont créés uniquement
+    // via le webhook Stripe après paiement (api/webhook-stripe.js envoie
+    // un magic link "Créer mon accès" par email). Redirection vers /login.
+    if (p === "/signup") {
+      if (typeof window !== "undefined") window.location.replace("/login");
+      return "login";
+    }
     if (p === "/join")   return "join";
     // Supabase recovery link → page créer mot de passe
     if (hash.includes("type=recovery") || hash.includes("type=invite")) return "set-password";
@@ -445,7 +451,6 @@ function AppInner() {
     return null;
   });
   if (authRoute === "login")  return <LoginScreen />;
-  if (authRoute === "signup") return <Suspense fallback={null}><SignupPage /></Suspense>;
   if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
   if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/app.html"; }} /></Suspense>;
 

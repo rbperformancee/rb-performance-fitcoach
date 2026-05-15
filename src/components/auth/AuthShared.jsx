@@ -43,10 +43,11 @@ export const AuthStyles = () => (
       position: relative;
     }
     .auth-logo {
-      display: flex; align-items: center; gap: 10px;
-      font-family: 'Syne', sans-serif;
-      font-size: 20px; font-weight: 900;
-      letter-spacing: .1em; color: #fff;
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      font-size: 13px; font-weight: 700;
+      letter-spacing: .18em; color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
     }
     .auth-quote {
       font-size: 15px; font-weight: 300;
@@ -79,9 +80,9 @@ export const AuthStyles = () => (
     }
     .auth-back:hover { color: rgba(255,255,255,.7); }
     .auth-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 32px; font-weight: 900;
-      color: #fff; letter-spacing: -1px;
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      font-size: 28px; font-weight: 700;
+      color: #fff; letter-spacing: -.6px;
       margin: 0 0 6px;
     }
     .auth-subtitle {
@@ -130,9 +131,9 @@ export const AuthStyles = () => (
       width: 100%; height: 48px;
       background: ${G}; color: #000;
       border: none; border-radius: 10px;
-      font-family: 'Syne', sans-serif;
+      font-family: 'DM Sans', -apple-system, sans-serif;
       font-size: 13px; font-weight: 700;
-      letter-spacing: .1em;
+      letter-spacing: .08em;
       cursor: pointer; margin-top: 8px;
       transition: opacity .2s, transform .15s;
       box-shadow: 0 16px 40px rgba(2,209,186,.3);
@@ -237,9 +238,9 @@ export const AuthStyles = () => (
       margin-bottom: 24px;
     }
     .auth-confirm-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 26px; font-weight: 900;
-      letter-spacing: -.5px; color: #fff;
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      font-size: 24px; font-weight: 700;
+      letter-spacing: -.4px; color: #fff;
       margin-bottom: 10px;
     }
     .auth-confirm-sub {
