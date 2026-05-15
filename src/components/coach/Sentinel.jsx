@@ -152,7 +152,7 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
       role="dialog"
       aria-modal="true"
       aria-label={t("sn.aria_label")}
-      style={{ position: "fixed", inset: 0, zIndex: 600, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff" }}
+      style={{ position: "fixed", inset: 0, zIndex: 600, background: "#050505", overflowY: "auto", WebkitOverflowScrolling: "touch", fontFamily: "'DM Sans',-apple-system,sans-serif", color: "#fff" }}
     >
       <style>{`
         @keyframes sentFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
