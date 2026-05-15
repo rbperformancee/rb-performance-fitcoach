@@ -48,6 +48,10 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/cron-demo-coach-reseed",
+      "schedule": "0 6 * * *"
+    },
+    {
       "path": "/api/cron-client-daily-reminder?kind=evening",
       "schedule": "0 19 * * *"
     },
