@@ -523,7 +523,7 @@ export default function Onboarding({ coach, onComplete }) {
         {/* ========== ETAPE 2 — PUSH NOTIFS ========== */}
         {step === 2 && (
           <div className="onb-step" style={{ textAlign: "center" }}>
-            <div className="onboarding-eyebrow">Étape 2 sur {TOTAL_STEPS} · Notifications</div>
+            <div className="onboarding-eyebrow">02 / 04</div>
             <h1 className="onboarding-title">Sois alerté en direct.</h1>
             <p className="onboarding-sub">
               Quand un client bat un record, abandonne, ou termine un programme — ton téléphone vibre. Tu réagis avant qu'il décroche.
