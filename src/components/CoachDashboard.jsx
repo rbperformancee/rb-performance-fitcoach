@@ -5087,17 +5087,19 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const scoreLabel = businessScore >= 75 ? t("cd.score_excellent") : businessScore >= 50 ? t("cd.score_good") : businessScore >= 25 ? t("cd.score_to_improve") : t("cd.score_critical");
 
   // ===== METRIQUES BUSINESS =====
-  // MRR : somme des prix mensuels de tous les clients avec un abonnement actif
-  const PLAN_PRICES = { "3m": 120, "6m": 110, "12m": 100 };
-  const activeSubscriptions = clients.filter(c => c.subscription_status === "active" && c.subscription_plan);
-  const mrr = activeSubscriptions.reduce((sum, c) => sum + (PLAN_PRICES[c.subscription_plan] || 0), 0);
+  // MRR : somme des prix mensuels de tous les clients avec un abonnement actif.
+  // Priorité au prix dénormalisé _plan_price (issu de coach_plans), fallback legacy.
+  const PLAN_PRICES_LEGACY = { "3m": 120, "6m": 110, "12m": 100 };
+  const planPriceFor = (c) => Number(c._plan_price) || PLAN_PRICES_LEGACY[c.subscription_plan] || 0;
+  const activeSubscriptions = clients.filter(c => c.subscription_status === "active" && (c._plan_price || c.subscription_plan));
+  const mrr = activeSubscriptions.reduce((sum, c) => sum + planPriceFor(c), 0);
   // Prevision 90j : MRR actuel * 3 - clients qui expirent dans 90j * leur prix
   const expiringIn90 = clients.filter(c => {
     if (!c.subscription_end_date) return false;
     const dl = Math.ceil((new Date(c.subscription_end_date) - Date.now()) / 86400000);
     return dl > 0 && dl <= 90;
   });
-  const churnRisk90 = expiringIn90.reduce((sum, c) => sum + (PLAN_PRICES[c.subscription_plan] || 0), 0);
+  const churnRisk90 = expiringIn90.reduce((sum, c) => sum + planPriceFor(c), 0);
 
   // CountUp animation for dashboard metric cards (must be after businessScore/mrr)
   useEffect(() => {
