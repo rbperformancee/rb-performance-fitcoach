@@ -5480,15 +5480,15 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   ) : null;
 
   // ========== ONBOARDING GATE ==========
-  // Si coach pas encore onboarde (et pas en mode demo), afficher le
-  // modal plein ecran 3 etapes. Il prend le relais du dashboard tant
-  // qu'il n'a pas flague onboarding_done=true.
-  if (!isDemo && coachData && coachData.onboarding_done === false) {
+  // Si coach pas encore onboardé (et pas en mode demo), afficher le
+  // modal plein écran. Critère unique : onboarding_completed_at IS NULL.
+  // (le champ legacy onboarding_done n'existe pas sur coaches.)
+  if (!isDemo && coachData && !coachData.onboarding_completed_at) {
     return (
       <Onboarding
         coach={coachData}
         onComplete={() => {
-          // Force un reload pour recharger coachData avec onboarding_done=true
+          // Force un reload pour recharger coachData avec onboarding_completed_at set.
           window.location.reload();
         }}
       />

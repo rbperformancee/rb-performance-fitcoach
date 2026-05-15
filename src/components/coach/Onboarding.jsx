@@ -295,8 +295,8 @@ export default function Onboarding({ coach, onComplete }) {
       const { error } = await supabase
         .from("coaches")
         .update({
-          onboarding_done: true,
           onboarding_completed_at: new Date().toISOString(),
+          onboarding_step: "done",
         })
         .eq("id", coach.id);
       if (error) throw error;
