@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -20,19 +20,6 @@ const SPECIALITIES = [
   "Seche", "Force", "Performance",
   "Remise en forme", "Running",
   "Arts martiaux", "Nutrition",
-];
-
-// Couleurs d'accent premium pour la brand du coach. Choisi pour bien
-// passer en UI dark mode (suffisamment saturées pour ressortir).
-const ACCENT_COLORS = [
-  { id: "teal",    hex: "#02d1ba", label: "Teal" },
-  { id: "violet",  hex: "#a78bfa", label: "Violet" },
-  { id: "rose",    hex: "#f472b6", label: "Rose" },
-  { id: "amber",   hex: "#fbbf24", label: "Ambre" },
-  { id: "orange",  hex: "#fb923c", label: "Orange" },
-  { id: "emerald", hex: "#34d399", label: "Émeraude" },
-  { id: "sky",     hex: "#38bdf8", label: "Ciel" },
-  { id: "red",     hex: "#ef4444", label: "Rouge" },
 ];
 
 /**
@@ -69,12 +56,10 @@ export default function Onboarding({ coach, onComplete }) {
   const [showMigrationHelp, setShowMigrationHelp] = useState(false);
 
   // ── Brand step ──
-  const [brandName, setBrandName] = useState(coach?.brand_name || "");
-  const [accentColor, setAccentColor] = useState(coach?.accent_color || "#02d1ba");
-  const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState(coach?.logo_url || null);
-  const [brandSaving, setBrandSaving] = useState(false);
-  const fileInputRef = useRef(null);
+  // Brand RB Perform fixe — pas de customisation coach (décision produit
+  // 2026-05-15). On garde accentColor comme constante pour les éléments
+  // visuels de l'onboarding (recap, boutons).
+  const accentColor = G;
 
   // ── Push step ──
   const { permission: pushPerm, requestPermission: requestPush } = usePushNotifications({ coachId: coach?.id });
@@ -85,7 +70,7 @@ export default function Onboarding({ coach, onComplete }) {
   const [inviteLoading, setInviteLoading] = useState(false);
 
   // Total steps : 0 intro, 1 identité, 2 brand, 3 push, 4 invite, 5 recap
-  const TOTAL_STEPS = 5; // dénominateur de progress (intro non comptée)
+  const TOTAL_STEPS = 4; // dénominateur de progress (intro non comptée)
 
   // Etape 0 → 1 automatique apres 2s
   useEffect(() => {
@@ -122,60 +107,12 @@ export default function Onboarding({ coach, onComplete }) {
         })
         .eq("id", coach.id);
       if (error) throw error;
-      // Pré-remplit brandName avec le prénom si vide (peut être édité)
-      if (!brandName) setBrandName(firstName.trim());
       setDirection("forward");
-      setStep(2);
+      setStep(2); // step 2 = push (brand step retirée — RB Perform branding only)
     } catch (e) {
       setError(e.message || t("onb.error_save"));
     }
     setSaving(false);
-  }
-
-  // Handler upload logo : compresse via FileReader (base64 inline → bucket
-  // serait plus propre mais évite la dep Storage pendant l'onboarding).
-  function pickLogo(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 500 * 1024) {
-      setError("Logo trop lourd (max 500 Ko). Pour l'instant, choisis une image plus petite.");
-      return;
-    }
-    setError("");
-    setLogoFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setLogoPreview(reader.result);
-    reader.readAsDataURL(file);
-  }
-
-  async function saveBrand() {
-    setError("");
-    haptic.selection();
-    setBrandSaving(true);
-    try {
-      const updates = {
-        brand_name: brandName.trim() || null,
-        accent_color: accentColor,
-      };
-      // Si logo uploadé, on stocke le base64 inline dans logo_url. Pas
-      // optimal pour de gros logos mais robuste & sans dep Storage.
-      if (logoFile && logoPreview) {
-        updates.logo_url = logoPreview;
-      }
-      const { error } = await supabase.from("coaches").update(updates).eq("id", coach.id);
-      if (error) throw error;
-      setDirection("forward");
-      setStep(3);
-    } catch (e) {
-      setError(e.message || "Erreur sauvegarde brand");
-    }
-    setBrandSaving(false);
-  }
-
-  function skipBrand() {
-    haptic.light();
-    setDirection("forward");
-    setStep(3);
   }
 
   async function activatePush() {
@@ -187,14 +124,14 @@ export default function Onboarding({ coach, onComplete }) {
     // On avance dans tous les cas (granted, denied ou erreur) — pas de blocage
     setTimeout(() => {
       setDirection("forward");
-      setStep(4);
+      setStep(3);
     }, 600);
   }
 
   function skipPush() {
     haptic.light();
     setDirection("forward");
-    setStep(4);
+    setStep(3);
   }
 
   async function sendInvite() {
@@ -234,7 +171,7 @@ export default function Onboarding({ coach, onComplete }) {
       toast.success(fillTpl(t("onb.toast_invite_sent"), { email: mail }));
       setInviteSent(true);
       setDirection("forward");
-      setTimeout(() => setStep(5), 400); // transition naturelle apres succes
+      setTimeout(() => setStep(4), 400); // transition naturelle apres succes
     } catch (e) {
       setError(e.message || t("onb.error_invite_send"));
     }
@@ -245,7 +182,7 @@ export default function Onboarding({ coach, onComplete }) {
     haptic.light();
     setInviteSkipped(true);
     setDirection("forward");
-    setStep(5);
+    setStep(4);
   }
 
   async function finishOnboarding() {
@@ -583,129 +520,10 @@ export default function Onboarding({ coach, onComplete }) {
           </div>
         )}
 
-        {/* ========== ETAPE 2 — BRAND ========== */}
+        {/* ========== ETAPE 2 — PUSH NOTIFS ========== */}
         {step === 2 && (
-          <div className="onb-step">
-            <div className="onboarding-eyebrow">Étape 2 sur {TOTAL_STEPS} · Identité visuelle</div>
-            <h1 className="onboarding-title">Ton studio.</h1>
-            <p className="onboarding-sub">
-              Voici comment tes clients verront ton app. Tu peux changer plus tard.
-            </p>
-
-            {/* PREVIEW LIVE — c'est le moment dopamine : voir son brand prendre vie */}
-            <div style={{
-              width: "100%",
-              padding: "20px 18px",
-              background: `linear-gradient(180deg, ${accentColor}10 0%, rgba(255,255,255,0.02) 100%)`,
-              border: `1px solid ${accentColor}40`,
-              borderRadius: 16,
-              marginBottom: 24,
-              display: "flex", alignItems: "center", gap: 14,
-              transition: "border-color .3s, background .3s",
-            }}>
-              {logoPreview ? (
-                <img src={logoPreview} alt="logo" style={{
-                  width: 48, height: 48, borderRadius: 12, objectFit: "cover",
-                  border: `1px solid ${accentColor}40`, flexShrink: 0,
-                }} />
-              ) : (
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${accentColor}15`,
-                  border: `1px solid ${accentColor}40`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 22, fontWeight: 900, color: accentColor,
-                  fontFamily: "'Syne',sans-serif", flexShrink: 0,
-                }}>
-                  {(brandName || firstName || "C").trim().charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 4 }}>
-                  Coaching by
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: accentColor, letterSpacing: -0.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {brandName || firstName || "Ton studio"}
-                </div>
-              </div>
-            </div>
-
-            <div className="onboarding-field">
-              <input
-                type="text"
-                value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
-                placeholder={`Nom de marque (ex: ${firstName || "Coach"} Performance)`}
-                className="onboarding-input"
-                maxLength={50}
-              />
-            </div>
-
-            <div className="onboarding-sep">Couleur d'accent</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 8, width: "100%", marginBottom: 20 }}>
-              {ACCENT_COLORS.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => { haptic.selection(); setAccentColor(c.hex); }}
-                  aria-label={c.label}
-                  title={c.label}
-                  style={{
-                    height: 36, borderRadius: 10,
-                    background: c.hex,
-                    border: accentColor === c.hex ? "2px solid #fff" : "2px solid rgba(255,255,255,0.08)",
-                    boxShadow: accentColor === c.hex ? `0 0 0 3px ${c.hex}40, 0 6px 20px ${c.hex}40` : "none",
-                    cursor: "pointer",
-                    transition: "transform .15s, box-shadow .2s, border-color .2s",
-                    transform: accentColor === c.hex ? "scale(1.08)" : "scale(1)",
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="onboarding-sep">Logo (optionnel)</div>
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              onChange={pickLogo}
-              style={{ display: "none" }}
-            />
-            <button
-              type="button"
-              onClick={() => { haptic.light(); fileInputRef.current?.click(); }}
-              style={{
-                width: "100%", padding: "14px 16px",
-                background: "rgba(255,255,255,0.04)",
-                border: "1px dashed rgba(255,255,255,0.15)",
-                borderRadius: 10,
-                color: "rgba(255,255,255,0.7)",
-                fontSize: 13, fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit",
-                marginBottom: 20,
-              }}
-            >
-              {logoFile ? `✓ ${logoFile.name}` : "Choisir un logo (PNG / JPG, max 500 Ko)"}
-            </button>
-
-            {error && <div className="onboarding-error">{error}</div>}
-
-            <button
-              onClick={saveBrand}
-              disabled={brandSaving}
-              className="onboarding-btn"
-              style={{ background: accentColor, boxShadow: `0 16px 40px ${accentColor}40`, textTransform: "uppercase" }}
-            >
-              {brandSaving ? "..." : "Continuer"}
-            </button>
-            <button type="button" onClick={skipBrand} className="onboarding-skip">Configurer plus tard</button>
-          </div>
-        )}
-
-        {/* ========== ETAPE 3 — PUSH NOTIFS ========== */}
-        {step === 3 && (
           <div className="onb-step" style={{ textAlign: "center" }}>
-            <div className="onboarding-eyebrow">Étape 3 sur {TOTAL_STEPS} · Notifications</div>
+            <div className="onboarding-eyebrow">Étape 2 sur {TOTAL_STEPS} · Notifications</div>
             <h1 className="onboarding-title">Sois alerté en direct.</h1>
             <p className="onboarding-sub">
               Quand un client bat un record, abandonne, ou termine un programme — ton téléphone vibre. Tu réagis avant qu'il décroche.
@@ -801,8 +619,8 @@ export default function Onboarding({ coach, onComplete }) {
           </div>
         )}
 
-        {/* ========== ETAPE 4 — PREMIER CLIENT ========== */}
-        {step === 4 && (
+        {/* ========== ETAPE 3 — PREMIER CLIENT ========== */}
+        {step === 3 && (
           <div className="onb-step">
             <div className="onboarding-eyebrow">{t("onb.step2_eyebrow")}</div>
             <h1 className="onboarding-title">{t("onb.step2_title")}</h1>
@@ -875,7 +693,7 @@ export default function Onboarding({ coach, onComplete }) {
         />
 
         {/* ========== ETAPE 6 — PRET ========== */}
-        {step === 5 && (
+        {step === 4 && (
           <div className="onb-step" style={{ textAlign: "center", width: "100%", position: "relative" }}>
             {/* Checkmark anime */}
             <svg className="onboarding-check" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -890,10 +708,6 @@ export default function Onboarding({ coach, onComplete }) {
               <div className="onboarding-recap-item">
                 <span className="onboarding-recap-icon done" style={{ color: accentColor }}>✓</span>
                 <span>{t("onb.recap_profile")}</span>
-              </div>
-              <div className="onboarding-recap-item">
-                <span className="onboarding-recap-icon done" style={{ color: accentColor }}>✓</span>
-                <span>Studio "<strong style={{ color: accentColor }}>{brandName || firstName || "Coach"}</strong>" configuré</span>
               </div>
               <div className="onboarding-recap-item">
                 {pushPerm === "granted" ? (
