@@ -34,25 +34,25 @@ export default function SignupPage() {
     if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) s++;
     return s;
   }, [password]);
-  const strengthLabel = ["", t("sn.strength_weak"), t("sn.strength_medium"), t("sn.strength_strong")][strength];
+  const strengthLabel = ["", t("signup.strength_weak"), t("signup.strength_medium"), t("signup.strength_strong")][strength];
 
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
     if (!firstName.trim() || !lastName.trim()) {
-      setError(t("sn.err_first_last_required")); return;
+      setError(t("signup.err_first_last_required")); return;
     }
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email.trim())) {
-      setError(t("sn.err_invalid_email")); return;
+      setError(t("signup.err_invalid_email")); return;
     }
     if (password.length < 8) {
-      setError(t("sn.err_pw_min")); return;
+      setError(t("signup.err_pw_min")); return;
     }
     if (password !== confirm) {
-      setError(t("sn.err_pw_mismatch")); return;
+      setError(t("signup.err_pw_mismatch")); return;
     }
     if (!accepted) {
-      setError(t("sn.err_accept_terms")); return;
+      setError(t("signup.err_accept_terms")); return;
     }
 
     setLoading(true);
@@ -111,7 +111,7 @@ export default function SignupPage() {
       // Session active immediatement → dashboard
       window.location.href = "/";
     } catch (e) {
-      setError(t("sn.err_signup_retry"));
+      setError(t("signup.err_signup_retry"));
       setLoading(false);
     }
   }
@@ -126,7 +126,7 @@ export default function SignupPage() {
       });
       if (error) { setError(error.message); setGoogleLoading(false); }
     } catch (e) {
-      setError(t("sn.err_google_unavailable"));
+      setError(t("signup.err_google_unavailable"));
       setGoogleLoading(false);
     }
   }
@@ -145,15 +145,15 @@ export default function SignupPage() {
                 <polyline points="22,6 12,13 2,6" />
               </svg>
             </div>
-            <div className="auth-confirm-title">{t("sn.confirm_title")}</div>
+            <div className="auth-confirm-title">{t("signup.confirm_title")}</div>
             <div className="auth-confirm-sub">
-              {t("sn.confirm_line1")}<br />
+              {t("signup.confirm_line1")}<br />
               <span className="auth-confirm-email">{sentEmail}</span>.
               <br /><br />
-              {t("sn.confirm_line2")}
+              {t("signup.confirm_line2")}
             </div>
             <div className="auth-foot">
-              {t("sn.already_confirmed")} <a href="/login">{t("sn.signin_link")}</a>
+              {t("signup.already_confirmed")} <a href="/login">{t("signup.signin_link")}</a>
             </div>
           </div>
         </div>
@@ -167,57 +167,57 @@ export default function SignupPage() {
       <AuthVisual />
 
       <div className="auth-form-panel">
-        <h1 className="auth-title">{t("sn.title")}</h1>
-        <p className="auth-subtitle accent">{t("sn.subtitle")}</p>
+        <h1 className="auth-title">{t("signup.title")}</h1>
+        <p className="auth-subtitle accent">{t("signup.subtitle")}</p>
 
         <form onSubmit={onSubmit} noValidate>
           <div style={{ display: "flex", gap: 10 }}>
             <div className="auth-field" style={{ flex: 1 }}>
-              <div className="auth-label-row"><label className="auth-label">{t("sn.first_name_label")}</label></div>
+              <div className="auth-label-row"><label className="auth-label">{t("signup.first_name_label")}</label></div>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="auth-input"
-                placeholder={t("sn.first_name_placeholder")}
+                placeholder={t("signup.first_name_placeholder")}
                 autoComplete="given-name"
                 autoFocus
               />
             </div>
             <div className="auth-field" style={{ flex: 1 }}>
-              <div className="auth-label-row"><label className="auth-label">{t("sn.last_name_label")}</label></div>
+              <div className="auth-label-row"><label className="auth-label">{t("signup.last_name_label")}</label></div>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="auth-input"
-                placeholder={t("sn.last_name_placeholder")}
+                placeholder={t("signup.last_name_placeholder")}
                 autoComplete="family-name"
               />
             </div>
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">{t("sn.email_label")}</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("signup.email_label")}</label></div>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="auth-input"
-              placeholder={t("sn.email_placeholder")}
+              placeholder={t("signup.email_placeholder")}
               autoComplete="email"
               required
             />
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">{t("sn.password_label")}</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("signup.password_label")}</label></div>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="auth-input"
-              placeholder={t("sn.password_placeholder")}
+              placeholder={t("signup.password_placeholder")}
               autoComplete="new-password"
               required
             />
@@ -228,19 +228,19 @@ export default function SignupPage() {
                   <div className={`auth-strength-bar ${strength >= 2 ? "on-" + strength : ""}`} />
                   <div className={`auth-strength-bar ${strength >= 3 ? "on-" + strength : ""}`} />
                 </div>
-                <div className="auth-strength-label">{t("sn.strength_prefix")} {strengthLabel || "…"}</div>
+                <div className="auth-strength-label">{t("signup.strength_prefix")} {strengthLabel || "…"}</div>
               </>
             )}
           </div>
 
           <div className="auth-field">
-            <div className="auth-label-row"><label className="auth-label">{t("sn.confirm_label")}</label></div>
+            <div className="auth-label-row"><label className="auth-label">{t("signup.confirm_label")}</label></div>
             <input
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               className="auth-input"
-              placeholder={t("sn.confirm_placeholder")}
+              placeholder={t("signup.confirm_placeholder")}
               autoComplete="new-password"
               required
             />
@@ -254,26 +254,26 @@ export default function SignupPage() {
               onChange={(e) => setAccepted(e.target.checked)}
             />
             <span>
-              {t("sn.terms_part1")} <a href="/legal.html#cgu" target="_blank" rel="noopener">{t("sn.terms_cgu")}</a> {t("sn.terms_part2")} <a href="/legal.html#rgpd" target="_blank" rel="noopener">{t("sn.terms_privacy")}</a>.
+              {t("signup.terms_part1")} <a href="/legal.html#cgu" target="_blank" rel="noopener">{t("signup.terms_cgu")}</a> {t("signup.terms_part2")} <a href="/legal.html#rgpd" target="_blank" rel="noopener">{t("signup.terms_privacy")}</a>.
             </span>
           </label>
 
           <button type="submit" className="auth-btn" disabled={loading || googleLoading} style={{ marginTop: 20 }}>
-            {loading ? t("sn.creating") : t("sn.create_account_btn")}
+            {loading ? t("signup.creating") : t("signup.create_account_btn")}
           </button>
 
           {error && <div className="auth-error">{error}</div>}
         </form>
 
-        <div className="auth-sep">{t("sn.separator_or")}</div>
+        <div className="auth-sep">{t("signup.separator_or")}</div>
 
         <button onClick={signupWithGoogle} className="auth-btn-ghost" disabled={loading || googleLoading}>
           <GoogleIcon />
-          {googleLoading ? t("sn.redirecting") : t("sn.continue_with_google")}
+          {googleLoading ? t("signup.redirecting") : t("signup.continue_with_google")}
         </button>
 
         <div className="auth-foot">
-          {t("sn.already_account")} <a href="/login">{t("sn.signin_link")}</a>
+          {t("signup.already_account")} <a href="/login">{t("signup.signin_link")}</a>
         </div>
       </div>
     </div>
