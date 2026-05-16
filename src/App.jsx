@@ -454,6 +454,16 @@ function AppInner() {
   if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
   if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/app.html"; }} /></Suspense>;
 
+  // QA local : ?preview_onboarding=1 → rendu direct du CoachOnboarding avec mock data,
+  // bypass auth/coach detection. Utile pour visualiser le design sans flow login.
+  const isPreviewOnb = typeof window !== "undefined" &&
+    window.location.hostname === "localhost" &&
+    new URLSearchParams(window.location.search).get("preview_onboarding") === "1";
+  if (isPreviewOnb) {
+    const mockCoach = { id: "00000000-0000-0000-0000-000000000000", full_name: "", email: "preview@local", specialties: [] };
+    return <Suspense fallback={null}><CoachOnboarding coach={mockCoach} preview={true} onComplete={() => alert("Onboarding terminé (preview)")} /></Suspense>;
+  }
+
   // ===== MODE CANDIDATURE HIGH-TICKET (/candidature) =====
   // Landing premium (CoachingApplicationLanding) puis OnboardingFlow
   // mode='application' au clic sur "Postuler maintenant".
@@ -1232,8 +1242,12 @@ function AppInner() {
       </div>
     );
   }
-  // ── Coach sans brand_name → onboarding coach (premiere config) ──
-  if (isCoach && coachData && !coachData.brand_name && showCoachDash) {
+  // ── Coach sans onboarding terminé → onboarding coach (première config) ──
+  // Gate sur `onboarding_completed_at` (écrit par finishOnboarding) ET
+  // `brand_name`. L'ancien flux setait brand_name ; le nouveau ne le set plus
+  // (step "Identité visuelle" retiré en dbab212f). Gater sur brand_name seul
+  // renvoyait en boucle au début de l'onboarding une fois celui-ci terminé.
+  if (isCoach && coachData && !coachData.brand_name && !coachData.onboarding_completed_at && showCoachDash) {
     return (
       <CoachOnboarding
         coach={coachData}

@@ -39,6 +39,7 @@ function Ic({ name, size = 16, color = "currentColor" }) {
     clock: <svg {...p}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
     activity: <svg {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
     spark: <svg {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>,
+    userPlus: <svg {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>,
   };
   return m[name] || null;
 }
@@ -108,6 +109,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const [refreshing, setRefreshing] = useState(false);
   const [detailCoach, setDetailCoach] = useState(null);
   const [funnelDialog, setFunnelDialog] = useState(null); // { step: 'created'|'setup'|'activated'|'engaged'|'paying', label, list }
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const loadData = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true); else setLoading(true);
@@ -432,7 +434,17 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflow: "hidden" }}>
             <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" }}>Mes coachs</span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{enriched.length}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{enriched.length}</span>
+                <button
+                  onClick={() => { haptic.medium(); setInviteOpen(true); }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, background: BLUE_DIM, border: `1px solid ${BLUE_BORDER}`, borderRadius: 100, padding: "5px 12px", color: BLUE, fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", fontFamily: BODY, transition: "all 0.15s" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(129,140,248,0.16)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = BLUE_DIM; }}
+                >
+                  <Ic name="userPlus" size={12} color={BLUE} /> Inviter
+                </button>
+              </div>
             </div>
             {enriched.length === 0 ? (
               <div style={{ padding: 32, textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Aucun coach.</div>
@@ -627,6 +639,14 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           programmes={programmes}
           sessionLogs={sessionLogs}
           onClose={() => setDetailCoach(null)}
+        />
+      )}
+
+      {/* ═══════ INVITER UN COACH (création hors Stripe) ═══════ */}
+      {inviteOpen && (
+        <InviteCoachDialog
+          onClose={() => setInviteOpen(false)}
+          onCreated={() => loadData(true)}
         />
       )}
     </div>
@@ -850,6 +870,246 @@ function CoachDetail({ coach, allClients, programmes, sessionLogs, onClose }) {
           <div>Status : {coach.subscription_status || "—"}</div>
           {coach.monthly_revenue_goal > 0 && <div>Goal mensuel : {coach.monthly_revenue_goal.toLocaleString()}€</div>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  InviteCoachDialog — création d'un compte coach HORS Stripe
+//  (comps, partenaires, Pioneer #1). Passe par l'Edge Function invite-coach
+//  qui revérifie que l'appelant est super admin avant toute création.
+// ───────────────────────────────────────────────────────────────────────────
+const PLAN_OPTIONS = [
+  { key: "founding", label: "Founding" },
+  { key: "pro", label: "Pro" },
+  { key: "elite", label: "Elite" },
+];
+
+function InviteCoachDialog({ onClose, onCreated }) {
+  const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState("founding");
+  const [lockedPrice, setLockedPrice] = useState("");
+  const [foundingCoach, setFoundingCoach] = useState(true);
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(null); // email du coach créé
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  async function submit() {
+    if (!emailValid || submitting) return;
+    haptic.medium();
+    setSubmitting(true);
+    setError("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token;
+      if (!jwt) throw new Error("Session expirée — reconnecte-toi.");
+
+      const res = await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/invite-coach`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          subscription_plan: plan,
+          locked_price: lockedPrice.trim() || null,
+          founding_coach: foundingCoach,
+          coach_notes: notes.trim() || null,
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.success) throw new Error(j.error || "Échec de la création.");
+
+      setDone(j.email || email.trim().toLowerCase());
+      onCreated?.();
+    } catch (e) {
+      setError(e.message || "Échec de la création.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const inputStyle = {
+    width: "100%", boxSizing: "border-box", background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 13px",
+    color: IVORY, fontSize: 13, fontFamily: BODY, outline: "none",
+  };
+  const labelStyle = {
+    fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase",
+    color: "rgba(255,255,255,0.4)", marginBottom: 8, display: "block",
+  };
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget && !submitting) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 260,
+        background: "rgba(0,0,0,0.78)",
+        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 20, fontFamily: BODY, color: IVORY, animation: "cF 0.2s ease",
+      }}
+    >
+      <div style={{
+        width: "100%", maxWidth: 480, maxHeight: "88vh",
+        background: "#0a0a0a", border: `1px solid ${BLUE_BORDER}`, borderRadius: 16,
+        boxShadow: `0 24px 64px rgba(0,0,0,0.6), 0 0 80px ${BLUE}10`,
+        display: "flex", flexDirection: "column", overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.25em", textTransform: "uppercase", color: BLUE, opacity: 0.85 }}>Création hors Stripe</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 900, color: IVORY, letterSpacing: "-0.02em", marginTop: 4, lineHeight: 1 }}>
+              Inviter un coach
+            </div>
+          </div>
+          <button onClick={onClose} disabled={submitting} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, width: 36, height: 36, color: "rgba(255,255,255,0.6)", cursor: submitting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Ic name="x" size={14} />
+          </button>
+        </div>
+
+        {done ? (
+          /* ── État succès ── */
+          <div style={{ padding: "32px 24px", textAlign: "center" }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(2,209,186,0.1)", border: `1px solid ${G}44`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Ic name="check" size={22} color={G} />
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Coach créé</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginBottom: 22 }}>
+              Un email de connexion a été envoyé à<br />
+              <span style={{ fontFamily: MONO, color: BLUE }}>{done}</span>
+            </div>
+            <button
+              onClick={onClose}
+              style={{ background: G, border: "none", borderRadius: 10, padding: "11px 28px", color: "#000", fontSize: 12, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase", cursor: "pointer", fontFamily: BODY }}
+            >
+              Terminé
+            </button>
+          </div>
+        ) : (
+          /* ── Formulaire ── */
+          <div style={{ padding: "18px 22px 22px", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 20 }}>
+              Crée un compte coach sans paiement Stripe. Le coach reçoit un email pour définir son mot de passe.
+            </div>
+
+            {/* Email */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Email du coach</label>
+              <input
+                type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                placeholder="coach@exemple.com" autoFocus disabled={submitting}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Plan */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Plan d'abonnement</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                {PLAN_OPTIONS.map((o) => {
+                  const active = plan === o.key;
+                  return (
+                    <button
+                      key={o.key}
+                      onClick={() => { haptic.selection(); setPlan(o.key); }}
+                      disabled={submitting}
+                      style={{
+                        flex: 1, padding: "9px 0", borderRadius: 9, cursor: submitting ? "not-allowed" : "pointer",
+                        fontSize: 12, fontWeight: 700, fontFamily: BODY,
+                        background: active ? BLUE_DIM : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${active ? BLUE_BORDER : "rgba(255,255,255,0.07)"}`,
+                        color: active ? BLUE : "rgba(255,255,255,0.5)",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Locked price */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Tarif verrouillé <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 500, color: "rgba(255,255,255,0.3)" }}>· optionnel</span></label>
+              <input
+                type="text" value={lockedPrice} onChange={(e) => setLockedPrice(e.target.value)}
+                placeholder="ex : 199" inputMode="numeric" disabled={submitting}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Founding coach toggle */}
+            <button
+              onClick={() => { haptic.selection(); setFoundingCoach((v) => !v); }}
+              disabled={submitting}
+              style={{
+                width: "100%", marginBottom: 16, display: "flex", alignItems: "center", gap: 12,
+                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 10, padding: "12px 13px", cursor: submitting ? "not-allowed" : "pointer",
+                fontFamily: BODY, textAlign: "left",
+              }}
+            >
+              <div style={{
+                width: 38, height: 22, borderRadius: 100, flexShrink: 0, position: "relative",
+                background: foundingCoach ? G : "rgba(255,255,255,0.12)", transition: "background 0.2s",
+              }}>
+                <div style={{
+                  position: "absolute", top: 2, left: foundingCoach ? 18 : 2,
+                  width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s",
+                }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>Founding coach</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Accès lifetime, bypass des gates Pro/Sentinel</div>
+              </div>
+            </button>
+
+            {/* Notes */}
+            <div style={{ marginBottom: 18 }}>
+              <label style={labelStyle}>Notes internes <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 500, color: "rgba(255,255,255,0.3)" }}>· optionnel</span></label>
+              <textarea
+                value={notes} onChange={(e) => setNotes(e.target.value)}
+                placeholder="Contexte : raison de la création, deal négocié…"
+                rows={3} disabled={submitting}
+                style={{ ...inputStyle, resize: "vertical", minHeight: 64, lineHeight: 1.5 }}
+              />
+            </div>
+
+            {error && (
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8, background: "rgba(239,68,68,0.07)", border: `1px solid ${RED}33`, borderRadius: 10, padding: "10px 12px", marginBottom: 16 }}>
+                <Ic name="alert" size={13} color={RED} />
+                <span style={{ fontSize: 11, color: RED, lineHeight: 1.5 }}>{error}</span>
+              </div>
+            )}
+
+            <button
+              onClick={submit}
+              disabled={!emailValid || submitting}
+              style={{
+                width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
+                background: (!emailValid || submitting) ? "rgba(255,255,255,0.06)" : BLUE,
+                color: (!emailValid || submitting) ? "rgba(255,255,255,0.3)" : "#000",
+                fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase",
+                cursor: (!emailValid || submitting) ? "not-allowed" : "pointer",
+                fontFamily: BODY, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                transition: "all 0.15s",
+              }}
+            >
+              {submitting ? <><Spinner size={14} /> Création…</> : <><Ic name="send" size={13} color="#000" /> Créer le compte coach</>}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

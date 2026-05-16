@@ -686,9 +686,20 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           )}
         </div>
         <div style={{ fontSize: 38, fontWeight: 900, lineHeight: 1.1, marginBottom: 16, letterSpacing: "-1.5px" }}>
-          {isRest ? <>Jour <span style={{ color: G }}>repos</span>.</> :
-           isNotStarted ? <>Démarre dans <span style={{ color: G }}>{todaysSession.daysUntil}</span> jour{todaysSession.daysUntil > 1 ? "s" : ""}.</> :
-           <>Cycle <span style={{ color: G }}>terminé</span>.</>}
+          {(() => {
+            // On rend les strings i18n qui contiennent {color}…{/color}
+            // en injectant un span coloré autour de la portion ciblée.
+            const renderColored = (raw, replacements = {}) => {
+              let s = String(raw || "");
+              Object.entries(replacements).forEach(([k, v]) => { s = s.split(`{${k}}`).join(String(v)); });
+              const m = s.match(/^(.*?)\{color\}(.+?)\{\/color\}(.*)$/);
+              if (!m) return s;
+              return <>{m[1]}<span style={{ color: G }}>{m[2]}</span>{m[3]}</>;
+            };
+            if (isRest) return renderColored(t('train.day_rest_text'));
+            if (isNotStarted) return renderColored(t(todaysSession.daysUntil > 1 ? 'train.starts_in_days_many' : 'train.starts_in_days_one'), { n: todaysSession.daysUntil });
+            return renderColored(t('train.cycle_finished_text'));
+          })()}
         </div>
         <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, maxWidth: 360, marginBottom: 36 }}>
           {isRest && "Profite. Hydrate-toi, mange propre, dors bien. Le corps progresse pendant le repos."}
@@ -718,9 +729,14 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         <div style={{ margin: "8px 20px 0", padding: "10px 14px", background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.22)", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ fontSize: 16 }}>⚠️</div>
           <div style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
-            {missedCount === 1
-              ? <>Tu as raté <strong style={{ color: "#f97316" }}>1 séance</strong> cette semaine. Pas grave — reprends aujourd'hui.</>
-              : <>Tu as raté <strong style={{ color: "#f97316" }}>{missedCount} séances</strong> cette semaine. On reprend aujourd'hui.</>}
+            {(() => {
+              const raw = missedCount === 1 ? t('train.missed_one_session') : t('train.missed_multiple').split('{n}').join(String(missedCount));
+              // On met en orange le segment quantifié pour garder le visuel
+              // existant. Découpe naïve sur le 1er chiffre rencontré.
+              const m = raw.match(/^(.*?)(\d+\s+\S+)(.*)$/);
+              if (!m) return raw;
+              return <>{m[1]}<strong style={{ color: "#f97316" }}>{m[2]}</strong>{m[3]}</>;
+            })()}
           </div>
         </div>
       )}
@@ -1193,14 +1209,14 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             return (
               <div style={{ position: "absolute", inset: 0, background: "#0a0a0a", borderRadius: "28px 28px 0 0", padding: "26px 22px calc(env(safe-area-inset-bottom,0px) + 22px)", overflowY: "auto" }}>
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "3px", color: G, textTransform: "uppercase", marginBottom: 8 }}>
-                  Feedback détaillé
+                  {t('train.feedback_extra_eyebrow')}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-.4px", marginBottom: 18, lineHeight: 1.2 }}>
-                  Ton ressenti précis ?
+                  {t('train.feeling_precise_q')}
                 </div>
 
                 {/* MOOD */}
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 8 }}>Ressenti séance</div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 8 }}>{t('train.feeling_session_label')}</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 18 }}>
                   {MOODS.map((m) => (
                     <button
@@ -1223,12 +1239,12 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                 </div>
 
                 {/* INJURY */}
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 8 }}>Douleur / blessure (optionnel)</div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 8 }}>{t('train.injury_label')}</div>
                 <input
                   type="text"
                   value={feedbackInjury}
                   onChange={(e) => setFeedbackInjury(e.target.value)}
-                  placeholder="Ex : épaule droite, lombaires…"
+                  placeholder={t('train.injury_placeholder')}
                   style={{
                     width: "100%", padding: "11px 14px",
                     background: "rgba(255,255,255,.03)",

@@ -104,11 +104,19 @@
       })();
       // ===== Service Worker registration =====
       // Sans ca : pas de cache offline, pas de push notifications, pas de PWA fullsize.
-      if ('serviceWorker' in navigator) {
+      // Skip en localhost pour eviter le cache aggressif qui masque les changements
+      // de chunks lazy (Onboarding, etc.) pendant le dev.
+      var isLocalDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      if ('serviceWorker' in navigator && !isLocalDev) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js').catch(function(err) {
             console.warn('[SW] registration failed:', err);
           });
+        });
+      } else if (isLocalDev && 'serviceWorker' in navigator) {
+        // Auto-unregister tout SW existant en local pour purger le cache
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          regs.forEach(function(r) { r.unregister(); });
         });
       }
     </script>
