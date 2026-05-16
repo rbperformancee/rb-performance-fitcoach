@@ -866,8 +866,11 @@ function CoachDetail({ coach, allClients, programmes, sessionLogs, onClose }) {
         <div style={{ padding: "16px 18px", background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 12, fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: MONO, lineHeight: 1.7 }}>
           <div>Créé le {new Date(coach.created_at).toLocaleDateString(intlLocale(), { day: "numeric", month: "long", year: "numeric" })}</div>
           <div>Stripe : {coach.stripe_customer_id ? coach.stripe_customer_id : "non connecté"}</div>
-          <div>Plan : {coach.subscription_plan || "free (migration 008 pending)"}</div>
-          <div>Status : {coach.subscription_status || "—"}</div>
+          <div>Plan : {coach.subscription_plan || "free"}{coach.founding_coach ? " · founding" : ""}{coach.locked_price ? ` · tarif verrouillé ${coach.locked_price}€` : ""}</div>
+          <div>Statut compte : {coach.is_active === false ? "désactivé" : "actif"}</div>
+          <div>Onboarding : {coach.onboarding_completed_at
+            ? `terminé le ${new Date(coach.onboarding_completed_at).toLocaleDateString(intlLocale(), { day: "numeric", month: "short", year: "numeric" })}`
+            : "pas encore terminé"}</div>
           {coach.monthly_revenue_goal > 0 && <div>Goal mensuel : {coach.monthly_revenue_goal.toLocaleString()}€</div>}
         </div>
       </div>
