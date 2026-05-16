@@ -108,6 +108,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [detailCoach, setDetailCoach] = useState(null);
+  const [lastLogins, setLastLogins] = useState({}); // { coachId: last_sign_in_at } — RPC coach_last_logins
   const [funnelDialog, setFunnelDialog] = useState(null); // { step: 'created'|'setup'|'activated'|'engaged'|'paying', label, list }
   const [inviteOpen, setInviteOpen] = useState(false);
 
@@ -145,6 +146,18 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
     setApplicationsCount(capps.count || 0);
     setLoading(false);
     setRefreshing(false);
+
+    // Dernières connexions coach (RPC sécurisée super-admin). Isolé dans son
+    // propre try/catch : un échec ici ne doit jamais empêcher le dashboard
+    // de s'afficher — au pire la "dernière connexion" reste inconnue.
+    try {
+      const { data: logins } = await supabase.rpc("coach_last_logins");
+      if (Array.isArray(logins)) {
+        const map = {};
+        logins.forEach((r) => { if (r && r.id) map[r.id] = r.last_sign_in_at; });
+        setLastLogins(map);
+      }
+    } catch { /* dégrade silencieusement */ }
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -638,6 +651,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           allClients={allClients}
           programmes={programmes}
           sessionLogs={sessionLogs}
+          lastLogin={lastLogins[detailCoach.id]}
           onClose={() => setDetailCoach(null)}
         />
       )}
@@ -766,7 +780,7 @@ function FunnelDialog({ dialog, onSelectCoach, onClose }) {
 // ───────────────────────────────────────────────────────────────────────────
 //  CoachDetail — drill-down full screen pour un coach
 // ───────────────────────────────────────────────────────────────────────────
-function CoachDetail({ coach, allClients, programmes, sessionLogs, onClose }) {
+function CoachDetail({ coach, allClients, programmes, sessionLogs, lastLogin, onClose }) {
   const cls = allClients.filter((c) => c.coach_id === coach.id);
   const cIds = new Set(cls.map((c) => c.id));
   const cProgs = programmes.filter((p) => cIds.has(p.client_id));
@@ -868,6 +882,9 @@ function CoachDetail({ coach, allClients, programmes, sessionLogs, onClose }) {
           <div>Stripe : {coach.stripe_customer_id ? coach.stripe_customer_id : "non connecté"}</div>
           <div>Plan : {coach.subscription_plan || "free"}{coach.founding_coach ? " · founding" : ""}{coach.locked_price ? ` · tarif verrouillé ${coach.locked_price}€` : ""}</div>
           <div>Statut compte : {coach.is_active === false ? "désactivé" : "actif"}</div>
+          <div>Dernière connexion : {lastLogin
+            ? `${new Date(lastLogin).toLocaleDateString(intlLocale(), { day: "numeric", month: "short", year: "numeric" })} · il y a ${rel(new Date(lastLogin).getTime())}`
+            : "jamais connecté"}</div>
           <div>Onboarding : {coach.onboarding_completed_at
             ? `terminé le ${new Date(coach.onboarding_completed_at).toLocaleDateString(intlLocale(), { day: "numeric", month: "short", year: "numeric" })}`
             : "pas encore terminé"}</div>
