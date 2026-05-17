@@ -2,6 +2,8 @@ import ClientAnalytics from "./ClientAnalytics";
 import ProgramPDFButton from "./ProgramPDF";
 import CoachStats from "./CoachStats";
 import ChatCoach from "./ChatCoach";
+import { uploadChatPhoto, uploadChatAudio } from "../lib/chatMedia";
+import VoiceMessageButton from "./VoiceMessageButton";
 import CarbCycling from "./coach/CarbCycling";
 import MenuGenerator from "./coach/MenuGenerator";
 import DemoBanner from "./DemoBanner";
@@ -1781,6 +1783,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [msgText,    setMsgText]    = useState("");
   const [sending,    setSending]    = useState(false);
   const [messages,   setMessages]   = useState([]);
+  const coachChatFileRef = useRef(null);
   const [rpeData,    setRpeData]    = useState([]);
   const [nutGoals,   setNutGoals]   = useState(null);
   const [nutSaving,  setNutSaving]  = useState(false);
@@ -2064,6 +2067,33 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       setMessages(prev => [{ content: msgText.trim(), from_coach: true, created_at: new Date().toISOString(), read: false }, ...prev]);
       setMsgText("");
     }
+    setSending(false);
+  };
+
+  // Envoi d'un média (photo / vocal) dans le chat coach → client.
+  const sendCoachMedia = async (mediaUrl, mediaType) => {
+    if (!client.id) return;
+    const { error } = await supabase.from("messages").insert({
+      client_id: client.id, from_coach: true, content: "", media_url: mediaUrl, media_type: mediaType,
+    });
+    if (!error) {
+      setMessages(prev => [{ content: "", from_coach: true, media_url: mediaUrl, media_type: mediaType, created_at: new Date().toISOString(), read: false }, ...prev]);
+    } else {
+      toast.error("Envoi échoué : " + error.message);
+    }
+  };
+  const sendCoachPhoto = async (file) => {
+    if (!file || sending) return;
+    setSending(true);
+    try { await sendCoachMedia(await uploadChatPhoto(file, client.id), "image"); }
+    catch (e) { toast.error("Photo non envoyée : " + (e?.message || "erreur")); }
+    setSending(false);
+  };
+  const sendCoachVoice = async (blob) => {
+    if (!blob || sending) return;
+    setSending(true);
+    try { await sendCoachMedia(await uploadChatAudio(blob, client.id), "audio"); }
+    catch (e) { toast.error("Vocal non envoyé : " + (e?.message || "erreur")); }
     setSending(false);
   };
 
@@ -3563,6 +3593,33 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; }}
                 onKeyDown={e => { if (e.key === "Enter" && e.metaKey) sendMessage(); }}
               />
+              <input
+                ref={coachChatFileRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) sendCoachPhoto(f); e.target.value = ""; }}
+              />
+              <button
+                onClick={() => coachChatFileRef.current?.click()}
+                disabled={sending}
+                aria-label="Envoyer une photo"
+                style={{
+                  alignSelf: "flex-end", width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                  cursor: sending ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+              </button>
+              <div style={{ alignSelf: "flex-end" }}>
+                <VoiceMessageButton onSend={sendCoachVoice} disabled={sending} accent={G} />
+              </div>
               <button onClick={sendMessage} disabled={!msgText.trim() || sending} style={{
                 alignSelf: "flex-end", width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
                 background: msgText.trim() ? `linear-gradient(135deg, ${G}, #0891b2)` : "rgba(255,255,255,0.04)",
@@ -3587,7 +3644,19 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     maxWidth: "85%",
                     alignSelf: m.from_coach ? "flex-end" : "flex-start",
                   }}>
-                    <div style={{ fontSize: 13, color: "#fff", lineHeight: 1.5 }}>{m.content}</div>
+                    {m.media_type === "image" && m.media_url ? (
+                      <a href={m.media_url} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
+                        <img src={m.media_url} alt="photo" loading="lazy"
+                          style={{ maxWidth: "100%", maxHeight: 260, borderRadius: 10, display: "block" }} />
+                      </a>
+                    ) : null}
+                    {m.media_type === "audio" && m.media_url ? (
+                      <audio controls preload="none" src={m.media_url}
+                        style={{ display: "block", width: 220, maxWidth: "100%", height: 38 }} />
+                    ) : null}
+                    {m.content ? (
+                      <div style={{ fontSize: 13, color: "#fff", lineHeight: 1.5, marginTop: m.media_url ? 6 : 0 }}>{m.content}</div>
+                    ) : null}
                     <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 4, display: "flex", justifyContent: "space-between", gap: 12 }}>
                       <span>{m.from_coach ? t("cp.you") : firstName}</span>
                       <span>{m.read ? t("cp.read") : t("cp.unread")} · {new Date(m.created_at).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" })}</span>

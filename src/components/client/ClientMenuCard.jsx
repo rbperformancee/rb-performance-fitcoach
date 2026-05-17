@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 
 /**
- * ClientMenuCard — affiche le "menu conseillé" envoyé par le coach
- * (table nutrition_menus, généré côté coach via MenuGenerator).
+ * ClientMenuCard — affiche la "journée type" envoyée par le coach
+ * (table nutrition_menus). Repas → liste d'aliments bruts avec grammages.
  * Ne rend rien tant qu'aucun menu n'a été envoyé.
  */
 
@@ -33,27 +33,25 @@ export default function ClientMenuCard({ clientId }) {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {menu.meals.map((meal, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 8, flexShrink: 0, background: "rgba(255,255,255,0.05)",
-              backgroundImage: meal.photo_url ? `url(${meal.photo_url})` : "none",
-              backgroundSize: "cover", backgroundPosition: "center",
-            }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 9, color: ORANGE, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>{meal.label}</div>
-              <div style={{ fontSize: 13, color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {meal.title}{meal.portions && meal.portions !== 1 ? ` · ×${meal.portions}` : ""}
+          <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "10px 12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+              <span style={{ fontSize: 11, color: ORANGE, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>{meal.label}</span>
+              {typeof meal.calories === "number" && (
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{meal.calories} kcal</span>
+              )}
+            </div>
+            {(meal.items || []).map((it, j) => (
+              <div key={j} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "rgba(255,255,255,0.85)", padding: "2px 0" }}>
+                <span>• {it.food}</span>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.5)" }}>{it.qty}</span>
               </div>
-            </div>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "rgba(255,255,255,0.5)", flexShrink: 0 }}>
-              {meal.calories} kcal
-            </div>
+            ))}
           </div>
         ))}
       </div>
       {menu.totals && (
         <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-          Total : {menu.totals.calories} kcal · {menu.totals.proteines}P · {menu.totals.glucides}G · {menu.totals.lipides}L
+          Total : {Math.round(menu.totals.calories)} kcal · {Math.round(menu.totals.proteines)}P · {Math.round(menu.totals.glucides)}G · {Math.round(menu.totals.lipides)}L
         </div>
       )}
     </div>
