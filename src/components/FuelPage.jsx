@@ -413,7 +413,9 @@ export default function FuelPage({ client, appData }) {
     "Diner": t("fuel.meal_dinner"),
   })[r] || r;
   const fuelData = useFuel(client?.id, dateSel.isToday ? undefined : dateSel.date);
-  const goals = appData?.nutritionGoals || fuelData.goals;
+  // Carb cycling : si un type de jour est résolu pour aujourd'hui, ses macros
+  // (fuelData.goals) priment sur l'objectif unique d'appData.
+  const goals = fuelData.dayTypeLabel ? fuelData.goals : (appData?.nutritionGoals || fuelData.goals);
   const logs = fuelData.logs;
   // Si on consulte la veille, n'utilise PAS appData (qui est toujours today)
   const dailyTracking = dateSel.isToday ? (fuelData.dailyTracking || appData?.dailyTracking) : fuelData.dailyTracking;
@@ -869,6 +871,16 @@ export default function FuelPage({ client, appData }) {
                 }}
               >{t("common.today")}</button>
             </div>
+            {fuelData.dayTypeLabel && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "4px 10px", borderRadius: 100,
+                background: "rgba(249,115,22,0.12)", border: `1px solid ${ORANGE}40`,
+                color: ORANGE, fontSize: 10, fontWeight: 800, letterSpacing: "0.5px", textTransform: "uppercase",
+              }}>
+                🍚 {fuelData.dayTypeLabel}
+              </span>
+            )}
           </div>
         </div>
 

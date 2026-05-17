@@ -2,6 +2,7 @@ import ClientAnalytics from "./ClientAnalytics";
 import ProgramPDFButton from "./ProgramPDF";
 import CoachStats from "./CoachStats";
 import ChatCoach from "./ChatCoach";
+import CarbCycling from "./coach/CarbCycling";
 import DemoBanner from "./DemoBanner";
 import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
@@ -3344,6 +3345,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             </div>
           )}
         </div>
+
+        <CarbCycling clientId={client.id} />
 
         </>)}
 

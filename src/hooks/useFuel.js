@@ -10,6 +10,7 @@ const ACTIVITY_LOG_THROTTLE_MS = 5000;
 
 export function useFuel(clientId, dateOverride) {
   const [goals, setGoals] = useState(null);
+  const [dayTypeLabel, setDayTypeLabel] = useState(null); // carb cycling : libellé du type de jour
   const [logs, setLogs] = useState([]);
   const [dailyTracking, setDailyTracking] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,28 @@ export function useFuel(clientId, dateOverride) {
       supabase.from("nutrition_logs").select("*").eq("client_id", clientId).eq("date", today).order("logged_at", { ascending: true }),
       supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).maybeSingle(),
     ]);
-    setGoals(goalsRes.data || { calories: 2000, proteines: 150, glucides: 250, lipides: 70, eau_ml: 2500, pas: 8000 });
+    // Carb cycling : si un planning est défini, on résout le type de jour
+    // d'aujourd'hui et on remplace les macros par celles de ce type.
+    // Tout échec → fallback sur l'objectif unique. eau_ml/pas restent les
+    // valeurs de base (le carb cycling ne fait varier que les macros).
+    let g = goalsRes.data || { calories: 2000, proteines: 150, glucides: 250, lipides: 70, eau_ml: 2500, pas: 8000 };
+    let dtLabel = null;
+    try {
+      const sched = goalsRes.data?.carb_cycle_schedule;
+      if (sched && typeof sched === "object") {
+        const wd = new Date(today + "T12:00:00").getDay();
+        const dtId = sched[String(wd)];
+        if (dtId) {
+          const { data: dt } = await supabase.from("nutrition_day_types").select("*").eq("id", dtId).maybeSingle();
+          if (dt) {
+            g = { ...g, calories: dt.calories, proteines: dt.proteines, glucides: dt.glucides, lipides: dt.lipides };
+            dtLabel = dt.label;
+          }
+        }
+      }
+    } catch { /* fallback objectif unique */ }
+    setGoals(g);
+    setDayTypeLabel(dtLabel);
     setLogs(logsRes.data || []);
     setDailyTracking(trackingRes.data || { eau_ml: 0, sommeil_h: 0, pas: 0 });
     setLoading(false);
@@ -46,12 +68,14 @@ export function useFuel(clientId, dateOverride) {
         filter: `client_id=eq.${clientId}`,
       }, payload => {
         if (payload.new && Object.keys(payload.new).length > 0) {
-          setGoals(payload.new);
+          // Carb cycling actif → re-résoudre le type de jour ; sinon maj directe.
+          if (payload.new.carb_cycle_schedule) fetchAll();
+          else setGoals(payload.new);
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [clientId]);
+  }, [clientId, fetchAll]);
 
   const addFood = async (item) => {
     if (!clientId) return { ok: false, error: "Pas connecté" };
@@ -219,5 +243,5 @@ export function useFuel(clientId, dateOverride) {
     });
   }, []);
 
-  return { goals, logs, dailyTracking, loading, totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score: calcScore(), fetchAll, appendLogs };
+  return { goals, dayTypeLabel, logs, dailyTracking, loading, totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score: calcScore(), fetchAll, appendLogs };
 }
