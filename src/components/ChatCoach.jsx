@@ -4,7 +4,8 @@ import { toast } from "./Toast";
 import haptic from "../lib/haptic";
 import { SkeletonBox } from "./Skeleton";
 import { useT, t as tStatic, getLocale } from "../lib/i18n";
-import { uploadChatPhoto } from "../lib/chatMedia";
+import { uploadChatPhoto, uploadChatAudio } from "../lib/chatMedia";
+import VoiceMessageButton from "./VoiceMessageButton";
 
 const GREEN = "#02d1ba";
 
@@ -172,6 +173,30 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
     setSending(false);
   };
 
+  // Envoi d'un message vocal. Upload Storage puis insert message média audio.
+  const sendVoice = async (blob) => {
+    if (!blob || sending) return;
+    setSending(true);
+    try {
+      const url = await uploadChatAudio(blob, clientId);
+      const { error } = await supabase.from("messages").insert({
+        client_id: clientId,
+        content: "",
+        from_coach: isCoach,
+        media_url: url,
+        media_type: "audio",
+        read: false,
+        created_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      if (navigator.vibrate) navigator.vibrate(10);
+    } catch (e) {
+      console.error("sendVoice error:", e);
+      toast.error("Vocal non envoyé : " + (e?.message || "erreur"));
+    }
+    setSending(false);
+  };
+
   const groups = groupByDay(messages);
   const isEmpty = !loading && messages.length === 0;
 
@@ -298,6 +323,10 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
                         style={{ maxWidth: "100%", maxHeight: 280, borderRadius: 10, display: "block" }} />
                     </a>
                   ) : null}
+                  {msg.media_type === "audio" && msg.media_url ? (
+                    <audio controls preload="none" src={msg.media_url}
+                      style={{ display: "block", width: 230, maxWidth: "100%", height: 40 }} />
+                  ) : null}
                   {msg.content ? (
                     <div style={{ fontSize: 14, color: "#fff", lineHeight: 1.45, whiteSpace: "pre-wrap", wordBreak: "break-word", marginTop: msg.media_url ? 6 : 0 }}>
                       {msg.content}
@@ -357,6 +386,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
             <polyline points="21 15 16 10 5 21" />
           </svg>
         </button>
+        <VoiceMessageButton onSend={sendVoice} disabled={sending} accent={GREEN} />
         <div style={{
           flex: 1,
           minWidth: 0,

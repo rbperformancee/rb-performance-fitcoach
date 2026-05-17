@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT, getLocale } from "../../lib/i18n";
 import { isClientDemoMode } from "../../lib/demoMode";
-import { uploadChatPhoto } from "../../lib/chatMedia";
+import { uploadChatPhoto, uploadChatAudio } from "../../lib/chatMedia";
+import VoiceMessageButton from "../VoiceMessageButton";
 
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
@@ -117,6 +118,27 @@ export default function ClientMessages({ client, coach, accent, user }) {
     setSending(false);
   }
 
+  // Envoi d'un message vocal au coach.
+  async function handleSendVoice(blob) {
+    if (!blob || sending) return;
+    if (isClientDemoMode()) return;
+    setSending(true);
+    try {
+      const url = await uploadChatAudio(blob, client.id);
+      const { error } = await supabase.from("messages").insert({
+        client_id: client.id,
+        content: "",
+        from_coach: false,
+        media_url: url,
+        media_type: "audio",
+      });
+      if (error) throw error;
+    } catch (e) {
+      console.warn("[ClientMessages] sendVoice", e);
+    }
+    setSending(false);
+  }
+
   const coachName = coach?.coaching_name || coach?.full_name || t("cm.your_coach");
   const firstName = (client?.full_name || "").split(" ")[0] || t("cm.you");
 
@@ -172,6 +194,10 @@ export default function ClientMessages({ client, coach, accent, user }) {
                     style={{ maxWidth: "100%", maxHeight: 260, borderRadius: 10, display: "block" }} />
                 </a>
               ) : null}
+              {m.media_type === "audio" && m.media_url ? (
+                <audio controls preload="none" src={m.media_url}
+                  style={{ display: "block", width: 220, maxWidth: "100%", height: 38 }} />
+              ) : null}
               {m.content ? <div style={{ marginTop: m.media_url ? 6 : 0 }}>{m.content}</div> : null}
               <div style={{ fontSize: 9, color: "rgba(255,255,255,.3)", marginTop: 4, letterSpacing: ".02em", textAlign: m.from_coach ? "left" : "right" }}>
                 {m.from_coach ? coachName.split(" ")[0] : firstName} · {fmtTime(m.created_at)}
@@ -209,6 +235,7 @@ export default function ClientMessages({ client, coach, accent, user }) {
             <polyline points="21 15 16 10 5 21" />
           </svg>
         </button>
+        <VoiceMessageButton onSend={handleSendVoice} disabled={sending} accent={accent} />
         <input
           type="text"
           value={text}

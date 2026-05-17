@@ -7,6 +7,7 @@
 import { supabase } from "./supabase";
 
 const PHOTO_BUCKET = "progress-photos";
+const AUDIO_BUCKET = "audio-messages";
 const MAX_DIM = 1280; // px — côté le plus long
 
 // Redimensionne (max 1280px) + recompresse en JPEG. Respecte l'orientation
@@ -54,5 +55,28 @@ export async function uploadChatPhoto(file, clientId) {
   });
   if (error) throw error;
   const { data } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/**
+ * Upload un message vocal (Blob audio enregistré) et renvoie son URL publique.
+ * @param {Blob}   blob     - enregistrement audio (MediaRecorder)
+ * @param {string} clientId - id du client de la conversation
+ * @returns {Promise<string>} URL publique du fichier audio
+ */
+export async function uploadChatAudio(blob, clientId) {
+  if (!blob || !blob.size) throw new Error("Enregistrement vide");
+  const type = blob.type || "audio/webm";
+  const ext = type.includes("mp4") || type.includes("aac") || type.includes("m4a")
+    ? "m4a"
+    : type.includes("ogg") ? "ogg" : "webm";
+  const rand = Math.random().toString(36).slice(2, 8);
+  const path = `${clientId || "chat"}/${Date.now()}-${rand}.${ext}`;
+  const { error } = await supabase.storage.from(AUDIO_BUCKET).upload(path, blob, {
+    contentType: type,
+    upsert: false,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
