@@ -6,9 +6,9 @@ import { supabase } from "../../lib/supabase";
  * grammages, répartis par repas, calés sur des macros cibles. Format
  * coach classique (cf. plan nutritionnel RB Performance) — PAS des recettes.
  *
- * Chaque repas = une source de protéines + une source de glucides +
- * (si besoin) une source de lipides + légumes pour les repas principaux.
- * Les grammages sont calculés pour tomber sur les macros du repas.
+ * Chaque repas suit un MODÈLE cohérent (combinaison d'aliments qui vont
+ * vraiment ensemble — ex. porridge, ou œufs + pain) ; les grammages sont
+ * calculés pour tomber sur les macros du repas.
  */
 
 const ORANGE = "#f97316";
@@ -36,84 +36,115 @@ const MEAL_PLANS = {
 };
 
 // Base d'aliments bruts — macros pour 100 g (valeurs standard).
-// `meals` = créneaux où l'aliment est pertinent.
-const FOODS = {
-  protein: [
-    { name: "Blanc de poulet", kcal: 165, p: 31, g: 0, l: 3.6, meals: ["dejeuner", "diner"] },
-    { name: "Steak haché 5% MG", kcal: 137, p: 21, g: 0, l: 5, meals: ["dejeuner", "diner"] },
-    { name: "Filet de dinde", kcal: 150, p: 29, g: 0, l: 3, meals: ["dejeuner", "diner"] },
-    { name: "Cabillaud", kcal: 82, p: 18, g: 0, l: 0.7, meals: ["dejeuner", "diner"] },
-    { name: "Saumon", kcal: 200, p: 22, g: 0, l: 13, meals: ["dejeuner", "diner"] },
-    { name: "Œufs entiers", kcal: 143, p: 13, g: 0.7, l: 9.5, unit: "œuf", unitG: 55, meals: ["petit-dejeuner", "dejeuner"] },
-    { name: "Skyr", kcal: 63, p: 11, g: 4, l: 0.2, meals: ["petit-dejeuner", "collation"] },
-    { name: "Fromage blanc 0%", kcal: 47, p: 8, g: 4, l: 0.2, meals: ["petit-dejeuner", "collation"] },
-    { name: "Whey protéine", kcal: 380, p: 80, g: 8, l: 6, meals: ["petit-dejeuner", "collation"] },
+const FOOD_DB = {
+  "Blanc de poulet": { kcal: 165, p: 31, g: 0, l: 3.6 },
+  "Steak haché 5% MG": { kcal: 137, p: 21, g: 0, l: 5 },
+  "Filet de dinde": { kcal: 150, p: 29, g: 0, l: 3 },
+  "Cabillaud": { kcal: 82, p: 18, g: 0, l: 0.7 },
+  "Saumon": { kcal: 200, p: 22, g: 0, l: 13 },
+  "Œufs entiers": { kcal: 143, p: 13, g: 0.7, l: 9.5, unit: "œuf", unitG: 55 },
+  "Skyr": { kcal: 63, p: 11, g: 4, l: 0.2 },
+  "Fromage blanc 0%": { kcal: 47, p: 8, g: 4, l: 0.2 },
+  "Whey protéine": { kcal: 380, p: 80, g: 8, l: 6 },
+  "Riz basmati cru": { kcal: 350, p: 7, g: 78, l: 0.6 },
+  "Pâtes complètes crues": { kcal: 350, p: 13, g: 65, l: 2.5 },
+  "Patate douce": { kcal: 86, p: 1.6, g: 20, l: 0.1 },
+  "Pomme de terre": { kcal: 80, p: 2, g: 17, l: 0.1 },
+  "Flocons d'avoine": { kcal: 370, p: 13, g: 60, l: 7 },
+  "Pain complet": { kcal: 250, p: 9, g: 45, l: 3 },
+  "Banane": { kcal: 90, p: 1.1, g: 23, l: 0.3, unit: "banane", unitG: 120 },
+  "Huile d'olive": { kcal: 900, p: 0, g: 0, l: 100 },
+  "Amandes": { kcal: 600, p: 21, g: 22, l: 50 },
+  "Beurre de cacahuète": { kcal: 600, p: 25, g: 20, l: 50 },
+  "Légumes verts": { kcal: 30, p: 2, g: 5, l: 0.3 },
+};
+
+// Modèles de repas COHÉRENTS — combinaisons d'aliments qui vont vraiment
+// ensemble (jamais de whey avec du pain, jamais de pain "nature" seul :
+// le pain n'apparaît qu'avec des œufs). Chaque rôle propose des variantes
+// pour la diversité ; les grammages sont calés sur les macros du repas.
+const MEAL_TEMPLATES = {
+  "petit-dejeuner": [
+    // Porridge : laitage/whey + flocons + fruit + oléagineux
+    { protein: ["Whey protéine", "Skyr", "Fromage blanc 0%"], carb: ["Flocons d'avoine"], extra: "Banane", fat: ["Beurre de cacahuète", "Amandes"] },
+    // Salé : œufs + pain (le pain a enfin de quoi l'accompagner)
+    { protein: ["Œufs entiers"], carb: ["Pain complet"], fat: ["Beurre de cacahuète"] },
   ],
-  carb: [
-    { name: "Riz basmati cru", kcal: 350, p: 7, g: 78, l: 0.6, meals: ["dejeuner", "diner"] },
-    { name: "Pâtes complètes crues", kcal: 350, p: 13, g: 65, l: 2.5, meals: ["dejeuner", "diner"] },
-    { name: "Patate douce", kcal: 86, p: 1.6, g: 20, l: 0.1, meals: ["dejeuner", "diner"] },
-    { name: "Pomme de terre", kcal: 80, p: 2, g: 17, l: 0.1, meals: ["dejeuner", "diner"] },
-    { name: "Flocons d'avoine", kcal: 370, p: 13, g: 60, l: 7, meals: ["petit-dejeuner", "collation"] },
-    { name: "Pain complet", kcal: 250, p: 9, g: 45, l: 3, meals: ["petit-dejeuner", "collation"] },
-    { name: "Banane", kcal: 90, p: 1.1, g: 23, l: 0.3, meals: ["petit-dejeuner", "collation"] },
+  "collation": [
+    { protein: ["Skyr", "Fromage blanc 0%"], extra: "Banane", fat: ["Amandes", "Beurre de cacahuète"] },
+    { protein: ["Whey protéine"], carb: ["Flocons d'avoine"], extra: "Banane" },
   ],
-  fat: [
-    { name: "Huile d'olive", kcal: 900, p: 0, g: 0, l: 100, meals: ["dejeuner", "diner"] },
-    { name: "Amandes", kcal: 600, p: 21, g: 22, l: 50, meals: ["collation", "petit-dejeuner"] },
-    { name: "Beurre de cacahuète", kcal: 600, p: 25, g: 20, l: 50, meals: ["petit-dejeuner", "collation"] },
+  "dejeuner": [
+    { protein: ["Blanc de poulet", "Filet de dinde", "Steak haché 5% MG"], carb: ["Riz basmati cru", "Pâtes complètes crues", "Patate douce", "Pomme de terre"], veg: true, fat: ["Huile d'olive"] },
   ],
-  veg: { name: "Légumes verts", kcal: 30, p: 2, g: 5, l: 0.3 },
+  "diner": [
+    { protein: ["Cabillaud", "Saumon", "Blanc de poulet", "Filet de dinde"], carb: ["Riz basmati cru", "Patate douce", "Pomme de terre"], veg: true, fat: ["Huile d'olive"] },
+  ],
 };
 
 const r5 = (n) => Math.max(0, Math.round(n / 5) * 5);
 const num = (v) => Math.max(0, parseInt(String(v).replace(/[^0-9]/g, "")) || 0);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-// Construit un repas calé sur la cible macro `mt` (kcal/p/g/l).
+// Construit un repas COHÉRENT calé sur la cible macro `mt` (kcal/p/g/l)
+// à partir d'un modèle de repas (combinaison d'aliments réaliste).
 function buildMeal(slot, mt) {
   const items = [];
   const acc = { calories: 0, proteines: 0, glucides: 0, lipides: 0 };
-  const add = (food, grams, qty) => {
+  const add = (name, grams, qty) => {
+    const food = FOOD_DB[name];
     const f = grams / 100;
     acc.calories += food.kcal * f;
     acc.proteines += food.p * f;
     acc.glucides += food.g * f;
     acc.lipides += food.l * f;
-    items.push({ food: food.name, qty });
-  };
-  const inMeal = (list) => {
-    const m = list.filter((f) => f.meals.includes(slot.type));
-    return m.length ? m : list;
+    items.push({ food: name, qty });
   };
 
-  // Protéines
-  const pf = pick(inMeal(FOODS.protein));
+  const tpl = pick(MEAL_TEMPLATES[slot.type] || MEAL_TEMPLATES["dejeuner"]);
+
+  // Protéines — calées sur la cible protéines du repas
+  const pName = pick(tpl.protein);
+  const pf = FOOD_DB[pName];
   const pGrams = pf.p > 0 ? r5(mt.p / (pf.p / 100)) : 100;
   if (pf.unit) {
     const u = Math.max(1, Math.round(pGrams / pf.unitG));
-    add(pf, u * pf.unitG, `${u} ${pf.unit}${u > 1 ? "s" : ""} entier${u > 1 ? "s" : ""}`);
+    add(pName, u * pf.unitG, `${u} ${pf.unit}${u > 1 ? "s" : ""} entier${u > 1 ? "s" : ""}`);
   } else {
-    add(pf, pGrams, `${pGrams} g`);
+    const g = Math.max(20, pGrams);
+    add(pName, g, `${g} g`);
   }
 
-  // Glucides
-  const cf = pick(inMeal(FOODS.carb));
-  const cGrams = cf.g > 0 ? r5(mt.g / (cf.g / 100)) : 50;
-  add(cf, cGrams, `${cGrams} g`);
+  // Fruit (portion fixe en unité) — compte dans les glucides
+  if (tpl.extra) {
+    const ef = FOOD_DB[tpl.extra];
+    add(tpl.extra, ef.unitG, `1 ${ef.unit}`);
+  }
+
+  // Glucides — comble les glucides restants après protéines + fruit
+  if (tpl.carb) {
+    const cName = pick(tpl.carb);
+    const cf = FOOD_DB[cName];
+    const remG = mt.g - acc.glucides;
+    const cGrams = cf.g > 0 ? Math.max(20, r5(remG / (cf.g / 100))) : 40;
+    add(cName, cGrams, `${cGrams} g`);
+  }
 
   // Lipides — comble le reste après protéines + glucides
-  const remFat = mt.l - acc.lipides;
-  if (remFat > 3) {
-    const ff = pick(inMeal(FOODS.fat));
-    let fGrams = ff.l > 0 ? Math.round(remFat / (ff.l / 100)) : 10;
-    fGrams = Math.max(5, Math.min(60, fGrams));
-    add(ff, fGrams, `${fGrams} g`);
+  if (tpl.fat) {
+    const remFat = mt.l - acc.lipides;
+    if (remFat > 3) {
+      const fName = pick(tpl.fat);
+      const ff = FOOD_DB[fName];
+      let fGrams = ff.l > 0 ? Math.round(remFat / (ff.l / 100)) : 10;
+      fGrams = Math.max(5, Math.min(50, fGrams));
+      add(fName, fGrams, `${fGrams} g`);
+    }
   }
 
   // Légumes pour les repas principaux
-  if (slot.type === "dejeuner" || slot.type === "diner") {
-    add(FOODS.veg, 150, "150 g");
+  if (tpl.veg) {
+    add("Légumes verts", 150, "150 g");
   }
 
   return {
