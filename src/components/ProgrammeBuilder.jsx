@@ -65,12 +65,26 @@ function buildHTML(p) {
           <input id="ev-${eid}" value="${escAttr(ex.vidUrl || '')}" />
         </div>`;
       }).join("");
+      // Runs / cardio prescrits — sérialisés au format lu par parserProgramme
+      // (.run-item) pour qu'ils survivent à un aller-retour dans le builder.
+      const runHtml = (s.runs || []).map((r, ri) => {
+        const rid = `${sid}r${ri + 1}`;
+        return `
+        <div class="run-item" id="run-${rid}">
+          <input id="rn-${rid}" value="${escAttr(r.name || '')}" />
+          <input id="rd-${rid}" value="${escAttr(r.distance || '')}" />
+          <input id="rdu-${rid}" value="${escAttr(r.duration || '')}" />
+          <input id="rbpm-${rid}" value="${escAttr(r.bpm || '')}" />
+          <input id="rrs-${rid}" value="${escAttr(r.rest || '')}" />
+        </div>`;
+      }).join("");
       return `
       <div class="seance-block" id="seance-${sid}">
         <input id="sn-${sid}" value="${escAttr(s.name)}" />
         <textarea id="sd-${sid}">${escText(s.description || '')}</textarea>
         <textarea id="sf-${sid}">${escText(s.finisher || '')}</textarea>
         ${exHtml}
+        ${runHtml}
       </div>`;
     }).join("");
     return `
@@ -90,7 +104,7 @@ ${weeksHtml}
 }
 
 const newExercise = () => ({ id: uid(), name: "", reps: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "" });
-const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", exercises: [newExercise()] });
+const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", runs: [], exercises: [newExercise()] });
 const newWeek = (n = 1) => ({ id: uid(), name: `Semaine ${n}`, sessions: [newSession(1)] });
 
 // Suggestions communes pour les champs exercice (autocomplete au focus).
@@ -347,6 +361,17 @@ function fromParsed(parsed) {
         name: s.name || "",
         description: s.description || "",
         finisher: s.finisher || "",
+        // Runs prescrits — préservés tels quels (le builder n'a pas encore
+        // d'UI pour les éditer, mais ils ne doivent JAMAIS être perdus).
+        runs: Array.isArray(s.runs)
+          ? s.runs.map((r) => ({
+              name: r.name || "",
+              distance: r.distance || "",
+              duration: r.duration || "",
+              bpm: r.bpm || "",
+              rest: r.rest || "",
+            }))
+          : [],
         exercises: (s.exercises || []).map((e) => ({
           id: uid(),
           name: e.name || "",
@@ -1180,6 +1205,16 @@ function Preview({ programme, showAnalytics }) {
                   <strong style={{ color: "rgba(239,68,68,0.85)" }}>Finisher</strong>{" — "}{s.finisher}
                 </div>
               ) : null}
+              {Array.isArray(s.runs) && s.runs.length > 0
+                ? s.runs.map((r, ri) => (
+                    <div key={ri} style={{ marginTop: ri === 0 ? 10 : 4, padding: "8px 10px", background: "rgba(2,209,186,0.05)", borderLeft: "2px solid rgba(2,209,186,0.5)", borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
+                      <strong style={{ color: "rgba(2,209,186,0.85)" }}>🏃 {r.name || "Run"}</strong>
+                      {[r.distance, r.duration, r.bpm ? r.bpm + " bpm" : null, r.rest].filter(Boolean).length > 0
+                        ? " — " + [r.distance, r.duration, r.bpm ? r.bpm + " bpm" : null, r.rest].filter(Boolean).join(" · ")
+                        : null}
+                    </div>
+                  ))
+                : null}
             </div>
           ))}
         </div>
