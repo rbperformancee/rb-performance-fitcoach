@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
+import { periodStart, periodLabel, periodNoun, FREQUENCIES } from "../../lib/checkinPeriod";
 
 /**
  * BilanPhysique — vue coach du bilan physique d'un client.
  *
  *  - Alertes automatiques (bilan en retard, poids stagnant, ressenti bas).
  *  - Évolution : courbes (sparklines) poids + mensurations avec Δ total.
- *  - Réglage : le coach active/désactive les mensurations dans le bilan.
- *  - Comparateur de photos avant/après (semaine X vs semaine Y).
- *  - Cartes de bilan avec Δ vs semaine précédente.
+ *  - Réglages : fréquence du bilan + mensurations on/off, par client.
+ *  - Comparateur de photos avant/après (période X vs période Y).
+ *  - Cartes de bilan avec Δ vs période précédente.
  *  - Annotation : commentaire + statut, visibles par l'athlète.
  */
 
@@ -26,17 +27,6 @@ const MEASURES = [
 const FEEL_LABELS = { 1: "Très mauvais", 2: "Mauvais", 3: "Correct", 4: "Bon", 5: "Excellent" };
 const STRESS_LABELS = { 1: "Zen", 2: "Détendu", 3: "Normal", 4: "Tendu", 5: "Très stressé" };
 
-function mondayOf(d) {
-  const x = new Date(d);
-  const day = x.getDay();
-  x.setDate(x.getDate() - (day === 0 ? 6 : day - 1));
-  return x.toISOString().slice(0, 10);
-}
-
-function fmtWeek(ws) {
-  return new Date(ws + "T00:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
-}
-
 function fmtNum(n) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
@@ -44,18 +34,23 @@ function fmtNum(n) {
 export default function BilanPhysique({ clientId, checkins, client }) {
   const [rows, setRows] = useState(checkins || []);
   const [measEnabled, setMeasEnabled] = useState(!!client?.checkin_measurements_enabled);
-  const [savingToggle, setSavingToggle] = useState(false);
+  const [freq, setFreq] = useState(client?.checkin_frequency || "weekly");
+  const [savingCfg, setSavingCfg] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => { setRows(checkins || []); }, [checkins]);
   useEffect(() => { setMeasEnabled(!!client?.checkin_measurements_enabled); }, [client?.checkin_measurements_enabled]);
-  // Source de vérité du réglage mensurations (le prop client peut être stale).
+  // Source de vérité des réglages (le prop client peut être stale).
   useEffect(() => {
     if (!clientId) return;
     let cancelled = false;
-    supabase.from("clients").select("checkin_measurements_enabled").eq("id", clientId).maybeSingle()
-      .then(({ data }) => { if (!cancelled && data) setMeasEnabled(!!data.checkin_measurements_enabled); });
+    supabase.from("clients").select("checkin_measurements_enabled, checkin_frequency").eq("id", clientId).maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setMeasEnabled(!!data.checkin_measurements_enabled);
+        setFreq(data.checkin_frequency || "weekly");
+      });
     return () => { cancelled = true; };
   }, [clientId]);
 
@@ -75,24 +70,24 @@ export default function BilanPhysique({ clientId, checkins, client }) {
   const alerts = useMemo(() => {
     const out = [];
     if (rows.length === 0) return out;
-    if (rows[0].week_start !== mondayOf(new Date())) {
-      out.push({ tone: "warn", text: "Bilan de cette semaine pas encore rempli." });
+    if (rows[0].week_start !== periodStart(freq)) {
+      out.push({ tone: "warn", text: `Bilan ${periodNoun(freq)} pas encore rempli.` });
     }
     const w = asc.map((r) => r.weight).filter((x) => x != null);
     if (w.length >= 3) {
       const last3 = w.slice(-3);
       if (Math.max(...last3) - Math.min(...last3) <= 0.3) {
-        out.push({ tone: "warn", text: "Poids stable depuis 3 semaines — ajuster le plan ?" });
+        out.push({ tone: "warn", text: "Poids stable sur les 3 derniers bilans — ajuster le plan ?" });
       }
     }
     const low = (col) => rows.length >= 2 && rows[0][col] != null && rows[1][col] != null && rows[0][col] <= 2 && rows[1][col] <= 2;
-    if (low("energy_level")) out.push({ tone: "bad", text: "Énergie basse 2 semaines de suite." });
-    if (low("motivation_level")) out.push({ tone: "bad", text: "Motivation en baisse 2 semaines de suite." });
+    if (low("energy_level")) out.push({ tone: "bad", text: "Énergie basse sur les 2 derniers bilans." });
+    if (low("motivation_level")) out.push({ tone: "bad", text: "Motivation en baisse sur les 2 derniers bilans." });
     if (rows.length >= 2 && rows[0].stress_level >= 4 && rows[1].stress_level >= 4) {
-      out.push({ tone: "bad", text: "Stress élevé 2 semaines de suite." });
+      out.push({ tone: "bad", text: "Stress élevé sur les 2 derniers bilans." });
     }
     return out;
-  }, [rows, asc]);
+  }, [rows, asc, freq]);
 
   // Séries pour les sparklines (chronologiques, valeurs non nulles).
   const series = useMemo(() => {
@@ -104,16 +99,24 @@ export default function BilanPhysique({ clientId, checkins, client }) {
 
   const photoRows = rows.filter((r) => Array.isArray(r.photos) && r.photos.length > 0);
 
+  async function saveCfg(patch) {
+    setSavingCfg(true);
+    const { error } = await supabase.from("clients").update(patch).eq("id", clientId);
+    setSavingCfg(false);
+    return !error;
+  }
+
   async function toggleMeasurements() {
     const next = !measEnabled;
     setMeasEnabled(next);
-    setSavingToggle(true);
-    const { error } = await supabase
-      .from("clients")
-      .update({ checkin_measurements_enabled: next })
-      .eq("id", clientId);
-    if (error) setMeasEnabled(!next);
-    setSavingToggle(false);
+    if (!(await saveCfg({ checkin_measurements_enabled: next }))) setMeasEnabled(!next);
+  }
+
+  async function changeFreq(next) {
+    if (next === freq) return;
+    const prev = freq;
+    setFreq(next);
+    if (!(await saveCfg({ checkin_frequency: next }))) setFreq(prev);
   }
 
   async function saveAnnotation(rowId, comment, status) {
@@ -127,18 +130,6 @@ export default function BilanPhysique({ clientId, checkins, client }) {
       setRows((prev) => prev.map((r) => (r.id === rowId ? { ...r, ...patch } : r)));
     }
     return !error;
-  }
-
-  if (rows.length === 0) {
-    return (
-      <div style={{ marginBottom: 20 }}>
-        <SectionLabel>Bilan physique</SectionLabel>
-        <ToggleRow enabled={measEnabled} saving={savingToggle} onToggle={toggleMeasurements} />
-        <div style={{ textAlign: "center", padding: 18, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
-          Aucun bilan reçu pour l'instant.
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -162,72 +153,127 @@ export default function BilanPhysique({ clientId, checkins, client }) {
         </div>
       )}
 
-      {/* RÉGLAGE MENSURATIONS */}
-      <ToggleRow enabled={measEnabled} saving={savingToggle} onToggle={toggleMeasurements} />
-
-      {/* ÉVOLUTION — sparklines */}
-      {series.length > 0 && (
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {series.map((s) => {
-              const first = s.pts[0], last = s.pts[s.pts.length - 1];
-              const d = last - first;
-              return (
-                <div key={s.col} style={{
-                  padding: "10px 12px", background: "rgba(255,255,255,0.025)",
-                  border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10,
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>{s.label}</span>
-                    <Delta v={d} unit={s.unit} />
-                  </div>
-                  <Sparkline values={s.pts} />
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
-                    {fmtNum(last)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 3 }}>{s.unit}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {/* RÉGLAGES — fréquence + mensurations */}
+      <div style={{
+        padding: "11px 12px", marginBottom: 12,
+        background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10,
+      }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 7 }}>Fréquence du bilan</div>
+        <div style={{ display: "flex", gap: 5, marginBottom: 10 }}>
+          {FREQUENCIES.map((f) => (
+            <button
+              key={f}
+              onClick={() => changeFreq(f)}
+              disabled={savingCfg}
+              style={{
+                flex: 1, padding: "7px 4px", borderRadius: 7,
+                fontSize: 10.5, fontWeight: 700, cursor: savingCfg ? "wait" : "pointer", fontFamily: "inherit",
+                color: freq === f ? "#000" : "rgba(255,255,255,0.6)",
+                background: freq === f ? G : "rgba(255,255,255,0.04)",
+                border: `1px solid ${freq === f ? "transparent" : "rgba(255,255,255,0.1)"}`,
+              }}
+            >
+              {f === "weekly" ? "Hebdo" : f === "biweekly" ? "2 sem." : "Mensuel"}
+            </button>
+          ))}
         </div>
-      )}
-
-      {/* COMPARATEUR PHOTOS */}
-      {photoRows.length >= 2 && (
-        <button
-          onClick={() => setCompareOpen(true)}
-          style={{
-            width: "100%", marginBottom: 12, padding: "10px 14px",
-            background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.28)",
-            borderRadius: 10, color: G, fontSize: 12, fontWeight: 700,
-            cursor: "pointer", fontFamily: "inherit",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <line x1="12" y1="3" x2="12" y2="21" />
-          </svg>
-          Comparer les photos avant / après
-        </button>
-      )}
-
-      {/* CARTES DE BILAN */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {rows.slice(0, 8).map((c) => (
-          <BilanCard
-            key={c.id}
-            row={c}
-            measEnabled={measEnabled}
-            deltaFor={deltaFor}
-            onSaveAnnotation={saveAnnotation}
-            onOpenPhoto={setLightbox}
-          />
-        ))}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 9, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#fff" }}>Demander les mensurations</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>
+              Sinon le bilan se limite au poids + photos.
+            </div>
+          </div>
+          <button
+            onClick={toggleMeasurements}
+            disabled={savingCfg}
+            aria-label="Activer les mensurations"
+            style={{
+              width: 42, height: 24, borderRadius: 100, flexShrink: 0, position: "relative",
+              background: measEnabled ? G : "rgba(255,255,255,0.12)",
+              border: "none", cursor: savingCfg ? "wait" : "pointer", transition: "background .15s",
+            }}
+          >
+            <span style={{
+              position: "absolute", top: 2, left: measEnabled ? 20 : 2,
+              width: 20, height: 20, borderRadius: "50%", background: "#fff",
+              transition: "left .15s",
+            }} />
+          </button>
+        </div>
       </div>
 
+      {rows.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 18, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
+          Aucun bilan reçu pour l'instant.
+        </div>
+      ) : (
+        <>
+          {/* ÉVOLUTION — sparklines */}
+          {series.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {series.map((s) => {
+                  const first = s.pts[0], last = s.pts[s.pts.length - 1];
+                  return (
+                    <div key={s.col} style={{
+                      padding: "10px 12px", background: "rgba(255,255,255,0.025)",
+                      border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10,
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>{s.label}</span>
+                        <Delta v={last - first} unit={s.unit} />
+                      </div>
+                      <Sparkline values={s.pts} />
+                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+                        {fmtNum(last)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 3 }}>{s.unit}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* COMPARATEUR PHOTOS */}
+          {photoRows.length >= 2 && (
+            <button
+              onClick={() => setCompareOpen(true)}
+              style={{
+                width: "100%", marginBottom: 12, padding: "10px 14px",
+                background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.28)",
+                borderRadius: 10, color: G, fontSize: 12, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="12" y1="3" x2="12" y2="21" />
+              </svg>
+              Comparer les photos avant / après
+            </button>
+          )}
+
+          {/* CARTES DE BILAN */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {rows.slice(0, 8).map((c) => (
+              <BilanCard
+                key={c.id}
+                row={c}
+                freq={freq}
+                measEnabled={measEnabled}
+                deltaFor={deltaFor}
+                onSaveAnnotation={saveAnnotation}
+                onOpenPhoto={setLightbox}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
       {compareOpen && (
-        <PhotoCompare rows={photoRows} onClose={() => setCompareOpen(false)} onOpenPhoto={setLightbox} />
+        <PhotoCompare rows={photoRows} freq={freq} onClose={() => setCompareOpen(false)} onOpenPhoto={setLightbox} />
       )}
       {lightbox && (
         <div
@@ -247,39 +293,6 @@ function SectionLabel({ children }) {
   return (
     <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>
       {children}
-    </div>
-  );
-}
-
-function ToggleRow({ enabled, saving, onToggle }) {
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-      padding: "9px 12px", marginBottom: 12,
-      background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10,
-    }}>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: "#fff" }}>Demander les mensurations</div>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>
-          Sinon le bilan se limite au poids + photos.
-        </div>
-      </div>
-      <button
-        onClick={onToggle}
-        disabled={saving}
-        aria-label="Activer les mensurations"
-        style={{
-          width: 42, height: 24, borderRadius: 100, flexShrink: 0, position: "relative",
-          background: enabled ? G : "rgba(255,255,255,0.12)",
-          border: "none", cursor: saving ? "wait" : "pointer", transition: "background .15s",
-        }}
-      >
-        <span style={{
-          position: "absolute", top: 2, left: enabled ? 20 : 2,
-          width: 20, height: 20, borderRadius: "50%", background: "#fff",
-          transition: "left .15s",
-        }} />
-      </button>
     </div>
   );
 }
@@ -314,7 +327,7 @@ function Sparkline({ values }) {
   );
 }
 
-function BilanCard({ row, measEnabled, deltaFor, onSaveAnnotation, onOpenPhoto }) {
+function BilanCard({ row, freq, measEnabled, deltaFor, onSaveAnnotation, onOpenPhoto }) {
   const [editing, setEditing] = useState(false);
   const [comment, setComment] = useState(row.coach_comment || "");
   const [status, setStatus] = useState(row.coach_status || null);
@@ -344,7 +357,7 @@ function BilanCard({ row, measEnabled, deltaFor, onSaveAnnotation, onOpenPhoto }
   return (
     <div style={{ padding: "12px 14px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>Semaine du {fmtWeek(row.week_start)}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#fff", textTransform: "capitalize" }}>{periodLabel(freq, row.week_start)}</div>
         {status && (
           <span style={{
             fontSize: 8, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase",
@@ -475,7 +488,7 @@ function BilanCard({ row, measEnabled, deltaFor, onSaveAnnotation, onOpenPhoto }
   );
 }
 
-function PhotoCompare({ rows, onClose, onOpenPhoto }) {
+function PhotoCompare({ rows, freq, onClose, onOpenPhoto }) {
   // rows = DESC. Par défaut : A = plus ancien, B = plus récent.
   const [aIdx, setAIdx] = useState(rows.length - 1);
   const [bIdx, setBIdx] = useState(0);
@@ -499,8 +512,8 @@ function PhotoCompare({ rows, onClose, onOpenPhoto }) {
         </div>
         <div style={{ padding: "14px 20px 24px", overflowY: "auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-            <WeekSelect rows={rows} value={aIdx} onChange={setAIdx} label="Avant" />
-            <WeekSelect rows={rows} value={bIdx} onChange={setBIdx} label="Après" />
+            <WeekSelect rows={rows} freq={freq} value={aIdx} onChange={setAIdx} label="Avant" />
+            <WeekSelect rows={rows} freq={freq} value={bIdx} onChange={setBIdx} label="Après" />
           </div>
           {POSE_LIST.map((pose) => {
             const ua = poseUrl(a, pose.key), ub = poseUrl(b, pose.key);
@@ -521,7 +534,7 @@ function PhotoCompare({ rows, onClose, onOpenPhoto }) {
   );
 }
 
-function WeekSelect({ rows, value, onChange, label }) {
+function WeekSelect({ rows, freq, value, onChange, label }) {
   return (
     <label style={{ display: "block" }}>
       <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: G, marginBottom: 5 }}>{label}</div>
@@ -536,7 +549,7 @@ function WeekSelect({ rows, value, onChange, label }) {
       >
         {rows.map((r, i) => (
           <option key={r.id} value={i} style={{ background: "#0a0a0a" }}>
-            Sem. {fmtWeek(r.week_start)}
+            {periodLabel(freq, r.week_start)}
           </option>
         ))}
       </select>

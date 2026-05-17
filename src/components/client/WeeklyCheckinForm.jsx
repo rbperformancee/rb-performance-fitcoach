@@ -4,6 +4,7 @@ import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { notifyCoachWeeklyCheckin } from "../../lib/notifyCoach";
 import { uploadChatPhoto } from "../../lib/chatMedia";
+import { periodStart, periodNoun } from "../../lib/checkinPeriod";
 
 const G = "#02d1ba";
 
@@ -38,21 +39,29 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
   const [photos, setPhotos] = useState({}); // { face: url, profil: url, dos: url }
   const [uploadingPose, setUploadingPose] = useState(null);
   const [measurementsEnabled, setMeasurementsEnabled] = useState(false);
+  const [freq, setFreq] = useState("weekly");
   const [coachFeedback, setCoachFeedback] = useState(null); // { week_start, coach_comment, coach_status }
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState(0); // 0=poids/mesures, 1=photos, 2=ressenti, 3=note
   const fileRef = useRef(null);
 
-  // Charge le checkin de la semaine (édition) + le réglage mensurations
-  // + le dernier retour du coach.
+  // Charge le réglage du client (fréquence + mensurations), puis le bilan
+  // de la période courante (édition) + le dernier retour du coach.
   useEffect(() => {
     if (!open || !clientId) return;
-    const ws = currentWeekStart();
     let cancelled = false;
     (async () => {
-      const [{ data: cur }, { data: cl }, { data: fb }] = await Promise.all([
-        supabase.from("weekly_checkins").select("*").eq("client_id", clientId).eq("week_start", ws).maybeSingle(),
-        supabase.from("clients").select("checkin_measurements_enabled").eq("id", clientId).maybeSingle(),
+      const { data: cl } = await supabase
+        .from("clients")
+        .select("checkin_measurements_enabled, checkin_frequency")
+        .eq("id", clientId).maybeSingle();
+      if (cancelled) return;
+      const f = cl?.checkin_frequency || "weekly";
+      setMeasurementsEnabled(!!cl?.checkin_measurements_enabled);
+      setFreq(f);
+      const [{ data: cur }, { data: fb }] = await Promise.all([
+        supabase.from("weekly_checkins").select("*")
+          .eq("client_id", clientId).eq("week_start", periodStart(f)).maybeSingle(),
         supabase.from("weekly_checkins")
           .select("week_start, coach_comment, coach_status")
           .eq("client_id", clientId)
@@ -61,7 +70,6 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
           .limit(1).maybeSingle(),
       ]);
       if (cancelled) return;
-      setMeasurementsEnabled(!!cl?.checkin_measurements_enabled);
       if (fb?.coach_comment) setCoachFeedback(fb);
       if (cur) {
         setWeight(cur.weight ?? "");
@@ -84,14 +92,6 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
   }, [open, clientId]);
 
   if (!open) return null;
-
-  function currentWeekStart() {
-    const d = new Date();
-    const day = d.getDay();
-    const diff = day === 0 ? 6 : day - 1;
-    d.setDate(d.getDate() - diff);
-    return d.toISOString().slice(0, 10);
-  }
 
   async function handlePhoto(file) {
     if (!file || !uploadingPose) return;
@@ -116,7 +116,7 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
       .map((p) => ({ pose: p.key, url: photos[p.key] }));
     const payload = {
       client_id: clientId,
-      week_start: currentWeekStart(),
+      week_start: periodStart(freq),
       weight: weight !== "" ? parseFloat(String(weight).replace(",", ".")) : null,
       waist_cm: waist !== "" ? parseFloat(String(waist).replace(",", ".")) : null,
       hips_cm: hips !== "" ? parseFloat(String(hips).replace(",", ".")) : null,
@@ -177,7 +177,7 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>
-                Bilan de la semaine
+                Bilan {periodNoun(freq)}
               </div>
               <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.4, lineHeight: 1.2 }}>
                 {stepTitle}
