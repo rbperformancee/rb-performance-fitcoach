@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useFuel } from "../hooks/useFuel";
+import ClientMenuCard from "./client/ClientMenuCard";
 import { useSelectedDate } from "../hooks/useSelectedDate";
 import { useT, getLocale } from "../lib/i18n";
 
@@ -883,6 +884,8 @@ export default function FuelPage({ client, appData }) {
             )}
           </div>
         </div>
+
+        <ClientMenuCard clientId={client?.id} />
 
         {/* TABS — l'onglet Objectifs est retire cote client : c'est le coach
             qui les fixe depuis son dashboard, le client n'a pas a les modifier. */}

@@ -74,6 +74,8 @@ export default function MenuGenerator({ clientId }) {
   const [meals, setMeals] = useState(4);
   const [menu, setMenu] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -98,6 +100,42 @@ export default function MenuGenerator({ clientId }) {
 
   function run() {
     setMenu(generate(target, meals, recipes));
+    setSent(false);
+  }
+
+  // Enregistre le menu généré → visible par l'athlète dans sa page Fuel.
+  async function sendToClient() {
+    if (!menu || sending) return;
+    setSending(true);
+    const payload = {
+      meals: menu.map((it) => {
+        const mm = m(it.recipe);
+        return {
+          label: it.slot.label,
+          recipe_id: it.recipe.id,
+          title: it.recipe.title,
+          photo_url: it.recipe.photo_url || null,
+          portions: it.portions,
+          calories: Math.round((mm.calories || 0) * it.portions),
+          proteines: Math.round((mm.proteines || 0) * it.portions),
+          glucides: Math.round((mm.glucides || 0) * it.portions),
+          lipides: Math.round((mm.lipides || 0) * it.portions),
+        };
+      }),
+      target,
+      totals: {
+        calories: Math.round(totals.calories), proteines: Math.round(totals.proteines),
+        glucides: Math.round(totals.glucides), lipides: Math.round(totals.lipides),
+      },
+      meals_count: meals,
+      generated_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from("nutrition_menus").upsert(
+      { client_id: clientId, payload, updated_at: new Date().toISOString() },
+      { onConflict: "client_id" },
+    );
+    setSending(false);
+    if (!error) setSent(true);
   }
 
   // Totaux du menu généré.
@@ -228,6 +266,19 @@ export default function MenuGenerator({ clientId }) {
               );
             })}
           </div>
+
+          <button
+            onClick={sendToClient}
+            disabled={sending || sent}
+            style={{
+              width: "100%", marginTop: 10, padding: "10px 0", borderRadius: 9, border: "none",
+              background: sent ? "rgba(52,211,153,0.15)" : ORANGE,
+              color: sent ? "#34d399" : "#000",
+              fontSize: 12, fontWeight: 800, cursor: sending || sent ? "default" : "pointer", fontFamily: "inherit",
+            }}
+          >
+            {sent ? "✓ Envoyé à l'athlète" : sending ? "Envoi…" : "Envoyer à l'athlète"}
+          </button>
         </div>
       )}
     </div>
