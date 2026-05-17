@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
+import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
 import SessionOptionsModal from "./SessionOptionsModal";
 import { useProgrammeOverrides } from "../hooks/useProgrammeOverrides";
 import { useT } from "../lib/i18n";
@@ -943,7 +944,8 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           const exs = currentSession.exercises || [];
           // Le premier exercice "non-fait" est le seul a etre marque ACTIF.
           const firstUndoneIdx = exs.findIndex((_, ei) => (getHistory(activeWeek, activeSession, ei) || []).length === 0);
-          return exs.map((ex, ei) => {
+          // Rend une carte d'exercice à l'index global `ei`.
+          const renderCard = (ex, ei) => {
             const history = getHistory(activeWeek, activeSession, ei) || [];
             const status = getProgressStatus(history);
             const isDone = history.length > 0;
@@ -967,6 +969,27 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                   bandColor={bandColor}
                   isActive={isExActive}
                 />
+              </div>
+            );
+          };
+          // Regroupe les exercices A1/A2… en supersets : on les enchaîne et
+          // seul le dernier porte le repos (les autres → repos masqué).
+          return buildExerciseBlocks(exs).map((block, bi) => {
+            if (!block.isSuperset) {
+              const { ex, index } = block.members[0];
+              return renderCard(ex, index);
+            }
+            return (
+              <div key={"sset-" + bi} style={{ marginBottom: 10, border: "1px solid rgba(2,209,186,0.18)", borderRadius: 18, padding: "8px 8px 0", background: "rgba(2,209,186,0.025)" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 7, padding: "5px 8px 9px" }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(2,209,186,0.85)" }}>
+                    ⚡ {supersetTypeLabel(block.members.length)} · {block.key}
+                  </span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>— enchaîne sans repos</span>
+                </div>
+                {block.members.map(({ ex, index }, mi) =>
+                  renderCard(mi === block.members.length - 1 ? ex : { ...ex, rest: "" }, index)
+                )}
               </div>
             );
           });
