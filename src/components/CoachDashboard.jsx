@@ -3,6 +3,7 @@ import ProgramPDFButton from "./ProgramPDF";
 import CoachStats from "./CoachStats";
 import ChatCoach from "./ChatCoach";
 import CarbCycling from "./coach/CarbCycling";
+import MenuGenerator from "./coach/MenuGenerator";
 import DemoBanner from "./DemoBanner";
 import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
@@ -3347,6 +3348,8 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </div>
 
         <CarbCycling clientId={client.id} />
+
+        <MenuGenerator clientId={client.id} />
 
         </>)}
 
