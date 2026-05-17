@@ -4,6 +4,7 @@ import { toast } from "./Toast";
 import haptic from "../lib/haptic";
 import { SkeletonBox } from "./Skeleton";
 import { useT, t as tStatic, getLocale } from "../lib/i18n";
+import { uploadChatPhoto } from "../lib/chatMedia";
 
 const GREEN = "#02d1ba";
 
@@ -62,6 +63,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef(null);
   const scrollRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
@@ -141,6 +143,31 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
       if (navigator.vibrate) navigator.vibrate(10);
       // NB : la push notif est envoyée côté serveur par le trigger
       // trg_notify_new_message (migration 082) — rien à faire ici.
+    }
+    setSending(false);
+  };
+
+  // Envoi d'une photo (bilan). Upload Storage puis insert message média.
+  const sendPhoto = async (file) => {
+    if (!file || sending) return;
+    haptic.light();
+    setSending(true);
+    try {
+      const url = await uploadChatPhoto(file, clientId);
+      const { error } = await supabase.from("messages").insert({
+        client_id: clientId,
+        content: "",
+        from_coach: isCoach,
+        media_url: url,
+        media_type: "image",
+        read: false,
+        created_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      if (navigator.vibrate) navigator.vibrate(10);
+    } catch (e) {
+      console.error("sendPhoto error:", e);
+      toast.error("Photo non envoyée : " + (e?.message || "erreur"));
     }
     setSending(false);
   };
@@ -265,9 +292,17 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
                   padding: "11px 14px 9px",
                   boxShadow: isMine ? "0 4px 16px rgba(2,209,186,0.08)" : "none",
                 }}>
-                  <div style={{ fontSize: 14, color: "#fff", lineHeight: 1.45, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                    {msg.content}
-                  </div>
+                  {msg.media_type === "image" && msg.media_url ? (
+                    <a href={msg.media_url} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
+                      <img src={msg.media_url} alt="photo" loading="lazy"
+                        style={{ maxWidth: "100%", maxHeight: 280, borderRadius: 10, display: "block" }} />
+                    </a>
+                  ) : null}
+                  {msg.content ? (
+                    <div style={{ fontSize: 14, color: "#fff", lineHeight: 1.45, whiteSpace: "pre-wrap", wordBreak: "break-word", marginTop: msg.media_url ? 6 : 0 }}>
+                      {msg.content}
+                    </div>
+                  ) : null}
                 </div>
                 <div style={{
                   fontSize: 9,
@@ -297,6 +332,31 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
         gap: 10,
         flexShrink: 0,
       }}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) sendPhoto(f); e.target.value = ""; }}
+        />
+        <button
+          onClick={() => { haptic.light(); fileInputRef.current?.click(); }}
+          disabled={sending}
+          title="Envoyer une photo"
+          style={{
+            width: 44, height: 44, flexShrink: 0, borderRadius: "50%",
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.04)",
+            cursor: sending ? "not-allowed" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+        </button>
         <div style={{
           flex: 1,
           minWidth: 0,

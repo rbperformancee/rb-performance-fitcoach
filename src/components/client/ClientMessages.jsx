@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT, getLocale } from "../../lib/i18n";
 import { isClientDemoMode } from "../../lib/demoMode";
+import { uploadChatPhoto } from "../../lib/chatMedia";
 
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
@@ -16,6 +17,7 @@ export default function ClientMessages({ client, coach, accent, user }) {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!client?.id) return;
@@ -94,6 +96,27 @@ export default function ClientMessages({ client, coach, accent, user }) {
     setSending(false);
   }
 
+  // Envoi d'une photo (bilan) au coach.
+  async function handleSendPhoto(file) {
+    if (!file || sending) return;
+    if (isClientDemoMode()) return;
+    setSending(true);
+    try {
+      const url = await uploadChatPhoto(file, client.id);
+      const { error } = await supabase.from("messages").insert({
+        client_id: client.id,
+        content: "",
+        from_coach: false,
+        media_url: url,
+        media_type: "image",
+      });
+      if (error) throw error;
+    } catch (e) {
+      console.warn("[ClientMessages] sendPhoto", e);
+    }
+    setSending(false);
+  }
+
   const coachName = coach?.coaching_name || coach?.full_name || t("cm.your_coach");
   const firstName = (client?.full_name || "").split(" ")[0] || t("cm.you");
 
@@ -143,7 +166,13 @@ export default function ClientMessages({ client, coach, accent, user }) {
                 animation: "capFade .25s ease both",
               }}
             >
-              <div>{m.content}</div>
+              {m.media_type === "image" && m.media_url ? (
+                <a href={m.media_url} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
+                  <img src={m.media_url} alt="photo" loading="lazy"
+                    style={{ maxWidth: "100%", maxHeight: 260, borderRadius: 10, display: "block" }} />
+                </a>
+              ) : null}
+              {m.content ? <div style={{ marginTop: m.media_url ? 6 : 0 }}>{m.content}</div> : null}
               <div style={{ fontSize: 9, color: "rgba(255,255,255,.3)", marginTop: 4, letterSpacing: ".02em", textAlign: m.from_coach ? "left" : "right" }}>
                 {m.from_coach ? coachName.split(" ")[0] : firstName} · {fmtTime(m.created_at)}
               </div>
@@ -154,6 +183,32 @@ export default function ClientMessages({ client, coach, accent, user }) {
 
       {/* Input */}
       <div style={{ padding: "12px 16px 16px", borderTop: ".5px solid rgba(255,255,255,.05)", background: "rgba(8,8,8,.95)", display: "flex", gap: 8 }}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSendPhoto(f); e.target.value = ""; }}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={sending}
+          aria-label="Envoyer une photo"
+          style={{
+            width: 42, height: 42, flexShrink: 0,
+            background: "rgba(255,255,255,.04)",
+            border: ".5px solid rgba(255,255,255,.08)",
+            borderRadius: "50%",
+            cursor: sending ? "not-allowed" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+        </button>
         <input
           type="text"
           value={text}
