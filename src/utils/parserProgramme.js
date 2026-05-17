@@ -236,8 +236,31 @@ export function parseProgrammeHTML(htmlString) {
         });
       });
 
-      if (exercises.length > 0 || runs.length > 0 || (finisher && finisher.length > 0) || sessionName !== `Séance ${si + 1}`) {
-        sessions.push({ name: sessionName, description, finisher, exercises, runs });
+      /* ── Séances terrain prescrites (.field-item) ── */
+      const fieldSessions = [];
+      seanceEl.querySelectorAll(".field-item").forEach((fEl) => {
+        const ffid = fEl.id.replace("field-", "");
+        const title = (
+          doc.getElementById(`ft-${ffid}`)?.value ||
+          doc.getElementById(`ft-${ffid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        if (!title) return; // skip vides
+
+        const moment = (
+          doc.getElementById(`fm-${ffid}`)?.value ||
+          doc.getElementById(`fm-${ffid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+
+        const fdEl = doc.getElementById(`fd-${ffid}`);
+        const fieldDesc = (fdEl?.value || fdEl?.textContent || "").trim() || null;
+
+        fieldSessions.push({ title, moment, description: fieldDesc });
+      });
+
+      if (exercises.length > 0 || runs.length > 0 || fieldSessions.length > 0 || (finisher && finisher.length > 0) || sessionName !== `Séance ${si + 1}`) {
+        sessions.push({ name: sessionName, description, finisher, exercises, runs, fieldSessions });
       }
     });
 

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
+import FieldSessionCard from "./FieldSessionCard";
 import SessionOptionsModal from "./SessionOptionsModal";
 import { useProgrammeOverrides } from "../hooks/useProgrammeOverrides";
 import { useT } from "../lib/i18n";
@@ -1032,6 +1033,28 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           </div>
           <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
             {t("train.cardio_log_hint")} <strong style={{ color: "rgba(2,209,186,0.7)" }}>{t("train.cardio_run_tab")}</strong>.
+          </div>
+        </div>
+      )}
+
+      {/* SÉANCES TERRAIN PRESCRITES (foot, rugby…) */}
+      {Array.isArray(currentSession.fieldSessions) && currentSession.fieldSessions.length > 0 && (
+        <div style={{ padding: "0 20px", marginTop: 18 }}>
+          <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 800, marginBottom: 10 }}>
+            Séance terrain
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {currentSession.fieldSessions.map((f, fi) => (
+              <FieldSessionCard
+                key={fi}
+                field={f}
+                clientId={client?.id}
+                coachId={client?.coach_id}
+                weekIdx={activeWeek}
+                sessionIdx={activeSession}
+                fieldIdx={fi}
+              />
+            ))}
           </div>
         </div>
       )}

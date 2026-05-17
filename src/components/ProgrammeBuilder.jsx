@@ -78,6 +78,16 @@ function buildHTML(p) {
           <input id="rrs-${rid}" value="${escAttr(r.rest || '')}" />
         </div>`;
       }).join("");
+      // Séances terrain (foot, rugby…) — format .field-item lu par parserProgramme.
+      const fieldHtml = (s.fieldSessions || []).map((f, fi) => {
+        const fid = `${sid}f${fi + 1}`;
+        return `
+        <div class="field-item" id="field-${fid}">
+          <input id="ft-${fid}" value="${escAttr(f.title || '')}" />
+          <input id="fm-${fid}" value="${escAttr(f.moment || '')}" />
+          <textarea id="fd-${fid}">${escText(f.description || '')}</textarea>
+        </div>`;
+      }).join("");
       return `
       <div class="seance-block" id="seance-${sid}">
         <input id="sn-${sid}" value="${escAttr(s.name)}" />
@@ -85,6 +95,7 @@ function buildHTML(p) {
         <textarea id="sf-${sid}">${escText(s.finisher || '')}</textarea>
         ${exHtml}
         ${runHtml}
+        ${fieldHtml}
       </div>`;
     }).join("");
     return `
@@ -104,7 +115,8 @@ ${weeksHtml}
 }
 
 const newExercise = () => ({ id: uid(), name: "", reps: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "" });
-const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", runs: [], exercises: [newExercise()] });
+const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", runs: [], fieldSessions: [], exercises: [newExercise()] });
+const newFieldSession = () => ({ id: uid(), title: "", moment: "", description: "" });
 const newWeek = (n = 1) => ({ id: uid(), name: `Semaine ${n}`, sessions: [newSession(1)] });
 
 // Suggestions communes pour les champs exercice (autocomplete au focus).
@@ -370,6 +382,15 @@ function fromParsed(parsed) {
               duration: r.duration || "",
               bpm: r.bpm || "",
               rest: r.rest || "",
+            }))
+          : [],
+        // Séances terrain (foot, rugby…)
+        fieldSessions: Array.isArray(s.fieldSessions)
+          ? s.fieldSessions.map((f) => ({
+              id: uid(),
+              title: f.title || "",
+              moment: f.moment || "",
+              description: f.description || "",
             }))
           : [],
         exercises: (s.exercises || []).map((e) => ({
@@ -770,6 +791,10 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
     arr.splice(exIdx + 1, 0, dup);
     onUpdate({ ...session, exercises: arr });
   };
+  const fieldSessions = session.fieldSessions || [];
+  const updateFieldSession = (fi, f) => onUpdate({ ...session, fieldSessions: fieldSessions.map((x, i) => i === fi ? f : x) });
+  const addFieldSession = () => onUpdate({ ...session, fieldSessions: [...fieldSessions, newFieldSession()] });
+  const removeFieldSession = (fi) => onUpdate({ ...session, fieldSessions: fieldSessions.filter((_, i) => i !== fi) });
 
   return (
     <div style={{
@@ -852,6 +877,50 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
           letterSpacing: 0.5,
         }}
       >+ Ajouter un exercice</button>
+
+      {/* SÉANCES TERRAIN — foot, rugby… le même jour, à un autre moment */}
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
+        Séances terrain{" "}
+        <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(foot, rugby… le même jour)</span>
+      </div>
+      {fieldSessions.map((f, i) => (
+        <div key={f.id} style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+            <input
+              value={f.title || ""}
+              onChange={(e) => updateFieldSession(i, { ...f, title: e.target.value })}
+              placeholder="Titre (ex. Entraînement club)"
+              style={{ flex: 2, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
+            />
+            <input
+              value={f.moment || ""}
+              onChange={(e) => updateFieldSession(i, { ...f, moment: e.target.value })}
+              placeholder="Moment (18h…)"
+              style={{ flex: 1, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
+            />
+            <button type="button" onClick={() => removeFieldSession(i)} title="Retirer"
+              style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            >×</button>
+          </div>
+          <textarea
+            value={f.description || ""}
+            onChange={(e) => updateFieldSession(i, { ...f, description: e.target.value })}
+            placeholder="Consignes (ex. Vitesse + appuis, 45 min)"
+            rows={2}
+            style={{ width: "100%", boxSizing: "border-box", padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none", resize: "vertical" }}
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addFieldSession}
+        style={{
+          width: "100%", padding: 10, background: "transparent",
+          border: "1px dashed rgba(2,209,186,0.3)", borderRadius: 12,
+          color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+          letterSpacing: 0.5,
+        }}
+      >+ Ajouter une séance terrain</button>
     </div>
   );
 }
@@ -1212,6 +1281,15 @@ function Preview({ programme, showAnalytics }) {
                       {[r.distance, r.duration, r.bpm ? r.bpm + " bpm" : null, r.rest].filter(Boolean).length > 0
                         ? " — " + [r.distance, r.duration, r.bpm ? r.bpm + " bpm" : null, r.rest].filter(Boolean).join(" · ")
                         : null}
+                    </div>
+                  ))
+                : null}
+              {Array.isArray(s.fieldSessions) && s.fieldSessions.length > 0
+                ? s.fieldSessions.map((f, fi) => (
+                    <div key={fi} style={{ marginTop: fi === 0 ? 10 : 4, padding: "8px 10px", background: "rgba(2,209,186,0.05)", borderLeft: "2px solid rgba(2,209,186,0.5)", borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
+                      <strong style={{ color: "rgba(2,209,186,0.85)" }}>🏟 {f.title || "Séance terrain"}</strong>
+                      {f.moment ? <span style={{ color: "rgba(255,255,255,0.45)" }}>{" · " + f.moment}</span> : null}
+                      {f.description ? <div style={{ marginTop: 2, color: "rgba(255,255,255,0.5)" }}>{f.description}</div> : null}
                     </div>
                   ))
                 : null}
