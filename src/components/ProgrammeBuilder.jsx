@@ -11,6 +11,7 @@ import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSe
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { exportProgrammePDF } from "../utils/exportPDF";
+import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
 
 const G = "#02d1ba";
 const G_DIM = "rgba(2,209,186,0.1)";
@@ -1141,26 +1142,39 @@ function Preview({ programme, showAnalytics }) {
             <div key={s.id} style={{ marginBottom: 14, padding: 14, background: "rgba(255,255,255,0.02)", border: "1px solid " + BORDER, borderRadius: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{s.name || ("Séance " + (si + 1))}</div>
               {s.description ? <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>{s.description}</div> : null}
-              {(s.exercises || []).map((ex) => {
-                const effectiveVid = ex.vidUrl || findVideo(ex.name);
-                const m = effectiveVid ? effectiveVid.match(/(?:youtu\.be\/|v=)([\w-]{11})/) : null;
-                const ytId = m ? m[1] : null;
-                return (
-                  <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                    {ytId ? (
-                      <img src={"https://img.youtube.com/vi/" + ytId + "/default.jpg"} alt="" style={{ width: 40, height: 30, objectFit: "cover", borderRadius: 4 }} />
-                    ) : (
-                      <div style={{ width: 40, height: 30, background: "rgba(255,255,255,0.04)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "rgba(255,255,255,0.2)" }}>?</div>
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ex.name || "[Exercice sans nom]"}</div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                        {[ex.reps, ex.tempo ? "tempo " + ex.tempo : null, ex.rir ? "RIR " + ex.rir : null, ex.rest ? "repos " + ex.rest : null].filter(Boolean).join(" · ")}
+              {(() => {
+                const renderRow = (ex) => {
+                  const effectiveVid = ex.vidUrl || findVideo(ex.name);
+                  const m = effectiveVid ? effectiveVid.match(/(?:youtu\.be\/|v=)([\w-]{11})/) : null;
+                  const ytId = m ? m[1] : null;
+                  return (
+                    <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                      {ytId ? (
+                        <img src={"https://img.youtube.com/vi/" + ytId + "/default.jpg"} alt="" style={{ width: 40, height: 30, objectFit: "cover", borderRadius: 4 }} />
+                      ) : (
+                        <div style={{ width: 40, height: 30, background: "rgba(255,255,255,0.04)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "rgba(255,255,255,0.2)" }}>?</div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ex.name || "[Exercice sans nom]"}</div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                          {[ex.reps, ex.tempo ? "tempo " + ex.tempo : null, ex.rir ? "RIR " + ex.rir : null, ex.rest ? "repos " + ex.rest : null].filter(Boolean).join(" · ")}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                };
+                return buildExerciseBlocks(s.exercises || []).map((block, bi) => {
+                  if (!block.isSuperset) return renderRow(block.members[0].ex);
+                  return (
+                    <div key={"sb-" + bi} style={{ marginTop: 6, border: "1px solid rgba(2,209,186,0.2)", borderRadius: 8, padding: "0 8px 6px", background: "rgba(2,209,186,0.03)" }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", color: "rgba(2,209,186,0.8)", padding: "7px 0 2px" }}>
+                        ⚡ {supersetTypeLabel(block.members.length)} · {block.key}
+                      </div>
+                      {block.members.map(({ ex }) => renderRow(ex))}
+                    </div>
+                  );
+                });
+              })()}
               {s.finisher ? (
                 <div style={{ marginTop: 10, padding: "8px 10px", background: "rgba(239,68,68,0.05)", borderLeft: "2px solid rgba(239,68,68,0.5)", borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
                   <strong style={{ color: "rgba(239,68,68,0.85)" }}>Finisher</strong>{" — "}{s.finisher}
