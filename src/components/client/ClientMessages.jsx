@@ -4,6 +4,7 @@ import { useT, getLocale } from "../../lib/i18n";
 import { isClientDemoMode } from "../../lib/demoMode";
 import { uploadChatPhoto, uploadChatAudio } from "../../lib/chatMedia";
 import VoiceMessageButton from "../VoiceMessageButton";
+import VoiceMessage from "../VoiceMessage";
 
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
@@ -195,8 +196,7 @@ export default function ClientMessages({ client, coach, accent, user }) {
                 </a>
               ) : null}
               {m.media_type === "audio" && m.media_url ? (
-                <audio controls preload="none" src={m.media_url}
-                  style={{ display: "block", width: 220, maxWidth: "100%", height: 38 }} />
+                <VoiceMessage src={m.media_url} />
               ) : null}
               {m.content ? <div style={{ marginTop: m.media_url ? 6 : 0 }}>{m.content}</div> : null}
               <div style={{ fontSize: 9, color: "rgba(255,255,255,.3)", marginTop: 4, letterSpacing: ".02em", textAlign: m.from_coach ? "left" : "right" }}>

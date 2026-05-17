@@ -6,6 +6,7 @@ import { SkeletonBox } from "./Skeleton";
 import { useT, t as tStatic, getLocale } from "../lib/i18n";
 import { uploadChatPhoto, uploadChatAudio } from "../lib/chatMedia";
 import VoiceMessageButton from "./VoiceMessageButton";
+import VoiceMessage from "./VoiceMessage";
 
 const GREEN = "#02d1ba";
 
@@ -85,7 +86,26 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: "client_id=eq." + clientId },
-        () => fetchMessages()
+        (payload) => {
+          // Ajout incrémental de la nouvelle bulle — pas de refetch complet
+          // (qui ferait re-clignoter toute la conversation). On déduplique
+          // par id et on remplace un éventuel message optimiste équivalent.
+          const row = payload.new;
+          if (!row?.id) return;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === row.id)) return prev;
+            const optIdx = prev.findIndex(
+              (m) => m._optimistic && m.from_coach === row.from_coach &&
+                (m.content || "") === (row.content || "")
+            );
+            if (optIdx !== -1) {
+              const next = [...prev];
+              next[optIdx] = row;
+              return next;
+            }
+            return [...prev, row];
+          });
+        }
       )
       .subscribe();
     return () => supabase.removeChannel(channel);
@@ -324,8 +344,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
                     </a>
                   ) : null}
                   {msg.media_type === "audio" && msg.media_url ? (
-                    <audio controls preload="none" src={msg.media_url}
-                      style={{ display: "block", width: 230, maxWidth: "100%", height: 40 }} />
+                    <VoiceMessage src={msg.media_url} />
                   ) : null}
                   {msg.content ? (
                     <div style={{ fontSize: 14, color: "#fff", lineHeight: 1.45, whiteSpace: "pre-wrap", wordBreak: "break-word", marginTop: msg.media_url ? 6 : 0 }}>

@@ -20,4 +20,5 @@ backup-*.sql
 supabase/.temp/
 AUDIT-*.md
 .env*.local
+.env.local.*
 supabase/migrations/supabase/

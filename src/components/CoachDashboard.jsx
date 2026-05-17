@@ -4,6 +4,7 @@ import CoachStats from "./CoachStats";
 import ChatCoach from "./ChatCoach";
 import { uploadChatPhoto, uploadChatAudio } from "../lib/chatMedia";
 import VoiceMessageButton from "./VoiceMessageButton";
+import VoiceMessage from "./VoiceMessage";
 import CarbCycling from "./coach/CarbCycling";
 import MenuGenerator from "./coach/MenuGenerator";
 import DemoBanner from "./DemoBanner";
@@ -3633,7 +3634,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               </button>
             </div>
             {messages.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 420, overflowY: "auto" }}>
                 {messages.map((m, i) => (
                   <div key={i} style={{
                     background: m.from_coach ? "rgba(2,209,186,0.06)" : "rgba(255,255,255,0.025)",
@@ -3651,8 +3652,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       </a>
                     ) : null}
                     {m.media_type === "audio" && m.media_url ? (
-                      <audio controls preload="none" src={m.media_url}
-                        style={{ display: "block", width: 220, maxWidth: "100%", height: 38 }} />
+                      <VoiceMessage src={m.media_url} />
                     ) : null}
                     {m.content ? (
                       <div style={{ fontSize: 13, color: "#fff", lineHeight: 1.5, marginTop: m.media_url ? 6 : 0 }}>{m.content}</div>
