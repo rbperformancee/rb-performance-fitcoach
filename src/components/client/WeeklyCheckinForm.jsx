@@ -1,23 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { notifyCoachWeeklyCheckin } from "../../lib/notifyCoach";
+import { uploadChatPhoto } from "../../lib/chatMedia";
 
 const G = "#02d1ba";
 
+const POSES = [
+  { key: "face", label: "Face" },
+  { key: "profil", label: "Profil" },
+  { key: "dos", label: "Dos" },
+];
+
 /**
  * WeeklyCheckinForm — bilan hebdomadaire du client (~30 secondes).
- * Capture poids + 5 mensurations + 4 niveaux de ressenti + note libre.
+ * Capture poids + photos de progression + ressenti + note. Les
+ * mensurations ne sont demandées que si le coach les a activées pour
+ * ce client (clients.checkin_measurements_enabled) : pour beaucoup de
+ * clients le poids + les photos (miroir) suffisent.
  *
  * UPSERT sur (client_id, week_start) — si le client soumet 2 fois, c'est
- * la dernière version qui compte. weeks_start = lundi de la semaine en cours.
- *
- * Props :
- *   open: bool
- *   onClose: () => void
- *   clientId: uuid (le client connecté)
- *   onDone?: () => void  // optionnel après soumission
+ * la dernière version qui compte. week_start = lundi de la semaine en cours.
  */
 export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
   const [weight, setWeight] = useState("");
@@ -31,33 +35,50 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
   const [stress, setStress] = useState(null);
   const [motivation, setMotivation] = useState(null);
   const [note, setNote] = useState("");
+  const [photos, setPhotos] = useState({}); // { face: url, profil: url, dos: url }
+  const [uploadingPose, setUploadingPose] = useState(null);
+  const [measurementsEnabled, setMeasurementsEnabled] = useState(false);
+  const [coachFeedback, setCoachFeedback] = useState(null); // { week_start, coach_comment, coach_status }
   const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState(0); // 0=mesures, 1=ressenti, 2=note
+  const [step, setStep] = useState(0); // 0=poids/mesures, 1=photos, 2=ressenti, 3=note
+  const fileRef = useRef(null);
 
-  // Charge le checkin déjà soumis pour cette semaine (si existe) — édition
+  // Charge le checkin de la semaine (édition) + le réglage mensurations
+  // + le dernier retour du coach.
   useEffect(() => {
     if (!open || !clientId) return;
     const ws = currentWeekStart();
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("weekly_checkins")
-        .select("*")
-        .eq("client_id", clientId)
-        .eq("week_start", ws)
-        .maybeSingle();
-      if (cancelled || !data) return;
-      setWeight(data.weight ?? "");
-      setWaist(data.waist_cm ?? "");
-      setHips(data.hips_cm ?? "");
-      setChest(data.chest_cm ?? "");
-      setArm(data.arm_cm ?? "");
-      setThigh(data.thigh_cm ?? "");
-      setEnergy(data.energy_level);
-      setSleep(data.sleep_quality);
-      setStress(data.stress_level);
-      setMotivation(data.motivation_level);
-      setNote(data.note || "");
+      const [{ data: cur }, { data: cl }, { data: fb }] = await Promise.all([
+        supabase.from("weekly_checkins").select("*").eq("client_id", clientId).eq("week_start", ws).maybeSingle(),
+        supabase.from("clients").select("checkin_measurements_enabled").eq("id", clientId).maybeSingle(),
+        supabase.from("weekly_checkins")
+          .select("week_start, coach_comment, coach_status")
+          .eq("client_id", clientId)
+          .not("coach_comment", "is", null)
+          .order("week_start", { ascending: false })
+          .limit(1).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      setMeasurementsEnabled(!!cl?.checkin_measurements_enabled);
+      if (fb?.coach_comment) setCoachFeedback(fb);
+      if (cur) {
+        setWeight(cur.weight ?? "");
+        setWaist(cur.waist_cm ?? "");
+        setHips(cur.hips_cm ?? "");
+        setChest(cur.chest_cm ?? "");
+        setArm(cur.arm_cm ?? "");
+        setThigh(cur.thigh_cm ?? "");
+        setEnergy(cur.energy_level);
+        setSleep(cur.sleep_quality);
+        setStress(cur.stress_level);
+        setMotivation(cur.motivation_level);
+        setNote(cur.note || "");
+        const p = {};
+        (Array.isArray(cur.photos) ? cur.photos : []).forEach((x) => { if (x?.pose && x?.url) p[x.pose] = x.url; });
+        setPhotos(p);
+      }
     })();
     return () => { cancelled = true; };
   }, [open, clientId]);
@@ -72,10 +93,27 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
     return d.toISOString().slice(0, 10);
   }
 
+  async function handlePhoto(file) {
+    if (!file || !uploadingPose) return;
+    const pose = uploadingPose;
+    try {
+      const url = await uploadChatPhoto(file, clientId);
+      setPhotos((p) => ({ ...p, [pose]: url }));
+      haptic.light();
+    } catch (e) {
+      toast.error("Photo non envoyée : " + (e?.message || "erreur"));
+    } finally {
+      setUploadingPose(null);
+    }
+  }
+
   async function submit() {
     if (!clientId) return;
     haptic.medium();
     setSaving(true);
+    const photoArr = POSES
+      .filter((p) => photos[p.key])
+      .map((p) => ({ pose: p.key, url: photos[p.key] }));
     const payload = {
       client_id: clientId,
       week_start: currentWeekStart(),
@@ -90,6 +128,7 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
       stress_level: stress,
       motivation_level: motivation,
       note: note.trim() || null,
+      photos: photoArr.length ? photoArr : null,
       submitted_at: new Date().toISOString(),
     };
     try {
@@ -97,7 +136,6 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
         .from("weekly_checkins")
         .upsert(payload, { onConflict: "client_id,week_start" });
       if (error) throw error;
-      // Push au coach si le client a écrit une note
       notifyCoachWeeklyCheckin(clientId, { hasNote: !!payload.note });
       toast.success("Bilan envoyé à ton coach");
       onDone?.();
@@ -109,6 +147,8 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
     }
   }
 
+  const stepTitle = ["Ton poids", "Tes photos", "Ton ressenti", "Un mot pour ton coach ?"][step];
+
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
@@ -119,6 +159,13 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
         fontFamily: "-apple-system,'Inter',sans-serif",
       }}
     >
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = ""; }}
+      />
       <div style={{
         background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: "20px 20px 0 0",
@@ -133,7 +180,7 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
                 Bilan de la semaine
               </div>
               <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.4, lineHeight: 1.2 }}>
-                {step === 0 ? "Tes mesures" : step === 1 ? "Ton ressenti" : "Un mot pour ton coach ?"}
+                {stepTitle}
               </div>
             </div>
             <button
@@ -145,7 +192,7 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
           </div>
           {/* Progress */}
           <div style={{ marginTop: 14, display: "flex", gap: 4 }}>
-            {[0,1,2].map((s) => (
+            {[0,1,2,3].map((s) => (
               <div key={s} style={{
                 flex: 1, height: 3, borderRadius: 100,
                 background: s <= step ? G : "rgba(255,255,255,0.08)",
@@ -157,23 +204,72 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
 
         {/* CONTENT */}
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px 24px" }}>
-          {step === 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <NumField label="Poids" unit="kg" value={weight} onChange={setWeight} placeholder="74.5" />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <NumField label="Taille" unit="cm" value={waist} onChange={setWaist} placeholder="82" />
-                <NumField label="Hanches" unit="cm" value={hips} onChange={setHips} placeholder="98" />
-                <NumField label="Poitrine" unit="cm" value={chest} onChange={setChest} placeholder="102" />
-                <NumField label="Bras" unit="cm" value={arm} onChange={setArm} placeholder="36" />
-                <NumField label="Cuisse" unit="cm" value={thigh} onChange={setThigh} placeholder="58" />
+          {/* Retour du coach sur le dernier bilan */}
+          {step === 0 && coachFeedback && (
+            <div style={{
+              marginBottom: 18, padding: "12px 14px",
+              background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)",
+              borderRadius: 12,
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: G, textTransform: "uppercase", marginBottom: 6 }}>
+                Retour de ton coach
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginTop: 4 }}>
-                Tout est optionnel — remplis ce que tu veux. Le coach voit ton évolution.
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.5, fontStyle: "italic" }}>
+                « {coachFeedback.coach_comment} »
               </div>
             </div>
           )}
 
+          {step === 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <NumField label="Poids" unit="kg" value={weight} onChange={setWeight} placeholder="74.5" />
+              {measurementsEnabled && (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <NumField label="Taille" unit="cm" value={waist} onChange={setWaist} placeholder="82" />
+                    <NumField label="Hanches" unit="cm" value={hips} onChange={setHips} placeholder="98" />
+                    <NumField label="Poitrine" unit="cm" value={chest} onChange={setChest} placeholder="102" />
+                    <NumField label="Bras" unit="cm" value={arm} onChange={setArm} placeholder="36" />
+                    <NumField label="Cuisse" unit="cm" value={thigh} onChange={setThigh} placeholder="58" />
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginTop: 4 }}>
+                    Tout est optionnel — remplis ce que tu veux. Ton coach voit ton évolution.
+                  </div>
+                </>
+              )}
+              {!measurementsEnabled && (
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginTop: 4 }}>
+                  Le poids et les photos suffisent — ton coach suit le reste à l'œil.
+                </div>
+              )}
+            </div>
+          )}
+
           {step === 1 && (
+            <div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, marginBottom: 14 }}>
+                Prends tes photos au même endroit, même lumière, à jeun si possible.
+                C'est le meilleur indicateur de ta progression.
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                {POSES.map((p) => (
+                  <PhotoSlot
+                    key={p.key}
+                    label={p.label}
+                    url={photos[p.key]}
+                    uploading={uploadingPose === p.key}
+                    onPick={() => { setUploadingPose(p.key); fileRef.current?.click(); }}
+                    onRemove={() => setPhotos((ph) => { const n = { ...ph }; delete n[p.key]; return n; })}
+                  />
+                ))}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 12, lineHeight: 1.5 }}>
+                Optionnel. Seul ton coach voit ces photos.
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
               <Scale1to5 label="Énergie cette semaine" value={energy} onChange={setEnergy} lowLabel="À plat" highLabel="Au top" />
               <Scale1to5 label="Qualité du sommeil"     value={sleep}  onChange={setSleep}  lowLabel="Mauvais" highLabel="Excellent" />
@@ -182,7 +278,7 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div>
               <textarea
                 value={note}
@@ -223,7 +319,7 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
           )}
           <button
             type="button"
-            onClick={() => step < 2 ? setStep(step + 1) : submit()}
+            onClick={() => step < 3 ? setStep(step + 1) : submit()}
             disabled={saving}
             style={{
               flex: 1,
@@ -234,10 +330,64 @@ export default function WeeklyCheckinForm({ open, onClose, clientId, onDone }) {
               fontFamily: "inherit", letterSpacing: ".05em", textTransform: "uppercase",
             }}
           >
-            {step < 2 ? "Suivant →" : (saving ? "Envoi…" : "Envoyer le bilan")}
+            {step < 3 ? "Suivant →" : (saving ? "Envoi…" : "Envoyer le bilan")}
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PhotoSlot({ label, url, uploading, onPick, onRemove }) {
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={onPick}
+        disabled={uploading}
+        style={{
+          width: "100%", aspectRatio: "3 / 4",
+          background: url ? "#000" : "rgba(255,255,255,0.03)",
+          border: `1px ${url ? "solid" : "dashed"} ${url ? "rgba(2,209,186,0.4)" : "rgba(255,255,255,0.15)"}`,
+          borderRadius: 12, cursor: uploading ? "wait" : "pointer",
+          overflow: "hidden", padding: 0,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
+        }}
+      >
+        {url ? (
+          <img src={url} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : uploading ? (
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>Envoi…</span>
+        ) : (
+          <>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={G} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: 1, textTransform: "uppercase" }}>{label}</span>
+          </>
+        )}
+      </button>
+      {url && !uploading && (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={"Retirer " + label}
+          style={{
+            position: "absolute", top: 5, right: 5,
+            width: 22, height: 22, borderRadius: "50%",
+            background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.2)",
+            color: "#fff", fontSize: 12, lineHeight: 1, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >×</button>
+      )}
+      {url && (
+        <div style={{ position: "absolute", bottom: 5, left: 5, fontSize: 8, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", color: "#fff", background: "rgba(0,0,0,0.6)", padding: "2px 6px", borderRadius: 5 }}>
+          {label}
+        </div>
+      )}
     </div>
   );
 }
