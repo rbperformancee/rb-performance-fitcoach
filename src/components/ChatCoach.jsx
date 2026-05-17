@@ -4,7 +4,6 @@ import { toast } from "./Toast";
 import haptic from "../lib/haptic";
 import { SkeletonBox } from "./Skeleton";
 import { useT, t as tStatic, getLocale } from "../lib/i18n";
-import { notifyNewMessage } from "../lib/notifyMessage";
 
 const GREEN = "#02d1ba";
 
@@ -140,14 +139,8 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
       // Remplacer le temp message par le vrai row (avec le bon id de la DB)
       setMessages((prev) => prev.map((m) => (m.id === tempId ? data : m)));
       if (navigator.vibrate) navigator.vibrate(10);
-      // Push notif au destinataire (fire-and-forget). isCoach=true → notifie
-      // le client ; isCoach=false → notifie le coach.
-      notifyNewMessage({
-        clientId,
-        fromCoach: isCoach,
-        senderName: isCoach ? resolvedCoachName : undefined,
-        content,
-      });
+      // NB : la push notif est envoyée côté serveur par le trigger
+      // trg_notify_new_message (migration 082) — rien à faire ici.
     }
     setSending(false);
   };

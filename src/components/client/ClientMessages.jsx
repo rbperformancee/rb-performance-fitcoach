@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT, getLocale } from "../../lib/i18n";
 import { isClientDemoMode } from "../../lib/demoMode";
-import { notifyNewMessage } from "../../lib/notifyMessage";
 
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
@@ -88,13 +87,7 @@ export default function ClientMessages({ client, coach, accent, user }) {
       });
       if (error) throw error;
       setText("");
-      // Push notif au coach (fire-and-forget).
-      notifyNewMessage({
-        clientId: client.id,
-        fromCoach: false,
-        senderName: client.full_name,
-        content,
-      });
+      // NB : push notif envoyée côté serveur par le trigger (migration 082).
     } catch (e) {
       console.warn("[ClientMessages] send", e);
     }
