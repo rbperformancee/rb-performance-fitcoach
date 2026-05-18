@@ -7,6 +7,7 @@ import { useT, t as tStatic, getLocale } from "../lib/i18n";
 import { uploadChatPhoto, uploadChatAudio } from "../lib/chatMedia";
 import VoiceMessageButton from "./VoiceMessageButton";
 import VoiceMessage from "./VoiceMessage";
+import { useTyping } from "../lib/useTyping";
 
 const GREEN = "#02d1ba";
 
@@ -66,6 +67,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
   const bottomRef = useRef(null);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
+  const { peerTyping, notifyTyping } = useTyping(clientId, isCoach ? "coach" : "client");
 
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
@@ -367,6 +369,18 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
             </div>
           );
         })}
+        {peerTyping && (
+          <div style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 7, padding: "4px 14px 6px" }}>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>
+              {resolvedCoachName} écrit
+            </span>
+            <span style={{ display: "flex", gap: 3 }}>
+              {[0, 1, 2].map((i) => (
+                <span key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: GREEN, display: "inline-block", animation: `dotPulse 1.2s ${i * 0.15}s infinite` }} />
+              ))}
+            </span>
+          </div>
+        )}
         <div ref={bottomRef} style={{ height: 1 }} />
       </div>
 
@@ -419,7 +433,7 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
         }}>
           <textarea
             value={newMsg}
-            onChange={(e) => setNewMsg(e.target.value)}
+            onChange={(e) => { setNewMsg(e.target.value); notifyTyping(); }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

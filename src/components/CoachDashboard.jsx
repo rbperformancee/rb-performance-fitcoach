@@ -6,6 +6,7 @@ import { uploadChatPhoto, uploadChatAudio } from "../lib/chatMedia";
 import VoiceMessageButton from "./VoiceMessageButton";
 import VoiceMessage from "./VoiceMessage";
 import BilanPhysique from "./coach/BilanPhysique";
+import { useTyping } from "../lib/useTyping";
 import CarbCycling from "./coach/CarbCycling";
 import MenuGenerator from "./coach/MenuGenerator";
 import DemoBanner from "./DemoBanner";
@@ -1786,6 +1787,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [sending,    setSending]    = useState(false);
   const [messages,   setMessages]   = useState([]);
   const coachChatFileRef = useRef(null);
+  const { peerTyping: clientTyping, notifyTyping: notifyCoachTyping } = useTyping(client?.id, "coach");
   const [rpeData,    setRpeData]    = useState([]);
   const [nutGoals,   setNutGoals]   = useState(null);
   const [nutSaving,  setNutSaving]  = useState(false);
@@ -3521,7 +3523,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
               <textarea
                 value={msgText}
-                onChange={e => setMsgText(e.target.value)}
+                onChange={e => { setMsgText(e.target.value); notifyCoachTyping(); }}
                 placeholder={fillTpl(t("cp.message_placeholder"), { name: firstName })}
                 rows={2}
                 style={{
@@ -3608,6 +3610,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             {messages.length === 0 && (
               <div style={{ textAlign: "center", padding: 20, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
                 {t("cp.messages_empty")}
+              </div>
+            )}
+            {clientTyping && (
+              <div style={{ padding: "8px 4px 0", fontSize: 11, color: G, fontStyle: "italic" }}>
+                {firstName} est en train d'écrire…
               </div>
             )}
           </div>
