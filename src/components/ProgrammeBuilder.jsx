@@ -117,6 +117,7 @@ ${weeksHtml}
 const newExercise = () => ({ id: uid(), name: "", reps: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "" });
 const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", runs: [], fieldSessions: [], exercises: [newExercise()] });
 const newFieldSession = () => ({ id: uid(), title: "", moment: "", description: "" });
+const newRun = () => ({ id: uid(), name: "", distance: "", duration: "", bpm: "", rest: "" });
 const newWeek = (n = 1) => ({ id: uid(), name: `Semaine ${n}`, sessions: [newSession(1)] });
 
 // Suggestions communes pour les champs exercice (autocomplete au focus).
@@ -377,6 +378,7 @@ function fromParsed(parsed) {
         // d'UI pour les éditer, mais ils ne doivent JAMAIS être perdus).
         runs: Array.isArray(s.runs)
           ? s.runs.map((r) => ({
+              id: uid(),
               name: r.name || "",
               distance: r.distance || "",
               duration: r.duration || "",
@@ -795,6 +797,10 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
   const updateFieldSession = (fi, f) => onUpdate({ ...session, fieldSessions: fieldSessions.map((x, i) => i === fi ? f : x) });
   const addFieldSession = () => onUpdate({ ...session, fieldSessions: [...fieldSessions, newFieldSession()] });
   const removeFieldSession = (fi) => onUpdate({ ...session, fieldSessions: fieldSessions.filter((_, i) => i !== fi) });
+  const runs = session.runs || [];
+  const updateRun = (ri, r) => onUpdate({ ...session, runs: runs.map((x, i) => i === ri ? r : x) });
+  const addRun = () => onUpdate({ ...session, runs: [...runs, newRun()] });
+  const removeRun = (ri) => onUpdate({ ...session, runs: runs.filter((_, i) => i !== ri) });
 
   return (
     <div style={{
@@ -877,6 +883,53 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
           letterSpacing: 0.5,
         }}
       >+ Ajouter un exercice</button>
+
+      {/* CARDIO / RUN — apparaît dans la séance ET dans la page Run du client */}
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
+        Cardio / Run{" "}
+        <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(alimente la page Run)</span>
+      </div>
+      {runs.map((r, i) => (
+        <div key={r.id || i} style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+            <input
+              value={r.name || ""}
+              onChange={(e) => updateRun(i, { ...r, name: e.target.value })}
+              placeholder="Nom (ex. Sortie longue, Fractionné 30/30)"
+              style={{ flex: 1, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
+            />
+            <button type="button" onClick={() => removeRun(i)} title="Retirer"
+              style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            >×</button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
+            {[
+              { k: "distance", ph: "Distance" },
+              { k: "duration", ph: "Durée" },
+              { k: "bpm", ph: "BPM" },
+              { k: "rest", ph: "Repos" },
+            ].map(({ k, ph }) => (
+              <input
+                key={k}
+                value={r[k] || ""}
+                onChange={(e) => updateRun(i, { ...r, [k]: e.target.value })}
+                placeholder={ph}
+                style={{ minWidth: 0, padding: "7px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addRun}
+        style={{
+          width: "100%", padding: 10, background: "transparent",
+          border: "1px dashed rgba(2,209,186,0.3)", borderRadius: 12,
+          color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+          letterSpacing: 0.5,
+        }}
+      >+ Ajouter un run</button>
 
       {/* SÉANCES TERRAIN — foot, rugby… le même jour, à un autre moment */}
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
