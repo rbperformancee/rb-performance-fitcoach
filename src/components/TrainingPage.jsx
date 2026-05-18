@@ -982,15 +982,18 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           // Le premier exercice "non-fait" est le seul a etre marque ACTIF.
           const firstUndoneIdx = exs.findIndex((_, ei) => (getHistory(activeWeek, activeSession, ei) || []).length === 0);
           // Rend une carte d'exercice à l'index global `ei`.
-          const renderCard = (ex, ei) => {
+          // forceActive : utilisé pour les supersets — tous les exercices du
+          // superset sont ouverts en même temps pour que l'athlète puisse
+          // enchaîner une série de chaque (A1 s1 → A2 s1 → A1 s2 → A2 s2…).
+          const renderCard = (ex, ei, forceActive = false) => {
             const history = getHistory(activeWeek, activeSession, ei) || [];
             const status = getProgressStatus(history);
             const isDone = history.length > 0;
             const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
             const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
-            const isExActive = firstUndoneIdx !== -1 && firstUndoneIdx === ei;
+            const isExActive = forceActive || (firstUndoneIdx !== -1 && firstUndoneIdx === ei);
             return (
-              <div key={ei} style={{ marginBottom: 10, opacity: isDone ? 1 : (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4 }}>
+              <div key={ei} style={{ marginBottom: 10, opacity: isDone || isExActive || (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4 }}>
                 <ExerciseCard
                   ex={ex}
                   weekIdx={activeWeek}
@@ -1016,16 +1019,23 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
               const { ex, index } = block.members[0];
               return renderCard(ex, index);
             }
+            // Le superset est "en cours" dès que le premier exo non-fait
+            // tombe dans sa plage d'index → on ouvre TOUS ses exercices en
+            // même temps (enchaînement série par série, dans l'ordre voulu).
+            const memberIdxs = block.members.map((m) => m.index);
+            const firstIdx = memberIdxs[0];
+            const lastIdx = memberIdxs[memberIdxs.length - 1];
+            const blockIsCurrent = firstUndoneIdx !== -1 && firstUndoneIdx >= firstIdx && firstUndoneIdx <= lastIdx;
             return (
               <div key={"sset-" + bi} style={{ marginBottom: 10, border: "1px solid rgba(2,209,186,0.18)", borderRadius: 18, padding: "8px 8px 0", background: "rgba(2,209,186,0.025)" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 7, padding: "5px 8px 9px" }}>
                   <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(2,209,186,0.85)" }}>
                     ⚡ {supersetTypeLabel(block.members.length)} · {block.key}
                   </span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>— enchaîne sans repos</span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>— une série de chaque, sans repos</span>
                 </div>
                 {block.members.map(({ ex, index }, mi) =>
-                  renderCard(mi === block.members.length - 1 ? ex : { ...ex, rest: "" }, index)
+                  renderCard(mi === block.members.length - 1 ? ex : { ...ex, rest: "" }, index, blockIsCurrent)
                 )}
               </div>
             );
