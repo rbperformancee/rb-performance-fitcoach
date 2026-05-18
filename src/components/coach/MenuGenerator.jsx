@@ -46,12 +46,12 @@ const FOOD_DB = {
   "Skyr": { kcal: 63, p: 11, g: 4, l: 0.2 },
   "Fromage blanc 0%": { kcal: 47, p: 8, g: 4, l: 0.2 },
   "Whey protéine": { kcal: 380, p: 80, g: 8, l: 6 },
-  "Riz basmati cru": { kcal: 350, p: 7, g: 78, l: 0.6 },
-  "Pâtes complètes crues": { kcal: 350, p: 13, g: 65, l: 2.5 },
-  "Patate douce": { kcal: 86, p: 1.6, g: 20, l: 0.1 },
-  "Pomme de terre": { kcal: 80, p: 2, g: 17, l: 0.1 },
-  "Flocons d'avoine": { kcal: 370, p: 13, g: 60, l: 7 },
-  "Pain complet": { kcal: 250, p: 9, g: 45, l: 3 },
+  "Riz basmati cru": { kcal: 350, p: 7, g: 78, l: 0.6, max: 150 },
+  "Pâtes complètes crues": { kcal: 350, p: 13, g: 65, l: 2.5, max: 150 },
+  "Patate douce": { kcal: 86, p: 1.6, g: 20, l: 0.1, max: 400 },
+  "Pomme de terre": { kcal: 80, p: 2, g: 17, l: 0.1, max: 450 },
+  "Flocons d'avoine": { kcal: 370, p: 13, g: 60, l: 7, max: 120 },
+  "Pain complet": { kcal: 250, p: 9, g: 45, l: 3, max: 120 },
   "Banane": { kcal: 90, p: 1.1, g: 23, l: 0.3, unit: "banane", unitG: 120 },
   "Huile d'olive": { kcal: 900, p: 0, g: 0, l: 100 },
   "Amandes": { kcal: 600, p: 21, g: 22, l: 50 },
@@ -61,24 +61,24 @@ const FOOD_DB = {
 
 // Modèles de repas COHÉRENTS — combinaisons d'aliments qui vont vraiment
 // ensemble (jamais de whey avec du pain, jamais de pain "nature" seul :
-// le pain n'apparaît qu'avec des œufs). Chaque rôle propose des variantes
-// pour la diversité ; les grammages sont calés sur les macros du repas.
+// le pain n'apparaît qu'avec des œufs). `fruit: true` = un fruit peut
+// venir compléter les glucides si le féculent est plafonné.
 const MEAL_TEMPLATES = {
   "petit-dejeuner": [
     // Porridge : laitage/whey + flocons + fruit + oléagineux
-    { protein: ["Whey protéine", "Skyr", "Fromage blanc 0%"], carb: ["Flocons d'avoine"], extra: "Banane", fat: ["Beurre de cacahuète", "Amandes"] },
+    { protein: ["Whey protéine", "Skyr", "Fromage blanc 0%"], carb: ["Flocons d'avoine"], fat: ["Beurre de cacahuète", "Amandes"], fruit: true },
     // Salé : œufs + pain (le pain a enfin de quoi l'accompagner)
-    { protein: ["Œufs entiers"], carb: ["Pain complet"], fat: ["Beurre de cacahuète"] },
+    { protein: ["Œufs entiers"], carb: ["Pain complet"], fat: ["Beurre de cacahuète"], fruit: true },
   ],
   "collation": [
-    { protein: ["Skyr", "Fromage blanc 0%"], extra: "Banane", fat: ["Amandes", "Beurre de cacahuète"] },
-    { protein: ["Whey protéine"], carb: ["Flocons d'avoine"], extra: "Banane" },
+    { protein: ["Skyr", "Fromage blanc 0%"], fat: ["Amandes", "Beurre de cacahuète"], fruit: true },
+    { protein: ["Whey protéine"], carb: ["Flocons d'avoine"], fruit: true },
   ],
   "dejeuner": [
-    { protein: ["Blanc de poulet", "Filet de dinde", "Steak haché 5% MG"], carb: ["Riz basmati cru", "Pâtes complètes crues", "Patate douce", "Pomme de terre"], veg: true, fat: ["Huile d'olive"] },
+    { protein: ["Blanc de poulet", "Filet de dinde", "Steak haché 5% MG"], carb: ["Riz basmati cru", "Pâtes complètes crues", "Patate douce", "Pomme de terre"], veg: true, fat: ["Huile d'olive"], fruit: true },
   ],
   "diner": [
-    { protein: ["Cabillaud", "Saumon", "Blanc de poulet", "Filet de dinde"], carb: ["Riz basmati cru", "Patate douce", "Pomme de terre"], veg: true, fat: ["Huile d'olive"] },
+    { protein: ["Cabillaud", "Saumon", "Blanc de poulet", "Filet de dinde"], carb: ["Riz basmati cru", "Patate douce", "Pomme de terre"], veg: true, fat: ["Huile d'olive"], fruit: true },
   ],
 };
 
@@ -112,19 +112,27 @@ function buildMeal(slot, mt) {
   // 1. Légumes (repas principaux) — portion fixe
   if (tpl.veg) place("veg", "Légumes verts", 150, "150 g");
 
-  // 2. Fruit — portion fixe en unité
-  if (tpl.extra) {
-    const ef = FOOD_DB[tpl.extra];
-    place("extra", tpl.extra, ef.unitG, `1 ${ef.unit}`);
-  }
-
-  // 3. Glucides — comble les glucides restants
+  // 2. Glucides — comble les glucides restants, PLAFONNÉ à une portion
+  //    réaliste (pas 180 g de pain ni 600 g de pomme de terre).
   if (tpl.carb) {
     const cName = pick(tpl.carb);
     const cf = FOOD_DB[cName];
     const remG = mt.g - acc.glucides;
-    const cGrams = cf.g > 0 ? Math.max(20, r5(remG / (cf.g / 100))) : 40;
+    let cGrams = cf.g > 0 ? r5(remG / (cf.g / 100)) : 40;
+    cGrams = Math.max(20, Math.min(cf.max || 9999, cGrams));
     place("carb", cName, cGrams, `${cGrams} g`);
+  }
+
+  // 3. Fruit — complète les glucides restants quand le féculent est
+  //    plafonné (ex. pain plafonné à 120 g → le reste passe en banane).
+  if (tpl.fruit) {
+    const remG = mt.g - acc.glucides;
+    if (remG > 8) {
+      const bf = FOOD_DB["Banane"];
+      const gPerUnit = (bf.g / 100) * bf.unitG; // glucides par banane
+      const units = Math.max(1, Math.round(remG / gPerUnit));
+      place("fruit", "Banane", units * bf.unitG, `${units} ${bf.unit}${units > 1 ? "s" : ""}`);
+    }
   }
 
   // 4. Protéines — comble les protéines restantes (après légumes/fruit/glucides)
@@ -155,7 +163,7 @@ function buildMeal(slot, mt) {
   }
 
   // Affichage : protéine → glucide → fruit → lipide → légumes
-  const items = ["protein", "carb", "extra", "fat", "veg"]
+  const items = ["protein", "carb", "fruit", "fat", "veg"]
     .filter((r) => slots[r])
     .map((r) => slots[r]);
 
