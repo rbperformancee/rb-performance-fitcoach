@@ -226,7 +226,7 @@ const en = {
     "train.ghost_all": "ghost visible on every exercise",
     "train.ghost_some": "ghost visible on",
     "train.ghost_some_suffix": "exercises",
-    "train.finisher_label": "🔥 Finisher",
+    "train.finisher_label": "Finisher",
     "train.cardio_label": "🏃 Prescribed cardio",
     "train.cardio_log_hint": "You can log these runs in the",
     "train.cardio_run_tab": "Run",

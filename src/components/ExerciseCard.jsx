@@ -186,7 +186,7 @@ function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placehold
           width: "100%", boxSizing: "border-box",
         }}
       />
-      <input type="text" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder || "—"}
+      <input type="number" inputMode="numeric" pattern="[0-9]*" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder || "—"}
         className="rb-reps-input"
         onKeyDown={e => e.key === "Enter" && validate()}
         style={{

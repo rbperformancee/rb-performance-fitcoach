@@ -1029,8 +1029,11 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             return (
               <div key={"sset-" + bi} style={{ marginBottom: 10, border: "1px solid rgba(2,209,186,0.18)", borderRadius: 18, padding: "8px 8px 0", background: "rgba(2,209,186,0.025)" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 7, padding: "5px 8px 9px" }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(2,209,186,0.85)" }}>
-                    ⚡ {supersetTypeLabel(block.members.length)} · {block.key}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(2,209,186,0.85)" }}>
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" style={{ flexShrink: 0 }}>
+                      <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+                    </svg>
+                    {supersetTypeLabel(block.members.length)} · {block.key}
                   </span>
                   <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>— une série de chaque, sans repos</span>
                 </div>

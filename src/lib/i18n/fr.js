@@ -226,7 +226,7 @@ const fr = {
     "train.ghost_all": "visible sur chaque exercice",
     "train.ghost_some": "visible sur",
     "train.ghost_some_suffix": "exercices",
-    "train.finisher_label": "🔥 Finisher",
+    "train.finisher_label": "Finisher",
     "train.cardio_label": "🏃 Cardio prescrit",
     "train.cardio_log_hint": "Tu peux logger ces runs dans l'onglet",
     "train.cardio_run_tab": "Run",

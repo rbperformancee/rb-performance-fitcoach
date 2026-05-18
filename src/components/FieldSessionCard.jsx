@@ -75,9 +75,15 @@ export default function FieldSessionCard({ field, clientId, coachId, weekIdx, se
     }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
-            🏟 {field.title || "Séance terrain"}
-            {field.moment ? <span style={{ fontWeight: 500, color: "rgba(255,255,255,0.4)" }}>{" · " + field.moment}</span> : null}
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 7 }}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke={G} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M5 22V3" />
+              <path d="M5 4h12l-2.4 4 2.4 4H5" />
+            </svg>
+            <span>
+              {field.title || "Séance terrain"}
+              {field.moment ? <span style={{ fontWeight: 500, color: "rgba(255,255,255,0.4)" }}>{" · " + field.moment}</span> : null}
+            </span>
           </div>
           {field.description ? (
             <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.5)", marginTop: 3, lineHeight: 1.45 }}>{field.description}</div>
