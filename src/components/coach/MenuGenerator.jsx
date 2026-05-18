@@ -88,49 +88,61 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 // Construit un repas COHÉRENT calé sur la cible macro `mt` (kcal/p/g/l)
 // à partir d'un modèle de repas (combinaison d'aliments réaliste).
+//
+// IMPORTANT : chaque aliment est calé sur la macro RESTANTE, pas sur la
+// cible brute — sinon les protéines du riz/avoine/légumes s'ajoutent par
+// dessus la source de protéines et le total explose. Ordre de calage :
+// légumes & fruit (fixes) → glucides → protéines → lipides ; la source de
+// protéines comble donc le déficit réel, le total respecte la cible.
 function buildMeal(slot, mt) {
-  const items = [];
   const acc = { calories: 0, proteines: 0, glucides: 0, lipides: 0 };
-  const add = (name, grams, qty) => {
+  const slots = {}; // role -> { food, qty }
+  const place = (role, name, grams, qty) => {
     const food = FOOD_DB[name];
     const f = grams / 100;
     acc.calories += food.kcal * f;
     acc.proteines += food.p * f;
     acc.glucides += food.g * f;
     acc.lipides += food.l * f;
-    items.push({ food: name, qty });
+    slots[role] = { food: name, qty };
   };
 
   const tpl = pick(MEAL_TEMPLATES[slot.type] || MEAL_TEMPLATES["dejeuner"]);
 
-  // Protéines — calées sur la cible protéines du repas
-  const pName = pick(tpl.protein);
-  const pf = FOOD_DB[pName];
-  const pGrams = pf.p > 0 ? r5(mt.p / (pf.p / 100)) : 100;
-  if (pf.unit) {
-    const u = Math.max(1, Math.round(pGrams / pf.unitG));
-    add(pName, u * pf.unitG, `${u} ${pf.unit}${u > 1 ? "s" : ""} entier${u > 1 ? "s" : ""}`);
-  } else {
-    const g = Math.max(20, pGrams);
-    add(pName, g, `${g} g`);
-  }
+  // 1. Légumes (repas principaux) — portion fixe
+  if (tpl.veg) place("veg", "Légumes verts", 150, "150 g");
 
-  // Fruit (portion fixe en unité) — compte dans les glucides
+  // 2. Fruit — portion fixe en unité
   if (tpl.extra) {
     const ef = FOOD_DB[tpl.extra];
-    add(tpl.extra, ef.unitG, `1 ${ef.unit}`);
+    place("extra", tpl.extra, ef.unitG, `1 ${ef.unit}`);
   }
 
-  // Glucides — comble les glucides restants après protéines + fruit
+  // 3. Glucides — comble les glucides restants
   if (tpl.carb) {
     const cName = pick(tpl.carb);
     const cf = FOOD_DB[cName];
     const remG = mt.g - acc.glucides;
     const cGrams = cf.g > 0 ? Math.max(20, r5(remG / (cf.g / 100))) : 40;
-    add(cName, cGrams, `${cGrams} g`);
+    place("carb", cName, cGrams, `${cGrams} g`);
   }
 
-  // Lipides — comble le reste après protéines + glucides
+  // 4. Protéines — comble les protéines restantes (après légumes/fruit/glucides)
+  {
+    const pName = pick(tpl.protein);
+    const pf = FOOD_DB[pName];
+    const remP = mt.p - acc.proteines;
+    const pGrams = pf.p > 0 ? r5(remP / (pf.p / 100)) : 100;
+    if (pf.unit) {
+      const u = Math.max(1, Math.round(pGrams / pf.unitG));
+      place("protein", pName, u * pf.unitG, `${u} ${pf.unit}${u > 1 ? "s" : ""} entier${u > 1 ? "s" : ""}`);
+    } else {
+      const g = Math.max(20, pGrams);
+      place("protein", pName, g, `${g} g`);
+    }
+  }
+
+  // 5. Lipides — comble les lipides restants
   if (tpl.fat) {
     const remFat = mt.l - acc.lipides;
     if (remFat > 3) {
@@ -138,14 +150,14 @@ function buildMeal(slot, mt) {
       const ff = FOOD_DB[fName];
       let fGrams = ff.l > 0 ? Math.round(remFat / (ff.l / 100)) : 10;
       fGrams = Math.max(5, Math.min(50, fGrams));
-      add(fName, fGrams, `${fGrams} g`);
+      place("fat", fName, fGrams, `${fGrams} g`);
     }
   }
 
-  // Légumes pour les repas principaux
-  if (tpl.veg) {
-    add("Légumes verts", 150, "150 g");
-  }
+  // Affichage : protéine → glucide → fruit → lipide → légumes
+  const items = ["protein", "carb", "extra", "fat", "veg"]
+    .filter((r) => slots[r])
+    .map((r) => slots[r]);
 
   return {
     label: slot.label,
