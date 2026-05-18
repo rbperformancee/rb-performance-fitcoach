@@ -50,7 +50,7 @@ const FOOD_DB = {
   "Pâtes complètes crues": { kcal: 350, p: 13, g: 65, l: 2.5, max: 150 },
   "Patate douce": { kcal: 86, p: 1.6, g: 20, l: 0.1, max: 400 },
   "Pomme de terre": { kcal: 80, p: 2, g: 17, l: 0.1, max: 450 },
-  "Flocons d'avoine": { kcal: 370, p: 13, g: 60, l: 7, max: 120 },
+  "Flocons d'avoine": { kcal: 370, p: 13, g: 60, l: 7, max: 50 },
   "Pain complet": { kcal: 250, p: 9, g: 45, l: 3, max: 120 },
   "Banane": { kcal: 90, p: 1.1, g: 23, l: 0.3, unit: "banane", unitG: 120 },
   "Huile d'olive": { kcal: 900, p: 0, g: 0, l: 100 },
