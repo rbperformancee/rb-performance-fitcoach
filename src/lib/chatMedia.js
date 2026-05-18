@@ -10,31 +10,45 @@ const PHOTO_BUCKET = "progress-photos";
 const AUDIO_BUCKET = "audio-messages";
 const MAX_DIM = 1280; // px — côté le plus long
 
-// Redimensionne (max 1280px) + recompresse en JPEG. Respecte l'orientation
-// EXIF (photos iPhone). Fallback : renvoie le fichier brut si quoi que ce
-// soit échoue — l'upload se fera tel quel.
+// Charge un fichier image dans un <img>, avec timeout. Plus fiable que
+// createImageBitmap sur iOS (qui peut bloquer indéfiniment sur un HEIC).
+function loadImage(src, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const to = setTimeout(() => { img.src = ""; reject(new Error("img timeout")); }, timeoutMs);
+    img.onload = () => { clearTimeout(to); resolve(img); };
+    img.onerror = () => { clearTimeout(to); reject(new Error("img error")); };
+    img.decoding = "async";
+    img.src = src;
+  });
+}
+
+// Redimensionne (max 1280px) + recompresse en JPEG via un <img> + canvas.
+// Cette voie convertit aussi les HEIC iPhone en JPEG (sinon la photo ne
+// s'affiche pas hors Safari). Timeout 12 s → on n'attend jamais sans fin.
+// Fallback : renvoie le fichier brut si quoi que ce soit échoue.
 async function downscaleImage(file) {
   if (!file || !file.type || !file.type.startsWith("image/")) return file;
+  let url;
   try {
-    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-    let { width, height } = bitmap;
+    url = URL.createObjectURL(file);
+    const img = await loadImage(url, 12000);
+    let width = img.naturalWidth, height = img.naturalHeight;
+    if (!width || !height) return file;
     const longest = Math.max(width, height);
-    if (longest <= MAX_DIM && file.size < 1_200_000) {
-      bitmap.close?.();
-      return file; // déjà raisonnable
-    }
     const scale = Math.min(1, MAX_DIM / longest);
     width = Math.round(width * scale);
     height = Math.round(height * scale);
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
-    canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
-    bitmap.close?.();
+    canvas.getContext("2d").drawImage(img, 0, 0, width, height);
     const blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.82));
-    return blob || file;
+    return blob && blob.size > 0 ? blob : file;
   } catch {
     return file;
+  } finally {
+    if (url) URL.revokeObjectURL(url);
   }
 }
 

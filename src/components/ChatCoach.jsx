@@ -108,7 +108,9 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
         }
       )
       .subscribe();
-    return () => supabase.removeChannel(channel);
+    // Filet de sécurité si le realtime ne délivre pas : refetch toutes les 6 s.
+    const poll = setInterval(fetchMessages, 6000);
+    return () => { supabase.removeChannel(channel); clearInterval(poll); };
   }, [clientId, fetchMessages]);
 
   useEffect(() => {

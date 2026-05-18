@@ -2044,7 +2044,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         }, refetchMessages)
         .subscribe();
     } catch { /* realtime peut etre desactive */ }
-    return () => { if (ch) supabase.removeChannel(ch); };
+    // Filet de sécurité : si le realtime ne délivre pas (socket coupée,
+    // cache PWA…), on rafraîchit les messages toutes les 6 s — le coach
+    // n'a plus besoin de refresh pour voir un nouveau message.
+    const msgPoll = setInterval(refetchMessages, 6000);
+    return () => { if (ch) supabase.removeChannel(ch); clearInterval(msgPoll); };
   }, [client?.id, d7str]);
 
   // ===== Agregation nutrition par jour =====
