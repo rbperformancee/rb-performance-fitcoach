@@ -1524,6 +1524,7 @@ const fr = {
     "rt.btn_resume": "Reprendre",
     "rt.btn_lets_go": "C'est parti !",
     "rt.btn_skip": "Passer",
+    "rt.minimize": "Réduire",
     // SessionTimer
     "st.eyebrow": "SÉANCE EN COURS",
     "st.summary_one_one": "{ex} exercice · {set} série",

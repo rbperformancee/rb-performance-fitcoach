@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Sparkline } from "./Sparkline";
-import { RestTimer, parseRestSeconds } from "./RestTimer";
+import { parseRestSeconds } from "./RestTimer";
+import { useRestTimer } from "../lib/restTimer";
 import haptic from "../lib/haptic";
 import { useT, getLocale } from "../lib/i18n";
 import { findVideo } from "../data/exerciseVideos";
@@ -214,30 +215,9 @@ function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placehold
 
 export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData, bandColor, isActive }) {
   const t = useT();
+  const restTimer = useRestTimer();
   const [expanded, setExpanded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  // showTimer persiste en localStorage : si l'utilisateur quitte la PWA pendant
-  // le rest timer (iOS kill du JS thread), le timer doit reapparaitre au retour.
-  // RestTimer lui-même reprend où il en était grâce à son propre localStorage.
-  const showTimerKey = "rb_rest_active_" + weekIdx + "_" + sessionIdx + "_" + exIdx;
-  const [showTimer, setShowTimer] = useState(() => {
-    try {
-      const v = localStorage.getItem(showTimerKey);
-      if (v) {
-        const ts = parseInt(v) || 0;
-        // Garde le timer si moins de 10min écoulées depuis le start
-        if (Date.now() - ts < 10 * 60 * 1000) return true;
-      }
-    } catch {}
-    return false;
-  });
-  useEffect(() => {
-    try {
-      if (showTimer) localStorage.setItem(showTimerKey, String(Date.now()));
-      else localStorage.removeItem(showTimerKey);
-    } catch {}
-    // eslint-disable-line
-  }, [showTimer, showTimerKey]);
 
   const today = new Date().toISOString().slice(0, 10);
   const storageKey = "sets_done_" + weekIdx + "_" + sessionIdx + "_" + exIdx + "_" + today;
@@ -312,9 +292,11 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
       const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
       saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n - 1].reps, completedSetsRef.current, ex.name);
       haptic.success(); // Exercice termine
-      if (restSecs) setTimeout(() => setShowTimer(true), 600);
+      // Dernière série faite → le repos annonce l'exercice suivant.
+      if (restSecs) setTimeout(() => restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets: null }), 600);
     } else if (restSecs) {
-      setTimeout(() => setShowTimer(true), 400);
+      // Série intermédiaire → le repos annonce la série suivante.
+      setTimeout(() => restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets: { next: n + 1, total: setsCount } }), 400);
     }
   };
 
@@ -338,7 +320,6 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     const bc = bandColor || "rgba(255,255,255,0.15)";
     return (
       <>
-        {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} betweenSets={betweenSets} onDismiss={() => setShowTimer(false)} />}
         <div style={{ marginBottom: 8 }} onClick={() => setExpanded(v => !v)}>
           <div style={{ display: "flex", alignItems: "stretch", borderRadius: 16, overflow: "hidden", background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" }}>
             <div style={{ width: 5, background: bc, flexShrink: 0 }} />
@@ -360,7 +341,6 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   if (allDone) {
     return (
       <>
-        {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} betweenSets={betweenSets} onDismiss={() => setShowTimer(false)} />}
         <div style={{ marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "stretch", borderRadius: 18, overflow: "hidden", background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.12)", cursor: "pointer" }}
             onClick={() => setExpanded(v => !v)}>
@@ -406,7 +386,6 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   // DESIGN : exercice actif ouvert
   return (
     <>
-      {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} betweenSets={betweenSets} onDismiss={() => setShowTimer(false)} />}
 
       <div style={{ marginBottom: 8, borderRadius: 20, overflow: "hidden", background: "rgba(255,255,255,0.03)", border: "2px solid #02d1ba" }}>
 
@@ -420,7 +399,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px", lineHeight: 1.1, marginBottom: 10 }}>{ex.name}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {chipsReps && <span style={{ fontSize: 11, color: "rgba(2,209,186,0.8)", background: "rgba(2,209,186,0.08)", padding: "5px 12px", borderRadius: 100, fontWeight: 600 }}>{chipsReps}</span>}
-                {ex.rest && <span onClick={() => restSecs && setShowTimer(true)} style={{ fontSize: 11, color: "rgba(255,165,0,0.7)", background: "rgba(255,165,0,0.07)", padding: "5px 12px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>⏱ {ex.rest}</span>}
+                {ex.rest && <span onClick={() => restSecs && restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets })} style={{ fontSize: 11, color: "rgba(255,165,0,0.7)", background: "rgba(255,165,0,0.07)", padding: "5px 12px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>⏱ {ex.rest}</span>}
                 {ex.tempo && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>{ex.tempo}</span>}
                 {ex.rir != null && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>RIR {ex.rir}</span>}
                 {hasVideo && <button onClick={() => setShowVideo(v => !v)} style={{ fontSize: 11, color: GREEN, background: "rgba(2,209,186,0.07)", border: "1px solid rgba(2,209,186,0.2)", padding: "5px 12px", borderRadius: 100, cursor: "pointer" }}>{showVideo ? t("ec.video_close") : t("ec.video_play")}</button>}
@@ -518,7 +497,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
         {/* Footer — Timer + Intelligence progression */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "14px 16px", display: "flex", gap: 10 }}>
           {ex.rest && (
-            <div onClick={() => restSecs && setShowTimer(true)} style={{ flex: 1, padding: "10px 14px", background: "rgba(255,165,0,0.04)", border: "1px solid rgba(255,165,0,0.08)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: restSecs ? "pointer" : "default" }}>
+            <div onClick={() => restSecs && restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets })} style={{ flex: 1, padding: "10px 14px", background: "rgba(255,165,0,0.04)", border: "1px solid rgba(255,165,0,0.08)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: restSecs ? "pointer" : "default" }}>
               <div style={{ fontSize: 9, color: "rgba(255,165,0,0.4)", letterSpacing: "1px", textTransform: "uppercase" }}>{t("ec.rest_label")}</div>
               <div style={{ fontSize: 18, fontWeight: 100, color: "rgba(255,165,0,0.6)", letterSpacing: "-1px" }}>{ex.rest}</div>
             </div>

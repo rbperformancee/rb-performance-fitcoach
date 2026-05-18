@@ -1524,6 +1524,7 @@ const en = {
     "rt.btn_resume": "Resume",
     "rt.btn_lets_go": "Let's go!",
     "rt.btn_skip": "Skip",
+    "rt.minimize": "Minimize",
     // SessionTimer
     "st.eyebrow": "SESSION IN PROGRESS",
     "st.summary_one_one": "{ex} exercise · {set} set",

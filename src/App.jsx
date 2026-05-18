@@ -4,6 +4,7 @@ import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
 import { ToastProvider, toast } from "./components/Toast";
 import { useAppData } from "./hooks/useAppData";
 import { useTheme } from "./hooks/useTheme";
+import { RestTimerProvider } from "./lib/restTimer";
 // NON lazy : ce flow s'affiche au tout premier render après login. Si lazy avec
 // fallback null, l'utilisateur voit un écran blanc pendant le téléchargement
 // du chunk → import direct.
@@ -1637,7 +1638,9 @@ export default function App() {
   return (
     <ErrorBoundaryApp>
       <Suspense fallback={<LazyFallback />}>
-        <AppInner />
+        <RestTimerProvider>
+          <AppInner />
+        </RestTimerProvider>
       </Suspense>
     </ErrorBoundaryApp>
   );

@@ -136,7 +136,7 @@ function unlockAudio() {
   } catch(e) {}
 }
 
-export function RestTimer({ restSeconds, onDismiss, exName, betweenSets }) {
+export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimized, onMinimize, onExpand }) {
   const t = useT();
   const [timeLeft, setTimeLeft] = useState(restSeconds);
 
@@ -318,6 +318,55 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets }) {
   const RADIUS = 82;
   const STROKE = 6;
 
+  // ── Vue réduite : pastille flottante. Le countdown tourne toujours (les
+  // effects ne dépendent pas de `minimized`), le client navigue librement. ──
+  if (minimized) {
+    const R = 9;
+    const C = 2 * Math.PI * R;
+    return (
+      <div onClick={onExpand} style={{
+        position: "fixed",
+        bottom: "calc(env(safe-area-inset-bottom,0px) + 84px)",
+        left: "50%", transform: "translateX(-50%)",
+        zIndex: 200,
+        display: "flex", alignItems: "center", gap: 11,
+        padding: "9px 9px 9px 13px",
+        background: "rgba(15,15,15,0.96)",
+        border: `1px solid ${ringColor}66`,
+        borderRadius: 100,
+        WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
+        boxShadow: `0 8px 28px rgba(0,0,0,0.55), 0 0 14px ${ringGlow}`,
+        cursor: "pointer",
+      }}>
+        <div style={{ position: "relative", width: 24, height: 24, flexShrink: 0 }}>
+          <svg width={24} height={24} viewBox="0 0 24 24">
+            <circle cx={12} cy={12} r={R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={2.5} />
+            <circle cx={12} cy={12} r={R} fill="none" stroke={ringColor} strokeWidth={2.5} strokeLinecap="round"
+              strokeDasharray={C} strokeDashoffset={C * (1 - progress)}
+              transform="rotate(-90 12 12)"
+              style={{ transition: "stroke-dashoffset 1s linear, stroke 0.3s" }} />
+          </svg>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.15, minWidth: 46 }}>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: phase === "done" ? GREEN : "#fff", letterSpacing: "-0.5px" }}>
+            {phase === "done" ? t("rt.ready") : timeStr}
+          </span>
+          <span style={{ fontSize: 7.5, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase" }}>
+            {t("rt.section_title")}
+          </span>
+        </div>
+        <button onClick={(e) => { e.stopPropagation(); clearPersist(); onDismiss?.(); }}
+          aria-label={t("rt.btn_skip")}
+          style={{
+            width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
+            background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)",
+            color: "rgba(255,255,255,0.6)", fontSize: 16, lineHeight: 1, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>×</button>
+      </div>
+    );
+  }
+
   return (
     <div onClick={unlockAudio} style={{
       position: "fixed", inset: 0, zIndex: 999,
@@ -333,6 +382,26 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets }) {
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
         @keyframes ringPop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
       `}</style>
+
+      {/* Bouton réduire — laisse le client naviguer dans l'app */}
+      {onMinimize && (
+        <button onClick={(e) => { e.stopPropagation(); onMinimize(); }}
+          aria-label={t("rt.minimize")}
+          style={{
+            position: "absolute",
+            top: "calc(env(safe-area-inset-top,0px) + 18px)", right: 18,
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "8px 13px", borderRadius: 100,
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+            color: "rgba(255,255,255,0.65)", fontSize: 11, fontWeight: 700,
+            cursor: "pointer",
+          }}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          {t("rt.minimize")}
+        </button>
+      )}
 
       {/* Titre */}
       <div style={{
