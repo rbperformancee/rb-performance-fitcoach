@@ -7,3 +7,8 @@
 # vérification stricte du header apikey/Authorization (= ANON ou SR).
 [functions.send-push]
 verify_jwt = false
+
+# daily-reminder : appelée par pg_cron via pg_net (header apikey). Même
+# raison que send-push — auth vérifiée dans la function.
+[functions.daily-reminder]
+verify_jwt = false
