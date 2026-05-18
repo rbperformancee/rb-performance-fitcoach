@@ -3192,9 +3192,6 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             <HabitsHeatmap7d key={habitsVersion} clientId={client.id} />
           </div>
 
-          {/* BILAN PHYSIQUE — alertes, courbes, photos, annotation (migration 086) */}
-          <BilanPhysique clientId={client.id} checkins={weeklyCheckins} client={client} />
-
           {/* RPE evolution en barres */}
           {rpeData.length > 2 && (
             <div style={{ marginBottom: 20 }}>
@@ -3333,6 +3330,9 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
         {/* ===== TAB: SUIVI ===== */}
         {panelTab === "suivi" && (<>
+
+        {/* BILAN PHYSIQUE — alertes, courbes, photos, annotation (migration 086) */}
+        <BilanPhysique clientId={client.id} checkins={weeklyCheckins} client={client} />
 
         {/* ===== NIVEAU CLIENT AUTO ===== */}
         {(() => {
