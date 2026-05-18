@@ -263,9 +263,10 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       </div>
 
       {/* HABITUDES QUOTIDIENNES — checklist assignée par le coach.
-          On passe daily_tracking pour permettre l'auto-validation des
-          habitudes type "10k pas" / "8h sommeil" / "2L eau". */}
-      <HabitsCard clientId={clientId} dailyTracking={appData?.dailyTracking} />
+          On passe daily_tracking + les pas LIVE (dailySteps) pour permettre
+          l'auto-validation immédiate des habitudes type "15k pas" dès que le
+          client saisit ses pas sur cette page. */}
+      <HabitsCard clientId={clientId} dailyTracking={{ ...appData?.dailyTracking, pas: dailySteps }} />
 
       {/* CTA Bilan hebdomadaire — visible uniquement dim/lun (jour du
           bilan = dimanche + rattrapage lundi), hidden si déjà soumis pour

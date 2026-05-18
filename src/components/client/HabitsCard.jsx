@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import haptic from "../../lib/haptic";
 import { toast } from "../Toast";
@@ -42,39 +42,59 @@ function computeStreak(datesSet) {
 }
 
 /**
- * Heuristique : parse une habitude type "10k pas", "8h sommeil", "2L eau",
- * "Marcher 10000 pas" → { metric, threshold }.
+ * Parse une habitude quantifiable depuis son nom → { metric, threshold }.
  *
+ * Gère : "15k pas", "10 000 pas", "10.000 pas", "8h de sommeil",
+ *        "2L d'eau", "2,5L eau", "Marcher 12000 pas"…
  * Retourne null si le nom ne matche pas un seuil quantifiable.
  */
 function parseHabitTarget(name) {
   if (!name) return null;
   const lower = name.toLowerCase();
-  const numMatch = lower.match(/(\d+(?:[.,]\d+)?)\s*(k|m)?/);
-  if (!numMatch) return null;
-  const baseNum = parseFloat(numMatch[1].replace(",", "."));
-  const unit = numMatch[2];
-  const num = unit === "k" ? baseNum * 1000 : baseNum;
-  // Pas / steps
-  if (/\bpas\b|\bstep|marche/.test(lower)) {
-    return { metric: "pas", threshold: num };
+
+  // 1. Quelle métrique ?
+  let metric = null;
+  if (/\bpas\b|\bstep|marche/.test(lower)) metric = "pas";
+  else if (/sommeil|dormir|sleep|coucher/.test(lower)) metric = "sommeil_h";
+  else if (/eau\b|water|boire|hydrat/.test(lower)) metric = "eau_ml";
+  if (!metric) return null;
+
+  // 2. Premier nombre du nom — le groupe capture chiffres + séparateurs
+  //    internes (espace, point, virgule) pour gérer "10 000" / "10.000".
+  const m = lower.match(/(\d[\d\s.,]*)\s*(k)?/);
+  if (!m) return null;
+  const token = m[1].trim();
+  const hasK = !!m[2];
+
+  let num;
+  // Décimale finale ("2,5", "1.5") : une virgule/point suivi de 1-2 chiffres.
+  const dec = token.match(/^([\d\s.]*\d)[.,](\d{1,2})$/);
+  if (dec) {
+    num = parseFloat(dec[1].replace(/[\s.]/g, "") + "." + dec[2]);
+  } else {
+    // Sinon tout séparateur = milliers → on les retire.
+    num = parseFloat(token.replace(/[\s.,]/g, ""));
   }
-  // Sommeil (heures)
-  if (/sommeil|dormir|sleep|coucher/.test(lower)) {
-    return { metric: "sommeil_h", threshold: num };
+  if (!isFinite(num) || num <= 0) return null;
+  if (hasK) num *= 1000;
+
+  if (metric === "pas") {
+    // Cible de pas réaliste : un nombre < 1000 est une notation en milliers
+    // ("10 pas" / "15 pas" voulait dire 10k / 15k).
+    if (num < 1000) num *= 1000;
+    return { metric, threshold: num };
   }
-  // Eau (litres ou ml)
-  if (/eau\b|water|boire|hydra/.test(lower)) {
-    const ml = num >= 50 ? num : num * 1000; // num=2 → 2L → 2000ml, num=2000 → ml direct
-    return { metric: "eau_ml", threshold: ml };
-  }
-  return null;
+  if (metric === "sommeil_h") return { metric, threshold: num };
+  // Eau : valeur < 50 = litres → on convertit en ml.
+  return { metric, threshold: num < 50 ? Math.round(num * 1000) : num };
 }
 
 export default function HabitsCard({ clientId, dailyTracking }) {
   const [habits, setHabits] = useState([]);
   const [todayLogs, setTodayLogs] = useState({}); // { habit_id: log_id }
   const [streaks, setStreaks] = useState({}); // habit_id → streak count
+  const [autoIds, setAutoIds] = useState(() => new Set()); // habits validées auto
+  const [fetchedTracking, setFetchedTracking] = useState(null); // daily_tracking du jour
   const [loading, setLoading] = useState(true);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -86,7 +106,7 @@ export default function HabitsCard({ clientId, dailyTracking }) {
       const since = new Date();
       since.setDate(since.getDate() - 60); // 60j max streak window
       const sinceStr = since.toISOString().slice(0, 10);
-      const [{ data: hs }, { data: lgs }, { data: histLogs }] = await Promise.all([
+      const [{ data: hs }, { data: lgs }, { data: histLogs }, { data: dt }] = await Promise.all([
         supabase.from("habits")
           .select("id, name, icon, color, ordre")
           .eq("client_id", clientId)
@@ -100,9 +120,18 @@ export default function HabitsCard({ clientId, dailyTracking }) {
           .select("habit_id, date")
           .eq("client_id", clientId)
           .gte("date", sinceStr),
+        // daily_tracking du jour — fetché ici pour que l'auto-validation
+        // marche même si le client a saisi ses pas/eau/sommeil sur une
+        // autre page (daily_tracking n'est pas en realtime).
+        supabase.from("daily_tracking")
+          .select("pas, eau_ml, sommeil_h")
+          .eq("client_id", clientId)
+          .eq("date", today)
+          .maybeSingle(),
       ]);
       if (cancelled) return;
       setHabits(hs || []);
+      setFetchedTracking(dt || null);
       const map = {};
       (lgs || []).forEach((l) => { map[l.habit_id] = l.id; });
       setTodayLogs(map);
@@ -122,18 +151,31 @@ export default function HabitsCard({ clientId, dailyTracking }) {
     return () => { cancelled = true; };
   }, [clientId, today]);
 
-  // Auto-validation : si une habitude matche un seuil (10k pas, 8h sommeil…)
-  // et que la métrique daily_tracking dépasse ce seuil, on insère un log
-  // automatique pour aujourd'hui. UNIQUE (habit_id, date) protège des doublons.
+  // Métriques effectives = MAX entre ce qu'on a fetché et la prop live
+  // (dailyTracking peut porter les pas saisis à l'instant sur la page Body).
+  // Le MAX est sûr : l'auto-validation ne fait qu'ajouter, jamais retirer.
+  const tracking = useMemo(() => {
+    const out = {};
+    ["pas", "eau_ml", "sommeil_h"].forEach((k) => {
+      const a = Number(fetchedTracking?.[k]) || 0;
+      const b = Number(dailyTracking?.[k]) || 0;
+      out[k] = Math.max(a, b);
+    });
+    return out;
+  }, [fetchedTracking, dailyTracking]);
+
+  // Auto-validation : si une habitude matche un seuil (15k pas, 8h sommeil…)
+  // et que la métrique du jour dépasse ce seuil, on insère un log automatique
+  // pour aujourd'hui. UNIQUE (habit_id, date) protège des doublons.
   useEffect(() => {
-    if (!dailyTracking || !clientId || habits.length === 0) return;
+    if (!clientId || habits.length === 0) return;
     let cancelled = false;
     (async () => {
       for (const h of habits) {
-        if (todayLogs[h.id]) continue; // déjà loggé
+        if (todayLogs[h.id]) continue; // déjà loggé (manuel ou auto)
         const target = parseHabitTarget(h.name);
         if (!target) continue;
-        const value = dailyTracking[target.metric];
+        const value = tracking[target.metric];
         if (value == null || value < target.threshold) continue;
         const { data, error } = await supabase
           .from("habit_logs")
@@ -143,14 +185,13 @@ export default function HabitsCard({ clientId, dailyTracking }) {
         if (cancelled) return;
         if (data && !error) {
           setTodayLogs((m) => ({ ...m, [h.id]: data.id }));
-          setStreaks((s) => ({ ...s, [h.id]: (s[h.id] || 0) + (todayLogs[h.id] ? 0 : 1) }));
+          setAutoIds((s) => new Set(s).add(h.id));
+          setStreaks((s) => ({ ...s, [h.id]: (s[h.id] || 0) + 1 }));
         }
       }
     })();
     return () => { cancelled = true; };
-    // Volontairement pas de `todayLogs` dans deps : on re-évalue uniquement
-    // quand habits ou daily_tracking change, pas à chaque toggle.
-  }, [habits, dailyTracking, clientId, today, todayLogs]);
+  }, [habits, tracking, clientId, today, todayLogs]);
 
   if (loading) return null;
   if (habits.length === 0) return null;
@@ -163,6 +204,7 @@ export default function HabitsCard({ clientId, dailyTracking }) {
       const { error } = await supabase.from("habit_logs").delete().eq("id", existingLogId);
       if (error) { toast.error("Erreur"); return; }
       setTodayLogs((m) => { const x = { ...m }; delete x[habit.id]; return x; });
+      setAutoIds((s) => { const x = new Set(s); x.delete(habit.id); return x; });
       // Streak peut chuter — recalc local optimiste : si yesterday = streak base, garder, sinon -1
       setStreaks((s) => ({ ...s, [habit.id]: Math.max(0, (s[habit.id] || 0) - 1) }));
     } else {
@@ -219,6 +261,7 @@ export default function HabitsCard({ clientId, dailyTracking }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 6, position: "relative" }}>
         {habits.map((h) => {
           const checked = !!todayLogs[h.id];
+          const isAuto = checked && autoIds.has(h.id);
           const c = h.color || G;
           return (
             <button
@@ -272,6 +315,20 @@ export default function HabitsCard({ clientId, dailyTracking }) {
               }}>
                 {h.name}
               </div>
+              {/* Badge "auto" — l'habitude a été validée par tes métriques */}
+              {isAuto && (
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 3,
+                  padding: "2px 7px",
+                  background: `${c}15`, border: `1px solid ${c}30`,
+                  borderRadius: 6,
+                  fontSize: 8.5, fontWeight: 800, letterSpacing: "0.8px",
+                  textTransform: "uppercase", color: c,
+                  flexShrink: 0,
+                }}>
+                  ⚡ Auto
+                </div>
+              )}
               {/* Streak */}
               {streaks[h.id] >= 2 && (
                 <div style={{

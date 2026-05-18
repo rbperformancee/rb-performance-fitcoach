@@ -172,6 +172,20 @@ export default function HabitsManager({ open, onClose, onChange, client }) {
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px 22px" }}>
           {loading && <div style={{ textAlign: "center", padding: 30, color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Chargement…</div>}
 
+          {!loading && (
+            <div style={{
+              display: "flex", gap: 9, padding: "10px 12px", marginBottom: 14,
+              background: `${G}0d`, border: `1px solid ${G}26`, borderRadius: 10,
+            }}>
+              <span style={{ fontSize: 14, lineHeight: 1.3 }}>⚡</span>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.45 }}>
+                <strong style={{ color: G }}>Validation auto</strong> — une habitude nommée avec un objectif
+                chiffré (ex. « 15k&nbsp;pas », « 8h sommeil », « 2L eau ») se coche toute seule dès que le
+                client atteint l'objectif.
+              </div>
+            </div>
+          )}
+
           {!loading && habits.length === 0 && (
             <div style={{ padding: "30px 20px", textAlign: "center" }}>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 14 }}>
