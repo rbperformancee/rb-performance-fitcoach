@@ -57,7 +57,7 @@ import { useStreak } from "./hooks/useStreak";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import SplashScreen from "./components/SplashScreen";
 
-import { parseProgrammeHTML } from "./utils/parserProgramme";
+import { parseProgrammeHTML, expandProgrammeWeeks } from "./utils/parserProgramme";
 import { useLogs } from "./hooks/useLogs";
 import { useAuth } from "./hooks/useAuth";
 import { ExerciseCard } from "./components/ExerciseCard";
@@ -798,7 +798,7 @@ function AppInner() {
 
   // Le programme affiché : cloud en priorité, sinon local
   const rawHtml = cloudProgramme || localProgramme;
-  const programme = useMemo(() => rawHtml ? parseProgrammeHTML(rawHtml) : null, [rawHtml]);
+  const programme = useMemo(() => rawHtml ? expandProgrammeWeeks(parseProgrammeHTML(rawHtml)) : null, [rawHtml]);
 
   const { getHistory, getLatest, saveLog, getDelta } = useLogs(
     client ? `client_${client.id}` : programme?.name,

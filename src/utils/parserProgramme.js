@@ -276,3 +276,40 @@ export function parseProgrammeHTML(htmlString) {
     totalSessions: weeks.reduce((a, w) => a + w.sessions.length, 0),
   };
 }
+
+// Extrait un nombre de semaines d'une durée libre ("6 semaines", "2 mois"…).
+export function parseDurationWeeks(duration) {
+  if (!duration) return null;
+  const m = String(duration).match(/(\d+)/);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  if (!n) return null;
+  return /mois/i.test(duration) ? n * 4 : n;
+}
+
+/**
+ * expandProgrammeWeeks — si le coach a construit une semaine-type (ou
+ * quelques semaines) avec une durée plus longue ("6 semaines"), on
+ * répète les semaines pour couvrir la durée. Chaque semaine répétée a
+ * son propre index → l'historique des séances reste séparé.
+ * Ne change rien si le programme couvre déjà sa durée.
+ */
+export function expandProgrammeWeeks(programme) {
+  if (!programme || !Array.isArray(programme.weeks) || programme.weeks.length === 0) {
+    return programme;
+  }
+  const durW = parseDurationWeeks(programme.duration);
+  if (!durW || durW <= programme.weeks.length) return programme;
+  const base = programme.weeks;
+  const weeks = Array.from({ length: durW }, (_, i) => ({
+    ...base[i % base.length],
+    weekNumber: i + 1,
+    name: `Semaine ${i + 1}`,
+  }));
+  return {
+    ...programme,
+    weeks,
+    totalWeeks: weeks.length,
+    totalSessions: weeks.reduce((a, w) => a + w.sessions.length, 0),
+  };
+}

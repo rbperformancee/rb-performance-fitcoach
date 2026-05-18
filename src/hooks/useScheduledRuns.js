@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabase";
-import { parseProgrammeHTML } from "../utils/parserProgramme";
+import { parseProgrammeHTML, expandProgrammeWeeks } from "../utils/parserProgramme";
 
 /**
  * useScheduledRuns — runs prescrits par le coach pour la semaine consultee.
@@ -55,7 +55,7 @@ export function useScheduledRuns(clientId) {
     }
 
     let parsed = null;
-    try { parsed = parseProgrammeHTML(prog.html_content); } catch (_) {}
+    try { parsed = expandProgrammeWeeks(parseProgrammeHTML(prog.html_content)); } catch (_) {}
 
     // start_date est la colonne canonique (saisie par le coach dans la builder).
     // programme_start_date est un alias historique. uploaded_at est le dernier

@@ -93,16 +93,33 @@ const QUOTES = [
   "Le succès, c'est l'addition de séances que personne n'a vues.",
 ]
 
+function parseDurationWeeks(d: string): number | null {
+  if (!d) return null
+  const m = String(d).match(/(\d+)/)
+  if (!m) return null
+  const n = parseInt(m[1], 10)
+  if (!n) return null
+  return /mois/i.test(d) ? n * 4 : n
+}
+
 function parseProgramme(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html')
   if (!doc) return []
-  return [...doc.querySelectorAll('.week-block')].map((w) =>
+  const weeks = [...doc.querySelectorAll('.week-block')].map((w) =>
     [...w.querySelectorAll('.seance-block')].map((s) => ({
       ex: s.querySelectorAll('.exercise-item').length,
       runs: s.querySelectorAll('.run-item').length,
       fields: s.querySelectorAll('.field-item').length,
     }))
   )
+  if (weeks.length === 0) return weeks
+  // Répète les semaines pour couvrir la durée (semaine-type répétée).
+  const durEl = doc.getElementById('prog-duration')
+  const durW = parseDurationWeeks(durEl?.getAttribute('value') || '')
+  if (durW && durW > weeks.length) {
+    return Array.from({ length: durW }, (_, i) => weeks[i % weeks.length])
+  }
+  return weeks
 }
 
 // Réplique de computeTodaysSession (TrainingPage) : la séance prévue aujourd'hui.
