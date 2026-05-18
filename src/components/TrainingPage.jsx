@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
 import FieldSessionCard from "./FieldSessionCard";
+import { uploadChatPhoto } from "../lib/chatMedia";
 import SessionOptionsModal from "./SessionOptionsModal";
 import { useProgrammeOverrides } from "../hooks/useProgrammeOverrides";
 import { useT } from "../lib/i18n";
@@ -402,6 +403,12 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   const [feedbackInjury, setFeedbackInjury] = useState("");
   const [feedbackNote, setFeedbackNote] = useState("");
   const [showFeedbackExtra, setShowFeedbackExtra] = useState(false);
+  // « BeReal » de fin de séance : photo optionnelle après la RPE.
+  const [berealHandled, setBerealHandled] = useState(false);
+  const [berealPhoto, setBerealPhoto] = useState(null);
+  const [berealCaption, setBerealCaption] = useState("");
+  const [berealBusy, setBerealBusy] = useState(false);
+  const berealFileRef = useRef(null);
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const CKEY = `rb_c_${activeWeek}_${activeSession}`;
   const [chrono, setChrono] = useState(() => {
@@ -544,8 +551,37 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     // fait 2 séances" alors qu'une seule était vraiment validée.
     stopChrono(chrono);
     if (navigator.vibrate) navigator.vibrate([50, 30, 100, 30, 150]);
+    setBerealHandled(false);
+    setBerealPhoto(null);
+    setBerealCaption("");
     setShowRessenti(true);
   };
+
+  // BeReal de fin de séance — upload de la photo, sauvegarde, skip.
+  const handleBerealFile = async (file) => {
+    if (!file || berealBusy) return;
+    setBerealBusy(true);
+    try {
+      const url = await uploadChatPhoto(file, client?.id);
+      setBerealPhoto(url);
+      if (navigator.vibrate) navigator.vibrate(20);
+    } catch (e) {
+      console.warn("[bereal] upload", e);
+    }
+    setBerealBusy(false);
+  };
+  const confirmBereal = async () => {
+    if (berealPhoto && sessionLogId) {
+      try {
+        await supabase.from("session_logs").update({
+          photo_url: berealPhoto,
+          photo_caption: berealCaption.trim() || null,
+        }).eq("id", sessionLogId);
+      } catch (e) { console.warn("[bereal] save", e); }
+    }
+    setBerealHandled(true);
+  };
+  const skipBereal = () => setBerealHandled(true);
 
   const handleRessenti = async (idx) => {
     setSelectedRessenti(idx);
@@ -1126,8 +1162,72 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                   ))}
                 </div>
               </>
+            ) : !berealHandled ? (
+              /* ETAPE 2 : BEREAL — photo de fin de séance (optionnelle) */
+              <>
+                <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>{t("train.session_done_label")}</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px", marginBottom: 6 }}>Immortalise ta séance 📸</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 24, lineHeight: 1.5 }}>
+                  Une photo de fin de séance, ton coach la verra dans ton récap. Pas obligatoire.
+                </div>
+
+                <input
+                  ref={berealFileRef}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  style={{ display: "none" }}
+                  onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) handleBerealFile(f); }}
+                />
+
+                {berealPhoto ? (
+                  <>
+                    <div style={{ position: "relative", width: "100%", borderRadius: 20, overflow: "hidden", marginBottom: 14, border: "1px solid rgba(255,255,255,0.08)" }}>
+                      <img src={berealPhoto} alt="" style={{ width: "100%", display: "block", maxHeight: 360, objectFit: "cover" }} />
+                    </div>
+                    <input
+                      type="text"
+                      value={berealCaption}
+                      maxLength={120}
+                      onChange={(e) => setBerealCaption(e.target.value)}
+                      placeholder="Ajoute une légende (optionnel)…"
+                      style={{ width: "100%", boxSizing: "border-box", padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "#fff", fontSize: 14, marginBottom: 16, outline: "none" }}
+                    />
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button
+                        onClick={() => { setBerealPhoto(null); setBerealCaption(""); }}
+                        style={{ flex: "0 0 auto", padding: "16px 20px", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+                      >
+                        Reprendre
+                      </button>
+                      <button
+                        onClick={confirmBereal}
+                        style={{ flex: 1, padding: 16, background: G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.3px" }}
+                      >
+                        Continuer
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => berealFileRef.current?.click()}
+                      disabled={berealBusy}
+                      style={{ width: "100%", padding: 18, background: berealBusy ? "rgba(2,209,186,0.4)" : G, color: "#000", border: "none", borderRadius: 16, fontSize: 15, fontWeight: 800, cursor: berealBusy ? "default" : "pointer", letterSpacing: "-0.3px", marginBottom: 10 }}
+                    >
+                      {berealBusy ? "Envoi…" : "📸 Prendre la photo"}
+                    </button>
+                    <button
+                      onClick={skipBereal}
+                      style={{ width: "100%", padding: 14, background: "transparent", color: "rgba(255,255,255,0.35)", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      Passer
+                    </button>
+                  </>
+                )}
+              </>
             ) : (
-              /* ETAPE 2 : RECAP PREMIUM */
+              /* ETAPE 3 : RECAP PREMIUM */
               <>
                 <div style={{ fontSize: 11, color: "rgba(2,209,186,0.6)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 16 }}>{t("train.session_recap")}</div>
 

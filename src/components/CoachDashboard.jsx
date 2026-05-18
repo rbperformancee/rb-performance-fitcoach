@@ -2992,6 +2992,32 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                         ))}
                       </div>
                     )}
+                    {/* Photo de fin de séance (BeReal) */}
+                    {s.photo_url && (
+                      <div style={{ paddingLeft: 50, marginTop: 10 }}>
+                        <a
+                          href={s.photo_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}
+                        >
+                          <img
+                            src={s.photo_url}
+                            alt=""
+                            style={{ width: 56, height: 56, borderRadius: 12, objectFit: "cover", border: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}
+                          />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", color: G }}>📸 Photo de séance</div>
+                            {s.photo_caption && (
+                              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontStyle: "italic", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                « {s.photo_caption} »
+                              </div>
+                            )}
+                          </div>
+                        </a>
+                      </div>
+                    )}
                   </div>
                 );
               })}
