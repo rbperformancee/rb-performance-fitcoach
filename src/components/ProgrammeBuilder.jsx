@@ -521,8 +521,65 @@ function ExercisePicker({ value, onChange, onPickFull }) {
     const seen = new Set();
     return [...personal, ...fallback]
       .filter((v) => { if (seen.has(v.id)) return false; seen.add(v.id); return true; })
-      .slice(0, 10);
+      .slice(0, 12);
   }, [query]);
+
+  // Bibliothèque complète, groupée par muscle — mode "parcourir" (champ vide).
+  const library = useMemo(() => {
+    const seen = new Set();
+    const all = [
+      ...EXERCISE_VIDEOS.map((v) => ({ ...v, source: "personal" })),
+      ...FALLBACK_VIDEOS.map((v) => ({ ...v, source: "fallback" })),
+    ].filter((v) => { if (seen.has(v.id)) return false; seen.add(v.id); return true; });
+    const groups = [];
+    const byName = {};
+    all.forEach((v) => {
+      const g = classifyExercise(v.title);
+      if (!byName[g]) { byName[g] = []; groups.push(g); }
+      byName[g].push(v);
+    });
+    return { count: all.length, groups, byName };
+  }, []);
+
+  const renderRow = (v) => (
+    <button
+      key={v.id}
+      type="button"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onPickFull({ name: v.title, vidUrl: "https://youtu.be/" + v.id });
+        setQuery(v.title);
+        setOpen(false);
+      }}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", gap: 10,
+        padding: "8px 10px", background: "transparent", border: "none",
+        cursor: "pointer", color: "#fff", textAlign: "left", fontFamily: "inherit",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+      }}
+    >
+      <img
+        src={"https://img.youtube.com/vi/" + v.id + "/default.jpg"}
+        alt=""
+        loading="lazy"
+        style={{ width: 60, height: 45, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>{v.title}</span>
+          {v.source === "personal" ? (
+            <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1, color: G, background: "rgba(2,209,186,0.1)", padding: "2px 6px", borderRadius: 100, textTransform: "uppercase", flexShrink: 0 }}>Perso</span>
+          ) : (
+            <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1, color: "rgba(168,139,250,0.85)", background: "rgba(168,139,250,0.08)", padding: "2px 6px", borderRadius: 100, textTransform: "uppercase", flexShrink: 0 }} title={v.creator || "Créateur externe"}>Démo</span>
+          )}
+        </div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+          {v.source === "fallback" && v.creator ? `via ${v.creator}` : ((v.aliases || []).slice(0, 2).join(" · ") || " ")}
+        </div>
+      </div>
+      <div style={{ fontSize: 14, color: G }}>+</div>
+    </button>
+  );
 
   return (
     <div ref={ref} style={{ position: "relative", flex: 1, minWidth: 0 }}>
@@ -531,9 +588,29 @@ function ExercisePicker({ value, onChange, onPickFull }) {
         value={query}
         onChange={(e) => { setQuery(e.target.value); onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        placeholder="Nom (tape 'bench', 'squat', 'curl'…)"
+        placeholder="Nom de l'exercice (clique pour parcourir la bibliothèque)"
         style={{ ...inputBaseStyle, padding: "10px 12px", fontSize: 13, background: "rgba(255,255,255,0.04)" }}
       />
+      {/* Champ vide / 1 caractère → on parcourt toute la bibliothèque, groupée par muscle */}
+      {open && (!query || query.length < 2) && (
+        <div style={{
+          position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4,
+          background: "#161616", border: "1px solid " + BORDER, borderRadius: 10,
+          maxHeight: 360, overflowY: "auto", zIndex: 50, boxShadow: "0 12px 32px rgba(0,0,0,0.6)",
+        }}>
+          <div style={{ position: "sticky", top: 0, background: "#161616", padding: "8px 10px", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: 10, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
+            Bibliothèque · {library.count} exercices
+          </div>
+          {library.groups.map((g) => (
+            <div key={g}>
+              <div style={{ padding: "7px 10px 4px", fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: G, textTransform: "uppercase", background: "rgba(2,209,186,0.04)" }}>
+                {g} · {library.byName[g].length}
+              </div>
+              {library.byName[g].map(renderRow)}
+            </div>
+          ))}
+        </div>
+      )}
       {/* Si query >= 3 char et 0 résultat → fallback YouTube search */}
       {open && query && query.length >= 3 && suggestions.length === 0 && (
         <div style={{
@@ -564,51 +641,13 @@ function ExercisePicker({ value, onChange, onPickFull }) {
           </div>
         </div>
       )}
-      {open && suggestions.length > 0 && (
+      {open && query && query.length >= 2 && suggestions.length > 0 && (
         <div style={{
           position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4,
           background: "#161616", border: "1px solid " + BORDER, borderRadius: 10,
-          maxHeight: 320, overflowY: "auto", zIndex: 50, boxShadow: "0 12px 32px rgba(0,0,0,0.6)",
+          maxHeight: 360, overflowY: "auto", zIndex: 50, boxShadow: "0 12px 32px rgba(0,0,0,0.6)",
         }}>
-          {suggestions.map((v) => (
-            <button
-              key={v.id}
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                // Single update : nom + URL ensemble pour éviter race state.
-                onPickFull({ name: v.title, vidUrl: "https://youtu.be/" + v.id });
-                setQuery(v.title);
-                setOpen(false);
-              }}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "8px 10px", background: "transparent", border: "none",
-                cursor: "pointer", color: "#fff", textAlign: "left", fontFamily: "inherit",
-                borderBottom: "1px solid rgba(255,255,255,0.04)",
-              }}
-            >
-              <img
-                src={"https://img.youtube.com/vi/" + v.id + "/default.jpg"}
-                alt=""
-                style={{ width: 60, height: 45, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
-              />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>{v.title}</span>
-                  {v.source === "personal" ? (
-                    <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1, color: G, background: "rgba(2,209,186,0.1)", padding: "2px 6px", borderRadius: 100, textTransform: "uppercase", flexShrink: 0 }}>Perso</span>
-                  ) : (
-                    <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1, color: "rgba(168,139,250,0.85)", background: "rgba(168,139,250,0.08)", padding: "2px 6px", borderRadius: 100, textTransform: "uppercase", flexShrink: 0 }} title={v.creator || "Créateur externe"}>Démo</span>
-                  )}
-                </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
-                  {v.source === "fallback" && v.creator ? `via ${v.creator}` : ((v.aliases || []).slice(0, 2).join(" · ") || " ")}
-                </div>
-              </div>
-              <div style={{ fontSize: 14, color: G }}>+</div>
-            </button>
-          ))}
+          {suggestions.map(renderRow)}
         </div>
       )}
     </div>
