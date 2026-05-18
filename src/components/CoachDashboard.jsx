@@ -1798,6 +1798,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [sessions,   setSessions]   = useState([]);
   const [allWeights, setAllWeights] = useState([]);
   const [exLogs, setExLogs] = useState([]);
+  const [fieldLogs, setFieldLogs] = useState([]);
   const [weeklyCheckins, setWeeklyCheckins] = useState([]);
   const [showHabitsManager, setShowHabitsManager] = useState(false);
   const [habitsVersion, setHabitsVersion] = useState(0); // bump pour refresh HabitsHeatmap7d
@@ -1895,6 +1896,25 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     // Fallback : programme actif (utile pour sessions sans programme_name)
     return exNamesByProg.__active__?.[idx] || null;
   }, [exNamesByProg]);
+  // Séances terrain prescrites dans le programme actif → résolution du titre
+  // depuis (week_idx, session_idx, field_idx) d'un field_session_log. Le
+  // programme est une semaine-type répétée : week_idx % nbSemainesTemplate.
+  const fieldByIdx = React.useMemo(() => {
+    const active = (programmesContent || []).find((p) => p.is_active);
+    if (!active?.html_content) return {};
+    try {
+      const parsed = parseProgrammeHTML(active.html_content);
+      const weeks = parsed?.weeks || [];
+      if (weeks.length === 0) return {};
+      return { weeks, totalTemplate: weeks.length };
+    } catch { return {}; }
+  }, [programmesContent]);
+  const resolveField = React.useCallback((l) => {
+    const weeks = fieldByIdx.weeks;
+    if (!weeks) return null;
+    const w = weeks[l.week_idx % fieldByIdx.totalTemplate];
+    return w?.sessions?.[l.session_idx]?.fieldSessions?.[l.field_idx] || null;
+  }, [fieldByIdx]);
   const logs = client._logs || [];
   const weights = client._weights || [];
   const lastWeight = weights[0];
@@ -1951,6 +1971,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     supabase.from("exercise_logs").select("id,logged_at,ex_key,weight,reps,sets")
       .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(100)
       .then(({ data }) => setExLogs(data || []));
+    // Séances terrain cochées par l'athlète (foot, rugby…) — migration 088
+    supabase.from("field_session_logs").select("*")
+      .eq("client_id", client.id).order("done_at", { ascending: false }).limit(40)
+      .then(({ data }) => setFieldLogs(data || []));
     // Historique poids complet (TOUS depuis le debut de l'abonnement)
     supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
       .order("date", { ascending: false }).limit(500)
@@ -2044,6 +2068,14 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           event: "*", schema: "public", table: "messages",
           filter: `client_id=eq.${client.id}`,
         }, refetchMessages)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "field_session_logs",
+          filter: `client_id=eq.${client.id}`,
+        }, () => {
+          supabase.from("field_session_logs").select("*")
+            .eq("client_id", client.id).order("done_at", { ascending: false }).limit(40)
+            .then(({ data }) => setFieldLogs(data || []));
+        })
         .subscribe();
     } catch { /* realtime peut etre desactive */ }
     // Filet de sécurité : si le realtime ne délivre pas (socket coupée,
@@ -3026,6 +3058,53 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         </div>
           );
         })()}
+
+        {/* ===== SÉANCES TERRAIN — cochées par l'athlète ===== */}
+        {fieldLogs.length > 0 && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.23s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="flame" size={14} color={G} />
+              Séances terrain ({fieldLogs.length})
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {fieldLogs.map((l, i) => {
+                const f = resolveField(l);
+                const d = new Date(l.done_at);
+                return (
+                  <div key={l.id || i} style={{ ...card, padding: "14px 16px" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
+                        🏟
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                          {f?.title || "Séance terrain"}
+                          {f?.moment && <span style={{ fontWeight: 500, color: "rgba(255,255,255,0.4)" }}>{" · " + f.moment}</span>}
+                        </div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                          {d.toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
+                        </div>
+                        {l.note && (
+                          <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", fontStyle: "italic", marginTop: 6, lineHeight: 1.45 }}>
+                            « {l.note} »
+                          </div>
+                        )}
+                      </div>
+                      {l.rpe != null && (
+                        <div style={{ flexShrink: 0, textAlign: "center" }}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 17, fontWeight: 200, color: G, lineHeight: 1 }}>
+                            {l.rpe}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>/10</span>
+                          </div>
+                          <div style={{ fontSize: 7, color: "rgba(255,255,255,0.3)", letterSpacing: "1px", textTransform: "uppercase", marginTop: 3 }}>RPE</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* (historique poids complet supprime : accessible via le drawer sur la card poids) */}
 
