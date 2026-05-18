@@ -289,6 +289,13 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const restSecs = parseRestSeconds(ex.rest);
   const setsCount = parsedSets;
 
+  // Repos inter-séries : tant qu'il reste des séries à faire sur CET exo, le
+  // timer doit annoncer la série suivante — pas l'exercice d'après. L'exo
+  // suivant n'est annoncé qu'après la dernière série (betweenSets = null).
+  const betweenSets = (doneCount > 0 && doneCount < parsedSets)
+    ? { next: doneCount + 1, total: parsedSets }
+    : null;
+
   // Calcul du volume de l exercice
   const volume = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0);
 
@@ -331,7 +338,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     const bc = bandColor || "rgba(255,255,255,0.15)";
     return (
       <>
-        {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} onDismiss={() => setShowTimer(false)} />}
+        {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} betweenSets={betweenSets} onDismiss={() => setShowTimer(false)} />}
         <div style={{ marginBottom: 8 }} onClick={() => setExpanded(v => !v)}>
           <div style={{ display: "flex", alignItems: "stretch", borderRadius: 16, overflow: "hidden", background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" }}>
             <div style={{ width: 5, background: bc, flexShrink: 0 }} />
@@ -353,7 +360,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   if (allDone) {
     return (
       <>
-        {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} onDismiss={() => setShowTimer(false)} />}
+        {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} betweenSets={betweenSets} onDismiss={() => setShowTimer(false)} />}
         <div style={{ marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "stretch", borderRadius: 18, overflow: "hidden", background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.12)", cursor: "pointer" }}
             onClick={() => setExpanded(v => !v)}>
@@ -399,7 +406,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   // DESIGN : exercice actif ouvert
   return (
     <>
-      {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} onDismiss={() => setShowTimer(false)} />}
+      {showTimer && restSecs && <RestTimer restSeconds={restSecs} exName={nextExName} betweenSets={betweenSets} onDismiss={() => setShowTimer(false)} />}
 
       <div style={{ marginBottom: 8, borderRadius: 20, overflow: "hidden", background: "rgba(255,255,255,0.03)", border: "2px solid #02d1ba" }}>
 

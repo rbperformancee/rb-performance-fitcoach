@@ -136,9 +136,17 @@ function unlockAudio() {
   } catch(e) {}
 }
 
-export function RestTimer({ restSeconds, onDismiss, exName }) {
+export function RestTimer({ restSeconds, onDismiss, exName, betweenSets }) {
   const t = useT();
   const [timeLeft, setTimeLeft] = useState(restSeconds);
+
+  // Repos inter-séries (il reste des séries sur l'exo en cours) → on annonce
+  // la série suivante. Sinon (dernière série faite) → l'exercice suivant.
+  const nextSet = betweenSets?.next;
+  const totalSets = betweenSets?.total;
+  const headline = nextSet
+    ? fillTpl(t("rt.next_set"), { n: nextSet, total: totalSets })
+    : (exName ? fillTpl(t("rt.next"), { name: exName }) : null);
   
   // Enregistrer SW et demander permission
   useEffect(() => {
@@ -235,7 +243,9 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
             type: 'SCHEDULE_TIMER',
             delay: totalRef.current,
             title: t("rt.notif_title"),
-            body: exName ? fillTpl(t("rt.notif_next"), { name: exName }) : t("rt.notif_lets_go"),
+            body: nextSet
+              ? fillTpl(t("rt.notif_next_set"), { n: nextSet, total: totalSets })
+              : exName ? fillTpl(t("rt.notif_next"), { name: exName }) : t("rt.notif_lets_go"),
           });
         }
       });
@@ -245,7 +255,7 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
         });
       };
     }
-  }, [running, exName]);
+  }, [running, exName, nextSet, totalSets]);
 
   const persist = () => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ start: startRef.current, total: totalRef.current })); } catch {}
@@ -333,14 +343,14 @@ export function RestTimer({ restSeconds, onDismiss, exName }) {
         {t("rt.section_title")}
       </div>
 
-      {/* Nom exercice suivant */}
-      {exName && (
+      {/* Série suivante (repos inter-séries) ou exercice suivant */}
+      {headline && (
         <div style={{
           fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)",
           marginBottom: 32, maxWidth: 260, textAlign: "center",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
-          {fillTpl(t("rt.next"), { name: exName })}
+          {headline}
         </div>
       )}
 

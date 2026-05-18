@@ -1512,9 +1512,11 @@ const en = {
     // RestTimer
     "rt.notif_title": "RB PERFORM — Rest done! 💪",
     "rt.notif_next": "Next: {name}",
+    "rt.notif_next_set": "Set {n} of {total} 💪",
     "rt.notif_lets_go": "Let's go!",
     "rt.section_title": "Recovery",
     "rt.next": "Next: {name}",
+    "rt.next_set": "Set {n} / {total}",
     "rt.ready": "Ready!",
     "rt.running": "running",
     "rt.paused": "paused",
