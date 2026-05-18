@@ -264,6 +264,9 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
 
   // Extraire le nombre de series — depuis ex.sets, ou depuis rawReps "3x5", ou fallback 1
   const parsedSets = (() => {
+    // Notation cluster / rest-pause : un "+" dans les reps (ex. "3X5+5+5")
+    // = UNE seule série à logger (l'athlète saisit le set complet une fois).
+    if (String(ex.rawReps || ex.reps || "").includes("+")) return 1;
     if (typeof ex.sets === "number" && ex.sets > 0) return ex.sets;
     if (ex.rawReps) {
       const m = ex.rawReps.match(/^(\d+)\s*[xX×]/);
