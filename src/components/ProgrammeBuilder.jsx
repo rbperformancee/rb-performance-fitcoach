@@ -774,6 +774,9 @@ function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDu
 
 function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps }) {
   const update = (k, v) => onUpdate({ ...session, [k]: v });
+  // Repli/dépli : une séance déjà remplie démarre repliée pour que la liste
+  // des séances reste scannable (le coach déplie celle qu'il veut éditer).
+  const [collapsed, setCollapsed] = useState((session.exercises || []).length > 0);
   const isMobile = useIsMobile();
   const sensors = useDragSensors();
   const updateExercise = (exIdx, ex) => onUpdate({ ...session, exercises: session.exercises.map((e, i) => i === exIdx ? ex : e) });
@@ -807,13 +810,20 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
       background: BG_2, border: "1px solid " + BORDER, borderRadius: 14,
       padding: 16, marginBottom: 14,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, marginBottom: 14, minWidth: 0, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, marginBottom: collapsed ? 0 : 14, minWidth: 0, flexWrap: "wrap" }}>
         {dragHandleProps ? (
           <button type="button" {...dragHandleProps}
             style={{ width: isMobile ? 28 : 24, height: isMobile ? 32 : 24, cursor: "grab", color: "rgba(255,255,255,0.3)", background: "transparent", border: "none", padding: 0, fontSize: 16, flexShrink: 0, touchAction: "none" }}
             title="Glisser pour réorganiser"
           >⋮⋮</button>
         ) : null}
+        <button type="button" onClick={() => setCollapsed((c) => !c)} title={collapsed ? "Déplier" : "Replier"}
+          style={{ width: 24, height: 24, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: collapsed ? "rotate(-90deg)" : "none", transition: "transform .15s" }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
         <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", flexShrink: 0 }}>Séance {idx + 1}</span>
         <input
           type="text"
@@ -844,6 +854,15 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
         >{isMobile ? "×" : "Supprimer"}</button>
       </div>
 
+      {collapsed && (
+        <div onClick={() => setCollapsed(false)} style={{ cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.38)", paddingLeft: 2 }}>
+          {(session.exercises || []).length} exercice{(session.exercises || []).length > 1 ? "s" : ""}
+          {runs.length > 0 ? ` · ${runs.length} run${runs.length > 1 ? "s" : ""}` : ""}
+          {fieldSessions.length > 0 ? ` · ${fieldSessions.length} terrain` : ""}
+        </div>
+      )}
+
+      {!collapsed && (<>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 14 }}>
         <TextArea label="Description" value={session.description} onChange={(v) => update("description", v)} placeholder="Pectoraux, épaules, triceps…" />
         <TextArea label="Finisher" value={session.finisher} onChange={(v) => update("finisher", v)} placeholder="3 séries de pompes lestées AMRAP…" />
@@ -974,6 +993,7 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
           letterSpacing: 0.5,
         }}
       >+ Ajouter une séance terrain</button>
+      </>)}
     </div>
   );
 }
