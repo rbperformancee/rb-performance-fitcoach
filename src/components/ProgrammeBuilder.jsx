@@ -753,7 +753,7 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
   );
 }
 
-function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate }) {
+function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, collapseSignal }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: session.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -765,6 +765,7 @@ function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDu
     <div ref={setNodeRef} style={style}>
       <SessionPanel
         session={session} idx={idx} total={total}
+        collapseSignal={collapseSignal}
         onUpdate={onUpdate} onRemove={onRemove} onMove={onMove} onDuplicate={onDuplicate}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
@@ -772,11 +773,15 @@ function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDu
   );
 }
 
-function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps }) {
+function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps, collapseSignal }) {
   const update = (k, v) => onUpdate({ ...session, [k]: v });
   // Repli/dépli : une séance déjà remplie démarre repliée pour que la liste
   // des séances reste scannable (le coach déplie celle qu'il veut éditer).
   const [collapsed, setCollapsed] = useState((session.exercises || []).length > 0);
+  // Réagit au bouton « Tout replier / déplier ».
+  useEffect(() => {
+    if (collapseSignal && collapseSignal.val !== null) setCollapsed(collapseSignal.val);
+  }, [collapseSignal?.v]);
   const isMobile = useIsMobile();
   const sensors = useDragSensors();
   const updateExercise = (exIdx, ex) => onUpdate({ ...session, exercises: session.exercises.map((e, i) => i === exIdx ? ex : e) });
@@ -998,7 +1003,7 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
   );
 }
 
-function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove }) {
+function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove, collapseSignal }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: week.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -1009,6 +1014,7 @@ function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplica
     <div ref={setNodeRef} style={style}>
       <WeekPanel
         week={week} weekIdx={weekIdx} totalWeeks={totalWeeks}
+        collapseSignal={collapseSignal}
         onUpdate={onUpdate} onRemove={onRemove} onDuplicate={onDuplicate} onMove={onMove}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
@@ -1016,10 +1022,15 @@ function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplica
   );
 }
 
-function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove, dragHandleProps }) {
+function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove, dragHandleProps, collapseSignal }) {
   const update = (k, v) => onUpdate({ ...week, [k]: v });
   const isMobile = useIsMobile();
   const sensors = useDragSensors();
+  const [collapsed, setCollapsed] = useState(false);
+  // Réagit au bouton « Tout replier / déplier ».
+  useEffect(() => {
+    if (collapseSignal && collapseSignal.val !== null) setCollapsed(collapseSignal.val);
+  }, [collapseSignal?.v]);
   const updateSession = (sIdx, s) => onUpdate({ ...week, sessions: week.sessions.map((x, i) => i === sIdx ? s : x) });
   const addSession = () => onUpdate({ ...week, sessions: [...week.sessions, newSession(week.sessions.length + 1)] });
   const removeSession = (sIdx) => {
@@ -1049,13 +1060,20 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
       background: "linear-gradient(180deg, rgba(2,209,186,0.04), transparent)",
       border: "1px solid " + BORDER, borderRadius: 18,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10, marginBottom: 16, minWidth: 0, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10, marginBottom: collapsed ? 0 : 16, minWidth: 0, flexWrap: "wrap" }}>
         {dragHandleProps ? (
           <button type="button" {...dragHandleProps}
             style={{ width: isMobile ? 28 : 24, height: isMobile ? 40 : 36, cursor: "grab", color: "rgba(255,255,255,0.4)", background: "transparent", border: "none", padding: 0, fontSize: 18, flexShrink: 0, touchAction: "none" }}
             title="Glisser pour réorganiser la semaine"
           >⋮⋮</button>
         ) : null}
+        <button type="button" onClick={() => setCollapsed((c) => !c)} title={collapsed ? "Déplier" : "Replier"}
+          style={{ width: 26, height: 26, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: collapsed ? "rotate(-90deg)" : "none", transition: "transform .15s" }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
         <div style={{
           width: 36, height: 36, borderRadius: 10,
           background: G, color: "#000", display: "flex", alignItems: "center", justifyContent: "center",
@@ -1102,6 +1120,15 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
         >{isMobile ? "×" : "Supprimer"}</button>
       </div>
 
+      {collapsed && (
+        <div onClick={() => setCollapsed(false)} style={{ cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.4)", paddingLeft: 2 }}>
+          {(week.sessions || []).length} séance{(week.sessions || []).length > 1 ? "s" : ""}
+          {" · "}
+          {(week.sessions || []).reduce((n, s) => n + (s.exercises || []).length, 0)} exercice{(week.sessions || []).reduce((n, s) => n + (s.exercises || []).length, 0) > 1 ? "s" : ""}
+        </div>
+      )}
+
+      {!collapsed && (<>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -1117,6 +1144,7 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
         <SortableContext items={(week.sessions || []).map((s) => s.id)} strategy={verticalListSortingStrategy}>
           {(week.sessions || []).map((s, i) => (
             <SortableSession key={s.id} session={s} idx={i} total={week.sessions.length}
+              collapseSignal={collapseSignal}
               onUpdate={(ns) => updateSession(i, ns)}
               onRemove={() => removeSession(i)}
               onMove={(dir) => moveSession(i, dir)}
@@ -1135,6 +1163,7 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
           fontFamily: "inherit", letterSpacing: 0.5,
         }}
       >+ Ajouter une séance</button>
+      </>)}
     </div>
   );
 }
@@ -1629,6 +1658,11 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
       setApplying(false);
     }
   };
+
+  // Signal de repli/dépli global : `v` (version) force tous les panneaux à
+  // adopter `val` (true = replié). Bumper `v` re-déclenche l'effet côté panneau.
+  const [collapseSignal, setCollapseSignal] = useState({ v: 0, val: null });
+  const collapseAll = (val) => setCollapseSignal((s) => ({ v: s.v + 1, val }));
 
   const update = (k, v) => setProgramme((p) => ({ ...p, [k]: v }));
   const updateWeek = (idx, w) => setProgramme((p) => ({ ...p, weeks: p.weeks.map((x, i) => i === idx ? w : x) }));
@@ -2255,7 +2289,19 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             </div>
           </div>
 
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 12 }}>Structure</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase" }}>Structure</span>
+            {(programme.weeks || []).length > 0 && (
+              <div style={{ display: "flex", gap: 6 }}>
+                <button type="button" onClick={() => collapseAll(true)}
+                  style={{ padding: "5px 10px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 7, color: "rgba(255,255,255,0.55)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                >Tout replier</button>
+                <button type="button" onClick={() => collapseAll(false)}
+                  style={{ padding: "5px 10px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 7, color: "rgba(255,255,255,0.55)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                >Tout déplier</button>
+              </div>
+            )}
+          </div>
           <DndContext
             sensors={dragSensors}
             collisionDetection={closestCenter}
@@ -2277,6 +2323,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
                   week={w}
                   weekIdx={i}
                   totalWeeks={programme.weeks.length}
+                  collapseSignal={collapseSignal}
                   onUpdate={(nw) => updateWeek(i, nw)}
                   onRemove={() => removeWeek(i)}
                   onDuplicate={() => duplicateWeek(i)}
