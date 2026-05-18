@@ -123,15 +123,13 @@ function buildMeal(slot, mt) {
     place("carb", cName, cGrams, `${cGrams} g`);
   }
 
-  // 3. Fruit — complète les glucides restants quand le féculent est
-  //    plafonné (ex. pain plafonné à 120 g → le reste passe en banane).
+  // 3. Fruit — 1 banane (jamais plus) en complément des glucides quand
+  //    le féculent est plafonné.
   if (tpl.fruit) {
     const remG = mt.g - acc.glucides;
     if (remG > 8) {
       const bf = FOOD_DB["Banane"];
-      const gPerUnit = (bf.g / 100) * bf.unitG; // glucides par banane
-      const units = Math.max(1, Math.round(remG / gPerUnit));
-      place("fruit", "Banane", units * bf.unitG, `${units} ${bf.unit}${units > 1 ? "s" : ""}`);
+      place("fruit", "Banane", bf.unitG, `1 ${bf.unit}`);
     }
   }
 
