@@ -113,21 +113,21 @@ function buildMeal(slot, mt) {
   if (tpl.veg) place("veg", "Légumes verts", 150, "150 g");
 
   // 2. Glucides — comble les glucides restants, PLAFONNÉ à une portion
-  //    réaliste (pas 180 g de pain ni 600 g de pomme de terre).
+  //    réaliste. Arrondi à l'inférieur → ne dépasse jamais la cible.
   if (tpl.carb) {
     const cName = pick(tpl.carb);
     const cf = FOOD_DB[cName];
     const remG = mt.g - acc.glucides;
-    let cGrams = cf.g > 0 ? r5(remG / (cf.g / 100)) : 40;
+    let cGrams = cf.g > 0 ? Math.floor(remG / (cf.g / 100) / 5) * 5 : 40;
     cGrams = Math.max(20, Math.min(cf.max || 9999, cGrams));
     place("carb", cName, cGrams, `${cGrams} g`);
   }
 
-  // 3. Fruit — 1 banane (jamais plus) en complément des glucides quand
-  //    le féculent est plafonné.
+  // 3. Fruit — 1 banane (jamais plus). Une banane ≈ 28 g de glucides :
+  //    on ne l'ajoute que si le déficit le justifie, pour ne PAS dépasser.
   if (tpl.fruit) {
     const remG = mt.g - acc.glucides;
-    if (remG > 8) {
+    if (remG >= 22) {
       const bf = FOOD_DB["Banane"];
       place("fruit", "Banane", bf.unitG, `1 ${bf.unit}`);
     }
