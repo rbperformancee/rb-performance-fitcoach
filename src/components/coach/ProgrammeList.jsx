@@ -54,12 +54,15 @@ const ORANGE = "#00C9A7";
  *   onEdit: (client) => void   // ouvre le builder
  *   onAssign: (programme) => void  // assigner a d'autres clients
  */
-export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign }) {
+export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign, onCreate }) {
   const t = useT();
   const [loading, setLoading] = useState(true);
   const [programmes, setProgrammes] = useState([]);
   const [filter, setFilter] = useState("all"); // all / active / archived
   const [search, setSearch] = useState("");
+  // Picker client pour « Créer un programme » (le builder a besoin d'un client cible).
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +115,13 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
     active: programmes.filter((p) => p.is_active).length,
     archived: programmes.filter((p) => !p.is_active).length,
   }), [programmes]);
+
+  const pickerClients = useMemo(() => {
+    const q = pickerSearch.trim().toLowerCase();
+    const list = [...clients].sort((a, b) => (a.full_name || a.email || "").localeCompare(b.full_name || b.email || ""));
+    if (!q) return list;
+    return list.filter((c) => `${c.full_name || ""} ${c.email || ""}`.toLowerCase().includes(q));
+  }, [clients, pickerSearch]);
 
   async function handleArchive(prog) {
     if (!window.confirm(fillTpl(tStatic("prog.confirm_archive"), { name: prog.programme_name }))) return;
@@ -166,6 +176,20 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
           {counts.active > 0 && <> · <span style={{ color: G }}>{fillTpl(counts.active > 1 ? t("prog.active_many") : t("prog.active_one"), { n: counts.active })}</span></>}
           {counts.archived > 0 && <> · <span style={{ color: "rgba(255,255,255,.4)" }}>{fillTpl(counts.archived > 1 ? t("prog.archived_many") : t("prog.archived_one"), { n: counts.archived })}</span></>}
         </div>
+        {onCreate && (
+          <button
+            onClick={() => { haptic.selection(); setPickerSearch(""); setPickerOpen(true); }}
+            style={{
+              marginTop: 16, display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "12px 20px", background: G, border: "none", borderRadius: 12,
+              color: "#04201d", fontSize: 13, fontWeight: 800, cursor: "pointer",
+              fontFamily: "inherit", letterSpacing: ".01em",
+            }}
+          >
+            <AppIcon name="plus" size={15} color="#04201d" />
+            Créer un programme
+          </button>
+        )}
       </div>
 
       {/* FILTRES + SEARCH */}
@@ -356,6 +380,60 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign 
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* PICKER CLIENT — choisir pour qui créer le programme */}
+      {pickerOpen && (
+        <div
+          onClick={() => setPickerOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 11000, background: "rgba(0,0,0,.72)", WebkitBackdropFilter: "blur(4px)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: "100%", maxWidth: 420, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#0c0c0c", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 18, overflow: "hidden" }}
+          >
+            <div style={{ padding: "18px 20px 10px" }}>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 6 }}>Nouveau programme</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-.3px" }}>Pour quel client ?</div>
+            </div>
+            <div style={{ padding: "0 20px 12px" }}>
+              <input
+                type="text"
+                value={pickerSearch}
+                onChange={(e) => setPickerSearch(e.target.value)}
+                placeholder="Rechercher un client…"
+                autoFocus
+                style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", background: "rgba(255,255,255,.03)", border: ".5px solid rgba(255,255,255,.1)", borderRadius: 10, color: "#fff", fontSize: 13, fontFamily: "inherit", outline: "none" }}
+              />
+            </div>
+            <div style={{ overflowY: "auto", padding: "0 12px 8px" }}>
+              {pickerClients.length === 0 ? (
+                <div style={{ padding: "24px 12px", textAlign: "center", fontSize: 12, color: "rgba(255,255,255,.4)" }}>Aucun client trouvé</div>
+              ) : pickerClients.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => { haptic.selection(); setPickerOpen(false); onCreate && onCreate(c); }}
+                  style={{ display: "flex", alignItems: "center", gap: 11, width: "100%", padding: "10px 12px", background: "transparent", border: "none", borderRadius: 10, cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,.06)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                >
+                  <Avatar name={c.full_name || c.email} size={34} src={c.avatar_url} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.full_name || c.email}</div>
+                    {c.full_name && c.email && <div style={{ fontSize: 10.5, color: "rgba(255,255,255,.3)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.email}</div>}
+                  </div>
+                  <AppIcon name="arrow-right" size={13} color="rgba(255,255,255,.3)" />
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setPickerOpen(false)}
+              style={{ margin: 12, padding: "11px", background: "rgba(255,255,255,.04)", border: ".5px solid rgba(255,255,255,.08)", borderRadius: 10, color: "rgba(255,255,255,.55)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              Annuler
+            </button>
+          </div>
         </div>
       )}
     </div>

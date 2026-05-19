@@ -4797,6 +4797,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [newName,   setNewName]   = useState("");
   const [toastMsg,  setToastMsg]  = useState(null);
   const [selected,  setSelected]  = useState(null);
+  // Client cible quand on crée un programme depuis l'onglet Programmes
+  // (le builder a besoin d'un client) → ouvre ProgrammeBuilder en overlay.
+  const [newProgClient, setNewProgClient] = useState(null);
   // Bumpé après un upload de programme → force le remount de ClientPanel pour
   // afficher le nouveau programme, sans renvoyer le coach à l'accueil.
   const [panelKey,  setPanelKey]  = useState(0);
@@ -5864,6 +5867,21 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           <ClientPanel key={`cp-${selected.id}-${panelKey}`} client={selected} onClose={() => { setSelected(null); setShowClientList(true); loadClients(); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }} onClientUpdated={(updated) => { setSelected(updated); loadClients(); }} />
         </ErrorBoundary>
       )}
+
+      {/* Builder ouvert depuis l'onglet Programmes (« Créer un programme ») */}
+      {newProgClient && (
+        <div className="coach-overlay-panel" style={{ position: "fixed", top: 0, right: 0, bottom: 0, left: 220, zIndex: 10000 }}>
+          <ErrorBoundary name="ProgrammeBuilder">
+            <ProgrammeBuilder
+              client={newProgClient}
+              coachData={coachData}
+              existingProgramme={null}
+              onClose={() => setNewProgClient(null)}
+              onSaved={() => { setNewProgClient(null); loadClients(); }}
+            />
+          </ErrorBoundary>
+        </div>
+      )}
       {showPipeline && (
         <ErrorBoundary name="PipelineKanban">
           <PipelineKanban
@@ -6326,6 +6344,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               clients={clients}
               onEdit={(client) => setSelected(client)}
               onAssign={(prog) => setDuplicateProgramme(prog)}
+              onCreate={(client) => setNewProgClient(client)}
             />
           )}
 
