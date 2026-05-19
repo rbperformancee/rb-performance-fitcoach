@@ -369,6 +369,84 @@ function ProgrammesHistorySection({ client, onEdit, onReuse }) {
   );
 }
 
+// ProgrammeBlocksSection — file d'attente de blocs (clients longue durée).
+// Liste les programmes actifs du client par ordre de published_at : le bloc
+// en cours + les blocs planifiés qui s'enchaîneront automatiquement à leur date.
+function ProgrammeBlocksSection({ client, onEdit, onNewBlock }) {
+  const [blocks, setBlocks] = React.useState([]);
+
+  React.useEffect(() => {
+    if (!client?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("programmes")
+        .select("id, programme_name, published_at, start_date, uploaded_at, is_active")
+        .eq("client_id", client.id)
+        .eq("is_active", true)
+        .order("published_at", { ascending: true, nullsFirst: true });
+      if (!cancelled) setBlocks(data || []);
+    })();
+    return () => { cancelled = true; };
+  }, [client?.id]);
+
+  // Affiché seulement quand il y a une vraie file (≥ 2 blocs).
+  if (blocks.length < 2) return null;
+
+  const now = Date.now();
+  // Bloc « en cours » = dernier dont published_at est déjà passé (ou null).
+  let currentIdx = -1;
+  blocks.forEach((b, i) => {
+    const ts = b.published_at ? new Date(b.published_at).getTime() : 0;
+    if (ts <= now) currentIdx = i;
+  });
+
+  const fmt = (iso) => iso
+    ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+  return (
+    <div style={{ marginTop: 16, padding: 16, background: "rgba(2,209,186,0.03)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 4 }}>File de blocs</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>{blocks.length} blocs — s'enchaînent automatiquement</div>
+        </div>
+        {onNewBlock && (
+          <button type="button" onClick={onNewBlock} style={{ padding: "6px 12px", background: "rgba(2,209,186,0.12)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 8, color: "#02d1ba", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>+ Bloc</button>
+        )}
+      </div>
+      {blocks.map((b, i) => {
+        const isCurrent = i === currentIdx;
+        const isFuture = i > currentIdx;
+        const isPast = i < currentIdx;
+        const label = isCurrent ? "EN COURS" : isFuture ? "PLANIFIÉ" : "TERMINÉ";
+        const labelColor = isCurrent ? "#02d1ba" : isFuture ? "#f59e0b" : "rgba(255,255,255,0.35)";
+        return (
+          <div key={b.id} style={{
+            display: "flex", alignItems: "center", gap: 11, padding: "11px 12px", marginBottom: 6,
+            background: isCurrent ? "rgba(2,209,186,0.07)" : "rgba(255,255,255,0.025)",
+            border: "1px solid " + (isCurrent ? "rgba(2,209,186,0.3)" : "rgba(255,255,255,0.05)"),
+            borderRadius: 10, opacity: isPast ? 0.55 : 1,
+          }}>
+            <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: isCurrent ? "#02d1ba" : "rgba(255,255,255,0.06)", color: isCurrent ? "#04201d" : "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 800 }}>{i + 1}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.programme_name || ("Bloc " + (i + 1))}</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                {isFuture && b.published_at ? "Démarre le " + fmt(b.published_at)
+                  : isCurrent ? (b.start_date ? "Depuis le " + fmt(b.start_date) : "Bloc actif")
+                  : "Bloc terminé"}
+              </div>
+            </div>
+            <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 0.8, color: labelColor, flexShrink: 0 }}>{label}</span>
+            <button type="button" onClick={() => onEdit(b.id)} style={{ padding: "5px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>Éditer</button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ProgrammeCompareModal — affiche 2 programmes côte à côte (#C feature)
 function ProgrammeCompareModal({ data, onClose }) {
   const [parsedA, parsedB] = React.useMemo(() => {
@@ -2606,6 +2684,19 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
 
           {/* CALENDRIER PROGRAMME ACTIF */}
           {prog && <ProgrammeCalendarSection programmeId={prog.id} clientId={client.id} />}
+
+          {/* FILE DE BLOCS — clients longue durée (3 mois = 3 blocs de 4 sem.) */}
+          <ProgrammeBlocksSection
+            client={client}
+            onEdit={async (progId) => {
+              try {
+                const { data, error } = await supabase.from("programmes").select("id, programme_name, html_content, start_date, training_days, published_at, uploaded_at").eq("id", progId).maybeSingle();
+                if (error || !data) { toast.error("Impossible de charger ce bloc"); return; }
+                setBuilderEditing(data); setShowBuilder(true);
+              } catch (e) { toast.error("Erreur : " + e.message); }
+            }}
+            onNewBlock={() => { setBuilderEditing(null); setShowBuilder(true); }}
+          />
 
           {/* HISTORIQUE PROGRAMMES — affiché si plus de 1 programme dans l'historique */}
           <ProgrammesHistorySection client={client} onEdit={async (progId) => {
