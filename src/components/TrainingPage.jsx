@@ -1095,11 +1095,31 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                 padding: "12px 14px",
               }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{r.name}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-                  {r.distance && <span>📏 {r.distance}</span>}
-                  {r.duration && <span>⏱ {r.duration}</span>}
-                  {r.bpm && <span>❤️ {r.bpm} bpm</span>}
-                  {r.rest && <span>⏸ {r.rest}</span>}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                  {r.distance && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="rgba(2,209,186,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="8" x2="3" y2="16" /><line x1="21" y1="8" x2="21" y2="16" /></svg>
+                      {r.distance}
+                    </span>
+                  )}
+                  {r.duration && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="rgba(2,209,186,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></svg>
+                      {r.duration}
+                    </span>
+                  )}
+                  {r.bpm && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="rgba(2,209,186,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.5-1.6 3-3.3 3-5.5A5.5 5.5 0 0 0 12 5 5.5 5.5 0 0 0 2 8.5c0 2.2 1.5 3.9 3 5.5l7 7Z" /></svg>
+                      {r.bpm} bpm
+                    </span>
+                  )}
+                  {r.rest && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="rgba(2,209,186,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+                      {r.rest}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

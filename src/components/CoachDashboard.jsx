@@ -3076,8 +3076,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 return (
                   <div key={l.id || i} style={{ ...card, padding: "14px 16px" }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
-                        🏟
+                      <div style={{ width: 38, height: 38, borderRadius: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke={G} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 22V3" /><path d="M5 4h12l-2.4 4 2.4 4H5" />
+                        </svg>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>

@@ -1461,7 +1461,12 @@ function Preview({ programme, showAnalytics }) {
               {Array.isArray(s.runs) && s.runs.length > 0
                 ? s.runs.map((r, ri) => (
                     <div key={ri} style={{ marginTop: ri === 0 ? 10 : 4, padding: "8px 10px", background: "rgba(2,209,186,0.05)", borderLeft: "2px solid rgba(2,209,186,0.5)", borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
-                      <strong style={{ color: "rgba(2,209,186,0.85)" }}>🏃 {r.name || "Run"}</strong>
+                      <strong style={{ color: "rgba(2,209,186,0.85)" }}>
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px", marginRight: 5 }}>
+                          <circle cx="6" cy="19" r="3" /><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" /><circle cx="18" cy="5" r="3" />
+                        </svg>
+                        {r.name || "Run"}
+                      </strong>
                       {[r.distance, r.duration, r.bpm ? r.bpm + " bpm" : null, r.rest].filter(Boolean).length > 0
                         ? " — " + [r.distance, r.duration, r.bpm ? r.bpm + " bpm" : null, r.rest].filter(Boolean).join(" · ")
                         : null}
@@ -1471,7 +1476,12 @@ function Preview({ programme, showAnalytics }) {
               {Array.isArray(s.fieldSessions) && s.fieldSessions.length > 0
                 ? s.fieldSessions.map((f, fi) => (
                     <div key={fi} style={{ marginTop: fi === 0 ? 10 : 4, padding: "8px 10px", background: "rgba(2,209,186,0.05)", borderLeft: "2px solid rgba(2,209,186,0.5)", borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
-                      <strong style={{ color: "rgba(2,209,186,0.85)" }}>🏟 {f.title || "Séance terrain"}</strong>
+                      <strong style={{ color: "rgba(2,209,186,0.85)" }}>
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px", marginRight: 5 }}>
+                          <path d="M5 22V3" /><path d="M5 4h12l-2.4 4 2.4 4H5" />
+                        </svg>
+                        {f.title || "Séance terrain"}
+                      </strong>
                       {f.moment ? <span style={{ color: "rgba(255,255,255,0.45)" }}>{" · " + f.moment}</span> : null}
                       {f.description ? <div style={{ marginTop: 2, color: "rgba(255,255,255,0.5)" }}>{f.description}</div> : null}
                     </div>
