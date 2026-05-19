@@ -9,6 +9,7 @@ import { RestTimerProvider } from "./lib/restTimer";
 // fallback null, l'utilisateur voit un écran blanc pendant le téléchargement
 // du chunk → import direct.
 import ClientFirstLoginFlow from "./components/ClientFirstLoginFlow";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 // ===== Lazy-loaded : composants charges a la demande =====
 const FuelPage = lazy(() => import("./components/FuelPage"));
@@ -1640,6 +1641,7 @@ export default function App() {
       <Suspense fallback={<LazyFallback />}>
         <RestTimerProvider>
           <AppInner />
+          <PWAInstallPrompt />
         </RestTimerProvider>
       </Suspense>
     </ErrorBoundaryApp>
