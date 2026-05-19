@@ -40,11 +40,15 @@ export function useScheduledRuns(clientId) {
       return;
     }
 
+    // File d'attente de blocs : on charge le bloc actif (published_at le plus
+    // récent parmi ceux <= maintenant ; NULL = legacy → actif).
     const { data: prog } = await supabase
       .from("programmes")
       .select("id, html_content, start_date, programme_start_date, uploaded_at, validated_until_week")
       .eq("client_id", clientId)
       .eq("is_active", true)
+      .or(`published_at.lte.${new Date().toISOString()},published_at.is.null`)
+      .order("published_at", { ascending: false, nullsFirst: false })
       .order("uploaded_at", { ascending: false })
       .limit(1)
       .maybeSingle();

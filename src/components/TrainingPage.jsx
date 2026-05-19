@@ -322,11 +322,16 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     (async () => {
       const { data } = await supabase
         .from("session_completions")
-        .select("week_idx, session_idx, validated_at, chrono_seconds")
+        .select("week_idx, session_idx, validated_at, chrono_seconds, programme_id")
         .eq("client_id", client.id);
       if (cancelled) return;
+      // File d'attente de blocs : on ne garde que les validations du bloc
+      // courant. programme_id NULL = lignes legacy (ancien programme unique).
+      const curProgId = programmeMeta?.id || null;
       const completed = new Set();
-      (data || []).forEach((c) => {
+      (data || [])
+        .filter((c) => !c.programme_id || !curProgId || c.programme_id === curProgId)
+        .forEach((c) => {
         const ckey = `rb_c_${c.week_idx}_${c.session_idx}`;
         try {
           const cur = JSON.parse(localStorage.getItem(ckey) || "{}");
@@ -376,12 +381,15 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     // Puis Supabase pour sync cross-device
     if (client?.id) {
       supabase.from("session_completions")
-        .select("validated_at, chrono_seconds")
+        .select("validated_at, chrono_seconds, programme_id")
         .eq("client_id", client.id)
         .eq("week_idx", activeWeek)
         .eq("session_idx", activeSession)
         .maybeSingle()
         .then(({ data }) => {
+          // Ignore les validations d'un autre bloc (file d'attente).
+          const curProgId = programmeMeta?.id || null;
+          if (data && data.programme_id && curProgId && data.programme_id !== curProgId) return;
           if (data?.validated_at) {
             setSessionValidee(true);
             // Sync localStorage
@@ -393,7 +401,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           }
         });
     }
-  }, [activeWeek, activeSession, client?.id]);
+  }, [activeWeek, activeSession, client?.id, programmeMeta?.id]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
@@ -498,7 +506,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     if (client?.id) {
       await supabase.from("session_completions").upsert({
         client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
-        chrono_seconds: total
+        chrono_seconds: total, programme_id: programmeMeta?.id || null
       }, { onConflict: "client_id,week_idx,session_idx" });
     }
   };
@@ -1342,7 +1350,8 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                         client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
                         validated_at: new Date().toISOString(),
                         chrono_seconds: chrono,
-                        rpe: selectedRessenti + 1
+                        rpe: selectedRessenti + 1,
+                        programme_id: programmeMeta?.id || null
                       }, { onConflict: "client_id,week_idx,session_idx" });
                     }
                   }}
@@ -1450,7 +1459,8 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                           client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
                           validated_at: new Date().toISOString(),
                           chrono_seconds: chrono,
-                          rpe: selectedRessenti + 1
+                          rpe: selectedRessenti + 1,
+                          programme_id: programmeMeta?.id || null
                         }, { onConflict: "client_id,week_idx,session_idx" });
                       }
                     }}
@@ -1483,7 +1493,8 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                           client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
                           validated_at: new Date().toISOString(),
                           chrono_seconds: chrono,
-                          rpe: selectedRessenti + 1
+                          rpe: selectedRessenti + 1,
+                          programme_id: programmeMeta?.id || null
                         }, { onConflict: "client_id,week_idx,session_idx" });
                       }
                     }}

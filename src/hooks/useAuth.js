@@ -30,6 +30,8 @@ export function useAuth() {
         .select('html_content')
         .eq('client_id', clientId)
         .eq('is_active', true)
+        .or(`published_at.lte.${new Date().toISOString()},published_at.is.null`)
+        .order('published_at', { ascending: false, nullsFirst: false })
         .order('uploaded_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -67,7 +69,10 @@ export function useAuth() {
       const branding = clientData.coach_id
         ? supabase.from("coaches").select("full_name,brand_name,accent_color,email,logo_url,coach_code,coach_slug,payment_link").eq("id", clientData.coach_id).maybeSingle()
         : Promise.resolve({ data: null });
-      const prog = supabase.from("programmes").select("*").eq("client_id", clientData.id).eq("is_active", true).order("uploaded_at", { ascending: false }).limit(1).maybeSingle();
+      // File d'attente de blocs : le programme actif = le bloc dont published_at
+      // est le plus récent parmi ceux déjà arrivés (<= maintenant). Les blocs
+      // futurs (published_at > now) attendent. NULL = programme legacy → actif.
+      const prog = supabase.from("programmes").select("*").eq("client_id", clientData.id).eq("is_active", true).or(`published_at.lte.${new Date().toISOString()},published_at.is.null`).order("published_at", { ascending: false, nullsFirst: false }).order("uploaded_at", { ascending: false }).limit(1).maybeSingle();
       const [{ data: coach }, { data: progData }] = await Promise.all([branding, prog]);
       if (coach) setCoachInfo(coach);
       if (progData?.html_content) {

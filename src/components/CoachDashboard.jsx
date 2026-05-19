@@ -2620,7 +2620,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             try {
               const { data: src } = await supabase.from("programmes").select("programme_name, html_content").eq("id", progId).maybeSingle();
               if (!src) return;
-              await supabase.from("programmes").update({ is_active: false }).eq("client_id", client.id);
+              // Désactive l'actuel mais PRÉSERVE les blocs planifiés futurs (file d'attente).
+              await supabase.from("programmes").update({ is_active: false })
+                .eq("client_id", client.id)
+                .or(`published_at.lte.${new Date().toISOString()},published_at.is.null`);
               const userResp = await supabase.auth.getUser();
               const { error } = await supabase.from("programmes").insert({
                 client_id: client.id,
@@ -5126,7 +5129,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       // Supprimer les anciens programmes (historique non affiche dans l'UI,
       // accumulation = bruit). run_logs.programme_id passe a NULL via FK.
-      await supabase.from("programmes").delete().eq("client_id", client.id);
+      // On PRÉSERVE les blocs planifiés dans le futur (file d'attente Option B).
+      await supabase.from("programmes").delete()
+        .eq("client_id", client.id)
+        .or(`published_at.lte.${new Date().toISOString()},published_at.is.null`);
 
       // Reset les completions de séance de l'ancien programme : sinon les
       // index (week_idx, session_idx) du nouveau programme matchent les

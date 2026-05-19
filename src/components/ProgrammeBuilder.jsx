@@ -1741,31 +1741,35 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
       const userResp = await supabase.auth.getUser();
       const email = userResp && userResp.data && userResp.data.user ? userResp.data.user.email : null;
 
-      // Cleanup avant insert :
-      //  - draft     : on supprime juste l'ancien brouillon (is_active=false, published_at IS NULL)
-      //                — l'éventuel programme en cours ou planifié reste intact
-      //  - publish   : reset complet (current behavior) — un seul programme actif après
-      //  - schedule  : on supprime brouillons + autres programmes planifiés (futurs).
-      //                On GARDE le programme en cours pour que le client continue à l'avoir
-      //                jusqu'à la date X. Le filtre côté client (`published_at <= NOW()`) prend
-      //                automatiquement le plus récent quand X est passé.
+      // Cleanup avant insert — file d'attente de blocs (clients longue durée :
+      // le coach prépare plusieurs blocs de 4 sem. à l'avance, chacun un
+      // `programmes` séparé avec un published_at échelonné).
+      //  - draft       : supprime juste les brouillons orphelins — le bloc actif
+      //                  et les blocs planifiés restent intacts.
+      //  - publish-now : remplace le bloc actif + brouillons, mais PRÉSERVE les
+      //                  blocs planifiés dans le futur (la file d'attente).
+      //  - schedule    : ajoute un bloc à la file — ne supprime que les
+      //                  brouillons orphelins. Bloc actif + autres blocs
+      //                  planifiés coexistent et s'enchaînent par date.
+      // En mode édition, on remplace précisément la ligne éditée par son id.
+      const editingId = editMode ? (existingProgramme && existingProgramme.id) : null;
+      const nowIso = new Date().toISOString();
       if (mode === "draft") {
         await supabase.from("programmes").delete()
           .eq("client_id", client.id)
           .eq("is_active", false)
           .is("published_at", null);
       } else if (mode === "publish-now") {
-        await supabase.from("programmes").delete().eq("client_id", client.id);
+        if (editingId) await supabase.from("programmes").delete().eq("id", editingId);
+        await supabase.from("programmes").delete()
+          .eq("client_id", client.id)
+          .or(`published_at.lte.${nowIso},published_at.is.null`);
       } else if (mode === "schedule") {
-        // Supprime brouillons + autres "scheduled" (published_at futur)
+        if (editingId) await supabase.from("programmes").delete().eq("id", editingId);
         await supabase.from("programmes").delete()
           .eq("client_id", client.id)
           .eq("is_active", false)
           .is("published_at", null);
-        await supabase.from("programmes").delete()
-          .eq("client_id", client.id)
-          .eq("is_active", true)
-          .gt("published_at", new Date().toISOString());
       }
 
       const isActive = mode !== "draft";
@@ -1780,7 +1784,8 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         is_active: isActive,
         published_at: publishedAt,
         uploaded_by: email,
-        start_date: programme.startDate || new Date().toISOString().slice(0, 10),
+        start_date: programme.startDate
+          || (mode === "schedule" ? String(scheduledAt).slice(0, 10) : nowIso.slice(0, 10)),
         training_days: (programme.trainingDays && programme.trainingDays.length) ? programme.trainingDays : [1],
       }).select("id").maybeSingle();
       if (error) throw error;
