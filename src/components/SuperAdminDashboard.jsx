@@ -104,7 +104,13 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
   const [nutritionLogs, setNutritionLogs] = useState([]);
   const [pushSubs, setPushSubs] = useState([]);
   const [waitlistCount, setWaitlistCount] = useState(0);
+  const [waitlist, setWaitlist] = useState([]); // entrées détaillées pour la vue
   const [applicationsCount, setApplicationsCount] = useState(0);
+  const [stripeFoundingLink, setStripeFoundingLink] = useState(() => {
+    try { return localStorage.getItem("rb_admin_stripe_founding_link") || ""; } catch { return ""; }
+  });
+  const [waitlistFilter, setWaitlistFilter] = useState("pending"); // pending | all | contacted | paid
+  const [waitlistLinkFor, setWaitlistLinkFor] = useState(null); // entry shown in modal
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [detailCoach, setDetailCoach] = useState(null);
@@ -117,9 +123,9 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
     const ago30 = new Date(Date.now() - 30 * 86400000).toISOString();
     const ago30d = ago30.split("T")[0];
 
-    // 12 queries parallèles. Migration 008 pas appliquée → on tente quand même
+    // 13 queries parallèles. Migration 008 pas appliquée → on tente quand même
     // de récupérer subscription_plan, ça fail silencieusement et on traite "free".
-    const [c, cl, pr, sl, wl, rl, el, nl, ps, wlist, capps] = await Promise.all([
+    const [c, cl, pr, sl, wl, rl, el, nl, ps, wlist, capps, wDetail] = await Promise.all([
       supabase.from("coaches").select("*").order("created_at"),
       supabase.from("clients").select("id,email,full_name,coach_id,subscription_plan,subscription_status,subscription_end_date,onboarding_done,created_at,last_seen_at,avatar_url"),
       supabase.from("programmes").select("id,client_id,is_active,uploaded_at,programme_name"),
@@ -131,6 +137,8 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
       supabase.from("push_subscriptions").select("id,client_id"),
       supabase.from("waitlist").select("id", { count: "exact", head: true }),
       supabase.from("coaching_applications").select("id", { count: "exact", head: true }),
+      // Détail des entrées waitlist pour la vue (max 200 récentes, suffisant).
+      supabase.from("waitlist").select("id,name,email,clients,problem,source,status,contacted_at,paid_at,created_at").order("created_at", { ascending: false }).limit(200),
     ]);
 
     setCoaches(c.data || []);
@@ -143,6 +151,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
     setNutritionLogs(nl.data || []);
     setPushSubs(ps.data || []);
     setWaitlistCount(wlist.count || 0);
+    setWaitlist(wDetail.data || []);
     setApplicationsCount(capps.count || 0);
     setLoading(false);
     setRefreshing(false);
@@ -544,6 +553,101 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           </div>
         </div>
 
+        {/* ═══════ WAITLIST — leads coachs à transformer en payants ═══════ */}
+        <div style={{ marginBottom: 24, animation: "cF 0.4s ease 0.22s both" }}>
+          <SectionHead icon="users" label="Waitlist coach" color={G} meta={`${waitlist.length} LEADS`} />
+
+          {/* Config : lien Stripe Founding (mémorisé en localStorage côté admin) */}
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12, padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)", fontFamily: MONO, letterSpacing: "0.1em", textTransform: "uppercase", flexShrink: 0 }}>Lien Stripe Founding</span>
+            <input
+              type="text"
+              value={stripeFoundingLink}
+              onChange={(e) => { setStripeFoundingLink(e.target.value); try { localStorage.setItem("rb_admin_stripe_founding_link", e.target.value); } catch {} }}
+              placeholder="https://buy.stripe.com/..."
+              style={{ flex: 1, background: "transparent", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, padding: "6px 10px", color: "#fff", fontSize: 11, fontFamily: MONO, outline: "none", letterSpacing: "0.02em" }}
+            />
+            {stripeFoundingLink && (
+              <a href={stripeFoundingLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: G, fontFamily: MONO, padding: "4px 8px", border: `1px solid ${G}55`, borderRadius: 6, textDecoration: "none" }}>tester</a>
+            )}
+          </div>
+
+          {/* Filtres de statut */}
+          <div style={{ display: "flex", gap: 4, marginBottom: 10, flexWrap: "wrap" }}>
+            {[
+              { id: "pending",   label: "À contacter", count: waitlist.filter((w) => (w.status || "pending") === "pending").length },
+              { id: "contacted", label: "Contacté",    count: waitlist.filter((w) => w.status === "contacted").length },
+              { id: "paid",      label: "Payé",        count: waitlist.filter((w) => w.status === "paid").length },
+              { id: "all",       label: "Tous",        count: waitlist.length },
+            ].map((f) => (
+              <button key={f.id} onClick={() => setWaitlistFilter(f.id)}
+                style={{ padding: "5px 11px", background: waitlistFilter === f.id ? BLUE_DIM : "transparent", border: `1px solid ${waitlistFilter === f.id ? BLUE_BORDER : "rgba(255,255,255,0.06)"}`, borderRadius: 6, color: waitlistFilter === f.id ? BLUE : "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: MONO, cursor: "pointer" }}>
+                {f.label} <span style={{ opacity: 0.6, marginLeft: 4 }}>{f.count}</span>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflow: "hidden" }}>
+            {(() => {
+              const filtered = waitlistFilter === "all" ? waitlist : waitlist.filter((w) => (w.status || "pending") === waitlistFilter);
+              if (filtered.length === 0) {
+                return <div style={{ padding: 32, textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Aucun lead {waitlistFilter !== "all" ? waitlistFilter : ""}.</div>;
+              }
+              return filtered.map((w, i) => {
+                const status = w.status || "pending";
+                const statusColor = status === "paid" ? G : status === "contacted" ? BLUE : status === "declined" ? RED : AMBER;
+                const statusLabel = status === "paid" ? "PAYÉ" : status === "contacted" ? "CONTACTÉ" : status === "declined" ? "REFUSÉ" : "EN ATTENTE";
+                const updateStatus = async (newStatus) => {
+                  const updates = { status: newStatus };
+                  if (newStatus === "contacted" && !w.contacted_at) updates.contacted_at = new Date().toISOString();
+                  if (newStatus === "paid" && !w.paid_at) updates.paid_at = new Date().toISOString();
+                  const { error } = await supabase.from("waitlist").update(updates).eq("id", w.id);
+                  if (!error) setWaitlist((prev) => prev.map((x) => x.id === w.id ? { ...x, ...updates } : x));
+                };
+                return (
+                  <div key={w.id} style={{ padding: "12px 18px", display: "flex", alignItems: "flex-start", gap: 12, borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{w.name || "—"}</span>
+                        <span style={{ fontSize: 8.5, fontWeight: 800, color: statusColor, letterSpacing: "0.1em", padding: "2px 7px", border: `1px solid ${statusColor}55`, background: `${statusColor}11`, borderRadius: 4 }}>{statusLabel}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", fontFamily: MONO, marginBottom: 4, wordBreak: "break-all" }}>{w.email}</div>
+                      {(w.clients || w.problem) && (
+                        <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.4)", lineHeight: 1.45 }}>
+                          {w.clients && <span><strong style={{ color: "rgba(255,255,255,0.65)", fontWeight: 600 }}>{w.clients}</strong> client(s){w.problem ? " · " : ""}</span>}
+                          {w.problem && <span style={{ fontStyle: "italic" }}>« {w.problem.length > 110 ? w.problem.slice(0, 110) + "…" : w.problem} »</span>}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: MONO, marginTop: 5 }}>
+                        {rel(w.created_at)}{w.source ? ` · ${w.source}` : ""}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, alignItems: "flex-end" }}>
+                      {status !== "paid" && (
+                        <button onClick={() => setWaitlistLinkFor(w)}
+                          disabled={!stripeFoundingLink}
+                          title={stripeFoundingLink ? "Générer & copier le lien Stripe" : "Configure le lien Stripe Founding en haut"}
+                          style={{ padding: "6px 12px", background: stripeFoundingLink ? G : "rgba(255,255,255,0.04)", color: stripeFoundingLink ? "#04201d" : "rgba(255,255,255,0.3)", border: "none", borderRadius: 6, fontSize: 10, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase", cursor: stripeFoundingLink ? "pointer" : "not-allowed", fontFamily: BODY }}>
+                          Lien Stripe
+                        </button>
+                      )}
+                      {status === "pending" && (
+                        <button onClick={() => updateStatus("contacted")} style={{ padding: "5px 10px", background: "transparent", color: BLUE, border: `1px solid ${BLUE_BORDER}`, borderRadius: 6, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", cursor: "pointer", fontFamily: BODY }}>Contacté</button>
+                      )}
+                      {status === "contacted" && (
+                        <button onClick={() => updateStatus("paid")} style={{ padding: "5px 10px", background: "transparent", color: G, border: `1px solid ${G}55`, borderRadius: 6, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", cursor: "pointer", fontFamily: BODY }}>Marquer payé</button>
+                      )}
+                      {status !== "declined" && status !== "paid" && (
+                        <button onClick={() => updateStatus("declined")} style={{ padding: "4px 10px", background: "transparent", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", cursor: "pointer", fontFamily: BODY }}>Refusé</button>
+                      )}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+
         {/* ═══════ ACTIVITÉ PLATEFORME (proxy santé via les athlètes) ═══════ */}
         <div style={{ marginBottom: 24, animation: "cF 0.4s ease 0.25s both" }}>
           <SectionHead icon="activity" label="Activité plateforme" color={BLUE} meta={`48H · ${activityFeed.length} EVENTS`} />
@@ -663,6 +767,50 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
           onCreated={() => loadData(true)}
         />
       )}
+
+      {/* ═══════ LIEN DE PAIEMENT — modal copier le lien Stripe pré-rempli ═══════ */}
+      {waitlistLinkFor && stripeFoundingLink && (() => {
+        const w = waitlistLinkFor;
+        const sep = stripeFoundingLink.includes("?") ? "&" : "?";
+        const url = `${stripeFoundingLink}${sep}prefilled_email=${encodeURIComponent(w.email || "")}`;
+        return (
+          <div onClick={(e) => { if (e.target === e.currentTarget) setWaitlistLinkFor(null); }}
+            style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: BODY, color: IVORY }}>
+            <div style={{ width: "100%", maxWidth: 540, background: "#0c0c0c", border: `1px solid ${G}33`, borderRadius: 18, overflow: "hidden" }}>
+              <div style={{ padding: "20px 24px 12px" }}>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.3em", color: G, fontFamily: MONO, textTransform: "uppercase", marginBottom: 6 }}>Lien de paiement</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px", marginBottom: 3 }}>Founding · 199 €/mois</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Pour <strong style={{ color: "#fff", fontWeight: 700 }}>{w.name || w.email}</strong></div>
+              </div>
+              <div style={{ padding: "0 24px 20px" }}>
+                <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: 14, fontFamily: MONO, fontSize: 11, color: "rgba(255,255,255,0.75)", wordBreak: "break-all", marginBottom: 14, lineHeight: 1.5 }}>{url}</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={async () => {
+                      try { await navigator.clipboard.writeText(url); } catch {}
+                      // Marque contacté si encore en attente
+                      if ((w.status || "pending") === "pending") {
+                        const updates = { status: "contacted", contacted_at: new Date().toISOString() };
+                        await supabase.from("waitlist").update(updates).eq("id", w.id);
+                        setWaitlist((prev) => prev.map((x) => x.id === w.id ? { ...x, ...updates } : x));
+                      }
+                      setWaitlistLinkFor(null);
+                    }}
+                    style={{ flex: 1, padding: "12px 16px", background: G, color: "#04201d", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase", cursor: "pointer", fontFamily: BODY }}
+                  >Copier & marquer contacté</button>
+                  <button
+                    onClick={() => setWaitlistLinkFor(null)}
+                    style={{ padding: "12px 16px", background: "transparent", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: BODY }}
+                  >Annuler</button>
+                </div>
+                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.35)", lineHeight: 1.55, marginTop: 12 }}>
+                  L'email du coach est pré-rempli sur la page Stripe. Envoie ce lien par DM/email — quand il aura payé, marque la ligne comme « Payé » (le webhook Stripe le fera tout seul une fois branché).
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
