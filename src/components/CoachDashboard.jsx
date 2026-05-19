@@ -4738,9 +4738,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const homeScreenDismissed = useRef(false);
   const { plans: coachPlans } = useCoachPlans(coachId);
   // Souscription push notifs coach : auto-subscribe si la permission est
-  // déjà accordée (sinon on attend une CTA explicite). Notifie sur PR
-  // client + autres events futurs.
-  usePushNotifications({ coachId });
+  // déjà accordée. Sinon on affiche une bannière CTA (cf. plus bas).
+  // Notifie sur message client, PR client, et autres events.
+  const { permission: pushPermission, requestPermission: requestPushPermission } = usePushNotifications({ coachId });
+  const [pushBannerDismissed, setPushBannerDismissed] = useState(() => {
+    try { return localStorage.getItem("rb_coach_push_banner_dismissed") === "1"; } catch { return false; }
+  });
 
   // Deep-link: /dashboard/mon-compte?tab=abonnement (retour Stripe Customer Portal)
   // ou /app.html?view=mon-compte&tab=... → ouvre MonCompte sur l'onglet demandé.
@@ -6065,6 +6068,47 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               {new Date().toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
             </div>
           </div>
+
+          {/* ========== BANNIÈRE ACTIVER LES NOTIFICATIONS ========== */}
+          {pushPermission !== "granted" && !pushBannerDismissed && (
+            <div style={{ margin: "20px 24px 0", padding: 16, background: `${G}12`, border: `1px solid ${G}33`, borderRadius: 16, display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: `${G}1f`, border: `1px solid ${G}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={G} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 3 }}>Active les notifications</div>
+                <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, marginBottom: pushPermission === "denied" ? 0 : 10 }}>
+                  {pushPermission === "denied"
+                    ? "Les notifications sont bloquées par ton navigateur. Réautorise-les dans les réglages du site (cadenas dans la barre d'adresse → Notifications) pour être prévenu quand un client t'écrit."
+                    : "Sois prévenu dès qu'un client t'envoie un message — même quand l'app est fermée."}
+                </div>
+                {pushPermission !== "denied" && (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={async () => {
+                        const p = await requestPushPermission();
+                        if (p === "granted") showToast("Notifications activées");
+                        else if (p === "denied") showToast("Notifications refusées");
+                      }}
+                      style={{ padding: "8px 16px", background: G, border: "none", borderRadius: 9, color: "#04201d", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
+                    >Activer</button>
+                    <button
+                      onClick={() => { setPushBannerDismissed(true); try { localStorage.setItem("rb_coach_push_banner_dismissed", "1"); } catch {} }}
+                      style={{ padding: "8px 14px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 9, color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                    >Plus tard</button>
+                  </div>
+                )}
+              </div>
+              {pushPermission === "denied" && (
+                <button
+                  onClick={() => { setPushBannerDismissed(true); try { localStorage.setItem("rb_coach_push_banner_dismissed", "1"); } catch {} }}
+                  style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 18, cursor: "pointer", padding: 0, lineHeight: 1, flexShrink: 0 }}
+                >×</button>
+              )}
+            </div>
+          )}
 
           {/* ========== SCORE CARD (même format que FuelPage score énergie) ========== */}
           <div style={{ margin: "20px 24px", background: "rgba(255,255,255,0.025)", border: `1px solid ${G}33`, borderRadius: 22, padding: 20, position: "relative", overflow: "hidden" }}>
