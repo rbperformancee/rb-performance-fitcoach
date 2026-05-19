@@ -4701,6 +4701,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const [newName,   setNewName]   = useState("");
   const [toastMsg,  setToastMsg]  = useState(null);
   const [selected,  setSelected]  = useState(null);
+  // Bumpé après un upload de programme → force le remount de ClientPanel pour
+  // afficher le nouveau programme, sans renvoyer le coach à l'accueil.
+  const [panelKey,  setPanelKey]  = useState(0);
   const [filter,    setFilter]    = useState("all");
 
   const showToast = (msg, type = "ok") => { setToastMsg({ msg, type }); setTimeout(() => setToastMsg(null), 3000); };
@@ -5166,8 +5169,12 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       showToast(fillTpl(t("cd.toast_programme_uploaded"), { who: client.full_name || client.email }));
       loadClients();
+      // On RESTE sur la fiche du client (avant : setSelected(null) renvoyait
+      // le coach à l'accueil). Le bump de panelKey remonte ClientPanel pour
+      // qu'il recharge et affiche le programme tout juste uploadé.
+      setPanelKey((k) => k + 1);
     } catch (e) { showToast(e.message, "err"); }
-    finally { setUploading(false); setSelected(null); }
+    finally { setUploading(false); }
   };
 
   // Stats
@@ -5755,7 +5762,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
       {selected && (
         <ErrorBoundary name="ClientPanel">
-          <ClientPanel client={selected} onClose={() => { setSelected(null); setShowClientList(true); loadClients(); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }} onClientUpdated={(updated) => { setSelected(updated); loadClients(); }} />
+          <ClientPanel key={`cp-${selected.id}-${panelKey}`} client={selected} onClose={() => { setSelected(null); setShowClientList(true); loadClients(); }} onUpload={uploadProg} onDelete={deleteClient} coachId={coachId} coachData={coachData} isDemo={isDemo} coachPlans={coachPlans} onWantInvoice={(c) => { setInvoicePreselect(c); setShowInvoice(true); }} onClientUpdated={(updated) => { setSelected(updated); loadClients(); }} />
         </ErrorBoundary>
       )}
       {showPipeline && (
