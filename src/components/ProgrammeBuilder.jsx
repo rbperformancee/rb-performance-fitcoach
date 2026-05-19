@@ -1496,10 +1496,12 @@ function Preview({ programme, showAnalytics }) {
 }
 
 export default function ProgrammeBuilder({ client, onClose, onSaved, existingProgramme }) {
-  // Clé draft localStorage : 1 par client. Persiste entre sessions.
-  const draftKey = `rb_progbuilder_draft_${client?.id || "anon"}`;
   // Autosave désactivé en mode "edit existing" (on travaille sur une copie live).
   const editMode = !!(existingProgramme && existingProgramme.html_content);
+  // Clé draft localStorage scopée PAR BLOC (et non par client) : sinon, avec
+  // la file de blocs, éditer le bloc 2 restaurait le brouillon du bloc 1.
+  // "new" = nouveau programme ; "<id>" = un bloc existant en édition.
+  const draftKey = `rb_progbuilder_draft_${client?.id || "anon"}_${(existingProgramme && existingProgramme.id) || "new"}`;
 
   // Brouillon localStorage valide (≤ 14 j, non vide) ou null.
   const loadDraft = () => {
