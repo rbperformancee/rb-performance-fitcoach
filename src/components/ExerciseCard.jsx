@@ -30,6 +30,27 @@ const fillTpl = (s, vars) => {
   return out;
 };
 
+/**
+ * Détecte une notation composée dans les reps :
+ *  - cluster / rest-pause : "5+5+5"  → un set = 3 mini-blocs au même poids,
+ *    courte pause entre chaque (l'athlète logue chaque bloc).
+ *  - dégressive / drop set : "10_10" → un set = 2 charges enchaînées sans
+ *    repos, la charge descend (l'athlète logue chaque charge).
+ * Retourne { type, segments: ["5","5","5"] } ou null.
+ */
+function parseCompound(reps) {
+  const r = String(reps || "").trim();
+  if (r.includes("+")) {
+    const segs = r.split("+").map((s) => s.trim()).filter(Boolean);
+    if (segs.length >= 2) return { type: "cluster", segments: segs };
+  }
+  if (r.includes("_")) {
+    const segs = r.split("_").map((s) => s.trim()).filter(Boolean);
+    if (segs.length >= 2) return { type: "degressive", segments: segs };
+  }
+  return null;
+}
+
 function ytId(url) {
   if (!url) return null;
   try {
@@ -213,6 +234,138 @@ function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placehold
   );
 }
 
+/**
+ * CompoundSetRow — UI guidée pour un set cluster ou dégressif.
+ * L'athlète saisit chaque bloc/charge ; une seule validation pour le set.
+ */
+function CompoundSetRow({ index, done, isActive, type, segments, currentEntry, defaultWeight, onDone }) {
+  const isCluster = type === "cluster";
+  const N = segments.length;
+
+  const [segVals, setSegVals] = useState(() => {
+    if (currentEntry && Array.isArray(currentEntry.segments) && currentEntry.segments.length === N) {
+      return currentEntry.segments.map((s) => ({
+        w: s.w != null && s.w !== "" ? String(s.w) : "",
+        r: s.r != null && s.r !== "" ? String(s.r) : "",
+      }));
+    }
+    const w0 = defaultWeight && Number(defaultWeight) > 0 ? String(defaultWeight) : "";
+    return segments.map(() => ({ w: w0, r: "" }));
+  });
+
+  const setW = (i, val) => setSegVals((prev) =>
+    // Cluster : poids identique sur tous les blocs → on propage.
+    isCluster ? prev.map((s) => ({ ...s, w: val })) : prev.map((s, j) => (j === i ? { ...s, w: val } : s))
+  );
+  const setR = (i, val) => setSegVals((prev) => prev.map((s, j) => (j === i ? { ...s, r: val } : s)));
+
+  const repsOk = segVals.every((s) => /^\d+$/.test(String(s.r).trim()) && parseInt(s.r, 10) > 0);
+  const weightOk = isCluster
+    ? !!String(segVals[0]?.w || "").trim()
+    : segVals.every((s) => !!String(s.w).trim());
+  const canValidate = repsOk && weightOk && !done && isActive;
+
+  const validate = () => {
+    if (!canValidate) return;
+    if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
+    const totalReps = segVals.reduce((a, s) => a + (parseInt(s.r, 10) || 0), 0);
+    onDone(String(segVals[0]?.w || ""), String(totalReps), index,
+      segVals.map((s) => ({ w: s.w, r: s.r })));
+  };
+
+  const opacity = done ? 1 : isActive ? 1 : 0.55;
+  const accent = type === "degressive" ? "#f59e0b" : GREEN;
+  const accentDim = type === "degressive" ? "rgba(245,158,11,0.12)" : GREEN_DIM;
+  const label = isCluster ? "Cluster" : "Dégressive";
+  const hint = isCluster ? "Repos court entre les blocs, même charge" : "Enchaîné sans repos, la charge descend";
+
+  const inStyle = {
+    background: done ? "rgba(2,209,186,0.06)" : "rgba(255,255,255,0.08)",
+    border: `${done ? 1 : 2}px solid ${done ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.13)"}`,
+    borderRadius: 12, padding: "11px 6px", textAlign: "center",
+    fontSize: 22, fontWeight: 100, color: done ? GREEN : "#fff",
+    letterSpacing: "-1px", outline: "none", fontFamily: "-apple-system,Inter,sans-serif",
+    width: "100%", boxSizing: "border-box",
+  };
+  const colLabel = { fontSize: 8, color: "rgba(255,255,255,0.22)", textAlign: "center", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4 };
+
+  return (
+    <div style={{
+      marginBottom: 10, padding: 12, borderRadius: 16, opacity, transition: "opacity 0.3s",
+      background: done ? "rgba(2,209,186,0.04)" : "rgba(255,255,255,0.02)",
+      border: `1px solid ${done ? "rgba(2,209,186,0.14)" : isActive ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}`,
+    }}>
+      {/* Header set */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        {done ? (
+          <div style={{ width: 22, height: 22, borderRadius: "50%", background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="3" strokeLinecap="round" style={{ width: 10, height: 10 }}><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        ) : (
+          <div style={{ width: 22, height: 22, borderRadius: "50%", background: accentDim, color: accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{index + 1}</div>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: 1, textTransform: "uppercase" }}>{label} · {N} {isCluster ? "blocs" : "charges"}</div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 1 }}>{hint}</div>
+        </div>
+        <button onClick={validate} disabled={!canValidate && !done} style={{
+          width: 40, height: 40, borderRadius: 12, border: "none", flexShrink: 0,
+          cursor: canValidate || done ? "pointer" : "not-allowed",
+          background: done ? "rgba(2,209,186,0.08)" : canValidate ? GREEN : "rgba(255,255,255,0.03)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke={done ? GREEN : canValidate ? "#050505" : "rgba(255,255,255,0.08)"} strokeWidth="3" strokeLinecap="round" style={{ width: 15, height: 15 }}>
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      </div>
+
+      {isCluster ? (
+        <>
+          {/* Poids partagé */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={colLabel}>Charge (kg)</div>
+            <input type="number" inputMode="decimal" value={segVals[0]?.w || ""} disabled={done}
+              onChange={(e) => setW(0, e.target.value)} placeholder="0" style={inStyle} />
+          </div>
+          {/* Reps par bloc */}
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${N}, 1fr)`, gap: 6 }}>
+            {segVals.map((s, i) => (
+              <div key={i}>
+                <div style={colLabel}>Bloc {i + 1} · {segments[i]}</div>
+                <input type="number" inputMode="numeric" pattern="[0-9]*" value={s.r} disabled={done}
+                  onChange={(e) => setR(i, e.target.value)} placeholder={segments[i]}
+                  className="rb-reps-input" style={inStyle} />
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {segVals.map((s, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "58px 1fr 1fr", gap: 6, alignItems: "center" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Charge {i + 1}
+              </div>
+              <div>
+                {i === 0 && <div style={colLabel}>Poids (kg)</div>}
+                <input type="number" inputMode="decimal" value={s.w} disabled={done}
+                  onChange={(e) => setW(i, e.target.value)} placeholder="0" style={inStyle} />
+              </div>
+              <div>
+                {i === 0 && <div style={colLabel}>Reps · {segments[i]}</div>}
+                <input type="number" inputMode="numeric" pattern="[0-9]*" value={s.r} disabled={done}
+                  onChange={(e) => setR(i, e.target.value)} placeholder={segments[i]}
+                  className="rb-reps-input" style={inStyle} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData, bandColor, isActive }) {
   const t = useT();
   const restTimer = useRestTimer();
@@ -242,11 +395,13 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const latest = getLatest(weekIdx, sessionIdx, exIdx);
   const delta = getDelta(weekIdx, sessionIdx, exIdx);
 
+  // Notation composée (cluster "5+5+5" / dégressive "10_10") : chaque SÉRIE
+  // est un bloc composé, loggé via CompoundSetRow. Le nombre de séries reste
+  // donné par le multiplicateur "NX" (ex. "3X5+5+5" = 3 séries cluster).
+  const compound = parseCompound(ex.reps || ex.rawReps);
+
   // Extraire le nombre de series — depuis ex.sets, ou depuis rawReps "3x5", ou fallback 1
   const parsedSets = (() => {
-    // Notation cluster / rest-pause : un "+" dans les reps (ex. "3X5+5+5")
-    // = UNE seule série à logger (l'athlète saisit le set complet une fois).
-    if (String(ex.rawReps || ex.reps || "").includes("+")) return 1;
     if (typeof ex.sets === "number" && ex.sets > 0) return ex.sets;
     if (ex.rawReps) {
       const m = ex.rawReps.match(/^(\d+)\s*[xX×]/);
@@ -276,11 +431,17 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     ? { next: doneCount + 1, total: parsedSets }
     : null;
 
-  // Calcul du volume de l exercice
-  const volume = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0);
+  // Calcul du volume de l exercice — segment-aware pour les sets composés
+  // (dégressive : chaque charge a son propre poids → on somme bloc par bloc).
+  const volume = completedSetsRef.current.reduce((a, s) => {
+    if (Array.isArray(s.segments) && s.segments.length) {
+      return a + s.segments.reduce((v, seg) => v + (parseFloat(seg.w) || 0) * (parseInt(seg.r) || 0), 0);
+    }
+    return a + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0);
+  }, 0);
 
-  const handleSetDone = (weight, reps, idx) => {
-    completedSetsRef.current = [...completedSetsRef.current, { weight, reps, index: idx }];
+  const handleSetDone = (weight, reps, idx, segments = null) => {
+    completedSetsRef.current = [...completedSetsRef.current, { weight, reps, index: idx, ...(segments ? { segments } : {}) }];
     const n = completedSetsRef.current.length;
     setDoneCount(n);
     try {
@@ -399,6 +560,16 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px", lineHeight: 1.1, marginBottom: 10 }}>{ex.name}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {chipsReps && <span style={{ fontSize: 11, color: "rgba(2,209,186,0.8)", background: "rgba(2,209,186,0.08)", padding: "5px 12px", borderRadius: 100, fontWeight: 600 }}>{chipsReps}</span>}
+                {compound && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 100,
+                    color: compound.type === "degressive" ? "#f59e0b" : GREEN,
+                    background: compound.type === "degressive" ? "rgba(245,158,11,0.1)" : "rgba(2,209,186,0.08)",
+                    border: `1px solid ${compound.type === "degressive" ? "rgba(245,158,11,0.25)" : "rgba(2,209,186,0.2)"}`,
+                  }}>
+                    {compound.type === "degressive" ? "Dégressive" : "Cluster"}
+                  </span>
+                )}
                 {ex.rest && <span onClick={() => restSecs && restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets })} style={{ fontSize: 11, color: "rgba(255,165,0,0.7)", background: "rgba(255,165,0,0.07)", padding: "5px 12px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>⏱ {ex.rest}</span>}
                 {ex.tempo && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>{ex.tempo}</span>}
                 {ex.rir != null && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>RIR {ex.rir}</span>}
@@ -452,43 +623,63 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
 
         {/* Series */}
         <div style={{ padding: "0 16px 16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px", gap: 8, marginBottom: 10, padding: "0 2px" }}>
-            <div></div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>{t("ec.weight_col")}</div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>
-              {t("ec.reps_col")}{ex.reps ? <span style={{ color: "rgba(2,209,186,0.5)", marginLeft: 4, textTransform: "none", letterSpacing: 0 }}>· {ex.reps}</span> : null}
+          {!compound && (
+            <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px", gap: 8, marginBottom: 10, padding: "0 2px" }}>
+              <div></div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>{t("ec.weight_col")}</div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", textAlign: "center", letterSpacing: "2px", textTransform: "uppercase" }}>
+                {t("ec.reps_col")}{ex.reps ? <span style={{ color: "rgba(2,209,186,0.5)", marginLeft: 4, textTransform: "none", letterSpacing: 0 }}>· {ex.reps}</span> : null}
+              </div>
+              <div></div>
             </div>
-            <div></div>
-          </div>
-          {Array.from({ length: setsCount }, (_, i) => (
-            <SetRow
-              key={resetKey + "-" + i}
-              index={i}
-              done={i < doneCount}
-              isActive={i === doneCount}
-              defaultW={(() => {
-                // Ignore les 0 hérités d'anciens logs : 0 ?? X retourne 0 et
-                // useState(0||"") => "" -> placeholder "0" qui ressemble à
-                // une valeur fixée par le coach. On veut un vrai poids > 0.
-                const sw = latest?.sets?.[i]?.weight;
-                if (sw != null && sw !== "" && Number(sw) > 0) return String(sw);
-                if (latest?.weight && Number(latest.weight) > 0) return String(latest.weight);
-                return "";
-              })()}
-              defaultR={(() => {
-                // N injecter une defaultR que si c est une vraie valeur numerique loggee.
-                // Les fourchettes type "8-10" venaient du fallback ex.reps -> pollution DB.
-                const r = latest?.sets?.[i]?.reps;
-                if (r == null || r === "") return "";
-                if (/^\d+$/.test(String(r).trim())) return String(r);
-                return "";
-              })()}
-              currentW={completedSetsRef.current[i]?.weight}
-              currentR={completedSetsRef.current[i]?.reps}
-              placeholder={ex.reps || "—"}
-              onDone={handleSetDone}
-            />
-          ))}
+          )}
+          {Array.from({ length: setsCount }, (_, i) => {
+            const restoredW = (() => {
+              // Ignore les 0 hérités d'anciens logs : 0 ?? X retourne 0 et
+              // useState(0||"") => "" -> placeholder "0" qui ressemble à
+              // une valeur fixée par le coach. On veut un vrai poids > 0.
+              const sw = latest?.sets?.[i]?.weight;
+              if (sw != null && sw !== "" && Number(sw) > 0) return String(sw);
+              if (latest?.weight && Number(latest.weight) > 0) return String(latest.weight);
+              return "";
+            })();
+            if (compound) {
+              return (
+                <CompoundSetRow
+                  key={resetKey + "-c-" + i}
+                  index={i}
+                  done={i < doneCount}
+                  isActive={i === doneCount}
+                  type={compound.type}
+                  segments={compound.segments}
+                  currentEntry={completedSetsRef.current[i]}
+                  defaultWeight={restoredW}
+                  onDone={handleSetDone}
+                />
+              );
+            }
+            return (
+              <SetRow
+                key={resetKey + "-" + i}
+                index={i}
+                done={i < doneCount}
+                isActive={i === doneCount}
+                defaultW={restoredW}
+                defaultR={(() => {
+                  // N injecter une defaultR que si c est une vraie valeur numerique loggee.
+                  // Les fourchettes type "8-10" venaient du fallback ex.reps -> pollution DB.
+                  const r = latest?.sets?.[i]?.reps;
+                  if (r == null || r === "") return "";
+                  if (/^\d+$/.test(String(r).trim())) return String(r);
+                  return "";
+                })()}
+                currentW={completedSetsRef.current[i]?.weight}
+                currentR={completedSetsRef.current[i]?.reps}
+                placeholder={ex.reps || "—"}
+                onDone={handleSetDone}
+              />
+            );
+          })}
           {doneCount > 0 && doneCount < setsCount && (
             <button onClick={handleReset} style={{ width: "100%", marginTop: 4, padding: "8px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)", background: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 11, cursor: "pointer" }}>{t("ec.restart")}</button>
           )}

@@ -247,10 +247,14 @@ function computeTodaysSession(programmeMeta, programme) {
 
   const sessionsPerWeek = trainingDays.length;
   const weekIdx = Math.floor(effectiveIdx / sessionsPerWeek);
-  const sessionIdx = effectiveIdx % sessionsPerWeek;
+  const sessionPos = effectiveIdx % sessionsPerWeek;
   if (weekIdx >= programme.weeks.length) return { type: "finished" };
-  const sessionsInWeek = programme.weeks[weekIdx]?.sessions?.length || 0;
-  if (sessionIdx >= sessionsInWeek) return { type: "rest" };
+  // Le calendrier ne mappe que les séances « normales » : les séances bonus
+  // sont optionnelles et n'occupent aucun jour d'entraînement.
+  const weekSessions = programme.weeks[weekIdx]?.sessions || [];
+  const normalIdx = weekSessions.map((s, i) => (s && s.bonus) ? -1 : i).filter((i) => i >= 0);
+  if (sessionPos >= normalIdx.length) return { type: "rest" };
+  const sessionIdx = normalIdx[sessionPos];
   return { type: "session", week: weekIdx, session: sessionIdx, sessionsPerWeek };
 }
 
@@ -297,7 +301,11 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       if (daysSinceStart < 0) return { weekday, status: "future", date };
       if (!td.includes(weekday)) return { weekday, status: "rest", date };
       const wIdx = Math.floor(daysSinceStart / 7);
-      const sIdx = td.indexOf(weekday);
+      // Mappe le jour d'entraînement vers une séance normale (saute les bonus).
+      const wkSessions = programme?.weeks?.[wIdx]?.sessions || [];
+      const normalIdx = wkSessions.map((s, i) => (s && s.bonus) ? -1 : i).filter((i) => i >= 0);
+      const pos = td.indexOf(weekday);
+      const sIdx = normalIdx.length && normalIdx[pos] != null ? normalIdx[pos] : pos;
       const validated = isSessionValidee(wIdx, sIdx);
       let status;
       if (validated) status = "done";
@@ -527,7 +535,9 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     () => ovApi.applyToSession(rawCurrentSession, activeWeek, activeSession),
     [ovApi, rawCurrentSession, activeWeek, activeSession]
   );
-  const totalSessions = programme?.weeks?.reduce((a, w) => a + (w.sessions?.length || 0), 0) || 0;
+  // Les séances bonus ne comptent pas dans le total (dénominateur de progression) :
+  // optionnelles, elles ne doivent pas faire baisser le % si le client les saute.
+  const totalSessions = programme?.weeks?.reduce((a, w) => a + (w.sessions || []).filter((s) => !s.bonus).length, 0) || 0;
   // Le compteur "done" provient EXCLUSIVEMENT des seances explicitement validees.
   const doneSessions = (programme?.weeks || []).reduce((a, w, wIdx) => {
     return a + (w.sessions || []).reduce((b, _s, sIdx) => {
@@ -919,8 +929,14 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
             return (
               <div key={i} data-session-idx={i} onClick={() => setActiveSession(i)} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
-                <div style={{ fontSize: 8, color: isDone ? G : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>
-                  {isDone ? t("train.session_done") : isActive ? t("train.session_today") : t("train.session_upcoming")}
+                {s.bonus && (
+                  <div style={{ position: "absolute", top: 8, right: 8, display: "flex", alignItems: "center", gap: 3, background: "rgba(2,209,186,0.14)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 100, padding: "2px 7px 2px 5px" }}>
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke={G} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8.5" x2="12" y2="15.5"/><line x1="8.5" y1="12" x2="15.5" y2="12"/></svg>
+                    <span style={{ fontSize: 7.5, fontWeight: 800, color: G, letterSpacing: 0.6 }}>BONUS</span>
+                  </div>
+                )}
+                <div style={{ fontSize: 8, color: isDone ? G : s.bonus ? "rgba(2,209,186,0.7)" : isActive ? "rgba(2,209,186,0.7)" : "rgba(255,255,255,0.2)", letterSpacing: "1px", marginBottom: 8, fontWeight: 700 }}>
+                  {isDone ? t("train.session_done") : s.bonus ? "OPTIONNELLE" : isActive ? t("train.session_today") : t("train.session_upcoming")}
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: isDone ? "rgba(255,255,255,0.5)" : isActive ? "#fff" : "rgba(255,255,255,0.45)", marginBottom: 3 }}>{s.name || `${t("train.session_default")} ${i + 1}`}</div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginBottom: 8 }}>{sexs} {t("train.exercises_count")}</div>

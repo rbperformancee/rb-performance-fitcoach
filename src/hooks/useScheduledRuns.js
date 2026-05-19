@@ -151,7 +151,8 @@ export function useScheduledRuns(clientId) {
 
     const allRunsDone = runs.length === 0 || runs.every(r => r.done);
 
-    const totalSessions = week.sessions.length;
+    // Les séances bonus sont optionnelles → exclues du compte de validation.
+    const totalSessions = week.sessions.filter((s) => !s.bonus).length;
     if (totalSessions === 0) return allRunsDone;
 
     if (!weekDateRange.start) return false;

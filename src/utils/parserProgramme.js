@@ -90,6 +90,10 @@ export function parseProgrammeHTML(htmlString) {
     weekEl.querySelectorAll(".seance-block").forEach((seanceEl, si) => {
       const fid = seanceEl.id.replace("seance-", "");
 
+      // Séance bonus / extra : optionnelle, ne compte pas dans la progression
+      // hebdo ni dans le calendrier (jours d'entraînement). data-bonus="1".
+      const bonus = seanceEl.getAttribute("data-bonus") === "1";
+
       const sessionName = (
         doc.getElementById(`sn-${fid}`)?.value ||
         doc.getElementById(`sn-${fid}`)?.getAttribute("value") ||
@@ -260,7 +264,7 @@ export function parseProgrammeHTML(htmlString) {
       });
 
       if (exercises.length > 0 || runs.length > 0 || fieldSessions.length > 0 || (finisher && finisher.length > 0) || sessionName !== `Séance ${si + 1}`) {
-        sessions.push({ name: sessionName, description, finisher, exercises, runs, fieldSessions });
+        sessions.push({ name: sessionName, description, finisher, bonus, exercises, runs, fieldSessions });
       }
     });
 

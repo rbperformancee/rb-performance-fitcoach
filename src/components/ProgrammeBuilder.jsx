@@ -89,7 +89,7 @@ function buildHTML(p) {
         </div>`;
       }).join("");
       return `
-      <div class="seance-block" id="seance-${sid}">
+      <div class="seance-block" id="seance-${sid}"${s.bonus ? ' data-bonus="1"' : ''}>
         <input id="sn-${sid}" value="${escAttr(s.name)}" />
         <textarea id="sd-${sid}">${escText(s.description || '')}</textarea>
         <textarea id="sf-${sid}">${escText(s.finisher || '')}</textarea>
@@ -115,7 +115,7 @@ ${weeksHtml}
 }
 
 const newExercise = () => ({ id: uid(), name: "", reps: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "" });
-const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", runs: [], fieldSessions: [], exercises: [newExercise()] });
+const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", bonus: false, runs: [], fieldSessions: [], exercises: [newExercise()] });
 const newFieldSession = () => ({ id: uid(), title: "", moment: "", description: "" });
 const newRun = () => ({ id: uid(), name: "", distance: "", duration: "", bpm: "", rest: "" });
 const newWeek = (n = 1) => ({ id: uid(), name: `Semaine ${n}`, sessions: [newSession(1)] });
@@ -154,8 +154,10 @@ const REPS_SUGGESTIONS = [
   "3X8/jambe", "3X10/jambe", "3X12/jambe", "4X8/bras", "3X10/bras",
   // Isométrique / temps
   "3X20 secondes", "3X30 secondes", "3X45 secondes", "3X60 secondes",
-  // Drop set / cluster
-  "Drop set", "Cluster set", "Rest-pause",
+  // Cluster / rest-pause — un "+" déclenche l'UI guidée côté client
+  "5+5+5", "3X5+5+5", "4X3+3+3", "3X8+8",
+  // Dégressive / drop set — un "_" déclenche l'UI guidée (charge qui descend)
+  "10_10", "3X12_8", "10_8_6",
 ];
 
 const TEMPO_SUGGESTIONS = [
@@ -224,6 +226,7 @@ function weeklyVolumeByGroup(week) {
       const mX = r.match(/^(\d+)\s*[xX×]/);
       if (mX) sets = parseInt(mX[1], 10);
       else if (/^\d+(\s*[-–]\s*\d+)+$/.test(r)) sets = r.split(/\s*[-–]\s*/).filter(Boolean).length;
+      else if (/^\d/.test(r) && /[+_]/.test(r)) sets = 1; // cluster "5+5+5" / dégressive "10_10"
       else if (/^\d+$/.test(r)) sets = 1;
       groups[grp] = (groups[grp] || 0) + sets;
     });
@@ -374,6 +377,7 @@ function fromParsed(parsed) {
         name: s.name || "",
         description: s.description || "",
         finisher: s.finisher || "",
+        bonus: !!s.bonus,
         // Runs prescrits — préservés tels quels (le builder n'a pas encore
         // d'UI pour les éditer, mais ils ne doivent JAMAIS être perdus).
         runs: Array.isArray(s.runs)
@@ -868,7 +872,14 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
-        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", flexShrink: 0 }}>Séance {idx + 1}</span>
+        {session.bonus ? (
+          <span title="Séance bonus — optionnelle pour le client" style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.2, color: G, textTransform: "uppercase", flexShrink: 0, display: "flex", alignItems: "center", gap: 4 }}>
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8.5" x2="12" y2="15.5"/><line x1="8.5" y1="12" x2="15.5" y2="12"/></svg>
+            Bonus
+          </span>
+        ) : (
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", flexShrink: 0 }}>Séance {idx + 1}</span>
+        )}
         <input
           type="text"
           value={session.name || ""}
@@ -907,6 +918,38 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
       )}
 
       {!collapsed && (<>
+      <button type="button" onClick={() => update("bonus", !session.bonus)}
+        style={{
+          display: "flex", alignItems: "center", gap: 9, width: "100%",
+          padding: "10px 12px", marginBottom: 12, borderRadius: 10, cursor: "pointer",
+          fontFamily: "inherit", textAlign: "left",
+          background: session.bonus ? G_DIM : "rgba(255,255,255,0.02)",
+          border: "1px solid " + (session.bonus ? "rgba(2,209,186,0.3)" : BORDER),
+        }}>
+        <div style={{
+          width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: session.bonus ? G : "rgba(255,255,255,0.06)",
+          color: session.bonus ? "#04201d" : "rgba(255,255,255,0.4)",
+        }}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8.5" x2="12" y2="15.5"/><line x1="8.5" y1="12" x2="15.5" y2="12"/></svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: session.bonus ? G : "rgba(255,255,255,0.72)" }}>Séance bonus / extra</div>
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.4)", marginTop: 1, lineHeight: 1.35 }}>
+            {session.bonus ? "Optionnelle — ne bloque pas la semaine, comptée si le client la fait." : "Activer pour une séance optionnelle, hors calendrier."}
+          </div>
+        </div>
+        <div style={{
+          width: 38, height: 22, borderRadius: 11, flexShrink: 0, position: "relative",
+          background: session.bonus ? G : "rgba(255,255,255,0.1)", transition: "background .15s",
+        }}>
+          <div style={{
+            position: "absolute", top: 2, left: session.bonus ? 18 : 2,
+            width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left .15s",
+          }} />
+        </div>
+      </button>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 14 }}>
         <TextArea label="Description" value={session.description} onChange={(v) => update("description", v)} placeholder="Pectoraux, épaules, triceps…" />
         <TextArea label="Finisher" value={session.finisher} onChange={(v) => update("finisher", v)} placeholder="3 séries de pompes lestées AMRAP…" />
