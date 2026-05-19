@@ -129,7 +129,10 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
 .tier-founding{background:rgba(0,201,167,0.04);border-color:rgba(0,201,167,0.2)}
 .tier-pro{background:rgba(255,255,255,0.015);border-color:rgba(255,255,255,0.04);opacity:.7}
 .tier-head{display:flex;align-items:center;gap:12px}
-.tier-medal{font-size:22px;flex-shrink:0;line-height:1}
+.tier-medal{width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)}
+.tier-founding .tier-medal{background:rgba(0,201,167,0.08);border-color:rgba(0,201,167,0.22);color:#00C9A7}
+.tier-pro .tier-medal{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:rgba(255,255,255,0.45)}
+.tier-medal svg{width:18px;height:18px}
 .tier-head>div:not(.tier-price){flex:1;min-width:0}
 .tier-name{font-size:13px;font-weight:800;color:#fff;letter-spacing:-0.01em;margin-bottom:2px}
 .tier-sub{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
@@ -212,20 +215,24 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
     <div class="tiers">
       <div class="tier tier-founding">
         <div class="tier-head">
-          <span class="tier-medal">🥇</span>
+          <span class="tier-medal" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>
+          </span>
           <div>
             <div class="tier-name" data-i18n="founding.t2_name">Founding Coach</div>
-            <div class="tier-sub" data-i18n="founding.t2_sub">30 places · jusqu'au 26 mai 2026</div>
+            <div class="tier-sub" data-i18n="founding.t2_sub">Cohorte limitée à 30 · clôture le 26 mai 2026</div>
           </div>
           <div class="tier-price"><strong>199€</strong><span>/mois à vie</span></div>
         </div>
-        <div class="tier-progress"><div class="tier-progress-fill" style="width:0%"></div></div>
-        <div class="tier-count" data-i18n="founding.t2_count"><strong>30 places restantes</strong> · ouvert maintenant</div>
+        <div class="tier-progress"><div class="tier-progress-fill" id="founding-progress-fill" style="width:0%"></div></div>
+        <div class="tier-count" id="founding-count-line" data-i18n="founding.t2_count"><strong>Cohorte 2026 en cours d'inscription</strong></div>
       </div>
 
       <div class="tier tier-pro">
         <div class="tier-head">
-          <span class="tier-medal">📈</span>
+          <span class="tier-medal" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
+          </span>
           <div>
             <div class="tier-name" data-i18n="founding.t3_name">Pro public</div>
             <div class="tier-sub" data-i18n="founding.t3_sub">à partir du 27 mai 2026</div>
@@ -576,6 +583,58 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
     document.addEventListener('DOMContentLoaded', initLangToggle);
   } else {
     initLangToggle();
+  }
+})();
+</script>
+
+<!-- Compteur HONNÊTE de la cohorte founding (lit /api/founding-spots) -->
+<script>
+(function(){
+  var TOTAL = 30;
+  var data = null;
+  function applySpots(){
+    if (!data) return;
+    var taken = data.taken || 0;
+    var remaining = data.remaining != null ? data.remaining : Math.max(0, TOTAL - taken);
+    var closed = !!data.closed;
+    // 2% minimum sur la barre tant que la cohorte est ouverte : sinon une
+    // barre à 0 ressemble à un bug. On grimpe à 100% une fois fermé.
+    var pct = closed ? 100 : Math.min(100, Math.max(2, (taken / TOTAL) * 100));
+    var fill = document.getElementById('founding-progress-fill');
+    if (fill) fill.style.width = pct + '%';
+    var line = document.getElementById('founding-count-line');
+    if (line) {
+      var lang = (document.documentElement.lang || 'fr').toLowerCase();
+      if (closed) {
+        line.innerHTML = lang === 'en'
+          ? '<strong>Cohort closed</strong> · all ' + TOTAL + ' founding seats taken'
+          : '<strong>Cohorte fermée</strong> · les ' + TOTAL + ' places founding sont prises';
+      } else if (taken === 0) {
+        line.innerHTML = lang === 'en'
+          ? '<strong>' + TOTAL + ' founding seats</strong> · cohort open'
+          : '<strong>' + TOTAL + ' places founding</strong> · cohorte ouverte';
+      } else {
+        line.innerHTML = lang === 'en'
+          ? '<strong>' + taken + ' / ' + TOTAL + '</strong> engaged · ' + remaining + ' seat' + (remaining > 1 ? 's' : '') + ' left'
+          : '<strong>' + taken + ' / ' + TOTAL + '</strong> places engagées · ' + remaining + ' restante' + (remaining > 1 ? 's' : '');
+      }
+    }
+  }
+  function load(){
+    fetch('/api/founding-spots').then(function(r){ return r.json(); }).then(function(d){
+      if (d && typeof d.taken === 'number') { data = d; applySpots(); }
+    }).catch(function(){});
+  }
+  // applyLang() écrase notre texte au changement de langue → on re-applique.
+  document.addEventListener('click', function(e){
+    var t = e.target && e.target.closest && e.target.closest('.lang-toggle button');
+    if (t) setTimeout(applySpots, 30);
+  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ load(); setTimeout(applySpots, 120); });
+  } else {
+    load();
+    setTimeout(applySpots, 120);
   }
 })();
 </script>
