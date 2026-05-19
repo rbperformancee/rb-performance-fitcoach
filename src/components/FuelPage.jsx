@@ -4,6 +4,7 @@ import { useFuel } from "../hooks/useFuel";
 import ClientMenuCard from "./client/ClientMenuCard";
 import { useSelectedDate } from "../hooks/useSelectedDate";
 import { useT, getLocale } from "../lib/i18n";
+import { searchLocalFoods } from "../lib/foodDatabase";
 
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 import { useOpenFoodFacts } from "../hooks/useOpenFoodFacts";
@@ -130,6 +131,18 @@ const ScoreRing = ({ score }) => {
   );
 };
 
+// Macros d'un aliment (valeurs par 100 g) ramenées à `grams`.
+function macrosForServing(food, grams) {
+  const g = Math.max(0, grams) / 100;
+  return {
+    kcal: Math.round((food.calories || 0) * g),
+    proteines: Math.round((food.proteines || 0) * g * 10) / 10,
+    glucides: Math.round((food.glucides || 0) * g * 10) / 10,
+    lipides: Math.round((food.lipides || 0) * g * 10) / 10,
+  };
+}
+const nfmt = (x) => (Math.round((x || 0) * 10) / 10).toString();
+
 // ===== SUPPLEMENTS TAB COMPONENT =====
 function SupplementsTab({ clientId }) {
   const [supplements, setSupplements] = useState([]);
@@ -138,7 +151,16 @@ function SupplementsTab({ clientId }) {
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDose, setNewDose] = useState("");
+  // Détection : si le nom matche un aliment de la base (whey, gainer…), le
+  // complément portera des macros et alimentera la nutrition une fois coché.
+  const [detected, setDetected] = useState(null);
+  const [portionG, setPortionG] = useState("30");
   const today = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    const m = searchLocalFoods((newName || "").trim());
+    setDetected(m && m.length ? m[0] : null);
+  }, [newName]);
 
   const loadData = useCallback(async () => {
     if (!clientId) { setLoading(false); return; }
@@ -168,39 +190,66 @@ function SupplementsTab({ clientId }) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const toggleTaken = async (supId) => {
-    const wasTaken = logs[supId] || false;
-    setLogs(prev => ({ ...prev, [supId]: !wasTaken }));
+  const toggleTaken = async (sup) => {
+    const wasTaken = logs[sup.id] || false;
+    setLogs(prev => ({ ...prev, [sup.id]: !wasTaken }));
     await supabase.from("supplement_logs").upsert({
       client_id: clientId,
-      supplement_id: supId,
+      supplement_id: sup.id,
       date: today,
       taken: !wasTaken,
     }, { onConflict: "supplement_id,date" });
+    // Complément à macros → on synchronise la nutrition du jour : coché =
+    // une ligne dans nutrition_logs, décoché = on la retire.
+    if (sup.counts_nutrition) {
+      try {
+        if (!wasTaken) {
+          await supabase.from("nutrition_logs").insert({
+            client_id: clientId, date: today, repas: "Collation",
+            aliment: sup.name, quantite_g: sup.serving_g, unit: "g",
+            calories: sup.kcal, proteines: sup.proteines,
+            glucides: sup.glucides, lipides: sup.lipides,
+            logged_at: new Date().toISOString(), supplement_id: sup.id,
+          });
+        } else {
+          await supabase.from("nutrition_logs").delete()
+            .eq("supplement_id", sup.id).eq("date", today);
+        }
+      } catch (e) { console.error("[supplements] nutrition sync failed", e); }
+    }
   };
 
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
 
+  const resetForm = () => {
+    setShowAdd(false); setNewName(""); setNewDose("");
+    setPortionG("30"); setDetected(null); setAddError("");
+  };
+
   const addSupplement = async () => {
     if (!newName.trim()) return;
     setAdding(true);
     setAddError("");
-    const { error } = await supabase.from("client_supplements").insert({
-      client_id: clientId,
-      name: newName.trim(),
-      dose: newDose.trim() || null,
-      added_by: "client",
-    });
+    const row = { client_id: clientId, name: newName.trim(), added_by: "client" };
+    if (detected) {
+      const g = Math.max(1, parseInt(portionG, 10) || 30);
+      const m = macrosForServing(detected, g);
+      Object.assign(row, {
+        dose: `${g} g`, counts_nutrition: true, serving_g: g,
+        kcal: m.kcal, proteines: m.proteines, glucides: m.glucides, lipides: m.lipides,
+      });
+    } else {
+      row.dose = newDose.trim() || null;
+    }
+    const { error } = await supabase.from("client_supplements").insert(row);
     setAdding(false);
     if (error) {
       console.error("[supplements] insert failed", error);
       setAddError(error.message || error.code || "Erreur d'enregistrement");
       return;
     }
-    setNewName("");
-    setNewDose("");
-    setShowAdd(false);
+    resetForm();
     await loadData();
   };
 
@@ -242,7 +291,7 @@ function SupplementsTab({ clientId }) {
             border: `1px solid ${taken ? "rgba(2,209,186,0.15)" : "rgba(255,255,255,0.06)"}`,
             borderRadius: 14, marginBottom: 8, transition: "all 0.2s",
           }}>
-            <button onClick={() => toggleTaken(sup.id)} style={{
+            <button onClick={() => toggleTaken(sup)} style={{
               width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
               background: taken ? GREEN : "rgba(255,255,255,0.06)",
               color: taken ? "#000" : "rgba(255,255,255,0.2)",
@@ -264,7 +313,16 @@ function SupplementsTab({ clientId }) {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: taken ? "rgba(255,255,255,0.4)" : "#fff", textDecoration: taken ? "line-through" : "none", transition: "all 0.2s", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sup.name}</div>
-              {sup.dose && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{sup.dose}{sup.added_by === "coach" ? " · Prescrit par ton coach" : ""}</div>}
+              {sup.counts_nutrition ? (
+                <div style={{ fontSize: 11, color: GREEN, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <span style={{ fontWeight: 700 }}>{nfmt(sup.serving_g)} g</span>
+                  <span style={{ color: "rgba(255,255,255,0.25)" }}> · </span>
+                  {nfmt(sup.proteines)} g prot · {sup.kcal} kcal
+                  <span style={{ color: "rgba(255,255,255,0.3)" }}> · compté en nutrition</span>
+                </div>
+              ) : (
+                sup.dose && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{sup.dose}{sup.added_by === "coach" ? " · Prescrit par ton coach" : ""}</div>
+              )}
             </div>
             <button onClick={() => removeSupplement(sup.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.15)", cursor: "pointer", fontSize: 16, padding: 4 }}>×</button>
           </div>
@@ -282,15 +340,33 @@ function SupplementsTab({ clientId }) {
       {/* Formulaire ajout */}
       {showAdd ? (
         <div style={{ marginTop: 12, padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 }}>
-          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom (ex: Creatine)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }} />
-          <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder="Dose (ex: 5g)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit" }} />
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom (ex: Créatine, Whey...)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }} />
+          {detected ? (
+            <div style={{ marginBottom: 12, padding: "12px 14px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.22)", borderRadius: 10 }}>
+              <div style={{ fontSize: 11, color: GREEN, fontWeight: 600, marginBottom: 10, lineHeight: 1.5 }}>
+                🍃 Reconnu comme <strong>{detected.name}</strong> — ça contient des macros. On les comptera dans ta nutrition à chaque fois que tu le coches.
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Portion</span>
+                <input type="text" inputMode="numeric" value={portionG} onChange={e => setPortionG(e.target.value.replace(/[^0-9]/g, ""))} style={{ width: 60, padding: "8px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff", fontSize: 15, textAlign: "center", outline: "none", fontFamily: "inherit" }} />
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>g</span>
+                {(() => {
+                  const g = Math.max(1, parseInt(portionG, 10) || 30);
+                  const m = macrosForServing(detected, g);
+                  return <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginLeft: "auto", fontWeight: 600 }}>≈ {m.kcal} kcal · {nfmt(m.proteines)} g prot</span>;
+                })()}
+              </div>
+            </div>
+          ) : (
+            <input type="text" value={newDose} onChange={e => setNewDose(e.target.value)} placeholder="Dose (ex: 5g)" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit" }} />
+          )}
           {addError && (
             <div style={{ marginBottom: 10, padding: "8px 12px", background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, fontSize: 11, color: "#ff6b6b" }}>
               {addError}
             </div>
           )}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => { setShowAdd(false); setNewName(""); setNewDose(""); setAddError(""); }} disabled={adding} style={{ flex: 1, padding: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
+            <button onClick={resetForm} disabled={adding} style={{ flex: 1, padding: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
             <button onClick={addSupplement} disabled={!newName.trim() || adding} style={{ flex: 1, padding: 12, background: (newName.trim() && !adding) ? ORANGE : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: (newName.trim() && !adding) ? "#000" : "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 800, cursor: (newName.trim() && !adding) ? "pointer" : "not-allowed", fontFamily: "inherit" }}>{adding ? "..." : "Ajouter"}</button>
           </div>
         </div>
