@@ -1448,7 +1448,29 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   // Autosave désactivé en mode "edit existing" (on travaille sur une copie live).
   const editMode = !!(existingProgramme && existingProgramme.html_content);
 
+  // Brouillon localStorage valide (≤ 14 j, non vide) ou null.
+  const loadDraft = () => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      if (d && d.weeks && d.weeks.length > 0 && (Date.now() - (d.savedAt || 0)) < 14 * 24 * 3600 * 1000) return d;
+    } catch {}
+    return null;
+  };
+  // Brouillon à restaurer. En mode édition, il ne prime que s'il est PLUS
+  // RÉCENT que la dernière sauvegarde serveur — ce sont des modifs non
+  // publiées à récupérer (avant, ce travail était purement et simplement perdu).
+  const draftToRestore = (() => {
+    const d = loadDraft();
+    if (!d) return null;
+    if (!editMode) return d;
+    const savedTs = existingProgramme?.uploaded_at ? new Date(existingProgramme.uploaded_at).getTime() : 0;
+    return (d.savedAt || 0) > savedTs ? d : null;
+  })();
+
   const [programme, setProgramme] = useState(() => {
+    if (draftToRestore) return draftToRestore;
     if (editMode) {
       try {
         const ParserMod = require("../utils/parserProgramme");
@@ -1468,16 +1490,6 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
         }
       } catch (e) { console.warn("[ProgrammeBuilder] parse existing failed:", e); }
     }
-    // Tente de restaurer un draft localStorage (mode création)
-    try {
-      const raw = localStorage.getItem(draftKey);
-      if (raw) {
-        const draft = JSON.parse(raw);
-        if (draft && draft.weeks && draft.weeks.length > 0 && (Date.now() - (draft.savedAt || 0)) < 14 * 24 * 3600 * 1000) {
-          return draft;
-        }
-      }
-    } catch {}
     return {
       name: "",
       clientName: (client && client.full_name) ? client.full_name : "",
@@ -1489,18 +1501,8 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   });
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  // Brouillon restauré ? Lu une seule fois au mount.
-  const [draftRestoredAt, setDraftRestoredAt] = useState(() => {
-    if (editMode) return null;
-    try {
-      const raw = localStorage.getItem(`rb_progbuilder_draft_${client?.id || "anon"}`);
-      if (!raw) return null;
-      const d = JSON.parse(raw);
-      const ts = d?.savedAt;
-      if (ts && (Date.now() - ts) < 14 * 24 * 3600 * 1000 && d?.weeks?.length > 0) return ts;
-    } catch {}
-    return null;
-  });
+  // Brouillon restauré ? (création OU modifs non publiées en mode édition)
+  const [draftRestoredAt, setDraftRestoredAt] = useState(() => draftToRestore?.savedAt || null);
   const [showPublishMenu, setShowPublishMenu] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleDate, setScheduleDate] = useState(() => {
@@ -1532,9 +1534,11 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
   const [mobileView, setMobileView] = useState("edit"); // "edit" | "preview"
   const dragSensors = useDragSensors();
 
-  // Autosave debounce 800ms (uniquement mode création, pas edit)
+  // Autosave debounce 800ms — en mode création ET en mode édition. Toute
+  // modif d'un programme (même existant) est désormais récupérable : avant,
+  // l'édition d'un programme publié n'était sauvegardée nulle part tant
+  // qu'on n'avait pas cliqué Publier → travail perdu à la fermeture.
   useEffect(() => {
-    if (editMode) return;
     const t = setTimeout(() => {
       try {
         const draft = { ...programme, savedAt: Date.now() };
@@ -1543,7 +1547,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
       } catch {}
     }, 800);
     return () => clearTimeout(t);
-  }, [programme, draftKey, editMode]);
+  }, [programme, draftKey]);
 
   const applyTemplate = (tplId) => {
     const tpl = TEMPLATES.find((t) => t.id === tplId);
