@@ -224,8 +224,6 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
           </div>
           <div class="tier-price"><strong>199€</strong><span>/mois à vie</span></div>
         </div>
-        <div class="tier-progress"><div class="tier-progress-fill" id="founding-progress-fill" style="width:0%"></div></div>
-        <div class="tier-count" id="founding-count-line" data-i18n="founding.t2_count"><strong>Cohorte 2026 en cours d'inscription</strong></div>
       </div>
 
       <div class="tier tier-pro">
@@ -583,58 +581,6 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
     document.addEventListener('DOMContentLoaded', initLangToggle);
   } else {
     initLangToggle();
-  }
-})();
-</script>
-
-<!-- Compteur HONNÊTE de la cohorte founding (lit /api/founding-spots) -->
-<script>
-(function(){
-  var TOTAL = 30;
-  var data = null;
-  function applySpots(){
-    if (!data) return;
-    var taken = data.taken || 0;
-    var remaining = data.remaining != null ? data.remaining : Math.max(0, TOTAL - taken);
-    var closed = !!data.closed;
-    // 2% minimum sur la barre tant que la cohorte est ouverte : sinon une
-    // barre à 0 ressemble à un bug. On grimpe à 100% une fois fermé.
-    var pct = closed ? 100 : Math.min(100, Math.max(2, (taken / TOTAL) * 100));
-    var fill = document.getElementById('founding-progress-fill');
-    if (fill) fill.style.width = pct + '%';
-    var line = document.getElementById('founding-count-line');
-    if (line) {
-      var lang = (document.documentElement.lang || 'fr').toLowerCase();
-      if (closed) {
-        line.innerHTML = lang === 'en'
-          ? '<strong>Cohort closed</strong> · all ' + TOTAL + ' founding seats taken'
-          : '<strong>Cohorte fermée</strong> · les ' + TOTAL + ' places founding sont prises';
-      } else if (taken === 0) {
-        line.innerHTML = lang === 'en'
-          ? '<strong>' + TOTAL + ' founding seats</strong> · cohort open'
-          : '<strong>' + TOTAL + ' places founding</strong> · cohorte ouverte';
-      } else {
-        line.innerHTML = lang === 'en'
-          ? '<strong>' + taken + ' / ' + TOTAL + '</strong> engaged · ' + remaining + ' seat' + (remaining > 1 ? 's' : '') + ' left'
-          : '<strong>' + taken + ' / ' + TOTAL + '</strong> places engagées · ' + remaining + ' restante' + (remaining > 1 ? 's' : '');
-      }
-    }
-  }
-  function load(){
-    fetch('/api/founding-spots').then(function(r){ return r.json(); }).then(function(d){
-      if (d && typeof d.taken === 'number') { data = d; applySpots(); }
-    }).catch(function(){});
-  }
-  // applyLang() écrase notre texte au changement de langue → on re-applique.
-  document.addEventListener('click', function(e){
-    var t = e.target && e.target.closest && e.target.closest('.lang-toggle button');
-    if (t) setTimeout(applySpots, 30);
-  });
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ load(); setTimeout(applySpots, 120); });
-  } else {
-    load();
-    setTimeout(applySpots, 120);
   }
 })();
 </script>
