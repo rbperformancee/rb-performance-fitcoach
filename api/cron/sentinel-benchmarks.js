@@ -146,29 +146,10 @@ export default async function handler(req, res) {
       if (!cm) continue;
 
       try {
-        // Price Intelligence card (if gap > 15%)
-        const priceMedian = benchmarks.avg_price?.median_value;
-        if (priceMedian && cm.avgPrice > 0) {
-          const gapPct = Math.round(((cm.avgPrice - priceMedian) / priceMedian) * 100);
-          if (Math.abs(gapPct) > 15) {
-            const isAbove = gapPct > 0;
-            const created = await insertCard({
-              coachId: coach.id,
-              module: "price_intel",
-              priority: 40,
-              title: isAbove ? "Tes tarifs sont au-dessus du marche" : "Tu es en dessous du marche",
-              body: isAbove
-                ? `Ton prix moyen (${Math.round(cm.avgPrice)}EUR) est ${gapPct}% au-dessus de la mediane plateforme (${Math.round(priceMedian)}EUR). C'est bien si ta valeur le justifie — sinon, ajuste.`
-                : `Ton prix moyen (${Math.round(cm.avgPrice)}EUR) est ${Math.abs(gapPct)}% en dessous de la mediane plateforme (${Math.round(priceMedian)}EUR). Tu pourrais augmenter tes tarifs.`,
-              data: { your_avg: cm.avgPrice, median: priceMedian, gap_pct: gapPct },
-              ctaLabel: "Voir mes tarifs",
-              ctaAction: "open_plans_settings",
-              expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
-              dedupeKey: `price_intel_${coach.id}_${today}`,
-            });
-            if (created) cardsCreated++;
-          }
-        }
+        // Les cartes price_intel sont désormais générées par le cron
+        // dédié sentinel-price-intel (analyse Mistral marché-aware, qui
+        // fonctionne dès le 1er coach). On garde ici uniquement le
+        // ranking, qui reste pertinent quand n≥10 sur la plateforme.
 
         // Ranking card (monthly)
         const retMedian = benchmarks.retention_7d?.median_value;
