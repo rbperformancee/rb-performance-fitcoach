@@ -235,6 +235,73 @@ function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placehold
 }
 
 /**
+ * TempoExplainModal — décode un tempo de musculation (ex. "3010", "X010")
+ * pour le client. La convention 4 chiffres = excentrique / pause basse /
+ * concentrique / pause haute. "X" = explosif (vitesse max).
+ */
+function explainTempo(tempo) {
+  const digits = String(tempo || "").trim().split("");
+  if (digits.length < 3 || digits.length > 4) return null;
+  const phases = [
+    { label: "Phase négative", sub: "descente / étirement contrôlé" },
+    { label: "Pause en bas", sub: "tension en position d'étirement" },
+    { label: "Phase positive", sub: "remontée / contraction" },
+    { label: "Pause en haut", sub: "tension en position de contraction" },
+  ];
+  return digits.map((d, i) => ({
+    ...phases[i],
+    digit: d,
+    display: d.toUpperCase() === "X" ? "Explosif" : `${d} sec`,
+  }));
+}
+
+function TempoExplainModal({ tempo, onClose }) {
+  const phases = explainTempo(tempo);
+  if (!phases) return null;
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 500, padding: 20,
+        background: "rgba(0,0,0,0.72)", WebkitBackdropFilter: "blur(6px)", backdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        animation: "rbFade .2s ease",
+      }}
+    >
+      <style>{`@keyframes rbFade{from{opacity:0}to{opacity:1}}`}</style>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: "100%", maxWidth: 380, background: "#0c0c0c",
+        border: `1px solid ${GREEN}33`, borderRadius: 18, overflow: "hidden",
+      }}>
+        <div style={{ padding: "20px 22px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.3em", color: GREEN, textTransform: "uppercase", marginBottom: 6 }}>Tempo · {tempo}</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.45 }}>
+            Chaque chiffre = la durée en secondes d'une phase du mouvement.
+          </div>
+        </div>
+        <div style={{ padding: "10px 14px 16px" }}>
+          {phases.map((p, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", borderBottom: i < phases.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: `${GREEN}14`, border: `1px solid ${GREEN}33`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: GREEN, fontFamily: "'JetBrains Mono',monospace" }}>{p.digit}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{p.label}<span style={{ fontWeight: 500, color: "rgba(255,255,255,0.45)", marginLeft: 6 }}>· {p.display}</span></div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{p.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button onClick={onClose} style={{
+          width: "100%", padding: 14, background: "transparent",
+          color: "rgba(255,255,255,0.55)", border: "none", borderTop: "1px solid rgba(255,255,255,0.05)",
+          fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+          letterSpacing: ".03em",
+        }}>Fermer</button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * CompoundSetRow — UI guidée pour un set cluster ou dégressif.
  * L'athlète saisit chaque bloc/charge ; une seule validation pour le set.
  */
@@ -371,6 +438,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const restTimer = useRestTimer();
   const [expanded, setExpanded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [showTempo, setShowTempo] = useState(false); // modale d'explication du tempo (ex. "3010")
 
   const today = new Date().toISOString().slice(0, 10);
   const storageKey = "sets_done_" + weekIdx + "_" + sessionIdx + "_" + exIdx + "_" + today;
@@ -488,12 +556,26 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", fontFamily: "monospace", width: 22, flexShrink: 0 }}>{String(globalIndex + 1).padStart(2, "0")}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "-0.3px" }}>{ex.name}</div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginTop: 3 }}>{chipsReps}{ex.tempo ? ` · ${ex.tempo}` : ""}{ex.rest ? ` · ⏱ ${ex.rest}` : ""}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginTop: 3 }}>
+                  {chipsReps}
+                  {ex.tempo && (
+                    <>
+                      {" · "}
+                      <span
+                        onClick={(e) => { e.stopPropagation(); setShowTempo(true); }}
+                        style={{ cursor: "pointer", borderBottom: "1px dotted rgba(255,255,255,0.25)" }}
+                        title="Voir l'explication du tempo"
+                      >{ex.tempo}</span>
+                    </>
+                  )}
+                  {ex.rest ? ` · ⏱ ${ex.rest}` : ""}
+                </div>
               </div>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: bc, flexShrink: 0 }} />
             </div>
           </div>
         </div>
+        {showTempo && <TempoExplainModal tempo={ex.tempo} onClose={() => setShowTempo(false)} />}
       </>
     );
   }
@@ -540,6 +622,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             </div>
           )}
         </div>
+        {showTempo && <TempoExplainModal tempo={ex.tempo} onClose={() => setShowTempo(false)} />}
       </>
     );
   }
@@ -571,7 +654,13 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                   </span>
                 )}
                 {ex.rest && <span onClick={() => restSecs && restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets })} style={{ fontSize: 11, color: "rgba(255,165,0,0.7)", background: "rgba(255,165,0,0.07)", padding: "5px 12px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>⏱ {ex.rest}</span>}
-                {ex.tempo && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>{ex.tempo}</span>}
+                {ex.tempo && (
+                  <span
+                    onClick={() => setShowTempo(true)}
+                    title="Voir l'explication du tempo"
+                    style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", padding: "5px 12px", borderRadius: 100, cursor: "pointer" }}
+                  >{ex.tempo}</span>
+                )}
                 {ex.rir != null && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", padding: "5px 12px", borderRadius: 100 }}>RIR {ex.rir}</span>}
                 {hasVideo && <button onClick={() => setShowVideo(v => !v)} style={{ fontSize: 11, color: GREEN, background: "rgba(2,209,186,0.07)", border: "1px solid rgba(2,209,186,0.2)", padding: "5px 12px", borderRadius: 100, cursor: "pointer" }}>{showVideo ? t("ec.video_close") : t("ec.video_play")}</button>}
                 {!hasVideo && <span title={t("ec.video_soon_tooltip") || "Vidéo perso bientôt — je tourne au fil de l'eau."} style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.1)", padding: "5px 12px", borderRadius: 100, cursor: "default", fontStyle: "italic" }}>{t("ec.video_soon") || "📷 Vidéo bientôt"}</span>}
@@ -704,6 +793,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
           )}
         </div>
       </div>
+      {showTempo && <TempoExplainModal tempo={ex.tempo} onClose={() => setShowTempo(false)} />}
     </>
   );
 }
