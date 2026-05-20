@@ -4,7 +4,7 @@
 // programme cache proactivement pour acces offline.
 
 const CACHE_VERSION = "rbperf-v" + (self.registration?.scope || "") + "-" + Date.now();
-const STATIC_CACHE = "rbperf-static-v12";
+const STATIC_CACHE = "rbperf-static-v13";
 const DATA_CACHE = "rbperf-data-v1";
 
 // App shell : fichiers critiques pre-caches a l'installation
@@ -164,21 +164,35 @@ self.addEventListener("push", (e) => {
 // Clic sur la notification — ouvre ou focus la fenetre a l'URL cible.
 // Si une fenetre de l'app est deja ouverte, on la focus plutot que
 // d'en ouvrir une nouvelle.
+//
+// CRITIQUE : on resout TOUJOURS en URL absolue avant openWindow().
+// Sur Android (notamment Samsung Internet, navigateur par defaut des Galaxy),
+// openWindow("/relative") est interprete comme un terme de recherche →
+// le browser ouvre Google avec la string → l'utilisateur tombe sur les
+// resultats Samsung. Bug reporte en prod, fix indispensable.
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || "/";
+  const rawUrl = (e.notification.data && e.notification.data.url) || "/";
+  const absoluteUrl = (() => {
+    try { return new URL(rawUrl, self.location.origin).href; }
+    catch { return self.location.origin + "/"; }
+  })();
   e.waitUntil((async () => {
     const wins = await clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const w of wins) {
       try {
         if (new URL(w.url).origin === self.location.origin) {
-          w.focus();
-          w.navigate ? w.navigate(url) : w.postMessage({ type: "navigate", url });
+          await w.focus();
+          if (w.navigate) {
+            try { await w.navigate(absoluteUrl); } catch (_) {}
+          } else {
+            w.postMessage({ type: "navigate", url: rawUrl });
+          }
           return;
         }
       } catch (_) {}
     }
-    if (clients.openWindow) await clients.openWindow(url);
+    if (clients.openWindow) await clients.openWindow(absoluteUrl);
   })());
 });
 
