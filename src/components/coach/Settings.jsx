@@ -257,6 +257,9 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
                 {t("set.payments_card_desc")}
               </div>
             </div>
+
+            {/* ===== Notif client en cas d'impayé ===== */}
+            <LatePaymentsClientNotifSection coachData={coachData} isDemo={isDemo} />
           </Section>
         )}
       </div>
@@ -267,6 +270,116 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
         coachId={coachData?.id}
         isDemo={isDemo}
       />
+    </div>
+  );
+}
+
+// ===== NOTIF CLIENT EN CAS D'IMPAYÉ (opt-in) =====
+const DEFAULT_LATE_TEMPLATE =
+  "Bonjour {firstName}, une échéance de {amount}€ est en attente depuis {days_late} jours. Merci de régulariser dès que possible 🙏";
+
+function LatePaymentsClientNotifSection({ coachData, isDemo }) {
+  const t = useT();
+  const [enabled, setEnabled] = useState(coachData?.notify_client_on_late_payment === true);
+  const [template, setTemplate] = useState(coachData?.late_payment_client_message || "");
+  const [saving, setSaving] = useState(false);
+
+  // Preview live avec placeholders concrets
+  const preview = (template || DEFAULT_LATE_TEMPLATE)
+    .replaceAll("{firstName}", "Alicia")
+    .replaceAll("{amount}", "100")
+    .replaceAll("{days_late}", "9");
+
+  async function save() {
+    if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; }
+    if (!coachData?.id) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("coaches")
+        .update({
+          notify_client_on_late_payment: enabled,
+          late_payment_client_message: template.trim() || null,
+        })
+        .eq("id", coachData.id);
+      if (error) throw error;
+      toast.success("Préférence enregistrée ✓");
+    } catch (e) {
+      toast.error(e.message || "Erreur");
+    }
+    setSaving(false);
+  }
+
+  return (
+    <div style={{ marginTop: 22, padding: "20px 22px", background: "rgba(255,255,255,.025)", border: ".5px solid rgba(255,255,255,.07)", borderRadius: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: enabled ? G : "rgba(255,255,255,.35)", marginBottom: 4 }}>
+            Notif client si impayé {enabled && "· ACTIVÉ"}
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.5 }}>
+            Le client reçoit un push si son échéance dépasse 7 jours de retard.
+          </div>
+        </div>
+        <button
+          onClick={() => setEnabled(!enabled)}
+          style={{
+            position: "relative", flexShrink: 0,
+            width: 44, height: 26, borderRadius: 100,
+            background: enabled ? G : "rgba(255,255,255,.12)",
+            border: "none", cursor: "pointer", padding: 0, transition: "background .2s",
+          }}
+          aria-label={enabled ? "Désactiver" : "Activer"}
+        >
+          <div style={{
+            position: "absolute", top: 3, left: enabled ? 21 : 3,
+            width: 20, height: 20, borderRadius: "50%",
+            background: "#fff", transition: "left .2s",
+          }} />
+        </button>
+      </div>
+
+      {enabled && (
+        <>
+          <div style={{ marginTop: 16 }}>
+            <div style={sectionSubtitle}>Message envoyé au client (personnalisable)</div>
+            <textarea
+              className="set-input"
+              value={template}
+              onChange={(e) => setTemplate(e.target.value.slice(0, 300))}
+              placeholder={DEFAULT_LATE_TEMPLATE}
+              rows={3}
+              style={{ ...input, height: "auto", padding: "12px 14px", lineHeight: 1.55, resize: "vertical", minHeight: 80, fontFamily: "inherit" }}
+            />
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", marginTop: 6, lineHeight: 1.6 }}>
+              Placeholders disponibles :{" "}
+              <code style={{ color: G }}>{"{firstName}"}</code>,{" "}
+              <code style={{ color: G }}>{"{amount}"}</code>,{" "}
+              <code style={{ color: G }}>{"{days_late}"}</code>
+              {" · "}
+              {template.length}/300
+            </div>
+          </div>
+
+          {/* Preview live */}
+          <div style={{ marginTop: 14, padding: "12px 14px", background: "rgba(2,209,186,.05)", border: `.5px solid ${G}33`, borderRadius: 10 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: `${G}cc`, marginBottom: 6 }}>
+              Aperçu (Alicia, 100€, 9j retard)
+            </div>
+            <div style={{ fontSize: 13, color: "#fff", lineHeight: 1.55, fontStyle: "italic" }}>
+              "{preview}"
+            </div>
+          </div>
+        </>
+      )}
+
+      <button
+        onClick={save}
+        disabled={saving}
+        style={{ ...btnPrimary, marginTop: 16, opacity: saving ? 0.5 : 1 }}
+      >
+        {saving ? "Enregistrement…" : "Enregistrer"}
+      </button>
     </div>
   );
 }

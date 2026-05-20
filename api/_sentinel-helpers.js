@@ -57,7 +57,7 @@ async function getSentinelCoaches() {
   // Founding coaches + Pro/Elite. Schema réel : founding_coach + subscription_plan
   // (cf. migration 066). Le code legacy référençait is_founding/plan (drift).
   const data = await sb(
-    `/rest/v1/coaches?select=id,full_name,email,founding_coach,subscription_plan&or=(founding_coach.eq.true,subscription_plan.in.(${SENTINEL_PLANS.join(",")}))`,
+    `/rest/v1/coaches?select=id,full_name,email,brand_name,founding_coach,subscription_plan,notify_client_on_late_payment,late_payment_client_message&or=(founding_coach.eq.true,subscription_plan.in.(${SENTINEL_PLANS.join(",")}))`,
     { headers: { Prefer: "return=representation" } }
   );
   return Array.isArray(data) ? data : [];
@@ -280,6 +280,29 @@ async function sendCoachPush(coachId, { title, body, url }) {
   }
 }
 
+// Push notification au client. Meme mecanisme que sendCoachPush mais sur
+// le filter client_id de l'edge function send-push.
+async function sendClientPush(clientId, { title, body, url }) {
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        title: title || "RB Perform",
+        body: body || "",
+        url: url || "/",
+      }),
+    });
+  } catch (e) {
+    console.warn("[sentinel] client push send failed:", e.message);
+  }
+}
+
 module.exports = {
   isAuthorizedCron,
   sb,
@@ -293,6 +316,7 @@ module.exports = {
   sanitize,
   anonymizeClient,
   sendCoachPush,
+  sendClientPush,
   todayKey,
   weekKey,
   SENTINEL_PLANS,

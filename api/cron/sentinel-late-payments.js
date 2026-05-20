@@ -18,9 +18,22 @@ const {
   insertCard,
   expireOldCards,
   sendCoachPush,
+  sendClientPush,
   weekKey,
 } = require("../_sentinel-helpers");
 const { captureException } = require("../_sentry");
+
+// Template par défaut du message client si le coach n'en a pas saisi.
+// Placeholders : {firstName}, {amount}, {days_late}
+const DEFAULT_CLIENT_MESSAGE =
+  "Bonjour {firstName}, une échéance de {amount}€ est en attente depuis {days_late} jours. Merci de régulariser dès que possible 🙏";
+
+function applyTemplate(tpl, vars) {
+  return Object.entries(vars).reduce(
+    (s, [k, v]) => s.replaceAll(`{${k}}`, String(v)),
+    tpl
+  );
+}
 
 const LATE_THRESHOLD_DAYS = 7;
 const limit = pLimit(5);
@@ -116,6 +129,40 @@ async function processCoach(coach) {
           : `${enriched.length} échéances en retard pour ${Math.round(totalAmount)} € au total`,
       url: "/dashboard?tab=business",
     });
+
+    // ===== Push CLIENT optionnel (opt-in coach) =====
+    // Le coach a explicitement activé la notif client. On envoie 1 push par
+    // client en retard avec le template personnalisé (ou défaut). Best-effort
+    // par client : un échec ne bloque pas les autres.
+    if (coach.notify_client_on_late_payment === true) {
+      const template = coach.late_payment_client_message || DEFAULT_CLIENT_MESSAGE;
+      // 1 push par client en retard (pas par échéance — pour éviter le spam
+      // si un client a plusieurs échéances en retard, on consolide)
+      const byClientId = new Map();
+      for (const s of enriched) {
+        const cur = byClientId.get(s.client_id) || {
+          client_name: s.client_name,
+          amount: 0,
+          max_days: 0,
+        };
+        cur.amount += Number(s.expected_amount);
+        cur.max_days = Math.max(cur.max_days, s.days_late);
+        byClientId.set(s.client_id, cur);
+      }
+      for (const [clientId, info] of byClientId.entries()) {
+        const firstName = info.client_name.split(" ")[0] || "Bonjour";
+        const body = applyTemplate(template, {
+          firstName,
+          amount: Math.round(info.amount),
+          days_late: info.max_days,
+        });
+        await sendClientPush(clientId, {
+          title: coach.brand_name || coach.full_name || "Rappel paiement",
+          body,
+          url: "/",
+        });
+      }
+    }
   }
 
   return {
