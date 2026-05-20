@@ -75,8 +75,9 @@ async function processCoach(coach) {
   );
   const nClients = Array.isArray(clientsRes) ? clientsRes.length : 0;
 
-  if (await isBudgetExceeded()) {
-    return { coachId: coach.id, status: "budget_exceeded" };
+  const budget = await isBudgetExceeded();
+  if (budget.exceeded) {
+    return { coachId: coach.id, status: "budget_exceeded", spent: budget.spent };
   }
 
   const planSummary = plans
