@@ -193,6 +193,20 @@ export default function LogPaymentModal({
           >×</button>
         </div>
 
+        {/* Teaser roadmap : Stripe Connect arrive, finir le log manuel */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 16,
+          background: `${G}10`, border: `1px solid ${G}33`, borderRadius: 10,
+        }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: `${G}1f`, border: `1px solid ${G}44`, display: "flex", alignItems: "center", justifyContent: "center", color: G }}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0, fontSize: 11, lineHeight: 1.45, color: "rgba(255,255,255,0.55)" }}>
+            <strong style={{ color: G, fontWeight: 800, letterSpacing: 0.5 }}>Bientôt</strong>
+            {" · "}intégration Stripe Connect (Q3 2026) — paiements clients automatiques, fini le log manuel.
+          </div>
+        </div>
+
         {/* Montant + Méthode */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
           <Field label="Montant (€)">
