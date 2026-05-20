@@ -161,12 +161,75 @@ export function mrrVariation(current, previous) {
   };
 }
 
-// ===== STUBS — vrais calculs IA dans un PR séparé =====
+// ===== FORECAST MRR 90 JOURS =====
 
+/**
+ * Projection MRR à 30/60/90 jours basée sur les snapshots quotidiens du coach.
+ * Méthode :
+ *   1. Régression linéaire simple sur les N derniers snapshots (mrr ~ time)
+ *      → tendance (slope) et MRR actuel.
+ *   2. Volatilité = std des résidus → bande d'incertitude qui s'élargit en √jours.
+ *   3. p50 = projection linéaire ; p10/p90 = ±1.28 × std × √days (~80% CI).
+ *
+ * Conservateur volontairement : on préfère sous-vendre que sur-promettre.
+ * Renvoie null tant qu'on n'a pas au moins 7 snapshots (sinon trend instable).
+ */
 export function computeForecast(clients, snapshots) {
-  // TODO: Monte Carlo sur 6 derniers mois
-  return null;
+  if (!Array.isArray(snapshots) || snapshots.length < 7) return null;
+
+  const sorted = [...snapshots]
+    .filter((s) => s && Number.isFinite(Number(s.mrr)))
+    .sort((a, b) => String(a.snapshot_date).localeCompare(String(b.snapshot_date)));
+  if (sorted.length < 7) return null;
+
+  const series = sorted.map((s) => Number(s.mrr));
+  const n = series.length;
+  const current = series[n - 1];
+
+  // Régression linéaire : pente quotidienne
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  for (let i = 0; i < n; i++) {
+    sumX += i;
+    sumY += series[i];
+    sumXY += i * series[i];
+    sumX2 += i * i;
+  }
+  const denom = n * sumX2 - sumX * sumX;
+  const slopePerDay = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
+  const intercept = (sumY - slopePerDay * sumX) / n;
+
+  // Std des résidus (volatilité jour-à-jour autour de la trendline)
+  let sse = 0;
+  for (let i = 0; i < n; i++) {
+    const yhat = intercept + slopePerDay * i;
+    sse += (series[i] - yhat) ** 2;
+  }
+  const stdResidual = Math.sqrt(sse / Math.max(1, n - 2));
+
+  const points = [0, 30, 60, 90].map((day) => {
+    const projected = current + slopePerDay * day;
+    const band = day === 0 ? 0 : 1.28 * stdResidual * Math.sqrt(day);
+    return {
+      day,
+      p10: Math.max(0, Math.round(projected - band)),
+      p50: Math.max(0, Math.round(projected)),
+      p90: Math.max(0, Math.round(projected + band)),
+    };
+  });
+
+  // Scénario de perte client : impact concret pour rendre le risque tangible
+  const activeClients = (clients || []).filter(
+    (c) => (c.subscription_status === "active") || c.last_seen_at
+  ).length;
+  const avgClientMrr = activeClients > 0 ? Math.round(current / activeClients) : 0;
+  const scenario_text = avgClientMrr > 0
+    ? `Si tu perds 1 client sans le remplacer : −${avgClientMrr} €/mois immédiat.`
+    : null;
+
+  return { points, scenario_text };
 }
+
+// ===== STUBS — vrais calculs IA dans un PR séparé =====
 
 export function computeNextMove(clients, coachData) {
   // TODO: Scan churn pondéré par poids MRR

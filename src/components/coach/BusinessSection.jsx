@@ -45,7 +45,7 @@ const RED = "#ff6b6b";
  *   - Retention + duree moyenne abonnements + benchmark
  *   - Prochain palier
  */
-export default function BusinessSection({ coachData, clients = [], hasSentinelAccess = false, onOpenSentinel }) {
+export default function BusinessSection({ coachData, clients = [], hasSentinelAccess = false, onOpenSentinel, onOpenAnalytics }) {
   const t = useT();
   const [goal, setGoal] = useState(coachData?.monthly_revenue_goal || 0);
   const [editingGoal, setEditingGoal] = useState(false);
@@ -408,6 +408,34 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
           </div>
         )}
       </div>
+
+      {/* ===== INSIGHTS — passerelle vers la section Analytics complète ===== */}
+      {onOpenAnalytics && (
+        <button
+          type="button"
+          onClick={() => { haptic.light(); onOpenAnalytics(); }}
+          style={{
+            width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+            background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 18, padding: "18px 22px", marginBottom: 18,
+            display: "flex", alignItems: "center", gap: 14, transition: "all .18s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${G}55`; e.currentTarget.style.background = `${G}0a`; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 13, flexShrink: 0, background: `${G}14`, border: `1px solid ${G}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <AppIcon name="chart" size={20} color={G} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: `${G}88`, marginBottom: 4 }}>Insights complets</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 2 }}>Voir l'analyse approfondie de tes données</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.45 }}>
+              Heatmap d'activité, top programmes, transformations, corrélations sommeil ↔ RPE, évolution poids globale.
+            </div>
+          </div>
+          <AppIcon name="arrow-right" size={16} color={`${G}aa`} />
+        </button>
+      )}
 
       {/* ===== OBJECTIF MENSUEL ===== */}
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "18px 22px", marginBottom: 18 }}>

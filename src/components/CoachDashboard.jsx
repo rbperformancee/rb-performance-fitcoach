@@ -6378,7 +6378,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               Affichee meme avec 0 client (empty state pris en charge dans
               BusinessSection — montre 0 MRR + CTA pour inviter premier client). */}
           {!showClientList && activeTab === "business" && coachData && (
-            <BusinessSection coachData={coachData} clients={clients} hasSentinelAccess={sentinelEnabled && hasSentinelAccess} onOpenSentinel={() => setShowSentinel(true)} />
+            <BusinessSection coachData={coachData} clients={clients} hasSentinelAccess={sentinelEnabled && hasSentinelAccess} onOpenSentinel={() => setShowSentinel(true)} onOpenAnalytics={() => setShowAnalytics(true)} />
           )}
 
           {/* ========== PROGRAMMES — liste des programmes coach ========== */}
