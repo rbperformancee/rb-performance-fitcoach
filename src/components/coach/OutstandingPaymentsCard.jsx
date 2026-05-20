@@ -21,6 +21,7 @@ import {
   addMonths,
 } from "../../lib/paymentSchedules";
 import AppIcon from "../AppIcon";
+import EditScheduleModal from "./EditScheduleModal";
 
 const G = "#02d1ba";
 const RED = "#ef4444";
@@ -30,6 +31,7 @@ export default function OutstandingPaymentsCard({ coachId }) {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(null); // id de l'échéance en cours d'action
+  const [editing, setEditing] = useState(null); // schedule en cours d'édition
 
   const refresh = useCallback(async () => {
     if (!coachId) return;
@@ -152,6 +154,13 @@ export default function OutstandingPaymentsCard({ coachId }) {
         )}
       </div>
 
+      <EditScheduleModal
+        open={!!editing}
+        schedule={editing}
+        onClose={() => setEditing(null)}
+        onSaved={refresh}
+      />
+
       {/* Liste par client */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {Object.entries(byClient).map(([clientId, group]) => (
@@ -218,6 +227,23 @@ export default function OutstandingPaymentsCard({ coachId }) {
                       }}
                     >
                       {busy === s.id ? "…" : "Payée"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(s)}
+                      disabled={busy === s.id}
+                      style={{
+                        padding: "6px 8px",
+                        background: "transparent",
+                        border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7,
+                        color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700,
+                        cursor: busy === s.id ? "wait" : "pointer", opacity: busy === s.id ? 0.5 : 1,
+                        fontFamily: "inherit", flexShrink: 0,
+                      }}
+                      title="Modifier la date ou le montant"
+                      aria-label="Modifier"
+                    >
+                      ✏️
                     </button>
                     <button
                       type="button"

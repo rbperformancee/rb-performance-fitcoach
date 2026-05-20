@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import {
   calculateMRR,
+  calculateMRRHybrid,
   countActiveClients,
   calculateRetention,
   averageSubscriptionDuration,
@@ -58,6 +59,8 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
   // dont received_date est dans le mois calendaire courant.
   const [cashThisMonth, setCashThisMonth] = useState(null);
   const [platformBenchmark, setPlatformBenchmark] = useState(null);
+  // Échéances planifiées dans le mois en cours (utilisées pour le MRR hybride)
+  const [schedulesThisMonth, setSchedulesThisMonth] = useState([]);
   // Plus de previewMode : si 0 client, on affiche un empty state premium (pas de mock data fake).
   const [previewMode, setPreviewMode] = useState(false);
   const [sentinelCard, setSentinelCard] = useState(null);
@@ -86,7 +89,14 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
   const nextMove = useMemo(() => previewMode ? MOCK_BUSINESS_DATA.nextMove : computeNextMove(clients, coachData), [clients, coachData, previewMode]);
   const forecast = useMemo(() => previewMode ? MOCK_BUSINESS_DATA.forecast : computeForecast(clients, history30d), [clients, history30d, previewMode]);
 
-  const mrr = useMemo(() => calculateMRR(clients), [clients]);
+  // MRR hybride : si des échéances sont planifiées ce mois, on les utilise
+  // (réalité business). Sinon fallback transparent sur le calcul historique.
+  const mrr = useMemo(
+    () => schedulesThisMonth.length > 0
+      ? calculateMRRHybrid(clients, schedulesThisMonth)
+      : calculateMRR(clients),
+    [clients, schedulesThisMonth]
+  );
   const active = useMemo(() => countActiveClients(clients), [clients]);
   const retention = useMemo(() => calculateRetention(clients), [clients]);
   const avgDuration = useMemo(() => averageSubscriptionDuration(clients), [clients]);
@@ -154,6 +164,24 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
           const total = (data || []).reduce((s, p) => s + (parseFloat(p.amount_eur) || 0), 0);
           setCashThisMonth(total);
         }
+      } catch (_) {}
+    })();
+
+    // Échéances dans le mois calendaire en cours — pour le MRR hybride.
+    // On prend pending + paid + late (waived exclu côté calculateMRRHybrid).
+    (async () => {
+      try {
+        const start = new Date();
+        start.setDate(1);
+        const startStr = start.toISOString().slice(0, 10);
+        const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+        const endStr = end.toISOString().slice(0, 10);
+        const { data } = await supabase.from("payment_schedules")
+          .select("client_id, expected_amount, status, due_date")
+          .eq("coach_id", coachData.id)
+          .gte("due_date", startStr)
+          .lte("due_date", endStr);
+        if (mounted) setSchedulesThisMonth(data || []);
       } catch (_) {}
     })();
 

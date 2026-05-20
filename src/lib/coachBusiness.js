@@ -38,6 +38,51 @@ export function calculateMRR(clients = []) {
 }
 
 /**
+ * MRR hybride : pour chaque client actif :
+ *   - s'il a des échéances planifiées dans le mois en cours → on somme leurs
+ *     expected_amount (réalité = ce que le coach attend réellement de lui)
+ *   - sinon fallback sur le prix mensuel théorique du plan
+ *
+ * Avantages vs calculateMRR :
+ *   - Un client qui paye 600€ upfront sur 6 mois ne fausse plus le MRR
+ *     (c'est 100€/mois pendant 6 mois, pas 600€ d'un coup)
+ *   - Un client en plan multi-échéances voit son MRR refléter l'échéance
+ *     du mois, pas une moyenne approximative
+ *   - Compatible avec les anciens clients sans schedules (fallback transparent)
+ *
+ * @param {Array} clients  — clients du coach (avec subscription_status, _plan_price…)
+ * @param {Array} schedulesThisMonth — payment_schedules avec due_date dans le mois en cours
+ */
+export function calculateMRRHybrid(clients = [], schedulesThisMonth = []) {
+  // Regrouper les échéances par client
+  const byClient = new Map();
+  for (const s of schedulesThisMonth) {
+    if (!s || !s.client_id) continue;
+    if (s.status === "waived") continue; // pas compté
+    const cur = byClient.get(s.client_id) || 0;
+    byClient.set(s.client_id, cur + Number(s.expected_amount || 0));
+  }
+
+  let mrr = 0;
+  for (const c of clients) {
+    if (c.subscription_status !== "active") continue;
+    if (byClient.has(c.id)) {
+      mrr += byClient.get(c.id);
+      byClient.delete(c.id); // marqué consommé
+    } else {
+      const price = Number(c._plan_price) || PLAN_MRR[c.subscription_plan] || 0;
+      mrr += price;
+    }
+  }
+
+  // Reliquat : échéances de clients qui ne sont pas (ou plus) dans la liste
+  // active — on les compte quand même (c'est de l'argent attendu).
+  for (const v of byClient.values()) mrr += v;
+
+  return Math.round(mrr);
+}
+
+/**
  * Compte les clients actifs (subscription active).
  */
 export function countActiveClients(clients = []) {

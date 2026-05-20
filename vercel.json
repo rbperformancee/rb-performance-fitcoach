@@ -40,6 +40,10 @@
       "schedule": "0 6 * * 3"
     },
     {
+      "path": "/api/cron/sentinel-late-payments",
+      "schedule": "0 8 * * *"
+    },
+    {
       "path": "/api/cron/cold-outreach",
       "schedule": "0 8 * * *"
     },
