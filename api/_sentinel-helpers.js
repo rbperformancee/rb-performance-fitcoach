@@ -256,6 +256,30 @@ function weekKey() {
   return `${d.getFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
+// Push notification au coach via l'edge function send-push.
+// Best-effort, silent fail : sans subscription le push n'est juste pas
+// envoyé, mais un échec ne doit JAMAIS faire crasher le cron.
+async function sendCoachPush(coachId, { title, body, url }) {
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      body: JSON.stringify({
+        coach_id: coachId,
+        title: title || "Sentinel",
+        body: body || "",
+        url: url || "/dashboard",
+      }),
+    });
+  } catch (e) {
+    console.warn("[sentinel] push send failed:", e.message);
+  }
+}
+
 module.exports = {
   isAuthorizedCron,
   sb,
@@ -268,6 +292,7 @@ module.exports = {
   expireOldCards,
   sanitize,
   anonymizeClient,
+  sendCoachPush,
   todayKey,
   weekKey,
   SENTINEL_PLANS,

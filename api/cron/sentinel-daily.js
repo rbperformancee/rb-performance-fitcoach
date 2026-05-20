@@ -24,6 +24,7 @@ const {
   expireOldCards,
   sanitize,
   anonymizeClient,
+  sendCoachPush,
   todayKey,
 } = require("../_sentinel-helpers");
 const { captureException } = require("../_sentry");
@@ -233,7 +234,22 @@ Genere JSON: {title, actions: [{text, impact_eur, cta_action: open_message_compo
             expiresAt: new Date(Date.now() + 18 * 3600000).toISOString(),
             dedupeKey: `daily_${coach.id}_${today}`,
           });
-          if (created) cardsCreated++;
+          if (created) {
+            cardsCreated++;
+
+            // Push notif au coach — teaser actionable de la 1re action.
+            // L'app s'invite sur son tel sans qu'il ait à l'ouvrir, et c'est
+            // CE qui crée l'habitude business quotidienne.
+            const top = cardData.actions?.[0];
+            if (top?.text) {
+              const impactSuffix = top.impact_eur > 0 ? ` · +${top.impact_eur}€` : "";
+              await sendCoachPush(coach.id, {
+                title: "Sentinel · ton action du jour",
+                body: `${top.text}${impactSuffix}`,
+                url: "/dashboard?tab=business",
+              });
+            }
+          }
         } catch (e) {
           console.error(`[sentinel-daily] coach ${coach.id}:`, e.message);
           errors++;
