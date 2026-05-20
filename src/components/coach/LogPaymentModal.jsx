@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
+import { generateSchedules, addMonths } from "../../lib/paymentSchedules";
 
 const G = "#02d1ba";
 const BORDER = "rgba(255,255,255,0.08)";
@@ -59,6 +60,14 @@ export default function LogPaymentModal({
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // ===== Mode "plan en plusieurs fois" =====
+  // OFF par défaut : comportement identique au modal historique.
+  // ON : on planifie N échéances mensuelles ; la 1ère = ce paiement, les N-1
+  //      autres deviennent des lignes payment_schedules pending.
+  const [installmentMode, setInstallmentMode] = useState(false);
+  const [totalPlanAmount, setTotalPlanAmount] = useState("");
+  const [nInstallments, setNInstallments] = useState(3);
+
   // Reset state quand le modal s'ouvre pour un nouveau client
   useEffect(() => {
     if (open) {
@@ -69,6 +78,9 @@ export default function LogPaymentModal({
       setPeriodPreset("30");
       setCustomEnd("");
       setNotes("");
+      setInstallmentMode(false);
+      setTotalPlanAmount("");
+      setNInstallments(3);
     }
   }, [open, defaultAmount, today, startDefault]);
 
@@ -83,12 +95,21 @@ export default function LogPaymentModal({
     return start.toISOString().slice(0, 10);
   })();
 
+  // Montant par échéance + dernière date (prévisualisation)
+  const installmentAmount = installmentMode && nInstallments > 0
+    ? Math.round((parseFloat(totalPlanAmount) / nInstallments) * 100) / 100
+    : 0;
+  const lastDueDate = installmentMode && nInstallments > 1
+    ? addMonths(receivedDate, nInstallments - 1)
+    : null;
+
   const valid =
     parseFloat(amount) > 0 &&
     receivedDate &&
     periodStart &&
     computedPeriodEnd &&
-    new Date(computedPeriodEnd) >= new Date(periodStart);
+    new Date(computedPeriodEnd) >= new Date(periodStart) &&
+    (!installmentMode || (parseFloat(totalPlanAmount) > 0 && nInstallments >= 2));
 
   async function save(skipDuplicateCheck = false) {
     if (!valid) return;
@@ -147,7 +168,32 @@ export default function LogPaymentModal({
         return;
       }
       haptic.success?.();
-      toast.success(`Paiement de ${parseFloat(amount).toFixed(2)} € enregistré ✓`);
+
+      // ===== Mode "plan en plusieurs fois" : crée les échéances futures =====
+      // Best-effort : si la création des schedules échoue, on garde le paiement
+      // (déjà inséré) et on prévient le coach. Pas de rollback complexe.
+      if (installmentMode && parseFloat(totalPlanAmount) > 0 && nInstallments >= 2) {
+        const res = await generateSchedules({
+          coachId,
+          clientId,
+          totalAmount: parseFloat(totalPlanAmount),
+          nInstallments,
+          firstPaymentDate: receivedDate,
+          firstPaymentId: data.id,
+          firstPaidAmount: parseFloat(amount),
+        });
+        if (!res.ok) {
+          toast.error(
+            `Paiement enregistré, mais impossible de planifier les échéances : ${res.error || "erreur inconnue"}. Réessaye depuis Comptes à recevoir.`
+          );
+        } else {
+          toast.success(
+            `Paiement enregistré ✓ — ${nInstallments - 1} échéance${nInstallments - 1 > 1 ? "s" : ""} planifiée${nInstallments - 1 > 1 ? "s" : ""}`
+          );
+        }
+      } else {
+        toast.success(`Paiement de ${parseFloat(amount).toFixed(2)} € enregistré ✓`);
+      }
       onSaved?.(data);
       onClose?.();
     } catch (e) {
@@ -207,9 +253,92 @@ export default function LogPaymentModal({
           </div>
         </div>
 
+        {/* Type d'engagement : 1x vs plan multi-échéances */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={subtitle}>Type d'engagement</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {[
+              { id: false, label: "Paiement unique", hint: "1 paiement, période simple" },
+              { id: true, label: "Plan en plusieurs fois", hint: "N échéances planifiées" },
+            ].map((opt) => {
+              const active = installmentMode === opt.id;
+              return (
+                <button
+                  key={String(opt.id)}
+                  type="button"
+                  onClick={() => setInstallmentMode(opt.id)}
+                  style={{
+                    padding: "10px 12px", textAlign: "left",
+                    background: active ? `${G}15` : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${active ? `${G}66` : BORDER}`,
+                    borderRadius: 10, cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 800, color: active ? G : "#fff", letterSpacing: 0.3 }}>
+                    {opt.label}
+                  </div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 3 }}>
+                    {opt.hint}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Plan multi-échéances : config */}
+        {installmentMode && (
+          <div style={{
+            marginBottom: 16, padding: 14,
+            background: `${G}08`, border: `1px solid ${G}22`, borderRadius: 12,
+          }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <Field label="Montant total du plan (€)">
+                <input
+                  type="number" step="0.01" min="0"
+                  value={totalPlanAmount}
+                  onChange={(e) => setTotalPlanAmount(e.target.value)}
+                  placeholder="Ex : 600"
+                  style={input}
+                  inputMode="decimal"
+                />
+              </Field>
+              <Field label="Nb d'échéances">
+                <select
+                  value={nInstallments}
+                  onChange={(e) => setNInstallments(parseInt(e.target.value, 10))}
+                  style={input}
+                >
+                  {[2, 3, 4, 5, 6, 8, 10, 12].map((n) => (
+                    <option key={n} value={n}>{n} fois</option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            {installmentAmount > 0 && (
+              <div style={{
+                marginTop: 10, padding: "8px 12px",
+                background: "rgba(255,255,255,0.03)", borderRadius: 8,
+                fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.55,
+              }}>
+                <strong style={{ color: G }}>{installmentAmount.toFixed(2)} €/échéance</strong>
+                {" · "}1ère aujourd'hui, dernière le{" "}
+                <strong style={{ color: "#fff" }}>
+                  {lastDueDate ? new Date(lastDueDate).toLocaleDateString("fr-FR") : "—"}
+                </strong>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
+                  Le montant ci-dessous est ce que tu reçois MAINTENANT.
+                  {parseFloat(amount) !== installmentAmount && installmentAmount > 0 &&
+                    " Tu peux le laisser différent (acompte, premier mois offert…)."}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Montant + Méthode */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-          <Field label="Montant (€)">
+          <Field label={installmentMode ? "Montant reçu maintenant (€)" : "Montant (€)"}>
             <input
               type="number"
               step="0.01"

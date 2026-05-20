@@ -23,6 +23,7 @@ import Spinner from "../Spinner";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { useT, getLocale } from "../../lib/i18n";
+import OutstandingPaymentsCard from "./OutstandingPaymentsCard";
 
 const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
 const fillTpl = (s, vars) => {
@@ -408,6 +409,9 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
           </div>
         )}
       </div>
+
+      {/* ===== COMPTES À RECEVOIR — échéances planifiées en attente ===== */}
+      {coachData?.id && <OutstandingPaymentsCard coachId={coachData.id} />}
 
       {/* ===== INSIGHTS — passerelle vers la section Analytics complète ===== */}
       {onOpenAnalytics && (
