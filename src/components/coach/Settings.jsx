@@ -283,6 +283,7 @@ function PublicProfileSection({ coachData, isDemo }) {
   const [photoUrl, setPhotoUrl] = useState(coachData?.public_photo_url || "");
   const [specialties, setSpecialties] = useState(Array.isArray(coachData?.public_specialties) ? coachData.public_specialties : []);
   const [ctaUrl, setCtaUrl] = useState(coachData?.public_cta_url || "");
+  const [calendarUrl, setCalendarUrl] = useState(coachData?.public_calendar_url || "");
   const [newSpec, setNewSpec] = useState("");
   const [uploading, setUploading] = useState(false);
   const [savingVitrine, setSavingVitrine] = useState(false);
@@ -381,6 +382,7 @@ function PublicProfileSection({ coachData, isDemo }) {
           public_specialties: specialties.length ? specialties : [],
           public_photo_url: photoUrl || null,
           public_cta_url: finalCta || null,
+          public_calendar_url: calendarUrl.trim() || null,
         })
         .eq("id", coachData.id);
       if (error) throw error;
@@ -599,6 +601,22 @@ function PublicProfileSection({ coachData, isDemo }) {
             <li><code style={{ color: G, fontSize: 11 }}>https://calendly.com/...</code> → ton Calendly</li>
             <li>Vide → mailto vers ton email (par défaut)</li>
           </ul>
+        </div>
+      </div>
+
+      {/* LIEN RÉSERVATION (booking secondaire sur la vitrine publique) */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={sectionSubtitle}>Lien de réservation (appel découverte)</div>
+        <input
+          className="set-input"
+          value={calendarUrl}
+          onChange={e => setCalendarUrl(e.target.value)}
+          placeholder="https://cal.com/ton-nom/15min  ·  https://calendly.com/..."
+          style={{ ...input, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
+        />
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 6, lineHeight: 1.6 }}>
+          Affiche un bouton secondaire <strong style={{ color: `${G}cc` }}>« Réserver un appel découverte »</strong> sous le CTA principal de ta vitrine publique.
+          Compatible Cal.com, Calendly, Tally, etc. Laisse vide pour masquer.
         </div>
       </div>
 

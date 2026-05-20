@@ -28,7 +28,7 @@ export default function PublicCoachProfile({ slug }) {
       try {
         const { data: c, error: ce } = await supabase
           .from("coaches")
-          .select("id, full_name, brand_name, coaching_name, public_bio, public_specialties, public_photo_url, public_city, logo_url, accent_color, public_profile_enabled")
+          .select("id, full_name, brand_name, coaching_name, public_bio, public_specialties, public_photo_url, public_city, public_calendar_url, logo_url, accent_color, public_profile_enabled")
           .eq("public_slug", slug)
           .eq("public_profile_enabled", true)
           .maybeSingle();
@@ -279,6 +279,54 @@ export default function PublicCoachProfile({ slug }) {
           <div style={{ marginTop: 16, fontSize: 11, color: "rgba(255,255,255,0.42)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>
             Sélection sur dossier · 5 places
           </div>
+
+          {coach.public_calendar_url && (
+            <div style={{ marginTop: 28, display: "flex", alignItems: "center", justifyContent: "center", gap: 14 }}>
+              <div style={{ height: 1, flex: "0 0 36px", background: "rgba(255,255,255,0.12)" }} />
+              <div style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontWeight: 700 }}>ou</div>
+              <div style={{ height: 1, flex: "0 0 36px", background: "rgba(255,255,255,0.12)" }} />
+            </div>
+          )}
+
+          {coach.public_calendar_url && (
+            <div style={{ marginTop: 20 }}>
+              <a
+                href={coach.public_calendar_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 10,
+                  textDecoration: "none",
+                  padding: "14px 26px",
+                  background: "transparent",
+                  color: "#fff",
+                  border: `1px solid ${accentHex}55`,
+                  borderRadius: 100,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${accentHex}10`; e.currentTarget.style.borderColor = accentHex; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = `${accentHex}55`; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={accentHex} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                Réserver un appel découverte
+              </a>
+              <div style={{ marginTop: 12, fontSize: 10, color: "rgba(255,255,255,0.32)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>
+                15 min · sans engagement
+              </div>
+            </div>
+          )}
         </div>
 
         {/* FOOTER */}
