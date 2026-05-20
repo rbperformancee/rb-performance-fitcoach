@@ -488,7 +488,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", fontFamily: "monospace", width: 22, flexShrink: 0 }}>{String(globalIndex + 1).padStart(2, "0")}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "-0.3px" }}>{ex.name}</div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginTop: 3 }}>{chipsReps}{ex.rest ? ` · ⏱ ${ex.rest}` : ""}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginTop: 3 }}>{chipsReps}{ex.tempo ? ` · ${ex.tempo}` : ""}{ex.rest ? ` · ⏱ ${ex.rest}` : ""}</div>
               </div>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: bc, flexShrink: 0 }} />
             </div>
