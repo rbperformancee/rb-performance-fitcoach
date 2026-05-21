@@ -108,6 +108,8 @@
     { "source": "/coaches", "destination": "/api/coaches-directory" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap.xml" },
     { "source": "/candidature", "destination": "/app.html?candidature=true" },
+    { "source": "/blog/:slug", "destination": "/blog/:slug.html" },
+    { "source": "/blog", "destination": "/blog/index.html" },
     { "source": "/((?!api/|_next/|static/|videos/|images/|_vercel/|.*\\..*).*)", "destination": "/404.html" }
   ],
   "headers": [

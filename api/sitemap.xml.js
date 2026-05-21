@@ -22,6 +22,7 @@ const STATIC_PAGES = [
   { loc: '/logiciel-coach-sportif',      changefreq: 'monthly', priority: 0.9 },
   { loc: '/alternative-trainerize',      changefreq: 'monthly', priority: 0.85 },
   { loc: '/comparison',                  changefreq: 'monthly', priority: 0.7 },
+  { loc: '/blog/combien-gagne-coach-sportif-france', changefreq: 'monthly', priority: 0.75 },
   { loc: '/security',                    changefreq: 'yearly',  priority: 0.4 },
   { loc: '/legal',                       changefreq: 'yearly',  priority: 0.3 },
 ];
