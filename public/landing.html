@@ -71,10 +71,15 @@
 <link rel="alternate" hreflang="x-default" href="https://rbperform.app/">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:locale:alternate" content="en_US">
-<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<!-- Favicons : Google SERP affiche le rel="icon" PNG le plus grand qu'il trouve
+     (min 48×48 depuis 2022). On met icon-192 (logo PWA éclair teal) en premier
+     pour qu'il s'affiche dans les résultats de recherche. -->
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/icon.svg" color="#02d1ba">
 <link rel="manifest" href="/manifest.json">
 <!-- LCP critical asset: start loading the hero poster before the video parser reaches it -->
 <link rel="preload" as="image" href="/images/hero-poster.jpg" fetchpriority="high">
