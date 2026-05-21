@@ -101,6 +101,8 @@
     { "source": "/welcome", "destination": "/welcome.html" },
     { "source": "/security", "destination": "/security.html" },
     { "source": "/comparison", "destination": "/comparison.html" },
+    { "source": "/alternative-trainerize", "destination": "/alternative-trainerize.html" },
+    { "source": "/logiciel-coach-sportif", "destination": "/logiciel-coach-sportif.html" },
     { "source": "/legal", "destination": "/legal.html" },
     { "source": "/coach/:slug", "destination": "/api/coach-vitrine?slug=:slug" },
     { "source": "/coaches", "destination": "/api/coaches-directory" },

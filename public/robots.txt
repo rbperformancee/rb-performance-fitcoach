@@ -1,9 +1,40 @@
+# RB Perform — robots.txt
+# Cible : indexation Google / Bing / DuckDuckGo / autres robots respectueux
+# Marché : France (priorité), Europe francophone
+
 User-agent: *
 Allow: /
+
+# Pages applicatives (auth, demo, vitrines coach dynamiques) — non-indexables
 Disallow: /api/
 Disallow: /app.html
 Disallow: /coach.html
 Disallow: /client-demo.html
 Disallow: /link.html
+Disallow: /welcome
+Disallow: /welcome.html
+Disallow: /dashboard/
+Disallow: /demo
+Disallow: /demo-client
+Disallow: /login
+Disallow: /signup
+Disallow: /join
 
+# Bots agressifs / scrapers IA — opt-out par défaut, sauf si l'audience
+# nous y rend visibles (ChatGPT/Perplexity nous trouvent via Google de toute
+# façon, on n'a pas besoin de les laisser entrainer leurs modèles sur notre
+# contenu). On les bloque tant que l'audience reste organique Google-first.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+# Sitemap
 Sitemap: https://rbperform.app/sitemap.xml

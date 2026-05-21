@@ -16,12 +16,14 @@ const SUPABASE_ANON = process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUP
 const SITE = 'https://rbperform.app';
 
 const STATIC_PAGES = [
-  { loc: '/',             changefreq: 'weekly',  priority: 1.0 },
-  { loc: '/candidature',  changefreq: 'monthly', priority: 0.9 },
-  { loc: '/founding',     changefreq: 'monthly', priority: 0.7 },
-  { loc: '/security',     changefreq: 'yearly',  priority: 0.4 },
-  { loc: '/comparison',   changefreq: 'monthly', priority: 0.5 },
-  { loc: '/legal',        changefreq: 'yearly',  priority: 0.3 },
+  { loc: '/',                            changefreq: 'weekly',  priority: 1.0 },
+  { loc: '/candidature',                 changefreq: 'monthly', priority: 0.9 },
+  { loc: '/founding',                    changefreq: 'weekly',  priority: 0.95 },
+  { loc: '/logiciel-coach-sportif',      changefreq: 'monthly', priority: 0.9 },
+  { loc: '/alternative-trainerize',      changefreq: 'monthly', priority: 0.85 },
+  { loc: '/comparison',                  changefreq: 'monthly', priority: 0.7 },
+  { loc: '/security',                    changefreq: 'yearly',  priority: 0.4 },
+  { loc: '/legal',                       changefreq: 'yearly',  priority: 0.3 },
 ];
 
 async function fetchPublicCoaches() {
