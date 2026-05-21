@@ -1918,8 +1918,18 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
   <div class="hero-blob hero-blob-2" aria-hidden="true"></div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <h1 class="hero-title" id="heroTitle">RB PERFORM</h1>
+    <h1 class="hero-title" id="heroTitle"><span class="sr-only">RB Perform — Le SaaS pour coachs sportifs : </span>RB PERFORM</h1>
     <p class="hero-sub" data-i18n="hero.sub" style="margin-bottom:32px">Le système qui transforme<br/>chaque coach en CEO.</p>
+    <!-- SEO content : invisible visuellement, indexé par Google. Complète le
+         H1 visuel "RB PERFORM" pour cibler les mots-clés SEO majeurs. -->
+    <div class="sr-only">
+      <h2>Logiciel SaaS pour coach sportif et personal trainer</h2>
+      <p>RB Perform est l'application qui transforme chaque coach sportif indépendant en CEO de son business : dashboard MRR temps réel, anti-churn IA, programme builder, paiements clients 0% commission. Alternative française à Trainerize, TrueCoach et Everfit, conforme RGPD avec hébergement EU.</p>
+      <h2>Pour qui ?</h2>
+      <p>Coachs personal trainers, préparateurs physiques, coachs musculation, préparateurs CrossFit, coachs perte de poids, coachs en ligne ou hybrides. De 5 à 200 clients suivis.</p>
+      <h2>Offre Founding Coach Program</h2>
+      <p>30 places fondatrices à 199€/mois bloqué à vie. Une fois la cohorte pleine, le tarif passe à 299€/mois pour les nouveaux. Aucun engagement, paiement Stripe sécurisé.</p>
+    </div>
     <button class="hero-arrow" id="heroEnter" data-i18n="hero.enter"
       style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:10px 28px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.2s;z-index:5">
       Entrer

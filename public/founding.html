@@ -6,8 +6,8 @@
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#080C14" />
 <meta name="color-scheme" content="dark" />
-<title>Founding Coach — RB Perform</title>
-<meta name="description" content="30 places Founding Coach — 199€/mois bloqué à vie. Une fois la cohorte pleine, tarif standard 299€/mois. Anti-churn IA, dashboard MRR, 0% commission.">
+<title>Founding Coach Program — 199€/mois bloqué à vie · RB Perform</title>
+<meta name="description" content="30 places Founding Coach pour coachs sportifs : 199€/mois bloqué à vie (vs 299€ standard ensuite). Anti-churn IA, dashboard MRR temps réel, programme builder, 0% commission. Réserve ta place.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:title" content="Founding Coach — 199€/mois bloqué à vie (30 places)">
@@ -184,6 +184,89 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
 *:focus{outline:none}
 *:focus-visible{outline:2px solid #02d1ba;outline-offset:3px;border-radius:4px}
 </style>
+
+<!-- Schema.org — Product + Offer + FAQPage : génère des rich snippets dans
+     les SERP Google (prix, dispo, étoiles si reviews, FAQ déroulante).
+     Boost CTR significatif sur les pages de pricing/offer. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Product",
+      "@id": "https://rbperform.app/founding#product",
+      "name": "RB Perform — Founding Coach Program",
+      "description": "Plan d'abonnement Founding pour coachs sportifs : 199€/mois bloqué à vie (vs 299€ standard ensuite). Inclut anti-churn IA, dashboard MRR temps réel, programme builder, automatisations, 0% commission sur les paiements clients.",
+      "image": "https://rbperform.app/og-image.png",
+      "brand": { "@type": "Brand", "name": "RB Perform" },
+      "category": "SaaS coach sportif",
+      "offers": {
+        "@type": "Offer",
+        "name": "Founding Coach — 199€/mois bloqué à vie",
+        "price": "199",
+        "priceCurrency": "EUR",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/LimitedAvailability",
+        "url": "https://rbperform.app/founding",
+        "eligibleQuantity": { "@type": "QuantitativeValue", "maxValue": 30 },
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "199",
+          "priceCurrency": "EUR",
+          "billingIncrement": 1,
+          "unitCode": "MON"
+        }
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://rbperform.app/founding#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Le prix de 199€/mois est-il vraiment bloqué à vie ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui. Tant que ton abonnement reste actif sans interruption, tu gardes le tarif Founding de 199€/mois à vie, même quand le tarif standard passera à 299€/mois après les 30 places fondatrices."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Combien y a-t-il de places Founding ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "30 places fondatrices au total. Une fois la cohorte pleine, le tarif passe automatiquement à 299€/mois pour les nouveaux coachs. Aucune date butoir, c'est uniquement le compteur de places qui déclenche le changement."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quelle est la différence avec Trainerize ou TrueCoach ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "RB Perform prend 0% de commission sur les paiements clients (vs ~3-5% chez les concurrents), inclut un anti-churn IA qui détecte les clients à risque avant qu'ils partent, et offre un dashboard MRR en temps réel pour piloter la croissance business. Hébergement EU et conformité RGPD natifs."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Est-ce qu'il y a un engagement minimum ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Aucun engagement. Tu peux résilier à tout moment depuis ton portail Stripe. Mais tant que tu restes actif, ton tarif Founding 199€ est verrouillé à vie."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Que se passe-t-il si je me désabonne et reviens plus tard ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Le tarif Founding 199€ est conditionné à un abonnement continu. Si tu résilies puis reviens, tu seras au tarif en vigueur à ce moment (probablement 299€ ou plus). Le prix verrouillé suit ta continuité, pas ton compte."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <a href="#main" class="skip-link" data-i18n="a11y.skip">Aller au contenu</a>
