@@ -142,7 +142,7 @@ export default function CoachOnboardingWizard({ coach, onScrollToInvitation }) {
               border: `1px solid ${step.color}40`,
               display: "flex", alignItems: "center", justifyContent: "center",
               color: step.done ? "#000" : step.color,
-              fontWeight: 800, fontSize: 14, fontFamily: "'JetBrains Mono',monospace",
+              fontWeight: 800, fontSize: 14, fontFamily: "'DM Sans',-apple-system,sans-serif",
               flexShrink: 0,
             }}>
               {step.done ? <AppIcon name="check" size={16} color="#000" strokeWidth={3} /> : i + 1}

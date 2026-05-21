@@ -250,7 +250,7 @@ export default function HabitsManager({ open, onClose, onChange, client }) {
                       display: "inline-flex", alignItems: "center", gap: 6,
                     }}
                   >
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 800, color: G, padding: "2px 5px", background: `${G}15`, borderRadius: 4 }}>{p.icon}</span>
+                    <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 9, fontWeight: 800, color: G, padding: "2px 5px", background: `${G}15`, borderRadius: 4 }}>{p.icon}</span>
                     {p.name}
                   </button>
                 ))}
@@ -270,7 +270,7 @@ export default function HabitsManager({ open, onClose, onChange, client }) {
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.08)",
                     borderRadius: 8,
-                    color: G, fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                    color: G, fontSize: 11, fontFamily: "'DM Sans',-apple-system,sans-serif",
                     outline: "none", textAlign: "center", letterSpacing: "1px",
                     fontWeight: 700, textTransform: "uppercase",
                     boxSizing: "border-box",
@@ -363,7 +363,7 @@ function HabitRow({ habit, onRename, onToggleActive, onChangeColor, onDelete, on
           width: 30, height: 30, borderRadius: 8,
           background: `${habit.color}18`, border: `1px solid ${habit.color}45`,
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "'DM Sans',-apple-system,sans-serif",
           fontSize: 9, fontWeight: 800, color: habit.color,
           letterSpacing: ".5px",
           cursor: "pointer", flexShrink: 0,

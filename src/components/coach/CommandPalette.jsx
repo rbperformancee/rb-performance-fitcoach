@@ -217,4 +217,4 @@ export default function CommandPalette({ open, onClose, clients = [], commands =
   );
 }
 
-const kbdStyle = { fontSize: 9, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "1px 5px", fontFamily: "'JetBrains Mono',monospace" };
+const kbdStyle = { fontSize: 9, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "1px 5px", fontFamily: "'DM Sans',-apple-system,sans-serif" };

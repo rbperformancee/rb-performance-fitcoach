@@ -25,7 +25,7 @@ function Avatar({ name, size = 28, src }) {
       backgroundSize: "cover", backgroundPosition: "center",
       border: "1px solid rgba(2,209,186,0.15)",
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "'Syne', sans-serif",
+      fontFamily: "'DM Sans',-apple-system,sans-serif",
       fontSize: size * 0.36, fontWeight: 900,
       color: "#02d1ba",
       flexShrink: 0,
@@ -306,7 +306,7 @@ export default function ProgrammeList({ coachId, clients = [], onEdit, onAssign,
                 </div>
 
                 {/* Nom programme */}
-                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-.3px", marginBottom: 6, lineHeight: 1.2 }}>
+                <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-.3px", marginBottom: 6, lineHeight: 1.2 }}>
                   {prog.programme_name || t("prog.no_name")}
                 </div>
 

@@ -86,7 +86,7 @@ export default function EmptyStateNewCoach({ onInvite, onBuilder, onMigrate, coa
             <div style={{
               fontSize: 11, fontWeight: 800, letterSpacing: "1.5px",
               color: c.primary ? G : "rgba(255,255,255,0.35)",
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Sans',-apple-system,sans-serif",
               flexShrink: 0,
               minWidth: 18,
             }}>

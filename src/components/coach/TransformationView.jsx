@@ -180,7 +180,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
               {data.deltas.weight !== null && Math.abs(data.deltas.weight) > 0.1 ? (
                 <>
                   <div style={{
-                    fontFamily: "'JetBrains Mono',monospace",
+                    fontFamily: "'DM Sans',-apple-system,sans-serif",
                     fontSize: 96, fontWeight: 800,
                     letterSpacing: "-4px", lineHeight: 1,
                     color: data.deltas.weight < 0 ? G : ORANGE,
@@ -195,7 +195,7 @@ export default function TransformationView({ client, coach, onClose, isDemo = fa
                 </>
               ) : (
                 <>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 72, fontWeight: 800, letterSpacing: "-3px", color: G }}>
+                  <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 72, fontWeight: 800, letterSpacing: "-3px", color: G }}>
                     {data.totalSessions}
                   </div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 6, letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700 }}>
@@ -307,11 +307,11 @@ function CompareCard({ label, before, after, unit, good, deltaText }) {
     <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "14px 16px" }}>
       <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", fontWeight: 700, marginBottom: 8 }}>{label}</div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, color: "rgba(255,255,255,0.35)", fontWeight: 700 }}>
+        <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", fontWeight: 700 }}>
           {before ?? "—"}{unit}
         </span>
         <AppIcon name="arrow-right" size={10} color="rgba(255,255,255,0.3)" />
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, color: "#fff", fontWeight: 800 }}>
+        <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 16, color: "#fff", fontWeight: 800 }}>
           {after ?? "—"}{unit}
         </span>
       </div>
@@ -327,7 +327,7 @@ function CompareCard({ label, before, after, unit, good, deltaText }) {
 function BigStat({ value, label, color }) {
   return (
     <div style={{ textAlign: "center", padding: "14px 10px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14 }}>
-      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 24, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: 9, letterSpacing: "1px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginTop: 4 }}>{label}</div>
     </div>
   );
@@ -359,8 +359,8 @@ function WeightCurve({ weights }) {
       <path d={path} fill="none" stroke="#02d1ba" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 6px rgba(2,209,186,0.4))" }} />
       <circle cx={toX(0)} cy={toY(vals[0])} r="4" fill="#02d1ba" opacity="0.5" />
       <circle cx={toX(vals.length - 1)} cy={toY(vals[vals.length - 1])} r="5" fill="#02d1ba" />
-      <text x={toX(0)} y={toY(vals[0]) - 8} fill="rgba(255,255,255,0.5)" fontSize="10" textAnchor="middle" fontFamily="'JetBrains Mono',monospace">{vals[0]} kg</text>
-      <text x={toX(vals.length - 1)} y={toY(vals[vals.length - 1]) - 8} fill="#02d1ba" fontSize="11" textAnchor="middle" fontWeight="700" fontFamily="'JetBrains Mono',monospace">{vals[vals.length - 1]} kg</text>
+      <text x={toX(0)} y={toY(vals[0]) - 8} fill="rgba(255,255,255,0.5)" fontSize="10" textAnchor="middle" fontFamily="'DM Sans',-apple-system,sans-serif">{vals[0]} kg</text>
+      <text x={toX(vals.length - 1)} y={toY(vals[vals.length - 1]) - 8} fill="#02d1ba" fontSize="11" textAnchor="middle" fontWeight="700" fontFamily="'DM Sans',-apple-system,sans-serif">{vals[vals.length - 1]} kg</text>
     </svg>
   );
 }

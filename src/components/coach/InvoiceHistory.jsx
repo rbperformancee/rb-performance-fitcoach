@@ -249,7 +249,7 @@ function Row({ number, client, amount, date, extra, badge, onDownload, downloadi
     }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'JetBrains Mono', monospace", letterSpacing: 0.3 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',-apple-system,sans-serif", letterSpacing: 0.3 }}>
             {number}
           </span>
           {badge && (

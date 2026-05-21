@@ -95,20 +95,20 @@ export default function ClientMenuCard({ clientId }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
                   <span style={{ fontSize: 11, color: ORANGE, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>{meal.label}</span>
                   {typeof meal.calories === "number" && (
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{meal.calories} kcal</span>
+                    <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{meal.calories} kcal</span>
                   )}
                 </div>
                 {(meal.items || []).map((it, j) => (
                   <div key={j} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "rgba(255,255,255,0.85)", padding: "2px 0" }}>
                     <span>• {it.food}</span>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.5)" }}>{it.qty}</span>
+                    <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", color: "rgba(255,255,255,0.5)" }}>{it.qty}</span>
                   </div>
                 ))}
               </div>
             ))}
           </div>
           {menu.totals && (
-            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
               Total : {Math.round(menu.totals.calories)} kcal · {Math.round(menu.totals.proteines)}P · {Math.round(menu.totals.glucides)}G · {Math.round(menu.totals.lipides)}L
             </div>
           )}

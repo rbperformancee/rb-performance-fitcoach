@@ -199,7 +199,7 @@ export default function ActivityFeedToday({ coachId, clientsById }) {
                 {e.summary}
               </div>
             </div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", flexShrink: 0, fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", flexShrink: 0, fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
               {timeAgo(e.ts)}
             </div>
           </div>

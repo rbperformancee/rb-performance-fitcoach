@@ -228,7 +228,7 @@ export default function MenuGenerator({ clientId }) {
   }
 
   const card = { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: 16, marginTop: 16 };
-  const numInp = { width: "100%", boxSizing: "border-box", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "7px 9px", color: "#fff", fontSize: 13, fontFamily: "'JetBrains Mono', monospace", outline: "none" };
+  const numInp = { width: "100%", boxSizing: "border-box", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "7px 9px", color: "#fff", fontSize: 13, fontFamily: "'DM Sans',-apple-system,sans-serif", outline: "none" };
 
   if (!open) {
     return (
@@ -294,12 +294,12 @@ export default function MenuGenerator({ clientId }) {
             <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "10px 12px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
                 <span style={{ fontSize: 11, color: ORANGE, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>{meal.label}</span>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{meal.calories} kcal</span>
+                <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{meal.calories} kcal</span>
               </div>
               {meal.items.map((it, j) => (
                 <div key={j} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "rgba(255,255,255,0.85)", padding: "2px 0" }}>
                   <span>• {it.food}</span>
-                  <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.5)" }}>{it.qty}</span>
+                  <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", color: "rgba(255,255,255,0.5)" }}>{it.qty}</span>
                 </div>
               ))}
             </div>
@@ -317,7 +317,7 @@ export default function MenuGenerator({ clientId }) {
               return (
                 <div key={k} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>{l}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: off <= 0.12 ? "#34d399" : off <= 0.25 ? ORANGE : "#ef4444" }}>{got}</div>
+                  <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 13, fontWeight: 700, color: off <= 0.12 ? "#34d399" : off <= 0.25 ? ORANGE : "#ef4444" }}>{got}</div>
                   <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>/ {goal}</div>
                 </div>
               );

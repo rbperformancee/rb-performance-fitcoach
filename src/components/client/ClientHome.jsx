@@ -95,14 +95,14 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 10 }}>
             {t("ch.hello")}
           </div>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
             {firstName || t("ch.champion")}<span style={{ color: accent }}>.</span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", marginTop: 6 }}>
             {t("ch.coached_by")} <span style={{ color: "rgba(255,255,255,.6)", fontWeight: 500 }}>{coachName}</span>
           </div>
         </div>
-        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(2,209,186,.1)", border: `.5px solid ${accent}30`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne', sans-serif", fontSize: 15, fontWeight: 900, color: accent, flexShrink: 0 }}>
+        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(2,209,186,.1)", border: `.5px solid ${accent}30`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 15, fontWeight: 900, color: accent, flexShrink: 0 }}>
           {coachInitials}
         </div>
       </div>
@@ -114,12 +114,12 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 8 }}>
             {t("ch.active_programme")}
           </div>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 12, letterSpacing: "-.3px" }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 12, letterSpacing: "-.3px" }}>
             {programme.programme_name || t("ch.no_name")}
           </div>
           <button
             onClick={() => onTabChange?.("prog")}
-            style={{ width: "100%", padding: "12px 16px", background: accent, color: "#000", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", fontFamily: "'Syne', sans-serif", cursor: "pointer", boxShadow: `0 10px 26px ${accent}30` }}
+            style={{ width: "100%", padding: "12px 16px", background: accent, color: "#000", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", fontFamily: "'DM Sans',-apple-system,sans-serif", cursor: "pointer", boxShadow: `0 10px 26px ${accent}30` }}
           >
             {t("ch.start_session")}
           </button>
@@ -182,7 +182,7 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
 function Stat({ label, value, suffix, icon, accent }) {
   return (
     <div style={{ padding: "14px 12px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 12, textAlign: "center" }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 200, color: accent, letterSpacing: "-1px", lineHeight: 1 }}>
+      <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 20, fontWeight: 200, color: accent, letterSpacing: "-1px", lineHeight: 1 }}>
         {icon && <span style={{ marginRight: 4, fontSize: 16 }}>{icon}</span>}
         {value}
         {suffix && <span style={{ fontSize: 10, color: "rgba(255,255,255,.3)" }}>{suffix}</span>}
@@ -200,7 +200,7 @@ function GoalBar({ label, value, target, color, unit = "" }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
         <span style={{ fontSize: 11, color: "rgba(255,255,255,.55)", fontWeight: 500 }}>{label}</span>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(255,255,255,.4)" }}>
+        <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 10, color: "rgba(255,255,255,.4)" }}>
           <b style={{ color: "#fff", fontWeight: 500 }}>{value}{unit}</b> / {target}{unit}
         </span>
       </div>

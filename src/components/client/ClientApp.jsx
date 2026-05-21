@@ -76,7 +76,7 @@ export default function ClientApp({ user }) {
     return (
       <div style={wrap}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, textAlign: "center", gap: 14 }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "-.5px" }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "-.5px" }}>
             {t("ca.no_account_title")}<span style={{ color: accent }}>.</span>
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.5, maxWidth: 320 }}>

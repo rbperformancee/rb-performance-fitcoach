@@ -196,7 +196,7 @@ export default function AnalyticsSection({ coachId, clients = [], onClose }) {
                     <div key={p.name + i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 220 }}>{p.name}</div>
-                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: p.avgAdherence >= 70 ? G : p.avgAdherence >= 40 ? ORANGE : RED }}>
+                        <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 14, fontWeight: 800, color: p.avgAdherence >= 70 ? G : p.avgAdherence >= 40 ? ORANGE : RED }}>
                           {p.avgAdherence}%
                         </div>
                       </div>
@@ -266,7 +266,7 @@ function Metric({ label, value, color }) {
   return (
     <div>
       <div style={{ fontSize: 9, letterSpacing: "1px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 800, color }}>{value}</div>
+      <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 18, fontWeight: 800, color }}>{value}</div>
     </div>
   );
 }
@@ -335,7 +335,7 @@ function CorrelationCard({ r, hint }) {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
         <div style={{ width: 70, height: 70, borderRadius: "50%", background: `${interp.color}18`, border: `1px solid ${interp.color}40`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 800, color: interp.color }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 18, fontWeight: 800, color: interp.color }}>
             {r > 0 ? "+" : ""}{r.toFixed(2)}
           </div>
           <div style={{ fontSize: 8, color: interp.color, opacity: 0.7, letterSpacing: "0.5px" }}>r</div>

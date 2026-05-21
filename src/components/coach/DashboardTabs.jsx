@@ -64,7 +64,7 @@ export default function DashboardTabs({ active, onChange, alerts = 0 }) {
             }}
           >
             <span style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Sans',-apple-system,sans-serif",
               fontSize: 10,
               fontWeight: 400,
               letterSpacing: "0.05em",
@@ -87,7 +87,7 @@ export default function DashboardTabs({ active, onChange, alerts = 0 }) {
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
                 fontSize: 9, fontWeight: 800, color: "#fff",
                 padding: "0 4px",
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: "'DM Sans',-apple-system,sans-serif",
               }}>{alerts > 9 ? "9+" : alerts}</span>
             )}
             {/* Underline anime */}

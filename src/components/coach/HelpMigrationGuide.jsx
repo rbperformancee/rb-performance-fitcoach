@@ -113,7 +113,7 @@ export default function HelpMigrationGuide({
                 <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 8 }}>
                   <div style={{
                     fontSize: 11, fontWeight: 800, letterSpacing: 1.5, color: G,
-                    fontFamily: "'JetBrains Mono','SF Mono',monospace", flexShrink: 0,
+                    fontFamily: "'DM Sans',-apple-system,sans-serif", flexShrink: 0,
                   }}>{s.step}</div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: -0.2 }}>{s.title}</div>
                 </div>

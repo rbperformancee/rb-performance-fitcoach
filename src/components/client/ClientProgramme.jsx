@@ -63,7 +63,7 @@ export default function ClientProgramme({ client, accent }) {
     return (
       <div style={{ padding: "32px 20px" }}>
         <div style={{ padding: "40px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 16, textAlign: "center" }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
             {t("cprg.no_programme")}<span style={{ color: accent }}>.</span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", lineHeight: 1.5 }}>
@@ -92,7 +92,7 @@ export default function ClientProgramme({ client, accent }) {
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 10 }}>
           {t("cprg.my_programme")}
         </div>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
+        <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
           {t("cprg.train")}<span style={{ color: accent }}>.</span>
         </div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginTop: 8 }}>
@@ -110,7 +110,7 @@ export default function ClientProgramme({ client, accent }) {
           color: "#000",
           border: "none",
           borderRadius: 14,
-          fontFamily: "'Syne', sans-serif",
+          fontFamily: "'DM Sans',-apple-system,sans-serif",
           fontSize: 13, fontWeight: 900,
           letterSpacing: ".1em", textTransform: "uppercase",
           cursor: "pointer",

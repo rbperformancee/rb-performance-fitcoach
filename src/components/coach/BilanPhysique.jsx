@@ -225,7 +225,7 @@ export default function BilanPhysique({ clientId, checkins, client }) {
                         <Delta v={last - first} unit={s.unit} />
                       </div>
                       <Sparkline values={s.pts} />
-                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", fontFamily: "'DM Sans',-apple-system,sans-serif", marginTop: 4 }}>
                         {fmtNum(last)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 3 }}>{s.unit}</span>
                       </div>
                     </div>
@@ -299,11 +299,11 @@ function SectionLabel({ children }) {
 
 function Delta({ v, unit }) {
   if (v == null || Math.abs(v) < 0.05) {
-    return <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: "'JetBrains Mono', monospace" }}>—</span>;
+    return <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>—</span>;
   }
   const up = v > 0;
   return (
-    <span style={{ fontSize: 10, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: up ? "#fbbf24" : "#34d399" }}>
+    <span style={{ fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans',-apple-system,sans-serif", color: up ? "#fbbf24" : "#34d399" }}>
       {up ? "▲" : "▼"} {up ? "+" : ""}{fmtNum(v)}{unit ? " " + unit : ""}
     </span>
   );
@@ -377,7 +377,7 @@ function BilanCard({ row, freq, measEnabled, deltaFor, onSaveAnnotation, onOpenP
           {measureVals.map((m) => {
             const d = deltaFor(row, m.col);
             return (
-              <span key={m.col} style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontFamily: "'JetBrains Mono', monospace" }}>
+              <span key={m.col} style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
                 {m.label} {fmtNum(row[m.col])}{m.unit}
                 {d != null && Math.abs(d) >= 0.05 && (
                   <span style={{ marginLeft: 4, color: d > 0 ? "#fbbf24" : "#34d399", fontWeight: 700 }}>

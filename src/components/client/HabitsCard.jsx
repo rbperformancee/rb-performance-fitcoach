@@ -299,7 +299,7 @@ export default function HabitsCard({ clientId, dailyTracking }) {
                   width: 28, height: 28, borderRadius: 8,
                   background: `${c}15`, border: `1px solid ${c}30`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: "'DM Sans',-apple-system,sans-serif",
                   fontSize: 9, fontWeight: 800, color: c,
                   letterSpacing: "0.5px",
                   flexShrink: 0,
@@ -339,7 +339,7 @@ export default function HabitsCard({ clientId, dailyTracking }) {
                   borderRadius: 6,
                   fontSize: 9, fontWeight: 800, letterSpacing: "0.5px",
                   color: streaks[h.id] >= 7 ? "#fbbf24" : c,
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: "'DM Sans',-apple-system,sans-serif",
                   flexShrink: 0,
                 }}>
                   {streaks[h.id]}j

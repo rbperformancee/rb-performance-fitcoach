@@ -409,7 +409,7 @@ function NumField({ label, unit, value, onChange, placeholder }) {
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 10,
-            color: "#fff", fontSize: 14, fontFamily: "'JetBrains Mono', monospace",
+            color: "#fff", fontSize: 14, fontFamily: "'DM Sans',-apple-system,sans-serif",
             outline: "none", boxSizing: "border-box",
           }}
         />
@@ -435,7 +435,7 @@ function Scale1to5({ label, value, onChange, lowLabel, highLabel }) {
               border: `1px solid ${value === n ? G : "rgba(255,255,255,0.08)"}`,
               borderRadius: 10,
               color: value === n ? "#000" : "rgba(255,255,255,0.65)",
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Sans',-apple-system,sans-serif",
               fontSize: 15, fontWeight: 700,
               cursor: "pointer", transition: "all .12s",
             }}

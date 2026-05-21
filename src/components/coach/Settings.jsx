@@ -252,7 +252,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(2,209,186,.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <AppIcon name="zap" size={16} color={G} />
                 </div>
-                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 900, color: "#fff" }}>{t("set.payments_card_title")}</div>
+                <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 16, fontWeight: 900, color: "#fff" }}>{t("set.payments_card_title")}</div>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
                 {t("set.payments_card_desc")}
@@ -424,7 +424,7 @@ function InvoicingSection({ coachData, isDemo }) {
           value={siret}
           onChange={(e) => setSiret(e.target.value.replace(/[^\d\s]/g, "").slice(0, 17))}
           placeholder="99063780300018"
-          style={{ ...input, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1 }}
+          style={{ ...input, fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", letterSpacing: 1 }}
           inputMode="numeric"
         />
         {siret && !siretValid && (
@@ -474,7 +474,7 @@ function InvoicingSection({ coachData, isDemo }) {
             value={vatNumber}
             onChange={(e) => setVatNumber(e.target.value.toUpperCase())}
             placeholder="FR12345678901"
-            style={{ ...input, fontFamily: "'JetBrains Mono', monospace" }}
+            style={{ ...input, fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums" }}
           />
         </ReqField>
       )}
@@ -799,7 +799,7 @@ function PublicProfileSection({ coachData, isDemo }) {
       {/* URL + copy */}
       {enabled && url && (
         <div style={{ display: "flex", gap: 6, marginBottom: 18, padding: "10px 12px", background: "rgba(2,209,186,.05)", border: `.5px solid ${G}33`, borderRadius: 10 }}>
-          <div style={{ flex: 1, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: G, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "8px 0" }}>
+          <div style={{ flex: 1, fontSize: 12, fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", color: G, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "8px 0" }}>
             {url}
           </div>
           <button onClick={() => copy(url)} style={{ ...btnGhost, padding: "8px 12px", flexShrink: 0 }}>
@@ -854,7 +854,7 @@ function PublicProfileSection({ coachData, isDemo }) {
       <div style={{ marginBottom: 16 }}>
         <div style={sectionSubtitle}>URL personnalisée</div>
         <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-          <div style={{ padding: "0 12px", height: 44, display: "flex", alignItems: "center", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.08)", borderRight: "none", borderRadius: "10px 0 0 10px", fontSize: 12, color: "rgba(255,255,255,.45)", fontFamily: "'JetBrains Mono', monospace" }}>
+          <div style={{ padding: "0 12px", height: 44, display: "flex", alignItems: "center", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.08)", borderRight: "none", borderRadius: "10px 0 0 10px", fontSize: 12, color: "rgba(255,255,255,.45)", fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums" }}>
             /coach/
           </div>
           <input
@@ -862,7 +862,7 @@ function PublicProfileSection({ coachData, isDemo }) {
             value={slug}
             onChange={e => setSlug(slugify(e.target.value))}
             placeholder="ton-nom"
-            style={{ ...input, borderRadius: "0 10px 10px 0", fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
+            style={{ ...input, borderRadius: "0 10px 10px 0", fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 13 }}
           />
         </div>
       </div>
@@ -929,7 +929,7 @@ function PublicProfileSection({ coachData, isDemo }) {
           value={ctaUrl}
           onChange={e => setCtaUrl(e.target.value)}
           placeholder="0612345678  ·  @ton_insta  ·  calendly.com/..."
-          style={{ ...input, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
+          style={{ ...input, fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 13 }}
         />
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 6, lineHeight: 1.6 }}>
           Ce champ accepte plusieurs formats — auto-conversion à l'enregistrement :
@@ -952,7 +952,7 @@ function PublicProfileSection({ coachData, isDemo }) {
           value={calendarUrl}
           onChange={e => setCalendarUrl(e.target.value)}
           placeholder="https://cal.com/ton-nom/15min  ·  https://calendly.com/..."
-          style={{ ...input, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
+          style={{ ...input, fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 13 }}
         />
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 6, lineHeight: 1.6 }}>
           Affiche un bouton secondaire <strong style={{ color: `${G}cc` }}>« Réserver un appel découverte »</strong> sous le CTA principal de ta vitrine publique.
@@ -1271,7 +1271,7 @@ const miniBtn = (disabled) => ({
 function Section({ title, sub, children }) {
   return (
     <div style={{ maxWidth: 560, margin: "0 auto", paddingBottom: 80 }}>
-      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 6 }}>
+      <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 24, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 6 }}>
         {title}
       </div>
       {sub && <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", marginBottom: 24, lineHeight: 1.5 }}>{sub}</div>}
@@ -1354,7 +1354,7 @@ const backBtn = {
   width: 80,
 };
 const headerTitle = {
-  fontFamily: "'Syne', sans-serif",
+  fontFamily: "'DM Sans',-apple-system,sans-serif",
   fontSize: 13, fontWeight: 900,
   letterSpacing: ".1em", color: "#fff",
   textTransform: "uppercase",
@@ -1421,7 +1421,7 @@ const btnPrimary = {
   padding: "13px 20px",
   background: G, color: "#000",
   border: "none", borderRadius: 10,
-  fontFamily: "'Syne', sans-serif",
+  fontFamily: "'DM Sans',-apple-system,sans-serif",
   fontSize: 12, fontWeight: 900,
   letterSpacing: ".1em", textTransform: "uppercase",
   cursor: "pointer",

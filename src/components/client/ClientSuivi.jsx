@@ -102,7 +102,7 @@ export default function ClientSuivi({ client, accent }) {
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.18)", marginBottom: 10 }}>
           {t("csv.my_tracking")}
         </div>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
+        <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-1.5px", color: "#fff", lineHeight: 1 }}>
           {t("csv.body")}<span style={{ color: accent }}>.</span>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function ClientSuivi({ client, accent }) {
               border: ".5px solid rgba(255,255,255,.1)",
               borderRadius: 10,
               color: "#fff", fontSize: 16,
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Sans',-apple-system,sans-serif",
               outline: "none", boxSizing: "border-box",
             }}
             onKeyDown={(e) => e.key === "Enter" && saveWeight()}
@@ -156,7 +156,7 @@ export default function ClientSuivi({ client, accent }) {
         <div style={{ padding: "18px 20px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.06)", borderRadius: 16, marginBottom: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(255,255,255,.3)" }}>{t("csv.recent_evolution")}</div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(255,255,255,.4)" }}>
+            <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 11, color: "rgba(255,255,255,.4)" }}>
               {fillTpl(measurements.length > 1 ? t("csv.weighings_count_plural") : t("csv.weighings_count"), { n: measurements.length })}
             </div>
           </div>
@@ -199,7 +199,7 @@ export default function ClientSuivi({ client, accent }) {
 function Block({ label, value, accent }) {
   return (
     <div style={{ padding: "12px 14px", background: "rgba(255,255,255,.02)", border: ".5px solid rgba(255,255,255,.05)", borderRadius: 10 }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 200, color: accent || "#fff", letterSpacing: "-.5px", lineHeight: 1 }}>
+      <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 18, fontWeight: 200, color: accent || "#fff", letterSpacing: "-.5px", lineHeight: 1 }}>
         {value}
       </div>
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginTop: 6 }}>

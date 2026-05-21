@@ -153,7 +153,7 @@ export default function CarbCycling({ clientId }) {
                         inputMode="numeric"
                         onChange={(e) => patchLocal(d.id, m.key, e.target.value)}
                         onBlur={() => saveDayType(d)}
-                        style={{ ...inp, fontFamily: "'JetBrains Mono', monospace" }}
+                        style={{ ...inp, fontFamily: "'DM Sans',-apple-system,sans-serif" }}
                       />
                     </div>
                   ))}

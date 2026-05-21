@@ -180,7 +180,7 @@ function ClientAlertCard({ client, onOpenClient }) {
           <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700, color: lvl.color, background: `${lvl.color}18`, padding: "3px 9px", borderRadius: 100, marginBottom: 4 }}>
             {lvl.label}
           </div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 17, fontWeight: 800, color: lvl.color, lineHeight: 1 }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 17, fontWeight: 800, color: lvl.color, lineHeight: 1 }}>
             {client._churnScore}
           </div>
         </div>
@@ -199,7 +199,7 @@ function ClientAlertCard({ client, onOpenClient }) {
                 <div style={{ fontSize: 10, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>
                   {t("ca.renewal_proba_label")}
                 </div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: renewalCol }}>
+                <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 14, fontWeight: 800, color: renewalCol }}>
                   {client._renewalProba}%
                 </div>
               </div>

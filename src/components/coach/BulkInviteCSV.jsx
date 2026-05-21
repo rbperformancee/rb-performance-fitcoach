@@ -338,7 +338,7 @@ export default function BulkInviteCSV({ open, onClose, coachId, onDone }) {
                         {f.label}{f.required && <span style={{ color: RED, marginLeft: 4 }}>*</span>}
                       </div>
                       <div style={{
-                        fontFamily: "'JetBrains Mono','SF Mono',monospace",
+                        fontFamily: "'DM Sans',-apple-system,sans-serif",
                         fontSize: 11,
                         color: found ? G : f.required ? RED : "rgba(255,255,255,0.3)",
                       }}>

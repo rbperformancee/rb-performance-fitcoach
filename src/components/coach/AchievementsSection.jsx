@@ -141,7 +141,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
             <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: `${ORANGE}d0`, fontWeight: 700 }}>{t("ach.streak_label")}</div>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: ORANGE, lineHeight: 1 }}>{streak.current}</div>
+            <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 30, fontWeight: 800, color: ORANGE, lineHeight: 1 }}>{streak.current}</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{streak.current > 1 ? t("ach.day_many") : t("ach.day_one")}</div>
           </div>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
@@ -158,7 +158,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
           {platformRank ? (
             <>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: "#818cf8", lineHeight: 1 }}>#{platformRank.rank}</div>
+                <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 30, fontWeight: 800, color: "#818cf8", lineHeight: 1 }}>#{platformRank.rank}</div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>/ {platformRank.total}</div>
               </div>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 4, lineHeight: 1.4 }}>{rankPhrase(platformRank.percentile)}</div>

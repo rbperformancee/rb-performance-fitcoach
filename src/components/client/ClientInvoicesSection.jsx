@@ -157,7 +157,7 @@ function ClientDocRow({ type, number, amount, date, extra, onDownload, downloadi
           <span style={{ fontSize: 9, fontWeight: 800, color: isInvoice ? accent : "rgba(255,255,255,.55)", letterSpacing: 1, textTransform: "uppercase" }}>
             {label}
           </span>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,.5)", fontFamily: "'JetBrains Mono', monospace" }}>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,.5)", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
             {number}
           </span>
         </div>

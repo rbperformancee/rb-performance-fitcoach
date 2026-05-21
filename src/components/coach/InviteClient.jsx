@@ -173,7 +173,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited, onBulk
         </div>
 
         <h2 style={{
-          fontFamily: "'Syne', sans-serif",
+          fontFamily: "'DM Sans',-apple-system,sans-serif",
           fontSize: 22, fontWeight: 900, letterSpacing: "-.5px",
           color: "#fff", margin: "0 0 8px", lineHeight: 1.2,
         }}>
@@ -251,7 +251,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited, onBulk
             padding: "14px 20px",
             background: G, color: "#000",
             border: "none", borderRadius: 12,
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "'DM Sans',-apple-system,sans-serif",
             fontSize: 13, fontWeight: 900,
             letterSpacing: ".1em", textTransform: "uppercase",
             cursor: sending ? "wait" : "pointer",

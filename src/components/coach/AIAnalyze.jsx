@@ -282,7 +282,7 @@ const demoCta = {
   background: G, color: "#000",
   textDecoration: "none",
   borderRadius: 10,
-  fontFamily: "'Syne', sans-serif",
+  fontFamily: "'DM Sans',-apple-system,sans-serif",
   fontSize: 12, fontWeight: 900,
   letterSpacing: ".1em", textTransform: "uppercase",
   boxShadow: `0 12px 30px rgba(2,209,186,.3)`,

@@ -163,16 +163,16 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
       <div style={overlay}>
         <div style={{ textAlign: "center", padding: 40, animation: "capFade .4s ease both" }}>
           <div style={{ fontSize: 56, marginBottom: 14 }}>🎉</div>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 900, letterSpacing: "-1px", color: "#fff", marginBottom: 10 }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 28, fontWeight: 900, letterSpacing: "-1px", color: "#fff", marginBottom: 10 }}>
             {t("stk.session_done")}<span style={{ color: accent }}>.</span>
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.6, marginBottom: 28 }}>
             {fillTpl(t("stk.sets_in_time"), { n: Object.keys(setsDone).length, time: fmtChrono(chrono) })}<br />
-            {t("stk.avg_rpe")} <span style={{ color: accent, fontFamily: "'JetBrains Mono', monospace" }}>{rpe}/10</span>
+            {t("stk.avg_rpe")} <span style={{ color: accent, fontFamily: "'DM Sans',-apple-system,sans-serif" }}>{rpe}/10</span>
           </div>
           <button
             onClick={onClose}
-            style={{ background: accent, color: "#000", border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 12, fontWeight: 900, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Syne', sans-serif", cursor: "pointer", boxShadow: `0 16px 40px ${accent}35` }}
+            style={{ background: accent, color: "#000", border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 12, fontWeight: 900, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'DM Sans',-apple-system,sans-serif", cursor: "pointer", boxShadow: `0 16px 40px ${accent}35` }}
           >
             {t("stk.back")}
           </button>
@@ -194,7 +194,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
       <div style={overlay}>
         <div style={{ padding: "28px 22px calc(env(safe-area-inset-bottom, 0px) + 22px)", maxWidth: 440, width: "100%", overflowY: "auto", maxHeight: "100vh" }}>
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 12, textAlign: "center" }}>{t("stk.rpe_final")}</div>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 6, textAlign: "center" }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 24, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 6, textAlign: "center" }}>
             {t("stk.how_was_session")}
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 24, textAlign: "center" }}>{t("stk.rpe_scale")}</div>
@@ -211,7 +211,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
                   border: ".5px solid rgba(255,255,255,.08)",
                   borderRadius: 10,
                   color: rpe === n ? "#000" : "rgba(255,255,255,.65)",
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: "'DM Sans',-apple-system,sans-serif",
                   fontSize: 16, fontWeight: 600,
                   cursor: "pointer", transition: "all .12s",
                 }}
@@ -238,7 +238,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                 }}
               >
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>{m.emoji}</span>
+                <span style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 13 }}>{m.emoji}</span>
                 <span style={{ letterSpacing: ".05em", textTransform: "uppercase" }}>{m.label}</span>
               </button>
             ))}
@@ -282,7 +282,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
 
           <button
             onClick={finishSession}
-            style={{ width: "100%", padding: "14px 20px", background: accent, color: "#000", border: "none", borderRadius: 12, fontFamily: "'Syne', sans-serif", fontSize: 13, fontWeight: 900, letterSpacing: ".1em", textTransform: "uppercase", cursor: "pointer", boxShadow: `0 16px 40px ${accent}35` }}
+            style={{ width: "100%", padding: "14px 20px", background: accent, color: "#000", border: "none", borderRadius: 12, fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 13, fontWeight: 900, letterSpacing: ".1em", textTransform: "uppercase", cursor: "pointer", boxShadow: `0 16px 40px ${accent}35` }}
           >
             {t("stk.finish_session")}
           </button>
@@ -297,7 +297,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
       {/* Topbar */}
       <div style={topbar}>
         <button onClick={onClose} style={closeBtn} aria-label={t("stk.quit")}>×</button>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
+        <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 22, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
           {fmtChrono(chrono)}
         </div>
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", letterSpacing: ".1em", textTransform: "uppercase" }}>
@@ -312,7 +312,7 @@ export default function SessionTracker({ client, programme, accent, onClose }) {
         <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: accent, marginBottom: 8 }}>
           {t("stk.current_exercise")}
         </div>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 6, lineHeight: 1.1 }}>
+        <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "-.5px", color: "#fff", marginBottom: 6, lineHeight: 1.1 }}>
           {t(ex.nameKey)}
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", marginBottom: 28 }}>
@@ -362,7 +362,7 @@ function SetRow({ setNum, logged, onSubmit, accent, t }) {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 12px", background: logged ? "rgba(2,209,186,.05)" : "rgba(255,255,255,.02)", border: `.5px solid ${logged ? accent + "30" : "rgba(255,255,255,.06)"}`, borderRadius: 12 }}>
-      <div style={{ width: 28, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "rgba(255,255,255,.45)", fontWeight: 600 }}>
+      <div style={{ width: 28, fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 13, color: "rgba(255,255,255,.45)", fontWeight: 600 }}>
         S{setNum}
       </div>
       <input
@@ -434,7 +434,7 @@ const cellInput = {
   border: ".5px solid rgba(255,255,255,.08)",
   borderRadius: 8,
   color: "#fff", fontSize: 14,
-  fontFamily: "'JetBrains Mono', monospace",
+  fontFamily: "'DM Sans',-apple-system,sans-serif",
   outline: "none", textAlign: "center",
   boxSizing: "border-box",
   minWidth: 0,

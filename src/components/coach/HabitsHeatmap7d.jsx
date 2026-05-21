@@ -106,7 +106,7 @@ export default function HabitsHeatmap7d({ clientId }) {
         <div style={{
           fontSize: 10, fontWeight: 800, letterSpacing: ".05em",
           color: compliancePct >= 75 ? "#34d399" : compliancePct >= 50 ? G : "#fbbf24",
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "'DM Sans',-apple-system,sans-serif",
         }}>
           {compliancePct}%
         </div>
@@ -142,7 +142,7 @@ export default function HabitsHeatmap7d({ clientId }) {
                 {h.icon && (
                   <span style={{
                     fontSize: 8, fontWeight: 800, color: c,
-                    fontFamily: "'JetBrains Mono', monospace",
+                    fontFamily: "'DM Sans',-apple-system,sans-serif",
                     padding: "1px 4px",
                     background: `${c}15`, borderRadius: 3,
                     flexShrink: 0,
@@ -153,7 +153,7 @@ export default function HabitsHeatmap7d({ clientId }) {
                   <span style={{
                     fontSize: 8, fontWeight: 800, letterSpacing: "0.3px",
                     color: streak >= 7 ? "#fbbf24" : c,
-                    fontFamily: "'JetBrains Mono', monospace",
+                    fontFamily: "'DM Sans',-apple-system,sans-serif",
                     flexShrink: 0,
                   }}>
                     {streak}j

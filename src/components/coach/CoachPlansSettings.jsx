@@ -121,7 +121,7 @@ export default function CoachPlansSettings({ coachId, plans = [], onReload }) {
             borderRadius: 16, padding: "16px 18px", position: "relative",
           }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 6 }}>{plan.name}</div>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: G, marginBottom: 4 }}>
+            <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 20, fontWeight: 700, color: G, marginBottom: 4 }}>
               {Number(plan.price_per_month).toLocaleString(intlLocale())}€<span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{t("cps.per_month_short")}</span>
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>

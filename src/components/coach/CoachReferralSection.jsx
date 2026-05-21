@@ -118,7 +118,7 @@ export default function CoachReferralSection({ coachData, isDemo = false }) {
             </div>
             <div style={{
               fontSize: 28, fontWeight: 900, color: "#fff",
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Sans',-apple-system,sans-serif",
               letterSpacing: "1px", lineHeight: 1,
               marginBottom: 14,
             }}>

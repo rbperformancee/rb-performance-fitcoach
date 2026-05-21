@@ -151,11 +151,11 @@ export default function ClientMessages({ client, coach, accent, user }) {
           {t("cm.conversation")}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${accent}15`, border: `.5px solid ${accent}30`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne', sans-serif", fontSize: 13, fontWeight: 900, color: accent, flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${accent}15`, border: `.5px solid ${accent}30`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 13, fontWeight: 900, color: accent, flexShrink: 0 }}>
             {(coach?.full_name || coachName).split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-.3px" }}>{coachName}</div>
+            <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-.3px" }}>{coachName}</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginTop: 1 }}>{t("cm.usual_reply")}</div>
           </div>
         </div>
