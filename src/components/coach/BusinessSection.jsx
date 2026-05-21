@@ -439,7 +439,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
       </div>
 
       {/* ===== COMPTES À RECEVOIR — échéances planifiées en attente ===== */}
-      {coachData?.id && <OutstandingPaymentsCard coachId={coachData.id} />}
+      {coachData?.id && <OutstandingPaymentsCard coachId={coachData.id} coachData={coachData} />}
 
       {/* ===== INSIGHTS — passerelle vers la section Analytics complète ===== */}
       {onOpenAnalytics && (

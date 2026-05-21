@@ -22,12 +22,13 @@ import {
 } from "../../lib/paymentSchedules";
 import AppIcon from "../AppIcon";
 import EditScheduleModal from "./EditScheduleModal";
+import { emitReceipt } from "../../lib/invoiceStorage";
 
 const G = "#02d1ba";
 const RED = "#ef4444";
 const ORANGE = "#f97316";
 
-export default function OutstandingPaymentsCard({ coachId }) {
+export default function OutstandingPaymentsCard({ coachId, coachData }) {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(null); // id de l'échéance en cours d'action
@@ -40,6 +41,50 @@ export default function OutstandingPaymentsCard({ coachId }) {
     if (res.ok) setSchedules(res.schedules);
     setLoading(false);
   }, [coachId]);
+
+  // ===== Helper : émet un reçu après réconciliation d'une échéance =====
+  // Best-effort : si la config légale du coach est incomplète, le reçu ne
+  // peut pas être généré (pas de SIRET, etc.) — on log un warning mais on
+  // ne bloque pas le flow (le paiement est déjà enregistré).
+  async function emitReceiptForSchedule(schedule, paymentRow) {
+    if (!coachData) return;
+    try {
+      const { data: client } = await supabase
+        .from("clients")
+        .select("id, full_name, email")
+        .eq("id", schedule.client_id)
+        .maybeSingle();
+      if (!client) return;
+
+      // Trouve la facture parente via payment_schedule_id (si elle a été émise)
+      const { data: parentInvoice } = await supabase
+        .from("invoices")
+        .select("id, invoice_number, installments_count")
+        .eq("client_id", schedule.client_id)
+        .eq("coach_id", coachData.id)
+        .order("issued_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const res = await emitReceipt({
+        coachId: coachData.id,
+        coach: coachData,
+        client,
+        amount_eur: Number(schedule.expected_amount),
+        payment_method: paymentRow?.payment_method || "virement",
+        payment_id: paymentRow?.id || null,
+        invoice_id: parentInvoice?.id || null,
+        schedule_id: schedule.id,
+        paid_at: paymentRow?.received_date || new Date().toISOString(),
+        notes: `Échéance ${schedule.sequence_num}/${schedule.total_sequence}`,
+      });
+      if (!res.ok) {
+        console.warn("[OutstandingPaymentsCard] receipt emit failed:", res.error);
+      }
+    } catch (e) {
+      console.warn("[OutstandingPaymentsCard] receipt emit exception:", e.message);
+    }
+  }
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -93,8 +138,11 @@ export default function OutstandingPaymentsCard({ coachId }) {
       );
       if (!res.ok) throw new Error(res.error);
 
+      // Émet un reçu auto (best-effort, ne bloque pas l'UX si ça échoue)
+      await emitReceiptForSchedule(schedule, paymentRow);
+
       haptic.success?.();
-      toast.success(`Échéance de ${Number(schedule.expected_amount).toFixed(2)} € marquée payée ✓`);
+      toast.success(`Échéance de ${Number(schedule.expected_amount).toFixed(2)} € marquée payée ✓ — reçu généré`);
       await refresh();
     } catch (e) {
       toast.error(e.message || "Erreur");

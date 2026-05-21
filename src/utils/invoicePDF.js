@@ -34,14 +34,12 @@ const PLAN_PRICES_LEGACY = { "3m": 120, "6m": 110, "12m": 100 };
 const PLAN_MONTHS_LEGACY = { "3m": 3, "6m": 6, "12m": 12 };
 
 /**
- * Genere et telecharge une facture PDF pour un client.
+ * Genere le PDF en interne et retourne le jsPDF doc + filename calcule.
+ * Refactorise pour separer la generation (reutilisable) du download.
  *
- * @param {Object} client — row clients
- * @param {Object} coach  — row coaches (brand_name, full_name, siret, business_name, business_address, etc.)
- * @param {string} [invoiceNumber] — ex: "INV-2026-001" (auto-genere si absent)
- * @param {Object} [opts] — { installments_count, installment_amount, due_date }
+ * @returns {Promise<{doc, filename, now}>}
  */
-export async function generateInvoicePDF(client, coach, invoiceNumber, opts = {}) {
+async function buildInvoicePdfDoc(client, coach, invoiceNumber, opts = {}) {
   const JsPDF = await loadJsPDF();
   const doc = new JsPDF({ unit: "mm", format: "a4" });
   const W = 210;
@@ -276,14 +274,26 @@ export async function generateInvoicePDF(client, coach, invoiceNumber, opts = {}
   doc.setTextColor(...lightGray);
   doc.text(brandName, W / 2, H - 4, { align: "center" });
 
-  // Telecharger via blob + anchor
   const safeName = (client.full_name || "client").replace(/[^a-zA-Z0-9]/g, "_");
-  const fileName = "Facture_" + safeName + "_" + now.toISOString().split("T")[0] + ".pdf";
+  const filename = "Facture_" + safeName + "_" + now.toISOString().split("T")[0] + ".pdf";
+  return { doc, filename, now };
+}
+
+/**
+ * Genere et TELECHARGE une facture PDF pour un client (comportement historique).
+ *
+ * @param {Object} client — row clients
+ * @param {Object} coach  — row coaches
+ * @param {string} [invoiceNumber] — ex: "INV-2026-0001" (auto-genere si absent)
+ * @param {Object} [opts] — { installments_count, installment_amount, due_date }
+ */
+export async function generateInvoicePDF(client, coach, invoiceNumber, opts = {}) {
+  const { doc, filename } = await buildInvoicePdfDoc(client, coach, invoiceNumber, opts);
   const blob = doc.output("blob");
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = fileName;
+  a.download = filename;
   a.rel = "noopener";
   document.body.appendChild(a);
   a.click();
@@ -291,4 +301,15 @@ export async function generateInvoicePDF(client, coach, invoiceNumber, opts = {}
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, 200);
+}
+
+/**
+ * Genere une facture PDF et retourne directement le Blob (pas de download).
+ * Utilise par invoiceStorage.emitInvoice() pour upload dans Supabase Storage.
+ *
+ * @returns {Promise<Blob>}
+ */
+export async function generateInvoicePDFBlob(client, coach, invoiceNumber, opts = {}) {
+  const { doc } = await buildInvoicePdfDoc(client, coach, invoiceNumber, opts);
+  return doc.output("blob");
 }

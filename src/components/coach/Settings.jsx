@@ -6,6 +6,7 @@ import PushNotifModal from "./PushNotifModal";
 import CoachPlansSettings from "./CoachPlansSettings";
 import { useCoachPlans } from "../../hooks/useCoachPlans";
 import { useT } from "../../lib/i18n";
+import InvoiceHistory from "./InvoiceHistory";
 
 const G = "#02d1ba";
 
@@ -258,6 +259,12 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
               </div>
             </div>
 
+            {/* ===== INFOS FACTURATION (obligatoires pour factures légales) ===== */}
+            <InvoicingSection coachData={coachData} isDemo={isDemo} />
+
+            {/* ===== HISTORIQUE factures + reçus émis ===== */}
+            <InvoiceHistory coachId={coachData?.id} />
+
             {/* ===== Notif client en cas d'impayé ===== */}
             <LatePaymentsClientNotifSection coachData={coachData} isDemo={isDemo} />
           </Section>
@@ -270,6 +277,226 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
         coachId={coachData?.id}
         isDemo={isDemo}
       />
+    </div>
+  );
+}
+
+// ===== INFOS FACTURATION =====
+// Champs obligatoires pour qu'une facture émise par le coach soit juridiquement
+// valide en France (art. L.441-9 C. com., art. 242 nonies A CGI).
+const LEGAL_FORMS = [
+  { id: "auto-entrepreneur", label: "Auto-entrepreneur (micro-entreprise)" },
+  { id: "EI", label: "Entreprise individuelle (EI)" },
+  { id: "EURL", label: "EURL" },
+  { id: "SASU", label: "SASU" },
+  { id: "SAS", label: "SAS" },
+  { id: "SARL", label: "SARL" },
+  { id: "autre", label: "Autre" },
+];
+
+function isCompanyForm(lf) {
+  return ["EURL", "SASU", "SAS", "SARL"].includes(lf);
+}
+
+function InvoicingSection({ coachData, isDemo }) {
+  const t = useT();
+  const [brandName, setBrandName] = useState(coachData?.brand_name || "");
+  const [businessName, setBusinessName] = useState(coachData?.business_name || "");
+  const [legalForm, setLegalForm] = useState(coachData?.legal_form || "");
+  const [businessAddress, setBusinessAddress] = useState(coachData?.business_address || "");
+  const [siret, setSiret] = useState(coachData?.siret || "");
+  const [rcsCity, setRcsCity] = useState(coachData?.rcs_city || "");
+  const [rcsNumber, setRcsNumber] = useState(coachData?.rcs_number || "");
+  const [capitalSocial, setCapitalSocial] = useState(coachData?.capital_social ? String(coachData.capital_social) : "");
+  const [tvaStatus, setTvaStatus] = useState(coachData?.tva_status || "");
+  const [vatNumber, setVatNumber] = useState(coachData?.vat_number || "");
+  const [saving, setSaving] = useState(false);
+
+  // Validation SIRET : 14 chiffres exactement
+  const siretClean = siret.replace(/\s+/g, "");
+  const siretValid = siretClean.length === 0 || /^\d{14}$/.test(siretClean);
+
+  // Champs requis pour facture légale
+  const required = {
+    brandName: brandName.trim().length > 0,
+    businessName: businessName.trim().length > 0,
+    legalForm: legalForm.length > 0,
+    businessAddress: businessAddress.trim().length > 0,
+    siret: siretClean.length === 14,
+  };
+  const allRequiredOk = Object.values(required).every(Boolean);
+
+  async function save() {
+    if (isDemo) { toast.info(t("set.toast_demo_unavailable")); return; }
+    if (!coachData?.id) return;
+    if (!siretValid) { toast.error("SIRET invalide (14 chiffres requis)"); return; }
+    setSaving(true);
+    try {
+      const updates = {
+        brand_name: brandName.trim() || null,
+        business_name: businessName.trim() || null,
+        legal_form: legalForm || null,
+        business_address: businessAddress.trim() || null,
+        siret: siretClean || null,
+        rcs_city: isCompanyForm(legalForm) ? (rcsCity.trim() || null) : null,
+        rcs_number: isCompanyForm(legalForm) ? (rcsNumber.trim() || null) : null,
+        capital_social: isCompanyForm(legalForm) && capitalSocial
+          ? Number(capitalSocial)
+          : null,
+        tva_status: tvaStatus || null,
+        vat_number: tvaStatus === "applicable" ? (vatNumber.trim() || null) : null,
+      };
+      const { error } = await supabase.from("coaches").update(updates).eq("id", coachData.id);
+      if (error) throw error;
+      toast.success("Infos facturation enregistrées ✓");
+    } catch (e) {
+      toast.error(e.message || "Erreur");
+    }
+    setSaving(false);
+  }
+
+  // Field component avec marker visuel obligatoire
+  const ReqField = ({ label, required: req, valid, children, hint }) => (
+    <label style={{ display: "block", marginBottom: 14 }}>
+      <div style={{ ...sectionSubtitle, display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+        <span>{label}</span>
+        {req && (
+          <span style={{
+            fontSize: 8, padding: "1px 6px", borderRadius: 100,
+            background: valid ? `${G}22` : "rgba(239,68,68,.15)",
+            color: valid ? G : "#ef4444",
+            letterSpacing: 0.3,
+          }}>
+            {valid ? "✓ OK" : "REQUIS"}
+          </span>
+        )}
+      </div>
+      {children}
+      {hint && (
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,.35)", marginTop: 4, lineHeight: 1.5 }}>
+          {hint}
+        </div>
+      )}
+    </label>
+  );
+
+  return (
+    <div style={{ marginTop: 22, padding: "22px 22px 24px", background: "rgba(255,255,255,.025)", border: ".5px solid rgba(255,255,255,.07)", borderRadius: 16 }}>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: allRequiredOk ? G : "#f97316", marginBottom: 4 }}>
+          Infos facturation {allRequiredOk ? "· COMPLÈTE" : "· À COMPLÉTER"}
+        </div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.5 }}>
+          Ces infos apparaissent sur chaque facture que tu émets à un client.
+          Obligatoires légalement en France (art. L.441-9 C. com.).
+        </div>
+      </div>
+
+      <ReqField label="Nom commercial" required valid={required.brandName} hint="Ce qui apparaît en gros en haut de la facture. Ex : ton nom, ton brand…">
+        <input className="set-input" value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="Rayan Bonte Coaching" style={input} />
+      </ReqField>
+
+      <ReqField label="Raison sociale" required valid={required.businessName} hint="Nom officiel de ton entreprise (ex: nom de famille en majuscules pour auto-entrepreneur)">
+        <input className="set-input" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="BONTE Rayan" style={input} />
+      </ReqField>
+
+      <ReqField label="Forme juridique" required valid={required.legalForm}>
+        <select value={legalForm} onChange={(e) => setLegalForm(e.target.value)} style={input}>
+          <option value="">— Choisir —</option>
+          {LEGAL_FORMS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+        </select>
+      </ReqField>
+
+      <ReqField label="Adresse complète" required valid={required.businessAddress} hint="Numéro, rue, code postal, ville">
+        <textarea
+          className="set-input"
+          value={businessAddress}
+          onChange={(e) => setBusinessAddress(e.target.value.slice(0, 200))}
+          placeholder="10 rue Cardinale, 75001 Paris"
+          rows={2}
+          style={{ ...input, height: "auto", padding: "10px 12px", lineHeight: 1.5, resize: "vertical", minHeight: 64 }}
+        />
+      </ReqField>
+
+      <ReqField label="SIRET" required valid={required.siret} hint="14 chiffres exactement. Tu peux le retrouver sur l'extrait Kbis ou ton attestation auto-entrepreneur.">
+        <input
+          className="set-input"
+          value={siret}
+          onChange={(e) => setSiret(e.target.value.replace(/[^\d\s]/g, "").slice(0, 17))}
+          placeholder="99063780300018"
+          style={{ ...input, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1 }}
+          inputMode="numeric"
+        />
+        {siret && !siretValid && (
+          <div style={{ fontSize: 10, color: "#ef4444", marginTop: 4 }}>
+            ⚠️ Le SIRET doit faire exactement 14 chiffres.
+          </div>
+        )}
+      </ReqField>
+
+      {/* Champs conditionnels société (RCS + capital) */}
+      {isCompanyForm(legalForm) && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10, marginBottom: 14 }}>
+            <ReqField label="RCS ville">
+              <input className="set-input" value={rcsCity} onChange={(e) => setRcsCity(e.target.value)} placeholder="Paris" style={input} />
+            </ReqField>
+            <ReqField label="RCS numéro">
+              <input className="set-input" value={rcsNumber} onChange={(e) => setRcsNumber(e.target.value)} placeholder="990637803" style={input} />
+            </ReqField>
+          </div>
+          <ReqField label="Capital social (EUR)">
+            <input
+              type="number" min="0" step="100"
+              className="set-input"
+              value={capitalSocial}
+              onChange={(e) => setCapitalSocial(e.target.value)}
+              placeholder="1000"
+              style={input}
+            />
+          </ReqField>
+        </>
+      )}
+
+      {/* TVA */}
+      <ReqField label="Statut TVA">
+        <select value={tvaStatus} onChange={(e) => setTvaStatus(e.target.value)} style={input}>
+          <option value="">— Choisir —</option>
+          <option value="franchise">Franchise en base (TVA non applicable - art. 293 B CGI)</option>
+          <option value="applicable">Assujetti TVA</option>
+        </select>
+      </ReqField>
+
+      {tvaStatus === "applicable" && (
+        <ReqField label="N° TVA intracommunautaire">
+          <input
+            className="set-input"
+            value={vatNumber}
+            onChange={(e) => setVatNumber(e.target.value.toUpperCase())}
+            placeholder="FR12345678901"
+            style={{ ...input, fontFamily: "'JetBrains Mono', monospace" }}
+          />
+        </ReqField>
+      )}
+
+      <button
+        onClick={save}
+        disabled={saving || !siretValid}
+        style={{ ...btnPrimary, marginTop: 8, opacity: saving ? 0.5 : 1 }}
+      >
+        {saving ? "Enregistrement…" : "Enregistrer les infos facturation"}
+      </button>
+
+      {!allRequiredOk && (
+        <div style={{
+          marginTop: 14, padding: "10px 12px",
+          background: "rgba(249,115,22,.08)", border: "1px solid rgba(249,115,22,.25)",
+          borderRadius: 10, fontSize: 11, color: "#fb923c", lineHeight: 1.5,
+        }}>
+          ⚠️ Tant que ces 5 champs ne sont pas remplis, tu ne peux pas émettre de facture
+          (les factures seraient juridiquement invalides).
+        </div>
+      )}
     </div>
   );
 }

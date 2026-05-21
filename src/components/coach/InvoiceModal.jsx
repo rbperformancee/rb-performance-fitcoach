@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
-import { generateInvoicePDF } from "../../utils/invoicePDF";
+import { generateInvoicePDF, generateInvoicePDFBlob } from "../../utils/invoicePDF";
+import { validateInvoiceConfig, uploadInvoicePdf } from "../../lib/invoiceStorage";
 import { useT, getLocale } from "../../lib/i18n";
 
 const G = "#02d1ba";
@@ -37,14 +38,22 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
   // → crée auto un client_payment lié à cette invoice (invoice_id FK)
   const [markAsPaid, setMarkAsPaid] = useState(false);
 
-  // Auto-generate invoice number
+  // Validation config légale du coach (SIRET, adresse, etc.) — bloque l'émission
+  // si manquant pour éviter de générer une facture juridiquement invalide.
+  const invoiceConfig = validateInvoiceConfig(coachData);
+
+  // Auto-generate invoice number (RPC atomique, signature mise à jour : p_coach_id)
   useEffect(() => {
     if (!coachData?.id) return;
-    supabase.rpc("next_invoice_number", { cid: coachData.id })
-      .then(({ data }) => { if (data) setInvoiceNumber(data); })
-      .catch(() => {
-        const d = new Date();
-        setInvoiceNumber("FAC-" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0"));
+    supabase.rpc("next_invoice_number", { p_coach_id: coachData.id })
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn("[InvoiceModal] next_invoice_number failed:", error.message);
+          const d = new Date();
+          setInvoiceNumber("INV-" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0"));
+        } else if (data) {
+          setInvoiceNumber(data);
+        }
       });
   }, [coachData?.id]);
 
@@ -75,6 +84,13 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
   const handleGenerate = async () => {
     if (!clientName.trim() || amountNum <= 0) {
       toast.error(t("inv.toast_missing_fields"));
+      return;
+    }
+    // Garde : interdit l'émission si infos légales manquantes
+    if (!invoiceConfig.valid) {
+      toast.error(
+        `Impossible d'émettre : il manque ${invoiceConfig.missing.map((m) => m.label).join(", ")}. Va dans Paramètres → Paiements → Infos facturation.`
+      );
       return;
     }
     setSaving(true);
@@ -147,15 +163,27 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
     };
 
     try {
-      await generateInvoicePDF(
-        fakeClient,
-        { ...coachData, tva_status: tvaApplicable ? "applicable" : "non_applicable" },
-        invoiceNumber,
-        {
-          installments_count: installments,
-          installment_amount: installments > 1 ? Math.round((totalTTC / installments) * 100) / 100 : null,
+      const pdfOpts = {
+        installments_count: installments,
+        installment_amount: installments > 1 ? Math.round((totalTTC / installments) * 100) / 100 : null,
+      };
+      const coachForPdf = { ...coachData, tva_status: tvaApplicable ? "applicable" : "non_applicable" };
+
+      // 1. Download immédiat pour le coach (UX inchangée)
+      await generateInvoicePDF(fakeClient, coachForPdf, invoiceNumber, pdfOpts);
+
+      // 2. Stockage automatique en bucket Supabase (audit trail + accès historique)
+      //    Best-effort : si l'upload échoue, le coach a quand même son PDF téléchargé.
+      if (invoiceRow?.id) {
+        try {
+          const blob = await generateInvoicePDFBlob(fakeClient, coachForPdf, invoiceNumber, pdfOpts);
+          const path = await uploadInvoicePdf(coachData.id, `${invoiceNumber}.pdf`, blob);
+          await supabase.from("invoices").update({ pdf_url: path }).eq("id", invoiceRow.id);
+        } catch (storageErr) {
+          console.warn("[InvoiceModal] storage upload failed:", storageErr.message);
         }
-      );
+      }
+
       toast.success(fillTpl(t("inv.toast_generated"), { num: invoiceNumber }));
       onClose();
     } catch (e) {
@@ -181,6 +209,28 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 24 }}>
           {new Date().toLocaleDateString(intlLocale(), { day: "numeric", month: "long", year: "numeric" })}
         </div>
+
+        {/* Garde : si infos légales manquantes, on bloque visuellement l'émission */}
+        {!invoiceConfig.valid && (
+          <div style={{
+            padding: "12px 14px", marginBottom: 20,
+            background: "rgba(249,115,22,.10)", border: "1px solid rgba(249,115,22,.35)",
+            borderRadius: 12,
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "#fb923c", textTransform: "uppercase", marginBottom: 6 }}>
+              Émission bloquée
+            </div>
+            <div style={{ fontSize: 12, color: "#fff", lineHeight: 1.5, marginBottom: 8 }}>
+              Il manque{" "}
+              <strong>{invoiceConfig.missing.map((m) => m.label).join(", ")}</strong>{" "}
+              dans tes infos facturation.
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.6)", lineHeight: 1.55 }}>
+              Une facture sans ces infos est juridiquement invalide (art. L.441-9 C. com.).
+              Complète ta config dans <strong>Paramètres → Paiements → Infos facturation</strong>.
+            </div>
+          </div>
+        )}
 
         {/* Client */}
         <Label text={t("inv.label_client")} />
@@ -323,18 +373,27 @@ export default function InvoiceModal({ coachData, clients = [], onClose, presele
           </div>
         )}
 
-        {/* CTA */}
-        <button onClick={handleGenerate} disabled={saving || !clientName.trim() || amountNum <= 0} style={{
-          width: "100%", marginTop: 20, padding: 16,
-          background: (!clientName.trim() || amountNum <= 0 || saving) ? "rgba(255,255,255,0.04)" : G,
-          color: (!clientName.trim() || amountNum <= 0 || saving) ? "rgba(255,255,255,0.25)" : "#000",
-          border: "none", borderRadius: 14, fontSize: 14, fontWeight: 800,
-          cursor: (!clientName.trim() || amountNum <= 0 || saving) ? "not-allowed" : "pointer",
-          fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
-          boxShadow: (!clientName.trim() || amountNum <= 0 || saving) ? "none" : `0 8px 24px rgba(2,209,186,0.3)`,
-        }}>
-          {saving ? t("inv.btn_generating") : t("inv.btn_generate")}
-        </button>
+        {/* CTA — disabled aussi si infos facturation incomplètes */}
+        {(() => {
+          const blocked = saving || !clientName.trim() || amountNum <= 0 || !invoiceConfig.valid;
+          return (
+            <button onClick={handleGenerate} disabled={blocked} style={{
+              width: "100%", marginTop: 20, padding: 16,
+              background: blocked ? "rgba(255,255,255,0.04)" : G,
+              color: blocked ? "rgba(255,255,255,0.25)" : "#000",
+              border: "none", borderRadius: 14, fontSize: 14, fontWeight: 800,
+              cursor: blocked ? "not-allowed" : "pointer",
+              fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.5px",
+              boxShadow: blocked ? "none" : `0 8px 24px rgba(2,209,186,0.3)`,
+            }}>
+              {saving
+                ? t("inv.btn_generating")
+                : !invoiceConfig.valid
+                  ? "Config facturation requise"
+                  : t("inv.btn_generate")}
+            </button>
+          );
+        })()}
       </div>
     </div>
   );

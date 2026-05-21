@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
+import ClientInvoicesSection from "./ClientInvoicesSection";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -171,6 +172,9 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
           </div>
         )}
       </div>
+
+      {/* ===== MES FACTURES & REÇUS — invisible si vide ===== */}
+      <ClientInvoicesSection client={client} accent={accent} />
     </div>
   );
 }
