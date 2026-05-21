@@ -101,9 +101,10 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: "Invalid or expired session" });
     }
 
-    // 3. Détecter le rôle (coach OU client) — un user peut être l'un OU l'autre
+    // 3. Détecter le rôle (coach OU client) — un user peut être l'un OU l'autre.
+    // IMPORTANT : coaches.id ≠ auth.users.id → match aussi via email.
     const [{ data: coach }, { data: client }] = await Promise.all([
-      supabase.from("coaches").select("*").eq("id", user.id).maybeSingle(),
+      supabase.from("coaches").select("*").or(`id.eq.${user.id},email.eq.${user.email}`).maybeSingle(),
       supabase.from("clients").select("*").or(`id.eq.${user.id},email.eq.${user.email}`).maybeSingle(),
     ]);
 

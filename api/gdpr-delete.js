@@ -72,9 +72,10 @@ module.exports = async (req, res) => {
       });
     }
 
-    // 3. Détection rôle (coach ou client)
+    // 3. Détection rôle (coach ou client).
+    // IMPORTANT : coaches.id ≠ auth.users.id → match aussi via email.
     const [{ data: coach }, { data: client }] = await Promise.all([
-      supabase.from("coaches").select("id, email, full_name").eq("id", user.id).maybeSingle(),
+      supabase.from("coaches").select("id, email, full_name").or(`id.eq.${user.id},email.eq.${user.email}`).maybeSingle(),
       supabase.from("clients").select("id, email, full_name").or(`id.eq.${user.id},email.eq.${user.email}`).maybeSingle(),
     ]);
 

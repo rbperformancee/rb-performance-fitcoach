@@ -48,11 +48,12 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Invalid or expired session' });
     }
 
-    // 3. Fetch stripe_customer_id from coaches table
+    // 3. Fetch stripe_customer_id from coaches table.
+    // IMPORTANT : coaches.id ≠ auth.users.id dans ce projet → match aussi via email.
     const { data: coach, error: coachError } = await supabase
       .from('coaches')
       .select('stripe_customer_id')
-      .eq('id', user.id)
+      .or(`id.eq.${user.id},email.eq.${user.email}`)
       .maybeSingle();
 
     if (coachError) {

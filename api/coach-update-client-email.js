@@ -51,9 +51,12 @@ module.exports = async (req, res) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return res.status(401).json({ error: "Invalid or expired session" });
 
-    // Vérifie que c'est un coach
+    // Vérifie que c'est un coach.
+    // IMPORTANT : coaches.id ≠ auth.users.id → match aussi via email.
     const { data: coach } = await supabase
-      .from("coaches").select("id, email").eq("id", user.id).maybeSingle();
+      .from("coaches").select("id, email")
+      .or(`id.eq.${user.id},email.eq.${user.email}`)
+      .maybeSingle();
     if (!coach) return res.status(403).json({ error: "Reserved to coaches" });
 
     // 2. Body
