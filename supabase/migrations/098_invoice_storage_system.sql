@@ -31,6 +31,13 @@ ALTER TABLE public.invoices
 ALTER TABLE public.invoices
   ADD COLUMN IF NOT EXISTS issued_at timestamptz NOT NULL DEFAULT now();
 
+-- La contrainte status historique acceptait juste {draft, sent, paid}.
+-- On ajoute 'issued' (facture émise = générée + stockée, distincte de
+-- 'sent' qui implique un envoi explicite au client).
+ALTER TABLE public.invoices DROP CONSTRAINT IF EXISTS invoices_status_check;
+ALTER TABLE public.invoices ADD CONSTRAINT invoices_status_check
+  CHECK (status = ANY (ARRAY['draft'::text, 'issued'::text, 'sent'::text, 'paid'::text]));
+
 COMMENT ON COLUMN public.invoices.pdf_url IS
   'URL Supabase Storage du PDF de la facture (bucket coach-invoices, chemin coach_id/invoice_id.pdf).';
 
