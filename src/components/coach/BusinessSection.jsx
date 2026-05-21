@@ -76,7 +76,12 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
           .select("id,title,body,data,cta_label,cta_action")
           .eq("module", "daily_playbook")
           .eq("status", "active")
+          // Exclure les cartes zombies (status=active mais déjà expirées) :
+          // expireOldCards() ne tourne qu'au prochain cron, l'UI doit donc
+          // filtrer elle-même pour éviter d'afficher une carte du jour passé.
+          .gt("expires_at", new Date().toISOString())
           .order("priority", { ascending: false })
+          .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
         if (!cancelled && data) setSentinelCard(data);

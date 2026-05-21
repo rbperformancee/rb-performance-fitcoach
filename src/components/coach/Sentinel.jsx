@@ -42,6 +42,10 @@ export default function Sentinel({ coachData, onClose, onNavigate }) {
         .from("sentinel_cards")
         .select("*")
         .eq("status", "active")
+        // Exclure les cartes zombies (status=active mais déjà expirées).
+        // expireOldCards() côté cron ne tourne pas en continu : l'UI doit
+        // filtrer elle-même pour éviter le doublon "carte du jour passé".
+        .gt("expires_at", new Date().toISOString())
         .order("priority", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(20);
