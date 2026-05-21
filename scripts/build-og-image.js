@@ -1,12 +1,16 @@
 /**
  * OG Image RB Perform — 1200×630 standard Open Graph.
  *
- * Aligné brand teal #02d1ba (vs l'ancien orange).
- * Positioning B2B SaaS pour coachs (pas B2C coaching) → évite les mots
- * "coaching premium" / "individualisé" qui posent problème NAF avant
- * juin 2026 (CQP ALS).
+ * V2 Hormozi-style : photo Rayan à gauche + promesse forte à droite.
  *
- * Affiché quand on partage rbperform.app sur iMessage, WhatsApp, LinkedIn,
+ * Pourquoi cette compo :
+ *   - Tu vends à des coachs qui te confient leur revenu mensuel → ils doivent
+ *     voir un humain, pas un logo abstrait
+ *   - Différenciation immédiate vs Trainerize/Trueform (SaaS anonymes)
+ *   - Conventions : Hormozi (acquisition.com), Iman Gadzhi, Andrew Tate
+ *     mettent leur visage parce que ça convertit chez l'audience coach/business
+ *
+ * Affichée quand on partage rbperform.app sur iMessage, WhatsApp, LinkedIn,
  * Twitter, Facebook, Slack, etc.
  */
 
@@ -15,8 +19,14 @@ const path = require('path');
 const fs = require('fs');
 
 const OUT_PATH = path.resolve(__dirname, '../public/og-image.png');
+const PHOTO_PATH = path.resolve(__dirname, '../public/images/rayan-hero.png');
 const W = 1200, H = 630;
 const G = '#02d1ba';
+
+// On encode la photo en base64 pour pouvoir l'embed dans le HTML
+// (sinon Playwright a besoin d'un serveur file://)
+const photoB64 = fs.readFileSync(PHOTO_PATH).toString('base64');
+const photoSrc = `data:image/png;base64,${photoB64}`;
 
 const HTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Sans:wght@500;600;700;800;900&display=swap');
@@ -26,122 +36,147 @@ const HTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
     font-family: 'DM Sans', 'Inter', -apple-system, sans-serif;
     background: #050505; color: #fff; position: relative;
   }
-  /* Filet teal en haut */
-  .top-bar {
-    position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: ${G};
-  }
-  /* Filet teal en bas */
-  .bottom-bar {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
-    background: ${G};
-  }
-  /* Ambient glow teal en haut-droit (signature visuelle) */
-  .ambient {
-    position: absolute; top: -200px; right: -200px;
-    width: 700px; height: 700px;
-    background: radial-gradient(circle, rgba(2,209,186,0.12), transparent 70%);
+  /* Filet teal en haut + bas (signature visuelle) */
+  .top-bar    { position: absolute; top: 0;    left: 0; right: 0; height: 4px; background: ${G}; z-index: 10; }
+  .bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: ${G}; z-index: 10; }
+
+  /* Ambient glow teal (signature) */
+  .ambient-1 {
+    position: absolute; top: -200px; right: 30%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(2,209,186,0.18), transparent 70%);
     pointer-events: none;
   }
   .ambient-2 {
-    position: absolute; bottom: -150px; left: -150px;
+    position: absolute; bottom: -150px; right: -100px;
     width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(2,209,186,0.06), transparent 70%);
+    background: radial-gradient(circle, rgba(2,209,186,0.08), transparent 70%);
     pointer-events: none;
   }
 
-  /* Container */
-  .wrap {
-    position: absolute; inset: 0;
-    padding: 70px 80px;
-    display: flex; flex-direction: column;
-    justify-content: space-between;
+  /* PHOTO GAUCHE — bleed full height pour impact maximal */
+  .photo-wrap {
+    position: absolute; top: 0; left: 0;
+    width: 540px; height: ${H}px;
+    overflow: hidden;
+  }
+  .photo {
+    position: absolute; top: 0; left: -60px;
+    width: 750px; height: ${H}px;
+    object-fit: cover; object-position: center top;
+  }
+  /* Dégradé subtil sur la droite de la photo pour transition douce vers le texte */
+  .photo-fade {
+    position: absolute; top: 0; right: 0; width: 200px; height: 100%;
+    background: linear-gradient(to right, transparent, #050505);
+    z-index: 2;
   }
 
-  /* Eyebrow brand */
+  /* COLONNE TEXTE — droite */
+  .text-col {
+    position: absolute; top: 0; right: 0; bottom: 0;
+    width: 660px; padding: 60px 60px 60px 30px;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    z-index: 3;
+  }
+
+  /* Eyebrow */
   .eyebrow {
-    display: inline-flex; align-items: center; gap: 14px;
-    font-size: 17px; font-weight: 800;
-    letter-spacing: 0.32em; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 12px;
+    font-size: 14px; font-weight: 800;
+    letter-spacing: 0.3em; text-transform: uppercase;
     color: ${G};
+    margin-bottom: 24px;
   }
   .eyebrow .dot {
-    width: 12px; height: 12px; border-radius: 50%;
+    width: 10px; height: 10px; border-radius: 50%;
     background: ${G};
-    box-shadow: 0 0 14px ${G};
+    box-shadow: 0 0 10px ${G};
   }
 
-  /* Main title */
+  /* Titre — promesse forte (Hormozi style) */
   .hero {
-    font-size: 86px; font-weight: 900;
-    letter-spacing: -0.04em; line-height: 0.98;
+    font-size: 64px; font-weight: 900;
+    letter-spacing: -0.035em; line-height: 0.98;
     color: #fff;
-    max-width: 900px;
+    margin-bottom: 22px;
   }
-  .hero .dot {
-    color: ${G};
-  }
+  .hero .dot { color: ${G}; }
 
-  /* Subtitle */
+  /* Sub — explication courte */
   .sub {
-    font-size: 26px; font-weight: 500;
-    color: rgba(255,255,255,0.55);
-    margin-top: 26px;
+    font-size: 21px; font-weight: 500;
+    color: rgba(255,255,255,0.62);
+    line-height: 1.4;
     letter-spacing: -0.01em;
-    line-height: 1.35;
-    max-width: 840px;
+    margin-bottom: 30px;
   }
+  .sub strong { color: #fff; font-weight: 700; }
 
-  /* Footer 3 piliers */
-  .pillars {
-    display: flex; gap: 36px; align-items: center;
-    font-size: 14px; font-weight: 700;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
+  /* Scarcity row */
+  .scarcity {
+    display: inline-flex; align-items: center; gap: 14px;
+    padding: 12px 18px;
+    background: rgba(2,209,186,0.08);
+    border: 1px solid rgba(2,209,186,0.35);
+    border-radius: 100px;
+    width: fit-content;
+    margin-bottom: 24px;
   }
-  .pillars .sep {
-    width: 4px; height: 4px; border-radius: 50%;
+  .scarcity-dot {
+    width: 8px; height: 8px; border-radius: 50%;
     background: ${G};
-    opacity: 0.7;
+    box-shadow: 0 0 10px ${G};
   }
+  .scarcity-text {
+    font-size: 14px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: #fff;
+  }
+  .scarcity-text .accent { color: ${G}; }
+
+  /* Footer domain */
   .domain {
     font-size: 18px; font-weight: 700;
     color: ${G};
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
   }
 </style></head>
 <body>
-  <div class="ambient"></div>
+  <div class="ambient-1"></div>
   <div class="ambient-2"></div>
   <div class="top-bar"></div>
   <div class="bottom-bar"></div>
 
-  <div class="wrap">
+  <div class="photo-wrap">
+    <img src="${photoSrc}" alt="" class="photo" />
+    <div class="photo-fade"></div>
+  </div>
+
+  <div class="text-col">
     <div class="eyebrow">
       <span class="dot"></span>
       <span>RB · Perform</span>
     </div>
 
-    <div>
-      <div class="hero">
-        L'app que les coachs<br/>attendaient<span class="dot">.</span>
-      </div>
-      <div class="sub">
-        Pilote ton business sportif : clients, programmes, paiements, alertes
-        churn. Tu coaches, RB Perform pilote.
-      </div>
+    <div class="hero">
+      L'app que<br/>
+      les coachs<br/>
+      attendaient<span class="dot">.</span>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-      <div class="pillars">
-        <span>MRR temps réel</span>
-        <span class="sep"></span>
-        <span>Alertes churn</span>
-        <span class="sep"></span>
-        <span>0% commission</span>
-      </div>
-      <div class="domain">rbperform.app</div>
+    <div class="sub">
+      Tu coaches. <strong>RB Perform pilote ton business.</strong><br/>
+      MRR, churn, paiements, programmes. 0% commission.
     </div>
+
+    <div class="scarcity">
+      <span class="scarcity-dot"></span>
+      <span class="scarcity-text"><span class="accent">199€/mois</span> bloqué à vie · 30 places</span>
+    </div>
+
+    <div class="domain">rbperform.app</div>
   </div>
 </body></html>`;
 
@@ -149,11 +184,10 @@ const HTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2 });
   await page.setContent(HTML, { waitUntil: 'networkidle' });
-  // Petit délai supplémentaire pour assurer le rendu des fonts Google
   await page.waitForTimeout(800);
   await page.screenshot({ path: OUT_PATH, type: 'png', omitBackground: false });
   await browser.close();
-  console.log('✅ OG image générée :', OUT_PATH);
+  console.log('✅ OG image V2 (Hormozi-style avec photo) :', OUT_PATH);
   const stat = fs.statSync(OUT_PATH);
   console.log(`   Taille : ${(stat.size / 1024).toFixed(1)} KB`);
 })();
