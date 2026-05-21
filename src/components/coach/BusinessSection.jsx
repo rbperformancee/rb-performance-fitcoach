@@ -272,7 +272,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(129,140,248,0.7)" }}>{t("biz.sentinel_playbook_label")}</span>
           </div>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(16px, 4vw, 20px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8 }}>{sentinelCard.title}</div>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: "clamp(16px, 4vw, 20px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8 }}>{sentinelCard.title}</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{sentinelCard.body}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "#818cf8" }}>
             {t("biz.sentinel_see_actions")}
@@ -298,9 +298,9 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
           </div>
           {nextMove ? (
             <>
-              <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(18px, 5vw, 22px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 10 }}>{nextMove.title}</div>
+              <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontSize: "clamp(18px, 5vw, 22px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 10 }}>{nextMove.title}</div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 18 }}>
-                {nextMove.description?.split(/(\d+%?€?)/g).map((part, i) => /\d/.test(part) ? <span key={i} style={{ fontFamily: "'JetBrains Mono',monospace", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{part}</span> : part)}
+                {nextMove.description?.split(/(\d+%?€?)/g).map((part, i) => /\d/.test(part) ? <span key={i} style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{part}</span> : part)}
               </div>
               <div className="nm-btns" style={{ display: "flex", gap: 10 }}>
                 <button style={{ flex: 1, padding: "12px 16px", background: "transparent", border: `1px solid ${G}40`, borderRadius: 12, color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{nextMove.action_secondary_label}</button>
@@ -318,7 +318,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
         {/* MRR card */}
         <div style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 18, padding: "20px 22px", position: "relative", overflow: "hidden" }}>
           <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", fontWeight: 700, marginBottom: 8 }}>{t("biz.mrr_month")}</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 38, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>
+          <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 38, fontWeight: 800, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>
             {mrr.toLocaleString(intlLocale())}<span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)", marginLeft: 4 }}>€</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
@@ -347,7 +347,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
                 <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.45)", fontWeight: 600 }}>
                   Encaissé ce mois
                 </div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 700, color: "#fff" }}>
+                <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 18, fontWeight: 700, color: "#fff" }}>
                   {cashThisMonth.toLocaleString(intlLocale())} €
                 </div>
               </div>
@@ -422,7 +422,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginBottom: 14 }}>
               {forecast.points.filter(p => p.day > 0).map((p, i) => (
                 <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 12px", textAlign: "center" }}>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: G }}>{p.p50.toLocaleString(intlLocale())} €</div>
+                  <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 16, fontWeight: 700, color: G }}>{p.p50.toLocaleString(intlLocale())} €</div>
                   <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 2 }}>{fillTpl(t("biz.forecast_d_prefix"), { n: p.day })} ({p.p10.toLocaleString(intlLocale())} - {p.p90.toLocaleString(intlLocale())})</div>
                 </div>
               ))}
@@ -500,7 +500,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
               value={newGoal}
               onChange={(e) => setNewGoal(e.target.value)}
               placeholder={t("biz.goal_input_placeholder")}
-              style={{ flex: 1, padding: "12px 16px", background: "rgba(255,255,255,0.05)", border: `1px solid ${ORANGE}40`, borderRadius: 12, color: "#fff", fontSize: 16, outline: "none", fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}
+              style={{ flex: 1, padding: "12px 16px", background: "rgba(255,255,255,0.05)", border: `1px solid ${ORANGE}40`, borderRadius: 12, color: "#fff", fontSize: 16, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontWeight: 700 }}
             />
             <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>{t("biz.goal_per_month")}</span>
             <button
@@ -520,7 +520,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
         ) : goal > 0 ? (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: "#fff" }}>
+              <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 24, fontWeight: 800, color: "#fff" }}>
                 {mrr.toLocaleString(intlLocale())} <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>/ {goal.toLocaleString(intlLocale())} €</span>
               </div>
               <div style={{ fontSize: 13, color: goalPct >= 100 ? G : ORANGE, fontWeight: 800 }}>{goalPct}%</div>
@@ -633,7 +633,7 @@ function ScoreRing({ score, color, size = 72 }) {
         />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 0 }}>
-        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: size * 0.32, fontWeight: 800, color }}>{displayed}</div>
+        <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: size * 0.32, fontWeight: 800, color }}>{displayed}</div>
         <div style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", letterSpacing: "1px", fontWeight: 700, marginTop: -2 }}>/100</div>
       </div>
     </div>
@@ -648,7 +648,7 @@ function StatCard({ label, value, sub, icon, color }) {
         <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>{label}</div>
         <AppIcon name={icon} size={12} color={color} />
       </div>
-      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 20, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: 10, color: color, marginTop: 4, fontWeight: 600 }}>{sub}</div>
     </div>
   );
