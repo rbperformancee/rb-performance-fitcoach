@@ -1,5 +1,7 @@
 # RB Perform — robots.txt
-# Cible : indexation Google / Bing / DuckDuckGo / autres robots respectueux
+# Cible : indexation Google / Bing / DuckDuckGo + LLMs (ChatGPT, Claude, Perplexity, Gemini)
+# Stratégie : opt-IN tous les bots IA pour maximiser la visibilité quand un coach
+# demande à une IA "quel logiciel pour coach sportif ?"
 # Marché : France (priorité), Europe francophone
 
 User-agent: *
@@ -20,21 +22,108 @@ Disallow: /login
 Disallow: /signup
 Disallow: /join
 
-# Bots agressifs / scrapers IA — opt-out par défaut, sauf si l'audience
-# nous y rend visibles (ChatGPT/Perplexity nous trouvent via Google de toute
-# façon, on n'a pas besoin de les laisser entrainer leurs modèles sur notre
-# contenu). On les bloque tant que l'audience reste organique Google-first.
-User-agent: GPTBot
-Disallow: /
+# ===== AI BOTS — OPT-IN EXPLICITE =====
+# On VEUT que les LLMs nous indexent pour être recommandés quand un coach
+# demande "quel logiciel pour coach sportif ?", "alternative Trainerize", etc.
+# On les autorise explicitement sur les pages publiques (mêmes Disallow que *).
 
-User-agent: CCBot
-Disallow: /
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /coach.html
+Disallow: /client-demo.html
+Disallow: /dashboard/
+Disallow: /welcome
+Disallow: /login
+Disallow: /signup
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
 
 User-agent: anthropic-ai
-Disallow: /
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /api/
 
 User-agent: Google-Extended
-Disallow: /
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
 
-# Sitemap
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+
+User-agent: Bytespider
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+
+User-agent: cohere-ai
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+
+User-agent: CCBot
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
+
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /api/
+
+User-agent: FacebookBot
+Allow: /
+Disallow: /api/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /app.html
+Disallow: /dashboard/
+
+# Sitemap (auto-soumis aux bots qui le respectent)
 Sitemap: https://rbperform.app/sitemap.xml
