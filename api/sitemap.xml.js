@@ -25,6 +25,7 @@ const STATIC_PAGES = [
   { loc: '/blog',                        changefreq: 'weekly',  priority: 0.7 },
   { loc: '/blog/combien-gagne-coach-sportif-france', changefreq: 'monthly', priority: 0.75 },
   { loc: '/blog/comment-fixer-tarifs-coach-sportif',  changefreq: 'monthly', priority: 0.8 },
+  { loc: '/blog/statut-juridique-coach-sportif',      changefreq: 'monthly', priority: 0.8 },
   { loc: '/security',                    changefreq: 'yearly',  priority: 0.4 },
   { loc: '/legal',                       changefreq: 'yearly',  priority: 0.3 },
 ];
