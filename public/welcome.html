@@ -132,17 +132,20 @@ body.is-android .install-android{display:block}
 <script>
 (function setupPasswordRecovery() {
   var hash = window.location.hash || '';
-  if (!hash.includes('type=recovery') && !hash.includes('type=invite')) return;
+  // On gère 3 cas via le hash :
+  //   #type=recovery&access_token=... → set password (lien valide)
+  //   #type=invite&access_token=...   → set password (lien d'invitation)
+  //   #error=access_denied&error_code=otp_expired → lien expiré (>1h)
+  var isRecovery = hash.includes('type=recovery') || hash.includes('type=invite');
+  var isExpired = hash.includes('error=access_denied') || hash.includes('error_code=otp_expired') || hash.includes('error_code=otp_disabled');
+  if (!isRecovery && !isExpired) return;
 
-  // Parse hash params : #access_token=xxx&refresh_token=xxx&type=recovery&...
+  // Parse hash params
   var params = {};
   hash.replace(/^#/, '').split('&').forEach(function(pair) {
     var idx = pair.indexOf('=');
     if (idx > -1) params[decodeURIComponent(pair.slice(0, idx))] = decodeURIComponent(pair.slice(idx + 1));
   });
-
-  var accessToken = params.access_token;
-  if (!accessToken) return;
 
   var SUPABASE_URL = 'https://pwkajyrpldhlybavmopd.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud';
@@ -153,6 +156,96 @@ body.is-android .install-android{display:block}
   var confirmInput = document.getElementById('confirmPasswordInput');
   var errorEl = document.getElementById('setPasswordError');
   var submitBtn = document.getElementById('setPasswordSubmit');
+
+  // === CAS B : lien expiré → afficher form "renvoyer le lien" ===
+  if (isExpired) {
+    // Remplace le contenu du modal par un form renvoyer
+    var modalBox = overlay.querySelector('div');
+    modalBox.innerHTML = ''
+      + '<div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#ef4444;margin-bottom:14px;">● Lien expiré</div>'
+      + '<h2 style="font-size:24px;font-weight:800;margin-bottom:8px;color:#fff;letter-spacing:-0.02em;line-height:1.2;">Reçois un nouveau lien</h2>'
+      + '<p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px;line-height:1.5;">Ton lien de création de mot de passe est expiré (valable 1h). Entre ton email — on t\'envoie un nouveau lien dans la minute.</p>'
+      + '<form id="resendForm">'
+      + '  <input type="email" id="resendEmail" placeholder="ton@email.com" required autocomplete="email" inputmode="email"'
+      + '    style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:15px;margin-bottom:14px;font-family:inherit;outline:none;" />'
+      + '  <div id="resendError" style="color:#ef4444;font-size:13px;margin-bottom:14px;display:none;line-height:1.4;"></div>'
+      + '  <div id="resendSuccess" style="color:#02d1ba;font-size:13px;margin-bottom:14px;display:none;line-height:1.4;"></div>'
+      + '  <button type="submit" id="resendSubmit"'
+      + '    style="width:100%;padding:15px;background:#02d1ba;color:#000;border:none;border-radius:100px;font-size:13px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-family:inherit;">'
+      + '    Renvoyer le lien →'
+      + '  </button>'
+      + '</form>'
+      + '<p style="margin-top:16px;font-size:12px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.4;">'
+      + '  Utilise l\'email avec lequel tu as payé. Le nouveau lien sera valable 1h.'
+      + '</p>';
+
+    overlay.style.display = 'flex';
+    var resendForm = document.getElementById('resendForm');
+    var resendEmail = document.getElementById('resendEmail');
+    var resendError = document.getElementById('resendError');
+    var resendSuccess = document.getElementById('resendSuccess');
+    var resendSubmit = document.getElementById('resendSubmit');
+    setTimeout(function() { resendEmail.focus(); }, 100);
+
+    resendForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var em = resendEmail.value.trim().toLowerCase();
+      resendError.style.display = 'none';
+      resendSuccess.style.display = 'none';
+
+      if (!em || em.indexOf('@') === -1) {
+        resendError.textContent = 'Email invalide.';
+        resendError.style.display = 'block';
+        return;
+      }
+
+      resendSubmit.disabled = true;
+      resendSubmit.style.opacity = '0.6';
+      resendSubmit.textContent = 'Envoi en cours…';
+
+      // Conserve plan + price s'ils étaient dans la query
+      var qs = window.location.search || '';
+      var redirectTo = window.location.origin + '/welcome' + qs;
+
+      fetch(SUPABASE_URL + '/auth/v1/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email: em, options: { redirectTo: redirectTo } })
+      })
+      .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, status: r.status, json: j }; }); })
+      .then(function(result) {
+        // Supabase renvoie 200 même si l'email n'existe pas (anti-enumeration).
+        // C'est volontaire, on traite tout 2xx comme succès.
+        if (result.status >= 200 && result.status < 300) {
+          resendSuccess.textContent = '✓ Nouveau lien envoyé à ' + em + '. Check ta boîte email (et les spams).';
+          resendSuccess.style.display = 'block';
+          resendSubmit.textContent = '✓ Envoyé';
+          resendSubmit.style.background = '#0a0a0a';
+          resendSubmit.style.color = '#02d1ba';
+          resendSubmit.style.border = '1px solid #02d1ba';
+        } else {
+          var msg = (result.json && (result.json.msg || result.json.error_description || result.json.message)) || 'Erreur (status ' + result.status + ')';
+          resendError.textContent = msg;
+          resendError.style.display = 'block';
+          resendSubmit.disabled = false;
+          resendSubmit.style.opacity = '1';
+          resendSubmit.textContent = 'Renvoyer le lien →';
+        }
+      })
+      .catch(function(err) {
+        resendError.textContent = 'Erreur réseau : ' + (err && err.message ? err.message : 'connexion impossible');
+        resendError.style.display = 'block';
+        resendSubmit.disabled = false;
+        resendSubmit.style.opacity = '1';
+        resendSubmit.textContent = 'Renvoyer le lien →';
+      });
+    });
+    return;
+  }
+
+  // === CAS A : lien valide → form set-password ===
+  var accessToken = params.access_token;
+  if (!accessToken) return;
 
   overlay.style.display = 'flex';
   setTimeout(function() { newInput.focus(); }, 100);
