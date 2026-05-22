@@ -99,6 +99,132 @@ body.is-android .install-android{display:block}
 </style>
 </head>
 <body>
+
+<!-- ===== Set Password Modal — apparaît si #type=recovery dans le hash =====
+     Le webhook stripe genère un magic link Supabase de type 'recovery' qui
+     redirige vers /welcome avec un access_token dans le hash. La page welcome
+     statique ne gérait pas le set-password (bug du 22/05/26 go-live).
+     Fix : on détecte le hash et on affiche un form ici, on appelle directement
+     l'API Supabase REST /auth/v1/user pour update le password (pas besoin de
+     charger la lib Supabase JS, juste 1 fetch). -->
+<div id="setPasswordOverlay" style="display:none;position:fixed;inset:0;background:rgba(5,5,5,0.92);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:#0a0a0a;border:1px solid rgba(2,209,186,0.3);border-radius:18px;padding:32px;max-width:420px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.6);">
+    <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px;">● Étape finale</div>
+    <h2 style="font-size:24px;font-weight:800;margin-bottom:8px;color:#fff;letter-spacing:-0.02em;line-height:1.2;">Définis ton mot de passe</h2>
+    <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px;line-height:1.5;">Choisis le mot de passe que tu utiliseras pour te connecter à ton dashboard coach.</p>
+    <form id="setPasswordForm">
+      <input type="password" id="newPasswordInput" placeholder="Nouveau mot de passe (8 caractères min)" minlength="8" required autocomplete="new-password"
+        style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:15px;margin-bottom:12px;font-family:inherit;outline:none;" />
+      <input type="password" id="confirmPasswordInput" placeholder="Confirmer le mot de passe" minlength="8" required autocomplete="new-password"
+        style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:15px;margin-bottom:14px;font-family:inherit;outline:none;" />
+      <div id="setPasswordError" style="color:#ef4444;font-size:13px;margin-bottom:14px;display:none;line-height:1.4;"></div>
+      <button type="submit" id="setPasswordSubmit"
+        style="width:100%;padding:15px;background:#02d1ba;color:#000;border:none;border-radius:100px;font-size:13px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all 0.15s;">
+        Définir mon mot de passe →
+      </button>
+    </form>
+    <p style="margin-top:16px;font-size:12px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.4;">
+      8 caractères minimum. Tu pourras le changer dans <em>Mon compte</em> plus tard.
+    </p>
+  </div>
+</div>
+
+<script>
+(function setupPasswordRecovery() {
+  var hash = window.location.hash || '';
+  if (!hash.includes('type=recovery') && !hash.includes('type=invite')) return;
+
+  // Parse hash params : #access_token=xxx&refresh_token=xxx&type=recovery&...
+  var params = {};
+  hash.replace(/^#/, '').split('&').forEach(function(pair) {
+    var idx = pair.indexOf('=');
+    if (idx > -1) params[decodeURIComponent(pair.slice(0, idx))] = decodeURIComponent(pair.slice(idx + 1));
+  });
+
+  var accessToken = params.access_token;
+  if (!accessToken) return;
+
+  var SUPABASE_URL = 'https://pwkajyrpldhlybavmopd.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_WbG1gs6l7XP6aHH_UqR0Hw_XLSI50ud';
+
+  var overlay = document.getElementById('setPasswordOverlay');
+  var form = document.getElementById('setPasswordForm');
+  var newInput = document.getElementById('newPasswordInput');
+  var confirmInput = document.getElementById('confirmPasswordInput');
+  var errorEl = document.getElementById('setPasswordError');
+  var submitBtn = document.getElementById('setPasswordSubmit');
+
+  overlay.style.display = 'flex';
+  setTimeout(function() { newInput.focus(); }, 100);
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var pw1 = newInput.value;
+    var pw2 = confirmInput.value;
+
+    errorEl.style.display = 'none';
+
+    if (pw1.length < 8) {
+      errorEl.textContent = 'Le mot de passe doit faire au moins 8 caractères.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (pw1 !== pw2) {
+      errorEl.textContent = 'Les deux mots de passe ne correspondent pas.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.6';
+    submitBtn.textContent = 'Définition en cours…';
+
+    // Appel direct Supabase REST API : PUT /auth/v1/user avec Bearer token
+    fetch(SUPABASE_URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer ' + accessToken,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ password: pw1 })
+    })
+    .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, status: r.status, json: j }; }); })
+    .then(function(result) {
+      if (!result.ok) {
+        var msg = (result.json && (result.json.msg || result.json.error_description || result.json.message)) || 'Erreur inconnue (status ' + result.status + ')';
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.textContent = 'Définir mon mot de passe →';
+        return;
+      }
+      // Succès : retire le hash de l'URL pour pas re-trigger au refresh
+      try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
+      // Feedback visuel
+      submitBtn.textContent = '✓ Mot de passe défini';
+      submitBtn.style.background = '#0a0a0a';
+      submitBtn.style.color = '#02d1ba';
+      submitBtn.style.border = '1px solid #02d1ba';
+      // Disparaît après 800ms et laisse voir la page welcome
+      setTimeout(function() {
+        overlay.style.transition = 'opacity 0.4s';
+        overlay.style.opacity = '0';
+        setTimeout(function() { overlay.style.display = 'none'; }, 400);
+      }, 800);
+    })
+    .catch(function(err) {
+      errorEl.textContent = 'Erreur réseau : ' + (err && err.message ? err.message : 'connexion impossible');
+      errorEl.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      submitBtn.textContent = 'Définir mon mot de passe →';
+    });
+  });
+})();
+</script>
+
 <a href="#main" class="skip-link" data-i18n="a11y.skip">Aller au contenu</a>
 <div class="lang-toggle" role="group" aria-label="Language">
   <button type="button" data-lang="fr" class="active" aria-pressed="true">FR</button>
