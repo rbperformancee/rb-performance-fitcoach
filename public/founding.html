@@ -386,58 +386,121 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       </div>
     </div>
 
-    <!-- Lead capture form — waitlist gratuite pour les hésitants -->
+    <!-- ===== SECTION CONVERSION FINALE — refonte conversion-max ===== -->
     <section class="join-section" id="join">
-      <div class="join-eyebrow">Waitlist · alternative au paiement direct</div>
-      <h2 class="join-title">Pas prêt ? Reste informé.</h2>
-      <p style="text-align:center;font-size:14px;color:rgba(255,255,255,0.6);max-width:520px;margin:0 auto 32px;line-height:1.6;">
-        Si tu veux d'abord en discuter ou attendre un signal,
-        laisse ton email — je te recontacte perso quand il reste 10 places.
-        <strong style="color:#fff;">Aucune carte demandée ici.</strong>
+      <div class="join-eyebrow" style="color:#02d1ba;">● Bloquer ma place — 30 places limitées</div>
+      <h2 class="join-title">Tu y es.<br/>Plus qu'à payer<span style="color:#02d1ba;">.</span></h2>
+      <p style="text-align:center;font-size:16px;color:rgba(255,255,255,0.7);max-width:560px;margin:0 auto 36px;line-height:1.6;">
+        <strong style="color:#fff;">199€/mois bloqué à vie.</strong>
+        Une fois les 30 places prises, le tarif passe à 299€/mois pour les nouveaux.
+        <strong style="color:#02d1ba;">Tu économises 1 200€ chaque année</strong>, à vie.
       </p>
 
-      <div id="formWrap">
-        <form class="form" id="waitlistForm" onsubmit="submitWaitlist(event)">
-          <div class="field">
-            <label data-i18n="founding.lbl_name">Ton prénom</label>
-            <input type="text" id="wl-name" required placeholder="Prénom" data-i18n-placeholder="founding.ph_name" autocomplete="given-name">
-          </div>
-          <div class="field">
-            <label data-i18n="founding.lbl_email">Ton email</label>
-            <input type="email" id="wl-email" required placeholder="coach@email.com" data-i18n-placeholder="founding.ph_email" autocomplete="email">
-          </div>
-          <div class="field">
-            <label data-i18n="founding.lbl_clients">Combien de clients tu coaches actuellement ?</label>
-            <select id="wl-clients" aria-label="Nombre de clients actuellement coaches" required>
-              <option value="" disabled selected data-i18n="founding.opt_select">Sélectionne</option>
-              <option value="0-5" data-i18n="founding.opt_clients1">0 à 5</option>
-              <option value="5-15" data-i18n="founding.opt_clients2">5 à 15</option>
-              <option value="15-30" data-i18n="founding.opt_clients3">15 à 30</option>
-              <option value="30+" data-i18n="founding.opt_clients4">30+</option>
-            </select>
-          </div>
-          <div class="field">
-            <label data-i18n="founding.lbl_problem">Ton plus gros problème en tant que coach ?</label>
-            <select id="wl-problem" aria-label="Probleme principal en tant que coach" required>
-              <option value="" disabled selected data-i18n="founding.opt_select">Sélectionne</option>
-              <option value="visibility" data-i18n="founding.opt_p1">Je ne sais pas combien je vais gagner le mois prochain</option>
-              <option value="churn" data-i18n="founding.opt_p2">Je perds des clients sans comprendre pourquoi</option>
-              <option value="admin" data-i18n="founding.opt_p3">Je passe trop de temps sur l'admin au lieu de coacher</option>
-              <option value="tools" data-i18n="founding.opt_p4">J'utilise 4+ outils différents et c'est le chaos</option>
-              <option value="scale" data-i18n="founding.opt_p5">Je veux passer de 10 à 30+ clients mais je ne sais pas comment</option>
-            </select>
-          </div>
-          <button type="submit" class="cta" id="wlBtn" data-i18n="founding.form_cta">Réserver ma place →</button>
-          <div class="cta-sub" data-i18n="founding.form_cta_sub" style="margin-bottom:0">Pas de carte bancaire. Juste ton email.</div>
-          <div class="legal-note" data-i18n="founding.form_legal">En t'inscrivant, tu acceptes notre <a href="/legal.html#rgpd">politique de confidentialité</a> · Désinscription en 1 clic</div>
-        </form>
+      <!-- Comparatif visuel 199 vs 299 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px;margin:0 auto 36px;">
+        <div style="padding:20px 22px;border:1px solid rgba(255,255,255,0.08);border-radius:16px;background:rgba(255,255,255,0.02);position:relative;">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:8px;">Standard</div>
+          <div style="font-size:32px;font-weight:900;color:rgba(255,255,255,0.4);text-decoration:line-through;letter-spacing:-1px;line-height:1;">299€</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;">/mois · à partir de la place #31</div>
+        </div>
+        <div style="padding:20px 22px;border:1px solid rgba(2,209,186,0.4);border-radius:16px;background:linear-gradient(135deg,rgba(2,209,186,0.08),rgba(2,209,186,0.02));position:relative;">
+          <div style="position:absolute;top:-9px;right:14px;padding:3px 10px;background:#02d1ba;color:#000;border-radius:100px;font-size:9px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;">Toi</div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#02d1ba;margin-bottom:8px;">Founding</div>
+          <div style="font-size:32px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1;">199€</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;">/mois <strong style="color:#02d1ba;">bloqué à vie</strong></div>
+        </div>
       </div>
 
-      <div id="successWrap" style="display:none">
-        <div class="success">
-          <div class="success-icon">✓</div>
-          <h3 data-i18n="founding.success_title" style="font-family:'Inter',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:12px">Tu es sur la liste.</h3>
-          <p class="cta-sub" data-i18n="founding.success_sub" style="margin-bottom:0">Tu recevras un email en mai avec ton accès prioritaire. En attendant, suis <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#00C9A7;text-decoration:none;font-weight:700">@rb_perform</a> sur Instagram.</p>
+      <!-- 3 garanties / réassurances -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;max-width:560px;margin:0 auto 36px;">
+        <div style="padding:14px 16px;border:1px solid rgba(255,255,255,0.06);border-radius:12px;background:rgba(255,255,255,0.015);">
+          <div style="font-size:11px;font-weight:800;color:#02d1ba;letter-spacing:0.05em;margin-bottom:4px;">✓ Annulable en 1 clic</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,0.5);line-height:1.45;">Aucun engagement. Tu pars quand tu veux depuis ton dashboard.</div>
+        </div>
+        <div style="padding:14px 16px;border:1px solid rgba(255,255,255,0.06);border-radius:12px;background:rgba(255,255,255,0.015);">
+          <div style="font-size:11px;font-weight:800;color:#02d1ba;letter-spacing:0.05em;margin-bottom:4px;">✓ 0% commission</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,0.5);line-height:1.45;">Stripe direct. Aucune marge prélevée sur tes paiements clients.</div>
+        </div>
+        <div style="padding:14px 16px;border:1px solid rgba(255,255,255,0.06);border-radius:12px;background:rgba(255,255,255,0.015);">
+          <div style="font-size:11px;font-weight:800;color:#02d1ba;letter-spacing:0.05em;margin-bottom:4px;">✓ RGPD natif EU</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,0.5);line-height:1.45;">Hébergement Frankfurt. DPA public. Aucun transfert US.</div>
+        </div>
+      </div>
+
+      <!-- CTA primaire : paiement direct -->
+      <div style="text-align:center;">
+        <button type="button" class="cta" onclick="openCheckoutModal()" style="border:none;font:inherit;cursor:pointer;font-size:15px;padding:18px 38px;">
+          Payer 199€ et bloquer ma place →
+        </button>
+        <div class="cta-sub" style="margin-top:10px;margin-bottom:8px;">
+          Paiement sécurisé Stripe · Confirmation email instantanée · Accès en 2 minutes
+        </div>
+        <!-- Mini social proof / scarcité -->
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:14px;letter-spacing:0.02em;">
+          🟢 Cohorte ouverte · <strong style="color:rgba(255,255,255,0.7);">30 places limitées</strong>
+        </div>
+      </div>
+
+      <!-- Toggle waitlist (lien discret en bas) -->
+      <div style="text-align:center;margin-top:36px;padding-top:28px;border-top:1px solid rgba(255,255,255,0.05);">
+        <p style="font-size:12px;color:rgba(255,255,255,0.4);margin:0 0 10px;">
+          Pas prêt à t'engager aujourd'hui ?
+        </p>
+        <button type="button" id="toggleWaitlistBtn" onclick="toggleWaitlist()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:9px 18px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:0.04em;transition:all 0.2s;">
+          Rejoindre la waitlist sans payer →
+        </button>
+      </div>
+
+      <!-- ===== Waitlist form (masqué par défaut, révélé via toggle) ===== -->
+      <div id="waitlistWrap" style="display:none;max-width:520px;margin:36px auto 0;padding:28px;border:1px solid rgba(255,255,255,0.08);border-radius:18px;background:rgba(255,255,255,0.02);">
+        <div id="formWrap">
+          <div style="font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;">Waitlist gratuite</div>
+          <h3 style="margin:0 0 8px;font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.01em;">Je te recontacte quand il reste 10 places.</h3>
+          <p style="margin:0 0 20px;font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;">
+            Sans carte. Sans engagement. Juste un email rappel pour que tu ne rates pas le verrou Founding.
+          </p>
+          <form class="form" id="waitlistForm" onsubmit="submitWaitlist(event)">
+            <div class="field">
+              <label data-i18n="founding.lbl_name">Ton prénom</label>
+              <input type="text" id="wl-name" required placeholder="Prénom" data-i18n-placeholder="founding.ph_name" autocomplete="given-name">
+            </div>
+            <div class="field">
+              <label data-i18n="founding.lbl_email">Ton email</label>
+              <input type="email" id="wl-email" required placeholder="coach@email.com" data-i18n-placeholder="founding.ph_email" autocomplete="email">
+            </div>
+            <div class="field">
+              <label data-i18n="founding.lbl_clients">Combien de clients tu coaches actuellement ?</label>
+              <select id="wl-clients" aria-label="Nombre de clients actuellement coaches" required>
+                <option value="" disabled selected data-i18n="founding.opt_select">Sélectionne</option>
+                <option value="0-5" data-i18n="founding.opt_clients1">0 à 5</option>
+                <option value="5-15" data-i18n="founding.opt_clients2">5 à 15</option>
+                <option value="15-30" data-i18n="founding.opt_clients3">15 à 30</option>
+                <option value="30+" data-i18n="founding.opt_clients4">30+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="founding.lbl_problem">Ton plus gros problème en tant que coach ?</label>
+              <select id="wl-problem" aria-label="Probleme principal en tant que coach" required>
+                <option value="" disabled selected data-i18n="founding.opt_select">Sélectionne</option>
+                <option value="visibility" data-i18n="founding.opt_p1">Je ne sais pas combien je vais gagner le mois prochain</option>
+                <option value="churn" data-i18n="founding.opt_p2">Je perds des clients sans comprendre pourquoi</option>
+                <option value="admin" data-i18n="founding.opt_p3">Je passe trop de temps sur l'admin au lieu de coacher</option>
+                <option value="tools" data-i18n="founding.opt_p4">J'utilise 4+ outils différents et c'est le chaos</option>
+                <option value="scale" data-i18n="founding.opt_p5">Je veux passer de 10 à 30+ clients mais je ne sais pas comment</option>
+              </select>
+            </div>
+            <button type="submit" class="cta" id="wlBtn" style="margin-top:4px;">Me prévenir →</button>
+            <div class="cta-sub" style="margin-bottom:0;font-size:11px;">Pas de carte. Désinscription en 1 clic.</div>
+            <div class="legal-note" style="font-size:10.5px;">En t'inscrivant, tu acceptes notre <a href="/legal.html#rgpd">politique de confidentialité</a></div>
+          </form>
+        </div>
+
+        <div id="successWrap" style="display:none">
+          <div class="success" style="text-align:center;padding:20px 0;">
+            <div class="success-icon" style="margin-bottom:14px;">✓</div>
+            <h3 style="font-family:'Inter',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:8px;">Tu es sur la liste.</h3>
+            <p class="cta-sub" style="margin-bottom:0;font-size:13px;">Je te recontacte quand il reste 10 places. <br/>En attendant, suis <a href="https://instagram.com/rb_perform" target="_blank" rel="noopener noreferrer" style="color:#02d1ba;text-decoration:none;font-weight:700;">@rb_perform</a>.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -529,6 +592,23 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       if (e.target.id === 'checkoutModal') closeCheckoutModal();
     });
 
+    function toggleWaitlist() {
+      var wrap = document.getElementById('waitlistWrap');
+      var btn = document.getElementById('toggleWaitlistBtn');
+      var isVisible = wrap.style.display !== 'none';
+      if (isVisible) {
+        wrap.style.display = 'none';
+        btn.textContent = 'Rejoindre la waitlist sans payer →';
+      } else {
+        wrap.style.display = 'block';
+        btn.textContent = 'Masquer la waitlist';
+        setTimeout(function(){
+          var nameField = document.getElementById('wl-name');
+          if (nameField) nameField.focus();
+          try { wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e){}
+        }, 100);
+      }
+    }
     function submitWaitlist(e) {
       e.preventDefault();
       var btn = document.getElementById('wlBtn');
