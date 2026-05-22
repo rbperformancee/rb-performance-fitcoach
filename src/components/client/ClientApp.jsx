@@ -83,7 +83,7 @@ export default function ClientApp({ user }) {
             {t("ca.no_account_desc")}
           </div>
           <button
-            onClick={() => supabase.auth.signOut().then(() => { window.location.href = "/"; })}
+            onClick={() => supabase.auth.signOut().then(() => { window.location.href = "/login"; })}
             style={{ marginTop: 10, background: "transparent", border: ".5px solid rgba(255,255,255,.15)", color: "rgba(255,255,255,.6)", padding: "10px 18px", borderRadius: 100, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
             {t("ca.logout")}

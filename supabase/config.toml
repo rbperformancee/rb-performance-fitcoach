@@ -12,3 +12,20 @@ verify_jwt = false
 # raison que send-push — auth vérifiée dans la function.
 [functions.daily-reminder]
 verify_jwt = false
+
+# ===== AUTH — Configuration RB Perform =====
+# Push avec : npx supabase config push --project-ref pwkajyrpldhlybavmopd --yes
+# Les templates HTML sont dans supabase/email-templates/
+
+# IMPORTANT : on déclare ici les valeurs ACTUELLES du dashboard pour éviter
+# que `config push` ne les écrase avec ses défauts CLI (qui sont plus restrictifs).
+[auth.email]
+max_frequency = "1m0s"
+otp_length = 6
+otp_expiry = 86400          # 24h (choix produit pour réduire friction onboarding coach)
+enable_confirmations = false
+secure_password_change = false
+
+[auth.email.template.recovery]
+subject = "Définis ton mot de passe — RB Perform"
+content_path = "./supabase/email-templates/reset-password.html"
