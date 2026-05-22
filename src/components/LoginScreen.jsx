@@ -177,9 +177,13 @@ export function LoginScreen({ onBack }) {
     setLoading(true);
     setError('');
     try {
+      // Redirect vers /welcome qui a un modal set-password avec gestion :
+      //   - lien valide (#type=recovery) → form set new password
+      //   - lien expiré (#error=otp_expired) → form renvoyer le lien
+      // Cf. public/welcome.html
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
-        { redirectTo: window.location.origin + '/#type=recovery' }
+        { redirectTo: window.location.origin + '/welcome' }
       );
       if (error) throw error;
       setSuccess(t('login.reset_email_sent'));
