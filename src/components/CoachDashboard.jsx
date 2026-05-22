@@ -4742,7 +4742,27 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   // Notifie sur message client, PR client, et autres events.
   const { permission: pushPermission, requestPermission: requestPushPermission } = usePushNotifications({ coachId });
   const [pushBannerDismissed, setPushBannerDismissed] = useState(() => {
-    try { return localStorage.getItem("rb_coach_push_banner_dismissed") === "1"; } catch { return false; }
+    // Logique en 3 niveaux :
+    // 1. Si l'user a cliqué "Plus tard" → dismissed définitivement
+    // 2. Si la bannière a déjà été shown dans une session précédente
+    //    ET qu'on est dans les 7 jours → dismissed (anti-spam)
+    // 3. Sinon → show (1er affichage, ou >7j depuis le dernier)
+    try {
+      if (localStorage.getItem("rb_coach_push_banner_dismissed") === "1") return true;
+
+      const shownAtStr = localStorage.getItem("rb_coach_push_banner_shown_at");
+      if (shownAtStr) {
+        const shownAt = parseInt(shownAtStr, 10);
+        const daysSinceShown = (Date.now() - shownAt) / (1000 * 60 * 60 * 24);
+        if (daysSinceShown < 7) return true;  // déjà vu < 7j, on dismiss
+      }
+
+      // First show OU >7j depuis le dernier : on track maintenant pour la prochaine session
+      localStorage.setItem("rb_coach_push_banner_shown_at", String(Date.now()));
+      return false;
+    } catch {
+      return false;
+    }
   });
 
   // Deep-link: /dashboard/mon-compte?tab=abonnement (retour Stripe Customer Portal)
