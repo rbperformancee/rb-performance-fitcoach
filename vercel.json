@@ -86,6 +86,10 @@
     {
       "path": "/api/cron-magic-link-reminder",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron-launch-reminder",
+      "schedule": "0 7 * * *"
     }
   ],
   "redirects": [

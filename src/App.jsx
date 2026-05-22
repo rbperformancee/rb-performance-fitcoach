@@ -94,6 +94,10 @@ import ErrorBoundaryApp from "./components/ErrorBoundary";
 import { setSentryRole } from "./lib/sentry";
 const SuperAdminDashboard = lazy(() => import("./components/SuperAdminDashboard"));
 const CoachOnboarding = lazy(() => import("./components/coach/Onboarding"));
+const WaitingForLaunchScreen = lazy(() => import("./components/WaitingForLaunchScreen"));
+// Date d'ouverture officielle de l'app pour les Founding (UTC).
+// 26 mai 2026 à 09h Paris = 07h UTC (DST CEST = UTC+2 en mai).
+const APP_UNLOCK_AT = new Date("2026-05-26T07:00:00Z");
 import ProgrammeSignature from "./components/ProgrammeSignature";
 import ProgrammeCountdown from "./components/ProgrammeCountdown";
 const CoachCodeGate = lazy(() => import("./components/CoachCodeGate"));
@@ -1255,6 +1259,25 @@ function AppInner() {
         coach={coachData}
         onComplete={() => window.location.reload()}
       />
+    );
+  }
+
+  // ── Founding gate : onboarding terminé MAIS launch officiel pas encore ──
+  // Bloque l'accès au dashboard tant que APP_UNLOCK_AT pas atteint.
+  // Affiche une waiting page premium avec countdown + email reminder J-1.
+  // Bypass si isSuperAdmin (Rayan doit pouvoir tester sans attendre).
+  if (
+    isCoach &&
+    coachData &&
+    coachData.onboarding_completed_at &&
+    showCoachDash &&
+    !isSuperAdmin &&
+    Date.now() < APP_UNLOCK_AT.getTime()
+  ) {
+    return (
+      <Suspense fallback={null}>
+        <WaitingForLaunchScreen coach={coachData} />
+      </Suspense>
     );
   }
 
