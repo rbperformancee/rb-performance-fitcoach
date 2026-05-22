@@ -363,11 +363,18 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       </div>
     </div>
 
-    <!-- CTA scroll-to-form -->
-    <a class="cta" href="#join" data-i18n="founding.cta">
-      Réserver ma place Founding →
-    </a>
-    <div class="cta-sub" data-i18n="founding.cta_sub">Lancement mai 2026 · Inscris-toi pour bloquer ton prix à vie</div>
+    <!-- CTA principal : paiement direct Stripe (Self-serve) -->
+    <button type="button" class="cta" onclick="openCheckoutModal()" style="border:none;font:inherit;cursor:pointer;">
+      Payer 199€ et bloquer ma place →
+    </button>
+    <div class="cta-sub">Stripe sécurisé · Sans engagement · Annulable à tout moment</div>
+
+    <!-- CTA secondaire : waitlist (pour les hésitants) -->
+    <div style="margin-top:18px;text-align:center;">
+      <a href="#join" style="font-size:13px;color:rgba(255,255,255,0.5);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:2px;">
+        Pas prêt à t'engager ? Rejoins la waitlist gratuite ↓
+      </a>
+    </div>
 
     <!-- Engagement Founder — Prix bloqué à vie -->
     <div class="engagements">
@@ -379,10 +386,15 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       </div>
     </div>
 
-    <!-- Lead capture form (consolidated from /waitlist) -->
+    <!-- Lead capture form — waitlist gratuite pour les hésitants -->
     <section class="join-section" id="join">
-      <div class="join-eyebrow" data-i18n="founding.join_eyebrow">Bloquer ma place</div>
-      <h2 class="join-title" data-i18n="founding.join_title">Une fois les 30 places prises, c'est fini.</h2>
+      <div class="join-eyebrow">Waitlist · alternative au paiement direct</div>
+      <h2 class="join-title">Pas prêt ? Reste informé.</h2>
+      <p style="text-align:center;font-size:14px;color:rgba(255,255,255,0.6);max-width:520px;margin:0 auto 32px;line-height:1.6;">
+        Si tu veux d'abord en discuter ou attendre un signal,
+        laisse ton email — je te recontacte perso quand il reste 10 places.
+        <strong style="color:#fff;">Aucune carte demandée ici.</strong>
+      </p>
 
       <div id="formWrap">
         <form class="form" id="waitlistForm" onsubmit="submitWaitlist(event)">
@@ -430,7 +442,93 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       </div>
     </section>
 
+    <!-- ===== Modal checkout direct Stripe ===== -->
+    <div id="checkoutModal" style="display:none;position:fixed;inset:0;background:rgba(5,5,5,0.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:24px;">
+      <div style="background:#0a0a0a;border:1px solid rgba(2,209,186,0.3);border-radius:18px;padding:32px;max-width:440px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.6);">
+        <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:18px;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#02d1ba;">● Paiement sécurisé Stripe</div>
+          <button type="button" onclick="closeCheckoutModal()" aria-label="Fermer" style="background:transparent;border:none;color:rgba(255,255,255,0.3);font-size:22px;cursor:pointer;padding:0;line-height:1;">×</button>
+        </div>
+        <h3 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1.2;">Bloquer ta place Founding</h3>
+        <p style="margin:0 0 22px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.5;">
+          <strong style="color:#02d1ba;">199 €/mois bloqué à vie.</strong> Sans engagement, annulable depuis ton dashboard à tout moment. Tu seras redirigé vers le paiement sécurisé Stripe.
+        </p>
+        <form id="checkoutForm" onsubmit="submitCheckout(event)">
+          <input type="email" id="ck-email" required autocomplete="email" inputmode="email"
+                 placeholder="ton@email.com"
+                 style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:15px;margin-bottom:14px;font-family:inherit;outline:none;" />
+          <div id="ck-error" style="color:#ef4444;font-size:13px;margin-bottom:14px;display:none;line-height:1.4;"></div>
+          <button type="submit" id="ck-btn"
+                  style="width:100%;padding:15px;background:#02d1ba;color:#000;border:none;border-radius:100px;font-size:13px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-family:inherit;">
+            Payer 199€ — Bloquer ma place →
+          </button>
+        </form>
+        <p style="margin:14px 0 0;font-size:11px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5;">
+          Tu pourras choisir EUR / USD / GBP sur la page Stripe.
+        </p>
+      </div>
+    </div>
+
     <script>
+    function openCheckoutModal() {
+      var m = document.getElementById('checkoutModal');
+      m.style.display = 'flex';
+      setTimeout(function(){ document.getElementById('ck-email').focus(); }, 100);
+    }
+    function closeCheckoutModal() {
+      document.getElementById('checkoutModal').style.display = 'none';
+    }
+    function submitCheckout(e) {
+      e.preventDefault();
+      var email = document.getElementById('ck-email').value.trim().toLowerCase();
+      var btn = document.getElementById('ck-btn');
+      var errEl = document.getElementById('ck-error');
+      errEl.style.display = 'none';
+      if (!email || email.indexOf('@') === -1) {
+        errEl.textContent = 'Email invalide.';
+        errEl.style.display = 'block';
+        return;
+      }
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      btn.textContent = 'Redirection vers Stripe…';
+      fetch('/api/checkout-founding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, currency: 'EUR' })
+      })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, json: j }; }); })
+      .then(function(result){
+        if (result.ok && result.json.url) {
+          // Save l'email en sessionStorage au cas où le user revient
+          try { sessionStorage.setItem('rb_checkout_email', email); } catch(e){}
+          window.location.href = result.json.url;
+        } else {
+          var msg = (result.json && (result.json.error || result.json.message)) || ('Erreur (status ' + result.status + ')');
+          errEl.textContent = msg;
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.textContent = 'Payer 199€ — Bloquer ma place →';
+        }
+      })
+      .catch(function(err){
+        errEl.textContent = 'Erreur réseau : ' + (err && err.message ? err.message : 'connexion impossible');
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.textContent = 'Payer 199€ — Bloquer ma place →';
+      });
+    }
+    // Close modal on Escape
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') closeCheckoutModal();
+    });
+    // Close modal on backdrop click
+    document.getElementById('checkoutModal').addEventListener('click', function(e){
+      if (e.target.id === 'checkoutModal') closeCheckoutModal();
+    });
+
     function submitWaitlist(e) {
       e.preventDefault();
       var btn = document.getElementById('wlBtn');
