@@ -207,10 +207,12 @@ body.is-android .install-android{display:block}
       var qs = window.location.search || '';
       var redirectTo = window.location.origin + '/welcome' + qs;
 
-      fetch(SUPABASE_URL + '/auth/v1/recover', {
+      // Supabase API : redirect_to est en query param (PAS dans body)
+      // cf https://supabase.com/docs/reference/api/recover
+      fetch(SUPABASE_URL + '/auth/v1/recover?redirect_to=' + encodeURIComponent(redirectTo), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
-        body: JSON.stringify({ email: em, options: { redirectTo: redirectTo } })
+        body: JSON.stringify({ email: em })
       })
       .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, status: r.status, json: j }; }); })
       .then(function(result) {
