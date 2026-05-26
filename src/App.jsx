@@ -33,6 +33,7 @@ function DemoLoadingText() {
   );
 }
 const TrainingPage = lazy(() => import("./components/TrainingPage"));
+const EbookStartScreen = lazy(() => import("./components/client/EbookStartScreen"));
 const ProfilePage = lazy(() => import("./components/ProfilePage"));
 const SessionTimer = lazy(() => import("./components/SessionTimer"));
 const ActivityWidget = lazy(() => import("./components/ActivityWidget"));
@@ -1559,6 +1560,11 @@ function AppInner() {
           <Suspense fallback={<PageFallback />}>
             {page === "training" ? (
               !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
+              // Ebook self-serve : achat reserve la place, mais les 100 jours
+              // ne demarrent qu'au clic explicite ici (cf EbookStartScreen).
+              client?.subscription_status === "pending_start" ? (
+                <EbookStartScreen client={client} />
+              ) :
                 <TrainingPage
                   client={client}
                   programme={programme}

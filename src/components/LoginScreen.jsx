@@ -22,7 +22,9 @@ export function LoginScreen({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [ebookWelcome, setEbookWelcome] = useState(false); // bannière source=ebook
   const otpRef = useRef(null);
+  const autoSentRef = useRef(false);
 
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -35,14 +37,45 @@ export function LoginScreen({ onBack }) {
     });
   }, []);
 
+  // Pre-fill depuis URL : ?email=...&source=ebook
+  // Cas : email final post-achat ebook → CTA "Accéder à mon espace" pointe ici
+  // avec l'email pré-rempli. On déclenche signInWithOtp automatiquement pour
+  // épargner au client la saisie manuelle.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email');
+    const source = params.get('source');
+    if (emailParam && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailParam)) {
+      setEmail(emailParam.toLowerCase());
+      if (source === 'ebook') {
+        setEbookWelcome(true);
+        // Déclenche l'envoi OTP automatiquement (après 600ms pour laisser
+        // au state le temps de propager). Guard `autoSentRef` pour éviter
+        // un double envoi si React re-render.
+        setTimeout(() => {
+          if (!autoSentRef.current) {
+            autoSentRef.current = true;
+            // sendOTP utilise `email` (closure capturée) → on attend la
+            // prochaine boucle pour que setEmail soit appliqué.
+            setTimeout(() => sendOTP(emailParam.toLowerCase()), 50);
+          }
+        }, 600);
+      }
+    }
+  }, []);
+
   // ===== CLIENT : envoyer OTP =====
-  const sendOTP = async () => {
-    if (!validEmail) return;
+  // overrideEmail : permet à l'auto-send (post pre-fill ?email=) de bypasser
+  // la closure stale de `email`. Sinon utilise le state.
+  const sendOTP = async (overrideEmail) => {
+    const effectiveEmail = (overrideEmail || email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(effectiveEmail)) return;
     setLoading(true);
     setError('');
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
+        email: effectiveEmail,
         // shouldCreateUser: false — un client ne peut pas s'inscrire seul.
         // Seul le coach peut creer un compte client via "Inviter" dans le
         // dashboard. Si l'email n'existe pas, Supabase renvoie l'erreur
@@ -52,7 +85,10 @@ export function LoginScreen({ onBack }) {
       });
       if (error) throw error;
       setStep('otp');
-      setSuccess(t('login.code_sent_success') + ' ' + email);
+      setSuccess(t('login.code_sent_success') + ' ' + effectiveEmail);
+      // Si on a pre-fill (overrideEmail) et que `email` state n'est pas encore
+      // appliqué, on force la sync pour que verifyOTP retrouve l'email.
+      if (overrideEmail && email !== effectiveEmail) setEmail(effectiveEmail);
       setTimeout(() => otpRef.current?.focus(), 100);
     } catch (e) {
       if (e.message === 'Signups not allowed for otp') {
@@ -65,18 +101,19 @@ export function LoginScreen({ onBack }) {
           const r = await fetch('/api/auth/check-invitation', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email.trim().toLowerCase() }),
+            body: JSON.stringify({ email: effectiveEmail }),
           });
           if (r.ok) {
             const data = await r.json();
             if (data.status === 'ready') {
               const { error: retryErr } = await supabase.auth.signInWithOtp({
-                email: email.trim().toLowerCase(),
+                email: effectiveEmail,
                 options: { shouldCreateUser: false },
               });
               if (!retryErr) {
                 setStep('otp');
-                setSuccess(t('login.code_sent_success') + ' ' + email);
+                setSuccess(t('login.code_sent_success') + ' ' + effectiveEmail);
+                if (overrideEmail && email !== effectiveEmail) setEmail(effectiveEmail);
                 setTimeout(() => otpRef.current?.focus(), 100);
                 setLoading(false);
                 return;
@@ -210,6 +247,24 @@ export function LoginScreen({ onBack }) {
             RB<span style={{ color: 'rgba(2,209,186,0.4)' }}>PERFORM</span>
           </div>
         </div>
+
+        {/* Bannière post-achat ebook (source=ebook dans l'URL) */}
+        {ebookWelcome && mode === 'client' && (
+          <div style={{
+            marginBottom: 28,
+            padding: '14px 16px',
+            background: 'rgba(2,209,186,0.08)',
+            border: '1px solid rgba(2,209,186,0.25)',
+            borderRadius: 12,
+          }}>
+            <div style={{ fontSize: 10, letterSpacing: 3, color: G, fontWeight: 800, textTransform: 'uppercase', marginBottom: 6 }}>
+              Ebook Athlète · 100j
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
+              On t'envoie un code à 6 chiffres par email. Entre-le ci-dessous pour accéder à ton programme.
+            </div>
+          </div>
+        )}
 
         {/* Titre — style dashboard coach */}
         <div style={{ marginBottom: 36 }}>

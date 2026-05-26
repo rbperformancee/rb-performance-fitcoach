@@ -144,6 +144,47 @@ function setPreflightCache(res, maxAgeSeconds = 86400) {
   res.setHeader("Access-Control-Max-Age", String(maxAgeSeconds));
 }
 
+/**
+ * Authentification server-to-server par secret partagé (X-Internal-Secret
+ * ou Authorization: Bearer <secret>). Utilisé par les endpoints internes
+ * appelés depuis d'autres services Vercel (ex: webhook Stripe sur
+ * rbperform.com qui POST vers /api/internal/* ici).
+ *
+ * Convention distincte de CRON_SECRET pour granularité (rotation
+ * indépendante, périmètre clair). Le secret doit être ≥ 32 chars random.
+ *
+ * Side effects : log structuré sur tentative non-auth (sans leak du secret),
+ * pour Sentry / vercel logs.
+ *
+ * @returns {boolean} true si auth OK, sinon false (l'appelant doit répondre 401)
+ */
+function isInternalAuthorized(req) {
+  const secret = process.env.INTERNAL_API_SECRET;
+  if (!secret || secret.length < 16) {
+    console.error("[INTERNAL_AUTH_FAIL] INTERNAL_API_SECRET missing or too short");
+    return false;
+  }
+  const headerSecret = req.headers["x-internal-secret"] || "";
+  const authHeader = req.headers.authorization || "";
+  const bearerSecret = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
+  // Comparaison constant-time pour éviter le timing attack
+  const provided = headerSecret || bearerSecret;
+  if (!provided || provided.length !== secret.length) {
+    console.warn("[INTERNAL_AUTH_REJECT] no/short secret from", getIP(req));
+    return false;
+  }
+  let diff = 0;
+  for (let i = 0; i < secret.length; i++) {
+    diff |= secret.charCodeAt(i) ^ provided.charCodeAt(i);
+  }
+  if (diff !== 0) {
+    console.warn("[INTERNAL_AUTH_REJECT] bad secret from", getIP(req));
+    return false;
+  }
+  return true;
+}
+
 module.exports = {
   isOriginAllowed,
   rateLimit,
@@ -151,4 +192,5 @@ module.exports = {
   getIP,
   attachRequestId,
   setPreflightCache,
+  isInternalAuthorized,
 };
