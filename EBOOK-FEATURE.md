@@ -10,21 +10,44 @@ Documentation opérationnelle du flow `achat ebook` → `provisioning compte ath
 
 ---
 
-## Architecture pricing (réel)
+## Architecture pricing — décision finale 59 / 69 / 99
+
+3 tiers Hormozi-style (max décision facile pour le prospect) :
 
 | Tier | Stripe product | Prix | Contenu | Compte 30 places |
 |---|---|---|---|---|
-| **F&M solo** | `force-masse` (existing) | **59€** | Force & Masse PDF | ❌ (flow legacy `sendProgrammeEmail`) |
-| **Founding** | `ebook-athlete-100-founding` | **79€** | F&M + accès app 100j | ✅ |
-| **Pack Athlète** *(latent)* | `ebook-athlete-100-pack` | **TBD** *(99€ avec anchor 119€ ?)* | F&M + Athlète 90J + accès app 100j | ✅ |
+| **F&M solo** | `force-masse` (existing) | **59€** | Force & Masse PDF | ❌ (flow legacy) |
+| **Athlète 90J solo** *(à activer)* | `programme-athlete-90j` | **69€** | Athlète 90J PDF seul | ❌ (flow legacy) |
+| **Pack Athlète Founding** *(latent)* | `ebook-athlete-100-pack` | **99€** | F&M + Athlète 90J + accès app 100j | ✅ (30 places) |
 
-**Anchor Hormozi possible** sur Founding 79€ :
-- Force & Masse PDF : 59€ (réel)
-- Accès App 100j : valeur perçue ~35€ (5€/sem × 7 sem app standalone)
-- **Valeur totale : 94€**
-- **Tier Founding : 79€** (économie 15€) — 30 places founding launch
+> Le tier `ebook-athlete-100-founding` (F&M + App seul, 79€) reste dans le code mais
+> **n'est PAS proposé sur la landing**. Il existe pour flexibilité future si on veut
+> rebrancher un intermédiaire. Tout le funnel pousse vers le **Pack 99€**.
 
-**Compteur 30 places** : partagé entre `founding` et `pack` (1 compteur global).
+### Anchor Hormozi sur le Pack 99€
+
+À afficher sur la landing rbperform.com :
+
+```
+~~Force & Masse PDF : 59€~~
+~~Athlète 90J PDF : 69€~~
+~~Accès App RB Perform 100j : 49€~~
+─────────────────────────────────
+VALEUR TOTALE : 177€
+
+🎁 Pack Athlète Founding : 99€ (économie 78€)
+   ⚡ 30 places — il en reste X
+```
+
+### Maths projetées sur 30 founding
+
+| Mix scénario | CA total |
+|---|---|
+| 100% Pack à 99€ (best case) | 2 970€ |
+| Réaliste (60% Pack / 30% Athlète / 10% F&M) | ~2 100€ |
+| Conservative (40% Pack / 40% Athlète / 20% F&M) | ~1 900€ |
+
+**Compteur 30 places** : déclenché uniquement par les achats du tier Pack (`ebook-athlete-100-pack`). Les tiers F&M solo et Athlète 90J solo ne décomptent pas.
 
 ---
 
@@ -102,35 +125,37 @@ Identique à `founding` mais :
 
 ### Procédure dashboard Stripe (TEST puis LIVE)
 
-**Aujourd'hui — 1 seul nouveau product à créer** (Founding) :
+**Quand Athlète 90J sera prêt — 2 nouveaux products à créer** :
 
 | Product Name (Stripe) | programmeId metadata | Price |
 |---|---|---|
-| `Force & Masse + App 100j (Founding)` | `ebook-athlete-100-founding` | 79.00 € |
+| `Athlète 90J PDF` | `programme-athlete-90j` | 69.00 € |
+| `Pack Athlète Founding (F&M + 90J + App)` | `ebook-athlete-100-pack` | 99.00 € |
 
 Configuration :
 - Currency : EUR
 - Recurring : NO (one-time)
 - Tax behavior : selon ton setup actuel
 
-**Plus tard — quand Athlète 90J sera prêt** :
-
-| Product Name (Stripe) | programmeId metadata | Price |
-|---|---|---|
-| `Pack Athlète (F&M + 90J + App)` | `ebook-athlete-100-pack` | 99.00 € (à confirmer) |
-
 ### Front rbperform.com
 
 Boutons d'achat à câbler vers `/api/checkout` :
 
 ```json
-// Tier Founding
-{ "programmeId": "ebook-athlete-100-founding",
-  "programmeName": "Force & Masse + App 100j (Founding)",
-  "price": 79 }
+// Tier Athlète 90J solo (flow legacy, pas d'app)
+{ "programmeId": "programme-athlete-90j",
+  "programmeName": "Athlète 90J — 90 jours pour devenir un véritable athlète",
+  "price": 69 }
+
+// Tier Pack Founding (flow ebook self-serve avec app 100j, 30 places)
+{ "programmeId": "ebook-athlete-100-pack",
+  "programmeName": "Pack Athlète Founding",
+  "price": 99 }
 ```
 
-Force & Masse standalone (59€) reste inchangé — utilise le product `force-masse` existing.
+Force & Masse standalone (59€) reste inchangé — product `force-masse` existing.
+
+**Le tier `ebook-athlete-100-founding` (79€) reste codé mais n'est PAS exposé** sur la landing pour rester sur 3 tiers Hormozi. Tu peux le rebrancher plus tard si besoin.
 
 ---
 
