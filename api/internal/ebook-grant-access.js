@@ -230,7 +230,7 @@ module.exports = async function handler(req, res) {
           subscription_plan: SUBSCRIPTION_PLAN_LABEL,
           subscription_status: 'pending_start', // 100j commencent au clic "Démarrer"
           pipeline_status: 'new',
-          tags: ['ebook-60d', 'self-serve'],
+          tags: ['ebook-100d', 'self-serve'],
         })
         .select('id')
         .single();
