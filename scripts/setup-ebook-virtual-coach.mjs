@@ -47,7 +47,7 @@ const COACH_ID = 'eb000000-0000-4000-8000-000000000001';
 const TEMPLATE_ID = 'eb000000-0000-4000-8000-000000000002';
 const COACH_EMAIL = 'athletes@rbperform.app';
 
-const PLACEHOLDER_HTML = `<!doctype html><html><head><meta charset="utf-8"/><title>Ebook Athlète 60J</title></head><body><input id="prog-name" value="Ebook Athlète 60J"/><input id="client-name" value=""/><input id="prog-duration" value="60 jours"/><div class="week" data-week="1"><h2>Semaine 1</h2><div class="session" data-session="1"><h3>Séance 1 — Full Body</h3><div class="exercise"><input id="en-w1s1e1-name" value="Programme à compléter"/><input id="en-w1s1e1-reps" value="4X10"/><input id="en-w1s1e1-tempo" value=""/><input id="en-w1s1e1-rir" value=""/><input id="en-w1s1e1-rest" value="90s"/></div></div></div></body></html>`;
+const PLACEHOLDER_HTML = `<!doctype html><html><head><meta charset="utf-8"/><title>Ebook Athlète 100J</title></head><body><input id="prog-name" value="Ebook Athlète 100J"/><input id="client-name" value=""/><input id="prog-duration" value="100 jours"/><div class="week" data-week="1"><h2>Semaine 1</h2><div class="session" data-session="1"><h3>Séance 1 — Full Body</h3><div class="exercise"><input id="en-w1s1e1-name" value="Programme à compléter"/><input id="en-w1s1e1-reps" value="4X10"/><input id="en-w1s1e1-tempo" value=""/><input id="en-w1s1e1-rir" value=""/><input id="en-w1s1e1-rest" value="90s"/></div></div></div></body></html>`;
 
 async function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -86,16 +86,16 @@ async function main() {
   }
 
   // 2) Template programme — UPSERT par id (PK)
-  console.log('\n[2/2] Upsert template programme ebook 60J…');
+  console.log('\n[2/2] Upsert template programme ebook 100J…');
   const { data: tplData, error: tplErr } = await supabase
     .from('coach_programme_templates')
     .upsert(
       {
         id: TEMPLATE_ID,
         coach_id: effectiveCoachId,
-        name: 'Ebook Athlète 60J — Template',
+        name: 'Ebook Athlète 100J — Template',
         description:
-          "Programme de référence dupliqué à chaque achat de l'ebook 60J. Modifier via scripts/update-ebook-template.mjs <chemin.html>.",
+          "Programme de référence dupliqué à chaque achat de l'ebook 100J. Modifier via scripts/update-ebook-template.mjs <chemin.html>.",
         html_content: PLACEHOLDER_HTML,
         weeks_count: 1,
         sessions_count: 1,

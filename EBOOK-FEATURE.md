@@ -1,12 +1,25 @@
-# Feature : Ebook self-serve athlète (PDF + accès app 100j)
+# Feature : Ebook self-serve athlète — 3 tiers (47 / 57 / 87 €)
 
 Documentation opérationnelle du flow `achat ebook` → `provisioning compte athlète` →
-`accès 100 jours à l'app RB Perform`.
+`accès 100 jours à l'app RB Perform` (bonus founding).
 
-> **TL;DR** : un acheteur de `ebook-athlete-60` sur rbperform.com reçoit le PDF + un email
-> avec un bouton "Accéder à mon espace" qui le logge sur rbperform.app. L'app lui est offerte
-> 100 jours (à partir du jour où **il** clique sur "Démarrer"). Seuls les 30 premiers acheteurs
-> ont droit à l'accès app : au-delà, le PDF reste envoyé + email waitlist wave 2.
+> **TL;DR** : trois products Stripe (`ebook-athlete-100-pdf`, `ebook-athlete-100-founding`,
+> `ebook-athlete-100-perf`) sur rbperform.com. Les tiers `founding` et `perf` déclenchent
+> le provisioning d'un compte athlète sur rbperform.app + accès app 100j pour les 30 premiers.
+> Le tier `pdf` n'envoie qu'un PDF (pas de compte app). Les 100j d'accès app démarrent quand
+> **le client** clique sur "Démarrer" dans l'app, pas à l'achat.
+
+---
+
+## Architecture des 3 tiers
+
+| Tier | Suffix programmeId | Prix | Contenu | Compte app | Compte 30 places |
+|---|---|---|---|---|---|
+| **PDF** | `-pdf` | **47€** | Ebook 100J PDF seul | ❌ | ❌ (pas comptabilisé) |
+| **FOUNDING** | `-founding` | **57€** | Ebook 100J + accès app 100j | ✅ (si 30 places dispo) | ✅ |
+| **PERFORMANCE** | `-perf` | **87€** | Ebook 100J + Force & Masse + accès app 100j | ✅ (si 30 places dispo) | ✅ |
+
+**Compteur 30 places** : partagé entre tiers `founding` et `perf` (1 compteur global, pas un par tier).
 
 ---
 
@@ -17,202 +30,131 @@ Documentation opérationnelle du flow `achat ebook` → `provisioning compte ath
 │ ~/rbperform (rbperform.com)        │                │ ~/fitcoach_updated (rbperform.app)│
 │ Next.js 16                          │                │ React CRA + Vercel api/*          │
 │                                    │                │                                  │
-│ /api/webhooks/stripe (POST)        │   X-Internal   │ /api/internal/ebook-grant-access │
-│  └─ checkout.session.completed     │ ─────Secret───▶│  ├─ idempotence stripe_session_id│
-│      └─ programmeId.startsWith(    │                │  ├─ compteur 30 places            │
-│           'ebook-athlete')          │                │  ├─ check coach existant          │
-│         └─ grantAppAccess()        │ ◀───{granted,──│  ├─ auth.users + clients          │
-│         └─ sendEbookEmail()        │   places_left} │  │   (status=pending_start)       │
-│             (PDF + variant)        │                │  └─ programmes (dup template)     │
-└────────────────────────────────────┘                └──────────────────────────────────┘
+│ /api/webhooks/stripe (POST)        │                │ /api/internal/ebook-grant-access │
+│  └─ checkout.session.completed     │                │                                  │
+│      └─ getEbookTier(programmeId)  │                │  Appelé UNIQUEMENT pour les      │
+│         ├─ 'pdf' → email only      │                │  tiers founding/perf :           │
+│         └─ 'founding'/'perf' →     │   X-Internal   │  ├─ idempotence stripe_session_id│
+│            grantAppAccess()        │ ─────Secret───▶│  ├─ compteur 30 places            │
+│            └─ sendEbookEmail()     │                │  ├─ check coach existant          │
+│               (3 variants HTML)    │ ◀───{granted,──│  ├─ auth.users + clients          │
+│                                    │  places_left}  │  │   (status=pending_start)       │
+└────────────────────────────────────┘                │  └─ programmes (dup template)     │
+                                                      └──────────────────────────────────┘
 ```
 
-Le SaaS (`fitcoach_updated`) est la **source de vérité** pour :
-- L'idempotence (table `ebook_purchases.stripe_session_id` PK)
-- Le compteur 30 (SELECT count WHERE app_access_granted=true)
-- L'état du compte athlète (clients + auth.users + programmes)
+---
 
-`rbperform.com` est uniquement l'**émetteur du paiement** et l'**émetteur de l'email**.
+## Flow client par tier
+
+### Tier `pdf` (47€)
+1. Achat sur rbperform.com → checkout Stripe avec `programmeId=ebook-athlete-100-pdf`
+2. Webhook reçoit → `sendEbookEmail(tier='pdf')`
+3. Email : PDF en pièce jointe + petit teaser "tu veux l'app ? Réponds-moi"
+4. Aucun compte SaaS créé, aucune ligne dans `ebook_purchases`
+
+### Tier `founding` (57€) — 30 premiers
+1. Achat avec `programmeId=ebook-athlete-100-founding`
+2. Webhook → `grantAppAccess` → SaaS provisionne client + programme
+3. Email : PDF + bouton **"Accéder à mon espace 100j"** → `/login?email=...&source=ebook`
+4. Login OTP 6 chiffres → `/training` → écran "Démarrer mes 100 jours" (irréversible)
+5. Clic Démarrer → `subscription_start_date = now()`, `+100j` jusqu'à `subscription_end_date`
+
+### Tier `perf` (87€) — Performance pack
+Identique à `founding` mais :
+- 2 PDFs en pièce jointe (Ebook 100J + Force & Masse)
+- Email avec bloc "Performance pack — 2 fichiers"
+
+### Tier `founding`/`perf` après les 30 places
+- `app_access_granted=false`, `reason=waitlist_wave2`
+- Email : PDF normal + bloc orange "30 places prises, tu es sur la waitlist"
+- Pas de bouton login
 
 ---
 
 ## Étapes ordonnées (statut)
 
-| # | Étape                                                        | Repo               | Statut |
-|---|--------------------------------------------------------------|--------------------|--------|
-| 1 | Coach virtuel + template HTML placeholder                    | fitcoach_updated   | ✅     |
-| 2 | Table `ebook_purchases` (idempotence + compteur)             | fitcoach_updated   | ⏳ DDL — voir ci-dessous |
-| 3 | Endpoint `/api/internal/ebook-grant-access`                  | fitcoach_updated   | ✅     |
-| 4 | Helper `isInternalAuthorized` dans `_security.js`            | fitcoach_updated   | ✅     |
-| 5 | Login pre-fill + écran "Démarrer 100j"                       | fitcoach_updated   | ✅     |
-| 6 | Webhook rbperform.com : branch `ebook-athlete-60`            | rbperform          | ✅     |
-| 7 | Email `sendEbookEmail` (2 variants : granted/waitlist)       | rbperform          | ✅     |
-| 8 | Tests E2E mode Stripe test                                   | both               | ✅ doc + script |
-| 9 | Déploiement prod + monitoring                                | both               | À faire |
+| # | Étape | Repo | Statut |
+|---|---|---|---|
+| 1 | Coach virtuel + template HTML | fitcoach_updated | ✅ |
+| 2 | Table `ebook_purchases` | fitcoach_updated | ✅ |
+| 3 | Endpoint `/api/internal/ebook-grant-access` | fitcoach_updated | ✅ |
+| 4 | Helper `isInternalAuthorized` | fitcoach_updated | ✅ |
+| 5 | Pre-fill login + écran "Démarrer 100j" | fitcoach_updated | ✅ |
+| 6 | Webhook switch 3 tiers + `getEbookTier()` | rbperform | ✅ |
+| 7 | Email 3 variants (pdf/founding/perf, granted/waitlist/collision) | rbperform | ✅ |
+| 8 | Tests E2E mode prod | both | ✅ (20/20) |
+| 9 | Déploiement prod | both | ✅ |
 
 ---
 
-## ⚠️ Avant de déployer — checklist obligatoire
+## Stripe — créer les 3 products
 
-### A. Migration 107 (`ebook_purchases`) à appliquer
+> ⚠️ Le webhook attend que `metadata.programmeId` soit l'un des 3 :
+> `ebook-athlete-100-pdf` / `ebook-athlete-100-founding` / `ebook-athlete-100-perf`
 
-Le script `scripts/setup-ebook-virtual-coach.mjs` a déjà créé le coach virtuel + template
-via PostgREST. Mais la table `ebook_purchases` nécessite du **DDL** → SQL Editor Supabase :
+### Procédure dashboard Stripe (TEST puis LIVE)
 
-1. Ouvre [supabase.com/dashboard](https://supabase.com/dashboard) → projet → **SQL Editor**
-2. Colle le contenu de `supabase/migrations/107_ebook_purchases.sql` → **Run**
-3. Vérifie : `node scripts/apply-ebook-migration-107.mjs` → doit dire "✅ EXISTE"
+1. [dashboard.stripe.com/products](https://dashboard.stripe.com/products) → **+ Add product** (×3)
+2. Pour chacun :
 
-### B. Stripe product à créer (rbperform.com)
+| Product Name (Stripe) | programmeId metadata | Price |
+|---|---|---|
+| `Ebook Athlète 100J — PDF` | `ebook-athlete-100-pdf` | 47.00 € |
+| `Ebook Athlète 100J — Founding` | `ebook-athlete-100-founding` | 57.00 € |
+| `Performance Pack 100J + F&M` | `ebook-athlete-100-perf` | 87.00 € |
 
-> ⚠️ Le code attend `metadata.programmeId === "ebook-athlete-60"` (commence par `ebook-athlete-`).
+3. Configuration commune :
+   - Currency : EUR
+   - Tax behavior : Inclusive ou Exclusive selon ton setup
+   - Recurring : NO (one-time)
 
-**Procédure Stripe Dashboard** :
-
-1. **TEST mode** d'abord : [dashboard.stripe.com/test/products](https://dashboard.stripe.com/test/products)
-2. **+ Create product** :
-   - Name : `Ebook Athlète 60J`
-   - Price : à toi de définir (suggestion : 27€/39€/47€)
-   - Type : One-time
-3. **Récupère le `price_id`** (format `price_xxx`)
-4. **Côté front rbperform.com** : ajoute un bouton qui POST sur `/api/checkout` avec :
+4. Côté front rbperform.com : 3 boutons → POST `/api/checkout` avec :
    ```json
-   { "programmeId": "ebook-athlete-60",
-     "programmeName": "Ebook Athlète 60J",
-     "price": 27 }
+   { "programmeId": "ebook-athlete-100-founding",
+     "programmeName": "Ebook Athlète 100J — Founding",
+     "price": 57 }
    ```
-5. **Reproduis en LIVE** mode quand prêt à vendre.
 
-### C. PDF placeholder à remplacer
-
-Le fichier `~/rbperform/public/pdfs/ebook-athlete-60.pdf` doit exister.
-Tant qu'il n'existe pas, l'email partira sans pièce jointe (warning dans les logs).
-
-Quand tu as le vrai PDF : `cp /chemin/ton-ebook.pdf ~/rbperform/public/pdfs/ebook-athlete-60.pdf`
-puis redéploie rbperform.
-
-### D. Template HTML programme à remplacer
-
-Le template `eb000000-0000-4000-8000-000000000002` contient un HTML minimaliste
-("Programme à compléter"). Pour le remplacer par le vrai programme 100J :
-
-Option 1 — via script (à venir, pas encore écrit) :
-```bash
-node scripts/update-ebook-template.mjs /chemin/vers/programme.html
-```
-
-Option 2 — manuel via Supabase Dashboard :
-```sql
-UPDATE coach_programme_templates
-SET html_content = '<...>', updated_at = now()
-WHERE id = 'eb000000-0000-4000-8000-000000000002';
-```
+5. **Reproduis en LIVE** une fois validé en TEST.
 
 ---
 
-## Env vars à provisionner
+## PDF à fournir
 
-### `~/fitcoach_updated` (Vercel project rbperform.app)
+Place ces fichiers dans `~/rbperform/public/pdfs/` :
 
-```bash
-INTERNAL_API_SECRET=<32+ chars random, ex: openssl rand -hex 32>
-EBOOK_VIRTUAL_COACH_ID=eb000000-0000-4000-8000-000000000001
-EBOOK_TEMPLATE_ID=eb000000-0000-4000-8000-000000000002
-```
-
-### `~/rbperform` (Vercel project rbperform.com)
-
-```bash
-INTERNAL_API_SECRET=<MÊME valeur que ci-dessus>
-SAAS_API_URL=https://rbperform.app
-SAAS_APP_URL=https://rbperform.app    # pour /login?email=...&source=ebook dans l'email
-```
-
-> ⚠️ `INTERNAL_API_SECRET` **doit être identique** sur les 2 projets sinon 401.
+| Path | Tier | Statut |
+|---|---|---|
+| `ebook-athlete-100.pdf` | utilisé par pdf/founding/perf | ⏳ à fournir |
+| `programme-force-masse.pdf` | additionalPdf du tier perf | ✅ existe (force-masse déjà sorti) |
 
 ---
 
-## Tests E2E
+## Env vars en place (vérifiées en prod)
 
-### Test rapide local (endpoint seul)
+### `~/fitcoach_updated` (rb-perfor) ✅
+- `INTERNAL_API_SECRET` (64 chars hex)
+- `EBOOK_VIRTUAL_COACH_ID=eb000000-0000-4000-8000-000000000001`
+- `EBOOK_TEMPLATE_ID=eb000000-0000-4000-8000-000000000002`
 
-```bash
-# Démarre dev server (vercel dev)
-cd ~/fitcoach_updated && vercel dev
-
-# Dans un autre terminal :
-node scripts/test-ebook-grant.mjs
-```
-
-Le script teste :
-- Auth (401 sans/mauvais secret)
-- Validation body (400 sur champs manquants)
-- Happy path (granted + client + programme créés)
-- Idempotence (replay même session_id → pas de doublon client)
-- Coach collision (email coach existant → granted=false)
-
-Cleanup automatique après tests.
-
-### Test full E2E via Stripe CLI (mode test)
-
-```bash
-cd ~/rbperform
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
-
-# Dans un autre terminal — simule un achat
-stripe trigger checkout.session.completed \
-  --add checkout_session:metadata.programmeId=ebook-athlete-60 \
-  --add checkout_session:metadata.programmeName="Ebook Athlète 60J" \
-  --add checkout_session:customer_email=test-e2e@example.com
-```
-
-Vérifie ensuite côté SaaS :
-```sql
-SELECT * FROM ebook_purchases ORDER BY created_at DESC LIMIT 5;
-SELECT * FROM clients WHERE coach_id = 'eb000000-0000-4000-8000-000000000001' ORDER BY created_at DESC LIMIT 5;
-```
-
-### Test compteur 30 (mock 29 places prises)
-
-```sql
--- À jouer en SQL Editor pour simuler 29 places prises
-INSERT INTO ebook_purchases (stripe_session_id, email, app_access_granted, granted_at)
-SELECT 'cs_mock_' || g, 'mock' || g || '@test.com', true, now()
-FROM generate_series(1, 29) g;
-
--- Maintenant le 30e achat doit retourner granted=true (place 30)
--- Le 31e doit retourner granted=false + reason=waitlist_wave2
-
--- Cleanup
-DELETE FROM ebook_purchases WHERE stripe_session_id LIKE 'cs_mock_%';
-```
-
----
-
-## Flow client (UX complet)
-
-1. **Achat sur rbperform.com** → checkout Stripe → paiement
-2. **Webhook Stripe** → grantAppAccess() → sendEbookEmail()
-3. **Email reçu** (variant A si granted) :
-   - PDF en pièce jointe
-   - Gros bouton **"Accéder à mon espace →"**
-4. **Clic bouton** → `rbperform.app/login?email=client@x.com&source=ebook`
-5. **LoginScreen** :
-   - Bannière "Ebook Athlète · 100j"
-   - Email pré-rempli + signInWithOtp() auto-déclenché
-   - Client reçoit code 6 chiffres par email Supabase
-6. **Code entré** → JWT → redirection `/app.html`
-7. **App.jsx** détecte `client.subscription_status === 'pending_start'`
-8. **EbookStartScreen** s'affiche : "Bienvenue [Prénom]. Démarre quand tu es prêt."
-9. **Clic "Démarrer mes 100 jours"** → confirmation → UPDATE clients :
-   - `subscription_status='active'`
-   - `subscription_start_date=now()`
-   - `subscription_end_date=now() + 100j`
-10. **TrainingPage** s'affiche normalement avec le programme dupliqué du template.
+### `~/rbperform` ✅
+- `INTERNAL_API_SECRET` (même valeur)
+- `SAAS_API_URL=https://rbperform.app`
+- `SAAS_APP_URL=https://rbperform.app`
 
 ---
 
 ## Schéma DB
+
+### `coaches` virtuel (migration 106)
+- `id = eb000000-0000-4000-8000-000000000001`
+- `email = athletes@rbperform.app`
+- Tous les clients ebook attachés via `clients.coach_id`
+
+### `coach_programme_templates` (migration 106)
+- `id = eb000000-0000-4000-8000-000000000002`
+- `html_content` = programme 100J — placeholder à remplacer
 
 ### `ebook_purchases` (migration 107)
 ```sql
@@ -225,61 +167,71 @@ raw_metadata        jsonb,
 source              text NOT NULL DEFAULT 'rbperform.com',
 created_at          timestamptz NOT NULL DEFAULT now(),
 granted_at          timestamptz,
-notes               text  -- 'waitlist_wave2' | 'coach_collision' | NULL
+notes               text  -- 'waitlist_wave2' | 'coach_collision'
 ```
 
-### Coach virtuel (migration 106)
-- `coaches.id = eb000000-0000-4000-8000-000000000001`
-- `coaches.email = athletes@rbperform.app`
-- Tous les clients ebook sont attachés via `clients.coach_id = <ce UUID>`
+---
 
-### Template programme (migration 106)
-- `coach_programme_templates.id = eb000000-0000-4000-8000-000000000002`
-- `html_content` = placeholder à remplacer
+## Tests E2E
+
+Tests passés contre prod (20/20) :
+```bash
+INTERNAL_API_SECRET=<secret> API_URL=https://rbperform.app \
+  node scripts/test-ebook-grant.mjs
+```
+
+Cleanup automatique après tests.
 
 ---
 
-## Monitoring & alerting
+## Monitoring
 
-Tous les paths d'erreur capturent dans **Sentry** via `_sentry.js#captureException` :
+**Compteur places restantes** :
+```sql
+SELECT 30 - count(*) AS places_left
+FROM ebook_purchases
+WHERE app_access_granted = true;
+```
 
-| Tag `stage`     | Quand                                              |
-|-----------------|----------------------------------------------------|
-| `lookup`        | SELECT ebook_purchases failed                      |
-| `auth`          | admin.createUser / listUsers failed                |
-| `client`        | INSERT clients failed                              |
-| `template`      | SELECT coach_programme_templates failed            |
-| `programme`     | INSERT programmes failed                           |
-| `purchase`      | INSERT ebook_purchases failed (hors 23505)         |
-| `unhandled`     | Exception non capturée                             |
+**Répartition par tier** (à requêter via metadata Stripe + ebook_purchases.raw_metadata) :
+```sql
+SELECT raw_metadata->>'programmeId' AS tier, count(*)
+FROM ebook_purchases
+GROUP BY raw_metadata->>'programmeId';
+```
 
-À monitorer en production :
-- Compteur places restantes : `SELECT 30 - count(*) FROM ebook_purchases WHERE app_access_granted=true`
-- Taux d'activation : `SELECT count(*) FROM clients WHERE coach_id='eb000000-...' AND subscription_status='active'` / `SELECT count FROM ebook_purchases WHERE app_access_granted=true`
-- Webhook failures : Stripe Dashboard → Developers → Webhooks → logs
-
----
-
-## Cas edges traités
-
-| Cas                                              | Comportement                                          |
-|--------------------------------------------------|-------------------------------------------------------|
-| Stripe retry le webhook (réseau, timeout)         | Idempotence via `stripe_session_id` PK → réponse identique |
-| 2 webhooks simultanés même session_id            | Race : 23505 sur INSERT purchase → fallback granted (déjà en base) |
-| Email acheteur = email coach existant            | granted=false, reason=`coach_collision`, email "contacte-nous" |
-| 30 places déjà prises                            | granted=false, reason=`waitlist_wave2`, PDF envoyé   |
-| SaaS unreachable depuis rbperform.com            | Email envoyé sans bloc accès app, alerte logs        |
-| auth.users existe déjà pour cet email            | Réutilisé (cas: client ancien sur l'app)              |
-| clients row existe déjà pour cet email + coach virtuel | Réutilisée (cas: retry après crash partiel)    |
-| INSERT clients OK mais INSERT programmes KO       | clients préservé, retry Stripe → INSERT programmes complète |
+**Taux d'activation** (clients ayant cliqué "Démarrer") :
+```sql
+SELECT
+  count(*) FILTER (WHERE subscription_status = 'active') AS activated,
+  count(*) FILTER (WHERE subscription_status = 'pending_start') AS pending,
+  count(*) AS total
+FROM clients
+WHERE coach_id = 'eb000000-0000-4000-8000-000000000001';
+```
 
 ---
 
-## TODO / Améliorations futures
+## Cas edges (tous gérés)
 
-- [ ] Script `scripts/update-ebook-template.mjs` pour remplacer le HTML du template
-- [ ] Page `/admin/ebook-purchases` dans CoachDashboard pour Rayan (liste des achats + filtres)
-- [ ] Email J+7/J+30 automatique (engagement) via cron existant
-- [ ] Upsell J+95 vers founding/coaching premium (cron + Resend)
-- [ ] Dashboard temps réel compteur 30 places (déjà couvert par `/api/founding-stats` pattern)
-- [ ] Support multi-cohorts (waitlist wave 2/3 activable manuellement)
+| Cas | Comportement |
+|---|---|
+| Stripe retry webhook | Idempotence via `stripe_session_id` PK |
+| 2 webhooks simultanés même session | 23505 unique_violation → fallback granted |
+| Email = coach existant | granted=false, reason=`coach_collision`, email "contacte-nous" |
+| 30 places prises | granted=false, reason=`waitlist_wave2`, PDF envoyé |
+| Tier `pdf` (pas d'app) | Pas d'appel SaaS, pas de ligne `ebook_purchases` |
+| SaaS unreachable depuis webhook | Email envoyé sans bloc app, alerte logs |
+| auth.users existe déjà | Réutilisé |
+| clients existe déjà (retry partiel) | Réutilisé, `user_id` re-attaché |
+
+---
+
+## TODO
+
+- [ ] PDF `ebook-athlete-100.pdf` à uploader dans `~/rbperform/public/pdfs/`
+- [ ] HTML template programme 100J à remplacer (`UPDATE coach_programme_templates ... WHERE id='eb000000-0000-4000-8000-000000000002'`)
+- [ ] Stripe products à créer (TEST + LIVE) — cf section dédiée
+- [ ] Front rbperform.com : 3 boutons d'achat (un par tier)
+- [ ] Optionnel : page `/admin/ebook-purchases` côté CoachDashboard pour Rayan
+- [ ] Optionnel : compteur live "il reste X/30 places" sur la landing rbperform.com (alimenté par `/api/founding-stats` pattern)
