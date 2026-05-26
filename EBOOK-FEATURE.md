@@ -1,25 +1,30 @@
-# Feature : Ebook self-serve athlète — 3 tiers (47 / 57 / 87 €)
+# Feature : Ebook self-serve athlète — 2 tiers actifs + 1 latent
 
 Documentation opérationnelle du flow `achat ebook` → `provisioning compte athlète` →
-`accès 100 jours à l'app RB Perform` (bonus founding).
+`accès 100 jours à l'app RB Perform` (bonus founding 30 places).
 
-> **TL;DR** : trois products Stripe (`ebook-athlete-100-pdf`, `ebook-athlete-100-founding`,
-> `ebook-athlete-100-perf`) sur rbperform.com. Les tiers `founding` et `perf` déclenchent
-> le provisioning d'un compte athlète sur rbperform.app + accès app 100j pour les 30 premiers.
-> Le tier `pdf` n'envoie qu'un PDF (pas de compte app). Les 100j d'accès app démarrent quand
-> **le client** clique sur "Démarrer" dans l'app, pas à l'achat.
+> **TL;DR** : sur rbperform.com, **Force & Masse** (59€, existing) est vendu en standalone
+> et bundlé avec l'accès app 100j dans le tier Founding (79€, 30 places). Un 3e tier
+> "Pack Athlète" est codé en attente : il s'active dès que le 2e ebook *"90 jours pour
+> devenir un véritable athlète"* est livré dans `~/rbperform/public/pdfs/`.
 
 ---
 
-## Architecture des 3 tiers
+## Architecture pricing (réel)
 
-| Tier | Suffix programmeId | Prix | Contenu | Compte app | Compte 30 places |
-|---|---|---|---|---|---|
-| **PDF** | `-pdf` | **47€** | Ebook 100J PDF seul | ❌ | ❌ (pas comptabilisé) |
-| **FOUNDING** | `-founding` | **57€** | Ebook 100J + accès app 100j | ✅ (si 30 places dispo) | ✅ |
-| **PERFORMANCE** | `-perf` | **87€** | Ebook 100J + Force & Masse + accès app 100j | ✅ (si 30 places dispo) | ✅ |
+| Tier | Stripe product | Prix | Contenu | Compte 30 places |
+|---|---|---|---|---|
+| **F&M solo** | `force-masse` (existing) | **59€** | Force & Masse PDF | ❌ (flow legacy `sendProgrammeEmail`) |
+| **Founding** | `ebook-athlete-100-founding` | **79€** | F&M + accès app 100j | ✅ |
+| **Pack Athlète** *(latent)* | `ebook-athlete-100-pack` | **TBD** *(99€ avec anchor 119€ ?)* | F&M + Athlète 90J + accès app 100j | ✅ |
 
-**Compteur 30 places** : partagé entre tiers `founding` et `perf` (1 compteur global, pas un par tier).
+**Anchor Hormozi possible** sur Founding 79€ :
+- Force & Masse PDF : 59€ (réel)
+- Accès App 100j : valeur perçue ~35€ (5€/sem × 7 sem app standalone)
+- **Valeur totale : 94€**
+- **Tier Founding : 79€** (économie 15€) — 30 places founding launch
+
+**Compteur 30 places** : partagé entre `founding` et `pack` (1 compteur global).
 
 ---
 
@@ -88,46 +93,61 @@ Identique à `founding` mais :
 
 ---
 
-## Stripe — créer les 3 products
+## Stripe — products à créer
 
-> ⚠️ Le webhook attend que `metadata.programmeId` soit l'un des 3 :
-> `ebook-athlete-100-pdf` / `ebook-athlete-100-founding` / `ebook-athlete-100-perf`
+> ⚠️ Le webhook attend que `metadata.programmeId` soit l'un des suivants :
+> - `force-masse` (existing — flow legacy, pas ebook self-serve)
+> - `ebook-athlete-100-founding` (nouveau)
+> - `ebook-athlete-100-pack` (nouveau, à activer plus tard)
 
 ### Procédure dashboard Stripe (TEST puis LIVE)
 
-1. [dashboard.stripe.com/products](https://dashboard.stripe.com/products) → **+ Add product** (×3)
-2. Pour chacun :
+**Aujourd'hui — 1 seul nouveau product à créer** (Founding) :
 
 | Product Name (Stripe) | programmeId metadata | Price |
 |---|---|---|
-| `Ebook Athlète 100J — PDF` | `ebook-athlete-100-pdf` | 47.00 € |
-| `Ebook Athlète 100J — Founding` | `ebook-athlete-100-founding` | 57.00 € |
-| `Performance Pack 100J + F&M` | `ebook-athlete-100-perf` | 87.00 € |
+| `Force & Masse + App 100j (Founding)` | `ebook-athlete-100-founding` | 79.00 € |
 
-3. Configuration commune :
-   - Currency : EUR
-   - Tax behavior : Inclusive ou Exclusive selon ton setup
-   - Recurring : NO (one-time)
+Configuration :
+- Currency : EUR
+- Recurring : NO (one-time)
+- Tax behavior : selon ton setup actuel
 
-4. Côté front rbperform.com : 3 boutons → POST `/api/checkout` avec :
-   ```json
-   { "programmeId": "ebook-athlete-100-founding",
-     "programmeName": "Ebook Athlète 100J — Founding",
-     "price": 57 }
-   ```
+**Plus tard — quand Athlète 90J sera prêt** :
 
-5. **Reproduis en LIVE** une fois validé en TEST.
+| Product Name (Stripe) | programmeId metadata | Price |
+|---|---|---|
+| `Pack Athlète (F&M + 90J + App)` | `ebook-athlete-100-pack` | 99.00 € (à confirmer) |
+
+### Front rbperform.com
+
+Boutons d'achat à câbler vers `/api/checkout` :
+
+```json
+// Tier Founding
+{ "programmeId": "ebook-athlete-100-founding",
+  "programmeName": "Force & Masse + App 100j (Founding)",
+  "price": 79 }
+```
+
+Force & Masse standalone (59€) reste inchangé — utilise le product `force-masse` existing.
 
 ---
 
-## PDF à fournir
+## PDFs nécessaires
 
 Place ces fichiers dans `~/rbperform/public/pdfs/` :
 
-| Path | Tier | Statut |
+| Path | Statut | Tiers concernés |
 |---|---|---|
-| `ebook-athlete-100.pdf` | utilisé par pdf/founding/perf | ⏳ à fournir |
-| `programme-force-masse.pdf` | additionalPdf du tier perf | ✅ existe (force-masse déjà sorti) |
+| `programme-force-masse.pdf` | ✅ existe (4.4 MB, 87 pages) | force-masse / founding / pack |
+| `programme-athlete-90j.pdf` | ⏳ **À CRÉER** (Athlète Explosif 90J) | pack uniquement |
+
+Quand le PDF Athlète 90J sera prêt :
+1. Place-le dans `~/rbperform/public/pdfs/programme-athlete-90j.pdf`
+2. Décommente le bloc `additionalPdfs` dans `lib/pdf-manager.ts` (entrée `ebook-athlete-100-pack`)
+3. Active le bouton "Pack Athlète" sur la landing
+4. Redeploy rbperform.com
 
 ---
 
