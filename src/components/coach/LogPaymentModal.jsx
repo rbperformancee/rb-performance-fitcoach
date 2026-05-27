@@ -111,7 +111,14 @@ export default function LogPaymentModal({
     new Date(computedPeriodEnd) >= new Date(periodStart) &&
     (!installmentMode || (parseFloat(totalPlanAmount) > 0 && nInstallments >= 2));
 
-  async function save(skipDuplicateCheck = false) {
+  // Guard `=== true` : protège contre le cas où `onClick={save}` passe le
+  // SyntheticEvent React comme premier arg. Sans ce guard, l'event (truthy)
+  // serait traité comme skipDuplicateCheck = true et bypasserait la couche 2
+  // de détection de chevauchement de paiement à chaque clic — risque de
+  // double-comptage silencieux. Voir aussi la même classe de bug dans
+  // LoginScreen.jsx (sendOTP).
+  async function save(skipDuplicateCheckArg = false) {
+    const skipDuplicateCheck = skipDuplicateCheckArg === true;
     if (!valid) return;
     setSaving(true);
     haptic.light();
@@ -429,7 +436,7 @@ export default function LogPaymentModal({
           >Annuler</button>
           <button
             type="button"
-            onClick={save}
+            onClick={() => save()}
             disabled={!valid || saving}
             style={{
               flex: 2, padding: "12px 18px",
