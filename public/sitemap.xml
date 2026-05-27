@@ -111,12 +111,87 @@
     <priority>0.85</priority>
   </url>
   <url>
+    <loc>https://rbperform.app/coach-sportif-nice</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-nantes</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-strasbourg</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-lille</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-rennes</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-montpellier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-grenoble</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-saint-etienne</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-reims</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-toulon</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://rbperform.app/rb-perform-vs-truecoach</loc>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://rbperform.app/rb-perform-vs-everfit</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/rb-perform-vs-mycoach</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/rb-perform-vs-fizzup-pro</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/rb-perform-vs-trainheroic</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/rb-perform-vs-hellocoach</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/blog/logiciel-facturation-auto-entrepreneur-coach</loc>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
