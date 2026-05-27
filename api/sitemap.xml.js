@@ -19,6 +19,7 @@ const STATIC_PAGES = [
   { loc: '/',                            changefreq: 'weekly',  priority: 1.0 },
   { loc: '/candidature',                 changefreq: 'monthly', priority: 0.9 },
   { loc: '/founding',                    changefreq: 'weekly',  priority: 0.95 },
+  { loc: '/diagnostic',                  changefreq: 'weekly',  priority: 0.9  },
   { loc: '/logiciel-coach-sportif',      changefreq: 'monthly', priority: 0.9 },
   { loc: '/alternative-trainerize',      changefreq: 'monthly', priority: 0.85 },
   { loc: '/comparison',                  changefreq: 'monthly', priority: 0.7 },
@@ -28,6 +29,8 @@ const STATIC_PAGES = [
   { loc: '/blog/combien-gagne-coach-sportif-france', changefreq: 'monthly', priority: 0.75 },
   { loc: '/blog/comment-fixer-tarifs-coach-sportif',  changefreq: 'monthly', priority: 0.8 },
   { loc: '/blog/statut-juridique-coach-sportif',      changefreq: 'monthly', priority: 0.8 },
+  { loc: '/blog/diagnostic-business-coach-sportif',   changefreq: 'monthly', priority: 0.85 },
+  { loc: '/blog/trouver-premiers-clients-coach-sportif', changefreq: 'monthly', priority: 0.85 },
   { loc: '/security',                    changefreq: 'yearly',  priority: 0.4 },
   { loc: '/legal',                       changefreq: 'yearly',  priority: 0.3 },
 ];
