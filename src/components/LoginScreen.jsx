@@ -68,8 +68,12 @@ export function LoginScreen({ onBack }) {
   // ===== CLIENT : envoyer OTP =====
   // overrideEmail : permet à l'auto-send (post pre-fill ?email=) de bypasser
   // la closure stale de `email`. Sinon utilise le state.
+  // Guard `typeof === 'string'` : protège contre le cas où onClick passe le
+  // SyntheticEvent React comme premier arg (regression possible si un
+  // futur onClick={sendOTP} oublie le wrapper `() => sendOTP()`).
   const sendOTP = async (overrideEmail) => {
-    const effectiveEmail = (overrideEmail || email).trim().toLowerCase();
+    const override = typeof overrideEmail === 'string' ? overrideEmail : '';
+    const effectiveEmail = (override || email).trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(effectiveEmail)) return;
     setLoading(true);
     setError('');
@@ -296,7 +300,7 @@ export function LoginScreen({ onBack }) {
                   style={inputStyle}
                 />
                 <button
-                  onClick={sendOTP}
+                  onClick={() => sendOTP()}
                   disabled={!validEmail || loading}
                   style={{
                     ...btnStyle,
