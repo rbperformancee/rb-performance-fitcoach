@@ -55,6 +55,10 @@ const STATIC_PAGES = [
   { loc: '/rb-perform-vs-trainheroic',                 changefreq: 'monthly', priority: 0.85 },
   { loc: '/rb-perform-vs-hellocoach',                  changefreq: 'monthly', priority: 0.85 },
   { loc: '/blog/logiciel-facturation-auto-entrepreneur-coach', changefreq: 'monthly', priority: 0.85 },
+  { loc: '/outils/simulateur-charges-micro-entrepreneur-coach', changefreq: 'monthly', priority: 0.85 },
+  { loc: '/outils/estimateur-revenu-coach-sportif',             changefreq: 'monthly', priority: 0.85 },
+  { loc: '/meilleures-applications-fitness-coach-sportif-2026', changefreq: 'monthly', priority: 0.85 },
+  { loc: '/meilleurs-outils-suivi-client-coach-sportif',        changefreq: 'monthly', priority: 0.85 },
   { loc: '/security',                    changefreq: 'yearly',  priority: 0.4 },
   { loc: '/legal',                       changefreq: 'yearly',  priority: 0.3 },
 ];

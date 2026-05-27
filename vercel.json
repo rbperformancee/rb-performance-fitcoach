@@ -134,6 +134,8 @@
     { "source": "/rb-perform-vs-:slug", "destination": "/rb-perform-vs-:slug.html" },
     { "source": "/outils/:slug", "destination": "/outils/:slug.html" },
     { "source": "/outils", "destination": "/outils/index.html" },
+    { "source": "/meilleures-applications-fitness-coach-sportif-2026", "destination": "/meilleures-applications-fitness-coach-sportif-2026.html" },
+    { "source": "/meilleurs-outils-suivi-client-coach-sportif", "destination": "/meilleurs-outils-suivi-client-coach-sportif.html" },
     { "source": "/((?!api/|_next/|static/|videos/|images/|_vercel/|.*\\..*).*)", "destination": "/404.html" }
   ],
   "headers": [
