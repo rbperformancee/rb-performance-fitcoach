@@ -1,9 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Stub : le sitemap réel est servi dynamiquement par /api/sitemap.xml
-     (cf. rewrite dans vercel.json). Ce fichier existe uniquement pour
-     satisfaire le check CI legacy. Voir commit a630c2e9. -->
+<!-- Sitemap statique. Les fichiers statiques sont servis par Vercel AVANT
+     les rewrites, donc l'ancienne rewrite /sitemap.xml → /api/sitemap.xml
+     ne s'applique jamais tant que ce fichier existe. On garde un sitemap
+     complet ici (statique = pas d'erreur 5xx possible). Pour ajouter une
+     URL, édite ICI + api/sitemap.xml.js (rester en sync). -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://rbperform.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/founding</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/diagnostic</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/candidature</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/logiciel-coach-sportif</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/alternative-trainerize</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/meilleurs-logiciels-coach-sportif-2026</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/comparison</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/blog/combien-gagne-coach-sportif-france</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/blog/comment-fixer-tarifs-coach-sportif</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/blog/statut-juridique-coach-sportif</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/blog/diagnostic-business-coach-sportif</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/blog/trouver-premiers-clients-coach-sportif</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/press</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/security</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/legal</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>
