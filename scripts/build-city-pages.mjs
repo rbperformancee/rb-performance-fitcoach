@@ -466,6 +466,12 @@ function generateHTML(city) {
   const url = `https://rbperform.app/coach-sportif-${city.slug}`;
   const title = `Coach sportif ${city.nameAccusatif} — Logiciel SaaS pour indépendants en 2026 | RB Perform`;
   const description = `Tu es coach sportif ${city.nameAccusatif} ? Marché local, salaires, fourchettes tarifs ${city.tarifSeanceMin}-${city.tarifSeanceMax}€/séance, quartiers porteurs et logiciel pro pensé pour les coachs francophones (RB Perform Founding 199€/mois bloqué à vie).`;
+  const ogParams = new URLSearchParams({
+    title: `Coach sportif ${city.nameAccusatif}`,
+    category: 'Marché local',
+    subtitle: `${city.tarifSeanceMin}-${city.tarifSeanceMax}€/séance · ${city.coachsEstimated} · Méthode 90j pour démarrer`,
+  });
+  const ogImage = `https://rbperform.app/api/og?${ogParams.toString()}`;
 
   const faqJsonLd = city.faqLocal.map(f => ({
     '@type': 'Question',
@@ -493,14 +499,14 @@ function generateHTML(city) {
 <meta property="og:title" content="${title}" />
 <meta property="og:description" content="${description}" />
 <meta property="og:url" content="${url}" />
-<meta property="og:image" content="https://rbperform.app/og-default.png" />
+<meta property="og:image" content="${ogImage}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${title}" />
 <meta name="twitter:description" content="${description}" />
-<meta name="twitter:image" content="https://rbperform.app/og-default.png" />
+<meta name="twitter:image" content="${ogImage}" />
 
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
@@ -511,6 +517,7 @@ function generateHTML(city) {
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
 <script type="application/ld+json">
@@ -525,7 +532,7 @@ ${JSON.stringify({
       dateModified: '2026-05-27',
       author: { '@type': 'Person', name: 'Rayan Bonte', url: 'https://rbperform.app', jobTitle: 'Founder RB Perform' },
       publisher: { '@type': 'Organization', name: 'RB Perform', logo: { '@type': 'ImageObject', url: 'https://rbperform.app/icon-512.png' } },
-      image: 'https://rbperform.app/og-default.png',
+      image: ogImage,
       description,
       wordCount: 1400,
       inLanguage: 'fr-FR',
