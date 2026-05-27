@@ -76,6 +76,51 @@
     <priority>0.85</priority>
   </url>
   <url>
+    <loc>https://rbperform.app/outils</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/outils/calculateur-tarif-coach-sportif</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-paris</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-lyon</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-marseille</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-bordeaux</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/coach-sportif-toulouse</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/rb-perform-vs-truecoach</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://rbperform.app/rb-perform-vs-everfit</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://rbperform.app/press</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>

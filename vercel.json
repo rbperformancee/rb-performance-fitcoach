@@ -90,6 +90,14 @@
     {
       "path": "/api/cron-launch-reminder",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron-diagnostic-nurture",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron-auto-validate-sessions",
+      "schedule": "0 * * * *"
     }
   ],
   "redirects": [
@@ -98,6 +106,7 @@
   "rewrites": [
     { "source": "/rejoindre/:slug", "destination": "/app.html?coach=:slug" },
     { "source": "/founding",    "destination": "/founding.html" },
+    { "source": "/diagnostic",  "destination": "/diagnostic.html" },
     { "source": "/link",        "destination": "/link.html" },
     { "source": "/demo",        "destination": "/app.html?demo=true" },
     { "source": "/demo-client", "destination": "/app.html?demo-client=true" },
@@ -121,6 +130,10 @@
     { "source": "/meilleurs-logiciels-coach-sportif-2026", "destination": "/meilleurs-logiciels-coach-sportif-2026.html" },
     { "source": "/press", "destination": "/press.html" },
     { "source": "/llms.txt", "destination": "/llms.txt" },
+    { "source": "/coach-sportif-:slug", "destination": "/coach-sportif-:slug.html" },
+    { "source": "/rb-perform-vs-:slug", "destination": "/rb-perform-vs-:slug.html" },
+    { "source": "/outils/:slug", "destination": "/outils/:slug.html" },
+    { "source": "/outils", "destination": "/outils/index.html" },
     { "source": "/((?!api/|_next/|static/|videos/|images/|_vercel/|.*\\..*).*)", "destination": "/404.html" }
   ],
   "headers": [
@@ -160,6 +173,13 @@
     },
     {
       "source": "/founding.html",
+      "headers": [
+        { "key": "Content-Disposition", "value": "inline" },
+        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/diagnostic.html",
       "headers": [
         { "key": "Content-Disposition", "value": "inline" },
         { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }

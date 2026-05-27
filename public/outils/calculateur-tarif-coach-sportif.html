@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#050505" />
+<meta name="color-scheme" content="dark" />
+
+<title>Calculateur tarif coach sportif 2026 — Combien facturer ta séance ? | RB Perform</title>
+<meta name="description" content="Outil gratuit pour calculer ton tarif coach sportif idéal en 2026. Tu entres tes objectifs de revenu, tes charges et ta zone — tu sors avec un tarif séance + mensuel + trimestriel recommandé. Méthode coût + valeur perçue." />
+<meta name="keywords" content="calculateur tarif coach sportif, simulateur prix coaching, combien facturer séance coach, tarif coach personnel calcul, prix coaching individuel" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta name="author" content="Rayan Bonte" />
+<link rel="canonical" href="https://rbperform.app/outils/calculateur-tarif-coach-sportif" />
+
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="fr_FR" />
+<meta property="og:title" content="Calculateur tarif coach sportif 2026 — Combien facturer ta séance ?" />
+<meta property="og:description" content="Outil gratuit pour calculer ton tarif coach sportif idéal. Entre tes objectifs + charges + zone, sors avec un tarif séance + mensuel + trimestriel recommandé." />
+<meta property="og:url" content="https://rbperform.app/outils/calculateur-tarif-coach-sportif" />
+<meta property="og:image" content="https://rbperform.app/og-default.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Calculateur tarif coach sportif 2026" />
+<meta name="twitter:description" content="Outil gratuit pour calculer ton tarif coach sportif idéal. Entre tes objectifs + charges + zone, sors avec un tarif recommandé." />
+<meta name="twitter:image" content="https://rbperform.app/og-default.png" />
+
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": "https://rbperform.app/outils/calculateur-tarif-coach-sportif#tool",
+      "name": "Calculateur tarif coach sportif",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Calcule ton tarif coach sportif optimal selon tes objectifs de revenu, charges, statut juridique et zone géographique. Méthode coût + valeur perçue.",
+      "url": "https://rbperform.app/outils/calculateur-tarif-coach-sportif",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "publisher": { "@type": "Organization", "name": "RB Perform", "logo": { "@type": "ImageObject", "url": "https://rbperform.app/icon-512.png" } },
+      "inLanguage": "fr-FR",
+      "isAccessibleForFree": true
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://rbperform.app/" },
+        { "@type": "ListItem", "position": 2, "name": "Outils", "item": "https://rbperform.app/outils" },
+        { "@type": "ListItem", "position": 3, "name": "Calculateur tarif coach sportif", "item": "https://rbperform.app/outils/calculateur-tarif-coach-sportif" }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Comment est calculé le tarif recommandé par cet outil ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "L'outil combine 2 méthodes : (1) méthode coût — il calcule combien tu dois facturer pour atteindre ton objectif de revenu après charges sociales (URSSAF micro-entrepreneur 22%) et taux d'occupation réaliste (60-70% des créneaux planifiés sont effectivement vendus) ; (2) méthode valeur perçue — il ajuste selon ta zone géographique (fourchettes Paris/Lyon/Marseille/etc.) et ton format (séance vs mensuel vs trimestriel). Le résultat te donne 3 tarifs cohérents : séance individuelle, mensuel 4 séances, trimestriel 12 séances." }
+        },
+        {
+          "@type": "Question",
+          "name": "Pourquoi le tarif mensuel n'est pas juste séance × 4 ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Parce que l'engagement mensuel mérite une remise structurelle de 8-15% — c'est le mécanisme qui décide le client à passer du one-shot au récurrent. Sans remise, il achète à la carte ; avec remise, il achète un format. La remise est calculée pour rester rentable pour toi (moins de coût acquisition + meilleure prévisibilité de revenu) tout en étant clairement attractive pour le client." }
+        },
+        {
+          "@type": "Question",
+          "name": "Le calcul est-il valide pour un coach en SASU/EURL plutôt qu'auto-entrepreneur ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "L'outil utilise par défaut le régime micro-BNC (22% de charges + 2,2% CFP). Pour EURL/SASU, les charges sociales sont plus élevées (40-50% selon TNS/assimilé salarié) mais l'IS plus bas — résultat global proche pour des revenus 35-60K€/an. Pour un calcul précis SASU/EURL, comptez 10-15% de plus sur le tarif recommandé." }
+        },
+        {
+          "@type": "Question",
+          "name": "Faut-il toujours arrondir au chiffre supérieur ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Pour les séances individuelles : oui, arrondis toujours à la dizaine supérieure (75€ recommandé → facture 80€). Pour les formats mensuel/trimestriel : arrondis au plus proche d'une psychological price (380€ vs 380,40€). Les chiffres ronds rassurent et signalent un professionnel établi, pas un freelance qui négocie ses tarifs." }
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#050505;color:#fff;font-family:'DM Sans',-apple-system,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{min-height:100vh}
+.topbar{position:sticky;top:0;background:rgba(5,5,5,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.04);z-index:50;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:13px;font-weight:900;letter-spacing:0.14em;color:#fff;text-decoration:none}
+.logo span{color:#02d1ba}
+.back-link{font-size:12px;color:rgba(255,255,255,0.5);text-decoration:none;letter-spacing:0.04em}
+.back-link:hover{color:#02d1ba}
+
+main{max-width:720px;margin:0 auto;padding:60px 24px 80px}
+
+.breadcrumb{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:24px;letter-spacing:0.02em}
+.breadcrumb a{color:rgba(255,255,255,0.55);text-decoration:none}
+.breadcrumb a:hover{color:#02d1ba}
+.breadcrumb .sep{margin:0 8px;color:rgba(255,255,255,0.2)}
+
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#02d1ba;margin-bottom:14px}
+.eyebrow::before{content:"●";margin-right:8px}
+h1{font-size:clamp(30px,5vw,42px);font-weight:900;letter-spacing:-0.025em;line-height:1.1;color:#fff;margin-bottom:14px}
+.lede{font-size:17px;color:rgba(255,255,255,0.72);line-height:1.55;margin-bottom:40px}
+
+.calc-card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:28px;margin-bottom:24px}
+.calc-card h2{font-size:18px;font-weight:800;color:#fff;margin:0 0 18px;letter-spacing:-0.01em}
+
+.field{margin-bottom:20px}
+.field-label{display:block;font-size:13px;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:8px}
+.field-help{font-size:12px;color:rgba(255,255,255,0.45);margin-top:6px;line-height:1.4}
+.field input,.field select{width:100%;padding:14px 16px;background:#0e0e0e;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:15px;font-family:inherit;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus{border-color:#02d1ba}
+.field input[type="range"]{padding:0;height:6px;background:rgba(255,255,255,0.1);accent-color:#02d1ba}
+
+.range-row{display:flex;align-items:center;gap:14px}
+.range-row input[type="range"]{flex:1}
+.range-row .range-val{flex-shrink:0;min-width:80px;text-align:right;font-weight:700;color:#02d1ba;font-size:16px}
+
+.btn-calc{width:100%;padding:16px 24px;background:#02d1ba;color:#000;border:none;border-radius:12px;font-size:14px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:transform .15s,background .15s;box-shadow:0 12px 32px rgba(2,209,186,0.2)}
+.btn-calc:hover{transform:translateY(-2px);background:#5af0d8}
+
+.results{display:none;margin-top:32px;background:linear-gradient(180deg,rgba(2,209,186,0.05),rgba(2,209,186,0.01));border:1px solid rgba(2,209,186,0.25);border-radius:18px;padding:28px}
+.results.show{display:block}
+.results h2{font-size:16px;font-weight:800;color:#02d1ba;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 6px}
+.results .subtitle{font-size:14px;color:rgba(255,255,255,0.7);margin:0 0 24px}
+
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.result-row:last-child{border-bottom:none}
+.result-label{font-size:14.5px;color:rgba(255,255,255,0.85);font-weight:600}
+.result-sub{font-size:12px;color:rgba(255,255,255,0.5);font-weight:400;margin-left:6px}
+.result-value{font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.02em}
+.result-value .unit{font-size:14px;font-weight:600;color:rgba(255,255,255,0.6);margin-left:4px}
+
+.result-summary{margin-top:24px;padding-top:20px;border-top:1px solid rgba(2,209,186,0.2);font-size:14px;line-height:1.6;color:rgba(255,255,255,0.78)}
+.result-summary strong{color:#fff}
+
+.cta-result{margin-top:24px;padding:20px;background:rgba(2,209,186,0.08);border:1px solid rgba(2,209,186,0.3);border-radius:12px;text-align:center}
+.cta-result h3{font-size:16px;font-weight:800;color:#fff;margin:0 0 6px}
+.cta-result p{font-size:13.5px;color:rgba(255,255,255,0.7);margin:0 0 14px}
+.cta-result a.btn{display:inline-block;padding:12px 24px;background:#02d1ba;color:#000;border-radius:100px;font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;text-decoration:none}
+
+article{margin-top:48px}
+article h2{font-size:clamp(22px,3.8vw,28px);font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1.2;margin:40px 0 16px}
+article h3{font-size:18px;font-weight:700;color:#fff;margin:28px 0 12px}
+article p{font-size:15.5px;color:rgba(255,255,255,0.74);line-height:1.7;margin-bottom:18px}
+article a{color:#02d1ba;text-decoration:underline;text-underline-offset:3px}
+article ul{padding-left:22px;margin-bottom:18px}
+article li{font-size:15px;color:rgba(255,255,255,0.75);line-height:1.65;margin-bottom:7px}
+
+.faq-section{margin:36px 0}
+.faq-item{padding:18px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-size:15.5px;font-weight:700;color:#fff;margin-bottom:8px}
+.faq-a{font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7);margin:0}
+
+.bottom-footer{margin-top:60px;padding-top:24px;border-top:1px solid rgba(255,255,255,.06);font-size:11.5px;color:rgba(255,255,255,.4);text-align:center}
+.bottom-footer a{color:rgba(255,255,255,.55);margin:0 6px;text-decoration:none}
+.bottom-footer a:hover{color:#02d1ba}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="/" class="logo">RB<span>PERFORM</span></a>
+  <a href="/blog" class="back-link">← Blog</a>
+</header>
+
+<main>
+  <nav class="breadcrumb">
+    <a href="/">Accueil</a><span class="sep">/</span>
+    <span>Outils</span><span class="sep">/</span>
+    <span>Calculateur tarif coach</span>
+  </nav>
+
+  <div class="eyebrow">Outil gratuit · 60 secondes</div>
+  <h1>Calculateur tarif coach sportif 2026</h1>
+  <p class="lede">
+    Combien dois-tu facturer ta séance pour atteindre ton objectif de revenu sans te tuer au travail ?
+    Entre 4 paramètres ci-dessous — tu sors avec 3 tarifs recommandés (séance, mensuel, trimestriel),
+    arrondi pro et la justification du calcul.
+  </p>
+
+  <div class="calc-card">
+    <h2>Tes paramètres</h2>
+
+    <div class="field">
+      <label class="field-label" for="objectif">Objectif de revenu mensuel <em style="font-weight:400;color:rgba(255,255,255,0.55)">(net après charges)</em></label>
+      <div class="range-row">
+        <input type="range" id="objectif" min="1500" max="8000" step="100" value="3500" />
+        <span class="range-val" id="objectif-val">3 500 €</span>
+      </div>
+      <div class="field-help">Combien tu veux gagner par mois, en net, dans la main, après URSSAF/impôts.</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="seances">Nombre de séances réalisables par semaine</label>
+      <div class="range-row">
+        <input type="range" id="seances" min="8" max="35" step="1" value="20" />
+        <span class="range-val" id="seances-val">20</span>
+      </div>
+      <div class="field-help">Réaliste pour un coach indé : 15-25 séances/semaine. Au-delà tu sacrifies ta récup et la qualité.</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="zone">Zone géographique</label>
+      <select id="zone">
+        <option value="paris" data-mult="1.20">Paris intra-muros (premium)</option>
+        <option value="grandes-villes" data-mult="1.00" selected>Lyon, Bordeaux, Toulouse, Lille, Nice (urbain CSP+)</option>
+        <option value="villes-moyennes" data-mult="0.88">Villes moyennes (50k-200k habitants)</option>
+        <option value="periurbain" data-mult="0.78">Périurbain / rural (clientèle accessible)</option>
+      </select>
+      <div class="field-help">Ajuste les fourchettes acceptables sur ton marché local. Voir nos pages <a href="/coach-sportif-paris" style="color:#02d1ba">Paris</a>, <a href="/coach-sportif-lyon" style="color:#02d1ba">Lyon</a>, etc.</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="statut">Statut juridique</label>
+      <select id="statut">
+        <option value="micro" data-charges="0.242" selected>Micro-entrepreneur (charges 22% + CFP 2,2%)</option>
+        <option value="eurl" data-charges="0.42">EURL (TNS — charges ~42%)</option>
+        <option value="sasu" data-charges="0.45">SASU (assimilé salarié — charges ~45%)</option>
+      </select>
+      <div class="field-help">Pas sûr ? Voir notre <a href="/blog/statut-juridique-coach-sportif" style="color:#02d1ba">guide statut juridique coach sportif</a>.</div>
+    </div>
+
+    <button class="btn-calc" id="btn-calc">Calculer mon tarif optimal →</button>
+  </div>
+
+  <div class="results" id="results">
+    <h2>Tes tarifs recommandés</h2>
+    <p class="subtitle" id="results-subtitle">Pour <span id="rs-zone"></span> · objectif <span id="rs-objectif"></span> /mois net.</p>
+
+    <div class="result-row">
+      <div>
+        <div class="result-label">Séance individuelle <span class="result-sub">(60 min)</span></div>
+      </div>
+      <div class="result-value"><span id="prix-seance">--</span><span class="unit">€</span></div>
+    </div>
+
+    <div class="result-row">
+      <div>
+        <div class="result-label">Abonnement mensuel <span class="result-sub">(4 séances / mois — remise 10%)</span></div>
+      </div>
+      <div class="result-value"><span id="prix-mensuel">--</span><span class="unit">€</span></div>
+    </div>
+
+    <div class="result-row">
+      <div>
+        <div class="result-label">Pack trimestriel <span class="result-sub">(12 séances / 3 mois — remise 15%)</span></div>
+      </div>
+      <div class="result-value"><span id="prix-trimestre">--</span><span class="unit">€</span></div>
+    </div>
+
+    <div class="result-summary" id="result-summary">
+      <!-- Rempli par JS -->
+    </div>
+
+    <div class="cta-result">
+      <h3>Tu as tes tarifs. Et le système pour les encaisser ?</h3>
+      <p>RB Perform encaisse en auto via Stripe (0% commission), suit ton MRR, et te détecte les clients qui partent. 199€/mois bloqué à vie pour les 30 premiers.</p>
+      <a href="/founding?utm_source=outil&utm_medium=calculateur_tarif" class="btn">Découvrir l'offre Founding →</a>
+    </div>
+  </div>
+
+  <article>
+    <h2>Comment cet outil calcule ton tarif</h2>
+    <p>
+      Le calcul combine deux méthodes complémentaires utilisées par les meilleurs coachs francophones :
+    </p>
+    <h3>1. Méthode coût (le plancher)</h3>
+    <p>
+      On part de ton objectif de revenu net mensuel, on remonte aux charges sociales (URSSAF + CFP selon
+      statut), on intègre un taux d'occupation réaliste de 65% (35% des créneaux planifiés ne sont pas vendus
+      ou sont annulés), et on divise par ton volume de séances réalisable. <strong>Résultat = tarif minimum
+      en dessous duquel tu travailles à perte</strong> (ou à burn-out garanti).
+    </p>
+    <h3>2. Méthode valeur perçue (le plafond)</h3>
+    <p>
+      Le tarif issu de la méthode coût est ensuite ajusté par un multiplicateur de zone géographique (Paris
+      premium = ×1,20, villes moyennes = ×0,88, etc.), basé sur les relevés empiriques de sites coachs locaux
+      en mai 2026. Cela évite de proposer un tarif déconnecté de ce que ton marché local accepte.
+    </p>
+    <h3>3. Formats packagés (la rentabilité long terme)</h3>
+    <p>
+      Le tarif mensuel applique une remise de 10% par rapport à 4 séances à la carte, et le trimestriel
+      une remise de 15%. Ces remises ne sont pas du « rabais » — elles sont le mécanisme qui décide ton
+      client à <strong>passer du one-shot au récurrent</strong>, ce qui multiplie ta rétention et la
+      prévisibilité de ton revenu. Détails dans notre
+      <a href="/blog/comment-fixer-tarifs-coach-sportif">guide pricing coach sportif 2026</a>.
+    </p>
+
+    <h2>Pourquoi un calculateur plutôt qu'une grille fixe ?</h2>
+    <p>
+      Parce qu'il n'existe pas de « bon » tarif universel pour un coach sportif. Un coach qui veut 2 500 €/mois
+      avec 12 séances/semaine à Toulouse n'a rien à voir avec un coach qui vise 6 000 €/mois avec 22 séances
+      à Paris. Les fourchettes des articles SEO sont utiles comme repères, mais elles ne te disent pas
+      <strong>combien TOI tu dois facturer</strong> compte tenu de ta situation. Cet outil le fait en 60 secondes.
+    </p>
+
+    <h2>Questions fréquentes</h2>
+    <div class="faq-section">
+      <div class="faq-item">
+        <div class="faq-q">Le calcul est-il valide pour un coach en SASU/EURL ?</div>
+        <p class="faq-a">Oui — sélectionne le bon statut dans le formulaire. Les charges sociales sont alors ajustées (22% micro / 42% EURL / 45% SASU). Pour des revenus 35-60K€/an, le tarif final reste proche entre les 3 statuts grâce à l'optimisation IS dans EURL/SASU.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Pourquoi le tarif mensuel n'est pas juste séance × 4 ?</div>
+        <p class="faq-a">Parce que l'engagement mensuel mérite une remise structurelle de 8-15% — c'est ce qui décide ton client à passer du one-shot au récurrent. Sans remise, il achète à la carte ; avec remise, il achète un format. La remise reste rentable pour toi grâce à la baisse de coût acquisition et la meilleure prévisibilité.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Faut-il arrondir au chiffre supérieur ?</div>
+        <p class="faq-a">Pour les séances individuelles : oui, arrondis à la dizaine supérieure (75 € recommandé → facture 80 €). Pour les formats mensuel/trimestriel : arrondis au plus proche d'une psychological price (380 € vs 380,40 €). Les chiffres ronds signalent un pro établi, pas un freelance qui négocie.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Mon tarif calculé semble élevé pour ma zone — j'arrive à le facturer ?</div>
+        <p class="faq-a">Si le tarif te paraît trop élevé, ce n'est presque jamais ton tarif qui pose problème : c'est ta présentation, ton offre, ou ton positionnement. Un coach qui démarre vend mal un tarif premium parce qu'il manque de confiance, pas parce que le marché refuse. Voir notre <a href="/blog/trouver-premiers-clients-coach-sportif">méthode 90 jours pour les 10 premiers clients</a>.</p>
+      </div>
+    </div>
+  </article>
+
+  <div class="bottom-footer">
+    <a href="/">Accueil</a> · <a href="/blog">Blog</a> · <a href="/founding">Founding 199€</a> · <a href="/alternative-trainerize">Alternative Trainerize</a> · <a href="/security">Sécurité &amp; RGPD</a> · <a href="/legal">Mentions légales</a>
+  </div>
+
+</main>
+
+<script>
+(function() {
+  const objectifEl = document.getElementById('objectif');
+  const objectifVal = document.getElementById('objectif-val');
+  const seancesEl = document.getElementById('seances');
+  const seancesVal = document.getElementById('seances-val');
+  const zoneEl = document.getElementById('zone');
+  const statutEl = document.getElementById('statut');
+  const btn = document.getElementById('btn-calc');
+  const results = document.getElementById('results');
+
+  const fmt = (n) => n.toLocaleString('fr-FR') + ' €';
+
+  function syncRanges() {
+    objectifVal.textContent = parseInt(objectifEl.value, 10).toLocaleString('fr-FR') + ' €';
+    seancesVal.textContent = seancesEl.value;
+  }
+  objectifEl.addEventListener('input', syncRanges);
+  seancesEl.addEventListener('input', syncRanges);
+  syncRanges();
+
+  function roundToDizaine(n) { return Math.ceil(n / 5) * 5; }
+  function roundToTen(n) { return Math.round(n / 10) * 10; }
+
+  btn.addEventListener('click', function() {
+    const objectifNet = parseInt(objectifEl.value, 10);
+    const seancesParSemaine = parseInt(seancesEl.value, 10);
+    const tauxCharges = parseFloat(zoneEl.options[zoneEl.selectedIndex].dataset.mult ? statutEl.options[statutEl.selectedIndex].dataset.charges : '0.242');
+    const multZone = parseFloat(zoneEl.options[zoneEl.selectedIndex].dataset.mult);
+
+    // Méthode coût : revenu brut = net / (1 - charges)
+    const revenuBrut = objectifNet / (1 - tauxCharges);
+
+    // Volume : 4.3 semaines/mois × séances × taux d'occupation 65%
+    const seancesMensuelles = seancesParSemaine * 4.3 * 0.65;
+
+    // Tarif coût (plancher)
+    const tarifCout = revenuBrut / seancesMensuelles;
+
+    // Ajustement zone
+    const tarifAjuste = tarifCout * multZone;
+
+    // Arrondi pro séance individuelle (dizaine sup)
+    const prixSeance = Math.max(45, roundToDizaine(tarifAjuste));
+
+    // Mensuel : 4 séances × prixSeance × 0.90 (remise 10%)
+    const prixMensuel = roundToTen(prixSeance * 4 * 0.90);
+
+    // Trimestriel : 12 séances × prixSeance × 0.85 (remise 15%)
+    const prixTrimestre = roundToTen(prixSeance * 12 * 0.85);
+
+    // Renseigner les résultats
+    document.getElementById('rs-zone').textContent = zoneEl.options[zoneEl.selectedIndex].textContent;
+    document.getElementById('rs-objectif').textContent = fmt(objectifNet);
+    document.getElementById('prix-seance').textContent = prixSeance.toLocaleString('fr-FR');
+    document.getElementById('prix-mensuel').textContent = prixMensuel.toLocaleString('fr-FR');
+    document.getElementById('prix-trimestre').textContent = prixTrimestre.toLocaleString('fr-FR');
+
+    // Résumé textuel
+    const seancesMensuellesArrondi = Math.round(seancesMensuelles);
+    const revenuMensuelEstime = seancesMensuellesArrondi * prixSeance;
+    const tauxOccupationLabel = '65%';
+    const summary = `
+      <strong>Le calcul :</strong> Pour atteindre ${fmt(objectifNet)} net/mois avec ${seancesParSemaine} séances
+      planifiées/semaine (${seancesMensuellesArrondi} séances vendues/mois à ${tauxOccupationLabel} d'occupation),
+      tu dois facturer <strong>${prixSeance} €/séance</strong> au minimum. Ce tarif intègre
+      ${Math.round(tauxCharges * 100)}% de charges sociales (${statutEl.options[statutEl.selectedIndex].textContent.split(' ')[0]}) et
+      l'ajustement de zone (×${multZone}).
+      <br/><br/>
+      <strong>Stratégie recommandée :</strong> propose la formule mensuelle (${prixMensuel} €) en priorité.
+      C'est ce qui sécurise ton revenu, fidélise tes clients et rend ton activité prévisible.
+      La séance à la carte (${prixSeance} €) ne sert que pour les nouveaux clients en test ou en complément ponctuel.
+    `;
+    document.getElementById('result-summary').innerHTML = summary;
+
+    results.classList.add('show');
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+</script>
+
+</body>
+</html>
