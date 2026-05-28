@@ -34,6 +34,19 @@ const BARCODE_FORMATS = [
 
 const hasBarcodeDetector = typeof window !== "undefined" && "BarcodeDetector" in window;
 
+// iOS PWA standalone : le pipeline media de WebKit retourne un stream actif
+// mais ne pousse jamais de frames quand l'app est ouverte en mode home-screen.
+// Bug documente WebKit, sans workaround web (cf bugs.webkit.org). On detecte
+// pour basculer direct sur l'app camera native (qui marche partout).
+const IS_IOS_PWA = (() => {
+  if (typeof navigator === "undefined" || typeof window === "undefined") return false;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || "");
+  const isStandalone =
+    navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  return isIOS && isStandalone;
+})();
+
 // ===== ScannerTapToPlay =====
 // Diagnostic + filet iOS combine. Surveille en continu l'etat de la
 // video et propose les bonnes actions selon le probleme detecte :
@@ -1156,14 +1169,20 @@ export default function FuelPage({ client, appData }) {
 
   // startLiveScan : demande la permission camera + branche le stream
   // sur le <video> + initialise le moteur (BarcodeDetector ou zbar-wasm).
-  // Sur iOS Safari (pas de BarcodeDetector), lazy-import zbar-wasm
-  // automatiquement -> le live marche partout. Fallback vers snap-photo
-  // uniquement si pas de getUserMedia OU permission refusee.
+  //
+  // iOS PWA standalone : skip direct via IS_IOS_PWA (cf module top).
+  // Bug WebKit documente : stream 'live' mais 0 frame. On va sur snap-photo.
+
   const startLiveScan = useCallback(async () => {
     setScanError("");
     setScanStatus("");
     if (!navigator.mediaDevices?.getUserMedia) {
       setLivePermission("unsupported");
+      return;
+    }
+    // iOS PWA : skip direct, on a perdu trop de temps avec WebKit
+    if (IS_IOS_PWA) {
+      setLivePermission("ios-pwa");
       return;
     }
     setLivePermission("starting");
@@ -2066,43 +2085,83 @@ export default function FuelPage({ client, appData }) {
                   </div>
                 )}
 
-                {/* — Mode denied / unsupported : fallback snap-photo natif — */}
-                {(livePermission === "denied" || livePermission === "unsupported" || livePermission === "idle") && livePermission !== "starting" && (
-                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
-                    <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.85 }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 52, height: 52 }}>
-                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                        <circle cx="12" cy="13" r="4" />
-                      </svg>
+                {/* — Mode fallback (denied/unsupported/idle/ios-pwa) : viewport
+                      esthetique avec cadre cible + bande rouge animee derriere
+                      le bouton "Prendre la photo". Quand le user tape, l'app
+                      camera native de l'OS s'ouvre (qualite max). C'est le
+                      flow le plus fiable, surtout sur iOS PWA ou le live ne
+                      marche pas du tout (bug WebKit). */}
+                {(livePermission === "denied" || livePermission === "unsupported" || livePermission === "idle" || livePermission === "ios-pwa") && livePermission !== "starting" && (
+                  <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "linear-gradient(180deg, #0a0a0a 0%, #050505 100%)" }}>
+                    {/* Cadre cible + bande rouge animee — meme esthetique que mode live */}
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                      <div style={{ position: "relative", width: "78%", maxWidth: 280, height: 130, borderRadius: 12 }}>
+                        {/* 4 coins violets lumineux */}
+                        {[
+                          { top: 0, left: 0, borderTop: `2px solid ${PURPLE}`, borderLeft: `2px solid ${PURPLE}`, borderTopLeftRadius: 8 },
+                          { top: 0, right: 0, borderTop: `2px solid ${PURPLE}`, borderRight: `2px solid ${PURPLE}`, borderTopRightRadius: 8 },
+                          { bottom: 0, left: 0, borderBottom: `2px solid ${PURPLE}`, borderLeft: `2px solid ${PURPLE}`, borderBottomLeftRadius: 8 },
+                          { bottom: 0, right: 0, borderBottom: `2px solid ${PURPLE}`, borderRight: `2px solid ${PURPLE}`, borderBottomRightRadius: 8 },
+                        ].map((c, idx) => (
+                          <div key={idx} style={{ position: "absolute", width: 24, height: 24, ...c }} />
+                        ))}
+                        {/* Bande rouge animee */}
+                        <style>{`@keyframes rbScanLineFallback {
+                          0%   { top: 4px; opacity: 0.55; }
+                          50%  { top: calc(100% - 6px); opacity: 1; }
+                          100% { top: 4px; opacity: 0.55; }
+                        }`}</style>
+                        <div style={{
+                          position: "absolute",
+                          left: 8, right: 8, height: 2,
+                          background: "linear-gradient(90deg, transparent 0%, #ef4444 20%, #fca5a5 50%, #ef4444 80%, transparent 100%)",
+                          boxShadow: "0 0 12px rgba(239,68,68,0.9), 0 0 24px rgba(239,68,68,0.5)",
+                          animation: "rbScanLineFallback 1.6s ease-in-out infinite",
+                          borderRadius: 2,
+                        }} />
+                        {/* Icone code-barre stylise au centre du cadre */}
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.25 }}>
+                          <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: "#fff" }}>
+                            <path d="M3 5v14M6 5v14M9 5v14M12 5v14M15 5v14M18 5v14M21 5v14" />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 290 }}>
-                      {livePermission === "denied"
-                        ? "Caméra refusée — utilise une photo à la place"
-                        : livePermission === "unsupported"
-                          ? "Mode live indisponible sur ce navigateur — utilise une photo"
-                          : (scanLoading
-                            ? (scanStatus || t("fuel.scan_decoding_short"))
-                            : t("fuel.scan_invite_hint"))}
+
+                    {/* CTA bouton snap au-dessus du cadre + hint */}
+                    <div style={{ position: "absolute", left: 0, right: 0, bottom: 16, display: "flex", flexDirection: "column", alignItems: "center", padding: "0 16px" }}>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginBottom: 10, textAlign: "center", lineHeight: 1.4, textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>
+                        {scanLoading
+                          ? (scanStatus || "Décodage…")
+                          : (livePermission === "denied"
+                            ? "Caméra refusée — utilise une photo"
+                            : "Cadre bien le code-barre dans la photo")}
+                      </div>
+                      <button
+                        onClick={triggerPhotoScan}
+                        disabled={scanLoading}
+                        style={{
+                          background: scanLoading ? "rgba(167,139,250,0.3)" : "linear-gradient(135deg, #a78bfa, #8b5cf6)",
+                          color: scanLoading ? "rgba(255,255,255,0.5)" : "#0a0a0a",
+                          border: "none",
+                          borderRadius: 100,
+                          padding: "14px 30px",
+                          fontSize: 13,
+                          fontWeight: 800,
+                          cursor: scanLoading ? "default" : "pointer",
+                          letterSpacing: "0.8px",
+                          textTransform: "uppercase",
+                          boxShadow: scanLoading ? "none" : "0 8px 28px rgba(167,139,250,0.5)",
+                          display: "flex", alignItems: "center", gap: 8,
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                          <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        {scanLoading ? t("fuel.scan_take_photo_loading") : "Prendre la photo"}
+                      </button>
                     </div>
-                    <button
-                      onClick={triggerPhotoScan}
-                      disabled={scanLoading}
-                      style={{
-                        background: scanLoading ? "rgba(167,139,250,0.3)" : "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-                        color: scanLoading ? "rgba(255,255,255,0.5)" : "#0a0a0a",
-                        border: "none",
-                        borderRadius: 14,
-                        padding: "14px 32px",
-                        fontSize: 14,
-                        fontWeight: 800,
-                        cursor: scanLoading ? "default" : "pointer",
-                        letterSpacing: "0.5px",
-                        textTransform: "uppercase",
-                        boxShadow: scanLoading ? "none" : "0 6px 24px rgba(167,139,250,0.4)",
-                      }}
-                    >
-                      {scanLoading ? t("fuel.scan_take_photo_loading") : t("fuel.scan_take_photo")}
-                    </button>
                   </div>
                 )}
 
