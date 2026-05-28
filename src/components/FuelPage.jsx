@@ -542,6 +542,11 @@ export default function FuelPage({ client, appData }) {
   // 4 etats : idle (avant ouverture), starting, granted, denied|unsupported.
   const [livePermission, setLivePermission] = useState("idle");
   const [liveDetecting, setLiveDetecting] = useState(false);
+  // liveStream en STATE (pas ref) car on a besoin que React re-run l'effect
+  // qui bind srcObject quand le stream arrive ET que le <video> est mounted.
+  // Si on garde en ref, l'effect ne se relance pas et la video reste noire
+  // (cas iOS classique : srcObject set avant que le <video> existe dans le DOM).
+  const [liveStream, setLiveStream] = useState(null);
   const videoRef = useRef(null);
   const liveStreamRef = useRef(null);
   const liveDetectorRef = useRef(null);
@@ -903,6 +908,7 @@ export default function FuelPage({ client, appData }) {
     }
     liveDetectorRef.current = null;
     setLiveDetecting(false);
+    setLiveStream(null);
   }, []);
 
   // onLiveDetected : appele des qu'un code-barre est lu. Anti-double
@@ -1035,12 +1041,10 @@ export default function FuelPage({ client, appData }) {
         audio: false,
       });
       liveStreamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // playsInline + muted obligatoires pour iOS Safari (sinon
-        // play() reject avec NotAllowedError).
-        try { await videoRef.current.play(); } catch {}
-      }
+      // NB : on NE set PAS videoRef.current.srcObject ici. La <video>
+      // n'est rendue qu'apres setLivePermission("granted") (cf JSX),
+      // donc videoRef.current est encore null a ce stade. On passe par
+      // setLiveStream + un useEffect qui bind quand les deux sont OK.
       // Choix du moteur de detection
       let engine = null;
       let intervalMs = 300;
@@ -1069,7 +1073,12 @@ export default function FuelPage({ client, appData }) {
         }
       }
       liveDetectorRef.current = engine;
+      // Order critique : setLivePermission("granted") d'abord -> React
+      // monte la <video>. Puis setLiveStream -> useEffect bind srcObject.
+      // React batche les 2 setState, donc le useEffect voit les deux
+      // changements ensemble et videoRef.current est valide.
       setLivePermission("granted");
+      setLiveStream(stream);
       setLiveDetecting(true);
       liveLoopRef.current = setInterval(scanFrame, intervalMs);
     } catch (err) {
@@ -1090,6 +1099,37 @@ export default function FuelPage({ client, appData }) {
     // startLiveScan/stopLiveScan changent (ils sont stables grace a
     // useCallback mais on garde la deps explicite minimale).
   }, [showScan, startLiveScan, stopLiveScan]);
+
+  // Bind du stream sur la <video> apres que React l'a mountee.
+  // Fix iOS : sans ce useEffect, le srcObject est set quand videoRef
+  // est encore null (la video n'est rendue qu'en mode "granted") -> ecran
+  // noir avec audio mute. Cet effect garantit que les deux sont prets.
+  // On retente sur tick suivant si videoRef n'est pas encore la
+  // (cas rare React 18 + Suspense).
+  useEffect(() => {
+    if (!liveStream) return;
+    let cancelled = false;
+    const bind = async () => {
+      // Petit retry si videoRef pas encore la (1 frame)
+      for (let i = 0; i < 5 && !videoRef.current; i++) {
+        await new Promise((r) => requestAnimationFrame(r));
+      }
+      if (cancelled || !videoRef.current) return;
+      try {
+        videoRef.current.srcObject = liveStream;
+        // playsInline + muted obligatoires pour iOS Safari (sinon
+        // play() reject NotAllowedError + ecran noir).
+        videoRef.current.setAttribute("playsinline", "true");
+        videoRef.current.setAttribute("webkit-playsinline", "true");
+        videoRef.current.muted = true;
+        await videoRef.current.play();
+      } catch (err) {
+        console.warn("video.play() failed:", err);
+      }
+    };
+    bind();
+    return () => { cancelled = true; };
+  }, [liveStream]);
 
   // Reset des erreurs/status/produit scanne a la fermeture de la modal scan
   useEffect(() => {
