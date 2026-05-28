@@ -34,6 +34,86 @@ const BARCODE_FORMATS = [
 
 const hasBarcodeDetector = typeof window !== "undefined" && "BarcodeDetector" in window;
 
+// ===== ScannerTapToPlay =====
+// Filet iOS : si la video reste a readyState 0 (rien ne joue) apres 800ms,
+// affiche un bouton plein ecran qui force play() au tap utilisateur.
+// iOS Safari refuse parfois autoplay meme avec autoPlay + playsInline +
+// muted, particulierement en PWA standalone apres reload. Le tap explicite
+// est la solution garantie (user-gesture context frais).
+// Aussi : affiche un mini diagnostic (resolution + tracks) au tap long
+// pour debugger les cas pathologiques sans devtools.
+function ScannerTapToPlay({ videoEl, liveStream }) {
+  const [showTap, setShowTap] = React.useState(false);
+  const [diag, setDiag] = React.useState("");
+
+  React.useEffect(() => {
+    if (!liveStream) return;
+    let cancelled = false;
+    // Verifie apres 800ms si la video a demarre
+    const t = setTimeout(() => {
+      if (cancelled) return;
+      const v = videoEl;
+      // readyState >= 2 (HAVE_CURRENT_DATA) = il y a au moins une frame dispo
+      const ready = v && v.readyState >= 2 && v.videoWidth > 0;
+      if (!ready) setShowTap(true);
+    }, 800);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [videoEl, liveStream]);
+
+  const forcePlay = async () => {
+    try {
+      if (videoEl) {
+        videoEl.muted = true;
+        videoEl.setAttribute("playsinline", "true");
+        await videoEl.play();
+      }
+      setShowTap(false);
+    } catch (err) {
+      // Recolte diagnostic pour debug visible
+      const tracks = liveStream ? liveStream.getVideoTracks() : [];
+      const info = [
+        `play err: ${err?.name || err?.message || "?"}`,
+        `readyState: ${videoEl?.readyState}`,
+        `videoSize: ${videoEl?.videoWidth}x${videoEl?.videoHeight}`,
+        `paused: ${videoEl?.paused}`,
+        `tracks: ${tracks.length}`,
+        tracks[0] ? `track[0] state: ${tracks[0].readyState} enabled:${tracks[0].enabled} muted:${tracks[0].muted}` : "",
+        tracks[0]?.label ? `label: ${tracks[0].label.slice(0, 30)}` : "",
+      ].filter(Boolean).join(" · ");
+      setDiag(info);
+    }
+  };
+
+  if (!showTap) return null;
+  return (
+    <div onClick={forcePlay}
+      style={{
+        position: "absolute", inset: 0, zIndex: 5,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)", cursor: "pointer",
+        padding: 16, textAlign: "center",
+      }}
+    >
+      <div style={{ color: "#fff", marginBottom: 10 }}>
+        <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3" />
+        </svg>
+      </div>
+      <div style={{ fontSize: 13, color: "#fff", fontWeight: 700, marginBottom: 4 }}>
+        Toucher pour activer la caméra
+      </div>
+      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>
+        iOS bloque l'auto-démarrage de la vidéo
+      </div>
+      {diag && (
+        <div style={{ fontSize: 9, color: "#ef4444", marginTop: 10, maxWidth: 320, lineHeight: 1.4, fontFamily: "ui-monospace,monospace" }}>
+          {diag}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const GREEN = "#02d1ba"; // v_fupyhdzh
 const ORANGE = "#f97316";
 const BLUE = "#60a5fa";
@@ -1825,13 +1905,36 @@ export default function FuelPage({ client, appData }) {
                 {/* — Mode live granted : flux camera + overlay scan — */}
                 {livePermission === "granted" && (
                   <>
+                    {/* iOS Safari requires :
+                        - playsInline (sinon plein-ecran force)
+                        - muted (sinon autoplay rejete)
+                        - autoPlay attribut
+                        - webkit-playsinline pour iOS < 12
+                        - onLoadedMetadata/onCanPlay handlers : iOS bloque
+                          parfois autoPlay meme avec tous les attributs,
+                          ces handlers retentent play() au bon moment.
+                        - onClick : ultime filet, l'utilisateur peut tap
+                          la video pour forcer play() (user gesture context).
+                    */}
                     <video
                       ref={videoRef}
                       autoPlay
                       playsInline
                       muted
-                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      controls={false}
+                      preload="auto"
+                      webkit-playsinline="true"
+                      x5-playsinline="true"
+                      onLoadedMetadata={(e) => { e.currentTarget.play().catch(() => {}); }}
+                      onCanPlay={(e) => { e.currentTarget.play().catch(() => {}); }}
+                      onClick={(e) => { e.currentTarget.play().catch(() => {}); }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", background: "#000" }}
                     />
+                    {/* Bouton "Activer la cam" : visible 1s apres mount.
+                        iOS strict refuse parfois l'autoplay meme avec tous
+                        les attributs. Ce bouton force play() dans un context
+                        user-gesture frais, ce qui debloque a 100%. */}
+                    <ScannerTapToPlay videoEl={videoRef.current} liveStream={liveStream} />
                     {/* Cadre cible + bande rouge animee. Pas un vrai
                         guide de cadrage strict (BarcodeDetector lit
                         toute la frame), juste un repere visuel. */}
