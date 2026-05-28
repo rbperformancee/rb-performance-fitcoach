@@ -152,6 +152,15 @@ export function parseProgrammeHTML(htmlString) {
           ""
         ).trim() || null;
 
+        /* Charge imposée par le coach (texte libre : "80kg", "60% 1RM",
+           "RPE 8", "BW + 20kg"…). Indépendant des reps pour permettre
+           l'évolution week-over-week et un affichage clair côté athlète. */
+        const charge = (
+          doc.getElementById(`ech-${eid}`)?.value ||
+          doc.getElementById(`ech-${eid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+
         /* Groupe superset */
         const group = (
           doc.getElementById(`eg-${eid}`)?.value ||
@@ -186,6 +195,7 @@ export function parseProgrammeHTML(htmlString) {
           rawReps,   // ← "4X8-10" tel que saisi — affiché directement dans le chip
           sets,      // ← number (4) ou null
           reps,      // ← string "8-10" ou null (utilisé comme placeholder input)
+          charge,    // ← charge prescrite ("80kg", "60% 1RM", "RPE 8"…)
           tempo,
           rir,
           rest,
@@ -231,12 +241,35 @@ export function parseProgrammeHTML(htmlString) {
           ""
         ).trim() || null;
 
+        // Champs fractionné (interval training) : si repeats ≥ 2, le run
+        // est interprété comme un fractionné. work = effort par répétition
+        // (ex "400m", "30s"), target = allure cible (ex "20km/h", "4:30/km").
+        const repeatsRaw = (
+          doc.getElementById(`rep-${rid}`)?.value ||
+          doc.getElementById(`rep-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        const repeats = parseInt(repeatsRaw, 10);
+        const work = (
+          doc.getElementById(`rw-${rid}`)?.value ||
+          doc.getElementById(`rw-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+        const target = (
+          doc.getElementById(`rtg-${rid}`)?.value ||
+          doc.getElementById(`rtg-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+
         runs.push({
           name: rName,
           distance,
           duration,
           bpm,
           rest: rRest,
+          repeats: isNaN(repeats) ? null : repeats,
+          work,
+          target,
         });
       });
 
@@ -263,8 +296,116 @@ export function parseProgrammeHTML(htmlString) {
         fieldSessions.push({ title, moment, description: fieldDesc });
       });
 
-      if (exercises.length > 0 || runs.length > 0 || fieldSessions.length > 0 || (finisher && finisher.length > 0) || sessionName !== `Séance ${si + 1}`) {
-        sessions.push({ name: sessionName, description, finisher, bonus, exercises, runs, fieldSessions });
+      /* ── Échauffement circuit (.warmup-circuit) — placé en tête de séance ── */
+      // Bloc placé en tête de séance : circuit de 2-5 mouvements à enchaîner
+      // pendant N tours. Différent d'un AMRAP (compétitif "max rounds") — ici
+      // c'est exactement N tours, allure modérée, pour préparer le corps.
+      let warmup = null;
+      const warmupEl = seanceEl.querySelector(".warmup-circuit");
+      if (warmupEl) {
+        const wid = warmupEl.id.replace("warmup-", "");
+        const roundsRaw = (
+          doc.getElementById(`wr-${wid}`)?.value ||
+          doc.getElementById(`wr-${wid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        const rounds = parseInt(roundsRaw, 10);
+        const restBetween = (
+          doc.getElementById(`wrr-${wid}`)?.value ||
+          doc.getElementById(`wrr-${wid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+        const notesEl = doc.getElementById(`wn-${wid}`);
+        const notes = (notesEl?.value || notesEl?.textContent || "").trim() || null;
+
+        const movements = [];
+        warmupEl.querySelectorAll(".warmup-movement").forEach((mEl) => {
+          const mid = mEl.id.replace("wmov-", "");
+          const name = (
+            doc.getElementById(`wmn-${mid}`)?.value ||
+            doc.getElementById(`wmn-${mid}`)?.getAttribute("value") ||
+            ""
+          ).trim();
+          const spec = (
+            doc.getElementById(`wms-${mid}`)?.value ||
+            doc.getElementById(`wms-${mid}`)?.getAttribute("value") ||
+            ""
+          ).trim();
+          if (!name && !spec) return;
+          movements.push({ name, spec: spec || null });
+        });
+
+        if (movements.length > 0 || rounds) {
+          warmup = {
+            rounds: isNaN(rounds) ? 3 : Math.max(1, rounds),
+            restBetween,
+            notes,
+            movements,
+          };
+        }
+      }
+
+      /* ── AMRAP / WOD prescrits (.amrap-item) ── */
+      const amraps = [];
+      seanceEl.querySelectorAll(".amrap-item").forEach((amEl) => {
+        const aid = amEl.id.replace("amrap-", "");
+        const title = (
+          doc.getElementById(`at-${aid}`)?.value ||
+          doc.getElementById(`at-${aid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        const minutesRaw = (
+          doc.getElementById(`adu-${aid}`)?.value ||
+          doc.getElementById(`adu-${aid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        const minutes = parseInt(minutesRaw, 10);
+        const descEl = doc.getElementById(`ad-${aid}`);
+        const description = (descEl?.value || descEl?.textContent || "").trim();
+        if (!title && !description && !minutes) return;
+        amraps.push({
+          title: title || "AMRAP",
+          minutes: isNaN(minutes) ? null : minutes,
+          description: description || null,
+        });
+      });
+
+      /* ── Ergo / cardio fin de séance (.ergo-item) ── */
+      // Bloc rameur/vélo/ski-erg/assault bike. Goal = "2km" / "150 cal" / "10 min".
+      // Minutes = durée pour le countdown (ex 10 min). Si absent → pas de chrono,
+      // juste l'objectif distance/cal affiché.
+      const ergos = [];
+      seanceEl.querySelectorAll(".ergo-item").forEach((egEl) => {
+        const eid = egEl.id.replace("ergo-", "");
+        const machine = (
+          doc.getElementById(`em-${eid}`)?.value ||
+          doc.getElementById(`em-${eid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        const goal = (
+          doc.getElementById(`egl-${eid}`)?.value ||
+          doc.getElementById(`egl-${eid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+        const minutesRaw = (
+          doc.getElementById(`emn-${eid}`)?.value ||
+          doc.getElementById(`emn-${eid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        const minutes = parseInt(minutesRaw, 10);
+        const notesEl = doc.getElementById(`en2-${eid}`);
+        const notes = (notesEl?.value || notesEl?.textContent || "").trim() || null;
+        if (!machine && !goal && !notes && !minutes) return;
+        ergos.push({
+          machine: machine || "Ergo",
+          goal,
+          minutes: isNaN(minutes) ? null : minutes,
+          notes,
+        });
+      });
+
+      if (exercises.length > 0 || runs.length > 0 || fieldSessions.length > 0 || amraps.length > 0 || ergos.length > 0 || warmup || (finisher && finisher.length > 0) || sessionName !== `Séance ${si + 1}`) {
+        sessions.push({ name: sessionName, description, finisher, bonus, exercises, runs, fieldSessions, amraps, ergos, warmup });
       }
     });
 

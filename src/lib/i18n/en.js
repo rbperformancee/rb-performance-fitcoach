@@ -166,6 +166,7 @@ const en = {
     "move.duration": "Duration",
     "move.bpm": "BPM",
     "move.rest": "Rest",
+    "move.target": "Pace",
     "move.todo": "To do",
     "move.done": "Done",
     "move.validate_week": "Validate week",

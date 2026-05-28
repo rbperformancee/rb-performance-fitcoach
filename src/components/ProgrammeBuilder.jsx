@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
 import { findFallbackVideo, FALLBACK_VIDEOS } from "../data/fallbackVideos";
 import LogPaymentModal, { checkPaymentNeeded } from "./coach/LogPaymentModal";
+import CountdownBlockCard from "./CountdownBlockCard";
 import { addBreadcrumb } from "../lib/sentry";
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
@@ -58,6 +59,7 @@ function buildHTML(p) {
         <div class="exercise-item" id="ex-${eid}">
           <input id="en-${eid}" value="${escAttr(ex.name)}" />
           <input id="er-${eid}" value="${escAttr(ex.reps)}" />
+          <input id="ech-${eid}" value="${escAttr(ex.charge || '')}" />
           <input id="et-${eid}" value="${escAttr(ex.tempo)}" />
           <select id="eri-${eid}"><option selected value="${escAttr(ex.rir)}">${escAttr(ex.rir)}</option></select>
           <input id="ers-${eid}" value="${escAttr(ex.rest)}" />
@@ -76,6 +78,9 @@ function buildHTML(p) {
           <input id="rdu-${rid}" value="${escAttr(r.duration || '')}" />
           <input id="rbpm-${rid}" value="${escAttr(r.bpm || '')}" />
           <input id="rrs-${rid}" value="${escAttr(r.rest || '')}" />
+          <input id="rep-${rid}" value="${escAttr(r.repeats != null ? String(r.repeats) : '')}" />
+          <input id="rw-${rid}" value="${escAttr(r.work || '')}" />
+          <input id="rtg-${rid}" value="${escAttr(r.target || '')}" />
         </div>`;
       }).join("");
       // Séances terrain (foot, rugby…) — format .field-item lu par parserProgramme.
@@ -88,14 +93,58 @@ function buildHTML(p) {
           <textarea id="fd-${fid}">${escText(f.description || '')}</textarea>
         </div>`;
       }).join("");
+      // AMRAP / WOD prescrits — format .amrap-item lu par parserProgramme.
+      // at = title, adu = duration en minutes (countdown), ad = description (mouvements).
+      const amrapHtml = (s.amraps || []).map((a, ai) => {
+        const aid = `${sid}a${ai + 1}`;
+        return `
+        <div class="amrap-item" id="amrap-${aid}">
+          <input id="at-${aid}" value="${escAttr(a.title || '')}" />
+          <input id="adu-${aid}" value="${escAttr(a.minutes != null ? String(a.minutes) : '')}" />
+          <textarea id="ad-${aid}">${escText(a.description || '')}</textarea>
+        </div>`;
+      }).join("");
+      // Ergo (rameur/vélo/ski-erg/assault bike…) en fin de séance.
+      const ergoHtml = (s.ergos || []).map((e, ei) => {
+        const eid = `${sid}eg${ei + 1}`;
+        return `
+        <div class="ergo-item" id="ergo-${eid}">
+          <input id="em-${eid}" value="${escAttr(e.machine || '')}" />
+          <input id="egl-${eid}" value="${escAttr(e.goal || '')}" />
+          <input id="emn-${eid}" value="${escAttr(e.minutes != null ? String(e.minutes) : '')}" />
+          <textarea id="en2-${eid}">${escText(e.notes || '')}</textarea>
+        </div>`;
+      }).join("");
+      // Échauffement circuit (en tête de séance, 1 par session)
+      const w = s.warmup;
+      const warmupHtml = (w && Array.isArray(w.movements) && w.movements.length > 0) ? (() => {
+        const movHtml = w.movements.map((m, mi) => {
+          const mid = `${sid}m${mi + 1}`;
+          return `
+          <div class="warmup-movement" id="wmov-${mid}">
+            <input id="wmn-${mid}" value="${escAttr(m.name || '')}" />
+            <input id="wms-${mid}" value="${escAttr(m.spec || '')}" />
+          </div>`;
+        }).join("");
+        return `
+        <div class="warmup-circuit" id="warmup-${sid}">
+          <input id="wr-${sid}" value="${escAttr(String(w.rounds || 3))}" />
+          <input id="wrr-${sid}" value="${escAttr(w.restBetween || '')}" />
+          <textarea id="wn-${sid}">${escText(w.notes || '')}</textarea>
+          ${movHtml}
+        </div>`;
+      })() : "";
       return `
       <div class="seance-block" id="seance-${sid}"${s.bonus ? ' data-bonus="1"' : ''}>
         <input id="sn-${sid}" value="${escAttr(s.name)}" />
         <textarea id="sd-${sid}">${escText(s.description || '')}</textarea>
         <textarea id="sf-${sid}">${escText(s.finisher || '')}</textarea>
+        ${warmupHtml}
         ${exHtml}
         ${runHtml}
         ${fieldHtml}
+        ${amrapHtml}
+        ${ergoHtml}
       </div>`;
     }).join("");
     return `
@@ -114,10 +163,21 @@ ${weeksHtml}
 </body></html>`;
 }
 
-const newExercise = () => ({ id: uid(), name: "", reps: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "" });
-const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", bonus: false, runs: [], fieldSessions: [], exercises: [newExercise()] });
+const newExercise = () => ({ id: uid(), name: "", reps: "", charge: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "" });
+const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", bonus: false, warmup: null, runs: [], fieldSessions: [], amraps: [], ergos: [], exercises: [newExercise()] });
+const newWarmupMovement = (name = "", spec = "") => ({ id: uid(), name, spec });
+const newWarmupCircuit = () => ({
+  rounds: 3, restBetween: "30s", notes: "",
+  movements: [
+    newWarmupMovement("Air squat", "10 reps"),
+    newWarmupMovement("Push-up", "8 reps"),
+    newWarmupMovement("Mountain climber", "30s"),
+  ],
+});
 const newFieldSession = () => ({ id: uid(), title: "", moment: "", description: "" });
-const newRun = () => ({ id: uid(), name: "", distance: "", duration: "", bpm: "", rest: "" });
+const newRun = () => ({ id: uid(), name: "", distance: "", duration: "", bpm: "", rest: "", repeats: null, work: "", target: "" });
+const newAmrap = () => ({ id: uid(), title: "AMRAP", minutes: 12, description: "" });
+const newErgo = () => ({ id: uid(), machine: "Rameur", goal: "", minutes: 10, notes: "" });
 const newWeek = (n = 1) => ({ id: uid(), name: `Semaine ${n}`, sessions: [newSession(1)] });
 
 // Suggestions communes pour les champs exercice (autocomplete au focus).
@@ -180,6 +240,30 @@ const TEMPO_SUGGESTIONS = [
 ];
 
 const RIR_SUGGESTIONS = ["0", "1", "2", "3", "4", "5", "Échec", "Pré-fatigue"];
+
+// CHARGE — palette des prescriptions courantes. Texte libre OK (60kg, 60%
+// 1RM, BW+20kg, RPE 8…). Sert juste à accélérer la saisie sur les valeurs
+// récurrentes — un coach peut tout taper à la main.
+const CHARGE_SUGGESTIONS = [
+  // Charges absolues (le plus courant)
+  "BW", "BW + 5kg", "BW + 10kg", "BW + 15kg", "BW + 20kg", "BW + 25kg",
+  "5kg", "7,5kg", "10kg", "12,5kg", "15kg", "17,5kg", "20kg", "22,5kg",
+  "25kg", "27,5kg", "30kg", "32,5kg", "35kg", "37,5kg", "40kg", "42,5kg",
+  "45kg", "47,5kg", "50kg", "52,5kg", "55kg", "57,5kg", "60kg", "62,5kg",
+  "65kg", "67,5kg", "70kg", "72,5kg", "75kg", "77,5kg", "80kg", "82,5kg",
+  "85kg", "87,5kg", "90kg", "92,5kg", "95kg", "97,5kg", "100kg",
+  "110kg", "120kg", "130kg", "140kg", "150kg",
+  // % du 1RM
+  "50% 1RM", "55% 1RM", "60% 1RM", "65% 1RM", "70% 1RM",
+  "72,5% 1RM", "75% 1RM", "77,5% 1RM", "80% 1RM", "82,5% 1RM",
+  "85% 1RM", "87,5% 1RM", "90% 1RM", "92,5% 1RM", "95% 1RM",
+  // RPE
+  "RPE 5", "RPE 6", "RPE 7", "RPE 7,5", "RPE 8", "RPE 8,5", "RPE 9", "RPE 9,5", "RPE 10",
+  // Repères qualitatifs (utiles pour les débutants ou hypertrophie)
+  "Léger", "Moyen", "Lourd", "Top set", "Échec technique",
+  // Bandes / élastiques
+  "Élastique léger", "Élastique moyen", "Élastique fort",
+];
 
 const REST_SUGGESTIONS = [
   "15s", "20s", "30s", "45s",
@@ -388,6 +472,9 @@ function fromParsed(parsed) {
               duration: r.duration || "",
               bpm: r.bpm || "",
               rest: r.rest || "",
+              repeats: r.repeats != null ? r.repeats : null,
+              work: r.work || "",
+              target: r.target || "",
             }))
           : [],
         // Séances terrain (foot, rugby…)
@@ -399,10 +486,43 @@ function fromParsed(parsed) {
               description: f.description || "",
             }))
           : [],
+        // AMRAP / WOD — bloc à temps avec countdown côté client.
+        amraps: Array.isArray(s.amraps)
+          ? s.amraps.map((a) => ({
+              id: uid(),
+              title: a.title || "AMRAP",
+              minutes: a.minutes != null ? a.minutes : null,
+              description: a.description || "",
+            }))
+          : [],
+        // Ergo (rameur, vélo, ski-erg…) en fin de séance.
+        ergos: Array.isArray(s.ergos)
+          ? s.ergos.map((e) => ({
+              id: uid(),
+              machine: e.machine || "Ergo",
+              goal: e.goal || "",
+              minutes: e.minutes != null ? e.minutes : null,
+              notes: e.notes || "",
+            }))
+          : [],
+        // Échauffement circuit (1 bloc en tête de séance, optionnel)
+        warmup: s.warmup && Array.isArray(s.warmup.movements) && s.warmup.movements.length > 0
+          ? {
+              rounds: s.warmup.rounds || 3,
+              restBetween: s.warmup.restBetween || "",
+              notes: s.warmup.notes || "",
+              movements: s.warmup.movements.map((m) => ({
+                id: uid(),
+                name: m.name || "",
+                spec: m.spec || "",
+              })),
+            }
+          : null,
         exercises: (s.exercises || []).map((e) => ({
           id: uid(),
           name: e.name || "",
           reps: e.rawReps || e.reps || "",
+          charge: e.charge || "",
           tempo: e.tempo || "",
           rir: e.rir || "",
           rest: e.rest || "",
@@ -435,7 +555,7 @@ function TextField({ label, value, onChange, placeholder }) {
   );
 }
 
-function SuggestField({ label, value, onChange, placeholder, suggestions }) {
+function SuggestField({ label, value, onChange, placeholder, suggestions, accent }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -446,16 +566,23 @@ function SuggestField({ label, value, onChange, placeholder, suggestions }) {
   const filtered = (value || "").length > 0
     ? suggestions.filter((s) => s.toLowerCase().includes((value || "").toLowerCase()))
     : suggestions;
+  // Accent : permet de surligner discrètement un champ critique (Charge).
+  // Le label prend la couleur d'accent quand une valeur est renseignée.
+  const hasValue = (value || "").length > 0;
+  const labelColor = accent && hasValue ? accent : "rgba(255,255,255,0.35)";
+  const fieldStyle = accent
+    ? { ...inputBaseStyle, borderColor: hasValue ? `${accent}55` : inputBaseStyle.borderColor, color: hasValue ? "#fff" : inputBaseStyle.color, fontWeight: hasValue ? 700 : inputBaseStyle.fontWeight }
+    : inputBaseStyle;
   return (
     <label ref={ref} style={{ display: "block", position: "relative" }}>
-      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: labelColor, marginBottom: 4, transition: "color .15s" }}>{label}</div>
       <input
         type="text"
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setOpen(true)}
         placeholder={placeholder}
-        style={inputBaseStyle}
+        style={fieldStyle}
       />
       {open && filtered.length > 0 && (
         <div style={{
@@ -658,6 +785,211 @@ function ExercisePicker({ value, onChange, onPickFull }) {
   );
 }
 
+// WarmupCircuitEditor — bloc premium éditorial pour configurer un circuit
+// d'échauffement (tours en boucle de N mouvements). Posé en tête de séance,
+// noir sur cyan subtil pour différencier visuellement des exos principaux.
+function WarmupCircuitEditor({ warmup, onUpdate, onUpdateMovement, onAddMovement, onRemoveMovement, onDisable, isMobile }) {
+  const PRESETS = [
+    { name: "Mobility", rounds: 2, restBetween: "—", notes: "Lent et contrôlé. Cherche l'amplitude.", movements: [
+      { name: "Hip openers", spec: "8/côté" },
+      { name: "Cat–cow", spec: "10 reps" },
+      { name: "World's greatest stretch", spec: "5/côté" },
+      { name: "Leg swings avant-arrière", spec: "10/jambe" },
+    ]},
+    { name: "Activation", rounds: 3, restBetween: "20s", notes: "Tempo contrôlé. Pré-charge neuro avant le bench / squat.", movements: [
+      { name: "Band pull-apart", spec: "15 reps" },
+      { name: "Glute bridge", spec: "12 reps" },
+      { name: "Scapular pull-up", spec: "8 reps" },
+      { name: "Dead bug", spec: "6/côté" },
+    ]},
+    { name: "Cardio", rounds: 3, restBetween: "30s", notes: "Élève le rythme cardiaque progressivement.", movements: [
+      { name: "Jumping jacks", spec: "30s" },
+      { name: "High knees", spec: "20s" },
+      { name: "Butt kicks", spec: "20s" },
+      { name: "Shadow boxing", spec: "30s" },
+    ]},
+  ];
+
+  const applyPreset = (p) => {
+    onUpdate({
+      rounds: p.rounds,
+      restBetween: p.restBetween === "—" ? "" : p.restBetween,
+      notes: p.notes,
+      movements: p.movements.map((m) => ({ id: uid(), name: m.name, spec: m.spec })),
+    });
+  };
+
+  return (
+    <div style={{
+      marginBottom: 14,
+      padding: "18px 18px 14px",
+      background: "linear-gradient(180deg, rgba(2,209,186,0.04) 0%, rgba(255,255,255,0.012) 100%)",
+      border: "1px solid rgba(2,209,186,0.18)",
+      borderRadius: 14,
+      position: "relative",
+    }}>
+      {/* Header sobre */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke={G} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-3.5-7.1"/><polyline points="21 4 21 9 16 9"/>
+            </svg>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase" }}>Circuit · Échauffement</span>
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 0.2 }}>
+            En boucle — préparation neuro-musculaire avant la séance
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onDisable}
+          style={{
+            padding: "5px 9px", background: "transparent", border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 6, color: "rgba(255,255,255,0.45)", fontSize: 10, cursor: "pointer", fontFamily: "inherit",
+            fontWeight: 600, letterSpacing: 0.3,
+          }}
+          title="Retirer le circuit"
+        >Retirer</button>
+      </div>
+
+      {/* Presets en 1 clic */}
+      <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 }}>
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", alignSelf: "center", marginRight: 4 }}>Presets</span>
+        {PRESETS.map((p) => (
+          <button
+            key={p.name}
+            type="button"
+            onClick={() => applyPreset(p)}
+            style={{
+              padding: "4px 10px",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 100,
+              color: "rgba(255,255,255,0.65)",
+              fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(2,209,186,0.08)"; e.currentTarget.style.borderColor = "rgba(2,209,186,0.25)"; e.currentTarget.style.color = G; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
+          >{p.name}</button>
+        ))}
+      </div>
+
+      {/* Tours / Repos — typographie magazine, big numbers */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+        <label style={{ display: "block" }}>
+          <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>Tours</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", background: "rgba(0,0,0,0.25)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 10 }}>
+            <input
+              type="number" min="1" max="10"
+              value={warmup.rounds ?? ""}
+              onChange={(e) => onUpdate({ rounds: e.target.value === "" ? null : Math.max(1, parseInt(e.target.value, 10) || 1) })}
+              style={{
+                flex: 1, padding: "4px 0", background: "transparent", border: "none",
+                color: "#fff", fontSize: 28, fontWeight: 200,
+                fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+                outline: "none", textAlign: "center", letterSpacing: "-1.5px",
+              }}
+            />
+          </div>
+        </label>
+        <label style={{ display: "block" }}>
+          <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>Repos entre tours</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", background: "rgba(0,0,0,0.25)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 10 }}>
+            <input
+              value={warmup.restBetween || ""}
+              onChange={(e) => onUpdate({ restBetween: e.target.value })}
+              placeholder="—"
+              style={{
+                flex: 1, padding: "4px 0", background: "transparent", border: "none",
+                color: "#fff", fontSize: 24, fontWeight: 300,
+                fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+                outline: "none", textAlign: "center", letterSpacing: "-0.5px",
+              }}
+            />
+          </div>
+        </label>
+      </div>
+
+      {/* Mouvements */}
+      <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 10 }}>Mouvements</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+        {(warmup.movements || []).map((m, mi) => (
+          <div key={m.id || mi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{
+              flexShrink: 0, width: 24, fontSize: 10, fontWeight: 700,
+              color: "rgba(255,255,255,0.3)",
+              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+              letterSpacing: 0.5, textAlign: "right",
+            }}>{String(mi + 1).padStart(2, "0")}</span>
+            <input
+              value={m.name || ""}
+              onChange={(e) => onUpdateMovement(mi, { name: e.target.value })}
+              placeholder="Mouvement"
+              style={{
+                flex: 2, minWidth: 0, padding: "8px 11px",
+                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 500,
+                fontFamily: "inherit", outline: "none", letterSpacing: -0.1,
+              }}
+            />
+            <input
+              value={m.spec || ""}
+              onChange={(e) => onUpdateMovement(mi, { spec: e.target.value })}
+              placeholder="10 reps · 30s"
+              style={{
+                flex: 1, minWidth: 0, padding: "8px 11px",
+                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 8, color: "rgba(255,255,255,0.85)", fontSize: 12, fontWeight: 600,
+                fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace", outline: "none",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => onRemoveMovement(mi)}
+              title="Retirer"
+              style={{
+                flexShrink: 0, width: 28, height: 28, padding: 0,
+                background: "transparent", border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 8, color: "rgba(255,255,255,0.35)", fontSize: 14,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >×</button>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={onAddMovement}
+        style={{
+          width: "100%", padding: "9px", background: "transparent",
+          border: "1px dashed rgba(2,209,186,0.2)", borderRadius: 9,
+          color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+          letterSpacing: 0.3, marginBottom: 14,
+        }}
+      >+ Mouvement</button>
+
+      {/* Notes */}
+      <label style={{ display: "block" }}>
+        <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>Notes (optionnel)</div>
+        <input
+          value={warmup.notes || ""}
+          onChange={(e) => onUpdate({ notes: e.target.value })}
+          placeholder="Sans repos entre mouvements · Tempo contrôlé…"
+          style={{
+            width: "100%", boxSizing: "border-box", padding: "9px 12px",
+            background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 9, color: "rgba(255,255,255,0.85)", fontSize: 12,
+            fontFamily: "inherit", outline: "none",
+          }}
+        />
+      </label>
+    </div>
+  );
+}
+
 function SortableExercise({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: ex.id });
   const style = {
@@ -719,8 +1051,9 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
         <button type="button" onClick={onDuplicate} title="Dupliquer" style={{ ...iconBtn, background: G_DIM, borderColor: "rgba(2,209,186,0.25)", color: G }}>⎘</button>
         <button type="button" onClick={onRemove} title="Supprimer" style={{ ...iconBtn, fontSize: 14 }}>×</button>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 6 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr 1fr", gap: 6 }}>
         <SuggestField label="Reps" value={ex.reps} onChange={(v) => update("reps", v)} placeholder="4X8-10" suggestions={REPS_SUGGESTIONS} />
+        <SuggestField label="Charge" value={ex.charge} onChange={(v) => update("charge", v)} placeholder="80kg · 60% 1RM" suggestions={CHARGE_SUGGESTIONS} accent="#fbbf24" />
         <SuggestField label="Tempo" value={ex.tempo} onChange={(v) => update("tempo", v)} placeholder="3010" suggestions={TEMPO_SUGGESTIONS} />
         <SuggestField label="RIR" value={ex.rir} onChange={(v) => update("rir", v)} placeholder="1" suggestions={RIR_SUGGESTIONS} />
         <SuggestField label="Repos" value={ex.rest} onChange={(v) => update("rest", v)} placeholder="2'" suggestions={REST_SUGGESTIONS} />
@@ -852,6 +1185,30 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
   const updateRun = (ri, r) => onUpdate({ ...session, runs: runs.map((x, i) => i === ri ? r : x) });
   const addRun = () => onUpdate({ ...session, runs: [...runs, newRun()] });
   const removeRun = (ri) => onUpdate({ ...session, runs: runs.filter((_, i) => i !== ri) });
+  const amraps = session.amraps || [];
+  const updateAmrap = (ai, a) => onUpdate({ ...session, amraps: amraps.map((x, i) => i === ai ? a : x) });
+  const addAmrap = () => onUpdate({ ...session, amraps: [...amraps, newAmrap()] });
+  const removeAmrap = (ai) => onUpdate({ ...session, amraps: amraps.filter((_, i) => i !== ai) });
+  const ergos = session.ergos || [];
+  const updateErgo = (ei, e) => onUpdate({ ...session, ergos: ergos.map((x, i) => i === ei ? e : x) });
+  const addErgo = () => onUpdate({ ...session, ergos: [...ergos, newErgo()] });
+  const removeErgo = (ei) => onUpdate({ ...session, ergos: ergos.filter((_, i) => i !== ei) });
+  const warmup = session.warmup || null;
+  const enableWarmup = () => onUpdate({ ...session, warmup: newWarmupCircuit() });
+  const disableWarmup = () => onUpdate({ ...session, warmup: null });
+  const updateWarmup = (patch) => onUpdate({ ...session, warmup: { ...warmup, ...patch } });
+  const updateWarmupMovement = (mi, patch) => onUpdate({
+    ...session,
+    warmup: { ...warmup, movements: warmup.movements.map((m, i) => i === mi ? { ...m, ...patch } : m) },
+  });
+  const addWarmupMovement = () => onUpdate({
+    ...session,
+    warmup: { ...warmup, movements: [...warmup.movements, newWarmupMovement()] },
+  });
+  const removeWarmupMovement = (mi) => onUpdate({
+    ...session,
+    warmup: { ...warmup, movements: warmup.movements.filter((_, i) => i !== mi) },
+  });
 
   return (
     <div style={{
@@ -911,9 +1268,12 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
 
       {collapsed && (
         <div onClick={() => setCollapsed(false)} style={{ cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.38)", paddingLeft: 2 }}>
+          {warmup ? `échauf · ` : ""}
           {(session.exercises || []).length} exercice{(session.exercises || []).length > 1 ? "s" : ""}
           {runs.length > 0 ? ` · ${runs.length} run${runs.length > 1 ? "s" : ""}` : ""}
           {fieldSessions.length > 0 ? ` · ${fieldSessions.length} terrain` : ""}
+          {amraps.length > 0 ? ` · ${amraps.length} AMRAP` : ""}
+          {ergos.length > 0 ? ` · ${ergos.length} ergo` : ""}
         </div>
       )}
 
@@ -955,6 +1315,53 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
         <TextArea label="Finisher" value={session.finisher} onChange={(v) => update("finisher", v)} placeholder="3 séries de pompes lestées AMRAP…" />
       </div>
 
+      {/* ───────── ÉCHAUFFEMENT CIRCUIT — en tête de séance ───────── */}
+      {warmup ? (
+        <WarmupCircuitEditor
+          warmup={warmup}
+          onUpdate={updateWarmup}
+          onUpdateMovement={updateWarmupMovement}
+          onAddMovement={addWarmupMovement}
+          onRemoveMovement={removeWarmupMovement}
+          onDisable={disableWarmup}
+          isMobile={isMobile}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={enableWarmup}
+          style={{
+            width: "100%", padding: "13px 14px", marginBottom: 14,
+            background: "transparent",
+            border: "1px dashed rgba(255,255,255,0.13)",
+            borderRadius: 12,
+            color: "rgba(255,255,255,0.55)",
+            fontSize: 11, fontFamily: "inherit",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 9,
+            letterSpacing: 0.3,
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+            e.currentTarget.style.borderColor = "rgba(2,209,186,0.3)";
+            e.currentTarget.style.color = "rgba(255,255,255,0.85)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)";
+            e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a9 9 0 1 1-3.5-7.1"/><polyline points="21 4 21 9 16 9"/>
+          </svg>
+          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2.5, textTransform: "uppercase", color: G }}>Circuit échauffement</span>
+          <span style={{ opacity: 0.5 }}>·</span>
+          <span>Préparer le corps avant la séance</span>
+        </button>
+      )}
+
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 10 }}>Exercices</div>
       <DndContext
         sensors={sensors}
@@ -995,25 +1402,122 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
         Cardio / Run{" "}
         <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(alimente la page Run)</span>
       </div>
-      {runs.map((r, i) => (
+      {runs.map((r, i) => {
+        const isFrac = (r.repeats != null && r.repeats >= 2) || !!r.work;
+        return (
         <div key={r.id || i} style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
             <input
               value={r.name || ""}
               onChange={(e) => updateRun(i, { ...r, name: e.target.value })}
-              placeholder="Nom (ex. Sortie longue, Fractionné 30/30)"
+              placeholder={isFrac ? "Nom (ex. HIIT 30/30, Tabata, 10×400m)" : "Nom (ex. Sortie longue, Footing récup)"}
               style={{ flex: 1, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
             />
+            <button
+              type="button"
+              onClick={() => updateRun(i, isFrac
+                ? { ...r, repeats: null, work: "", target: "" }
+                : { ...r, repeats: r.repeats || 8, work: r.work || "30s", rest: r.rest || "30s", target: r.target || "" }
+              )}
+              title={isFrac ? "Repasser en continu" : "Activer le fractionné"}
+              style={{
+                flexShrink: 0, padding: "7px 10px",
+                background: isFrac ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.03)",
+                border: "1px solid " + (isFrac ? "rgba(239,68,68,0.3)" : BORDER),
+                borderRadius: 8,
+                color: isFrac ? "#ef4444" : "rgba(255,255,255,0.55)",
+                fontSize: 10, fontWeight: 800, letterSpacing: 0.5, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >{isFrac ? "FRAC ✓" : "FRAC"}</button>
             <button type="button" onClick={() => removeRun(i)} title="Retirer"
               style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
             >×</button>
           </div>
+          {/* Presets HIIT + presets Running classiques.
+              HIIT (temps-based) : 15/15, 20/20, 30/30, Tabata, etc.
+              Running (distance-based) : 8×400m VO2max, 5×1000m AS10,
+              6×800m, 3×2000m, 2×3000m, 10×300m, 12×400m (presets prépa
+              10km / semi / 5km). Le target (allure) reste vide : le coach
+              le saisit selon le profil athlète. */}
+          {isFrac && (
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 7 }}>
+              {[
+                { label: "15/15", repeats: 12, work: "15s", rest: "15s" },
+                { label: "20/20", repeats: 10, work: "20s", rest: "20s" },
+                { label: "30/30", repeats: 8,  work: "30s", rest: "30s" },
+                { label: "20/40", repeats: 8,  work: "20s", rest: "40s" },
+                { label: "40/20", repeats: 8,  work: "40s", rest: "20s" },
+                { label: "Tabata 20/10", repeats: 8,  work: "20s", rest: "10s" },
+                { label: "1'/1'", repeats: 10, work: "1'",  rest: "1'"  },
+                { label: "1'/30", repeats: 8,  work: "1'",  rest: "30s" },
+                // — Running fractionnés course (prépa 5km/10km/semi) —
+                { label: "10×300m", repeats: 10, work: "300m", rest: "1'30" },
+                { label: "8×400m", repeats: 8, work: "400m", rest: "1'30" },
+                { label: "12×400m", repeats: 12, work: "400m", rest: "1'30" },
+                { label: "6×800m", repeats: 6, work: "800m", rest: "2'00" },
+                { label: "5×1000m", repeats: 5, work: "1000m", rest: "2'30" },
+                { label: "3×2000m", repeats: 3, work: "2000m", rest: "3'00" },
+                { label: "2×3000m", repeats: 2, work: "3000m", rest: "4'00" },
+                { label: "2×10 min seuil", repeats: 2, work: "10 min", rest: "3' trot" },
+                { label: "3×8 min seuil", repeats: 3, work: "8 min", rest: "2'30 trot" },
+              ].map((preset) => {
+                const isOn = r.repeats === preset.repeats && r.work === preset.work && r.rest === preset.rest;
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => updateRun(i, { ...r, repeats: preset.repeats, work: preset.work, rest: preset.rest })}
+                    style={{
+                      padding: "4px 9px",
+                      background: isOn ? "rgba(239,68,68,0.18)" : "rgba(255,255,255,0.03)",
+                      border: "1px solid " + (isOn ? "rgba(239,68,68,0.45)" : "rgba(255,255,255,0.08)"),
+                      borderRadius: 100,
+                      color: isOn ? "#ef4444" : "rgba(255,255,255,0.55)",
+                      fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}
+                  >{preset.label}</button>
+                );
+              })}
+            </div>
+          )}
+          {/* Champs fractionné quand activé */}
+          {isFrac && (
+            <div style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
+              <input
+                type="number" min="1" max="50"
+                value={r.repeats ?? ""}
+                onChange={(e) => updateRun(i, { ...r, repeats: e.target.value === "" ? null : Math.max(1, parseInt(e.target.value, 10) || 1) })}
+                placeholder="×N"
+                style={{ minWidth: 0, padding: "7px 8px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: "inherit", outline: "none", textAlign: "center" }}
+              />
+              <input
+                value={r.work || ""}
+                onChange={(e) => updateRun(i, { ...r, work: e.target.value })}
+                placeholder="Effort (30s, 400m…)"
+                style={{ minWidth: 0, padding: "7px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
+              />
+              <input
+                value={r.rest || ""}
+                onChange={(e) => updateRun(i, { ...r, rest: e.target.value })}
+                placeholder="Récup (30s, 1'30)"
+                style={{ minWidth: 0, padding: "7px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
+              />
+              <input
+                value={r.target || ""}
+                onChange={(e) => updateRun(i, { ...r, target: e.target.value })}
+                placeholder="Allure / temps cible (ex 4'15-4'20/km · 1'42 par 400m)"
+                style={{ minWidth: 0, padding: "7px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
+              />
+            </div>
+          )}
+          {/* Champs continu (et compléments fractionné : distance/durée totales facultatives) */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
             {[
-              { k: "distance", ph: "Distance" },
-              { k: "duration", ph: "Durée" },
+              { k: "distance", ph: isFrac ? "Distance totale (opt.)" : "Distance" },
+              { k: "duration", ph: isFrac ? "Durée totale (opt.)" : "Durée" },
               { k: "bpm", ph: "BPM" },
-              { k: "rest", ph: "Repos" },
+              ...(isFrac ? [] : [{ k: "rest", ph: "Repos" }]),
             ].map(({ k, ph }) => (
               <input
                 key={k}
@@ -1025,7 +1529,8 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
             ))}
           </div>
         </div>
-      ))}
+        );
+      })}
       <button
         type="button"
         onClick={addRun}
@@ -1080,6 +1585,204 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
           letterSpacing: 0.5,
         }}
       >+ Ajouter une séance terrain</button>
+
+      {/* AMRAP / WOD — bloc à temps avec chrono countdown côté client */}
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(239,68,68,0.85)", textTransform: "uppercase", margin: "18px 0 10px", display: "flex", alignItems: "center", gap: 6 }}>
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
+        </svg>
+        Bloc à temps (AMRAP · EMOM · Tabata · WOD)
+        <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.3)", fontWeight: 500, marginLeft: 4 }}>
+          — chrono countdown lançable par l'athlète
+        </span>
+      </div>
+      {amraps.map((a, i) => (
+        <div key={a.id || i} style={{
+          background: "linear-gradient(160deg, rgba(239,68,68,0.06) 0%, rgba(15,15,15,0.4) 100%)",
+          border: "1px solid rgba(239,68,68,0.28)",
+          borderRadius: 12, padding: 14, marginBottom: 10,
+        }}>
+          {/* Header avec presets format */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1.5, color: "#ef4444", textTransform: "uppercase" }}>Bloc {i + 1}</span>
+            <button type="button" onClick={() => removeAmrap(i)} title="Retirer ce bloc"
+              style={{ padding: "5px 9px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 6, color: "#c0392b", fontSize: 11, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}
+            >× Retirer</button>
+          </div>
+
+          {/* Presets de format : 1 clic */}
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 12 }}>
+            {[
+              { label: "AMRAP 12'",     title: "AMRAP",         minutes: 12 },
+              { label: "AMRAP 20'",     title: "AMRAP",         minutes: 20 },
+              { label: "EMOM 10'",      title: "EMOM",          minutes: 10 },
+              { label: "Tabata 4'",     title: "Tabata",        minutes: 4 },
+              { label: "WOD For Time",  title: "For Time",      minutes: 15 },
+              { label: "Chipper 25'",   title: "Chipper",       minutes: 25 },
+            ].map((p) => {
+              const on = a.title === p.title && a.minutes === p.minutes;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => updateAmrap(i, { ...a, title: p.title, minutes: p.minutes })}
+                  style={{
+                    padding: "4px 10px",
+                    background: on ? "rgba(239,68,68,0.18)" : "rgba(255,255,255,0.03)",
+                    border: "1px solid " + (on ? "rgba(239,68,68,0.45)" : "rgba(255,255,255,0.08)"),
+                    borderRadius: 100,
+                    color: on ? "#ef4444" : "rgba(255,255,255,0.6)",
+                    fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >{p.label}</button>
+              );
+            })}
+          </div>
+
+          {/* Titre + durée */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 110px", gap: 8, marginBottom: 10 }}>
+            <label style={{ display: "block" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(239,68,68,0.75)", marginBottom: 4 }}>
+                Format / Nom
+              </div>
+              <input
+                value={a.title || ""}
+                onChange={(e) => updateAmrap(i, { ...a, title: e.target.value })}
+                placeholder="AMRAP, EMOM, WOD, For Time…"
+                style={{ width: "100%", boxSizing: "border-box", padding: "9px 11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: "inherit", outline: "none" }}
+              />
+            </label>
+            <label style={{ display: "block" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(239,68,68,0.75)", marginBottom: 4 }}>
+                Durée chrono
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8 }}>
+                <input
+                  type="number" min="1" max="120"
+                  value={a.minutes ?? ""}
+                  onChange={(e) => updateAmrap(i, { ...a, minutes: e.target.value === "" ? null : Math.max(1, parseInt(e.target.value, 10) || 1) })}
+                  placeholder="12"
+                  style={{ flex: 1, minWidth: 0, padding: "5px 0", background: "transparent", border: "none", color: "#fff", fontSize: 16, fontWeight: 800, fontFamily: "ui-monospace,'SF Mono',Menlo,monospace", outline: "none", textAlign: "center" }}
+                />
+                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", letterSpacing: 0.5, fontWeight: 700 }}>MIN</span>
+              </div>
+            </label>
+          </div>
+
+          {/* Mouvements (description) */}
+          <label style={{ display: "block", marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(239,68,68,0.75)" }}>
+                Mouvements à enchaîner
+              </div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 0.3 }}>
+                1 ligne = 1 mouvement
+              </div>
+            </div>
+            <textarea
+              value={a.description || ""}
+              onChange={(e) => updateAmrap(i, { ...a, description: e.target.value })}
+              placeholder={"10 burpees\n15 air squats\n20 sit-ups\n200m course"}
+              rows={4}
+              style={{ width: "100%", boxSizing: "border-box", padding: "9px 11px", background: "rgba(255,255,255,0.04)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12.5, fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace", outline: "none", resize: "vertical", lineHeight: 1.6 }}
+            />
+          </label>
+
+          {/* Preview : vrai chrono lançable côté athlète. Le storageKey est
+              tied à l'ID de l'AMRAP (qui change à chaque ré-ajout) — pas de
+              persistance sale entre 2 blocs distincts. Préfixé `_preview_`
+              pour pouvoir cleanup si besoin un jour. */}
+          {(a.title || a.minutes || a.description) && (
+            <details style={{ marginTop: 6 }}>
+              <summary style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(255,255,255,0.35)", cursor: "pointer", userSelect: "none", padding: "4px 0" }}>
+                ▾ Aperçu côté athlète (chrono réel)
+              </summary>
+              <div style={{ marginTop: 8 }}>
+                <CountdownBlockCard
+                  variant="amrap"
+                  title={a.title || "AMRAP"}
+                  minutes={a.minutes}
+                  description={a.description}
+                  badge={a.minutes ? `${a.minutes} min · max rounds` : null}
+                  storageKey={`_preview_amrap_${a.id || i}`}
+                />
+              </div>
+            </details>
+          )}
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addAmrap}
+        style={{
+          width: "100%", padding: 12, background: "transparent",
+          border: "1px dashed rgba(239,68,68,0.35)", borderRadius: 12,
+          color: "#ef4444", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+          letterSpacing: 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+        }}
+      >
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
+        </svg>
+        Ajouter un bloc AMRAP / EMOM / Tabata / WOD
+      </button>
+
+      {/* ERGO / CARDIO FIN DE SÉANCE — rameur, vélo, ski-erg, assault bike */}
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
+        Ergo (fin de séance){" "}
+        <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(rameur, vélo, ski-erg, assault…)</span>
+      </div>
+      {ergos.map((e, i) => (
+        <div key={e.id || i} style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.22)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+            <select
+              value={e.machine || "Rameur"}
+              onChange={(ev) => updateErgo(i, { ...e, machine: ev.target.value })}
+              style={{ flex: 1, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.04)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
+            >
+              {["Rameur", "Vélo (Watt bike)", "Vélo (Assault)", "Ski-erg", "Tapis", "Stairmaster", "Autre"].map((m) => (
+                <option key={m} value={m} style={{ background: "#0a0a0a" }}>{m}</option>
+              ))}
+            </select>
+            <input
+              value={e.goal || ""}
+              onChange={(ev) => updateErgo(i, { ...e, goal: ev.target.value })}
+              placeholder="Objectif (2 km / 150 cal / 5 rounds)"
+              style={{ flex: 1.5, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
+            />
+            <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, flexShrink: 0 }}>
+              <input
+                type="number" min="0" max="120"
+                value={e.minutes ?? ""}
+                onChange={(ev) => updateErgo(i, { ...e, minutes: ev.target.value === "" ? null : Math.max(0, parseInt(ev.target.value, 10) || 0) })}
+                placeholder="—"
+                style={{ width: 32, padding: 0, background: "transparent", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: "inherit", outline: "none", textAlign: "center" }}
+              />
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: 0.5 }}>min</span>
+            </div>
+            <button type="button" onClick={() => removeErgo(i)} title="Retirer"
+              style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            >×</button>
+          </div>
+          <input
+            value={e.notes || ""}
+            onChange={(ev) => updateErgo(i, { ...e, notes: ev.target.value })}
+            placeholder="Notes (intensité, allure, position…)"
+            style={{ width: "100%", boxSizing: "border-box", padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addErgo}
+        style={{
+          width: "100%", padding: 10, background: "transparent",
+          border: "1px dashed rgba(56,189,248,0.4)", borderRadius: 12,
+          color: "#38bdf8", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+          letterSpacing: 0.5,
+        }}
+      >+ Ajouter un ergo (rameur / vélo / ski-erg…)</button>
       </>)}
     </div>
   );
@@ -1484,6 +2187,35 @@ function Preview({ programme, showAnalytics }) {
                       </strong>
                       {f.moment ? <span style={{ color: "rgba(255,255,255,0.45)" }}>{" · " + f.moment}</span> : null}
                       {f.description ? <div style={{ marginTop: 2, color: "rgba(255,255,255,0.5)" }}>{f.description}</div> : null}
+                    </div>
+                  ))
+                : null}
+              {Array.isArray(s.amraps) && s.amraps.length > 0
+                ? s.amraps.map((a, ai) => (
+                    <div key={ai} style={{ marginTop: ai === 0 ? 10 : 4, padding: "8px 10px", background: "rgba(239,68,68,0.06)", borderLeft: "2px solid rgba(239,68,68,0.55)", borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.75)" }}>
+                      <strong style={{ color: "rgba(239,68,68,0.95)" }}>
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px", marginRight: 5 }}>
+                          <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
+                        </svg>
+                        {a.title || "AMRAP"}
+                      </strong>
+                      {a.minutes ? <span style={{ color: "rgba(255,255,255,0.55)" }}>{" · " + a.minutes + " min"}</span> : null}
+                      {a.description ? <div style={{ marginTop: 2, color: "rgba(255,255,255,0.55)", whiteSpace: "pre-wrap" }}>{a.description}</div> : null}
+                    </div>
+                  ))
+                : null}
+              {Array.isArray(s.ergos) && s.ergos.length > 0
+                ? s.ergos.map((e, ei) => (
+                    <div key={ei} style={{ marginTop: ei === 0 ? 10 : 4, padding: "8px 10px", background: "rgba(56,189,248,0.06)", borderLeft: "2px solid rgba(56,189,248,0.55)", borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.75)" }}>
+                      <strong style={{ color: "rgba(56,189,248,0.95)" }}>
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-1px", marginRight: 5 }}>
+                          <circle cx="5" cy="17" r="3" /><circle cx="19" cy="17" r="3" /><path d="M6 13l4-8h4l-2 6 4 6" />
+                        </svg>
+                        {e.machine || "Ergo"}
+                      </strong>
+                      {e.goal ? <span style={{ color: "rgba(255,255,255,0.55)" }}>{" · " + e.goal}</span> : null}
+                      {e.minutes ? <span style={{ color: "rgba(255,255,255,0.45)" }}>{" · " + e.minutes + " min"}</span> : null}
+                      {e.notes ? <div style={{ marginTop: 2, color: "rgba(255,255,255,0.55)" }}>{e.notes}</div> : null}
                     </div>
                   ))
                 : null}

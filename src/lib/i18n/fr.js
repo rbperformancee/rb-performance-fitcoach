@@ -166,6 +166,7 @@ const fr = {
     "move.duration": "Duree",
     "move.bpm": "BPM",
     "move.rest": "Repos",
+    "move.target": "Allure",
     "move.todo": "A faire",
     "move.done": "Fait",
     "move.validate_week": "Valider la semaine",

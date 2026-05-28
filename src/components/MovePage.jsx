@@ -375,8 +375,18 @@ export default function MovePage({ client, appData }) {
                         </div>
                       </div>
 
-                      {/* Targets — chips compactes premium */}
+                      {/* Targets — chips compactes premium.
+                          Ordre : fractionné structure (repeats × work) → distance →
+                          durée → target (allure/temps cible) → bpm → rest.
+                          target affiche allure ET temps cible cumulés
+                          (ex "4'15-4'20/km · 1'42 par 400m"), info clé pour le coureur. */}
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                        {r.repeats != null && r.repeats >= 2 && r.work && (
+                          <span style={{ ...chipStyle, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                            <span style={chipLabel}>×</span>
+                            <span style={{ ...chipVal, color: "#fff", fontWeight: 800 }}>{r.repeats} × {r.work}</span>
+                          </span>
+                        )}
                         {r.distance && (
                           <span style={chipStyle}>
                             <span style={chipLabel}>{t("move.distance")}</span>
@@ -387,6 +397,12 @@ export default function MovePage({ client, appData }) {
                           <span style={chipStyle}>
                             <span style={chipLabel}>{t("move.duration")}</span>
                             <span style={chipVal}>{r.duration}</span>
+                          </span>
+                        )}
+                        {r.target && (
+                          <span style={{ ...chipStyle, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.22)" }}>
+                            <span style={chipLabel}>{t("move.target") || "Allure"}</span>
+                            <span style={{ ...chipVal, color: "#02d1ba", fontWeight: 700 }}>{r.target}</span>
                           </span>
                         )}
                         {r.bpm && (
