@@ -38,6 +38,29 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet"></noscript>
+
+<!-- Meta Pixel — tracking conversions (PageView + InitiateCheckout + Purchase + Lead).
+     L'ID __META_PIXEL_ID__ est injecté au build par vercel.json buildCommand.
+     Si l'ID est invalide (non-numérique ou placeholder), le pixel ne charge pas
+     (guard interne) — pas d'erreur ni traffic vers Meta. -->
+<script>
+(function(){
+  var pid='__META_PIXEL_ID__';
+  if(/[^0-9]/.test(pid)||pid.length<10)return;
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init',pid);
+  fbq('track','PageView');
+  // Si on revient sur /founding?success=true (post-Stripe), fire Purchase.
+  // Stripe webhook track aussi côté server (source of truth), mais ce Purchase
+  // client-side permet le retargeting Meta Ads (lookalike audience high-LTV).
+  try {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      fbq('track','Purchase',{value:199,currency:'EUR',content_name:'Founding Coach 199'});
+    }
+  } catch(e){}
+})();
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#080C14;color:#fff;font-family:'Inter',-apple-system,system-ui,sans-serif;min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased}
@@ -261,6 +284,30 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
             "@type": "Answer",
             "text": "Le tarif Founding 199€ est conditionné à un abonnement continu. Si tu résilies puis reviens, tu seras au tarif en vigueur à ce moment (probablement 299€ ou plus). Le prix verrouillé suit ta continuité, pas ton compte."
           }
+        },
+        {
+          "@type": "Question",
+          "name": "Et si je débute juste comme coach, c'est trop tôt pour RB Perform ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "C'est en fait le meilleur moment. Les coachs qui démarrent et qui structurent leur business pro dès J1 (vitrine, encaissement auto, suivi structuré) atteignent leurs 10 premiers clients en 60-90 jours vs 6-12 mois en mode bricolé Notion/Excel/Stripe à la main. Le Founding price 199€ te bloque pendant que tu scales — tu ne paieras jamais le double même quand tu auras 30 clients."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment je migre depuis Trainerize / TrueCoach / Notion / Excel ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Migration en 15 minutes via le dashboard Coach. Tu exportes ta base clients depuis ton outil actuel (CSV depuis Trainerize/TrueCoach/Everfit/HelloCoach, ou Notion/Excel) et tu importes dans RB Perform. Mapping automatique. Tes clients reçoivent un email avec lien d'installation PWA en 1 clic. Pendant les 90 premiers jours Founding, le fondateur (Rayan) est joignable WhatsApp direct pour t'aider si bloqué — c'est inclus dans l'offre."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quel support j'ai accès en tant que Founding Coach ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "90 premiers jours : WhatsApp direct au fondateur Rayan Bonte. Réponse moins de 2h en semaine, moins de 24h le weekend. Au-delà : support email français, réponse moins de 24h en semaine avec priorité Founder vs nouveaux abonnés à 299€. En plus, vote sur la roadmap produit — les Founders shippent leurs features en priorité. Pas de support outsourcé, pas de bot — un vrai contact humain qui peut débugger ton compte."
+          }
         }
       ]
     }
@@ -386,6 +433,17 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       </div>
     </div>
 
+    <!-- ===== Soft alternative pour les indécis (qualifier vers diagnostic) ===== -->
+    <div style="max-width:560px;margin:32px auto 8px;padding:18px 22px;background:rgba(255,255,255,0.02);border:1px dashed rgba(2,209,186,0.25);border-radius:14px;text-align:center">
+      <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.55;margin-bottom:10px">
+        <strong style="color:#fff">Pas encore décidé ?</strong> Fais d'abord le diagnostic gratuit en 2 min. Tu sauras exactement ce que RB Perform résoudrait dans ton cas.
+      </div>
+      <a href="/diagnostic?utm_source=founding&utm_medium=qualifier&utm_campaign=diagnostic_alt"
+         style="display:inline-block;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#02d1ba;text-decoration:none;border-bottom:1px solid rgba(2,209,186,0.4);padding-bottom:2px">
+        Faire le diagnostic d'abord →
+      </a>
+    </div>
+
     <!-- ===== SECTION CONVERSION FINALE — refonte conversion-max ===== -->
     <section class="join-section" id="join">
       <div class="join-eyebrow" style="color:#02d1ba;">● Sécuriser ma place — 30 places limitées</div>
@@ -501,6 +559,119 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       </div>
     </section>
 
+    <!-- ===== Section FAQ visible (objection handling) =====
+         Rend visibles les questions du Schema.org FAQPage déjà présent dans
+         le <head>. Sans cette section HTML, les 5 Q&R existantes ne
+         servaient qu'au SEO (rich snippets SERP), pas à la conversion.
+         3 questions supplémentaires ajoutées pour traiter les objections
+         classiques : éligibilité débutant, migration, support.
+         Schema FAQPage mis à jour en parallèle pour rester en sync. -->
+    <section style="margin-top:48px;padding-top:32px;border-top:.5px solid rgba(255,255,255,0.06)">
+      <div style="text-align:center;margin-bottom:32px">
+        <div style="font-size:10px;color:rgba(0,201,167,0.7);letter-spacing:0.2em;text-transform:uppercase;font-weight:800;margin-bottom:8px">● Questions fréquentes</div>
+        <h2 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin:0">
+          Tes dernières hésitations<span style="color:#00C9A7">.</span>
+        </h2>
+      </div>
+
+      <div style="max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:8px">
+
+        <details style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+          <summary style="padding:18px 22px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span>Le prix 199 €/mois est-il vraiment bloqué à vie ?</span>
+            <span aria-hidden="true" style="color:#00C9A7;font-size:18px;flex-shrink:0">+</span>
+          </summary>
+          <div style="padding:0 22px 20px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7)">
+            Oui. Tant que ton abonnement reste actif sans interruption, tu gardes le tarif Founding 199 €/mois à vie — même quand le standard passera à 299 €/mois après les 30 places fondatrices. C'est garanti contractuellement dans les CGV. Si tu résilies et reviens plus tard, tu passes au tarif en vigueur à ce moment-là — le verrou suit ta continuité, pas ton compte.
+          </div>
+        </details>
+
+        <details style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+          <summary style="padding:18px 22px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span>Combien y a-t-il de places Founding et c'est quand la fin ?</span>
+            <span aria-hidden="true" style="color:#00C9A7;font-size:18px;flex-shrink:0">+</span>
+          </summary>
+          <div style="padding:0 22px 20px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7)">
+            30 places fondatrices au total. <strong style="color:#fff">Aucune date butoir</strong> — c'est uniquement le compteur de places qui déclenche le passage à 299 €/mois pour les nouveaux. Donc pas de pression artificielle "il vous reste 24h", mais une vraie limitation sur le nombre de coachs founders à 199 €. Une fois la cohorte pleine, c'est fini définitivement à ce tarif.
+          </div>
+        </details>
+
+        <details style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+          <summary style="padding:18px 22px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span>Quelle différence concrète avec Trainerize, TrueCoach ou Everfit ?</span>
+            <span aria-hidden="true" style="color:#00C9A7;font-size:18px;flex-shrink:0">+</span>
+          </summary>
+          <div style="padding:0 22px 20px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7)">
+            Trois différences majeures : <strong style="color:#fff">(1)</strong> RB Perform prend 0 % de commission sur les paiements clients (Stripe direct) vs 2,9-3,5 % chez les concurrents US — sur 30 K€ de CA annuel, ça fait ~900 € d'écart en ta poche. <strong style="color:#fff">(2)</strong> Anti-churn IA inclus qui détecte les clients à risque <em>avant</em> qu'ils partent (absent ailleurs). <strong style="color:#fff">(3)</strong> Hébergement EU + RGPD natif, interface FR, support FR — pas de zone grise juridique. Comparatif détaillé : <a href="/alternative-trainerize" style="color:#00C9A7;text-decoration:underline;text-underline-offset:2px">RB Perform vs Trainerize</a>.
+          </div>
+        </details>
+
+        <details style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+          <summary style="padding:18px 22px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span>Et si je débute, c'est trop tôt pour moi ?</span>
+            <span aria-hidden="true" style="color:#00C9A7;font-size:18px;flex-shrink:0">+</span>
+          </summary>
+          <div style="padding:0 22px 20px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7)">
+            C'est en fait <strong style="color:#fff">le meilleur moment</strong>. Les coachs qui démarrent et qui structurent leur business pro dès J1 (vitrine, encaissement auto, suivi structuré) atteignent leurs 10 premiers clients en 60-90 jours vs 6-12 mois en mode bricolé Notion/Excel/Stripe à la main. Le Founding price te bloque à 199 € pendant que tu scales — tu ne paieras jamais le double. Méthode 90 jours détaillée : <a href="/blog/trouver-premiers-clients-coach-sportif" style="color:#00C9A7;text-decoration:underline;text-underline-offset:2px">10 premiers clients en 90 jours</a>.
+          </div>
+        </details>
+
+        <details style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+          <summary style="padding:18px 22px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span>Je suis sur Trainerize / Excel / Notion — comment je migre ?</span>
+            <span aria-hidden="true" style="color:#00C9A7;font-size:18px;flex-shrink:0">+</span>
+          </summary>
+          <div style="padding:0 22px 20px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7)">
+            Migration en <strong style="color:#fff">15 minutes</strong> via le dashboard Coach. Tu exportes ta base clients depuis ton outil actuel (CSV depuis Trainerize/TrueCoach/Everfit/HelloCoach, ou Notion/Excel) et tu importes dans RB Perform. Mapping automatique. Tes clients reçoivent un email avec lien d'installation PWA en 1 clic. <strong style="color:#fff">Pendant les 90 premiers jours, j'ai accès direct WhatsApp</strong> pour t'aider si bloqué — c'est inclus dans Founding.
+          </div>
+        </details>
+
+        <details style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+          <summary style="padding:18px 22px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span>Quel support et à quelle vitesse je suis aidé ?</span>
+            <span aria-hidden="true" style="color:#00C9A7;font-size:18px;flex-shrink:0">+</span>
+          </summary>
+          <div style="padding:0 22px 20px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7)">
+            <strong style="color:#fff">90 premiers jours Founding</strong> : WhatsApp direct au fondateur (moi, Rayan). Réponse &lt;2h en semaine, &lt;24h le weekend. <strong style="color:#fff">Au-delà</strong> : support email FR, réponse &lt;24h en semaine (priorité Founder vs nouveaux abonnés 299 €). En plus tu votes sur la roadmap produit — les Founders shippent leurs features en priorité. Pas un support outsourcé Manille, pas un bot — un vrai contact humain qui sait débugger ton compte.
+          </div>
+        </details>
+
+        <details style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+          <summary style="padding:18px 22px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span>Y a-t-il un engagement minimum ?</span>
+            <span aria-hidden="true" style="color:#00C9A7;font-size:18px;flex-shrink:0">+</span>
+          </summary>
+          <div style="padding:0 22px 20px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7)">
+            Aucun. Tu peux résilier à tout moment depuis ton portail Stripe en 1 clic, sans justification, sans frais. Tant que tu restes actif, ton tarif Founding 199 € reste verrouillé à vie. Le risque pour toi est strictement de 199 € (le 1er mois si ça ne te plaît pas).
+          </div>
+        </details>
+
+        <details style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+          <summary style="padding:18px 22px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span>Que se passe-t-il si je résilie puis veux revenir ?</span>
+            <span aria-hidden="true" style="color:#00C9A7;font-size:18px;flex-shrink:0">+</span>
+          </summary>
+          <div style="padding:0 22px 20px;font-size:14.5px;line-height:1.65;color:rgba(255,255,255,0.7)">
+            Le tarif Founding 199 € est conditionné à un abonnement <strong style="color:#fff">continu</strong>. Si tu résilies puis reviens, tu seras au tarif en vigueur à ce moment-là (probablement 299 € ou plus). C'est volontaire — le verrou récompense la fidélité, pas le yo-yo. Si tu hésites, mieux vaut tester 1 mois et décider, plutôt que résilier "au cas où".
+          </div>
+        </details>
+
+      </div>
+
+      <!-- Dernier CTA après FAQ — pour ceux qui ont scrollé jusqu'ici -->
+      <div style="text-align:center;margin-top:36px">
+        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0 0 16px">
+          Toutes tes questions sont répondues ?
+        </p>
+        <button type="button" class="cta" onclick="openCheckoutModal()" style="border:none;font:inherit;cursor:pointer;font-size:15px;padding:18px 38px;max-width:380px;margin:0 auto">
+          Sécuriser ma place — 199 € →
+        </button>
+        <div class="cta-sub" style="margin-top:10px">
+          Sans engagement · Annulable en 1 clic · Hébergement EU
+        </div>
+      </div>
+    </section>
+
     <!-- ===== Modal checkout direct Stripe ===== -->
     <div id="checkoutModal" style="display:none;position:fixed;inset:0;background:rgba(5,5,5,0.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:24px;">
       <div style="background:#0a0a0a;border:1px solid rgba(2,209,186,0.3);border-radius:18px;padding:32px;max-width:440px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.6);">
@@ -533,6 +704,9 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
       var m = document.getElementById('checkoutModal');
       m.style.display = 'flex';
       setTimeout(function(){ document.getElementById('ck-email').focus(); }, 100);
+      // Track : utilisateur a manifesté l'intention d'acheter (a ouvert le
+      // formulaire email). Pas encore Stripe — juste l'ouverture du funnel.
+      try { if (window.fbq) fbq('track','InitiateCheckout',{value:199,currency:'EUR',content_name:'Founding Coach 199'}); } catch(e){}
     }
     function closeCheckoutModal() {
       document.getElementById('checkoutModal').style.display = 'none';
@@ -633,6 +807,11 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(28px,6vw,42px);font-weight:900
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       }).catch(function(){});
+
+      // Track : lead capture (waitlist = lead chaud mais pas payment)
+      // Permet de mesurer le funnel waitlist→conversion + créer une
+      // audience custom Meta Ads "waitlist coaches" pour retargeting.
+      try { if (window.fbq) fbq('track','Lead',{content_name:'Founding Waitlist',content_category:'founding_waitlist'}); } catch(e){}
 
       // Always show success (graceful degradation)
       document.getElementById('formWrap').style.display = 'none';

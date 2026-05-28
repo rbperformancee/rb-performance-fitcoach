@@ -1,5 +1,5 @@
 {
-  "buildCommand": "react-scripts build && cp build/index.html build/app.html && cp public/landing.html build/index.html && if [ -n \"$META_PIXEL_ID\" ]; then sed -i \"s/__META_PIXEL_ID__/$META_PIXEL_ID/g\" build/index.html build/app.html; fi",
+  "buildCommand": "react-scripts build && cp build/index.html build/app.html && cp public/landing.html build/index.html && if [ -n \"$META_PIXEL_ID\" ]; then for f in build/index.html build/app.html build/founding.html; do [ -f \"$f\" ] && sed -i \"s/__META_PIXEL_ID__/$META_PIXEL_ID/g\" \"$f\"; done; fi",
   "outputDirectory": "build",
   "installCommand": "npm install",
   "crons": [
