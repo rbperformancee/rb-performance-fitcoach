@@ -534,6 +534,23 @@ export default function FuelPage({ client, appData }) {
   const [scanQuantite, setScanQuantite] = useState(100); // quantite choisie pour le produit scanne
   const fileInputRef = useRef(null); // <input type=file capture=environment> qui ouvre la camera native
 
+  // ===== Mode live camera in-app (Yuka/MyFitnessPal-style) =====
+  // <video> en flux continu + BarcodeDetector qui scanne 1 frame toutes
+  // les ~300 ms. Detection auto + bip + vibration des qu'un code est
+  // cadre. Fallback automatique vers snap-photo natif si permission
+  // refusee ou BarcodeDetector indisponible (iOS Safari notamment).
+  // 4 etats : idle (avant ouverture), starting, granted, denied|unsupported.
+  const [livePermission, setLivePermission] = useState("idle");
+  const [liveDetecting, setLiveDetecting] = useState(false);
+  const videoRef = useRef(null);
+  const liveStreamRef = useRef(null);
+  const liveDetectorRef = useRef(null);
+  const liveLoopRef = useRef(null);
+  // Garde anti double-detection (BarcodeDetector peut renvoyer
+  // plusieurs fois le meme code en quelques frames).
+  const liveLastCodeRef = useRef("");
+  const liveLastCodeAtRef = useRef(0);
+
   // Edition d'un aliment deja loggue
   const [fuelTab, setFuelTab] = useState("nutrition"); // nutrition | supplements
   const [editingFood, setEditingFood] = useState(null); // log d'origine, immutable, pour calculer les ratios
@@ -869,6 +886,150 @@ export default function FuelPage({ client, appData }) {
     setScanQuantite(100); // defaut 100g, donnees OpenFoodFacts pour 100g
   }, [scanBarcode]);
 
+  // ===== Live scan — start / stop / scan loop =====
+  // stopLiveScan : idempotent, safe a appeler N fois. Coupe le stream
+  // (eteint la diode camera + libere les ressources) et clear le loop.
+  const stopLiveScan = useCallback(() => {
+    if (liveLoopRef.current) {
+      clearInterval(liveLoopRef.current);
+      liveLoopRef.current = null;
+    }
+    if (liveStreamRef.current) {
+      try { liveStreamRef.current.getTracks().forEach((t) => t.stop()); } catch {}
+      liveStreamRef.current = null;
+    }
+    if (videoRef.current) {
+      try { videoRef.current.srcObject = null; } catch {}
+    }
+    liveDetectorRef.current = null;
+    setLiveDetecting(false);
+  }, []);
+
+  // onLiveDetected : appele des qu'un code-barre est lu. Anti-double
+  // (50% des sessions le BarcodeDetector renvoie 2-3 frames de suite
+  // le meme code). Bip + vibration, stop le stream, lookup produit.
+  const onLiveDetected = useCallback(async (rawCode) => {
+    const now = Date.now();
+    // Ignore si meme code lu il y a < 2s
+    if (rawCode === liveLastCodeRef.current && now - liveLastCodeAtRef.current < 2000) return;
+    liveLastCodeRef.current = rawCode;
+    liveLastCodeAtRef.current = now;
+
+    // Feedback : vibration + bip (Web Audio API, pas de fichier requis)
+    if (navigator.vibrate) navigator.vibrate(60);
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 1200;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+      }
+    } catch {}
+
+    stopLiveScan();
+    setScanLoading(true);
+    setScanStatus("Recherche du produit...");
+    try {
+      const food = await scanBarcode(rawCode);
+      setScanLoading(false);
+      setScanStatus("");
+      if (!food || !food.calories) {
+        setScanError("Produit introuvable (" + rawCode + "). Essaie un autre produit ou ajoute-le manuellement.");
+        return;
+      }
+      setScannedFood(food);
+      setScanQuantite(100);
+    } catch (err) {
+      setScanLoading(false);
+      setScanStatus("");
+      setScanError("Erreur reseau OpenFoodFacts. Reessaie.");
+    }
+  }, [scanBarcode, stopLiveScan]);
+
+  // scanFrame : 1 passe de detection sur la frame video courante.
+  // BarcodeDetector accepte un HTMLVideoElement directement (zero copie).
+  // Erreur swallowed : une frame ratee n'est pas grave, la suivante repasse.
+  const scanFrame = useCallback(async () => {
+    if (!videoRef.current || !liveDetectorRef.current) return;
+    // Skip si la video n'a pas encore une frame dispo (chargement)
+    if (videoRef.current.readyState < 2) return;
+    try {
+      const codes = await liveDetectorRef.current.detect(videoRef.current);
+      if (codes && codes.length > 0 && codes[0].rawValue) {
+        onLiveDetected(codes[0].rawValue);
+      }
+    } catch {
+      // skip frame
+    }
+  }, [onLiveDetected]);
+
+  // startLiveScan : demande la permission camera + branche le stream
+  // sur le <video> + initialise le detecteur + lance la boucle.
+  // Fallback transparent vers snap-photo si pas supporte ou refuse.
+  const startLiveScan = useCallback(async () => {
+    setScanError("");
+    setScanStatus("");
+    // Pre-flight : BarcodeDetector + getUserMedia requis pour le mode live
+    if (!hasBarcodeDetector || !navigator.mediaDevices?.getUserMedia) {
+      setLivePermission("unsupported");
+      return;
+    }
+    setLivePermission("starting");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+      liveStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        // playsInline + muted obligatoires pour iOS Safari (sinon
+        // play() reject avec NotAllowedError).
+        try { await videoRef.current.play(); } catch {}
+      }
+      // Init detector apres confirmation permission (evite warning console)
+      let formats = BARCODE_FORMATS;
+      try {
+        const supported = await window.BarcodeDetector.getSupportedFormats();
+        const filtered = BARCODE_FORMATS.filter((f) => supported.includes(f));
+        if (filtered.length > 0) formats = filtered;
+      } catch {}
+      liveDetectorRef.current = new window.BarcodeDetector({ formats });
+      setLivePermission("granted");
+      setLiveDetecting(true);
+      // 300ms = compromis batterie/reactivite. 5fps suffisent pour
+      // detecter un code stable, bien au-dela de la perception humaine.
+      liveLoopRef.current = setInterval(scanFrame, 300);
+    } catch (err) {
+      console.warn("Live scan permission denied / failed:", err);
+      setLivePermission("denied");
+    }
+  }, [scanFrame]);
+
+  // Auto-start a l'ouverture du modal, cleanup a la fermeture
+  useEffect(() => {
+    if (showScan) {
+      startLiveScan();
+    } else {
+      stopLiveScan();
+    }
+    return () => stopLiveScan();
+    // Volontairement only on showScan : on ne veut pas relancer si
+    // startLiveScan/stopLiveScan changent (ils sont stables grace a
+    // useCallback mais on garde la deps explicite minimale).
+  }, [showScan, startLiveScan, stopLiveScan]);
+
   // Reset des erreurs/status/produit scanne a la fermeture de la modal scan
   useEffect(() => {
     if (!showScan) {
@@ -877,6 +1038,9 @@ export default function FuelPage({ client, appData }) {
       setScanLoading(false);
       setScannedFood(null);
       setScanQuantite(100);
+      setLivePermission("idle");
+      liveLastCodeRef.current = "";
+      liveLastCodeAtRef.current = 0;
     }
   }, [showScan]);
 
@@ -1550,45 +1714,129 @@ export default function FuelPage({ client, appData }) {
               })}
             </div>
 
-            {/* Etape 1 : invite photo (tant qu'aucun produit scanne) */}
+            {/* Etape 1 : viewport scan (tant qu'aucun produit scanne).
+                Mode preferentiel : flux camera live + detection auto + bande
+                rouge animee. Si permission refusee ou BarcodeDetector
+                indispo (iOS Safari sans PWA, navigateurs anciens), bascule
+                automatiquement sur snap-photo natif. */}
             {!scannedFood && (
-              <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#0a0a0a", width: "100%", height: 280, marginBottom: 14 }}>
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
-                  <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.85 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 52, height: 52 }}>
-                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
+              <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#000", width: "100%", height: 280, marginBottom: 14 }}>
+                {/* — Mode live granted : flux camera + overlay scan — */}
+                {livePermission === "granted" && (
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                    {/* Cadre cible + bande rouge animee. Pas un vrai
+                        guide de cadrage strict (BarcodeDetector lit
+                        toute la frame), juste un repere visuel. */}
+                    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {/* Voile sombre autour du cadre (mask radial) */}
+                      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 45% at center, transparent 0%, transparent 55%, rgba(0,0,0,0.55) 100%)" }} />
+                      <div style={{ position: "relative", width: "78%", height: 140, borderRadius: 12 }}>
+                        {/* 4 coins lumineux */}
+                        {[
+                          { top: 0, left: 0, borderTop: `2px solid ${PURPLE}`, borderLeft: `2px solid ${PURPLE}`, borderTopLeftRadius: 8 },
+                          { top: 0, right: 0, borderTop: `2px solid ${PURPLE}`, borderRight: `2px solid ${PURPLE}`, borderTopRightRadius: 8 },
+                          { bottom: 0, left: 0, borderBottom: `2px solid ${PURPLE}`, borderLeft: `2px solid ${PURPLE}`, borderBottomLeftRadius: 8 },
+                          { bottom: 0, right: 0, borderBottom: `2px solid ${PURPLE}`, borderRight: `2px solid ${PURPLE}`, borderBottomRightRadius: 8 },
+                        ].map((c, idx) => (
+                          <div key={idx} style={{ position: "absolute", width: 24, height: 24, ...c }} />
+                        ))}
+                        {/* Bande rouge animée (va-et-vient haut/bas).
+                            Inline @keyframes via <style> pour eviter d'ajouter
+                            au CSS global. Box-shadow rouge pour le glow. */}
+                        <style>{`@keyframes rbScanLine {
+                          0%   { top: 4px; opacity: 0.55; }
+                          50%  { top: calc(100% - 6px); opacity: 1; }
+                          100% { top: 4px; opacity: 0.55; }
+                        }`}</style>
+                        <div style={{
+                          position: "absolute",
+                          left: 8,
+                          right: 8,
+                          height: 2,
+                          background: "linear-gradient(90deg, transparent 0%, #ef4444 20%, #fca5a5 50%, #ef4444 80%, transparent 100%)",
+                          boxShadow: "0 0 12px rgba(239,68,68,0.9), 0 0 24px rgba(239,68,68,0.5)",
+                          animation: "rbScanLine 1.6s ease-in-out infinite",
+                          borderRadius: 2,
+                        }} />
+                      </div>
+                    </div>
+                    {/* Hint en bas */}
+                    <div style={{ position: "absolute", bottom: 12, left: 0, right: 0, textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.7)", letterSpacing: 0.5, textShadow: "0 1px 4px rgba(0,0,0,0.8)", padding: "0 16px" }}>
+                      {scanLoading ? (scanStatus || "Recherche…") : "Cadre le code-barre"}
+                    </div>
+                    {/* Badge "LIVE" en haut droite */}
+                    {liveDetecting && !scanLoading && (
+                      <div style={{ position: "absolute", top: 10, right: 10, display: "flex", alignItems: "center", gap: 5, padding: "4px 9px", background: "rgba(239,68,68,0.18)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 100, fontSize: 9, color: "#ef4444", fontWeight: 800, letterSpacing: 1.2, textTransform: "uppercase" }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", boxShadow: "0 0 6px #ef4444" }} />
+                        LIVE
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* — Mode starting : activation camera en cours — */}
+                {livePermission === "starting" && (
+                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
+                    <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.85 }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 44, height: 44 }}>
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+                      Activation de la caméra…
+                    </div>
                   </div>
+                )}
 
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 290 }}>
-                    {scanLoading
-                      ? (scanStatus || t("fuel.scan_decoding_short"))
-                      : t("fuel.scan_invite_hint")}
+                {/* — Mode denied / unsupported : fallback snap-photo natif — */}
+                {(livePermission === "denied" || livePermission === "unsupported" || livePermission === "idle") && livePermission !== "starting" && (
+                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
+                    <div style={{ color: PURPLE, marginBottom: 14, opacity: 0.85 }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 52, height: 52 }}>
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18, lineHeight: 1.5, maxWidth: 290 }}>
+                      {livePermission === "denied"
+                        ? "Caméra refusée — utilise une photo à la place"
+                        : livePermission === "unsupported"
+                          ? "Mode live indisponible sur ce navigateur — utilise une photo"
+                          : (scanLoading
+                            ? (scanStatus || t("fuel.scan_decoding_short"))
+                            : t("fuel.scan_invite_hint"))}
+                    </div>
+                    <button
+                      onClick={triggerPhotoScan}
+                      disabled={scanLoading}
+                      style={{
+                        background: scanLoading ? "rgba(167,139,250,0.3)" : "linear-gradient(135deg, #a78bfa, #8b5cf6)",
+                        color: scanLoading ? "rgba(255,255,255,0.5)" : "#0a0a0a",
+                        border: "none",
+                        borderRadius: 14,
+                        padding: "14px 32px",
+                        fontSize: 14,
+                        fontWeight: 800,
+                        cursor: scanLoading ? "default" : "pointer",
+                        letterSpacing: "0.5px",
+                        textTransform: "uppercase",
+                        boxShadow: scanLoading ? "none" : "0 6px 24px rgba(167,139,250,0.4)",
+                      }}
+                    >
+                      {scanLoading ? t("fuel.scan_take_photo_loading") : t("fuel.scan_take_photo")}
+                    </button>
                   </div>
+                )}
 
-                  <button
-                    onClick={triggerPhotoScan}
-                    disabled={scanLoading}
-                    style={{
-                      background: scanLoading ? "rgba(167,139,250,0.3)" : "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-                      color: scanLoading ? "rgba(255,255,255,0.5)" : "#0a0a0a",
-                      border: "none",
-                      borderRadius: 14,
-                      padding: "14px 32px",
-                      fontSize: 14,
-                      fontWeight: 800,
-                      cursor: scanLoading ? "default" : "pointer",
-                      letterSpacing: "0.5px",
-                      textTransform: "uppercase",
-                      boxShadow: scanLoading ? "none" : "0 6px 24px rgba(167,139,250,0.4)",
-                    }}
-                  >
-                    {scanLoading ? t("fuel.scan_take_photo_loading") : t("fuel.scan_take_photo")}
-                  </button>
-                </div>
-
-                {/* Input file invisible : declenche l'app camera native */}
+                {/* Input file invisible : declenche l'app camera native (fallback) */}
                 <input
                   ref={fileInputRef}
                   type="file"
