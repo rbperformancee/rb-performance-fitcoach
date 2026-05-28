@@ -954,30 +954,73 @@ export default function FuelPage({ client, appData }) {
   }, [scanBarcode, stopLiveScan]);
 
   // scanFrame : 1 passe de detection sur la frame video courante.
-  // BarcodeDetector accepte un HTMLVideoElement directement (zero copie).
+  // Deux moteurs supportes :
+  //   - BarcodeDetector natif (Android Chrome, desktop Chrome/Edge) :
+  //     prend le HTMLVideoElement directement (zero copie, tres rapide).
+  //   - zbar-wasm (iOS Safari, navigateurs sans BarcodeDetector) :
+  //     necessite de drawImage la frame video dans un <canvas> off-DOM
+  //     puis getImageData -> zbar.scanImageData. ~100-150ms par frame.
   // Erreur swallowed : une frame ratee n'est pas grave, la suivante repasse.
+  // isScanningRef bloque l'overlap si la frame N+1 arrive avant que N termine.
+  const isScanningRef = useRef(false);
+  const liveCanvasRef = useRef(null); // canvas reutilise entre frames (zbar)
   const scanFrame = useCallback(async () => {
     if (!videoRef.current || !liveDetectorRef.current) return;
-    // Skip si la video n'a pas encore une frame dispo (chargement)
-    if (videoRef.current.readyState < 2) return;
+    if (videoRef.current.readyState < 2) return; // pas encore de frame dispo
+    if (isScanningRef.current) return; // skip si la frame precedente n'a pas fini
+    isScanningRef.current = true;
     try {
-      const codes = await liveDetectorRef.current.detect(videoRef.current);
-      if (codes && codes.length > 0 && codes[0].rawValue) {
-        onLiveDetected(codes[0].rawValue);
+      const engine = liveDetectorRef.current;
+      if (engine.type === "native") {
+        const codes = await engine.detector.detect(videoRef.current);
+        if (codes && codes.length > 0 && codes[0].rawValue) {
+          onLiveDetected(codes[0].rawValue);
+        }
+      } else if (engine.type === "zbar") {
+        // Convert video frame -> ImageData via canvas reutilise.
+        // Resolution reduite (max 800px sur le grand cote) pour rester
+        // sous ~150ms par frame meme sur iPhone middle-range.
+        const v = videoRef.current;
+        const vw = v.videoWidth || 640;
+        const vh = v.videoHeight || 480;
+        const MAX = 800;
+        let w = vw, h = vh;
+        if (w > MAX || h > MAX) {
+          const ratio = Math.min(MAX / w, MAX / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        if (!liveCanvasRef.current) {
+          liveCanvasRef.current = document.createElement("canvas");
+        }
+        const canvas = liveCanvasRef.current;
+        if (canvas.width !== w) canvas.width = w;
+        if (canvas.height !== h) canvas.height = h;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(v, 0, 0, w, h);
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const symbols = await engine.zbar.scanImageData(imageData);
+        if (symbols && symbols.length > 0) {
+          const decoded = symbols[0].decode();
+          if (decoded) onLiveDetected(decoded);
+        }
       }
     } catch {
       // skip frame
+    } finally {
+      isScanningRef.current = false;
     }
   }, [onLiveDetected]);
 
   // startLiveScan : demande la permission camera + branche le stream
-  // sur le <video> + initialise le detecteur + lance la boucle.
-  // Fallback transparent vers snap-photo si pas supporte ou refuse.
+  // sur le <video> + initialise le moteur (BarcodeDetector ou zbar-wasm).
+  // Sur iOS Safari (pas de BarcodeDetector), lazy-import zbar-wasm
+  // automatiquement -> le live marche partout. Fallback vers snap-photo
+  // uniquement si pas de getUserMedia OU permission refusee.
   const startLiveScan = useCallback(async () => {
     setScanError("");
     setScanStatus("");
-    // Pre-flight : BarcodeDetector + getUserMedia requis pour le mode live
-    if (!hasBarcodeDetector || !navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       setLivePermission("unsupported");
       return;
     }
@@ -998,19 +1041,37 @@ export default function FuelPage({ client, appData }) {
         // play() reject avec NotAllowedError).
         try { await videoRef.current.play(); } catch {}
       }
-      // Init detector apres confirmation permission (evite warning console)
-      let formats = BARCODE_FORMATS;
-      try {
-        const supported = await window.BarcodeDetector.getSupportedFormats();
-        const filtered = BARCODE_FORMATS.filter((f) => supported.includes(f));
-        if (filtered.length > 0) formats = filtered;
-      } catch {}
-      liveDetectorRef.current = new window.BarcodeDetector({ formats });
+      // Choix du moteur de detection
+      let engine = null;
+      let intervalMs = 300;
+      if (hasBarcodeDetector) {
+        let formats = BARCODE_FORMATS;
+        try {
+          const supported = await window.BarcodeDetector.getSupportedFormats();
+          const filtered = BARCODE_FORMATS.filter((f) => supported.includes(f));
+          if (filtered.length > 0) formats = filtered;
+        } catch {}
+        engine = { type: "native", detector: new window.BarcodeDetector({ formats }) };
+        intervalMs = 300; // 5 fps, ultra-rapide en natif
+      } else {
+        // iOS Safari & co : lazy-load zbar-wasm (~250 KB, cache ensuite)
+        try {
+          const zbar = await import("@undecaf/zbar-wasm");
+          engine = { type: "zbar", zbar };
+          intervalMs = 500; // 2 fps, zbar prend ~100-150ms par frame
+        } catch (err) {
+          console.warn("zbar-wasm load failed:", err);
+          // Stoppe le stream qu'on vient d'allumer pour rien
+          try { stream.getTracks().forEach((t) => t.stop()); } catch {}
+          liveStreamRef.current = null;
+          setLivePermission("unsupported");
+          return;
+        }
+      }
+      liveDetectorRef.current = engine;
       setLivePermission("granted");
       setLiveDetecting(true);
-      // 300ms = compromis batterie/reactivite. 5fps suffisent pour
-      // detecter un code stable, bien au-dela de la perception humaine.
-      liveLoopRef.current = setInterval(scanFrame, 300);
+      liveLoopRef.current = setInterval(scanFrame, intervalMs);
     } catch (err) {
       console.warn("Live scan permission denied / failed:", err);
       setLivePermission("denied");
