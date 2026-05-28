@@ -1542,56 +1542,17 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
         }}
       >+ Ajouter un run</button>
 
-      {/* SÉANCES TERRAIN — foot, rugby… le même jour, à un autre moment */}
-      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
-        Séances terrain{" "}
-        <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(foot, rugby… le même jour)</span>
-      </div>
-      {fieldSessions.map((f, i) => (
-        <div key={f.id} style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
-          <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-            <input
-              value={f.title || ""}
-              onChange={(e) => updateFieldSession(i, { ...f, title: e.target.value })}
-              placeholder="Titre (ex. Entraînement club)"
-              style={{ flex: 2, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
-            />
-            <input
-              value={f.moment || ""}
-              onChange={(e) => updateFieldSession(i, { ...f, moment: e.target.value })}
-              placeholder="Moment (18h…)"
-              style={{ flex: 1, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
-            />
-            <button type="button" onClick={() => removeFieldSession(i)} title="Retirer"
-              style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
-            >×</button>
-          </div>
-          <textarea
-            value={f.description || ""}
-            onChange={(e) => updateFieldSession(i, { ...f, description: e.target.value })}
-            placeholder="Consignes (ex. Vitesse + appuis, 45 min)"
-            rows={2}
-            style={{ width: "100%", boxSizing: "border-box", padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none", resize: "vertical" }}
-          />
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={addFieldSession}
-        style={{
-          width: "100%", padding: 10, background: "transparent",
-          border: "1px dashed rgba(2,209,186,0.3)", borderRadius: 12,
-          color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-          letterSpacing: 0.5,
-        }}
-      >+ Ajouter une séance terrain</button>
-
-      {/* AMRAP / WOD — bloc à temps avec chrono countdown côté client */}
+      {/* AMRAP / WOD — bloc à temps avec chrono countdown côté client.
+          Placé juste après Cardio/Run car même famille (effort cardio
+          chronométré, lancé par l'athlète). Distinct de Run :
+          le Run mesure du fractionné où chaque round est minuté
+          (8×400m, Tabata 20/10×8). L'AMRAP mesure le nombre de
+          rounds réalisés dans une fenêtre donnée (12 min, score libre). */}
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(239,68,68,0.85)", textTransform: "uppercase", margin: "18px 0 10px", display: "flex", alignItems: "center", gap: 6 }}>
         <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
         </svg>
-        Bloc à temps (AMRAP · EMOM · Tabata · WOD)
+        Bloc à temps (AMRAP · EMOM · WOD)
         <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.3)", fontWeight: 500, marginLeft: 4 }}>
           — chrono countdown lançable par l'athlète
         </span>
@@ -1616,7 +1577,6 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
               { label: "AMRAP 12'",     title: "AMRAP",         minutes: 12 },
               { label: "AMRAP 20'",     title: "AMRAP",         minutes: 20 },
               { label: "EMOM 10'",      title: "EMOM",          minutes: 10 },
-              { label: "Tabata 4'",     title: "Tabata",        minutes: 4 },
               { label: "WOD For Time",  title: "For Time",      minutes: 15 },
               { label: "Chipper 25'",   title: "Chipper",       minutes: 25 },
             ].map((p) => {
@@ -1725,8 +1685,52 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
         </svg>
-        Ajouter un bloc AMRAP / EMOM / Tabata / WOD
+        Ajouter un bloc AMRAP / EMOM / WOD
       </button>
+
+      {/* SÉANCES TERRAIN — foot, rugby… le même jour, à un autre moment */}
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
+        Séances terrain{" "}
+        <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(foot, rugby… le même jour)</span>
+      </div>
+      {fieldSessions.map((f, i) => (
+        <div key={f.id} style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+            <input
+              value={f.title || ""}
+              onChange={(e) => updateFieldSession(i, { ...f, title: e.target.value })}
+              placeholder="Titre (ex. Entraînement club)"
+              style={{ flex: 2, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
+            />
+            <input
+              value={f.moment || ""}
+              onChange={(e) => updateFieldSession(i, { ...f, moment: e.target.value })}
+              placeholder="Moment (18h…)"
+              style={{ flex: 1, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
+            />
+            <button type="button" onClick={() => removeFieldSession(i)} title="Retirer"
+              style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            >×</button>
+          </div>
+          <textarea
+            value={f.description || ""}
+            onChange={(e) => updateFieldSession(i, { ...f, description: e.target.value })}
+            placeholder="Consignes (ex. Vitesse + appuis, 45 min)"
+            rows={2}
+            style={{ width: "100%", boxSizing: "border-box", padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none", resize: "vertical" }}
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addFieldSession}
+        style={{
+          width: "100%", padding: 10, background: "transparent",
+          border: "1px dashed rgba(2,209,186,0.3)", borderRadius: 12,
+          color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+          letterSpacing: 0.5,
+        }}
+      >+ Ajouter une séance terrain</button>
 
       {/* ERGO / CARDIO FIN DE SÉANCE — rameur, vélo, ski-erg, assault bike */}
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
