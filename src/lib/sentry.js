@@ -58,13 +58,36 @@ export async function initSentry() {
     // them via `defaultIntegrations: false` only gates them at runtime,
     // not build time — keeping as-is with replay sample rates at 0.
     SentryRef = await import("@sentry/browser");
+
+    // Session Replay : capture une vidéo des 30s qui précèdent une erreur.
+    // Déjà bundlé par @sentry/browser (cf commentaire ci-dessus), donc 0 KB
+    // de coût additionnel — on l'active uniquement sur erreur (pas sur
+    // session normale). Game-changer pour debug UI silencieuse (cf bug
+    // LoginScreen 21→28 mai : bouton mort sans erreur visible, un replay
+    // aurait montré le clic + state UI inchangé en 5 secondes).
+    //
+    // Privacy : `maskAllInputs: true` (défaut) masque tous les <input> en
+    // RGB blocks dans le replay → pas de capture d'emails/passwords/etc.
+    // `blockAllMedia: false` car on n'a pas de contenu sensible visuel.
+    const integrations = [];
+    try {
+      if (SentryRef.replayIntegration) {
+        integrations.push(SentryRef.replayIntegration({
+          maskAllInputs: true,
+          maskAllText: false,
+          blockAllMedia: false,
+        }));
+      }
+    } catch { /* replayIntegration may not be available — fallback silently */ }
+
     SentryRef.init({
       dsn: DSN,
       environment: ENV,
       release: RELEASE,
       tracesSampleRate: ENV === "production" ? 0.1 : 1.0,
-      replaysSessionSampleRate: 0,
-      replaysOnErrorSampleRate: 0,
+      replaysSessionSampleRate: 0,         // Pas de capture sur session normale
+      replaysOnErrorSampleRate: 1.0,        // 100% de capture quand erreur arrive
+      integrations,
       ignoreErrors: IGNORE,
       beforeSend(event) {
         if (ENV !== "production") return null;

@@ -125,7 +125,11 @@
       ],
       "areaServed":["FR","EU","US","UK","CA","CH","BE","LU"],
       "knowsLanguage":["fr-FR","en-US"],
-      "sameAs":["https://www.instagram.com/rb_perform/"]
+      "sameAs":[
+        "https://www.linkedin.com/company/rb-perform/",
+        "https://www.instagram.com/rb_perform/",
+        "https://rbperform.com"
+      ]
     },
     {
       "@type":"Person",
@@ -134,8 +138,22 @@
       "jobTitle":"Founder & CEO",
       "url":"https://rbperform.app",
       "worksFor":{"@id":"https://rbperform.app/#org"},
-      "knowsAbout":["Fitness Coaching","SaaS","Business Software","Customer Retention","Anti-Churn AI"],
-      "knowsLanguage":["fr-FR","en-US"]
+      "knowsAbout":[
+        "Fitness Coaching",
+        "Personal Training",
+        "SaaS",
+        "Business Software",
+        "Customer Retention",
+        "Anti-Churn AI",
+        "Sports Coaching",
+        "Independent Coach Business",
+        "MRR Monitoring",
+        "Stripe Connect"
+      ],
+      "knowsLanguage":["fr-FR","en-US"],
+      "sameAs":[
+        "https://www.linkedin.com/in/rayan-bonte-a21637349/"
+      ]
     },
     {
       "@type":"WebSite",
@@ -180,9 +198,9 @@
         "highPrice":"499",
         "offerCount":"3",
         "offers":[
-          {"@type":"Offer","name":"Starter","price":"199","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"199","priceCurrency":"EUR","unitCode":"MON","billingDuration":"P1M"}},
+          {"@type":"Offer","name":"Starter","price":"149","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"149","priceCurrency":"EUR","unitCode":"MON","billingDuration":"P1M"}},
           {"@type":"Offer","name":"Pro","price":"299","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"299","priceCurrency":"EUR","unitCode":"MON","billingDuration":"P1M"}},
-          {"@type":"Offer","name":"Elite","price":"499","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"499","priceCurrency":"EUR","unitCode":"MON","billingDuration":"P1M"}}
+          {"@type":"Offer","name":"Elite","price":"399","priceCurrency":"EUR","priceSpecification":{"@type":"UnitPriceSpecification","price":"399","priceCurrency":"EUR","unitCode":"MON","billingDuration":"P1M"}}
         ]
       }
     },
@@ -3071,17 +3089,11 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
     </style>
     <div class="fc-card">
       <div class="fc-inner" style="position:relative;z-index:1">
-        <!-- Ligne 1 : badge + countdown -->
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+        <!-- Ligne 1 : badge offre fondateur (compteur places restantes retiré) -->
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
             <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,201,167,0.12);border:1px solid rgba(0,201,167,0.25);border-radius:100px;padding:5px 14px">
               <div style="width:5px;height:5px;border-radius:50%;background:#00C9A7;box-shadow:0 0 6px #00C9A7;animation:rbPulse 2s ease-in-out infinite"></div>
               <span data-i18n="pricing.fc_badge" style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#00C9A7">Offre Fondateur</span>
-            </div>
-            <div id="foundingCountdown" style="display:flex;gap:6px;align-items:center">
-              <div id="fc-days" class="fc-timer-digit">--</div><span style="color:rgba(255,255,255,0.15);font-size:18px;font-weight:200">:</span>
-              <div id="fc-hours" class="fc-timer-digit">--</div><span style="color:rgba(255,255,255,0.15);font-size:18px;font-weight:200">:</span>
-              <div id="fc-mins" class="fc-timer-digit">--</div><span style="color:rgba(255,255,255,0.15);font-size:18px;font-weight:200">:</span>
-              <div id="fc-secs" class="fc-timer-digit">--</div>
             </div>
           </div>
 
@@ -3119,12 +3131,28 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       </div>
     </div>
 
+    <!-- ===== DIAGNOSTIC LEAD MAGNET (qualifier pour les indécis) ===== -->
+    <div style="margin:32px auto 24px;max-width:720px;padding:20px 24px;background:rgba(255,255,255,0.02);border:1px dashed rgba(0,201,167,0.25);border-radius:16px;text-align:center">
+      <div style="font-size:10px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:rgba(0,201,167,0.7);margin-bottom:8px">● Outil gratuit · 2 min</div>
+      <div style="font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.01em;margin-bottom:6px">Pas sûr que RB Perform soit pour toi ?</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.55;margin-bottom:14px">
+        Fais d'abord le <strong style="color:#fff">Diagnostic Coach</strong> en 2 min. 10 questions, ton score sur 100,
+        ton pilier business le plus faible, et le kit d'actions pour le réparer. Aucun compte requis.
+      </div>
+      <a href="/diagnostic?utm_source=landing&utm_medium=hero&utm_campaign=diagnostic_qualifier"
+         style="display:inline-block;padding:12px 26px;background:transparent;color:#00C9A7;border:1.5px solid #00C9A7;border-radius:100px;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;transition:all 0.15s"
+         onmouseover="this.style.background='rgba(0,201,167,0.1)'"
+         onmouseout="this.style.background='transparent'">
+        Faire mon diagnostic gratuit →
+      </a>
+    </div>
+
     <!-- ===== 3 PLANS ===== -->
     <div class="plans">
       <div class="plan reveal">
         <div class="name" data-i18n="pricing.starter_name">Starter</div>
         <div class="desc" data-i18n="pricing.starter_desc">Pour les coachs qui démarrent leur activité.</div>
-        <div class="price"><span class="currency">€</span>199</div>
+        <div class="price"><span class="currency">€</span>149</div>
         <div class="period" data-i18n="pricing.per_month">Par mois</div>
         <ul class="f-list">
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.starter_f1">Jusqu'à 5 clients</span></li>
@@ -3154,7 +3182,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       <div class="plan reveal stagger-2">
         <div class="name" data-i18n="pricing.elite_name">Elite</div>
         <div class="desc" data-i18n="pricing.elite_desc">Pour les coachs qui veulent tout — et plus encore.</div>
-        <div class="price"><span class="currency">€</span>499</div>
+        <div class="price"><span class="currency">€</span>399</div>
         <div class="period" data-i18n="pricing.per_month">Par mois</div>
         <ul class="f-list">
           <li><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="pricing.elite_f1">Clients illimités</span></li>
@@ -3420,7 +3448,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'sticky.label':'Founding Coach Program — <b>30 fondateurs</b>','sticky.cta':'Rejoindre les 30 Founding Coachs →',
       // ===== QUIZ RESULTS (dynamiques) =====
       'quiz.starter_tag':'Plan recommandé',
-      'quiz.starter_title':'Starter — 199€/mois',
+      'quiz.starter_title':'Starter — 149€/mois',
       'quiz.starter_desc':'Parfait pour bâtir tes fondations : dashboard, programme builder, messagerie, jusqu\'à 10 clients. Tu démarres carré, sans surpayer.',
       'quiz.starter_cta':'Démarrer Starter',
       'quiz.pro_tag':'Plan recommandé',
@@ -3428,7 +3456,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'quiz.pro_desc':'Le plan le plus choisi. Anti-churn IA, analytics avancées, automatisations complètes, jusqu\'à 30 clients. C\'est le standard pour les coachs établis.',
       'quiz.pro_cta':'Démarrer Pro',
       'quiz.elite_tag':'Plan recommandé',
-      'quiz.elite_title':'Elite — 499€/mois',
+      'quiz.elite_title':'Elite — 399€/mois',
       'quiz.elite_desc':'Pour scale sans limite : clients illimités, support prioritaire 7j/7, onboarding 1:1. Le maximum.',
       'quiz.elite_cta':'Démarrer Elite',
       // ===== ROI (dynamique) =====
@@ -3543,7 +3571,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'sticky.label':'Founding Coach Program — <b>30 founders</b>','sticky.cta':'Join the 30 Founding Coaches →',
       // ===== QUIZ RESULTS (dynamic) =====
       'quiz.starter_tag':'Recommended plan',
-      'quiz.starter_title':'Starter — €199/month',
+      'quiz.starter_title':'Starter — €149/month',
       'quiz.starter_desc':'Perfect to build your foundations: dashboard, program builder, messaging, up to 10 clients. You start clean, without overpaying.',
       'quiz.starter_cta':'Start with Starter',
       'quiz.pro_tag':'Recommended plan',
@@ -3551,7 +3579,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
       'quiz.pro_desc':'The most-picked plan. Anti-churn AI, advanced analytics, full automations, up to 30 clients. The standard for established coaches.',
       'quiz.pro_cta':'Start with Pro',
       'quiz.elite_tag':'Recommended plan',
-      'quiz.elite_title':'Elite — €499/month',
+      'quiz.elite_title':'Elite — €399/month',
       'quiz.elite_desc':'To scale without limits: unlimited clients, priority support 7 days a week, 1:1 onboarding. The maximum.',
       'quiz.elite_cta':'Start with Elite',
       // ===== ROI (dynamic) =====
@@ -4352,7 +4380,7 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 
   // Cout RB selon le nombre de clients (Starter <= 5, Pro > 5)
   function rbCost(c){ return c <= 5 ? 199 * 12 : 299 * 12; }
-  function rbPlan(c){ return c <= 5 ? 'Starter 199€' : 'Pro 299€'; }
+  function rbPlan(c){ return c <= 5 ? 'Starter 149€' : 'Pro 299€'; }
 
   function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
 
@@ -4417,40 +4445,9 @@ section.manifeste.active .mstack-card:nth-child(3){ animation: cardSlideIn .5s e
 </script>
 
 
-<!-- Founding Coach countdown timer -->
-<script>
-(function(){
-  var end = new Date('2026-05-26T23:59:59').getTime();
-  var dEl = document.getElementById('fc-days');
-  var hEl = document.getElementById('fc-hours');
-  var mEl = document.getElementById('fc-mins');
-  var sEl = document.getElementById('fc-secs');
-  var cta = document.getElementById('foundingCTA');
-  if (!dEl) return;
-  function tick() {
-    var now = Date.now();
-    var diff = end - now;
-    if (diff <= 0) {
-      dEl.textContent = '00'; hEl.textContent = '00'; mEl.textContent = '00'; sEl.textContent = '00';
-      var wrap = document.getElementById('foundingCountdown');
-      var T = (window.t || function(k){ return k === 'countdown.expired' ? 'Offre expirée' : k; });
-      if (wrap) wrap.innerHTML = '<div style="font-size:16px;font-weight:800;color:#ff6b6b;letter-spacing:0.1em;text-transform:uppercase">' + T('countdown.expired') + '</div>';
-      if (cta) { cta.style.opacity = '0.4'; cta.style.cursor = 'not-allowed'; cta.onclick = function(e){ e.preventDefault(); }; }
-      return;
-    }
-    var d = Math.floor(diff / 86400000);
-    var h = Math.floor((diff % 86400000) / 3600000);
-    var m = Math.floor((diff % 3600000) / 60000);
-    var s = Math.floor((diff % 60000) / 1000);
-    dEl.textContent = String(d).padStart(2, '0');
-    hEl.textContent = String(h).padStart(2, '0');
-    mEl.textContent = String(m).padStart(2, '0');
-    sEl.textContent = String(s).padStart(2, '0');
-  }
-  tick();
-  setInterval(tick, 1000);
-})();
-</script>
+<!-- Compteur "places restantes" retiré de la landing (stratégie ajustée).
+     L'endpoint /api/founding-stats reste actif pour usage interne / admin. -->
+
 
 <!-- BLACK MIRROR ENGINE v3 — attend sliders + craquelure cinematique -->
 <script>
