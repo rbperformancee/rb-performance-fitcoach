@@ -35,30 +35,53 @@ const BARCODE_FORMATS = [
 const hasBarcodeDetector = typeof window !== "undefined" && "BarcodeDetector" in window;
 
 // ===== ScannerTapToPlay =====
-// Filet iOS : si la video reste a readyState 0 (rien ne joue) apres 800ms,
-// affiche un bouton plein ecran qui force play() au tap utilisateur.
-// iOS Safari refuse parfois autoplay meme avec autoPlay + playsInline +
-// muted, particulierement en PWA standalone apres reload. Le tap explicite
-// est la solution garantie (user-gesture context frais).
-// Aussi : affiche un mini diagnostic (resolution + tracks) au tap long
-// pour debugger les cas pathologiques sans devtools.
-function ScannerTapToPlay({ videoEl, liveStream }) {
-  const [showTap, setShowTap] = React.useState(false);
+// Diagnostic + filet iOS combine. Surveille en continu l'etat de la
+// video et propose les bonnes actions selon le probleme detecte :
+//   - autoplay rejete -> bouton "Toucher pour activer"
+//   - stream sans frame apres 2s post-play -> bug iOS PWA, propose fallback
+//     vers camera OS native (le mode snap-photo qui marchait avant).
+// Le mini-bandeau diag est toujours visible (bas de la video) pour qu'on
+// puisse tester en prod sans devtools.
+function ScannerTapToPlay({ videoEl, liveStream, onFallbackNative }) {
+  const [mode, setMode] = React.useState("checking"); // checking | tap | playing | stalled
   const [diag, setDiag] = React.useState("");
 
+  // Polling de l'etat video (300ms) pour decider quel mode afficher
   React.useEffect(() => {
     if (!liveStream) return;
     let cancelled = false;
-    // Verifie apres 800ms si la video a demarre
-    const t = setTimeout(() => {
+    const start = Date.now();
+    const tick = () => {
       if (cancelled) return;
       const v = videoEl;
-      // readyState >= 2 (HAVE_CURRENT_DATA) = il y a au moins une frame dispo
-      const ready = v && v.readyState >= 2 && v.videoWidth > 0;
-      if (!ready) setShowTap(true);
-    }, 800);
-    return () => { cancelled = true; clearTimeout(t); };
-  }, [videoEl, liveStream]);
+      const elapsed = Date.now() - start;
+      const tracks = liveStream.getVideoTracks() || [];
+      const t0 = tracks[0];
+      const info = [
+        `rs:${v?.readyState ?? "?"}`,
+        `${v?.videoWidth ?? 0}x${v?.videoHeight ?? 0}`,
+        `paused:${v?.paused ? "1" : "0"}`,
+        `tr:${tracks.length}`,
+        t0 ? `${t0.readyState}/${t0.enabled ? "on" : "off"}/${t0.muted ? "mute" : "ok"}` : "",
+      ].filter(Boolean).join(" ");
+      setDiag(info);
+
+      const hasFrame = v && v.videoWidth > 0 && v.readyState >= 2;
+      const isPlaying = v && !v.paused;
+
+      if (hasFrame && isPlaying) {
+        setMode("playing");
+      } else if (!isPlaying && elapsed > 800) {
+        setMode("tap");
+      } else if (isPlaying && !hasFrame && elapsed > 2500) {
+        // Play OK mais 0 frame en 2.5s → bug iOS PWA classique
+        setMode("stalled");
+      }
+      if (mode !== "playing") setTimeout(tick, 300);
+    };
+    tick();
+    return () => { cancelled = true; };
+  }, [videoEl, liveStream, mode]);
 
   const forcePlay = async () => {
     try {
@@ -67,50 +90,83 @@ function ScannerTapToPlay({ videoEl, liveStream }) {
         videoEl.setAttribute("playsinline", "true");
         await videoEl.play();
       }
-      setShowTap(false);
+      setMode("checking"); // laisse le polling decider
     } catch (err) {
-      // Recolte diagnostic pour debug visible
-      const tracks = liveStream ? liveStream.getVideoTracks() : [];
-      const info = [
-        `play err: ${err?.name || err?.message || "?"}`,
-        `readyState: ${videoEl?.readyState}`,
-        `videoSize: ${videoEl?.videoWidth}x${videoEl?.videoHeight}`,
-        `paused: ${videoEl?.paused}`,
-        `tracks: ${tracks.length}`,
-        tracks[0] ? `track[0] state: ${tracks[0].readyState} enabled:${tracks[0].enabled} muted:${tracks[0].muted}` : "",
-        tracks[0]?.label ? `label: ${tracks[0].label.slice(0, 30)}` : "",
-      ].filter(Boolean).join(" · ");
-      setDiag(info);
+      setDiag((d) => `play-err:${err?.name || "?"} | ${d}`);
     }
   };
 
-  if (!showTap) return null;
   return (
-    <div onClick={forcePlay}
-      style={{
-        position: "absolute", inset: 0, zIndex: 5,
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)", cursor: "pointer",
-        padding: 16, textAlign: "center",
-      }}
-    >
-      <div style={{ color: "#fff", marginBottom: 10 }}>
-        <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="5 3 19 12 5 21 5 3" />
-        </svg>
-      </div>
-      <div style={{ fontSize: 13, color: "#fff", fontWeight: 700, marginBottom: 4 }}>
-        Toucher pour activer la caméra
-      </div>
-      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>
-        iOS bloque l'auto-démarrage de la vidéo
-      </div>
-      {diag && (
-        <div style={{ fontSize: 9, color: "#ef4444", marginTop: 10, maxWidth: 320, lineHeight: 1.4, fontFamily: "ui-monospace,monospace" }}>
-          {diag}
+    <>
+      {/* Overlay actif selon le mode */}
+      {mode === "tap" && (
+        <div onClick={forcePlay}
+          style={{
+            position: "absolute", inset: 0, zIndex: 5,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.55)", cursor: "pointer", padding: 16, textAlign: "center",
+          }}
+        >
+          <div style={{ color: "#fff", marginBottom: 10 }}>
+            <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+          </div>
+          <div style={{ fontSize: 13, color: "#fff", fontWeight: 700, marginBottom: 4 }}>
+            Toucher pour activer la caméra
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>
+            iOS bloque l'auto-démarrage de la vidéo
+          </div>
         </div>
       )}
-    </div>
+
+      {mode === "stalled" && (
+        <div
+          style={{
+            position: "absolute", inset: 0, zIndex: 5,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.78)", padding: 20, textAlign: "center",
+          }}
+        >
+          <div style={{ color: "#fbbf24", marginBottom: 10 }}>
+            <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <circle cx="12" cy="17" r="0.5" fill="currentColor" />
+            </svg>
+          </div>
+          <div style={{ fontSize: 12, color: "#fff", fontWeight: 700, marginBottom: 4, lineHeight: 1.4, maxWidth: 280 }}>
+            iOS bloque la caméra dans cette PWA
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", marginBottom: 14, lineHeight: 1.4, maxWidth: 280 }}>
+            Bascule sur l'app caméra de l'iPhone (qualité max)
+          </div>
+          <button
+            onClick={onFallbackNative}
+            style={{
+              background: "linear-gradient(135deg, #a78bfa, #8b5cf6)",
+              color: "#0a0a0a", border: "none", borderRadius: 12,
+              padding: "12px 22px", fontSize: 12, fontWeight: 800,
+              cursor: "pointer", letterSpacing: 0.5, textTransform: "uppercase",
+            }}
+          >
+            Prendre une photo
+          </button>
+        </div>
+      )}
+
+      {/* Mini diag toujours visible en bas (debug prod sans devtools) */}
+      <div style={{
+        position: "absolute", bottom: 4, left: 6, right: 6,
+        fontSize: 8.5, color: "rgba(255,255,255,0.55)",
+        fontFamily: "ui-monospace,monospace", textAlign: "center",
+        textShadow: "0 1px 2px rgba(0,0,0,0.9)", pointerEvents: "none",
+        letterSpacing: 0.3,
+      }}>
+        {diag}
+      </div>
+    </>
   );
 }
 
@@ -1934,7 +1990,17 @@ export default function FuelPage({ client, appData }) {
                         iOS strict refuse parfois l'autoplay meme avec tous
                         les attributs. Ce bouton force play() dans un context
                         user-gesture frais, ce qui debloque a 100%. */}
-                    <ScannerTapToPlay videoEl={videoRef.current} liveStream={liveStream} />
+                    <ScannerTapToPlay
+                      videoEl={videoRef.current}
+                      liveStream={liveStream}
+                      onFallbackNative={() => {
+                        // Stoppe le stream live + bascule vers OS camera
+                        stopLiveScan();
+                        setLivePermission("denied");
+                        // Ouvre directement le picker camera natif
+                        setTimeout(() => triggerPhotoScan(), 100);
+                      }}
+                    />
                     {/* Cadre cible + bande rouge animee. Pas un vrai
                         guide de cadrage strict (BarcodeDetector lit
                         toute la frame), juste un repere visuel. */}
