@@ -34,17 +34,20 @@ const BARCODE_FORMATS = [
 
 const hasBarcodeDetector = typeof window !== "undefined" && "BarcodeDetector" in window;
 
-// iOS PWA standalone : le pipeline media de WebKit retourne un stream actif
-// mais ne pousse jamais de frames quand l'app est ouverte en mode home-screen.
-// Bug documente WebKit, sans workaround web (cf bugs.webkit.org). On detecte
-// pour basculer direct sur l'app camera native (qui marche partout).
-const IS_IOS_PWA = (() => {
+// iOS = on saute le mode live, peu importe le contexte (Safari, PWA, in-app
+// browser). Verdict apres tests reels (iOS 17/18) : le pipeline media de
+// WebKit retourne souvent un stream 'live' mais ne pousse pas de frames,
+// et autoplay est rejete meme avec les bons attributs. Snap-photo natif
+// marche a 100% via capture=environment, c'est l'experience la plus fiable.
+// Detection large : UA iPhone/iPad/iPod OU iPad qui se fait passer pour Mac
+// (iOS 13+ par defaut sur iPad : 'Macintosh' dans le UA + touch).
+const IS_IOS = (() => {
   if (typeof navigator === "undefined" || typeof window === "undefined") return false;
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || "");
-  const isStandalone =
-    navigator.standalone === true ||
-    (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
-  return isIOS && isStandalone;
+  const ua = navigator.userAgent || "";
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  // iPadOS 13+ : UA = "Mac" mais touch points > 0
+  if (ua.includes("Mac") && navigator.maxTouchPoints > 1) return true;
+  return false;
 })();
 
 // ===== ScannerTapToPlay =====
@@ -1180,9 +1183,9 @@ export default function FuelPage({ client, appData }) {
       setLivePermission("unsupported");
       return;
     }
-    // iOS PWA : skip direct, on a perdu trop de temps avec WebKit
-    if (IS_IOS_PWA) {
-      setLivePermission("ios-pwa");
+    // iOS : skip direct le live mode (bug WebKit, cf module top)
+    if (IS_IOS) {
+      setLivePermission("ios-pwa"); // garde la cle pour le JSX fallback
       return;
     }
     setLivePermission("starting");
