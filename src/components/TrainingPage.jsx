@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import CountdownBlockCard from "./CountdownBlockCard";
+import RunIntervalTimer from "./RunIntervalTimer";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
 import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
@@ -33,7 +35,7 @@ const fmtTime = (s) => {
   return String(Math.floor(ss / 60)).padStart(2, "0") + ":" + String(ss % 60).padStart(2, "0");
 };
 
-function FinisherCard({ finisher, weekIdx, sessionIdx, label }) {
+function FinisherCard({ finisher, weekIdx, sessionIdx, label, clientId, programmeId }) {
   const KEY = `rb_finisher_${weekIdx}_${sessionIdx}`;
 
   // État chrono : { start: timestamp ms, total?: seconds (figé au stop), done?: bool }
@@ -88,6 +90,41 @@ function FinisherCard({ finisher, weekIdx, sessionIdx, label }) {
     const total = s.start ? Math.floor((Date.now() - s.start) / 1000) : seconds;
     try { localStorage.setItem(KEY, JSON.stringify({ start: s.start || Date.now(), total, done: true })); } catch {}
     setSeconds(total); setRunning(false); setDone(true);
+    // Persist DB (best-effort, n'attend pas — pas de bloquage UI si offline).
+    // UPSERT manuel : on regarde si la row session_completions existe (créée
+    // au moment où le client valide la séance complète) — si oui on UPDATE
+    // juste finisher_seconds. Sinon INSERT minimale (chrono/rpe/volume à 0,
+    // ils seront remplis quand le client validera la séance entière).
+    // Le coach verra le finisher dans l'historique séance via la jointure date.
+    if (clientId) {
+      (async () => {
+        try {
+          const { data: existing } = await supabase
+            .from("session_completions")
+            .select("id")
+            .eq("client_id", clientId)
+            .eq("week_idx", weekIdx)
+            .eq("session_idx", sessionIdx)
+            .maybeSingle();
+          if (existing) {
+            await supabase.from("session_completions")
+              .update({ finisher_seconds: total })
+              .eq("id", existing.id);
+          } else {
+            await supabase.from("session_completions").insert({
+              client_id: clientId,
+              week_idx: weekIdx,
+              session_idx: sessionIdx,
+              finisher_seconds: total,
+              programme_id: programmeId || null,
+              chrono_seconds: 0, volume_kg: 0, rpe: 0,
+            });
+          }
+        } catch (e) {
+          console.warn("[finisher] persist failed:", e?.message);
+        }
+      })();
+    }
   };
   const reset = () => {
     try { localStorage.removeItem(KEY); } catch {}
@@ -204,6 +241,395 @@ function FinisherCard({ finisher, weekIdx, sessionIdx, label }) {
             </button>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// CountdownBlockCard est extrait dans son propre fichier — réutilisé tel quel
+// dans le builder pour le preview live de l'AMRAP. On garde un alias local
+// pour ne pas casser les usages existants ; on importe ↓ depuis le composant.
+function _CountdownBlockCardInline_DEPRECATED({
+  title,
+  minutes,
+  description,
+  variant = "amrap",
+  icon,
+  badge,
+  storageKey,
+}) {
+  const ACCENT = variant === "ergo" ? "#38bdf8" : "#ef4444";
+  const ACCENT_RGB = variant === "ergo" ? "56,189,248" : "239,68,68";
+  const totalSeconds = Math.max(1, (minutes || 0)) * 60;
+  const KEY = storageKey;
+
+  const readState = useCallback(() => {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
+  }, [KEY]);
+
+  // remaining = secondes restantes au countdown
+  const computeRemaining = useCallback(() => {
+    const s = readState();
+    if (s.done) return 0;
+    if (s.start) {
+      const elapsed = Math.floor((Date.now() - s.start) / 1000);
+      return Math.max(0, totalSeconds - elapsed);
+    }
+    return totalSeconds;
+  }, [readState, totalSeconds]);
+
+  const [remaining, setRemaining] = useState(computeRemaining);
+  const [running, setRunning] = useState(() => {
+    const s = readState();
+    return !!(s.start && !s.done);
+  });
+  const [done, setDone] = useState(() => !!readState().done);
+  const tickRef = useRef(null);
+
+  // Reset quand on change de bloc / clé
+  useEffect(() => {
+    const s = readState();
+    if (s.done) { setRemaining(0); setRunning(false); setDone(true); }
+    else if (s.start) {
+      const r = computeRemaining();
+      setRemaining(r); setDone(r === 0); setRunning(r > 0);
+      if (r === 0) try { localStorage.setItem(KEY, JSON.stringify({ ...s, done: true })); } catch {}
+    } else {
+      setRemaining(totalSeconds); setRunning(false); setDone(false);
+    }
+  }, [readState, computeRemaining, KEY, totalSeconds]);
+
+  // Tick + resync visibilitychange
+  useEffect(() => {
+    clearInterval(tickRef.current);
+    if (!running) return;
+    tickRef.current = setInterval(() => {
+      const r = computeRemaining();
+      setRemaining(r);
+      if (r === 0) {
+        const s = readState();
+        try { localStorage.setItem(KEY, JSON.stringify({ ...s, done: true })); } catch {}
+        setRunning(false); setDone(true);
+        // beep doux + vibrate à la fin
+        try { if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 200]); } catch {}
+        try {
+          const a = new (window.AudioContext || window.webkitAudioContext)();
+          const o = a.createOscillator(); const g = a.createGain();
+          o.frequency.value = 880; o.connect(g); g.connect(a.destination);
+          g.gain.setValueAtTime(0.15, a.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.7);
+          o.start(); o.stop(a.currentTime + 0.7);
+        } catch {}
+      }
+    }, 500);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setRemaining(computeRemaining());
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(tickRef.current); document.removeEventListener("visibilitychange", onVisible); };
+  }, [running, computeRemaining, KEY, readState]);
+
+  const start = () => {
+    try { localStorage.setItem(KEY, JSON.stringify({ start: Date.now() })); } catch {}
+    setRemaining(totalSeconds); setRunning(true); setDone(false);
+  };
+  const reset = () => {
+    try { localStorage.removeItem(KEY); } catch {}
+    setRemaining(totalSeconds); setRunning(false); setDone(false);
+  };
+
+  const display = fmtTime(remaining);
+  const stateLabel = done ? "TERMINÉ" : running ? "CHRONO EN COURS" : "PRÊT À LANCER";
+  const stateColor = done ? G : running ? ACCENT : "rgba(255,255,255,0.4)";
+
+  return (
+    <div style={{
+      background: `linear-gradient(160deg, rgba(${ACCENT_RGB},0.10) 0%, rgba(15,15,15,0.55) 60%, rgba(0,0,0,0.7) 100%)`,
+      border: `1px solid rgba(${ACCENT_RGB},0.28)`,
+      borderRadius: 18,
+      padding: "20px 18px 18px",
+      position: "relative",
+      overflow: "hidden",
+      boxShadow: "0 6px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)",
+    }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2,
+        background: `linear-gradient(90deg, rgba(${ACCENT_RGB},1) 0%, rgba(${ACCENT_RGB},0.5) 50%, transparent 100%)` }} />
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        <div style={{ width: 26, height: 26, borderRadius: 8, background: `rgba(${ACCENT_RGB},0.18)`,
+          display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid rgba(${ACCENT_RGB},0.4)`, flexShrink: 0 }}>
+          {icon || (variant === "ergo" ? (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="5" cy="17" r="3" /><circle cx="19" cy="17" r="3" /><path d="M6 13l4-8h4l-2 6 4 6" />
+            </svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
+            </svg>
+          ))}
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: ACCENT }}>
+            {title}
+          </div>
+          {badge ? (
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+              {badge}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {description ? (
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", lineHeight: 1.55, whiteSpace: "pre-wrap", marginBottom: 16, fontWeight: 500 }}>
+          {description}
+        </div>
+      ) : null}
+
+      {/* Countdown display — masqué si pas de minutes (juste info card) */}
+      {minutes ? (
+        <div style={{ paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.07)", textAlign: "center" }}>
+          <div style={{
+            fontSize: 50, fontWeight: 100,
+            color: done ? G : running ? "#fff" : "rgba(255,255,255,0.35)",
+            letterSpacing: "-2px",
+            fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+            lineHeight: 1, marginBottom: 6,
+            textShadow: done ? `0 0 28px ${G}55` : running ? `0 0 18px rgba(${ACCENT_RGB},0.3)` : "none",
+            transition: "color 0.2s, text-shadow 0.2s",
+          }}>
+            {display.split(":")[0]}
+            <span style={{ color: "rgba(255,255,255,0.2)" }}>:</span>
+            {display.split(":")[1]}
+          </div>
+          <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "2.5px", textTransform: "uppercase",
+            color: stateColor, marginBottom: 14, transition: "color 0.2s" }}>
+            {stateLabel}{done && " ✓"}
+          </div>
+
+          {!running && !done && (
+            <button onClick={start} style={{
+              background: ACCENT, color: "white", border: "none", borderRadius: 12,
+              padding: "12px 26px", fontSize: 12, fontWeight: 800, letterSpacing: "2px",
+              textTransform: "uppercase", cursor: "pointer", width: "100%",
+              boxShadow: `0 4px 16px rgba(${ACCENT_RGB},0.35)`,
+            }}>
+              Lancer le chrono
+            </button>
+          )}
+          {running && (
+            <button onClick={reset} style={{
+              width: "100%", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.75)",
+              border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12,
+              padding: "12px 20px", fontSize: 11, fontWeight: 700, letterSpacing: "1.5px",
+              textTransform: "uppercase", cursor: "pointer",
+            }}>
+              Stop & Reset
+            </button>
+          )}
+          {done && (
+            <button onClick={reset} style={{
+              background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)",
+              border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12,
+              padding: "10px 22px", fontSize: 11, fontWeight: 700, letterSpacing: "1.5px",
+              textTransform: "uppercase", cursor: "pointer",
+            }}>
+              Refaire
+            </button>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// WarmupCard — circuit d'échauffement en tête de séance, premium éditorial.
+// Affiche : tours [01/03] (anneau de progression), liste compacte des mouvements,
+// bouton "Tour suivant". Quand tous les tours sont done → collapse en ligne
+// discrète "✓ Échauffement validé". État persisté via localStorage par session.
+function WarmupCard({ warmup, weekIdx, sessionIdx }) {
+  const KEY = `rb_warmup_${weekIdx}_${sessionIdx}`;
+  const totalRounds = warmup?.rounds || 3;
+
+  const readState = useCallback(() => {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
+  }, [KEY]);
+
+  const [done, setDone] = useState(() => !!readState().done);
+  const [round, setRound] = useState(() => Math.max(1, readState().round || 1));
+  const [collapsed, setCollapsed] = useState(() => !!readState().done);
+
+  useEffect(() => {
+    const s = readState();
+    setDone(!!s.done);
+    setRound(Math.max(1, s.round || 1));
+    setCollapsed(!!s.done);
+  }, [weekIdx, sessionIdx, readState]);
+
+  const nextRound = () => {
+    if (round >= totalRounds) {
+      // Dernier tour validé → done
+      try { localStorage.setItem(KEY, JSON.stringify({ done: true, round: totalRounds })); } catch {}
+      setDone(true);
+      setTimeout(() => setCollapsed(true), 600);  // collapse après animation
+      try { if (navigator.vibrate) navigator.vibrate([20, 30, 60]); } catch {}
+    } else {
+      const next = round + 1;
+      try { localStorage.setItem(KEY, JSON.stringify({ round: next })); } catch {}
+      setRound(next);
+      try { if (navigator.vibrate) navigator.vibrate(15); } catch {}
+    }
+  };
+
+  const reset = () => {
+    try { localStorage.removeItem(KEY); } catch {}
+    setRound(1); setDone(false); setCollapsed(false);
+  };
+
+  if (!warmup || !Array.isArray(warmup.movements) || warmup.movements.length === 0) return null;
+
+  // Vue collapsed (post-validation)
+  if (collapsed) {
+    return (
+      <div
+        onClick={() => setCollapsed(false)}
+        style={{
+          padding: "10px 16px", marginBottom: 14,
+          background: "rgba(2,209,186,0.04)",
+          border: "1px solid rgba(2,209,186,0.15)",
+          borderRadius: 12, display: "flex", alignItems: "center", gap: 10,
+          cursor: "pointer", fontFamily: "inherit",
+        }}
+      >
+        <div style={{ width: 22, height: 22, borderRadius: "50%", background: G, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#04201d" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2.5, color: G, textTransform: "uppercase" }}>Échauffement validé</div>
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>
+            {totalRounds} tour{totalRounds > 1 ? "s" : ""} · {warmup.movements.length} mouvement{warmup.movements.length > 1 ? "s" : ""}
+          </div>
+        </div>
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 0.5 }}>Voir</div>
+      </div>
+    );
+  }
+
+  // Vue active — premium éditorial
+  const progress = Math.min(1, round / totalRounds);
+  const ringR = 22;
+  const circumference = 2 * Math.PI * ringR;
+  const dashOffset = circumference * (1 - progress);
+
+  return (
+    <div style={{
+      padding: "20px 18px 18px", marginBottom: 14,
+      background: "linear-gradient(180deg, rgba(2,209,186,0.05) 0%, rgba(0,0,0,0.4) 100%)",
+      border: "1px solid rgba(2,209,186,0.18)",
+      borderRadius: 18,
+      position: "relative", overflow: "hidden",
+    }}>
+      {/* Header : titre + anneau de progression tours */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 16 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke={G} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-3.5-7.1"/><polyline points="21 4 21 9 16 9"/>
+            </svg>
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase" }}>Échauffement</span>
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", letterSpacing: 0.3 }}>
+            Circuit en boucle · {totalRounds} tours
+          </div>
+        </div>
+        <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
+          <svg width="52" height="52" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r={ringR} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+            <circle cx="26" cy="26" r={ringR} fill="none" stroke={G} strokeWidth="3" strokeLinecap="round"
+              strokeDasharray={circumference} strokeDashoffset={dashOffset}
+              transform="rotate(-90 26 26)" style={{ transition: "stroke-dashoffset .5s cubic-bezier(.4,0,.2,1)" }} />
+          </svg>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontSize: 17, fontWeight: 200, color: G, lineHeight: 1, fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace", letterSpacing: "-0.5px" }}>
+              {String(round).padStart(2, "0")}
+            </div>
+            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", marginTop: 1, fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace" }}>/{String(totalRounds).padStart(2, "0")}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mouvements — typographie magazine */}
+      <div style={{ display: "flex", flexDirection: "column", paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        {warmup.movements.map((m, mi) => (
+          <div key={mi} style={{
+            display: "flex", alignItems: "baseline", gap: 10,
+            padding: "9px 0",
+            borderBottom: mi < warmup.movements.length - 1 ? "1px dashed rgba(255,255,255,0.04)" : "none",
+          }}>
+            <span style={{
+              width: 22, flexShrink: 0, fontSize: 9.5, fontWeight: 700,
+              color: "rgba(255,255,255,0.28)",
+              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+            }}>{String(mi + 1).padStart(2, "0")}</span>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: -0.2 }}>
+              {m.name}
+            </div>
+            <div style={{
+              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+              fontSize: 12, fontWeight: 700, color: G, letterSpacing: -0.3,
+              flexShrink: 0, opacity: 0.85,
+            }}>{m.spec}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Notes (optionnelles) */}
+      {warmup.notes && (
+        <div style={{ marginTop: 12, padding: "9px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, fontStyle: "italic" }}>
+          {warmup.notes}
+        </div>
+      )}
+      {warmup.restBetween && (
+        <div style={{ marginTop: 8, fontSize: 9.5, color: "rgba(255,255,255,0.35)", letterSpacing: 0.5, textAlign: "center" }}>
+          ⌁ {warmup.restBetween} entre tours
+        </div>
+      )}
+
+      {/* Action */}
+      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+        {round > 1 && (
+          <button onClick={reset} style={{
+            padding: "11px 14px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)", borderRadius: 11,
+            color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700,
+            letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit",
+          }}>Reset</button>
+        )}
+        <button
+          onClick={nextRound}
+          style={{
+            flex: 1, padding: "13px 16px",
+            background: round >= totalRounds ? G : "rgba(2,209,186,0.12)",
+            border: `1px solid ${round >= totalRounds ? G : "rgba(2,209,186,0.35)"}`,
+            borderRadius: 11,
+            color: round >= totalRounds ? "#04201d" : G,
+            fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase",
+            cursor: "pointer", fontFamily: "inherit",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            transition: "all .15s",
+          }}
+        >
+          {round >= totalRounds ? (
+            <>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Valider l'échauffement
+            </>
+          ) : (
+            <>Tour suivant
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -998,6 +1424,13 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         );
       })()}
 
+      {/* ÉCHAUFFEMENT CIRCUIT — en tête de séance, avant les exos */}
+      {currentSession.warmup && (
+        <div style={{ padding: "0 20px", marginBottom: 4 }}>
+          <WarmupCard warmup={currentSession.warmup} weekIdx={activeWeek} sessionIdx={activeSession} />
+        </div>
+      )}
+
       {/* EXERCICES */}
       <div style={{ padding: "0 20px" }}>
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>{t("train.exercises_header")}</div>
@@ -1070,13 +1503,15 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         })()}
       </div>
 
-      {/* FINISHER — premium card avec chrono persistant */}
+      {/* FINISHER — premium card avec chrono persistant + persist en DB pour coach */}
       {currentSession.finisher && currentSession.finisher.trim().length > 0 && (
         <FinisherCard
           finisher={currentSession.finisher}
           weekIdx={activeWeek}
           sessionIdx={activeSession}
           label={t("train.finisher_label")}
+          clientId={client?.id}
+          programmeId={programmeMeta?.id || null}
         />
       )}
 
@@ -1087,14 +1522,46 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             {t("train.cardio_label")}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {currentSession.runs.map((r, ri) => (
+            {currentSession.runs.map((r, ri) => {
+              const isFrac = (r.repeats != null && r.repeats >= 2) || !!r.work;
+              // Détection pattern "temps/temps" (HIIT, Tabata, 30/30…) : si
+              // work ET rest sont du temps (Xs / Xmin / X'…), on affiche en
+              // forme compacte "N × work/rest" au lieu de "N × work · R rest".
+              const isTimePattern = (v) => /^\s*\d+\s*(s|sec|secondes|min|m|'[\d]*|"|)\s*$|^\s*\d+\s*'\s*\d{0,2}\s*$/i.test(v || "");
+              const isTimeBased = isFrac && isTimePattern(r.work) && isTimePattern(r.rest);
+              return (
               <div key={ri} style={{
-                background: "rgba(2,209,186,0.03)",
-                border: "1px solid rgba(2,209,186,0.15)",
+                background: isFrac ? "rgba(239,68,68,0.04)" : "rgba(2,209,186,0.03)",
+                border: "1px solid " + (isFrac ? "rgba(239,68,68,0.22)" : "rgba(2,209,186,0.15)"),
                 borderRadius: 12,
                 padding: "12px 14px",
               }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{r.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+                  {isFrac && (
+                    <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1.2, padding: "2px 6px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: "#ef4444", textTransform: "uppercase" }}>
+                      {isTimeBased ? "HIIT" : "Frac"}
+                    </span>
+                  )}
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{r.name}</div>
+                </div>
+                {isFrac && (
+                  <div style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", fontSize: 16, fontWeight: 700, color: "#ef4444", marginBottom: 6, letterSpacing: "-0.3px" }}>
+                    {isTimeBased ? (
+                      <>
+                        {r.repeats || "?"} × {r.work || "?"}
+                        <span style={{ color: "rgba(255,255,255,0.3)", margin: "0 2px" }}>/</span>
+                        {r.rest || "?"}
+                        {r.target ? <span style={{ color: "rgba(255,255,255,0.55)", fontWeight: 500, marginLeft: 8, fontSize: 13 }}>@ {r.target}</span> : null}
+                      </>
+                    ) : (
+                      <>
+                        {r.repeats || "?"} × {r.work || "?"}
+                        {r.target ? <span style={{ color: "rgba(255,255,255,0.55)", fontWeight: 500, marginLeft: 6, fontSize: 13 }}>@ {r.target}</span> : null}
+                        {r.rest ? <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500, marginLeft: 6, fontSize: 13 }}>· R {r.rest}</span> : null}
+                      </>
+                    )}
+                  </div>
+                )}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
                   {r.distance && (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -1114,18 +1581,85 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                       {r.bpm} bpm
                     </span>
                   )}
-                  {r.rest && (
+                  {r.rest && !isFrac && (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                       <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="rgba(2,209,186,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
                       {r.rest}
                     </span>
                   )}
                 </div>
+                {/* Timer interval lancable pour HIIT time-based.
+                    storageKey unique par semaine+session+rundIdx pour isoler
+                    les etats si plusieurs runs dans la meme session. */}
+                {isTimeBased && (
+                  <div style={{ marginTop: 12 }}>
+                    <RunIntervalTimer
+                      storageKey={`rb_runtimer_${activeWeek}_${activeSession}_${ri}`}
+                      name={r.name}
+                      blocks={r.blocks || 1}
+                      repeats={r.repeats}
+                      work={r.work}
+                      rest={r.rest}
+                      blockRest={r.blockRest}
+                      target={r.target}
+                    />
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
           <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
             {t("train.cardio_log_hint")} <strong style={{ color: "rgba(2,209,186,0.7)" }}>{t("train.cardio_run_tab")}</strong>.
+          </div>
+        </div>
+      )}
+
+      {/* AMRAP / WOD prescrits — chrono countdown lançable côté athlète */}
+      {Array.isArray(currentSession.amraps) && currentSession.amraps.length > 0 && (
+        <div style={{ padding: "0 20px", marginTop: 18 }}>
+          <div style={{ fontSize: 9, color: "rgba(239,68,68,0.85)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 800, marginBottom: 10 }}>
+            AMRAP / WOD
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {currentSession.amraps.map((a, ai) => (
+              <CountdownBlockCard
+                key={ai}
+                variant="amrap"
+                title={a.title || "AMRAP"}
+                minutes={a.minutes}
+                description={a.description}
+                badge={a.minutes ? `${a.minutes} min · max rounds` : null}
+                storageKey={`rb_amrap_${activeWeek}_${activeSession}_${ai}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ERGO FIN DE SÉANCE — rameur / vélo / ski-erg / assault bike, etc. */}
+      {Array.isArray(currentSession.ergos) && currentSession.ergos.length > 0 && (
+        <div style={{ padding: "0 20px", marginTop: 18 }}>
+          <div style={{ fontSize: 9, color: "rgba(56,189,248,0.85)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 800, marginBottom: 10 }}>
+            Ergo · fin de séance
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {currentSession.ergos.map((e, ei) => {
+              const badgeParts = [];
+              if (e.goal) badgeParts.push(e.goal);
+              if (e.minutes) badgeParts.push(`${e.minutes} min`);
+              return (
+                <CountdownBlockCard
+                  key={ei}
+                  variant="ergo"
+                  title={e.machine || "Ergo"}
+                  minutes={e.minutes}
+                  description={e.notes}
+                  badge={badgeParts.join(" · ") || null}
+                  storageKey={`rb_ergo_${activeWeek}_${activeSession}_${ei}`}
+                />
+              );
+            })}
           </div>
         </div>
       )}

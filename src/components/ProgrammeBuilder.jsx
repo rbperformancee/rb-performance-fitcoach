@@ -81,6 +81,8 @@ function buildHTML(p) {
           <input id="rep-${rid}" value="${escAttr(r.repeats != null ? String(r.repeats) : '')}" />
           <input id="rw-${rid}" value="${escAttr(r.work || '')}" />
           <input id="rtg-${rid}" value="${escAttr(r.target || '')}" />
+          <input id="rblocks-${rid}" value="${escAttr(r.blocks != null ? String(r.blocks) : '')}" />
+          <input id="rbr-${rid}" value="${escAttr(r.blockRest || '')}" />
         </div>`;
       }).join("");
       // Séances terrain (foot, rugby…) — format .field-item lu par parserProgramme.
@@ -1508,6 +1510,28 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
                 onChange={(e) => updateRun(i, { ...r, target: e.target.value })}
                 placeholder="Allure / temps cible (ex 4'15-4'20/km · 1'42 par 400m)"
                 style={{ minWidth: 0, padding: "7px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
+              />
+            </div>
+          )}
+          {/* Blocs + repos entre blocs (optionnels, pour HIIT type "2×8 × 30/30"
+              avec un long repos entre les 2 series). Si blocks = 1 ou vide,
+              le timer fonctionne comme un seul bloc (cas par defaut). */}
+          {isFrac && (
+            <div style={{ display: "grid", gridTemplateColumns: "60px 1fr", gap: 6, marginBottom: 6 }}>
+              <input
+                type="number" min="1" max="10"
+                value={r.blocks ?? ""}
+                onChange={(e) => updateRun(i, { ...r, blocks: e.target.value === "" ? null : Math.max(1, parseInt(e.target.value, 10) || 1) })}
+                placeholder="Blocs"
+                title="Nombre de blocs (ex 2 pour '2 séries de 8×30/30')"
+                style={{ minWidth: 0, padding: "7px 8px", background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.22)", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: "inherit", outline: "none", textAlign: "center" }}
+              />
+              <input
+                value={r.blockRest || ""}
+                onChange={(e) => updateRun(i, { ...r, blockRest: e.target.value })}
+                placeholder={(r.blocks && r.blocks > 1) ? "Repos entre blocs (ex 2'00, 3 min)" : "Repos entre blocs (optionnel, ex 2'00)"}
+                disabled={!r.blocks || r.blocks <= 1}
+                style={{ minWidth: 0, padding: "7px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: (!r.blocks || r.blocks <= 1) ? "rgba(255,255,255,0.3)" : "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
               />
             </div>
           )}

@@ -260,6 +260,20 @@ export function parseProgrammeHTML(htmlString) {
           doc.getElementById(`rtg-${rid}`)?.getAttribute("value") ||
           ""
         ).trim() || null;
+        // blocks = nombre de blocs (default 1). blockRest = repos entre
+        // blocs (ex "2'00"). Permet "2 blocs de 8×30/30 avec 2' entre".
+        // Optionnels — si vides, le timer fonctionne comme un seul bloc.
+        const blocksRaw = (
+          doc.getElementById(`rblocks-${rid}`)?.value ||
+          doc.getElementById(`rblocks-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim();
+        const blocks = parseInt(blocksRaw, 10);
+        const blockRest = (
+          doc.getElementById(`rbr-${rid}`)?.value ||
+          doc.getElementById(`rbr-${rid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
 
         runs.push({
           name: rName,
@@ -270,6 +284,8 @@ export function parseProgrammeHTML(htmlString) {
           repeats: isNaN(repeats) ? null : repeats,
           work,
           target,
+          blocks: isNaN(blocks) ? null : blocks,
+          blockRest,
         });
       });
 
