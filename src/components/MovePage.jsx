@@ -5,6 +5,25 @@ import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
 import { useScheduledRuns } from "../hooks/useScheduledRuns";
 import { useT, getLocale } from "../lib/i18n";
+import RunIntervalTimer from "./RunIntervalTimer";
+
+/**
+ * Detection HIIT time-based : si work ET rest sont des durees parsables
+ * (30s, 1'30, etc), c'est un fractionné chronometre -> on lance le
+ * timer au lieu de demander distance/duree manuelle.
+ * Pour les distances (8×400m) ou continu, on garde le flow save normal.
+ */
+function isTimeBasedFractionne(run) {
+  if (!run || run.repeats == null || run.repeats < 2) return false;
+  const parse = (v) => {
+    if (!v) return 0;
+    const s = String(v).trim();
+    if (/^(\d+)\s*[':]\s*(\d{1,2})\s*$/.test(s)) return 1;
+    if (/^(\d+)\s*(min|m|s|sec|secondes?|')?$/i.test(s)) return 1;
+    return 0;
+  };
+  return parse(run.work) > 0 && parse(run.rest) > 0;
+}
 
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
@@ -21,6 +40,8 @@ export default function MovePage({ client, appData }) {
   const [saving, setSaving] = useState(false);
   // Run prescrit en cours de log (pre-remplit le form + tag programme)
   const [pendingPrescribed, setPendingPrescribed] = useState(null);
+  // Run prescrit en mode HIIT timer (chrono lance, pas de save form)
+  const [pendingTimer, setPendingTimer] = useState(null);
 
   // Runs prescrits par le coach pour la semaine en cours
   const scheduled = useScheduledRuns(client?.id);
@@ -131,9 +152,16 @@ export default function MovePage({ client, appData }) {
     }).then(() => {});
   };
 
-  // Ouvre le formulaire pre-rempli avec un run prescrit
+  // Ouvre le bon flow selon le type de run prescrit :
+  //   - HIIT time-based (30/30, Tabata) → modal chrono interval
+  //   - Autres (distance, continu) → modal save sortie classique
+  // Eviter qu'on demande la distance pour un HIIT (qui n'en a pas).
   const startPrescribed = (run) => {
     haptic.selection();
+    if (isTimeBasedFractionne(run)) {
+      setPendingTimer(run);
+      return;
+    }
     // Tente de pre-remplir distance + duree depuis les cibles
     const distMatch = run.distance?.match(/(\d+(?:[.,]\d+)?)/);
     const durMatch = run.duration?.match(/(\d+)\s*h\s*(\d+)?|(\d+)\s*min/i);
@@ -150,6 +178,47 @@ export default function MovePage({ client, appData }) {
     });
     setPendingPrescribed(run);
     setShowAdd(true);
+  };
+
+  // Marque un HIIT comme fait (sans demander distance/duree).
+  // On insere un run_log minimal avec target_label + programme tags
+  // pour que le coach voit "fait", + un session_log pour le XP.
+  const completeHiitRun = async (run) => {
+    if (!client?.id || !run) return;
+    haptic.success();
+    try {
+      const prescribedFields = {
+        programme_id: scheduled.programmeId,
+        programme_week: scheduled.viewWeek,
+        programme_session: run.sessionIndex,
+        programme_run_index: run.runIndex,
+        target_label: run.name,
+      };
+      await supabase.from("run_logs").insert({
+        client_id: client.id,
+        date: today,
+        // Pas de distance/duree : HIIT pas mesure en km
+        distance_km: null,
+        duree_min: null,
+        allure_min_km: null,
+        note: `HIIT ${run.repeats}×${run.work}/${run.rest}` + (run.blocks > 1 ? ` × ${run.blocks} blocs` : ""),
+        ...prescribedFields,
+      });
+      await supabase.from("session_logs").insert({
+        client_id: client.id,
+        session_name: `${t("move.run_session_label")} · HIIT`,
+        programme_name: "Move",
+        logged_at: new Date().toISOString(),
+      });
+      await scheduled.refresh();
+      setPendingTimer(null);
+    } catch (err) {
+      console.error("[hiit-complete] failed", err);
+      try {
+        const { toast } = await import("./Toast");
+        toast.error("Erreur enregistrement HIIT");
+      } catch (_) {}
+    }
   };
 
   const weekKm = weekRuns.reduce((a, r) => a + (r.distance_km || 0), 0);
@@ -599,6 +668,45 @@ export default function MovePage({ client, appData }) {
         </div>
 
       </div>
+
+      {/* MODAL HIIT TIMER — lance le chrono interval, mark done a la fin */}
+      {pendingTimer && (
+        <div onClick={e => { if (e.target === e.currentTarget) setPendingTimer(null); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
+          <div style={{ background: "#0a0a0a", borderRadius: "24px 24px 0 0", padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 20px)", width: "100%", maxWidth: 480, boxSizing: "border-box", border: "1px solid rgba(239,68,68,0.18)", borderBottom: "none" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(239,68,68,0.85)", textTransform: "uppercase", marginBottom: 4 }}>
+                  HIIT / Fractionné
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>{pendingTimer.name}</div>
+              </div>
+              <button onClick={() => setPendingTimer(null)} aria-label="Fermer" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, width: 40, height: 40, color: "rgba(255,255,255,0.7)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <RunIntervalTimer
+              storageKey={`rb_movetimer_${pendingTimer.sessionIndex}_${pendingTimer.runIndex}`}
+              name={pendingTimer.name}
+              blocks={pendingTimer.blocks || 1}
+              repeats={pendingTimer.repeats}
+              work={pendingTimer.work}
+              rest={pendingTimer.rest}
+              blockRest={pendingTimer.blockRest}
+              target={pendingTimer.target}
+            />
+
+            {/* Action mark complete : disponible meme avant la fin du timer
+                (l'athlete peut avoir fait offline et marquer fait ensuite). */}
+            <button
+              onClick={() => completeHiitRun(pendingTimer)}
+              style={{ width: "100%", marginTop: 14, padding: 14, background: GREEN, color: "#0a0a0a", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit" }}
+            >
+              ✓ Marquer comme fait
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* MODAL AJOUTER SORTIE */}
       {showAdd && (
