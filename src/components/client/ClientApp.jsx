@@ -180,6 +180,11 @@ const page = {
   flex: 1,
   overflowY: "auto",
   WebkitOverflowScrolling: "touch",
+  // Safe-area iOS : sans ça, le contenu se loge sous le notch / Dynamic
+  // Island sur iPhone (status bar mange le haut). On l'applique ici plutôt
+  // qu'au wrap pour que le fond noir reste edge-to-edge (visible derrière
+  // la status bar transparente, look natif).
+  paddingTop: "env(safe-area-inset-top, 0px)",
 };
 const nav = {
   position: "fixed",
