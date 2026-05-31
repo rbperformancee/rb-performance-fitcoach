@@ -1,5 +1,5 @@
 import ClientAnalytics from "./ClientAnalytics";
-import ProgramPDFButton from "./ProgramPDF";
+import ProgramPDFButton, { exportProgramPDF } from "./ProgramPDF";
 import CoachStats from "./CoachStats";
 import ChatCoach from "./ChatCoach";
 import { uploadChatPhoto, uploadChatAudio } from "../lib/chatMedia";
@@ -222,20 +222,27 @@ function ProgrammeCalendarSection({ programmeId, clientId }) {
         })}
       </div>
 
-      {/* Mini-calendrier 14 jours */}
+      {/* Mini-calendrier 14 jours.
+          Bug fix 24/05/26 : 'today' affichait un fill plein turquoise identique
+          à 'done' → induisait le coach en erreur (croyait que la séance était
+          faite). La légende disait pourtant "contour" mais le rendu ne suivait
+          pas. Maintenant : today = contour SEUL, fond transparent. */}
       <div style={{ display: "flex", gap: 3, marginBottom: 6 }}>
         {days14.map((d, i) => {
           const colors = {
-            done: "rgba(2,209,186,0.7)", today: "#02d1ba",
-            missed: "#f97316", rest: "rgba(255,255,255,0.08)",
+            done: "rgba(2,209,186,0.7)",
+            missed: "#f97316",
+            rest: "rgba(255,255,255,0.08)",
             before: "rgba(255,255,255,0.04)",
           };
           const isToday = d.status === "today";
           return (
             <div key={i} title={d.date.toLocaleDateString("fr-FR")} style={{
               flex: 1, height: 24, borderRadius: 4,
-              background: colors[d.status],
-              border: isToday ? "1.5px solid #02d1ba" : "none",
+              // Today : transparent + contour vif. Sinon : background plein.
+              background: isToday ? "transparent" : colors[d.status],
+              border: isToday ? "1.5px dashed #02d1ba" : "none",
+              boxSizing: "border-box",
             }} />
           );
         })}
@@ -1877,6 +1884,12 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
   const [allWeights, setAllWeights] = useState([]);
   const [exLogs, setExLogs] = useState([]);
   const [fieldLogs, setFieldLogs] = useState([]);
+  const [runLogs, setRunLogs] = useState([]);
+  // Completions séances (= chrono total, RPE, volume). Joint par date à
+  // sessions[] dans la timeline pour afficher la durée totale (cf. demande
+  // Rayan 24/05/26 : "j'aimerais voir le temps total de la séance dans
+  // l'historique"). session_logs n'a pas de duration_seconds, c'est ici.
+  const [clientCompletions, setClientCompletions] = useState([]);
   const [weeklyCheckins, setWeeklyCheckins] = useState([]);
   const [showHabitsManager, setShowHabitsManager] = useState(false);
   const [habitsVersion, setHabitsVersion] = useState(0); // bump pour refresh HabitsHeatmap7d
@@ -2053,6 +2066,18 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
     supabase.from("field_session_logs").select("*")
       .eq("client_id", client.id).order("done_at", { ascending: false }).limit(40)
       .then(({ data }) => setFieldLogs(data || []));
+    // Completions (chrono total, finisher, RPE, auto_validated) — joint par date.
+    supabase.from("session_completions")
+      .select("validated_at, chrono_seconds, finisher_seconds, rpe, volume_kg, week_idx, session_idx, auto_validated")
+      .eq("client_id", client.id).order("validated_at", { ascending: false }).limit(50)
+      .then(({ data }) => setClientCompletions(data || []));
+    // Sorties course (run_logs) — séparé des séances muscu (session_logs).
+    // Cf. report Rayan 24/05/26 : "course + muscu sur une journée c'était pas
+    // clair quoi est quoi" car run_logs n'était pas rendu côté coach.
+    supabase.from("run_logs")
+      .select("id,date,logged_at,distance_km,duree_min,allure_min_km,note,target_label")
+      .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(40)
+      .then(({ data }) => setRunLogs(data || []));
     // Historique poids complet (TOUS depuis le debut de l'abonnement)
     supabase.from("weight_logs").select("date,weight,note").eq("client_id", client.id)
       .order("date", { ascending: false }).limit(500)
@@ -2153,6 +2178,15 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           supabase.from("field_session_logs").select("*")
             .eq("client_id", client.id).order("done_at", { ascending: false }).limit(40)
             .then(({ data }) => setFieldLogs(data || []));
+        })
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "run_logs",
+          filter: `client_id=eq.${client.id}`,
+        }, () => {
+          supabase.from("run_logs")
+            .select("id,date,logged_at,distance_km,duree_min,allure_min_km,note,target_label")
+            .eq("client_id", client.id).order("logged_at", { ascending: false }).limit(40)
+            .then(({ data }) => setRunLogs(data || []));
         })
         .subscribe();
     } catch { /* realtime peut etre desactive */ }
@@ -2455,37 +2489,26 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             const subColor = isExpired ? RED : isExpiring ? (daysLeft <= 7 ? RED : ORANGE) : G;
             const planLabel = client._plan_name || { "3m": "3 Mois", "6m": "6 Mois", "12m": "12 Mois" }[client.subscription_plan] || client.subscription_plan || t("cp.plan_undefined");
 
+            // Compteur séances faites pour ce programme. clientCompletions ne
+            // contient que celles du programme actif (les anciennes sont DELETE
+            // à chaque changement de programme — cf. ligne ~2266 / ~5323).
+            const completionsCount = (clientCompletions || []).length;
+            const startDate = prog.start_date ? new Date(prog.start_date) : new Date(prog.uploaded_at);
+            const startLabel = startDate.toLocaleDateString(intlLocale(), { day: "numeric", month: "long" });
+
             return (
               <div style={card}>
-                {/* Programme actif */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: subStart ? 14 : 0 }}>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{prog.programme_name}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: G, marginTop: 4, fontWeight: 600 }}>
-                      <Icon name="check" size={12} />
-                      {fillTpl(t("cp.active_since"), { date: new Date(prog.uploaded_at).toLocaleDateString(intlLocale(), { day: "numeric", month: "long" }) })}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button
-                      onClick={async () => {
-                        try {
-                          const { data, error } = await supabase
-                            .from("programmes")
-                            .select("id, programme_name, html_content, start_date, training_days")
-                            .eq("id", prog.id)
-                            .maybeSingle();
-                          if (error || !data) { toast.error("Impossible de charger le programme"); return; }
-                          setBuilderEditing(data);
-                          setShowBuilder(true);
-                        } catch (e) { toast.error("Erreur : " + e.message); }
-                      }}
-                      style={{ fontSize: 10, fontWeight: 700, color: G, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
-                    >Éditer</button>
-                    <button
-                      onClick={() => setConfirmDelete({ progId: prog.id, progName: prog.programme_name })}
-                      style={{ fontSize: 10, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
-                    >{t("cp.btn_suppr")}</button>
+                {/* Programme actif — résumé épuré (sans boutons édition,
+                    déplacés dans l'onglet Programme pour le workflow d'édition). */}
+                <div style={{ marginBottom: subStart ? 14 : 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{prog.programme_name}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: G, marginTop: 4, fontWeight: 600 }}>
+                    <Icon name="check" size={12} />
+                    <span>Démarré le {startLabel}</span>
+                    <span style={{ color: "rgba(255,255,255,0.2)", margin: "0 2px" }}>·</span>
+                    <span style={{ color: completionsCount > 0 ? G : "rgba(255,255,255,0.4)" }}>
+                      {completionsCount} séance{completionsCount > 1 ? "s" : ""} faite{completionsCount > 1 ? "s" : ""}
+                    </span>
                   </div>
                 </div>
 
@@ -3022,6 +3045,74 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
         {/* ===== TAB: PROGRAMME ===== */}
         {panelTab === "programme" && (<>
 
+        {/* ===== Programme actif — édition (déplacé depuis Résumé) ===== */}
+        {prog && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.05s both" }}>
+            <div style={{ ...card, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", marginBottom: 4 }}>Programme actif</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {prog.programme_name}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap" }}>
+                <button
+                  onClick={async () => {
+                    try {
+                      const { data, error } = await supabase
+                        .from("programmes")
+                        .select("id, programme_name, html_content, start_date, training_days")
+                        .eq("id", prog.id)
+                        .maybeSingle();
+                      if (error || !data) { toast.error("Impossible de charger le programme"); return; }
+                      setBuilderEditing(data);
+                      setShowBuilder(true);
+                    } catch (e) { toast.error("Erreur : " + e.message); }
+                  }}
+                  style={{ fontSize: 11, fontWeight: 700, color: G, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}
+                >
+                  <Icon name="edit" size={12} />
+                  Éditer
+                </button>
+                <button
+                  onClick={async () => {
+                    // Pop-up blocker bypass : on ouvre la fenêtre SYNCHRONEMENT
+                    // dans le handler de clic (sinon Safari/Chrome bloquent).
+                    // Le fetch SQL vient après, puis on écrit le HTML dedans.
+                    const win = window.open("", "_blank");
+                    if (!win) { toast.error("Pop-up bloquée. Autorise les fenêtres pour ce site puis réessaie."); return; }
+                    try {
+                      const { data, error } = await supabase
+                        .from("programmes")
+                        .select("id, programme_name, html_content")
+                        .eq("id", prog.id)
+                        .maybeSingle();
+                      if (error || !data?.html_content) {
+                        try { win.close(); } catch(_) {}
+                        toast.error("Impossible de charger le programme");
+                        return;
+                      }
+                      exportProgramPDF(client, data, win);
+                    } catch (err) {
+                      try { win.close(); } catch(_) {}
+                      toast.error("Erreur PDF : " + (err?.message || err));
+                    }
+                  }}
+                  style={{ fontSize: 11, fontWeight: 700, color: G, background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}
+                  title="Génère un PDF imprimable (Cmd+P pour enregistrer) à envoyer à l'athlète"
+                >
+                  <Icon name="document" size={12} />
+                  Exporter PDF
+                </button>
+                <button
+                  onClick={() => setConfirmDelete({ progId: prog.id, progName: prog.programme_name })}
+                  style={{ fontSize: 11, fontWeight: 700, color: RED, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontFamily: "inherit" }}
+                >{t("cp.btn_suppr")}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ===== HISTORIQUE SEANCES — avec detail poids souleves ===== */}
         {(() => {
           // Dedupe : si le client a valide la meme seance plusieurs fois le
@@ -3031,8 +3122,13 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           // distincte sera rendue.
           const seen = new Set();
           const dedupedSessions = sessions.filter((s) => {
+            // Filter out les "Course X km" : elles sont affichées dans la
+            // section dédiée "Sorties course" (run_logs) — les laisser ici
+            // crée de la confusion (exos PULL attribués à une course, etc).
+            const name = s.session_name || "";
+            if (/^Course\b/i.test(name)) return false;
             const dateStr = new Date(s.logged_at).toISOString().split("T")[0];
-            const key = `${dateStr}__${s.session_name || s.programme_name || "—"}`;
+            const key = `${dateStr}__${name || s.programme_name || "—"}`;
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
@@ -3053,8 +3149,43 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 const date = new Date(s.logged_at);
                 const dateStr = date.toISOString().split("T")[0];
                 const durationMin = s.duration_seconds ? Math.round(s.duration_seconds / 60) : null;
-                // Exercices de cette seance (meme jour)
-                const dayExs = exLogs.filter(e => e.logged_at && e.logged_at.startsWith(dateStr));
+                // Match cette session_log à sa session_completion (même date
+                // ± 5 min de marge) pour récupérer (week_idx, session_idx).
+                // Permet de filtrer les exos par ex_key au lieu de par date —
+                // sinon 2 séances le même jour fusionnent leurs exos.
+                const sTime = date.getTime();
+                const matchedComp = clientCompletions.find((c) => {
+                  if (!c.validated_at) return false;
+                  // Même jour suffit ; si 2 séances même jour, on regarde la plus proche
+                  return c.validated_at.startsWith(dateStr);
+                });
+                // Si plusieurs completions le même jour, on prend la plus proche en temps
+                let bestComp = matchedComp;
+                if (matchedComp) {
+                  const sameDayComps = clientCompletions.filter(
+                    (c) => c.validated_at && c.validated_at.startsWith(dateStr)
+                  );
+                  if (sameDayComps.length > 1) {
+                    bestComp = sameDayComps.reduce((best, c) => {
+                      const dBest = Math.abs(new Date(best.validated_at).getTime() - sTime);
+                      const dC = Math.abs(new Date(c.validated_at).getTime() - sTime);
+                      return dC < dBest ? c : best;
+                    });
+                  }
+                }
+                const wIdx = bestComp?.week_idx;
+                const sIdx = bestComp?.session_idx;
+                // Filtre exos par ex_key (_wN_sN_eN) si on a la session matchée,
+                // sinon fallback sur le filtre date legacy.
+                const sameDayExs = exLogs.filter(
+                  (e) => e.logged_at && e.logged_at.startsWith(dateStr)
+                );
+                const exKeyPattern = wIdx != null && sIdx != null
+                  ? new RegExp(`_w${wIdx}_s${sIdx}_e\\d+$`)
+                  : null;
+                const dayExs = exKeyPattern
+                  ? sameDayExs.filter((e) => exKeyPattern.test(e.ex_key || ""))
+                  : sameDayExs;
                 // Grouper par exercice et prendre le max poids. Le label
                 // privilégie le vrai nom (parsé depuis le programme), sinon
                 // fallback "Exercice N".
@@ -3202,6 +3333,53 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           </div>
         )}
 
+        {/* ===== SORTIES COURSE — séparées de la muscu pour clarté visuelle ===== */}
+        {runLogs.length > 0 && (
+          <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.24s both" }}>
+            <div style={sectionTitle}>
+              <Icon name="run" size={14} color={G} />
+              Sorties course ({runLogs.length})
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {runLogs.map((r, i) => {
+                // run_logs.date est canonique, fallback sur logged_at
+                const d = new Date(r.date || r.logged_at);
+                const km = r.distance_km != null ? Number(r.distance_km).toFixed(r.distance_km % 1 === 0 ? 0 : 2) : null;
+                const dur = r.duree_min != null ? r.duree_min : null;
+                return (
+                  <div key={r.id || i} style={{ ...card, padding: "14px 16px" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      {/* Icône chaussure pour distinguer visuellement de la muscu */}
+                      <div style={{ width: 38, height: 38, borderRadius: 12, background: G_DIM, border: `1px solid ${G_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke={G} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 17h14a2 2 0 0 0 2-2v-1a3 3 0 0 0-2-2.8L13 9 9 5H7a3 3 0 0 0-3 3v7a2 2 0 0 0 1 2z"/>
+                          <path d="M8 17v2M12 17v2M16 17v2"/>
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                          {r.target_label || "Course"}
+                          {km != null && <span style={{ fontWeight: 500, color: "rgba(255,255,255,0.5)" }}>{" · " + km + " km"}</span>}
+                          {dur != null && <span style={{ fontWeight: 500, color: "rgba(255,255,255,0.5)" }}>{" · " + dur + " min"}</span>}
+                        </div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                          {d.toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
+                          {r.allure_min_km && <span>{" · allure " + r.allure_min_km + "/km"}</span>}
+                        </div>
+                        {r.note && (
+                          <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", fontStyle: "italic", marginTop: 6, lineHeight: 1.45 }}>
+                            « {r.note} »
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* (historique poids complet supprime : accessible via le drawer sur la card poids) */}
 
         {/* ===== PROGRESSION — SECTION UNIFIEE PREMIUM ===== */}
@@ -3250,9 +3428,36 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {sessions.slice(0, 10).map((s, i) => {
                   const date = new Date(s.logged_at);
-                  const durationMin = s.duration_seconds ? Math.round(s.duration_seconds / 60) : null;
-                  // Trouver RPE du même jour
+                  // session_logs n'a pas duration_seconds — on récupère depuis
+                  // session_completions (chrono_seconds) joint par date.
                   const dateStr = date.toISOString().split("T")[0];
+                  const matchedComp = clientCompletions.find(c =>
+                    c.validated_at && c.validated_at.slice(0, 10) === dateStr
+                  );
+                  const chronoSec = matchedComp?.chrono_seconds || 0;
+                  const finisherSec = matchedComp?.finisher_seconds || 0;
+                  const isAutoValidated = matchedComp?.auto_validated === true;
+                  // Format propre : 1h32 si ≥1h, sinon "47 min". 0 = pas de chrono.
+                  let durationLabel = null;
+                  if (chronoSec > 0) {
+                    const totalMin = Math.round(chronoSec / 60);
+                    if (totalMin >= 60) {
+                      const h = Math.floor(totalMin / 60);
+                      const m = totalMin % 60;
+                      durationLabel = m > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
+                    } else {
+                      durationLabel = `${totalMin} min`;
+                    }
+                  }
+                  // Finisher : format MM:SS (typique 3-8 min), affiché en rouge
+                  // pour distinction visuelle (= cohérent avec FinisherCard client).
+                  let finisherLabel = null;
+                  if (finisherSec > 0) {
+                    const fm = Math.floor(finisherSec / 60);
+                    const fs = finisherSec % 60;
+                    finisherLabel = `${fm}:${String(fs).padStart(2, "0")}`;
+                  }
+                  // Trouver RPE du même jour
                   const dayRpe = rpeData.find(r => r.date === dateStr);
                   // Feedback structuré (migration 056)
                   const MOOD_LABELS = { great: "Au top", good: "Bien", ok: "Correct", tough: "Dure", bad: "Catastrophe" };
@@ -3269,10 +3474,26 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                       <div style={{ flex: 1, padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12 }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                           <div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{s.session_name || t("cp.session_fallback")}</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                              <span>{s.session_name || t("cp.session_fallback")}</span>
+                              {isAutoValidated && (
+                                <span
+                                  title="Validée automatiquement par le système (le client a logué ses exos mais n'a pas cliqué 'Terminer la séance')"
+                                  style={{
+                                    fontSize: 8, fontWeight: 800, letterSpacing: "1px", textTransform: "uppercase",
+                                    color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.04)",
+                                    border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
+                                    padding: "2px 6px",
+                                  }}
+                                >
+                                  auto
+                                </span>
+                              )}
+                            </div>
                             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
                               {date.toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" })}
-                              {durationMin != null && <span> · {fillTpl(t("cp.minutes_short"), { n: durationMin })}</span>}
+                              {durationLabel && <span> · <strong style={{ color: G, fontWeight: 700 }}>⏱ {durationLabel}</strong></span>}
+                              {finisherLabel && <span> · <strong style={{ color: "#ef4444", fontWeight: 700 }}>🔥 finisher {finisherLabel}</strong></span>}
                               {s.exercises_count > 0 && <span> · {fillTpl(t("cp.exos_count"), { n: s.exercises_count })}</span>}
                             </div>
                           </div>
