@@ -168,13 +168,16 @@ rbperform.app/
 ├── /founding                      [Offre — Schema Product/Offer + FAQ]
 ├── /alternative-trainerize        [Page dédiée switching — Schema Article + FAQ]
 ├── /logiciel-coach-sportif        [Page dédiée broad — Schema Article + FAQ]
+├── /meilleurs-logiciels-coach-sportif-2026  [Listicle Top 10 — Schema ItemList]
 ├── /comparison                    [vs concurrents — Schema Article]
 ├── /security                      [Trust — Schema WebPage + Organization]
 ├── /legal                         [Conformité — Schema BreadcrumbList]
 └── /blog                          [Hub — Schema Blog]
-    ├── /combien-gagne-coach-sportif-france  [Schema Article + FAQ]
-    ├── /comment-fixer-tarifs-coach-sportif  [Schema Article + FAQ]
-    └── /statut-juridique-coach-sportif      [Schema Article + FAQ]
+    ├── /combien-gagne-coach-sportif-france  [Schema Article + FAQ] — informationnel
+    ├── /comment-fixer-tarifs-coach-sportif  [Schema Article + FAQ] — commercial
+    ├── /statut-juridique-coach-sportif      [Schema Article + FAQ] — transactionnel
+    ├── /diagnostic-business-coach-sportif   [Schema Article + FAQ] — audit + lead magnet
+    └── /trouver-premiers-clients-coach-sportif [Schema Article + FAQ] — acquisition (27/05/26)
 ```
 
 **Sitemap dynamique** : `/sitemap.xml` est généré par `api/sitemap.xml.js` et inclut
@@ -260,11 +263,12 @@ Objectif réaliste : top 20 en 4-8 semaines, top 10 en 3-6 mois selon la concurr
 
 ### Court-moyen terme (2-4 semaines)
 
-3. **Article #4** : « Comment trouver ses 10 premiers clients de coaching sportif »
-   (intent acquisition, volume élevé, conversion naturelle vers RB Perform)
-4. **Article #5** : « Logiciel de facturation pour auto-entrepreneur coach »
-   (longue traîne avec intent transactionnel très précis)
-5. **Performance / Core Web Vitals** : audit Lighthouse → optimisation images,
+3. ~~**Article #4** : « Diagnostic business coach sportif »~~ ✅ Publié 23/05/26 (`/blog/diagnostic-business-coach-sportif`)
+4. ~~**Article #5** : « Comment trouver ses 10 premiers clients »~~ ✅ Publié 27/05/26 (`/blog/trouver-premiers-clients-coach-sportif` — méthode 90 jours, 7 canaux, ~2 800 mots)
+5. **Article #6** : « Logiciel de facturation pour auto-entrepreneur coach »
+   (longue traîne avec intent transactionnel très précis, ~1 800 recherches/mois)
+6. **Article #7** : « Programme d'entraînement type pour clients de coach » (intent débutant coach + lead magnet)
+7. **Performance / Core Web Vitals** : audit Lighthouse → optimisation images,
    preload fonts, defer JS non-critique. Boost le ranking mobile.
 
 ### Moyen terme (1-3 mois)
