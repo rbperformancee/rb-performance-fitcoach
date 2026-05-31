@@ -222,8 +222,16 @@ const REPS_SUGGESTIONS = [
   "5/3/1", "5x5", "3x5",
   // Unilatéral
   "3X8/jambe", "3X10/jambe", "3X12/jambe", "4X8/bras", "3X10/bras",
+  // Distance (sled push, farmer's walk, sprint, prowler, traîneau)
+  "3X10m", "3X15m", "3X20m", "3X25m", "3X30m", "3X40m",
+  "4X10m", "4X15m", "4X20m", "4X30m",
+  "5X10m", "5X15m", "5X20m", "5X30m", "5X40m",
+  "6X20m", "6X30m", "8X20m", "10X20m",
+  // Pour distances plus longues (carries, prowler walks)
+  "3X50m", "3X60m", "3X100m", "2X100m", "5X100m",
   // Isométrique / temps
   "3X20 secondes", "3X30 secondes", "3X45 secondes", "3X60 secondes",
+  "3X30s", "3X45s", "4X30s", "5X30s",
   // Cluster / rest-pause — un "+" déclenche l'UI guidée côté client
   "5+5+5", "3X5+5+5", "4X3+3+3", "3X8+8",
   // Dégressive / drop set — un "_" déclenche l'UI guidée (charge qui descend)
@@ -1098,7 +1106,7 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
         <button type="button" onClick={onRemove} title="Supprimer" style={{ ...iconBtn, fontSize: 14 }}>×</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr 1fr", gap: 6 }}>
-        <SuggestField label="Reps" value={ex.reps} onChange={(v) => update("reps", v)} placeholder="4X8-10" suggestions={REPS_SUGGESTIONS} />
+        <SuggestField label="Reps" value={ex.reps} onChange={(v) => update("reps", v)} placeholder="4X8-10 · 3X20m · 3X30s" suggestions={REPS_SUGGESTIONS} />
         <SuggestField label="Charge" value={ex.charge} onChange={(v) => update("charge", v)} placeholder="80kg · 60% 1RM" suggestions={CHARGE_SUGGESTIONS} accent="#fbbf24" />
         <SuggestField label="Tempo" value={ex.tempo} onChange={(v) => update("tempo", v)} placeholder="3010" suggestions={TEMPO_SUGGESTIONS} />
         <SuggestField label="RIR" value={ex.rir} onChange={(v) => update("rir", v)} placeholder="1" suggestions={RIR_SUGGESTIONS} />
