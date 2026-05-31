@@ -72,7 +72,7 @@ export default function InviteClient({ open, onClose, coachId, onInvited, onBulk
     haptic.selection();
     setSending(true);
     try {
-      // Insert invitation (token genere cote DB via default gen_random_uuid)
+      // 1) INSERT invitation (sync, ~100ms) — seul point bloquant.
       const { data: inv, error: insErr } = await supabase
         .from("invitations")
         .insert({
@@ -86,27 +86,37 @@ export default function InviteClient({ open, onClose, coachId, onInvited, onBulk
         .single();
       if (insErr) throw insErr;
 
-      // Call edge function send-invite
-      const { data: { session } } = await supabase.auth.getSession();
-      const jwt = session?.access_token;
-      if (!jwt) throw new Error(t("iv.error_session_expired"));
-
-      const fnRes = await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-invite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
-        body: JSON.stringify({ invitation_id: inv.id }),
-      });
-      const fnJson = await fnRes.json();
-      if (!fnRes.ok || !fnJson.success) {
-        console.warn("[send-invite] non-critique:", fnJson);
-        // On ne throw pas — l'invitation est creee, le coach peut resend plus tard
-        toast.info(t("iv.toast_email_not_sent"));
-      } else {
-        toast.success(t("iv.toast_sent").replace("{email}", mail));
-      }
-
+      // 2) UX optimistic : on toast + ferme modal IMMÉDIATEMENT.
+      // L'envoi du mail (Resend via Edge function) prend 1-3s — on ne fait pas
+      // attendre le coach. L'invitation est créée en DB, le pire cas si l'email
+      // ne part pas = le coach renvoie manuellement (bouton "Renvoyer" dans la
+      // liste invitations).
+      toast.success(t("iv.toast_sent").replace("{email}", mail));
       if (onInvited) onInvited(inv);
       onClose?.();
+
+      // 3) Fire-and-forget l'email — silencieux si OK, toast d'avertissement
+      // discret si Resend a planté pour que le coach sache (sans bloquer la UX).
+      (async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const jwt = session?.access_token;
+          if (!jwt) return; // session expirée — le coach verra au prochain refresh
+          const fnRes = await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-invite`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+            body: JSON.stringify({ invitation_id: inv.id }),
+          });
+          const fnJson = await fnRes.json().catch(() => ({}));
+          if (!fnRes.ok || !fnJson.success) {
+            console.warn("[send-invite] async fail:", fnJson);
+            toast.info(t("iv.toast_email_not_sent"));
+          }
+        } catch (e) {
+          console.warn("[send-invite] async exception:", e?.message);
+          toast.info(t("iv.toast_email_not_sent"));
+        }
+      })();
     } catch (e) {
       setError(e.message || t("iv.error_generic"));
       setSending(false);
