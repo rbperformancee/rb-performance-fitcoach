@@ -20,20 +20,23 @@ html, body, #root {
    (turquoise / orange / rouge / violet) restent identiques car ils
    fonctionnent dans les 2 modes. */
 :root {
-  /* Accents — communs aux 2 modes */
+  /* Accents — communs aux 2 modes (turquoise reste lisible sur blanc ET noir) */
   --accent: #02d1ba;
+  --accent-2: #4ade80;
   --accent-dim: rgba(2,209,186,0.12);
   --accent-glow: rgba(2,209,186,0.25);
   --accent-orange: #f97316;
   --accent-purple: #a78bfa;
   --accent-red: #ef4444;
   --accent-blue: #60a5fa;
+  --red: #ef4444; /* alias historique */
 
   /* Backgrounds dark */
   --bg: #050505;            /* fond principal page */
   --bg-elevated: #0a0a0a;   /* cards, modals, headers */
   --bg-2: rgba(255,255,255,0.025);
   --bg-3: rgba(255,255,255,0.04);
+  --bg-4: rgba(255,255,255,0.06);
   --bg-overlay: rgba(0,0,0,0.7); /* fond modal */
 
   /* Borders dark */
@@ -41,14 +44,26 @@ html, body, #root {
   --border-2: rgba(255,255,255,0.1);
   --border-strong: rgba(255,255,255,0.18);
 
-  /* Text dark */
+  /* Text dark — text-2/3 ici en solid pour rester lisible
+     sur fonds non purs (cards, overlays). Si tu veux du alpha
+     pur pour un compose visuel doux, utilise rgba directement. */
   --text: #f5f5f5;
-  --text-2: rgba(255,255,255,0.55);
-  --text-3: rgba(255,255,255,0.25);
+  --text-2: #9ca3af;
+  --text-3: #6b7280;
   --text-mute: rgba(255,255,255,0.15);
 
-  --radius: 16px;
+  /* Layout / typo / motion. --radius : 12px pour preserver le rendu
+     existant (le 2e :root historique gagnait avec 12px avant dedup). */
+  --radius: 12px;
+  --radius-sm: 8px;
   --shadow: 0 4px 24px rgba(0,0,0,0.4);
+
+  --font:         'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body:    'DM Sans', -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-display: 'Syne', sans-serif;
+  --mono:         'JetBrains Mono', monospace;
+  --display:      'Syne', sans-serif;
 
   /* color-scheme controls native form widgets, scrollbars */
   color-scheme: dark;
@@ -71,6 +86,7 @@ html, body, #root {
   --bg-elevated: #ffffff;   /* blanc pur pour cards/modals (avec shadow) */
   --bg-2: #ffffff;
   --bg-3: #f9fafb;          /* gris-100 — hover/sub-card */
+  --bg-4: #f4f4f5;          /* zinc-100 — equivalent rgba(255,255,255,0.06) en dark */
   --bg-overlay: rgba(0,0,0,0.5);
 
   /* Borders light — visibles mais discretes */
@@ -540,32 +556,8 @@ input:focus {
 }
 
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@200;400;500;700&display=swap');
-
-:root {
-  --font-display: 'Syne', sans-serif;
-  --font-body:    'DM Sans', -apple-system, sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
-  --bg: #050505;
-  --bg-2: rgba(255,255,255,0.025);
-  --bg-3: rgba(255,255,255,0.04);
-  --bg-4: rgba(255,255,255,0.06);
-  --border:    rgba(255,255,255,0.08);
-  --border-2:  rgba(255,255,255,0.13);
-  --text:      #f5f5f5;
-  --text-2:    #9ca3af;
-  --text-3:    #6b7280;
-  --accent:        #02d1ba;
-  --accent-2:      #4ade80;
-  --accent-dim:    rgba(2,209,186,0.12);
-  --accent-glow:   rgba(2,209,186,0.25);
-  --red:       #ef4444;
-  --radius:    12px;
-  --radius-sm: 8px;
-  --font:      'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --mono:      'JetBrains Mono', monospace;
-  --display:   'Syne', sans-serif;
-}
+/* :root + @import fonts deja definis tout en haut du fichier
+   (un seul bloc pour eviter conflits cascade en mode light). */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 14px; -webkit-tap-highlight-color: transparent; }
