@@ -63,8 +63,39 @@ export function usePushNotifications(arg) {
     if (perm === 'granted') await subscribe();
     return perm;
   }, [subscribe]);
+  // resetSubscription : force la régénération d'une sub neuve côté Apple/FCM.
+  // Use case : la sub a été silently invalidée par Apple Push Service (cas
+  // connu sur iOS où Apple accepte sent:1 mais ne délivre plus). L'utilisateur
+  // ne reçoit plus rien sans erreur côté serveur. Un simple re-subscribe ne
+  // suffit pas car getSubscription() retourne la vieille sub valide côté JS.
+  // → On unsubscribe explicitement, on supprime la row côté DB, puis on
+  //   refait subscribe() qui génère un endpoint neuf.
+  const resetSubscription = useCallback(async () => {
+    try {
+      if (!('serviceWorker' in navigator) || !VAPID_PUBLIC_KEY) {
+        return { ok: false, reason: 'unsupported' };
+      }
+      const reg = await navigator.serviceWorker.ready;
+      const oldSub = await reg.pushManager.getSubscription();
+      const oldEndpoint = oldSub?.endpoint;
+      // 1) Unsubscribe côté SW
+      if (oldSub) {
+        try { await oldSub.unsubscribe(); } catch {}
+      }
+      // 2) Supprime la row côté DB (matching endpoint pour pas wiper d'autres devices)
+      if (oldEndpoint) {
+        await supabase.from('push_subscriptions').delete().eq('endpoint', oldEndpoint);
+      }
+      // 3) Re-subscribe (génère un endpoint neuf si Apple/FCM coopèrent)
+      await subscribe();
+      return { ok: true, oldEndpoint };
+    } catch (e) {
+      console.error('[push] resetSubscription failed:', e);
+      return { ok: false, reason: e.message };
+    }
+  }, [subscribe]);
   useEffect(() => {
     if (permission === 'granted' && (clientId || coachId)) subscribe();
   }, [clientId, coachId, permission, subscribe]);
-  return { permission, subscribed, requestPermission };
+  return { permission, subscribed, requestPermission, resetSubscription };
 }
