@@ -1138,42 +1138,198 @@ body {
 }
 
 /* ===========================================================
-   THEME — Dark (default) + Light mode overrides
+   THEME — Light mode : overrides des CLASSES CSS hardcodees.
+   Les inline-style overrides sont definis tout en haut du fichier
+   (ligne ~111). Ici on cible les .topbar, .session-name, .prog-name
+   etc. qui ecrivent en #ffffff via regles CSS classiques —
+   non capturees par [style*="..."].
    =========================================================== */
-html[data-theme="light"] {
-  background: #f7f7f8;
-  color: #0a0a0a;
+
+/* Topbar / bottom nav : noirs + flou en dark → blanc cassé + flou en light */
+html[data-theme="light"] .topbar {
+  background: rgba(255,255,255,0.85) !important;
+  border-bottom: 1px solid rgba(24,24,27,0.08) !important;
+  box-shadow: 0 1px 0 rgba(24,24,27,0.04) !important;
 }
-html[data-theme="light"] body {
-  background: #f7f7f8;
-  color: #0a0a0a;
+html[data-theme="light"] .topbar-name { color: #18181b !important; }
+html[data-theme="light"] .topbar-logo-img {
+  background: #f4f4f5 !important;
+  border-color: rgba(24,24,27,0.08) !important;
 }
-/* Inverse les fonds principaux les plus utilises */
-html[data-theme="light"] [style*="background:#0a0a0a"],
-html[data-theme="light"] [style*="background: #0a0a0a"],
-html[data-theme="light"] [style*="background:#050505"],
-html[data-theme="light"] [style*="background: #050505"],
-html[data-theme="light"] [style*="background:#0f0f0f"],
-html[data-theme="light"] [style*="background: #0f0f0f"] {
+html[data-theme="light"] .topbar-logo-fallback {
+  background: #f4f4f5 !important;
+  border-color: rgba(24,24,27,0.08) !important;
+}
+html[data-theme="light"] .topbar-import-btn {
+  border-color: rgba(24,24,27,0.12) !important;
+  color: #52525b !important;
+}
+html[data-theme="light"] .topbar-import-btn:hover {
+  background: #f4f4f5 !important;
+  color: #18181b !important;
+}
+html[data-theme="light"] .bottom-nav {
+  background: rgba(255,255,255,0.92) !important;
+  border-top: 1px solid rgba(24,24,27,0.08) !important;
+  box-shadow: 0 -1px 0 rgba(24,24,27,0.04) !important;
+}
+html[data-theme="light"] .nav-tab:not(.active) {
+  color: #52525b !important;
+}
+html[data-theme="light"] .nav-tab:not(.active) svg path,
+html[data-theme="light"] .nav-tab:not(.active) svg circle,
+html[data-theme="light"] .nav-tab:not(.active) svg line,
+html[data-theme="light"] .nav-tab:not(.active) svg polyline {
+  stroke: #52525b !important;
+}
+/* .nav-tab.active reste accent #02d1ba + texte noir = OK 2 modes */
+
+/* Main wrapper : fond #050505 hardcode dans la regle CSS → bg page light */
+html[data-theme="light"] .main { background: #f4f4f5 !important; }
+
+/* Programme header : titre en #ffffff → noir zinc */
+html[data-theme="light"] .prog-name { color: #09090b !important; }
+html[data-theme="light"] .prog-eyebrow,
+html[data-theme="light"] .prog-client,
+html[data-theme="light"] .prog-meta { color: #71717a !important; }
+html[data-theme="light"] .dot { color: #d4d4d8 !important; }
+html[data-theme="light"] .prog-header { border-bottom-color: rgba(24,24,27,0.08) !important; }
+
+/* Week / session navigation pills : transparent blanc → gris doux */
+html[data-theme="light"] .week-btn,
+html[data-theme="light"] .session-tab {
+  background: rgba(24,24,27,0.04) !important;
+  border-color: rgba(24,24,27,0.08) !important;
+  color: #52525b !important;
+}
+html[data-theme="light"] .week-btn:hover,
+html[data-theme="light"] .session-tab:hover {
+  border-color: rgba(24,24,27,0.15) !important;
+  color: #18181b !important;
+}
+html[data-theme="light"] .week-btn.active {
+  background: #02d1ba !important;
+  border-color: #02d1ba !important;
+  color: #04201d !important;
+}
+html[data-theme="light"] .session-tab.active {
+  background: rgba(2,209,186,0.12) !important;
+  border-color: rgba(2,209,186,0.45) !important;
+  color: #04201d !important;
+}
+
+/* Session header : nom en #fff → noir */
+html[data-theme="light"] .session-name { color: #09090b !important; }
+html[data-theme="light"] .session-eyebrow,
+html[data-theme="light"] .session-desc { color: #71717a !important; }
+
+/* Exercise cards : titre et inputs */
+html[data-theme="light"] .ex-card {
   background: #ffffff !important;
-  color: #0a0a0a;
+  border-color: rgba(24,24,27,0.08) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.03) !important;
 }
-/* Texte blanc -> texte noir en mode clair */
-html[data-theme="light"] [style*="color:#fff"],
-html[data-theme="light"] [style*="color: #fff"],
-html[data-theme="light"] [style*="color:white"],
-html[data-theme="light"] [style*="color: white"] {
-  color: #0a0a0a !important;
+html[data-theme="light"] .ex-card:hover { border-color: rgba(24,24,27,0.15) !important; }
+html[data-theme="light"] .ex-name { color: #09090b !important; }
+html[data-theme="light"] .ex-num { background: #f4f4f5 !important; }
+html[data-theme="light"] .ex-num span { color: #71717a !important; }
+html[data-theme="light"] .ex-input-label,
+html[data-theme="light"] .ex-last-label,
+html[data-theme="light"] .ex-history-toggle,
+html[data-theme="light"] .ex-input::placeholder,
+html[data-theme="light"] .ex-history-date,
+html[data-theme="light"] .ex-history-reps { color: #71717a !important; }
+html[data-theme="light"] .ex-input {
+  background: #f9fafb !important;
+  border-color: rgba(24,24,27,0.1) !important;
+  color: #09090b !important;
 }
-html[data-theme="light"] [style*="rgba(255,255,255,0.5)"],
-html[data-theme="light"] [style*="rgba(255,255,255,0.4)"],
-html[data-theme="light"] [style*="rgba(255,255,255,0.6)"] {
-  color: rgba(0,0,0,0.55) !important;
+html[data-theme="light"] .ex-input:focus {
+  border-color: #02d1ba !important;
+  background: rgba(2,209,186,0.04) !important;
 }
-html[data-theme="light"] [style*="border: 1px solid rgba(255,255,255"],
-html[data-theme="light"] [style*="border:1px solid rgba(255,255,255"] {
-  border-color: rgba(0,0,0,0.08) !important;
+html[data-theme="light"] .ex-unit { color: #a1a1aa !important; }
+html[data-theme="light"] .ex-save-btn {
+  background: #f4f4f5 !important;
+  border-color: rgba(24,24,27,0.1) !important;
+  color: #52525b !important;
 }
+html[data-theme="light"] .ex-chip-sets {
+  background: rgba(24,24,27,0.06) !important;
+  color: #3f3f46 !important;
+}
+html[data-theme="light"] .ex-chip-rest { background: rgba(24,24,27,0.04) !important; color: #71717a !important; }
+html[data-theme="light"] .ex-progress-row {
+  background: #f9fafb !important;
+  border-color: rgba(24,24,27,0.08) !important;
+}
+html[data-theme="light"] .ex-history-weight,
+html[data-theme="light"] .ex-last-val { color: #18181b !important; }
+html[data-theme="light"] .ex-history-row:hover { background: #f4f4f5 !important; }
+html[data-theme="light"] .ex-delta.neu { color: #71717a !important; }
+
+/* Finisher block */
+html[data-theme="light"] .finisher-block {
+  background: rgba(2,209,186,0.05) !important;
+  border-color: rgba(2,209,186,0.25) !important;
+}
+html[data-theme="light"] .finisher-text { color: #3f3f46 !important; }
+
+/* Section divider */
+html[data-theme="light"] .section-sep { background: rgba(24,24,27,0.08) !important; }
+html[data-theme="light"] .section-header { color: #71717a !important; }
+
+/* Coach dashboard */
+html[data-theme="light"] .coach-header {
+  background: linear-gradient(135deg, rgba(2,209,186,0.06) 0%, transparent 60%) !important;
+  border-bottom: 1px solid rgba(2,209,186,0.18) !important;
+}
+html[data-theme="light"] .stat-card {
+  background: #ffffff !important;
+  border-color: rgba(24,24,27,0.08) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.03) !important;
+}
+html[data-theme="light"] .coach-input {
+  background: #ffffff !important;
+  border-color: rgba(24,24,27,0.1) !important;
+  color: #09090b !important;
+}
+
+/* Skeleton shimmer en light : grays plus marques pour rester visible */
+html[data-theme="light"] .skeleton {
+  background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%) !important;
+  background-size: 200% 100% !important;
+}
+
+/* Demo client frame : noir → blanc */
+html[data-theme="light"] .demo-client-frame { background: #f4f4f5 !important; }
+
+/* Scrollbar light */
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(24,24,27,0.15) !important; }
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(2,209,186,0.4) !important; }
+
+/* === Inline styles : ratisser TOUS les variants de blanc ===
+   React peut sérialiser color en plein de formes différentes :
+   #fff, #FFF, #ffffff, white, rgb(255,255,255), rgba(255,255,255,1).
+   On les attrape toutes. */
+html[data-theme="light"] [style*="color:#FFF"],
+html[data-theme="light"] [style*="color: #FFF"],
+html[data-theme="light"] [style*="color:#FFFFFF"],
+html[data-theme="light"] [style*="color: #FFFFFF"],
+html[data-theme="light"] [style*="color: rgb(255, 255, 255)"],
+html[data-theme="light"] [style*="color:rgb(255,255,255)"],
+html[data-theme="light"] [style*="color: rgba(255, 255, 255, 1)"],
+html[data-theme="light"] [style*="color: #f5f5f5"],
+html[data-theme="light"] [style*="color:#f5f5f5"],
+html[data-theme="light"] [style*="color: #fafafa"],
+html[data-theme="light"] [style*="color:#fafafa"],
+html[data-theme="light"] [style*="color: #eee"],
+html[data-theme="light"] [style*="color:#eee"] {
+  color: #09090b !important;
+}
+
+/* Body global déjà gere ligne 289 — on s'assure juste de pas avoir
+   un override #f7f7f8 qui ressort plus blanc que #f4f4f5. */
 
 /* ===========================================================
    HOVER LIFT — classe utilitaire .card-lift et .lift
