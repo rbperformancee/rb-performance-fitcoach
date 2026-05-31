@@ -55,8 +55,10 @@ function buildHTML(p) {
       const sid = `w${wi + 1}s${si + 1}`;
       const exHtml = (s.exercises || []).map((ex, ei) => {
         const eid = `${sid}e${ei + 1}`;
+        // ermt = nombre de reps cible si l'exercice est un test RM
+        // (1RM/2RM/3RM/5RM/8RM/10RM/15RM…). Vide si exo normal.
         return `
-        <div class="exercise-item" id="ex-${eid}">
+        <div class="exercise-item" id="ex-${eid}"${ex.rmTest ? ` data-rmtest="${escAttr(String(ex.rmTest))}"` : ''}>
           <input id="en-${eid}" value="${escAttr(ex.name)}" />
           <input id="er-${eid}" value="${escAttr(ex.reps)}" />
           <input id="ech-${eid}" value="${escAttr(ex.charge || '')}" />
@@ -65,6 +67,7 @@ function buildHTML(p) {
           <input id="ers-${eid}" value="${escAttr(ex.rest)}" />
           <input id="eg-${eid}" value="${escAttr(ex.group || '')}" />
           <input id="ev-${eid}" value="${escAttr(ex.vidUrl || '')}" />
+          <input id="ermt-${eid}" value="${escAttr(ex.rmTest != null ? String(ex.rmTest) : '')}" />
         </div>`;
       }).join("");
       // Runs / cardio prescrits — sérialisés au format lu par parserProgramme
@@ -165,7 +168,12 @@ ${weeksHtml}
 </body></html>`;
 }
 
-const newExercise = () => ({ id: uid(), name: "", reps: "", charge: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "" });
+// Exercise + flag optionnel rmTest pour signaler "exo en mode test
+// de force max" (1RM / 2RM / 3RM / 5RM / 8RM / 10RM / 15RM, libre).
+// Quand rmTest est non-null, c'est un nombre = reps cibles du test
+// (= N dans NRM). L'athlete loggue le poids souleve + on calcule le
+// 1RM estime via Epley pour calibrer les charges programme suivantes.
+const newExercise = () => ({ id: uid(), name: "", reps: "", charge: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "", rmTest: null });
 const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", bonus: false, warmup: null, runs: [], fieldSessions: [], amraps: [], ergos: [], exercises: [newExercise()] });
 const newWarmupMovement = (name = "", spec = "") => ({ id: uid(), name, spec });
 const newWarmupCircuit = () => ({
@@ -1026,9 +1034,14 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
   else if (personalUrl) videoSource = "personal";
   else if (fallbackHit) videoSource = "fallback";
 
+  // Card style change quand exo est un test RM : fond/border gold pour
+  // signal visuel fort que ce n'est pas un exo standard.
   return (
     <div style={{
-      background: "rgba(255,255,255,0.025)", border: "1px solid " + BORDER,
+      background: ex.rmTest
+        ? "linear-gradient(160deg, rgba(250,204,21,0.06) 0%, rgba(255,255,255,0.02) 100%)"
+        : "rgba(255,255,255,0.025)",
+      border: "1px solid " + (ex.rmTest ? "rgba(250,204,21,0.3)" : BORDER),
       borderRadius: 12, padding: 12, marginBottom: 10,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 6, marginBottom: 10, minWidth: 0 }}>
@@ -1039,15 +1052,46 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
           >⋮⋮</button>
         ) : null}
         <div style={{
-          width: 24, height: 24, borderRadius: 6, background: G_DIM,
+          width: 24, height: 24, borderRadius: 6, background: ex.rmTest ? "rgba(250,204,21,0.15)" : G_DIM,
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 11, fontWeight: 700, color: G, flexShrink: 0,
+          fontSize: 11, fontWeight: 700, color: ex.rmTest ? "#facc15" : G, flexShrink: 0,
+          border: ex.rmTest ? "1px solid rgba(250,204,21,0.4)" : "none",
         }}>{idx + 1}</div>
         <ExercisePicker
           value={ex.name}
           onChange={(v) => update("name", v)}
           onPickFull={({ name, vidUrl }) => onUpdate({ ...ex, name, vidUrl })}
         />
+        {/* Test RM : input nombre libre (1, 2, 3, 5, 8, 10, 15…) qui flag
+            l'exercice comme test de force max. Vide = exo normal. > 0 = test.
+            Quand actif : badge "RM" gold + exo styled gold. L'athlete pourra
+            logger son poids souleve et l'app calculera le 1RM estime (Epley). */}
+        <div title="Test RM : nombre de reps cible (1 = 1RM, 3 = 3RM, etc.) — laisse vide pour un exo normal"
+          style={{ display: "inline-flex", alignItems: "center", gap: 3, height: 24, padding: "0 4px",
+            background: ex.rmTest ? "rgba(250,204,21,0.12)" : "transparent",
+            border: "1px solid " + (ex.rmTest ? "rgba(250,204,21,0.4)" : BORDER),
+            borderRadius: 6, flexShrink: 0,
+          }}>
+          <input
+            type="number" min="1" max="20"
+            value={ex.rmTest ?? ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "" || v === "0") return update("rmTest", null);
+              const n = Math.max(1, Math.min(20, parseInt(v, 10) || 0));
+              update("rmTest", n);
+            }}
+            placeholder="RM"
+            style={{
+              width: isMobile ? 28 : 32, padding: "0 2px", background: "transparent",
+              border: "none", color: ex.rmTest ? "#facc15" : "rgba(255,255,255,0.4)",
+              fontSize: 11, fontWeight: 800, fontFamily: "inherit", outline: "none", textAlign: "center",
+            }}
+          />
+          {ex.rmTest && (
+            <span style={{ fontSize: 9, fontWeight: 800, color: "#facc15", letterSpacing: 0.5, paddingRight: 2 }}>RM</span>
+          )}
+        </div>
         {!isMobile && idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter" style={iconBtn}>↑</button>}
         {!isMobile && idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre" style={iconBtn}>↓</button>}
         <button type="button" onClick={onDuplicate} title="Dupliquer" style={{ ...iconBtn, background: G_DIM, borderColor: "rgba(2,209,186,0.25)", color: G }}>⎘</button>

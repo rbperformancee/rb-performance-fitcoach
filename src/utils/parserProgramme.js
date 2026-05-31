@@ -190,6 +190,19 @@ export function parseProgrammeHTML(htmlString) {
           ""
         ).trim() || null;
 
+        /* Test RM (force max) : nombre de reps cible (1, 2, 3, 5, 8, 10, 15…).
+           Si renseigne et > 0, l'exo est interprete comme un test de force max
+           (NRM). null = exo normal. L'athlete logera son poids souleve, et
+           le 1RM estime sera calcule via formule Epley cote affichage. */
+        const rmTestRaw = (
+          doc.getElementById(`ermt-${eid}`)?.value ||
+          doc.getElementById(`ermt-${eid}`)?.getAttribute("value") ||
+          exEl.getAttribute("data-rmtest") || // fallback : data-rmtest sur le div parent
+          ""
+        ).trim();
+        const rmTestNum = parseInt(rmTestRaw, 10);
+        const rmTest = !isNaN(rmTestNum) && rmTestNum > 0 ? rmTestNum : null;
+
         exercises.push({
           name: exName,
           rawReps,   // ← "4X8-10" tel que saisi — affiché directement dans le chip
@@ -203,6 +216,7 @@ export function parseProgrammeHTML(htmlString) {
           groupType,
           vidUrl,
           thumbUrl,
+          rmTest,    // ← number (N pour NRM) ou null si exo standard
         });
       });
 

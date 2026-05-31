@@ -555,9 +555,22 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             <div style={{ flex: 1, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", fontFamily: "monospace", width: 22, flexShrink: 0 }}>{String(globalIndex + 1).padStart(2, "0")}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "-0.3px" }}>{ex.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "-0.3px" }}>{ex.name}</div>
+                  {ex.rmTest && (
+                    <span title={`Test ${ex.rmTest}RM`}
+                      style={{ fontSize: 8.5, fontWeight: 800, color: "#facc15", background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.3)", padding: "2px 7px", borderRadius: 100, letterSpacing: 0.5 }}>
+                      {ex.rmTest}RM
+                    </span>
+                  )}
+                </div>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginTop: 3 }}>
                   {chipsReps}
+                  {ex.charge && (
+                    <span style={{ color: "rgba(251,191,36,0.85)", fontWeight: 700, marginLeft: 4 }}>
+                      {" · "}{ex.charge}
+                    </span>
+                  )}
                   {ex.tempo && (
                     <>
                       {" · "}
@@ -593,11 +606,34 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                 <svg viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="3" strokeLinecap="round" style={{ width: 16, height: 16 }}><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "-0.3px" }}>{ex.name}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "-0.3px" }}>{ex.name}</div>
+                  {ex.rmTest && (
+                    <span style={{ fontSize: 9, fontWeight: 800, color: "#facc15", background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.3)", padding: "2px 7px", borderRadius: 100, letterSpacing: 0.5 }}>
+                      {ex.rmTest}RM
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
                   {latest && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{latest.weight} kg · {chipsReps}</span>}
                   {deltaPos && <span style={{ fontSize: 11, color: GREEN, fontWeight: 700, background: "rgba(2,209,186,0.08)", padding: "2px 8px", borderRadius: 100 }}>+{delta?.toFixed(1)} kg</span>}
                   {deltaNeg && <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 700, background: "rgba(239,68,68,0.08)", padding: "2px 8px", borderRadius: 100 }}>{delta?.toFixed(1)} kg</span>}
+                  {/* 1RM estime via formule Epley : 1RM = poids × (1 + reps/30).
+                      Affiche uniquement si l'exo est un test RM ET qu'on a un
+                      log avec poids + reps reelles. Tres utile pour le coach
+                      pour calibrer les % de RM dans le programme suivant. */}
+                  {ex.rmTest && latest && latest.weight > 0 && (() => {
+                    const realReps = parseInt(latest.reps, 10) || ex.rmTest;
+                    const e1rm = latest.weight * (1 + realReps / 30);
+                    return (
+                      <span
+                        title={`1RM estimé via formule Epley : ${latest.weight}kg × (1 + ${realReps}/30) = ${e1rm.toFixed(1)}kg`}
+                        style={{ fontSize: 11, fontWeight: 800, color: "#facc15", background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.25)", padding: "3px 9px", borderRadius: 100, letterSpacing: 0.3 }}
+                      >
+                        1RM ≈ {Math.round(e1rm)} kg
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
               {volume > 0 && (
@@ -642,7 +678,28 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-1px", lineHeight: 1.1, marginBottom: 10 }}>{ex.name}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {/* Badge TEST NRM — quand l'exo est un test de force max
+                    (1RM/2RM/3RM/5RM/etc.). Or pour signal visuel fort.
+                    L'athlete sait qu'il doit donner son max. */}
+                {ex.rmTest && (
+                  <span title={`Test de force max — vise ${ex.rmTest} rep${ex.rmTest > 1 ? "s" : ""} maximum`}
+                    style={{ fontSize: 11, fontWeight: 800, color: "#facc15", background: "rgba(250,204,21,0.15)", border: "1px solid rgba(250,204,21,0.4)", padding: "5px 12px", borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 5, letterSpacing: 0.5 }}>
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="8" r="5" />
+                      <path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.12" />
+                    </svg>
+                    TEST {ex.rmTest}RM
+                  </span>
+                )}
                 {chipsReps && <span style={{ fontSize: 11, color: "rgba(2,209,186,0.8)", background: "rgba(2,209,186,0.08)", padding: "5px 12px", borderRadius: 100, fontWeight: 600 }}>{chipsReps}</span>}
+                {ex.charge && (
+                  <span title="Charge prescrite par ton coach" style={{ fontSize: 11, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)", padding: "5px 12px", borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 5, letterSpacing: 0.2 }}>
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6.5 6.5h11l-.5 4-1 7.5h-8l-1-7.5z" /><path d="M9 6.5V4h6v2.5" />
+                    </svg>
+                    {ex.charge}
+                  </span>
+                )}
                 {compound && (
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 100,
