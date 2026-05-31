@@ -345,12 +345,11 @@ export default function RunIntervalTimer({
           </>
         ) : done ? (
           <>
-            <div style={{
-              fontFamily: "ui-monospace, 'SF Mono', monospace",
-              fontSize: 48, fontWeight: 800, color: "rgba(255,255,255,0.85)",
-              letterSpacing: "-2px", lineHeight: 1,
-            }}>
-              ✓
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.85)" }}>
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", marginTop: 8 }}>
               Terminé · {fmt(totalS)}
@@ -392,7 +391,8 @@ export default function RunIntervalTimer({
         }} />
       </div>
 
-      {/* Controls */}
+      {/* Controls — icones SVG inline pour matcher l'esthetique lucide
+          du reste de l'app (plus de glyphes unicode genre "▶ ■ ↻"). */}
       <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
         {!running && !done && (
           <button
@@ -404,8 +404,14 @@ export default function RunIntervalTimer({
               color: "#fff", border: "none", borderRadius: 10,
               fontSize: 12, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase",
               cursor: "pointer", fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}
-          >▶ Démarrer</button>
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            Démarrer
+          </button>
         )}
         {running && (
           <button
@@ -417,8 +423,14 @@ export default function RunIntervalTimer({
               border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10,
               fontSize: 12, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase",
               cursor: "pointer", fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}
-          >■ Arrêter</button>
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <rect x="6" y="6" width="12" height="12" rx="1" />
+            </svg>
+            Arrêter
+          </button>
         )}
         {done && (
           <button
@@ -430,15 +442,41 @@ export default function RunIntervalTimer({
               border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10,
               fontSize: 12, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase",
               cursor: "pointer", fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}
-          >↻ Refaire</button>
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+            Refaire
+          </button>
         )}
       </div>
 
-      {/* Hint sur le son */}
+      {/* Hint sur les feedback — SVG speaker/vibration au lieu des emojis */}
       {!running && !done && (
-        <div style={{ marginTop: 8, fontSize: 9, color: "rgba(255,255,255,0.3)", textAlign: "center", letterSpacing: 0.3 }}>
-          🔊 Bip à chaque transition · 📳 vibration en mode silence
+        <div style={{
+          marginTop: 10, fontSize: 9.5, color: "rgba(255,255,255,0.35)",
+          textAlign: "center", letterSpacing: 0.5,
+          display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%",
+        }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+            </svg>
+            Bip à chaque transition
+          </span>
+          <span style={{ opacity: 0.5 }}>·</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+              <line x1="12" y1="18" x2="12.01" y2="18" />
+            </svg>
+            Vibration silence
+          </span>
         </div>
       )}
     </div>

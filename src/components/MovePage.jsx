@@ -438,9 +438,18 @@ export default function MovePage({ client, appData }) {
                           background: r.done ? "rgba(2,209,186,0.12)" : "rgba(239,68,68,0.08)",
                           color: r.done ? "#02d1ba" : RED,
                           border: `1px solid ${r.done ? "rgba(2,209,186,0.25)" : "rgba(239,68,68,0.2)"}`,
-                          display: "inline-flex", alignItems: "center", gap: 4,
+                          display: "inline-flex", alignItems: "center", gap: 5,
                         }}>
-                          {r.done ? "✓" : "●"} {r.done ? t("move.done") : t("move.todo")}
+                          {r.done ? (
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          ) : (
+                            <svg width="7" height="7" viewBox="0 0 24 24" aria-hidden="true">
+                              <circle cx="12" cy="12" r="6" fill="currentColor" />
+                            </svg>
+                          )}
+                          {r.done ? t("move.done") : t("move.todo")}
                         </div>
                       </div>
 
@@ -700,9 +709,18 @@ export default function MovePage({ client, appData }) {
                 (l'athlete peut avoir fait offline et marquer fait ensuite). */}
             <button
               onClick={() => completeHiitRun(pendingTimer)}
-              style={{ width: "100%", marginTop: 14, padding: 14, background: GREEN, color: "#0a0a0a", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit" }}
+              style={{
+                width: "100%", marginTop: 14, padding: 14,
+                background: GREEN, color: "#0a0a0a", border: "none", borderRadius: 12,
+                fontSize: 13, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase",
+                cursor: "pointer", fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
             >
-              ✓ Marquer comme fait
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Marquer comme fait
             </button>
           </div>
         </div>

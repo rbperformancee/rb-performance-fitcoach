@@ -25,12 +25,32 @@ const GREEN = "#02d1ba";
  * les gens qui veulent dark le soir et light la journee.
  * Le bouton actif est highlight vert. Reactif via useTheme().
  */
+/* Icones SVG lucide-style — moon, sun, sun-moon (auto) — coherent
+   avec le reste de l'app (pas d'emojis qui font tache). */
+const IconMoon = ({ size = 13 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+const IconSun = ({ size = 13 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+);
+const IconAuto = ({ size = 13 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 3a9 9 0 0 0 0 18 9 9 0 0 0 0-18z" />
+    <path d="M12 3a9 9 0 0 1 0 18V3z" fill="currentColor" />
+  </svg>
+);
+
 function ThemeToggleRow({ rowBase, sectionLabel, t }) {
   const { mode, setMode } = useTheme();
   const options = [
-    { value: "dark", label: t("theme.dark") || "Sombre", icon: "🌙" },
-    { value: "auto", label: t("theme.auto") || "Auto", icon: "🌗" },
-    { value: "light", label: t("theme.light") || "Clair", icon: "☀️" },
+    { value: "dark", label: t("theme.dark") || "Sombre", Icon: IconMoon },
+    { value: "auto", label: t("theme.auto") || "Auto", Icon: IconAuto },
+    { value: "light", label: t("theme.light") || "Clair", Icon: IconSun },
   ];
   return (
     <div style={{ padding: "0 22px 18px" }}>
@@ -39,13 +59,14 @@ function ThemeToggleRow({ rowBase, sectionLabel, t }) {
         <div style={{ display: "inline-flex", padding: 3, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, width: "100%", boxSizing: "border-box" }}>
           {options.map((opt) => {
             const active = mode === opt.value;
+            const Icon = opt.Icon;
             return (
               <button
                 key={opt.value}
                 onClick={() => { haptic.selection(); setMode(opt.value); }}
                 style={{
                   flex: 1,
-                  padding: "8px 6px",
+                  padding: "9px 6px",
                   borderRadius: 100,
                   border: "none",
                   background: active ? GREEN : "transparent",
@@ -58,10 +79,10 @@ function ThemeToggleRow({ rowBase, sectionLabel, t }) {
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 6,
+                  gap: 7,
                 }}
               >
-                <span style={{ fontSize: 13 }}>{opt.icon}</span>
+                <Icon size={13} />
                 {opt.label}
               </button>
             );
