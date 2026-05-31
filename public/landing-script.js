@@ -508,7 +508,7 @@ if (!opts.length || !result) return;
 var RESULTS = {
 starter: {
 tag: 'Plan recommandé',
-title: 'Starter — 199€/mois',
+title: 'Starter — 149€/mois',
 desc: 'Parfait pour bâtir tes fondations : dashboard, programme builder, messagerie, jusqu\'à 10 clients. Tu démarres carré, sans surpayer.',
 href: '/founding.html',
 cta: 'Démarrer Starter'
@@ -522,7 +522,7 @@ cta: 'Démarrer Pro'
 },
 elite: {
 tag: 'Plan recommandé',
-title: 'Elite — 499€/mois',
+title: 'Elite — 399€/mois',
 desc: 'Pour scale sans limite : clients illimités, support prioritaire 7j/7, onboarding 1:1, domaine custom inclus. Le maximum.',
 href: '/founding.html',
 cta: 'Démarrer Elite'
@@ -659,8 +659,8 @@ const gainEl     = document.getElementById('roi-gain');
 const multEl     = document.getElementById('roi-multiple');
 const concEl     = document.getElementById('roi-conclusion');
 function sliderToClients(v){ return Math.round(2 + Math.pow(v / 100, 2) * 98); }
-function rbCost(c){ return c <= 5 ? 199 * 12 : 299 * 12; }
-function rbPlan(c){ return c <= 5 ? 'Starter 199€' : 'Pro 299€'; }
+function rbCost(c){ return c <= 5 ? 149 * 12 : 299 * 12; }
+function rbPlan(c){ return c <= 5 ? 'Starter 149€' : 'Pro 299€'; }
 function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
 function update(){
 const raw     = +clientsSlider.value;
