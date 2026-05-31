@@ -14,9 +14,63 @@ import HelpPage from "./HelpPage";
 import AppIcon from "./AppIcon";
 import { useT } from "../lib/i18n";
 import { usePushNotifications } from "../hooks/usePushNotifications";
+import { useTheme } from "../lib/theme";
 import { toast } from "./Toast";
 
 const GREEN = "#02d1ba";
+
+/**
+ * Toggle theme — segment control 3 etats (dark / auto / light).
+ * 'auto' suit la preference systeme (prefers-color-scheme) — utile pour
+ * les gens qui veulent dark le soir et light la journee.
+ * Le bouton actif est highlight vert. Reactif via useTheme().
+ */
+function ThemeToggleRow({ rowBase, sectionLabel, t }) {
+  const { mode, setMode } = useTheme();
+  const options = [
+    { value: "dark", label: t("theme.dark") || "Sombre", icon: "🌙" },
+    { value: "auto", label: t("theme.auto") || "Auto", icon: "🌗" },
+    { value: "light", label: t("theme.light") || "Clair", icon: "☀️" },
+  ];
+  return (
+    <div style={{ padding: "0 22px 18px" }}>
+      <div style={sectionLabel}>{t("theme.section") || "Apparence"}</div>
+      <div style={{ ...rowBase, cursor: "default", padding: 6 }}>
+        <div style={{ display: "inline-flex", padding: 3, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, width: "100%", boxSizing: "border-box" }}>
+          {options.map((opt) => {
+            const active = mode === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => { haptic.selection(); setMode(opt.value); }}
+                style={{
+                  flex: 1,
+                  padding: "8px 6px",
+                  borderRadius: 100,
+                  border: "none",
+                  background: active ? GREEN : "transparent",
+                  color: active ? "#000" : "rgba(255,255,255,0.55)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "background 0.18s, color 0.18s",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <span style={{ fontSize: 13 }}>{opt.icon}</span>
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ProfilePage({ client, onLogout, appData, coachInfo, onDeleteRequest, onShowPrivacy, onShowMentions, onShowCGU }) {
   const t = useT();
@@ -292,13 +346,14 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
 /* ── Modale Paramètres : regroupe notifs / langue / légal / compte ── */
 function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPrivacy, onShowMentions, onShowCGU }) {
   const t = useT();
-  const { permission: pushPerm, requestPermission: requestPush } = usePushNotifications(client?.id);
+  const { permission: pushPerm, requestPermission: requestPush, resetSubscription: resetPush } = usePushNotifications(client?.id);
   // pushOn : on se base sur la permission iOS persistée et NON sur `subscribed`
   // (qui est un useState resetté à false à chaque remount). Sinon le bouton
   // re-affichait 'Activer' à chaque réouverture de la PWA alors que la
   // subscription est déjà active.
   const pushOn = pushPerm === "granted";
   const [pushBusy, setPushBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
 
   const handleEnableNotifs = async () => {
     haptic.light();
@@ -309,6 +364,19 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
       else if (perm === "denied") toast.error(t("settings.toast_notifs_denied"));
       else toast.error(t("settings.toast_notifs_failed"));
     } finally { setPushBusy(false); }
+  };
+
+  // Reset push : utile quand Apple/FCM a silently invalidé la sub.
+  // L'utilisateur ne reçoit plus rien sans erreur côté serveur — ce bouton
+  // force unsubscribe + DELETE row + re-subscribe → nouvel endpoint propre.
+  const handleResetNotifs = async () => {
+    haptic.light();
+    setResetBusy(true);
+    try {
+      const r = await resetPush();
+      if (r.ok) toast.success("Notifications réinitialisées");
+      else toast.error("Échec — réinstalle la PWA");
+    } finally { setResetBusy(false); }
   };
 
   // Empêche le scroll en arrière-plan pendant l'ouverture de la modale
@@ -380,6 +448,22 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
               {t("settings.notifs_help_ios")}
             </div>
           )}
+          {pushOn && (
+            <button
+              onClick={handleResetNotifs}
+              disabled={resetBusy}
+              style={{
+                marginTop: 8, padding: "8px 12px", fontSize: 11, fontWeight: 600,
+                color: "rgba(255,255,255,0.45)", background: "transparent",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8,
+                cursor: resetBusy ? "wait" : "pointer", fontFamily: "inherit",
+                width: "auto", letterSpacing: "0.02em",
+              }}
+              title="Si tu ne reçois plus les notifs, ça force une nouvelle inscription côté Apple/Google"
+            >
+              {resetBusy ? "Réinitialisation…" : "↻ Réinitialiser les notifications"}
+            </button>
+          )}
         </div>
 
         {/* === LANGUE === */}
@@ -390,6 +474,9 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
             <LanguageToggle compact />
           </div>
         </div>
+
+        {/* === THEME === Toggle dark / light / auto (suit OS) */}
+        <ThemeToggleRow rowBase={rowBase} sectionLabel={sectionLabel} t={t} />
 
         {/* === LEGAL === */}
         {(onShowPrivacy || onShowMentions || onShowCGU) && (

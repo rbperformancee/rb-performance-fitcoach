@@ -5,14 +5,16 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineBanner from "./components/OfflineBanner";
 import ConsentAwareAnalytics from "./components/ConsentAwareAnalytics";
 import { initSentry, captureError } from "./lib/sentry";
-import { applyTheme, getStoredTheme } from "./lib/theme";
+import { applyThemeWithMeta, getStoredTheme } from "./lib/theme";
 import { preloadActiveLocale } from "./lib/i18n";
 
 // Init Sentry AVANT le render — captures errors during initial mount
 initSentry();
 
-// Init theme avant le render pour eviter le flash
-applyTheme(getStoredTheme());
+// Init theme avant le render pour eviter le flash (couche bas-niveau,
+// pas besoin de React). Inclut sync meta theme-color pour la barre
+// statut iOS PWA + tabs Chrome.
+applyThemeWithMeta(getStoredTheme());
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
