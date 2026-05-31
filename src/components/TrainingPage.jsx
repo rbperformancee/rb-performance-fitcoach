@@ -3,6 +3,8 @@ import CountdownBlockCard from "./CountdownBlockCard";
 import RunIntervalTimer from "./RunIntervalTimer";
 import { supabase } from "../lib/supabase";
 import { ExerciseCard } from "./ExerciseCard";
+import { findVideo } from "../data/exerciseVideos";
+import { findFallbackVideo } from "../data/fallbackVideos";
 import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
 import FieldSessionCard from "./FieldSessionCard";
 import { uploadChatPhoto } from "../lib/chatMedia";
@@ -447,6 +449,29 @@ function _CountdownBlockCardInline_DEPRECATED({
 // Affiche : tours [01/03] (anneau de progression), liste compacte des mouvements,
 // bouton "Tour suivant". Quand tous les tours sont done → collapse en ligne
 // discrète "✓ Échauffement validé". État persisté via localStorage par session.
+// Resout l'URL video pour un mouvement d'echauffement (nom seul).
+// Meme pattern qu'ExerciseCard : 1) lib perso (findVideo) puis 2) lib
+// externe (findFallbackVideo). Retourne {url, source} ou null.
+function resolveWarmupVideo(name) {
+  if (!name) return null;
+  const personal = findVideo(name);
+  if (personal) return { url: "https://youtu.be/" + personal, source: "personal" };
+  const fallback = findFallbackVideo(name);
+  if (fallback && fallback.url) return { url: fallback.url, source: "fallback", creator: fallback.creator };
+  return null;
+}
+
+// Extrait l'ID YouTube depuis n'importe quel format d'URL pour
+// construire l'embed url (no-cookie domain pour la perf + privacy).
+function getYouTubeEmbedUrl(url) {
+  if (!url) return null;
+  try {
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([\w-]{11})/);
+    if (!m) return null;
+    return `https://www.youtube-nocookie.com/embed/${m[1]}?modestbranding=1&rel=0&playsinline=1`;
+  } catch { return null; }
+}
+
 function WarmupCard({ warmup, weekIdx, sessionIdx }) {
   const KEY = `rb_warmup_${weekIdx}_${sessionIdx}`;
   const totalRounds = warmup?.rounds || 3;
@@ -458,6 +483,9 @@ function WarmupCard({ warmup, weekIdx, sessionIdx }) {
   const [done, setDone] = useState(() => !!readState().done);
   const [round, setRound] = useState(() => Math.max(1, readState().round || 1));
   const [collapsed, setCollapsed] = useState(() => !!readState().done);
+  // Quel mouvement a sa video ouverte (max 1 a la fois, pour ne pas
+  // empiler 5 iframes lourds en memoire sur mobile).
+  const [openedVideoIdx, setOpenedVideoIdx] = useState(null);
 
   useEffect(() => {
     const s = readState();
@@ -558,29 +586,87 @@ function WarmupCard({ warmup, weekIdx, sessionIdx }) {
         </div>
       </div>
 
-      {/* Mouvements — typographie magazine */}
+      {/* Mouvements — typographie magazine + detection video auto.
+          Chaque mouvement cherche sa video dans lib perso > lib externe.
+          Si trouvee : bouton play ▶ a droite, ouvre iframe inline en
+          dessous (lazy load, 1 seul ouvert a la fois pour la perf). */}
       <div style={{ display: "flex", flexDirection: "column", paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        {warmup.movements.map((m, mi) => (
-          <div key={mi} style={{
-            display: "flex", alignItems: "baseline", gap: 10,
-            padding: "9px 0",
-            borderBottom: mi < warmup.movements.length - 1 ? "1px dashed rgba(255,255,255,0.04)" : "none",
-          }}>
-            <span style={{
-              width: 22, flexShrink: 0, fontSize: 9.5, fontWeight: 700,
-              color: "rgba(255,255,255,0.28)",
-              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-            }}>{String(mi + 1).padStart(2, "0")}</span>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: -0.2 }}>
-              {m.name}
-            </div>
-            <div style={{
-              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-              fontSize: 12, fontWeight: 700, color: G, letterSpacing: -0.3,
-              flexShrink: 0, opacity: 0.85,
-            }}>{m.spec}</div>
-          </div>
-        ))}
+        {warmup.movements.map((m, mi) => {
+          const vid = resolveWarmupVideo(m.name);
+          const embed = vid ? getYouTubeEmbedUrl(vid.url) : null;
+          const isOpen = openedVideoIdx === mi;
+          return (
+            <React.Fragment key={mi}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "9px 0",
+                borderBottom: mi < warmup.movements.length - 1 && !isOpen ? "1px dashed rgba(255,255,255,0.04)" : "none",
+              }}>
+                <span style={{
+                  width: 22, flexShrink: 0, fontSize: 9.5, fontWeight: 700,
+                  color: "rgba(255,255,255,0.28)",
+                  fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+                }}>{String(mi + 1).padStart(2, "0")}</span>
+                <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: -0.2 }}>
+                  {m.name}
+                </div>
+                <div style={{
+                  fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+                  fontSize: 12, fontWeight: 700, color: G, letterSpacing: -0.3,
+                  flexShrink: 0, opacity: 0.85,
+                }}>{m.spec}</div>
+                {embed && (
+                  <button
+                    type="button"
+                    onClick={() => setOpenedVideoIdx(isOpen ? null : mi)}
+                    title={isOpen ? "Fermer la vidéo" : "Voir la démo"}
+                    aria-label={isOpen ? "Fermer la vidéo" : "Voir la démo"}
+                    style={{
+                      flexShrink: 0,
+                      width: 26, height: 26, borderRadius: "50%",
+                      background: isOpen ? G : "rgba(2,209,186,0.1)",
+                      border: "1px solid " + (isOpen ? G : "rgba(2,209,186,0.3)"),
+                      color: isOpen ? "#04201d" : G,
+                      cursor: "pointer", fontFamily: "inherit",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      transition: "background .15s, transform .15s",
+                    }}
+                  >
+                    {isOpen ? (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    ) : (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+              </div>
+              {isOpen && embed && (
+                <div style={{ padding: "4px 0 12px", borderBottom: mi < warmup.movements.length - 1 ? "1px dashed rgba(255,255,255,0.04)" : "none" }}>
+                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", borderRadius: 10, overflow: "hidden", background: "#000" }}>
+                    <iframe
+                      src={embed}
+                      title={`Démo ${m.name}`}
+                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      loading="lazy"
+                    />
+                  </div>
+                  {vid.source === "fallback" && vid.creator && (
+                    <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.35)", textAlign: "right", marginTop: 4, fontStyle: "italic", letterSpacing: 0.2 }}>
+                      Démo externe · {vid.creator}
+                    </div>
+                  )}
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
       </div>
 
       {/* Notes (optionnelles) */}
@@ -590,8 +676,12 @@ function WarmupCard({ warmup, weekIdx, sessionIdx }) {
         </div>
       )}
       {warmup.restBetween && (
-        <div style={{ marginTop: 8, fontSize: 9.5, color: "rgba(255,255,255,0.35)", letterSpacing: 0.5, textAlign: "center" }}>
-          ⌁ {warmup.restBetween} entre tours
+        <div style={{ marginTop: 8, fontSize: 9.5, color: "rgba(255,255,255,0.35)", letterSpacing: 0.5, textAlign: "center", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, width: "100%" }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <polyline points="12 7 12 12 15 14" />
+          </svg>
+          <span>{warmup.restBetween} entre tours</span>
         </div>
       )}
 
