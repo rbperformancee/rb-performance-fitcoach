@@ -98,6 +98,10 @@
     {
       "path": "/api/cron-auto-validate-sessions",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron-push-hygiene",
+      "schedule": "0 5 * * *"
     }
   ],
   "redirects": [
