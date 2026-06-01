@@ -1652,6 +1652,16 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                     )}
                   </div>
                 )}
+                {/* Target / allure en mode continu : le coach peut prescrire
+                    une consigne longue ("4'50-4'55/km · allure seuil stable",
+                    "Footing progressif + 5×100m lignes + mobilite") qu'on
+                    affiche ici. En mode fractionne, target est deja rendu
+                    inline avec le ratio reps×work au-dessus. */}
+                {!isFrac && r.target && (
+                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.7)", fontWeight: 500, lineHeight: 1.5, marginBottom: 8, paddingLeft: 10, borderLeft: "2px solid rgba(2,209,186,0.4)" }}>
+                    {r.target}
+                  </div>
+                )}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
                   {r.distance && (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>

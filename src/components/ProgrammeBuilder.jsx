@@ -1537,9 +1537,13 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
               })}
             </div>
           )}
-          {/* Champs fractionné quand activé */}
+          {/* Champs fractionné — 3 colonnes (reps × work × rest) avec target
+              sorti sur sa propre ligne en dessous (textarea), pour pouvoir
+              ecrire des allures detaillees type
+              '1: 4'15 / 2: 4'10 / 3-5: 4'00 / 6-8: 3'55'
+              ou 'Footing progressif + 5×100m lignes + mobilite hanches'. */}
           {isFrac && (
-            <div style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr", gap: 6, marginBottom: 6 }}>
               <input
                 type="number" min="1" max="50"
                 value={r.repeats ?? ""}
@@ -1557,12 +1561,6 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
                 value={r.rest || ""}
                 onChange={(e) => updateRun(i, { ...r, rest: e.target.value })}
                 placeholder="Récup (30s, 1'30)"
-                style={{ minWidth: 0, padding: "7px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
-              />
-              <input
-                value={r.target || ""}
-                onChange={(e) => updateRun(i, { ...r, target: e.target.value })}
-                placeholder="Allure / temps cible (ex 4'15-4'20/km · 1'42 par 400m)"
                 style={{ minWidth: 0, padding: "7px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 11, fontFamily: "inherit", outline: "none" }}
               />
             </div>
@@ -1606,6 +1604,29 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
               />
             ))}
           </div>
+          {/* Target / Allure — sur sa propre ligne, full-width, pour pouvoir
+              ecrire des allures longues / multi-parts type
+              '1: 4'15 / 2: 4'10 / 3-5: 4'00 / 6-8: 3'55' ou
+              'Footing progressif + 5×100m lignes + mobilite hanches/chevilles'.
+              Affiche dans LES DEUX modes (continu + fractionne) car un
+              echauffement / EF a aussi une allure cible. Textarea pour que
+              tout le contenu reste visible sans scroll horizontal. */}
+          <textarea
+            value={r.target || ""}
+            onChange={(e) => updateRun(i, { ...r, target: e.target.value })}
+            placeholder={isFrac
+              ? "Allure / temps cible (ex 4'15-4'20/km · 1'42 par 400m · ou progressif 4'30→3'55)"
+              : "Allure / consigne (ex 4'50-4'55/km seuil · Footing très calme 5'30-6'00/km · Footing progressif + 5×100m lignes)"}
+            rows={2}
+            style={{
+              width: "100%", boxSizing: "border-box",
+              marginTop: 6, padding: "7px 9px",
+              background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.22)",
+              borderRadius: 8, color: "#fff", fontSize: 11.5,
+              fontFamily: "inherit", outline: "none", resize: "vertical", lineHeight: 1.5,
+              minHeight: 38,
+            }}
+          />
         </div>
         );
       })}
