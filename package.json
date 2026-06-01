@@ -52,6 +52,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "health": "node scripts/health-check.js",
+    "migrate": "node scripts/apply-migration.mjs",
+    "migrate:dry": "node scripts/apply-migration.mjs --dry-run",
     "test": "react-scripts test --watchAll=false",
     "test:watch": "react-scripts test",
     "test:e2e": "playwright test --project=chromium",
