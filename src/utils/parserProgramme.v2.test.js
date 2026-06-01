@@ -180,12 +180,20 @@ describe("parserProgramme — runs prescrits + finisher", () => {
 
   test("run avec tous les champs", () => {
     const run = result.weeks[0].sessions[0].runs[0];
+    // Depuis le commit fractionné, les runs ont 5 champs supplementaires
+    // (target/work/repeats/blocks/blockRest) → null en run prescrit basique,
+    // remplis en mode fractionne avancé.
     expect(run).toEqual({
       name: "Endurance fondamentale",
       distance: "5 km",
       duration: "30 min",
       bpm: "130-150",
       rest: "2 min",
+      target: null,
+      work: null,
+      repeats: null,
+      blocks: null,
+      blockRest: null,
     });
   });
 

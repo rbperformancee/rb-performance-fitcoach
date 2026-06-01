@@ -13,12 +13,15 @@ describe("parseReps", () => {
     expect(parseReps("4×8-10")).toEqual({ sets: 4, reps: "8-10", rawReps: "4×8-10" });
   });
 
-  test("format reps seul '8-10'", () => {
-    expect(parseReps("8-10")).toEqual({ sets: null, reps: "8-10", rawReps: "8-10" });
+  test("format reps seul '8-10' (pyramide 2 series)", () => {
+    // Le parser interprete les patterns `n-m[-p…]` comme pyramide : chaque
+    // valeur = 1 serie. "8-10" = 2 series, "12-10-8" = 3 series.
+    expect(parseReps("8-10")).toEqual({ sets: 2, reps: "8-10", rawReps: "8-10" });
   });
 
-  test("format unique '8'", () => {
-    expect(parseReps("8")).toEqual({ sets: null, reps: "8", rawReps: "8" });
+  test("format unique '8' (= 1 serie)", () => {
+    // Un nombre seul (sans separateur) = 1 serie a N reps.
+    expect(parseReps("8")).toEqual({ sets: 1, reps: "8", rawReps: "8" });
   });
 
   test("avec espaces '4 X 8-10'", () => {
