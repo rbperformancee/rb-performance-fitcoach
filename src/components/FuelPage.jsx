@@ -40,13 +40,30 @@ const hasBarcodeDetector = typeof window !== "undefined" && "BarcodeDetector" in
 // et autoplay est rejete meme avec les bons attributs. Snap-photo natif
 // marche a 100% via capture=environment, c'est l'experience la plus fiable.
 // Detection large : UA iPhone/iPad/iPod OU iPad qui se fait passer pour Mac
-// (iOS 13+ par defaut sur iPad : 'Macintosh' dans le UA + touch).
+// (iOS 13+ par defaut sur iPad : 'Macintosh' dans le UA + touch). On ratisse
+// 4 signaux pour eviter les angles morts (iOS Safari avec 'Demande Site
+// Bureau' active perd 'iPhone' du UA, certains in-app browsers iOS aussi).
+//
+// Escape hatch : ?scan=snap dans l'URL force snap-photo, peu importe la
+// detection (debug si on rate encore un cas dans la nature).
 const IS_IOS = (() => {
   if (typeof navigator === "undefined" || typeof window === "undefined") return false;
+  // 0. Override URL : ?scan=snap force snap-photo
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("scan") === "snap") return true;
+  } catch { /* no-op */ }
   const ua = navigator.userAgent || "";
+  // 1. UA standard : iPhone/iPad/iPod
   if (/iPad|iPhone|iPod/.test(ua)) return true;
-  // iPadOS 13+ : UA = "Mac" mais touch points > 0
+  // 2. iPadOS 13+ : UA = "Mac" mais touch points > 1
   if (ua.includes("Mac") && navigator.maxTouchPoints > 1) return true;
+  // 3. navigator.platform legacy (iOS Safari avec 'Demande Site Bureau' :
+  //    UA passe en 'Mac' mais platform reste 'iPhone' sur certaines versions)
+  const platform = (navigator.platform || "").toLowerCase();
+  if (/iphone|ipad|ipod/.test(platform)) return true;
+  // 4. iOS standalone PWA : navigator.standalone existe uniquement sur iOS
+  if (typeof window.navigator !== "undefined" && "standalone" in window.navigator) return true;
   return false;
 })();
 
