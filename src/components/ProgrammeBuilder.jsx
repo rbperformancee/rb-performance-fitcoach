@@ -193,6 +193,8 @@ const newWeek = (n = 1) => ({ id: uid(), name: `Semaine ${n}`, sessions: [newSes
 // Suggestions communes pour les champs exercice (autocomplete au focus).
 // Fourchettes exhaustives (force, hypertrophie, endurance, drop sets, special).
 const REPS_SUGGESTIONS = [
+  // Test RM — flag automatique côté athlete (badge gold + estim 1RM Epley)
+  "1RM", "2RM", "3RM", "5RM", "8RM", "10RM", "12RM", "15RM",
   // Force / Power
   "1X1", "2X1", "3X1", "5X1", "10X1",
   "5X2", "6X2", "7X2", "8X2", "10X2",
@@ -1070,43 +1072,43 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
           onChange={(v) => update("name", v)}
           onPickFull={({ name, vidUrl }) => onUpdate({ ...ex, name, vidUrl })}
         />
-        {/* Test RM : input nombre libre (1, 2, 3, 5, 8, 10, 15…) qui flag
-            l'exercice comme test de force max. Vide = exo normal. > 0 = test.
-            Quand actif : badge "RM" gold + exo styled gold. L'athlete pourra
-            logger son poids souleve et l'app calculera le 1RM estime (Epley). */}
-        <div title="Test RM : nombre de reps cible (1 = 1RM, 3 = 3RM, etc.) — laisse vide pour un exo normal"
-          style={{ display: "inline-flex", alignItems: "center", gap: 3, height: 24, padding: "0 4px",
-            background: ex.rmTest ? "rgba(250,204,21,0.12)" : "transparent",
-            border: "1px solid " + (ex.rmTest ? "rgba(250,204,21,0.4)" : BORDER),
-            borderRadius: 6, flexShrink: 0,
-          }}>
-          <input
-            type="number" min="1" max="20"
-            value={ex.rmTest ?? ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === "" || v === "0") return update("rmTest", null);
-              const n = Math.max(1, Math.min(20, parseInt(v, 10) || 0));
-              update("rmTest", n);
-            }}
-            placeholder="RM"
-            style={{
-              width: isMobile ? 28 : 32, padding: "0 2px", background: "transparent",
-              border: "none", color: ex.rmTest ? "#facc15" : "rgba(255,255,255,0.4)",
-              fontSize: 11, fontWeight: 800, fontFamily: "inherit", outline: "none", textAlign: "center",
-            }}
-          />
-          {ex.rmTest && (
-            <span style={{ fontSize: 9, fontWeight: 800, color: "#facc15", letterSpacing: 0.5, paddingRight: 2 }}>RM</span>
-          )}
-        </div>
+        {/* Badge "TEST NRM" visible quand ex.rmTest != null. Le RM est SETTE
+            depuis le champ Reps en dessous (taper "3RM" / "1RM" / "5RM" ou
+            via les suggestions au top de REPS_SUGGESTIONS). Pas d'input
+            separe ici — le coach tape directement dans Reps. */}
+        {ex.rmTest && (
+          <div title={`Test ${ex.rmTest}RM — 1RM estime calcule cote athlete (Epley)`}
+            style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 24, padding: "0 8px",
+              background: "rgba(250,204,21,0.14)", border: "1px solid rgba(250,204,21,0.4)",
+              borderRadius: 6, flexShrink: 0, fontSize: 10, fontWeight: 800,
+              color: "#facc15", letterSpacing: 0.5, textTransform: "uppercase",
+            }}>
+            Test {ex.rmTest}RM
+          </div>
+        )}
         {!isMobile && idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter" style={iconBtn}>↑</button>}
         {!isMobile && idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre" style={iconBtn}>↓</button>}
         <button type="button" onClick={onDuplicate} title="Dupliquer" style={{ ...iconBtn, background: G_DIM, borderColor: "rgba(2,209,186,0.25)", color: G }}>⎘</button>
         <button type="button" onClick={onRemove} title="Supprimer" style={{ ...iconBtn, fontSize: 14 }}>×</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr 1fr", gap: 6 }}>
-        <SuggestField label="Reps" value={ex.reps} onChange={(v) => update("reps", v)} placeholder="4X8-10 · 3X20m · 3X30s" suggestions={REPS_SUGGESTIONS} />
+        <SuggestField
+          label="Reps"
+          value={ex.reps}
+          // Derivation auto rmTest depuis le champ Reps. Le coach tape "3RM",
+          // "1RM", "5RM", etc. → on extrait N et on flag rmTest=N. Pattern
+          // accepte aussi "3X1RM" (3 series de 1RM) → on prend le N juste
+          // avant "RM". Si plus aucun RM dans la string → reset rmTest=null.
+          // Comme ca le NRM vit dans le meme champ que les reps, pas dans
+          // un widget separe — coherent avec "5X8", "4X8-10", "3X30s", etc.
+          onChange={(v) => {
+            const m = String(v || "").match(/(\d+)\s*RM\b/i);
+            const rmTest = m ? Math.max(1, Math.min(20, parseInt(m[1], 10))) : null;
+            onUpdate({ ...ex, reps: v, rmTest });
+          }}
+          placeholder="4X8-10 · 3RM · 3X20m · 3X30s"
+          suggestions={REPS_SUGGESTIONS}
+        />
         <SuggestField label="Charge" value={ex.charge} onChange={(v) => update("charge", v)} placeholder="80kg · 60% 1RM" suggestions={CHARGE_SUGGESTIONS} accent="#fbbf24" />
         <SuggestField label="Tempo" value={ex.tempo} onChange={(v) => update("tempo", v)} placeholder="3010" suggestions={TEMPO_SUGGESTIONS} />
         <SuggestField label="RIR" value={ex.rir} onChange={(v) => update("rir", v)} placeholder="1" suggestions={RIR_SUGGESTIONS} />
