@@ -509,7 +509,7 @@ var RESULTS = {
 starter: {
 tag: 'Plan recommandé',
 title: 'Starter — 149€/mois',
-desc: 'Parfait pour bâtir tes fondations : dashboard, programme builder, messagerie, jusqu\'à 10 clients. Tu démarres carré, sans surpayer.',
+desc: 'Parfait pour bâtir tes fondations : dashboard, programme builder, messagerie, jusqu\'à 5 clients. Tu démarres carré, sans surpayer.',
 href: '/founding.html',
 cta: 'Démarrer Starter'
 },
