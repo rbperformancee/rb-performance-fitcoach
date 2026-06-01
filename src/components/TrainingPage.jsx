@@ -1560,7 +1560,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             );
           };
           // Regroupe les exercices A1/A2… en supersets : on les enchaîne et
-          // seul le dernier porte le repos (les autres → repos masqué).
+          // seul le dernier porte le repos affiche (les autres → repos masqué).
           return buildExerciseBlocks(exs).map((block, bi) => {
             if (!block.isSuperset) {
               const { ex, index } = block.members[0];
@@ -1573,6 +1573,18 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             const firstIdx = memberIdxs[0];
             const lastIdx = memberIdxs[memberIdxs.length - 1];
             const blockIsCurrent = firstUndoneIdx !== -1 && firstUndoneIdx >= firstIdx && firstUndoneIdx <= lastIdx;
+
+            // Le repos du superset = on cherche dans TOUS les membres, en
+            // priorisant le dernier (A2 ou A3). Si le coach a mis le repos
+            // uniquement sur A1, on le récupère quand même. Bug avant ce fix :
+            // seul le rest du DERNIER membre était lu — si le coach mettait
+            // le rest sur A1 (cas fréquent), il était silencieusement masqué.
+            let supersetRest = "";
+            for (let m = block.members.length - 1; m >= 0; m--) {
+              const r = block.members[m].ex.rest;
+              if (r && String(r).trim()) { supersetRest = r; break; }
+            }
+
             return (
               <div key={"sset-" + bi} style={{ marginBottom: 10, border: "1px solid rgba(2,209,186,0.18)", borderRadius: 18, padding: "8px 8px 0", background: "rgba(2,209,186,0.025)" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 7, padding: "5px 8px 9px" }}>
@@ -1582,10 +1594,22 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                     </svg>
                     {supersetTypeLabel(block.members.length)} · {block.key}
                   </span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>— une série de chaque, sans repos</span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
+                    — une série de chaque, sans repos
+                    {supersetRest ? <> · puis <strong style={{ color: "rgba(2,209,186,0.9)" }}>⏱ {supersetRest}</strong> avant le tour suivant</> : null}
+                  </span>
                 </div>
                 {block.members.map(({ ex, index }, mi) =>
-                  renderCard(mi === block.members.length - 1 ? ex : { ...ex, rest: "" }, index, blockIsCurrent)
+                  // Dernier membre porte le repos effectif du superset (lu
+                  // sur n'importe lequel des membres). Les autres : repos masqué
+                  // (pas de pause entre A1 et A2 par definition).
+                  renderCard(
+                    mi === block.members.length - 1
+                      ? { ...ex, rest: supersetRest }
+                      : { ...ex, rest: "" },
+                    index,
+                    blockIsCurrent
+                  )
                 )}
               </div>
             );
