@@ -29,7 +29,7 @@ const { rateLimit, attachRequestId } = require("./_security");
 const { captureException } = require("./_sentry");
 const { RB_SUPPORT_EMAIL } = require("./_branding");
 const {
-  PILLARS, QUESTIONS, KITS, ACQUISITION_REFRAME,
+  PILLARS, QUESTIONS, KITS, resolveKit, ACQUISITION_REFRAME,
 } = require("./_diagnostic-content");
 const { computeScores } = require("./_diagnostic-scoring");
 
@@ -73,7 +73,7 @@ function getTransporter() {
 // =============================================================================
 // Email HTML — rapport complet branded RB Perform (table layout, Outlook-safe).
 // =============================================================================
-function buildReportEmail({ firstName, globalScore, pillarScores, band, kit, weakPillarLabel }) {
+function buildReportEmail({ firstName, globalScore, pillarScores, band, kit, weakPillarLabel, fallbackBanner }) {
   const greet = firstName ? escHtml(firstName) : "Coach";
   const pillarRows = Object.entries(pillarScores).map(([pid, score]) => {
     const label = PILLARS[pid].label;
@@ -144,6 +144,11 @@ function buildReportEmail({ firstName, globalScore, pillarScores, band, kit, wea
 
   <tr><td style="padding-bottom:18px;">
     <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:${G};margin-bottom:8px;">Ton pilier le plus faible · ${escHtml(weakPillarLabel)}</div>
+    ${fallbackBanner ? `
+    <div style="background:rgba(245,180,0,0.08);border:1px solid rgba(245,180,0,0.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#f5b400;margin-bottom:6px;">⏳ Kit personnalisé en finition</div>
+      <div style="font-size:13px;line-height:1.55;color:rgba(255,255,255,0.78);">${escHtml(fallbackBanner)}</div>
+    </div>` : ""}
     <h2 style="margin:0;font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.01em;line-height:1.2;">${escHtml(kit.title)}</h2>
   </td></tr>
 
@@ -268,7 +273,10 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: "invalid_answers" });
     }
     const { globalScore, pillarScores, weakPillar, fragilePillars, band } = scoring;
-    const kit = KITS[weakPillar];
+    // resolveKit retombe sur P1 si le kit du pilier faible est encore
+    // marqué placeholder (TODO Rayan). isFallback / fallbackBanner sont
+    // rendus par buildReportEmail + envoyés au front pour l'in-page.
+    const { kit, isFallback, originalPillar, fallbackBanner } = resolveKit(weakPillar);
     const weakPillarLabel = PILLARS[weakPillar].label;
 
     // Persist (best-effort — un échec DB ne doit pas bloquer le rendu du rapport)
@@ -318,7 +326,7 @@ module.exports = async (req, res) => {
           to: cleanEmail,
           replyTo: SMTP_USER,
           subject: `${firstName || "Coach"} → ${globalScore}/100. Voilà ce qui menace ton business.`,
-          html: buildReportEmail({ firstName, globalScore, pillarScores, band, kit, weakPillarLabel }),
+          html: buildReportEmail({ firstName, globalScore, pillarScores, band, kit, weakPillarLabel, fallbackBanner }),
           headers: {
             "List-Unsubscribe": `<mailto:${SMTP_USER}?subject=unsubscribe>`,
             "X-Diagnostic-Id": diagnosticId || "n/a",
@@ -384,6 +392,9 @@ module.exports = async (req, res) => {
       fragilePillars,
       band,
       kit,
+      // Si fallback : front peut afficher un bandeau "kit perso arrive bientôt".
+      // isFallback=false / originalPillar=null / fallbackBanner=null en steady state.
+      kitFallback: isFallback ? { originalPillar, banner: fallbackBanner } : null,
       reframe: ACQUISITION_REFRAME,
       pillarLabels,
     });

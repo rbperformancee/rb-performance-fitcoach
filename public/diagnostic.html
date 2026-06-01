@@ -256,6 +256,9 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(34px,7vw,52px);font-weight:900
 /* Kit card */
 .kit-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:28px;margin-bottom:24px}
 .kit-eyebrow{font-size:10px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#02d1ba;margin-bottom:8px}
+.kit-fallback{background:rgba(245,180,0,0.08);border:1px solid rgba(245,180,0,0.32);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.kit-fallback-tag{font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#f5b400;margin-bottom:6px}
+.kit-fallback-text{font-size:13.5px;line-height:1.6;color:rgba(255,255,255,0.78)}
 .kit-title{font-family:'Inter',sans-serif;font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.015em;line-height:1.2;margin-bottom:16px}
 .kit-diagnostic{font-size:14px;line-height:1.65;color:rgba(255,255,255,0.7);margin-bottom:24px}
 .kit-actions-title{font-size:10px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:14px}
@@ -525,6 +528,10 @@ h1{font-family:'Inter',sans-serif;font-size:clamp(34px,7vw,52px);font-weight:900
   <!-- Kit de réparation -->
   <div class="kit-card">
     <div class="kit-eyebrow" id="kitEyebrow"></div>
+    <div class="kit-fallback" id="kitFallbackBanner" style="display:none;">
+      <div class="kit-fallback-tag">⏳ Kit personnalisé en finition</div>
+      <div class="kit-fallback-text"></div>
+    </div>
     <div class="kit-title" id="kitTitle"></div>
     <div class="kit-diagnostic" id="kitDiagnostic"></div>
     <div class="kit-actions-title">Les 3 actions à enclencher</div>
@@ -850,7 +857,7 @@ async function submitDiagnostic() {
 
 // ---- Result rendering ----
 function renderResult(data) {
-  const { globalScore, pillarScores, weakPillar, weakPillarLabel, band, kit, reframe, pillarLabels } = data;
+  const { globalScore, pillarScores, weakPillar, weakPillarLabel, band, kit, kitFallback, reframe, pillarLabels } = data;
 
   // Greeting
   const fn = document.getElementById("firstName").value.trim();
@@ -898,6 +905,19 @@ function renderResult(data) {
   // Kit
   document.getElementById("kitEyebrow").textContent =
     `Ton pilier le plus faible · ${weakPillarLabel}`;
+
+  // Bandeau de fallback : si le kit servi est un fallback P1 (le kit du
+  // pilier faible est encore en cours de finition), on injecte un bandeau
+  // doré au-dessus du titre. Sinon on s'assure qu'aucun bandeau parasite
+  // ne reste depuis un éventuel rerun.
+  const fallbackBox = document.getElementById("kitFallbackBanner");
+  if (kitFallback && kitFallback.banner) {
+    fallbackBox.style.display = "block";
+    fallbackBox.querySelector(".kit-fallback-text").textContent = kitFallback.banner;
+  } else if (fallbackBox) {
+    fallbackBox.style.display = "none";
+  }
+
   document.getElementById("kitTitle").textContent = kit.title;
   document.getElementById("kitDiagnostic").textContent = kit.diagnostic;
 

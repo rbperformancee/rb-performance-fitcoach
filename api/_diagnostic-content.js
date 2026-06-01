@@ -148,25 +148,26 @@ const KITS = {
   },
 
   // ───────────────────────────────────────────────────────────────────────────
-  // P2 — Rétention / anti-départ (PLACEHOLDER — à remplir par Rayan)
+  // P2 — Rétention / anti-départ (PLACEHOLDER — kits brouillon, fallback P1)
   // ───────────────────────────────────────────────────────────────────────────
-  P2: {
+  // Flag `placeholder: true` détecté par resolveKit() → on envoie le kit P1
+  // au lead avec un bandeau "ton kit personnalisé arrive bientôt". Évite
+  // qu'un lead recoive un email truffé de "[TODO Rayan]".
+  P2: { placeholder: true,
     title: "[TODO Rayan] Tes clients partent et tu le découvres trop tard",
-    diagnostic:
-      "[TODO Rayan] Placeholder rétention. Voir kit P1 pour structure.",
+    diagnostic: "[TODO Rayan] Placeholder rétention. Voir kit P1 pour structure.",
     actions: [
       { title: "[TODO Action 1]", body: "[TODO body]" },
       { title: "[TODO Action 2]", body: "[TODO body]" },
       { title: "[TODO Action 3]", body: "[TODO body]" },
     ],
-    rb_solves:
-      "[TODO Rayan] Anti-churn IA de RB Perform : signaux de départ détectés en amont, alertes coach.",
+    rb_solves: "[TODO Rayan] Anti-churn IA de RB Perform : signaux de départ détectés en amont, alertes coach.",
   },
 
   // ───────────────────────────────────────────────────────────────────────────
-  // P3 — Robustesse base client (PLACEHOLDER)
+  // P3 — Robustesse base client (PLACEHOLDER, fallback P1)
   // ───────────────────────────────────────────────────────────────────────────
-  P3: {
+  P3: { placeholder: true,
     title: "[TODO Rayan] Ton business tient sur 2-3 piliers fragiles",
     diagnostic: "[TODO Rayan] Concentration client trop forte ou trop peu d'actifs.",
     actions: [
@@ -178,9 +179,9 @@ const KITS = {
   },
 
   // ───────────────────────────────────────────────────────────────────────────
-  // P4 — Cash / encaissement (PLACEHOLDER)
+  // P4 — Cash / encaissement (PLACEHOLDER, fallback P1)
   // ───────────────────────────────────────────────────────────────────────────
-  P4: {
+  P4: { placeholder: true,
     title: "[TODO Rayan] Tu cours après ton cash",
     diagnostic: "[TODO Rayan] Encaissement manuel + zéro matelas.",
     actions: [
@@ -192,9 +193,9 @@ const KITS = {
   },
 
   // ───────────────────────────────────────────────────────────────────────────
-  // P5 — Pilotage (PLACEHOLDER)
+  // P5 — Pilotage (PLACEHOLDER, fallback P1)
   // ───────────────────────────────────────────────────────────────────────────
-  P5: {
+  P5: { placeholder: true,
     title: "[TODO Rayan] Tu pilotes à l'aveugle",
     diagnostic: "[TODO Rayan] Pas d'outil, pas de routine de revue, intuition pure.",
     actions: [
@@ -205,6 +206,43 @@ const KITS = {
     rb_solves: "[TODO Rayan] Dashboard MRR + cohortes + alertes hebdo.",
   },
 };
+
+/**
+ * resolveKit(weakPillar) — sélectionne le kit à servir.
+ *
+ * Si le kit du pilier faible est marqué placeholder=true (brouillon, pas
+ * encore validé par Rayan), on retombe sur KIT.P1 (référence) avec un
+ * bandeau qui explique au lead que son kit personnalisé arrive bientôt.
+ *
+ * Évite d'envoyer un email truffé de "[TODO Rayan]" tant que les 4 kits
+ * P2-P5 ne sont pas finalisés. Quand un kit cesse d'être placeholder
+ * (retire la propriété), le routing redevient direct, sans aucun autre
+ * changement de code nécessaire.
+ *
+ * @returns {{
+ *   kit: KitObject,           // toujours non-placeholder, servable tel quel
+ *   isFallback: boolean,      // true = on a remplacé par P1
+ *   originalPillar: string|null,  // 'P2' si fallback, null sinon
+ *   fallbackBanner: string|null,  // texte de bandeau à afficher si fallback
+ * }}
+ */
+function resolveKit(weakPillar) {
+  const candidate = KITS[weakPillar];
+  if (candidate && !candidate.placeholder) {
+    return { kit: candidate, isFallback: false, originalPillar: null, fallbackBanner: null };
+  }
+  // Fallback : on sert P1 (référence stable) avec contexte.
+  const originalLabel = PILLARS[weakPillar]?.label || weakPillar;
+  return {
+    kit: KITS.P1,
+    isFallback: true,
+    originalPillar: weakPillar,
+    fallbackBanner:
+      `Ton kit personnalisé "${originalLabel}" arrive très bientôt. ` +
+      `En attendant, voici les fondations universelles qui s'appliquent à tous les coachs — ` +
+      `commence par là, je te recontacte dès que ton kit ciblé est prêt.`,
+  };
+}
 
 // Ligne d'intro qui neutralise le réflexe "il me faut plus de clients"
 // (cf. argumentation reframe Acquisition, validée par Rayan).
@@ -229,6 +267,7 @@ module.exports = {
   QUESTIONS,
   BANDS,
   KITS,
+  resolveKit,
   ACQUISITION_REFRAME,
   HEALTHY_BUSINESS_ANCHOR,
 };
