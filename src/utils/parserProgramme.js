@@ -48,7 +48,10 @@ function getVal(doc, id) {
 //
 // Précédent du même pattern : `detectRmTest` plus bas (NRM dans reps field).
 // ──────────────────────────────────────────────────────────────────────────
-const PLETNEV_RE = /^\s*(\d+)\s*\(\s*(\d+)\s*\+\s*(\d+)\s*\+\s*(\d+)\s*\+\s*(\d+)\s*\)\s*$/;
+// Le séparateur entre le compteur de rounds et la parenthèse est optionnel :
+// `4 (4+2+6+6)`, `4(4+2+6+6)`, `4X(4+2+6+6)`, `4x(4+2+6+6)`, `4×(4+2+6+6)`.
+// Cohérent avec la convention reps standard du builder (`4X8-10`).
+const PLETNEV_RE = /^\s*(\d+)\s*[xX×]?\s*\(\s*(\d+)\s*\+\s*(\d+)\s*\+\s*(\d+)\s*\+\s*(\d+)\s*\)\s*$/;
 
 export function detectPletnev(rawReps) {
   if (!rawReps || typeof rawReps !== "string") return null;

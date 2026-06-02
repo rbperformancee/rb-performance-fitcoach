@@ -24,6 +24,15 @@ describe("detectPletnev — pattern 'N (a+b+c+d)'", () => {
     expect(detectPletnev("  4  ( 4 + 2 + 6 + 6 )  ")).not.toBeNull();
   });
 
+  test("séparateur X/x/× optionnel entre rounds et parenthèse", () => {
+    // Convention NxR classique du builder — toutes ces formes équivalentes
+    expect(detectPletnev("4X(4+2+6+6)")?.rounds).toBe(4);
+    expect(detectPletnev("4x(4+2+6+6)")?.rounds).toBe(4);
+    expect(detectPletnev("4×(4+2+6+6)")?.rounds).toBe(4);
+    expect(detectPletnev("4 X (4+2+6+6)")?.rounds).toBe(4);
+    expect(detectPletnev("3X(4+2+6+6)")?.phases.map(p => p.reps)).toEqual([4, 2, 6, 6]);
+  });
+
   test("rejette les formats voisins (pas Pletnev)", () => {
     expect(detectPletnev("4x8-10")).toBeNull();
     expect(detectPletnev("5+5+5")).toBeNull();

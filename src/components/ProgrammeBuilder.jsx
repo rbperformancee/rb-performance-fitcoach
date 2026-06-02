@@ -240,8 +240,9 @@ const REPS_SUGGESTIONS = [
   // Dégressive / drop set — un "_" déclenche l'UI guidée (charge qui descend)
   "10_10", "3X12_8", "10_8_6",
   // Méthode Pletnev — contraste 4 phases (exc 1RM → iso 80% → dyn 60% → explo 50%).
-  // Format : N (a+b+c+d) → N rounds, badge Pletnev, décompo affichée à l'athlète.
-  "3 (4+2+6+6)", "4 (4+2+6+6)", "5 (4+2+6+6)",
+  // Format : NX(a+b+c+d) → N rounds, badge Pletnev, décompo affichée à l'athlète.
+  // L'espace/x/×/aucun sont équivalents : "4X(4+2+6+6)" = "4 (4+2+6+6)".
+  "3X(4+2+6+6)", "4X(4+2+6+6)", "5X(4+2+6+6)",
 ];
 
 const TEMPO_SUGGESTIONS = [
@@ -1127,7 +1128,7 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
             const rmTest = m ? Math.max(1, Math.min(20, parseInt(m[1], 10))) : null;
             onUpdate({ ...ex, reps: v, rmTest });
           }}
-          placeholder="4X8-10 · 3RM · 3X30s · 4 (4+2+6+6) = Pletnev"
+          placeholder="4X8-10 · 3RM · 3X30s · 4X(4+2+6+6) = Pletnev"
           suggestions={REPS_SUGGESTIONS}
         />
         <SuggestField label="Charge" value={ex.charge} onChange={(v) => update("charge", v)} placeholder="80kg · 60% 1RM" suggestions={CHARGE_SUGGESTIONS} accent="#fbbf24" />
