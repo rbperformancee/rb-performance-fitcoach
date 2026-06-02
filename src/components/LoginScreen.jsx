@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useT } from '../lib/i18n';
+import { isNative } from '../lib/native';
 
 const G = '#02d1ba';
 
@@ -29,10 +30,18 @@ export function LoginScreen({ onBack }) {
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   // Auto-redirect si deja connecte
+  // Sur Capacitor natif : `/app.html` n'existe pas dans le bundle (uniquement
+  // index.html → React). Si on redirige, WKWebView 404 → cancel → re-render →
+  // re-redirect → boucle (écran blanc). Sur natif on reload `/` qui re-mount
+  // App.jsx, et la session détectée par useAuth fera passer à TrainingPage.
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data?.session?.user) {
-        window.location.href = '/app.html';
+        if (isNative()) {
+          window.location.replace('/');
+        } else {
+          window.location.href = '/app.html';
+        }
       }
     });
   }, []);
@@ -204,7 +213,13 @@ export function LoginScreen({ onBack }) {
         setError(t('login.bad_credentials'));
       } else {
         // Redirect vers app.html, App.jsx detecte le role et affiche le dashboard
-        window.location.href = '/app.html';
+        // Sur natif : `/app.html` n'existe pas → reload `/` qui remonte App.jsx
+        // avec la session fraîchement posée par signInWithPassword.
+        if (isNative()) {
+          window.location.replace('/');
+        } else {
+          window.location.href = '/app.html';
+        }
       }
     } catch (e) {
       setError(t('login.connect_error'));

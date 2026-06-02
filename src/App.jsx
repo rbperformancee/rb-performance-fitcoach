@@ -6,6 +6,7 @@ import { useAppData } from "./hooks/useAppData";
 // Theme appliqué globalement par src/index.js (applyThemeWithMeta avant render).
 // Toggle utilisateur via ProfilePage → useTheme depuis ./lib/theme.
 import { RestTimerProvider } from "./lib/restTimer";
+import { isNative } from "./lib/native";
 // NON lazy : ce flow s'affiche au tout premier render après login. Si lazy avec
 // fallback null, l'utilisateur voit un écran blanc pendant le téléchargement
 // du chunk → import direct.
@@ -1015,7 +1016,12 @@ function AppInner() {
       (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
       window.navigator.standalone === true
     );
-    if (showLogin || isStandalonePWA) {
+    // Capacitor natif : il n'y a pas de landing publique dans le bundle iOS
+    // (uniquement build/index.html → React). Tout `window.location.replace("/")`
+    // recharge index.html → re-render App → re-redirect → boucle infinie
+    // (symptôme observé : écran blanc, WKWebView logs `code=-999` cancelled
+    // toutes les 100ms). Sur natif, on rend directement LoginScreen.
+    if (showLogin || isStandalonePWA || isNative()) {
       return <LoginScreen onBack={() => setShowLogin(false)} />;
     }
     // Cas par defaut : visiteur non-loggue arrivant sur /app.html → redirect
