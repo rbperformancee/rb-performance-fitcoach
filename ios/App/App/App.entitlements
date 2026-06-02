@@ -2,9 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Push Notifications (Wave 5 APNs) -->
+    <!-- Push Notifications (Wave 5 APNs).
+         `production` est requis pour App Store + TestFlight. Le scheme APNs
+         côté serveur (api/send-push.js) doit utiliser api.push.apple.com
+         (et non api.sandbox.push.apple.com qui est pour le sandbox dev).
+         Pour debug local en dev, repasser temporairement à 'development'
+         + APNS_USE_SANDBOX=1 côté serveur. -->
     <key>aps-environment</key>
-    <string>development</string>
+    <string>production</string>
 
     <!-- HealthKit : auto-fill compteur de pas dans WeightChart. Lecture seule
          pour l'instant. Si on active l'écriture (workouts → Apple Health),

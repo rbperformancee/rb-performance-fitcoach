@@ -122,6 +122,45 @@
                 <string>CA92.1</string>
             </array>
         </dict>
+
+        <!-- File Timestamp : utilisé par Capacitor pour lire les meta des fichiers
+             bundle (cache HTML offline, assets statiques copiés depuis build/).
+             Sans déclaration → rejet auto Apple si scan détecte stat()/getattrlist(). -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- C617.1 = Inside the app, access timestamp of file the app
+                     itself created or written to. Bundle files copiés par
+                     Capacitor cap sync rentrent dans ce cas. -->
+                <string>C617.1</string>
+            </array>
+        </dict>
+
+        <!-- Disk Space : potentiellement utilisé par capacitor-health + @capacitor/preferences
+             quand ils vérifient l'espace dispo avant write. Préempt. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- E174.1 = Display disk space info to the user (ou check avant write) -->
+                <string>E174.1</string>
+            </array>
+        </dict>
+
+        <!-- System Boot Time : utilisé par Sentry SDK + diagnostics crash pour
+             établir uptime de session. Inoffensif mais Apple le scanne. -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- 35F9.1 = Measure time between events. Utile pour crash diagnostics. -->
+                <string>35F9.1</string>
+            </array>
+        </dict>
     </array>
 </dict>
 </plist>
