@@ -135,7 +135,9 @@ export function useLogs(programmeName, clientId = null) {
     return () => { cancelled = true; };
   }, [clientId]);
 
-  // Retourne l'historique complet d'un exercice : [{date, weight, reps}]
+  // Retourne l'historique du même (semaine, séance, exo).
+  // Utilisé pour : "as-tu fait CET exo cette semaine ?" (badge done, progression
+  // de la séance courante, gating PDF export). Strictement scope semaine courante.
   const getHistory = useCallback(
     (weekIdx, sessionIdx, exIdx) => {
       const key = buildExKey(programmeName, weekIdx, sessionIdx, exIdx);
@@ -144,13 +146,48 @@ export function useLogs(programmeName, clientId = null) {
     [logs, programmeName]
   );
 
-  // Dernière entrée
+  // Retourne l'historique du même (séance, exo) **toutes semaines confondues**.
+  // C'est ce qu'on affiche dans l'ExerciseCard : "quel poids j'ai mis la
+  // dernière fois sur ce squat" — quelque soit la semaine. Sans ça, en
+  // semaine 2 le client ne voit JAMAIS les charges qu'il a tapées en semaine 1
+  // (bug rapporté en prod 2 juin 2026 : "je vois pas les poids semaine
+  // précédente").
+  //
+  // Regex : match `__wN_s<sessionIdx>_e<exIdx>` pour tout N. Si le coach a
+  // restructuré le programme (ajout/retrait de semaines), les entrées
+  // historiques restent visibles tant que (sessionIdx, exIdx) sont stables.
+  const getCrossWeekHistory = useCallback(
+    (sessionIdx, exIdx) => {
+      const pattern = new RegExp(`__w\\d+_s${sessionIdx}_e${exIdx}$`);
+      const out = [];
+      for (const key of Object.keys(logs)) {
+        if (pattern.test(key)) {
+          const arr = logs[key];
+          if (Array.isArray(arr)) out.push(...arr);
+        }
+      }
+      // Tri chronologique ASC pour que [length-1] soit la séance la plus
+      // récente. Dédup par date au cas où une saisie ait été dupliquée
+      // (la dernière gagne — match avec la sémantique de saveLog qui
+      // delete-then-insert sur (client_id, ex_key, date)).
+      const byDate = new Map();
+      for (const e of out) {
+        if (e && e.date) byDate.set(e.date, e);
+      }
+      return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
+    },
+    [logs]
+  );
+
+  // Dernière entrée toutes semaines confondues — utilisé pour pré-remplir le
+  // poids quand le client ouvre la séance de cette semaine (référence = ce
+  // qu'il a fait la fois précédente, peu importe la semaine).
   const getLatest = useCallback(
     (weekIdx, sessionIdx, exIdx) => {
-      const history = getHistory(weekIdx, sessionIdx, exIdx);
+      const history = getCrossWeekHistory(sessionIdx, exIdx);
       return history.length > 0 ? history[history.length - 1] : null;
     },
-    [getHistory]
+    [getCrossWeekHistory]
   );
 
   // Ajouter / mettre à jour une entrée pour aujourd'hui.
@@ -236,16 +273,19 @@ export function useLogs(programmeName, clientId = null) {
     [programmeName, clientId, logs]
   );
 
-  // Delta entre la dernière et l'avant-dernière entrée
+  // Delta entre la dernière et l'avant-dernière entrée, toutes semaines
+  // confondues. Permet d'afficher "+2.5kg" sur la flèche de progression
+  // semaine-après-semaine (sans ça, le delta n'apparaît qu'à la 2e séance
+  // de la SEMAINE COURANTE — donc jamais en pratique).
   const getDelta = useCallback(
     (weekIdx, sessionIdx, exIdx) => {
-      const history = getHistory(weekIdx, sessionIdx, exIdx);
+      const history = getCrossWeekHistory(sessionIdx, exIdx);
       if (history.length < 2) return null;
       const delta = history[history.length - 1].weight - history[history.length - 2].weight;
       return delta;
     },
-    [getHistory]
+    [getCrossWeekHistory]
   );
 
-  return { getHistory, getLatest, saveLog, getDelta };
+  return { getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta };
 }

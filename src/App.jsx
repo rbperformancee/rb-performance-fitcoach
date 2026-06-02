@@ -502,11 +502,47 @@ function AppInner() {
   });
 
   // ===== MODE DEMO CLIENT (route /demo-client ou ?demo-client=true) =====
-  const [isClientDemo] = React.useState(() => {
+  // Sur natif, on accepte aussi un flag localStorage `rb_demo_autostart` qui
+  // est set par le deep-link handler Capacitor (rbperform://demo-client). Ça
+  // permet de déclencher la démo depuis un lien email/SMS sans passer par
+  // une URL Vercel-rewritten (qui n'existe pas dans le bundle natif).
+  const [isClientDemo, setIsClientDemo] = React.useState(() => {
     if (typeof window === "undefined") return false;
-    return window.location.pathname === "/demo-client"
-      || new URLSearchParams(window.location.search).get("demo-client") === "true";
+    if (window.location.pathname === "/demo-client") return true;
+    if (new URLSearchParams(window.location.search).get("demo-client") === "true") return true;
+    try {
+      if (window.localStorage.getItem("rb_demo_autostart") === "1") {
+        window.localStorage.removeItem("rb_demo_autostart");
+        return true;
+      }
+    } catch (_) {}
+    return false;
   });
+
+  // Capacitor deep-link handler : écoute les URLs ouvertes via le scheme
+  // `rbperform://` (cf CFBundleURLSchemes dans Info.plist). Sur réception
+  // de rbperform://demo-client → bascule isClientDemo en true → l'effect
+  // de auto-login client demo se déclenche.
+  React.useEffect(() => {
+    if (!isNative()) return;
+    let listenerRef = null;
+    (async () => {
+      try {
+        const { App: CapApp } = await import("@capacitor/app").catch(() => ({ App: null }));
+        if (!CapApp) return;
+        listenerRef = await CapApp.addListener("appUrlOpen", (event) => {
+          try {
+            const url = new URL(event.url);
+            // rbperform://demo-client → host = 'demo-client'
+            if (url.host === "demo-client" || url.pathname === "/demo-client") {
+              setIsClientDemo(true);
+            }
+          } catch (_) {}
+        });
+      } catch (_) {}
+    })();
+    return () => { try { listenerRef?.remove(); } catch (_) {} };
+  }, []);
 
   // Demo : pre-fetch les chunks du dashboard EN PARALLELE de l'auth roundtrip.
   // Sans ca, les lazy imports ne demarrent qu'apres user authentifie → 500ms de
@@ -810,7 +846,7 @@ function AppInner() {
   const rawHtml = cloudProgramme || localProgramme;
   const programme = useMemo(() => rawHtml ? expandProgrammeWeeks(parseProgrammeHTML(rawHtml)) : null, [rawHtml]);
 
-  const { getHistory, getLatest, saveLog, getDelta } = useLogs(
+  const { getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta } = useLogs(
     client ? `client_${client.id}` : programme?.name,
     client?.id || null
   );
@@ -1603,6 +1639,7 @@ function AppInner() {
                   activeSession={activeSession}
                   setActiveSession={setActiveSession}
                   getHistory={getHistory}
+                  getCrossWeekHistory={getCrossWeekHistory}
                   getLatest={getLatest}
                   saveLog={saveLog}
                   getDelta={getDelta}

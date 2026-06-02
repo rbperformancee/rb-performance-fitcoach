@@ -436,7 +436,7 @@ function CompoundSetRow({ index, done, isActive, type, segments, currentEntry, d
   );
 }
 
-export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getLatest, saveLog, getDelta, nextExName, ghostData, bandColor, isActive }) {
+export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta, nextExName, ghostData, bandColor, isActive }) {
   const t = useT();
   const restTimer = useRestTimer();
   const [expanded, setExpanded] = useState(false);
@@ -462,7 +462,16 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     if (completedSetsRef.current.length > 0) return completedSetsRef.current.length;
     try { return parseInt(localStorage.getItem(storageKey) || "0"); } catch { return 0; }
   });
-  const history = getHistory(weekIdx, sessionIdx, exIdx);
+  // Historique CROSS-semaine : le client doit voir ce qu'il a tapé sur le
+  // même squat (sessionIdx, exIdx) la semaine précédente, peu importe la
+  // semaine courante. Sans ça, il croit avoir perdu ses charges chaque lundi.
+  // getCrossWeekHistory est fourni par useLogs ; getLatest + getDelta sont
+  // déjà cross-week côté hook depuis le fix 2 juin 2026.
+  // Fallback `getHistory` (intra-semaine) si un caller ne passe pas le hook
+  // mis à jour — ne devrait plus jamais arriver mais évite un blanc.
+  const history = (typeof getCrossWeekHistory === "function"
+    ? getCrossWeekHistory(sessionIdx, exIdx)
+    : getHistory(weekIdx, sessionIdx, exIdx));
   const latest = getLatest(weekIdx, sessionIdx, exIdx);
   const delta = getDelta(weekIdx, sessionIdx, exIdx);
 

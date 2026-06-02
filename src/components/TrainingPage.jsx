@@ -774,7 +774,7 @@ function computeTodaysSession(programmeMeta, programme) {
   return { type: "session", week: weekIdx, session: sessionIdx, sessionsPerWeek };
 }
 
-export default function TrainingPage({ client, programme, programmeMeta, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getLatest, saveLog, getDelta, onStartSession }) {
+export default function TrainingPage({ client, programme, programmeMeta, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta, onStartSession }) {
   const t = useT();
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
@@ -1548,6 +1548,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                   exIdx={ei}
                   globalIndex={ei}
                   getHistory={getHistory}
+                  getCrossWeekHistory={getCrossWeekHistory}
                   getLatest={getLatest}
                   saveLog={saveLog}
                   getDelta={getDelta}
