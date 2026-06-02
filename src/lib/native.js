@@ -67,6 +67,30 @@ export function isWeb() {
 }
 
 /**
+ * Navigation post-auth (login, logout, account delete, set-password, etc.).
+ *
+ * Web : redirige vers `webPath` (ex: `/app.html`, `/login`, `/`) — ces chemins
+ * sont des rewrites Vercel qui pointent vers la bonne entry HTML.
+ *
+ * Natif Capacitor : `webPath` n'existe PAS dans le bundle (uniquement
+ * `index.html`). Toute redirection vers `/app.html`, `/login`, etc. déclenche
+ * un 404 WKWebView → re-mount index → re-render → re-redirect → boucle
+ * infinie (écran blanc, logs `setMainDocumentError code=-999`). On reload
+ * `/` qui sert index.html, et useAuth + App.jsx redéterminent la vue depuis
+ * la session Supabase courante (login si signOut, dashboard si signIn).
+ *
+ * Cf [[feedback-capacitor-navigation-loop]] dans la memory pour le contexte.
+ */
+export function navigateAfterAuth(webPath) {
+  if (typeof window === "undefined") return;
+  if (isNative()) {
+    window.location.replace("/");
+  } else {
+    window.location.href = webPath;
+  }
+}
+
+/**
  * Petit objet introspectable pour debug — à logger uniquement en dev.
  * Ne JAMAIS appeler côté athlète prod, ça pollue les outils.
  */

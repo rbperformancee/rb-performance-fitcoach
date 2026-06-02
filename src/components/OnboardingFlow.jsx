@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
 import { useT, getLocale } from "../lib/i18n";
+import { navigateAfterAuth } from "../lib/native";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -1030,7 +1031,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
               if (isApplication) {
                 // Mode application : retour au site, pas de supabase update
                 haptic.success();
-                window.location.href = "/";
+                navigateAfterAuth("/");
                 return;
               }
               if (client?.id) {

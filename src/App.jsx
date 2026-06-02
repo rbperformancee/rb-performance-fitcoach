@@ -6,7 +6,7 @@ import { useAppData } from "./hooks/useAppData";
 // Theme appliqué globalement par src/index.js (applyThemeWithMeta avant render).
 // Toggle utilisateur via ProfilePage → useTheme depuis ./lib/theme.
 import { RestTimerProvider } from "./lib/restTimer";
-import { isNative } from "./lib/native";
+import { isNative, navigateAfterAuth } from "./lib/native";
 // NON lazy : ce flow s'affiche au tout premier render après login. Si lazy avec
 // fallback null, l'utilisateur voit un écran blanc pendant le téléchargement
 // du chunk → import direct.
@@ -461,7 +461,7 @@ function AppInner() {
   });
   if (authRoute === "login")  return <LoginScreen />;
   if (authRoute === "join")   return <Suspense fallback={null}><JoinPage /></Suspense>;
-  if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => { window.location.href = "/app.html"; }} /></Suspense>;
+  if (authRoute === "set-password") return <Suspense fallback={null}><SetPasswordPage onComplete={() => navigateAfterAuth("/app.html")} /></Suspense>;
 
   // QA local : ?preview_onboarding=1 → rendu direct du CoachOnboarding avec mock data,
   // bypass auth/coach detection. Utile pour visualiser le design sans flow login.
@@ -1077,6 +1077,9 @@ function AppInner() {
     const exitQA = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete("test_onboarding");
+      // QA-only flag, jamais touché sur natif (param querystring) — mais on
+      // gate quand même pour cohérence.
+      if (isNative()) { window.location.replace("/"); return; }
       window.location.href = url.pathname + url.search;
     };
     return <Suspense fallback={null}><OnboardingFlow client={client || { email: user.email, id: null }} onComplete={exitQA} /></Suspense>;
@@ -1158,7 +1161,7 @@ function AppInner() {
     const _ctx = getContextMsg();
     return (
       <div style={{minHeight:'100dvh',background:'#050505',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden',maxWidth:isClientDemo?430:'none',margin:isClientDemo?'0 auto':0}}>
-        {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
+        {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
         {isClientDemo && <div style={{height:52}} />}
 
         {/* Particules d'ambiance */}
@@ -1387,9 +1390,11 @@ function AppInner() {
       }
       toast.success("Compte supprimé. Email de confirmation envoyé.");
       // On laisse le toast lisible quelques secondes avant la redirection.
+      // Apple 5.1.1(v) : ce flow DOIT marcher pour App Review. Sur natif,
+      // /login n'existe pas → navigateAfterAuth reload '/' qui montre LoginScreen.
       setTimeout(async () => {
         try { await supabase.auth.signOut(); } catch {}
-        window.location.href = "/login";
+        navigateAfterAuth("/login");
       }, 2500);
     } catch (e) {
       console.error("[delete account] failed:", e);
@@ -1542,12 +1547,12 @@ function AppInner() {
           ? {paddingTop: 52}
           : {minHeight:'100dvh', background:'#050505', position:'relative', width:'100%', overflowX:'hidden'}
         }>
-          {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
+          {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
           {page === 'training' && <TrainLocked client={client} sessionsDone={_sessionsDone} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} />}
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
-          {page === 'profile' && <ProfilePage client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Désactivé en mode démo") : () => supabase.auth.signOut().then(() => { window.location.href = "/login"; })} supabase={supabase} appData={appData} onDeleteRequest={() => setShowDeleteConfirm(true)} onShowPrivacy={() => setShowPrivacy(true)} onShowMentions={() => setShowMentions(true)} onShowCGU={() => setShowCGU(true)} />}
+          {page === 'profile' && <ProfilePage client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Désactivé en mode démo") : () => supabase.auth.signOut().then(() => navigateAfterAuth("/login"))} supabase={supabase} appData={appData} onDeleteRequest={() => setShowDeleteConfirm(true)} onShowPrivacy={() => setShowPrivacy(true)} onShowMentions={() => setShowMentions(true)} onShowCGU={() => setShowCGU(true)} />}
           <nav style={{position:'fixed',bottom:'calc(env(safe-area-inset-bottom,0px) + 20px)',left:'50%',transform:'translateX(-50%)',display:'flex',gap:0,background:'rgba(18,18,18,0.88)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:100,padding:5,zIndex:100,WebkitBackdropFilter: 'blur(20px)', backdropFilter: 'blur(20px)',WebkitBackdropFilter:'blur(20px)'}}>
             {[
               {id:'training',icon:<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' style={{width:20,height:20}}><path d='M6 4v16M18 4v16M2 12h4M18 12h4M6 8h12M6 16h12'/></svg>},
@@ -1574,7 +1579,7 @@ function AppInner() {
           ? {}
           : {width:'100%',position:'relative',background:'#050505',minHeight:'100dvh',overflowX:'hidden'}
         }>
-          {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => { window.location.href = "/"; }); }} />}
+          {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
           {isClientDemo && <div style={{height:52}} />}
           <Suspense fallback={<PageFallback />}>
             {page === "training" ? (
@@ -1607,7 +1612,7 @@ function AppInner() {
                   key={page}
                   client={client}
                   coachInfo={coachInfo}
-                  onLogout={isClientDemo ? () => toast.info("Desactive en mode demo") : () => supabase.auth.signOut().then(() => { window.location.href = "/login"; })}
+                  onLogout={isClientDemo ? () => toast.info("Desactive en mode demo") : () => supabase.auth.signOut().then(() => navigateAfterAuth("/login"))}
                   supabase={supabase}
                   appData={appData}
                   onDeleteRequest={() => setShowDeleteConfirm(true)}

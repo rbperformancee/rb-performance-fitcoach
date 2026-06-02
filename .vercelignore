@@ -1,0 +1,13 @@
+# Xcode build artifacts (ne JAMAIS uploader sur Vercel — peuvent atteindre
+# 300MB+ de XCFrameworks SPM + ModuleCache, et n'ont rien à faire en prod web).
+build/sim/
+ios/App/build/
+ios/App/Pods/
+*.xcarchive
+*.ipa
+*.dSYM
+DerivedData/
+
+# Misc
+.DS_Store
+*.log

@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { useT } from "../../lib/i18n";
+import { navigateAfterAuth } from "../../lib/native";
 import DataExportSection from "./DataExportSection";
 import HelpMigrationGuide from "./HelpMigrationGuide";
 import CoachReferralSection from "./CoachReferralSection";
@@ -163,7 +164,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
       // Sign out + redirect après 3s pour laisser le toast être lu
       setTimeout(async () => {
         await supabase.auth.signOut();
-        window.location.href = "/";
+        navigateAfterAuth("/");
       }, 3000);
     } catch (e) {
       toast.error(e.message || "Suppression indisponible");
@@ -212,7 +213,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
   const logout = async () => {
     if (isDemo) { toast.success(t("mc.toast_demo_logout_disabled")); return; }
     await supabase.auth.signOut();
-    window.location.href = "/login";
+    navigateAfterAuth("/login");
   };
 
   const initials = (coachData?.full_name || "C").split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase();

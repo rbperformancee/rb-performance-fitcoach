@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
+import { navigateAfterAuth } from "../../lib/native";
 import ClientHome from "./ClientHome";
 import ClientProgramme from "./ClientProgramme";
 import ClientMessages from "./ClientMessages";
@@ -83,7 +84,7 @@ export default function ClientApp({ user }) {
             {t("ca.no_account_desc")}
           </div>
           <button
-            onClick={() => supabase.auth.signOut().then(() => { window.location.href = "/login"; })}
+            onClick={() => supabase.auth.signOut().then(() => navigateAfterAuth("/login"))}
             style={{ marginTop: 10, background: "transparent", border: ".5px solid rgba(255,255,255,.15)", color: "rgba(255,255,255,.6)", padding: "10px 18px", borderRadius: 100, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
             {t("ca.logout")}

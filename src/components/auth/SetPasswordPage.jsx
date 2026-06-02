@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
+import { navigateAfterAuth } from "../../lib/native";
 
 /**
  * SetPasswordPage — le coach crée son mot de passe après paiement Stripe.
@@ -50,7 +51,7 @@ export default function SetPasswordPage({ onComplete }) {
         if (typeof onComplete === "function") {
           onComplete();
         } else {
-          window.location.href = "/app.html";
+          navigateAfterAuth("/app.html");
         }
       }, 2000);
     } catch (err) {

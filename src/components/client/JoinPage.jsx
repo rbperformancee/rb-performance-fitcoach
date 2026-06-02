@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
 import { AuthVisual, AuthStyles, G } from "../auth/AuthShared";
+import { navigateAfterAuth } from "../../lib/native";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -130,7 +131,7 @@ export default function JoinPage() {
       });
       if (signInErr) throw signInErr;
 
-      window.location.href = "/";
+      navigateAfterAuth("/");
     } catch (e) {
       setFormError(e.message || t("jp.signup_error"));
       setSubmitting(false);

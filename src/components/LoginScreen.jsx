@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useT } from '../lib/i18n';
-import { isNative } from '../lib/native';
+import { isNative, navigateAfterAuth } from '../lib/native';
 
 const G = '#02d1ba';
 
@@ -37,11 +37,7 @@ export function LoginScreen({ onBack }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data?.session?.user) {
-        if (isNative()) {
-          window.location.replace('/');
-        } else {
-          window.location.href = '/app.html';
-        }
+        navigateAfterAuth('/app.html');
       }
     });
   }, []);
@@ -213,13 +209,8 @@ export function LoginScreen({ onBack }) {
         setError(t('login.bad_credentials'));
       } else {
         // Redirect vers app.html, App.jsx detecte le role et affiche le dashboard
-        // Sur natif : `/app.html` n'existe pas → reload `/` qui remonte App.jsx
-        // avec la session fraîchement posée par signInWithPassword.
-        if (isNative()) {
-          window.location.replace('/');
-        } else {
-          window.location.href = '/app.html';
-        }
+        // (sur natif, helper reload '/' au lieu — /app.html n'existe pas dans le bundle).
+        navigateAfterAuth('/app.html');
       }
     } catch (e) {
       setError(t('login.connect_error'));

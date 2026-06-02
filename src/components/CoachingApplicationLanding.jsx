@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { navigateAfterAuth } from "../lib/native";
 
 const OnboardingFlow = lazy(() => import("./OnboardingFlow"));
 
@@ -73,7 +74,7 @@ export default function CoachingApplicationLanding() {
   if (showForm) {
     return (
       <Suspense fallback={<div style={{ minHeight: "100dvh", background: BG }} />}>
-        <OnboardingFlow client={null} mode="application" onComplete={() => { window.location.href = "/"; }} />
+        <OnboardingFlow client={null} mode="application" onComplete={() => navigateAfterAuth("/")} />
       </Suspense>
     );
   }

@@ -29,7 +29,13 @@ const config: CapacitorConfig = {
     },
   },
   server: {
-    iosScheme: 'https',
+    // 'capacitor' au lieu de 'https' — sur iOS 26 + Capacitor 8, le scheme
+    // 'https' déclenche un FrameLoadInterruptedByPolicyChange (code 102) qui
+    // empêche le bundle local de charger dans WKWebView. Le scheme natif
+    // 'capacitor' contourne la policy ATS et reste compatible avec l'origin
+    // 'capacitor://localhost'. Aucun impact sur le bundle web (cf gating
+    // isNative dans usePushNotifications, useAuth, etc.).
+    iosScheme: 'capacitor',
     androidScheme: 'https',
   },
 };

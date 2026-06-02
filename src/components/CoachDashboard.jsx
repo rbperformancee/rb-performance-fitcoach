@@ -13,6 +13,7 @@ import DemoBanner from "./DemoBanner";
 import { toast } from "./Toast";
 import React, { useState, useEffect, useRef } from "react";
 import DOMPurify from "dompurify";
+import { navigateAfterAuth } from "../lib/native";
 import { supabase } from "../lib/supabase";
 import { generateInvoicePDF } from "../utils/invoicePDF";
 import ProgrammeBuilder from "./ProgrammeBuilder";
@@ -5916,7 +5917,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     { icon: "users",    label: t("cd.menu_my_account"), onClick: () => { setShowMoreMenu(false); setShowAnalytics(false); setShowSettings(false); setShowMonCompte(true); } },
     { type: "separator" },
     { icon: "message",  label: t("cd.menu_help"), color: "rgba(255,255,255,0.4)", onClick: () => { setShowMoreMenu(false); toast.success(t("cd.toast_help")); } },
-    { icon: "arrow-right", label: t("cd.menu_logout"), color: RED, onClick: () => { setShowMoreMenu(false); if (isDemo) { toast.info(t("cd.toast_demo_logout")); return; } supabase.auth.signOut().then(() => { window.location.href = "/login"; }); } },
+    { icon: "arrow-right", label: t("cd.menu_logout"), color: RED, onClick: () => { setShowMoreMenu(false); if (isDemo) { toast.info(t("cd.toast_demo_logout")); return; } supabase.auth.signOut().then(() => navigateAfterAuth("/login")); } },
   ];
   const MoreMenu = showMoreMenu ? (
     <div style={{
@@ -5988,9 +5989,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     }}>
       {isDemo && (
         <DemoBanner onSignup={() => {
-          supabase.auth.signOut().then(() => {
-            window.location.href = "/";
-          });
+          supabase.auth.signOut().then(() => navigateAfterAuth("/"));
         }} />
       )}
       <style>{`

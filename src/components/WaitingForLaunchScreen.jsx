@@ -18,6 +18,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { navigateAfterAuth } from "../lib/native";
 
 const G = "#02d1ba";
 
@@ -55,7 +56,7 @@ export default function WaitingForLaunchScreen({ coach }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = "/login";
+    navigateAfterAuth("/login");
   };
 
   const firstName = (coach?.full_name || "").split(" ")[0] || null;

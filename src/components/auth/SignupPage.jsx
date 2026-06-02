@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { AuthVisual, AuthStyles, GoogleIcon } from "./AuthShared";
 import { useT } from "../../lib/i18n";
 import { addBreadcrumb } from "../../lib/sentry";
+import { navigateAfterAuth } from "../../lib/native";
 
 /**
  * SignupPage — inscription coach email/password.
@@ -109,7 +110,7 @@ export default function SignupPage() {
         return;
       }
       // Session active immediatement → dashboard
-      window.location.href = "/";
+      navigateAfterAuth("/");
     } catch (e) {
       setError(t("signup.err_signup_retry"));
       setLoading(false);

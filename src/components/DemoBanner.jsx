@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { navigateAfterAuth } from '../lib/native';
 
 /**
  * DemoBanner — barre teal en haut quand un visiteur explore le dashboard
@@ -23,7 +24,7 @@ export default function DemoBanner({ onSignup }) {
         if (t <= 1) {
           clearInterval(timer);
           supabase.auth.signOut().then(() => {
-            window.location.href = '/?demo_expired=true';
+            navigateAfterAuth('/?demo_expired=true');
           });
           return 0;
         }
