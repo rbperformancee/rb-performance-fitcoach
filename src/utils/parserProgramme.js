@@ -32,9 +32,52 @@ function getVal(doc, id) {
  * Parse "8-10"             → { sets: null, reps: "8-10", rawReps: "8-10" }
  * Parse ""                  → { sets: null, reps: null, rawReps: null }
  */
+// ──────────────────────────────────────────────────────────────────────────
+// Méthode Pletnev — protocole russe de force/contraste en 4 phases par
+// "round" (cycle). Le coach saisit le format compact `N (a+b+c+d)` dans le
+// champ reps :
+//   - N           = nombre de rounds (cycles)
+//   - a (4 par défaut) = reps excentriques (6s) @ 1RM
+//   - b (2 par défaut) = reps isométriques 90° (6s) @ 80%
+//   - c (6 par défaut) = reps dynamiques @ 60% avec tempo 20X0
+//   - d (6 par défaut) = reps explosives @ 50%
+//
+// Détection : retourne null si le pattern ne matche pas. Sinon retourne un
+// objet structuré que les UI (TrainingPage athlète, ProgrammeBuilder coach)
+// peuvent consommer pour afficher la décomposition.
+//
+// Précédent du même pattern : `detectRmTest` plus bas (NRM dans reps field).
+// ──────────────────────────────────────────────────────────────────────────
+const PLETNEV_RE = /^\s*(\d+)\s*\(\s*(\d+)\s*\+\s*(\d+)\s*\+\s*(\d+)\s*\+\s*(\d+)\s*\)\s*$/;
+
+export function detectPletnev(rawReps) {
+  if (!rawReps || typeof rawReps !== "string") return null;
+  const m = rawReps.match(PLETNEV_RE);
+  if (!m) return null;
+  const [, rounds, eccentric, isometric, dynamic, explosive] = m;
+  return {
+    rounds: parseInt(rounds, 10),
+    phases: [
+      { kind: "eccentric",  reps: parseInt(eccentric, 10),  loadPct: 100, loadLabel: "1RM",  tempo: "6s descente", note: "Excentrique contrôlée 6 secondes" },
+      { kind: "isometric",  reps: parseInt(isometric, 10),  loadPct: 80,  loadLabel: "80%",  tempo: "iso 6s à 90°", note: "Tenue isométrique 6s à mi-amplitude (~90°)" },
+      { kind: "dynamic",    reps: parseInt(dynamic, 10),    loadPct: 60,  loadLabel: "60%",  tempo: "20X0",         note: "Concentrique explosive — tempo 20X0" },
+      { kind: "explosive",  reps: parseInt(explosive, 10),  loadPct: 50,  loadLabel: "50%",  tempo: "explosif",      note: "Reps explosives, vitesse max" },
+    ],
+  };
+}
+
 export function parseReps(raw) {
   if (!raw || raw === "—" || raw === "") return { sets: null, reps: null, rawReps: null };
   const trimmed = raw.trim();
+
+  // Méthode Pletnev : si le coach saisit "N (a+b+c+d)", on traite comme N
+  // rounds de 4 phases. sets = N pour que le compteur de séries reste
+  // cohérent (chaque round = une grosse "série composite"). Le détail des
+  // phases est consommé séparément par TrainingPage via detectPletnev().
+  const pletnev = detectPletnev(trimmed);
+  if (pletnev) {
+    return { sets: pletnev.rounds, reps: "Méthode Pletnev", rawReps: raw };
+  }
 
   // Tokenise les blocs "NxR" successifs separes par 2+ espaces.
   // 2+ espaces = volonte explicite du coach (un seul espace est ambigu :

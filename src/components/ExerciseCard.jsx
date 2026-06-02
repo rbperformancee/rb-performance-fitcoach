@@ -6,6 +6,7 @@ import haptic from "../lib/haptic";
 import { useT, getLocale } from "../lib/i18n";
 import { findVideo } from "../data/exerciseVideos";
 import { findFallbackVideo } from "../data/fallbackVideos";
+import { detectPletnev } from "../utils/parserProgramme";
 
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
@@ -468,6 +469,14 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   // donné par le multiplicateur "NX" (ex. "3X5+5+5" = 3 séries cluster).
   const compound = parseCompound(ex.reps || ex.rawReps);
 
+  // Méthode Pletnev : si le coach a saisi "N (4+2+6+6)" dans le champ reps,
+  // on détecte la structure des 4 phases (excentrique → iso → dynamique →
+  // explosive) et on affiche le détail à l'athlète. Chaque round = une
+  // série dans le compteur du haut. Override de `compound` (Pletnev est
+  // sémantiquement une notation composée plus structurée).
+  const pletnev = detectPletnev(ex.rawReps || ex.reps);
+  const [showPletnevDetail, setShowPletnevDetail] = useState(false);
+
   // Extraire le nombre de series — depuis ex.sets, ou depuis rawReps "3x5", ou fallback 1
   const parsedSets = (() => {
     if (typeof ex.sets === "number" && ex.sets > 0) return ex.sets;
@@ -691,6 +700,22 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                     TEST {ex.rmTest}RM
                   </span>
                 )}
+                {/* Badge MÉTHODE PLETNEV — quand reps matche N (a+b+c+d).
+                    Cliquable : ouvre la décomposition des 4 phases (excen-
+                    trique / iso / dynamique / explosive) avec leurs charges
+                    et tempos. Couleur violet pour différencier du jaune RM. */}
+                {pletnev && (
+                  <span
+                    onClick={() => setShowPletnevDetail((v) => !v)}
+                    title="Méthode Pletnev — clique pour voir la décomposition"
+                    style={{ fontSize: 11, fontWeight: 800, color: "#a78bfa", background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.4)", padding: "5px 12px", borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 5, letterSpacing: 0.5, cursor: "pointer" }}
+                  >
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+                    </svg>
+                    PLETNEV · {pletnev.rounds} round{pletnev.rounds > 1 ? "s" : ""}
+                  </span>
+                )}
                 {chipsReps && <span style={{ fontSize: 11, color: "rgba(2,209,186,0.8)", background: "rgba(2,209,186,0.08)", padding: "5px 12px", borderRadius: 100, fontWeight: 600 }}>{chipsReps}</span>}
                 {ex.charge && (
                   <span title="Charge prescrite par ton coach" style={{ fontSize: 11, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)", padding: "5px 12px", borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 5, letterSpacing: 0.2 }}>
@@ -740,6 +765,54 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
               <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", marginTop: 4, letterSpacing: "1px" }}>{t("ec.serie")}</div>
             </div>
           </div>
+
+          {/* Détail méthode Pletnev — déployé via clic sur le badge.
+              Affiche les 4 phases avec leurs reps / charge / tempo, pour
+              que l'athlète enchaîne sans devoir aller chercher la spec. */}
+          {pletnev && showPletnevDetail && (
+            <div style={{
+              marginTop: 4, marginBottom: 14,
+              padding: "12px 14px",
+              background: "rgba(167,139,250,0.04)",
+              border: "1px solid rgba(167,139,250,0.18)",
+              borderRadius: 12,
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", color: "rgba(167,139,250,0.85)", marginBottom: 8 }}>
+                Méthode Pletnev — {pletnev.rounds} round{pletnev.rounds > 1 ? "s" : ""} de 4 phases
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {pletnev.phases.map((p, pi) => (
+                  <div key={pi} style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 10px",
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 8,
+                  }}>
+                    <div style={{
+                      flexShrink: 0,
+                      width: 22, height: 22, borderRadius: "50%",
+                      background: "rgba(167,139,250,0.18)",
+                      color: "#a78bfa",
+                      fontSize: 11, fontWeight: 800,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>{pi + 1}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", letterSpacing: 0.2 }}>
+                        {p.reps} reps · {p.loadLabel} · <span style={{ color: "rgba(167,139,250,0.85)", fontFamily: "ui-monospace, 'SF Mono', monospace" }}>{p.tempo}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2, lineHeight: 1.4 }}>
+                        {p.note}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 8, lineHeight: 1.5, fontStyle: "italic" }}>
+                Enchaîne les 4 phases sans repos, puis récup avant le round suivant.
+              </div>
+            </div>
+          )}
 
           {/* Video */}
           {hasVideo && showVideo && (

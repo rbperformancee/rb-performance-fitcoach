@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
 import { findFallbackVideo, FALLBACK_VIDEOS } from "../data/fallbackVideos";
 import LogPaymentModal, { checkPaymentNeeded } from "./coach/LogPaymentModal";
+import { detectPletnev } from "../utils/parserProgramme";
 import CountdownBlockCard from "./CountdownBlockCard";
 import { addBreadcrumb } from "../lib/sentry";
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -238,6 +239,9 @@ const REPS_SUGGESTIONS = [
   "5+5+5", "3X5+5+5", "4X3+3+3", "3X8+8",
   // Dégressive / drop set — un "_" déclenche l'UI guidée (charge qui descend)
   "10_10", "3X12_8", "10_8_6",
+  // Méthode Pletnev — contraste 4 phases (exc 1RM → iso 80% → dyn 60% → explo 50%).
+  // Format : N (a+b+c+d) → N rounds, badge Pletnev, décompo affichée à l'athlète.
+  "3 (4+2+6+6)", "4 (4+2+6+6)", "5 (4+2+6+6)",
 ];
 
 const TEMPO_SUGGESTIONS = [
@@ -1086,6 +1090,23 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
             Test {ex.rmTest}RM
           </div>
         )}
+        {/* Méthode Pletnev — détection du pattern N (a+b+c+d) tapé dans Reps.
+            Le badge confirme au coach que la méthode est reconnue → l'athlète
+            verra automatiquement la décomposition (4 phases) en séance.
+            Format reconnu : "4 (4+2+6+6)" = 4 rounds, 4 reps exc + 2 iso + 6 dyn + 6 explo. */}
+        {(() => {
+          const pl = detectPletnev(ex.reps);
+          return pl ? (
+            <div title={`Méthode Pletnev — ${pl.rounds} rounds de 4 phases (exc 1RM → iso 80% → dyn 60% → explo 50%)`}
+              style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 24, padding: "0 8px",
+                background: "rgba(167,139,250,0.14)", border: "1px solid rgba(167,139,250,0.4)",
+                borderRadius: 6, flexShrink: 0, fontSize: 10, fontWeight: 800,
+                color: "#a78bfa", letterSpacing: 0.5, textTransform: "uppercase",
+              }}>
+              Pletnev · {pl.rounds}r
+            </div>
+          ) : null;
+        })()}
         {!isMobile && idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter" style={iconBtn}>↑</button>}
         {!isMobile && idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre" style={iconBtn}>↓</button>}
         <button type="button" onClick={onDuplicate} title="Dupliquer" style={{ ...iconBtn, background: G_DIM, borderColor: "rgba(2,209,186,0.25)", color: G }}>⎘</button>
@@ -1106,7 +1127,7 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
             const rmTest = m ? Math.max(1, Math.min(20, parseInt(m[1], 10))) : null;
             onUpdate({ ...ex, reps: v, rmTest });
           }}
-          placeholder="4X8-10 · 3RM · 3X20m · 3X30s"
+          placeholder="4X8-10 · 3RM · 3X30s · 4 (4+2+6+6) = Pletnev"
           suggestions={REPS_SUGGESTIONS}
         />
         <SuggestField label="Charge" value={ex.charge} onChange={(v) => update("charge", v)} placeholder="80kg · 60% 1RM" suggestions={CHARGE_SUGGESTIONS} accent="#fbbf24" />
@@ -2008,13 +2029,30 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
         >{isMobile ? "×" : "Supprimer"}</button>
       </div>
 
-      {collapsed && (
-        <div onClick={() => setCollapsed(false)} style={{ cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.4)", paddingLeft: 2 }}>
-          {(week.sessions || []).length} séance{(week.sessions || []).length > 1 ? "s" : ""}
-          {" · "}
-          {(week.sessions || []).reduce((n, s) => n + (s.exercises || []).length, 0)} exercice{(week.sessions || []).reduce((n, s) => n + (s.exercises || []).length, 0) > 1 ? "s" : ""}
-        </div>
-      )}
+      {collapsed && (() => {
+        // Résumé week-collapsed : avant on ne montrait que les exos →
+        // un programme 100% running (ex. Prep 10km) affichait "0 exercices"
+        // et donnait l'impression que les runs étaient mal classés. On
+        // surface maintenant tous les blocs présents (exos, runs, terrain,
+        // AMRAP, ergo) — cohérent avec le résumé au niveau séance.
+        const sessions = week.sessions || [];
+        const nbSess = sessions.length;
+        const nbEx = sessions.reduce((n, s) => n + (s.exercises || []).length, 0);
+        const nbRuns = sessions.reduce((n, s) => n + (s.runs || []).length, 0);
+        const nbField = sessions.reduce((n, s) => n + (s.fieldSessions || []).length, 0);
+        const nbAmrap = sessions.reduce((n, s) => n + (s.amraps || []).length, 0);
+        const nbErgo = sessions.reduce((n, s) => n + (s.ergos || []).length, 0);
+        return (
+          <div onClick={() => setCollapsed(false)} style={{ cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.4)", paddingLeft: 2 }}>
+            {nbSess} séance{nbSess > 1 ? "s" : ""}
+            {nbEx > 0 ? ` · ${nbEx} exo${nbEx > 1 ? "s" : ""}` : ""}
+            {nbRuns > 0 ? ` · ${nbRuns} run${nbRuns > 1 ? "s" : ""}` : ""}
+            {nbField > 0 ? ` · ${nbField} terrain` : ""}
+            {nbAmrap > 0 ? ` · ${nbAmrap} AMRAP` : ""}
+            {nbErgo > 0 ? ` · ${nbErgo} ergo` : ""}
+          </div>
+        );
+      })()}
 
       {!collapsed && (<>
       <DndContext
@@ -2182,6 +2220,10 @@ function AnalyticsPanel({ programme }) {
 
 function Preview({ programme, showAnalytics }) {
   const totalEx = (programme.weeks || []).reduce((a, w) => a + (w.sessions || []).reduce((b, s) => b + (s.exercises || []).length, 0), 0);
+  // Compte aussi les runs : un programme 100% running (ex. prep 10km) doit
+  // pouvoir afficher son volume cardio dans le résumé header, sinon le
+  // coach voit "0 Exercices" et croit que les runs ont disparu.
+  const totalRuns = (programme.weeks || []).reduce((a, w) => a + (w.sessions || []).reduce((b, s) => b + (s.runs || []).length, 0), 0);
   const totalSessions = (programme.weeks || []).reduce((a, w) => a + (w.sessions || []).length, 0);
 
   if (showAnalytics) {
@@ -2209,6 +2251,7 @@ function Preview({ programme, showAnalytics }) {
         <Stat label="Semaines" value={programme.weeks.length} />
         <Stat label="Séances" value={totalSessions} />
         <Stat label="Exercices" value={totalEx} />
+        {totalRuns > 0 && <Stat label="Runs" value={totalRuns} />}
       </div>
 
       {programme.weeks.length === 0 ? (
