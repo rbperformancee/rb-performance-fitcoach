@@ -47,6 +47,17 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.rbperform</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>rbperform</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>RB Perform utilise la caméra pour scanner les codes-barres d'aliments lors du suivi nutritionnel et pour prendre tes photos de check-in hebdomadaire.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

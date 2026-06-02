@@ -424,6 +424,48 @@ export function LoginScreen({ onBack }) {
           )}
         </div>
 
+        {/* Mode démo — utile pour App Review Apple (zéro OTP requis) +
+            tout prospect qui veut tester sans s'inscrire. Sur web, le path
+            /demo-client expose déjà le même flow ; on l'ajoute ici pour le
+            natif iOS où il n'y a pas de URL rewrite. */}
+        {isNative() && mode === 'client' && step === 'email' && (
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true);
+                setError('');
+                try {
+                  const res = await fetch('/api/demo-client');
+                  const json = await res.json();
+                  if (!json.access_token) {
+                    throw new Error(json.error || 'Demo session failed');
+                  }
+                  const { error: setErr } = await supabase.auth.setSession({
+                    access_token: json.access_token,
+                    refresh_token: json.refresh_token,
+                  });
+                  if (setErr) throw setErr;
+                  setSuccess('Mode démo activé');
+                  navigateAfterAuth('/app.html');
+                } catch (e) {
+                  setError(e.message || 'Impossible de lancer la démo');
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              style={{
+                ...switchStyle,
+                color: G,
+                fontWeight: 600,
+                opacity: loading ? 0.5 : 1,
+              }}
+            >
+              {loading ? 'Connexion…' : 'Continuer en mode démo'}
+            </button>
+          </div>
+        )}
+
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: 32, fontSize: 11, color: 'rgba(255,255,255,0.12)' }}>
           RB Perform — rbperform.app

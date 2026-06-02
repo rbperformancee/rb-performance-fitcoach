@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { isNative } from "../lib/native";
 
 /**
  * PWAInstallPrompt — invite à installer l'app sur l'écran d'accueil.
@@ -49,8 +50,10 @@ export default function PWAInstallPrompt() {
   const platform = detectPlatform();
 
   useEffect(() => {
-    // Conditions d'exclusion : déjà installé, desktop, ou refusé récemment.
-    if (isStandalone() || !platform) return;
+    // Conditions d'exclusion : déjà installé (PWA standalone), desktop, refusé
+    // récemment, OU déjà dans l'app native Capacitor (proposer d'installer
+    // l'app n'a aucun sens quand on EST DEJA dans l'app installée).
+    if (isStandalone() || isNative() || !platform) return;
     try {
       const ts = Number(localStorage.getItem(DISMISS_KEY) || 0);
       if (ts && Date.now() - ts < REPROMPT_MS) return;
