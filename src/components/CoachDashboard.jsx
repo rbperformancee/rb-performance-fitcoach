@@ -104,9 +104,11 @@ const G_BORDER = "rgba(0,201,167,0.2)";
 // Pour supprimer, l'utilisateur doit taper le mot SUPPRIMER. Empêche tout
 // clic réflexe sur "OK" d'un window.confirm.
 function ConfirmDeleteProgramme({ progName, onCancel, onConfirm }) {
+  const t = useT();
   const [typed, setTyped] = useState("");
   const RED = "#ff6b6b";
-  const matches = typed.trim() === "SUPPRIMER";
+  const CONFIRM_WORD = t("cd.delete_confirm_word", "SUPPRIMER");
+  const matches = typed.trim() === CONFIRM_WORD;
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 11000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
@@ -118,17 +120,17 @@ function ConfirmDeleteProgramme({ progName, onCancel, onConfirm }) {
             <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
         </div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.3, marginBottom: 10 }}>Supprimer définitivement ?</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.3, marginBottom: 10 }}>{t("cd.delete_title", "Supprimer définitivement ?")}</div>
         <div style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.6, marginBottom: 18 }}>
-          Tu vas supprimer <strong style={{ color: "#fff" }}>{progName || "ce programme"}</strong>. Cette action est <strong style={{ color: RED }}>irréversible</strong> — toutes les semaines, séances et exercices seront perdus.
+          {t("cd.delete_intro_part1", "Tu vas supprimer")} <strong style={{ color: "#fff" }}>{progName || t("cd.delete_this_programme", "ce programme")}</strong>. {t("cd.delete_intro_part2", "Cette action est")} <strong style={{ color: RED }}>{t("cd.delete_irreversible", "irréversible")}</strong> — {t("cd.delete_intro_part3", "toutes les semaines, séances et exercices seront perdus.")}
         </div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Tape <strong style={{ color: RED, letterSpacing: 1 }}>SUPPRIMER</strong> pour confirmer :</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>{t("cd.delete_type_prefix", "Tape")} <strong style={{ color: RED, letterSpacing: 1 }}>{CONFIRM_WORD}</strong> {t("cd.delete_type_suffix", "pour confirmer :")}</div>
         <input
           type="text"
           autoFocus
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
-          placeholder="SUPPRIMER"
+          placeholder={CONFIRM_WORD}
           style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid " + (matches ? RED : "rgba(255,255,255,0.08)"), borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 1, fontFamily: "inherit", outline: "none", marginBottom: 18, transition: "border-color .2s" }}
         />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -136,13 +138,13 @@ function ConfirmDeleteProgramme({ progName, onCancel, onConfirm }) {
             type="button"
             onClick={onCancel}
             style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}
-          >Annuler</button>
+          >{t("common.cancel", "Annuler")}</button>
           <button
             type="button"
             disabled={!matches}
             onClick={onConfirm}
             style={{ padding: "10px 18px", background: matches ? RED : "rgba(255,107,107,0.2)", border: "none", borderRadius: 10, color: matches ? "#fff" : "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 800, cursor: matches ? "pointer" : "not-allowed", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase", opacity: matches ? 1 : 0.5, transition: "all .2s" }}
-          >Supprimer définitivement</button>
+          >{t("cd.delete_btn_permanent", "Supprimer définitivement")}</button>
         </div>
       </div>
     </div>

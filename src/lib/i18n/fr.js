@@ -2468,6 +2468,18 @@ const fr = {
     "xp.activity_weighin": "Pesée · {kg} kg",
     "xp.activity_run": "Course · {km} km",
 
+    // ===== CoachDashboard — modal confirm delete programme =====
+    "cd.delete_confirm_word": "SUPPRIMER",
+    "cd.delete_title": "Supprimer définitivement ?",
+    "cd.delete_intro_part1": "Tu vas supprimer",
+    "cd.delete_intro_part2": "Cette action est",
+    "cd.delete_intro_part3": "toutes les semaines, séances et exercices seront perdus.",
+    "cd.delete_this_programme": "ce programme",
+    "cd.delete_irreversible": "irréversible",
+    "cd.delete_type_prefix": "Tape",
+    "cd.delete_type_suffix": "pour confirmer :",
+    "cd.delete_btn_permanent": "Supprimer définitivement",
+
     // ===== Checkin period labels (lib/checkinPeriod.js) =====
     "checkin.freq_weekly": "Hebdomadaire",
     "checkin.freq_biweekly": "Toutes les 2 semaines",
