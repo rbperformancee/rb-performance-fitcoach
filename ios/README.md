@@ -10,11 +10,14 @@ Cf `APP_STORE_ROADMAP.md` à la racine pour le contexte stratégique.
 | Élément | État | Détail |
 |---|---|---|
 | Code applicatif (Waves 1-6) | ✅ | Déployé en prod web, gated `isNative()` |
+| Boot Capacitor (no nav loop) | ✅ | 2 juin 2026 — fix App.jsx:1024 + LoginScreen.jsx (cf §Boot Capacitor) |
 | Info.plist permissions | ✅ | Caméra, photo, mic, no encryption |
 | PrivacyInfo.xcprivacy | ✅ | Données + Required Reason APIs déclarées |
 | App Icon 1024×1024 | ✅ | `Assets.xcassets/AppIcon.appiconset/` |
 | Splash 2732×2732 | ✅ | `Assets.xcassets/Splash.imageset/` |
 | Capacitor SPM (5 plugins) | ✅ | `cap sync ios` OK |
+| `iosScheme: 'capacitor'` | ✅ | Évite policy ATS + FrameLoad code=102 sur iOS 26 |
+| Simulator boot OK | ✅ | iPhone 16 / iOS 26.5 — LoginScreen rendu, JS bridge ✓ |
 | App Store Connect metadata | ✅ | `ios/AppStoreConnect/` (FR + EN) |
 | ExportOptions.plist | ✅ | `ios/export-options/` (app-store + adhoc) |
 | Apple Developer Program | ❌ | À souscrire (99€/an) |
@@ -22,6 +25,26 @@ Cf `APP_STORE_ROADMAP.md` à la racine pour le contexte stratégique.
 | Distribution certificate | ❌ | À générer une fois Apple Dev validé |
 | TestFlight build | ❌ | Après archive Xcode |
 | App Store review | ❌ | Après TestFlight validé |
+
+---
+
+## Boot Capacitor — gotcha critique (résolu 2 juin 2026)
+
+Sur le bundle natif, `build/index.html` est le seul HTML servi par WKWebView.
+Les rewrites Vercel (`/app.html`, `/login`, `/demo-client`) **n'existent pas** —
+toute redirection JS vers ces URLs déclenche un 404 → cancel → re-mount React
+→ re-redirection → boucle infinie (écran blanc, logs `setMainDocumentError
+code=-999` toutes les 100ms).
+
+**Patches in-tree** :
+- `src/App.jsx:1018` — ajoute `isNative()` au gate LoginScreen, supprime le
+  `window.location.replace("/")` qui bouclait
+- `src/components/LoginScreen.jsx:35,207` — sur natif, `window.location.replace("/")`
+  au lieu de `'/app.html'` (reload propre, App.jsx détecte la session via useAuth)
+
+**À surveiller pour la suite** : autres redirections `window.location.href`
+restantes (logout, demo expired, account delete) — non-bloquantes au boot mais
+à gater `isNative()` au cas par cas dans Wave 7 (post-MVP).
 
 ---
 
