@@ -12,7 +12,12 @@
 
 const { getServiceClient } = require('./_supabase');
 
-const DEMO_CLIENT_ID = '5f5cb37c-728b-47a9-b7ae-43d3aa643d65';
+// Real lucas.demo@rbperform.app client_id (audit 3 juin 2026).
+// Avant : '5f5cb37c-728b-47a9-b7ae-43d3aa643d65' (UUID erroné → reset cron
+// shootait dans le vide, lucas.demo restait vide pendant des mois.
+// BLOCKER Apple App Review : reviewer cliquait "Continuer en mode démo" et
+// voyait des écrans vides → rejet 2.1 'app does not appear fully functional').
+const DEMO_CLIENT_ID = '7999fa42-e5e9-4e7d-b4d6-cf2a64373cd2';
 
 function isAuthorized(req) {
   const cronSecret = process.env.CRON_SECRET;

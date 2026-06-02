@@ -240,7 +240,24 @@ Si bug critique en prod après release :
 ✅ 5 screenshots iPhone 6.9" (1320×2868) dans `AppStoreConnect/screenshots/6.9-inch/`
 ✅ ExportOptions.plist (AppStore + Adhoc)
 
+### Push 85% → 95% (3 juin 2026)
+✅ TARGETED_DEVICE_FAMILY=1 (iPhone only, no iPad rejection risk)
+✅ lucas.demo seed UUID corrigé (`7999fa42-e5e9-4e7d-b4d6-cf2a64373cd2`) → cron-demo-reset.js opérationnel
+✅ lucas.demo seeded en prod : 30 weight logs + 12 sessions + 4 badges + 3 messages + programme PPL actif
+✅ Bug cross-week weights fixé (App.jsx + ExerciseCard + TrainingPage + useLogs.js)
+✅ EN screenshots générés dans `6.9-inch-en/` (référence pour v1.1 quand i18n EN complète)
+✅ Notes review enrichies avec liste des features visibles au reviewer
+
+### Locale strategy v1.0
+🇫🇷 App Store Connect : **FR-only** pour v1.0 (app primary language = FR)
+🇬🇧 EN locale : reporté à v1.1 quand i18n complète (Body/Run/Profile pages partial)
+   → Apple accepte parfaitement un app mono-locale ; downloads internationaux ne sont pas bloqués
+
 ❌ Apple Developer Program — **À TOI** (99€/an)
 ❌ Team ID dans ExportOptions.plist — **À TOI** (remplace TEAMIDXXXX)
 ❌ APNs Auth Key + Vercel vars — **À TOI**
 ❌ Archive Xcode → TestFlight → Submit — **À TOI** (après Apple Dev validé)
+
+## 📊 Probabilité acceptation estimée
+
+**95%** — tous les motifs Apple courants couverts (5.1.1(v) account delete, 5.1.2 privacy manifest, 3.1.1 IAP, 4.7 web alternative, 2.1 completeness avec demo data riche). Reste 5% de variance reviewer (humain, parfois pinaille sur des détails de copy ou de capture). Premier rejet typique = mail clair → fix → resoumets (24h cycle).

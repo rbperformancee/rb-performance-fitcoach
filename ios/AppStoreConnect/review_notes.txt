@@ -10,8 +10,26 @@ DEMO ACCOUNT (athlete side):
 Email    : lucas.demo@rbperform.app
 Password : N/A — passwordless magic link via email.
            Use the "Continuer en mode démo" button on the login screen
-           to bypass the email step entirely. This loads a read-only
-           demo with sample data (program, history, messages).
+           (visible on iOS native builds) to bypass the email step.
+
+The demo account is pre-seeded with rich realistic data:
+• Active 4-week PPL program (Push / Pull / Legs)
+• 30 days of weight logs (78.2 kg → 75.5 kg progression)
+• 12 completed workout sessions with RPE & set completion
+• 4 earned badges (first session, 5 sessions, 10 sessions, weight logged)
+• 3 sample coach ↔ athlete messages
+
+Reviewer-visible features in this demo:
+• Tab "Train" — view the PPL program, browse exercises, see history
+• Tab "Body" — weight chart with 30-day trend, goal setting
+• Tab "Fuel" — nutrition tracking + barcode scanner permission flow
+• Tab "Run" — activity log + Apple Health integration prompt
+• Tab "Profile" — settings, account deletion, message thread with coach
+
+The demo account is protected server-side: account deletion is simulated
+(returns success without actually deleting) so reviewers cannot break it
+for subsequent testers. A daily cron (/api/cron-demo-reset @ 03:00 UTC)
+re-seeds the data to keep the demo fresh.
 
 THIRD-PARTY SERVICES USED:
 • Supabase (auth + data, Frankfurt EU region)
