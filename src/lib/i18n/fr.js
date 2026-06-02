@@ -2433,6 +2433,40 @@ const fr = {
     "coach.weight_nudge_toast_failed": "Échec d'envoi",
     "coach.weight_nudge_push_title": "Pèse-toi aujourd'hui",
     "coach.weight_nudge_push_body": "{name}, rentre ton poids dans l'app — 10s, ça permet d'ajuster ton suivi.",
+
+    // ===== Body / WeightChart — strings inline (i18n push v1.0) =====
+    "wc.kilograms": "kilogrammes",
+    "wc.weekday_letters": "L,M,M,J,V,S,D",
+    "wc.delta_since_start": "{delta} kg depuis le début",
+    "wc.stat_minimum": "Minimum",
+    "wc.stat_average": "Moyenne",
+    "wc.stat_maximum": "Maximum",
+    "wc.goal_line": "Objectif {goal}kg",
+    "wc.goal_inline": "Objectif · {goal} kg",
+    "wc.goal_pct_reached": "{pct}% atteint",
+    "wc.left_to_gain": "Reste à prendre",
+    "wc.left_to_lose": "Reste à perdre",
+    "wc.phrase_start_tracking": "Commence ton suivi. Chaque gramme compte.",
+    "wc.phrase_gaining_well": "Tu prends bien. Continue sur cette lancée.",
+    "wc.phrase_slight_progress": "Légère progression. Tu vas dans le bon sens.",
+    "wc.phrase_slight_drop_eat_more": "Petite baisse cette semaine. Mange plus et reste focus.",
+    "wc.phrase_moving_well": "Tu es en mouvement. Continue comme ça.",
+    "wc.phrase_slight_loss_good": "Légère baisse. Tu vas dans le bon sens.",
+    "wc.phrase_slight_gain_adjust": "Petite hausse. Ajuste ton alimentation et rebondis.",
+    "wc.sig_no_variation": "Aucune variation depuis ta dernière pesée. Pèse-toi régulièrement pour suivre ta progression.",
+    "wc.sig_noise_normal": "Ta variation de {kg} kg est du bruit normal. Continue sur ta lancée.",
+    "wc.sig_real_signal_positive_gain": "{kg} kg de prise — un vrai signal positif. Bien joué.",
+    "wc.sig_real_signal_positive_loss": "{kg} kg de perte — un vrai signal positif. Bien joué.",
+    "wc.sig_real_signal_wrong_way": "{kg} kg dans le mauvais sens — un vrai signal. Analyse ta semaine.",
+
+    // ===== Move / Run — strings inline =====
+    "move.no_run_prescribed_inline": "aucun run prescrit",
+    "move.weekday_letters_sun_first": "D,L,M,M,J,V,S",
+
+    // ===== XP / Profile activity labels =====
+    "xp.activity_session_completed": "Séance complétée",
+    "xp.activity_weighin": "Pesée · {kg} kg",
+    "xp.activity_run": "Course · {km} km",
 };
 
 export default fr;

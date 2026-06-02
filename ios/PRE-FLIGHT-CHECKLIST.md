@@ -245,13 +245,20 @@ Si bug critique en prod après release :
 ✅ lucas.demo seed UUID corrigé (`7999fa42-e5e9-4e7d-b4d6-cf2a64373cd2`) → cron-demo-reset.js opérationnel
 ✅ lucas.demo seeded en prod : 30 weight logs + 12 sessions + 4 badges + 3 messages + programme PPL actif
 ✅ Bug cross-week weights fixé (App.jsx + ExerciseCard + TrainingPage + useLogs.js)
-✅ EN screenshots générés dans `6.9-inch-en/` (référence pour v1.1 quand i18n EN complète)
 ✅ Notes review enrichies avec liste des features visibles au reviewer
 
-### Locale strategy v1.0
-🇫🇷 App Store Connect : **FR-only** pour v1.0 (app primary language = FR)
-🇬🇧 EN locale : reporté à v1.1 quand i18n complète (Body/Run/Profile pages partial)
-   → Apple accepte parfaitement un app mono-locale ; downloads internationaux ne sont pas bloqués
+### Push 95% → 97% — i18n EN complète (3 juin 2026)
+✅ WeightChart : 14 strings inline FR remplacées par t() (KILOGRAMMES, phrases motivationnelles, signal/noise, weekday letters)
+✅ MovePage : "aucun run prescrit" + weekday heatmap localisés
+✅ useXP : labels d'activité "Séance complétée / Pesée / Course" → t() calls
+✅ Date format locale-aware via `formatDate()` helper (FR `mercredi 3 juin` ↔ EN `Wednesday, June 3`)
+✅ 5 EN screenshots premium qualité dans `6.9-inch-en/` (1320×2868) prêts à uploader
+
+### Locale strategy v1.0 — BILINGUE
+🇫🇷 App Store Connect FR : metadata + 5 screenshots `6.9-inch/`
+🇬🇧 App Store Connect EN : metadata `en-US/` + 5 screenshots `6.9-inch-en/`
+   → App primary language = FR ; EN locale active pour downloads internationaux
+   → User-content (messages coach Lucas, exercises, programme name) reste FR : c'est du contenu réel, pas de la UI ; Apple accepte
 
 ❌ Apple Developer Program — **À TOI** (99€/an)
 ❌ Team ID dans ExportOptions.plist — **À TOI** (remplace TEAMIDXXXX)

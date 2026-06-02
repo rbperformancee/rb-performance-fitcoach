@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
+import { t as it } from "../lib/i18n";
+
+// Helper d'interpolation minimal pour les labels d'activite.
+const fillTpl = (s, vars) => {
+  let out = String(s || "");
+  Object.entries(vars || {}).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
+  return out;
+};
 
 const LEVELS = [
   { level: 1, name: "Rookie",    min: 0,    color: "rgba(255,255,255,0.4)", accent: "rgba(255,255,255,0.3)" },
@@ -53,7 +61,7 @@ export function useXP(clientId) {
     const sessionCount = sessions.data?.length || 0;
     totalXP += sessionCount * 40;
     sessions.data?.slice(0, 4).forEach(s => {
-      activity.push({ type: "session", label: "Seance completee", meta: "40 XP", xp: 40, date: s.logged_at, color: "#02d1ba" });
+      activity.push({ type: "session", label: it("xp.activity_session_completed"), meta: "40 XP", xp: 40, date: s.logged_at, color: "#02d1ba" });
     });
 
     // XP streak
@@ -76,7 +84,7 @@ export function useXP(clientId) {
     const weightCount = weights.data?.length || 0;
     totalXP += weightCount * 5;
     weights.data?.slice(0, 2).forEach(w => {
-      activity.push({ type: "weight", label: `Pesee · ${w.weight} kg`, meta: "+5 XP", xp: 5, date: w.date, color: "rgba(2,209,186,0.5)" });
+      activity.push({ type: "weight", label: fillTpl(it("xp.activity_weighin"), { kg: w.weight }), meta: "+5 XP", xp: 5, date: w.date, color: "rgba(2,209,186,0.5)" });
     });
 
     // XP courses (Move)
@@ -88,7 +96,7 @@ export function useXP(clientId) {
     const localTotalKm = (runsRes.data || []).reduce((a, r) => a + (r.distance_km || 0), 0);
     totalXP += localRunCount * 10;
     runsRes.data?.slice(0, 2).forEach(r => {
-      activity.push({ type: "run", label: `Course · ${r.distance_km} km`, meta: "+10 XP", xp: 10, date: r.date, color: "#ef4444" });
+      activity.push({ type: "run", label: fillTpl(it("xp.activity_run"), { km: r.distance_km }), meta: "+10 XP", xp: 10, date: r.date, color: "#ef4444" });
     });
 
     // XP nutrition - jours avec au moins un repas logue

@@ -230,7 +230,9 @@ export default function MovePage({ client, appData }) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = d.toISOString().split("T")[0];
-      const label = ["D","L","M","M","J","V","S"][d.getDay()];
+      // Locale-aware day labels: Sunday-first array. FR: D L M M J V S — EN: S M T W T F S.
+      const dayLetters = t("move.weekday_letters_sun_first").split(",");
+      const label = dayLetters[d.getDay()];
       const run = runs.find(r => r.date === key);
       days.push({ label, km: run?.distance_km || 0, isToday: key === today });
     }
@@ -313,7 +315,7 @@ export default function MovePage({ client, appData }) {
               )}
               <div style={{ flex: 1, minWidth: 0, fontSize: 12, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 <span style={{ color: "#fff", fontWeight: 700 }}>{t("move.week_label")} {scheduled.viewWeek}<span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>/{scheduled.totalWeeks}</span></span>
-                <span style={{ marginLeft: 8, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>— aucun run prescrit</span>
+                <span style={{ marginLeft: 8, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>— {t("move.no_run_prescribed_inline")}</span>
               </div>
               {scheduled.totalWeeks > 1 && (
                 <button

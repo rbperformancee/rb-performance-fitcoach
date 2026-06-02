@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 import { supabase } from "../lib/supabase";
-import { useT } from "../lib/i18n";
+import { useT, formatDate } from "../lib/i18n";
 
 // Petite helper d'interpolation : remplace {key} dans une string i18n.
 const fillTpl = (s, vars) => {
@@ -156,15 +156,15 @@ export default function WeightChart({ clientId, client, programme, appData }) {
 
   const getPhrase = () => {
     const isPrise = goal && latestW && goal > latestW;
-    if (!weekDiff || parseFloat(weekDiff) === 0) return "Commence ton suivi. Chaque gramme compte.";
+    if (!weekDiff || parseFloat(weekDiff) === 0) return t("wc.phrase_start_tracking");
     if (isPrise) {
-      if (parseFloat(weekDiff) > 0.5) return "Tu prends bien. Continue sur cette lancee.";
-      if (parseFloat(weekDiff) > 0) return "Legere progression. Tu vas dans le bon sens.";
-      return "Petite baisse cette semaine. Mange plus et reste focus.";
+      if (parseFloat(weekDiff) > 0.5) return t("wc.phrase_gaining_well");
+      if (parseFloat(weekDiff) > 0) return t("wc.phrase_slight_progress");
+      return t("wc.phrase_slight_drop_eat_more");
     } else {
-      if (parseFloat(weekDiff) < -0.5) return "Tu es en mouvement. Continue comme ca.";
-      if (parseFloat(weekDiff) < 0) return "Legere baisse. Tu vas dans le bon sens.";
-      return "Petite hausse. Ajuste ton alimentation et rebondis.";
+      if (parseFloat(weekDiff) < -0.5) return t("wc.phrase_moving_well");
+      if (parseFloat(weekDiff) < 0) return t("wc.phrase_slight_loss_good");
+      return t("wc.phrase_slight_gain_adjust");
     }
   };
 
@@ -183,7 +183,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
     const target = new Date();
     target.setDate(target.getDate() + weeksNeeded * 7);
     return {
-      date: target.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
+      date: formatDate(target, { day: "numeric", month: "short" }),
       kgLeft: Math.abs(remaining).toFixed(1),
       weeks: weeksNeeded
     };
@@ -231,7 +231,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
         <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}>{t('wc.tracking_label')}</div>
         <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", letterSpacing: "-3px", lineHeight: 0.92, marginBottom: 10 }}>Body<span style={{ color: "#02d1ba" }}>.</span></div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", fontStyle: "italic", marginBottom: 20 }}>
-          {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          {formatDate(new Date(), { weekday: "long", day: "numeric", month: "long" })}
         </div>
 
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
@@ -240,7 +240,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
               <span style={{ fontSize: 88, fontWeight: 100, letterSpacing: "-6px", color: "#fff" }}>{latestW ? Math.floor(latestW) : "--"}</span>
               <span style={{ fontSize: 36, fontWeight: 200, color: "rgba(255,255,255,0.35)", letterSpacing: "-2px", paddingBottom: 12 }}>{latestW ? "." + latestW.toFixed(1).split(".")[1] : ""}</span>
             </div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 2 }}>kilogrammes</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginTop: 2 }}>{t("wc.kilograms")}</div>
           </div>
 
           <svg width={64} height={64} viewBox="0 0 64 64" style={{ flexShrink: 0, marginTop: 8 }}>
@@ -256,7 +256,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
           <div style={{ marginBottom: 8 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: isDown ? "rgba(2,209,186,0.08)" : "rgba(239,68,68,0.08)", border: "1px solid " + (isDown ? "rgba(2,209,186,0.2)" : "rgba(239,68,68,0.2)"), borderRadius: 100, padding: "5px 16px", fontSize: 13, color: isDown ? GREEN : "rgba(239,68,68,0.9)", fontWeight: 500 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: isDown ? GREEN : "rgba(239,68,68,0.9)", display: "inline-block" }} />
-              {weekDiff > 0 ? "+" : ""}{weekDiff} kg depuis le debut
+              {fillTpl(t("wc.delta_since_start"), { delta: (weekDiff > 0 ? "+" : "") + weekDiff })}
             </span>
           </div>
         )}
@@ -277,7 +277,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
               </linearGradient>
             </defs>
             {goal && <line x1={0} y1={goalY} x2={W} y2={goalY} stroke="rgba(2,209,186,0.2)" strokeWidth={1} strokeDasharray="8,5" />}
-            {goal && <text x={8} y={goalY - 4} fill="rgba(2,209,186,0.4)" fontSize={9} fontFamily="-apple-system,sans-serif">Objectif {goal}kg</text>}
+            {goal && <text x={8} y={goalY - 4} fill="rgba(2,209,186,0.4)" fontSize={9} fontFamily="-apple-system,sans-serif">{fillTpl(t("wc.goal_line"), { goal })}</text>}
             <path d={areaD} fill="url(#wg2)" />
             <path d={pathD} fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             <circle cx={toX(vals.length - 1)} cy={toY(vals[vals.length - 1])} r={5} fill={GREEN} />
@@ -345,9 +345,9 @@ export default function WeightChart({ clientId, client, programme, appData }) {
 
       <div style={{ padding: "0 24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 28, position: "relative", zIndex: 1 }}>
         {[
-          { label: "Minimum", value: vals.length ? Math.min(...vals).toFixed(1) : "--", accent: false },
-          { label: "Moyenne", value: vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : "--", accent: true },
-          { label: "Maximum", value: vals.length ? Math.max(...vals).toFixed(1) : "--", accent: false },
+          { label: t("wc.stat_minimum"), value: vals.length ? Math.min(...vals).toFixed(1) : "--", accent: false },
+          { label: t("wc.stat_average"), value: vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : "--", accent: true },
+          { label: t("wc.stat_maximum"), value: vals.length ? Math.max(...vals).toFixed(1) : "--", accent: false },
         ].map((s, i) => (
           <div key={i} style={{ borderTop: "1px solid " + (s.accent ? GREEN : "rgba(255,255,255,0.06)"), borderTopWidth: s.accent ? 2 : 1, paddingTop: 14, paddingRight: i < 2 ? 8 : 0 }}>
             <div style={{ fontSize: 26, fontWeight: 200, color: s.accent ? GREEN : "#fff", letterSpacing: "-1.5px", lineHeight: 1 }}>{s.value}</div>
@@ -360,9 +360,9 @@ export default function WeightChart({ clientId, client, programme, appData }) {
         {goal ? (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, alignItems: "center" }}>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>Objectif · {goal} kg</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{fillTpl(t("wc.goal_inline"), { goal })}</span>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{goalPct}% atteint</span>
+                <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>{fillTpl(t("wc.goal_pct_reached"), { pct: goalPct })}</span>
                 <button onClick={() => setEditGoal(true)} style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "2px 8px", cursor: "pointer" }}>{t('wc.modify')}</button>
               </div>
             </div>
@@ -413,7 +413,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             {[
               { dot: GREEN, label: t('wc.today'), val: latestW ? latestW.toFixed(1) + " kg" : "--" },
               { dot: "rgba(255,255,255,0.2)", label: t('wc.goal_reached_on'), val: proj.date },
-              { dot: "rgba(129,140,248,0.7)", label: goal > latestW ? "Reste a prendre" : "Reste a perdre", val: proj.kgLeft + " kg" },
+              { dot: "rgba(129,140,248,0.7)", label: goal > latestW ? t("wc.left_to_gain") : t("wc.left_to_lose"), val: proj.kgLeft + " kg" },
             ].map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: r.dot, flexShrink: 0 }} />
@@ -462,7 +462,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
                 <div style={{ flex: 1, padding: "12px 14px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.12)", borderRadius: 12 }}>
                   <div style={{ fontSize: 9, color: "rgba(2,209,186,0.5)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>{t('wc.real_signals')}</div>
                   <div style={{ fontSize: 22, fontWeight: 200, color: GREEN }}>{realSignals}</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>vraies tendances</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>{t("wc.real_trends")}</div>
                 </div>
               </div>
               <div style={{ padding: "12px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 12, fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic", lineHeight: 1.6 }}>
@@ -471,10 +471,11 @@ export default function WeightChart({ clientId, client, programme, appData }) {
                   const lastVal = vals[vals.length - 1];
                   const prevVal = vals[vals.length - 2];
                   const isProgres = isPrise ? lastVal > prevVal : lastVal < prevVal;
-                  if (lastDiff === 0) return `" Aucune variation depuis ta derniere pesee. Pese-toi regulierement pour suivre ta progression. "`;
-                  if (isNoise) return `" Ta variation de ${lastDiff.toFixed(2)} kg est du bruit normal. Continue sur ta lancee. "`;
-                  if (isProgres) return `" ${lastDiff.toFixed(2)} kg ${isPrise ? "de prise" : "de perte"} — un vrai signal positif. Bien joue. "`;
-                  return `" ${lastDiff.toFixed(2)} kg dans le mauvais sens — un vrai signal. Analyse ta semaine. "`;
+                  const kg = lastDiff.toFixed(2);
+                  if (lastDiff === 0) return `" ${t("wc.sig_no_variation")} "`;
+                  if (isNoise) return `" ${fillTpl(t("wc.sig_noise_normal"), { kg })} "`;
+                  if (isProgres) return `" ${fillTpl(isPrise ? t("wc.sig_real_signal_positive_gain") : t("wc.sig_real_signal_positive_loss"), { kg })} "`;
+                  return `" ${fillTpl(t("wc.sig_real_signal_wrong_way"), { kg })} "`;
                 })()}
               </div>
             </div>
@@ -487,7 +488,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
       <div style={{ padding: "0 24px", marginBottom: 32, position: "relative", zIndex: 1 }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{t('wc.regularity')}</div>
         <div style={{ display: "flex", gap: "4px", marginBottom: 6 }}>
-          {["L","M","M","J","V","S","D"].map((d, i) => (
+          {t("wc.weekday_letters").split(",").map((d, i) => (
             <div key={i} style={{ flex: 1, textAlign: "center", fontSize: 9, color: "rgba(255,255,255,0.15)" }}>{d}</div>
           ))}
         </div>
@@ -495,7 +496,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
           <div onClick={() => setSelectedDay(null)} style={{ position: "relative", marginBottom: 12, padding: "14px 16px", background: "rgba(2,209,186,0.08)", border: "1px solid rgba(2,209,186,0.25)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: 10, color: "rgba(2,209,186,0.6)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>
-                {new Date(selectedDay.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                {formatDate(new Date(selectedDay.date + "T12:00:00"), { weekday: "long", day: "numeric", month: "long" })}
               </div>
               <div style={{ fontSize: 28, fontWeight: 200, color: "#fff", letterSpacing: "-1px" }}>
                 {selectedDay.weight} <span style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>kg</span>

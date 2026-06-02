@@ -123,6 +123,32 @@ export function getSupportedLocales() {
 }
 
 /**
+ * Mappe la locale courante vers le format BCP-47 utilise par Intl/toLocaleDateString.
+ * "fr" -> "fr-FR", "en" -> "en-US".
+ */
+export function getDateLocale() {
+  return currentLocale === "en" ? "en-US" : "fr-FR";
+}
+
+/**
+ * Format de date locale-aware. Wrapper autour de toLocaleDateString pour
+ * que tous les composants athlete-facing affichent la date dans la langue
+ * de l'utilisateur (eviter le hardcode "fr-FR" qui fait fuiter du francais
+ * dans les screenshots EN).
+ *
+ * Usage : formatDate(new Date(), { weekday: "long", day: "numeric", month: "long" })
+ */
+export function formatDate(date, options) {
+  try {
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(getDateLocale(), options);
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Translation function — pure (pour usage hors React).
  * Si le dict n'est pas encore charge, retourne la cle (fallback graceful).
  */

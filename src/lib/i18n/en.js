@@ -2433,6 +2433,40 @@ const en = {
     "coach.weight_nudge_toast_failed": "Send failed",
     "coach.weight_nudge_push_title": "Weigh-in today",
     "coach.weight_nudge_push_body": "{name}, log your weight in the app — 10s, helps fine-tune your tracking.",
+
+    // ===== Body / WeightChart — strings inline (i18n push v1.0) =====
+    "wc.kilograms": "kilograms",
+    "wc.weekday_letters": "M,T,W,T,F,S,S",
+    "wc.delta_since_start": "{delta} kg since start",
+    "wc.stat_minimum": "Minimum",
+    "wc.stat_average": "Average",
+    "wc.stat_maximum": "Maximum",
+    "wc.goal_line": "Goal {goal}kg",
+    "wc.goal_inline": "Goal · {goal} kg",
+    "wc.goal_pct_reached": "{pct}% reached",
+    "wc.left_to_gain": "Left to gain",
+    "wc.left_to_lose": "Left to lose",
+    "wc.phrase_start_tracking": "Start tracking. Every gram counts.",
+    "wc.phrase_gaining_well": "You're gaining well. Keep that momentum.",
+    "wc.phrase_slight_progress": "Slight progress. You're on the right path.",
+    "wc.phrase_slight_drop_eat_more": "Slight drop this week. Eat more and stay focused.",
+    "wc.phrase_moving_well": "You're moving. Keep at it.",
+    "wc.phrase_slight_loss_good": "Slight loss. You're on the right path.",
+    "wc.phrase_slight_gain_adjust": "Slight gain. Adjust your nutrition and bounce back.",
+    "wc.sig_no_variation": "No variation since your last weigh-in. Weigh in regularly to track your progress.",
+    "wc.sig_noise_normal": "Your {kg} kg variation is normal noise. Stay the course.",
+    "wc.sig_real_signal_positive_gain": "{kg} kg gained — a real positive signal. Well done.",
+    "wc.sig_real_signal_positive_loss": "{kg} kg lost — a real positive signal. Well done.",
+    "wc.sig_real_signal_wrong_way": "{kg} kg in the wrong direction — a real signal. Review your week.",
+
+    // ===== Move / Run — strings inline =====
+    "move.no_run_prescribed_inline": "no run prescribed",
+    "move.weekday_letters_sun_first": "S,M,T,W,T,F,S",
+
+    // ===== XP / Profile activity labels =====
+    "xp.activity_session_completed": "Session completed",
+    "xp.activity_weighin": "Weigh-in · {kg} kg",
+    "xp.activity_run": "Run · {km} km",
 };
 
 export default en;
