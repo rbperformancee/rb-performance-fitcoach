@@ -37,6 +37,8 @@ async function sbFetch(path) {
 }
 
 async function sendPush(clientId, title, body, deepLink) {
+  // ─── Web push (Edge Function existante, inchangée) ─────────────────────
+  let webOk = false;
   try {
     await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
       method: "POST",
@@ -51,11 +53,38 @@ async function sendPush(clientId, title, body, deepLink) {
         url: deepLink || "/",
       }),
     });
-    return true;
+    webOk = true;
   } catch (e) {
-    console.warn("[reminder] push failed for", clientId, e?.message);
-    return false;
+    console.warn("[reminder] web push failed for", clientId, e?.message);
   }
+
+  // ─── APNs en parallèle (Wave 5 — iOS natif) ────────────────────────────
+  // No-op silencieux tant que les env vars APNs ne sont pas configurées
+  // (l'endpoint renvoie 503 et on l'ignore). Aucun impact sur le web push.
+  try {
+    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://rbperform.app";
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret) {
+      const r = await fetch(`${base}/api/send-push-apns`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cronSecret}`,
+        },
+        body: JSON.stringify({ client_id: clientId, title, body, url: deepLink || "/" }),
+      });
+      // 503 = APNs pas configuré → c'est ATTENDU, on skip silencieusement.
+      // 200 = sent. Tout autre code → warn (sans throw, pour pas casser le cron).
+      if (r.status !== 200 && r.status !== 503) {
+        const text = await r.text().catch(() => "");
+        console.warn("[reminder] apns push status", r.status, "for", clientId, text.slice(0, 120));
+      }
+    }
+  } catch (e) {
+    console.warn("[reminder] apns push failed for", clientId, e?.message);
+  }
+
+  return webOk;
 }
 
 module.exports = async function handler(req, res) {

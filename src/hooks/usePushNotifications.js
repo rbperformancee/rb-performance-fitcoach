@@ -1,7 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { isNative, isIOSNative } from '../lib/native';
+
+// ──────────────────────────────────────────────────────────────────────────
+// usePushNotifications — hook unifié push web (VAPID) + push natif (APNs)
+//
+// Le hook expose un contrat unique `{ permission, subscribed,
+// requestPermission, resetSubscription }`. À l'intérieur, on branche selon
+// `isNative()` :
+//   - web      → flow Web Push (service worker + pushManager.subscribe +
+//                row endpoint+subscription dans push_subscriptions)
+//   - native   → flow Capacitor PushNotifications + APNs token →
+//                row apns_token dans push_subscriptions
+//
+// Important : sur web on n'importe JAMAIS @capacitor/push-notifications
+// (sinon le bundle alourdit la PWA pour rien). L'import est dynamique et
+// gated par `isNative()`.
+//
+// Roadmap : APP_STORE_ROADMAP.md (Wave 5).
+// ──────────────────────────────────────────────────────────────────────────
+
 const VAPID_PUBLIC_KEY = process.env.REACT_APP_VAPID_PUBLIC_KEY;
-if (!VAPID_PUBLIC_KEY) console.error('REACT_APP_VAPID_PUBLIC_KEY missing in env vars');
+if (!VAPID_PUBLIC_KEY && !isNative()) {
+  // Sur natif on n'utilise pas VAPID, donc on ne loggue l'erreur QUE en web.
+  console.error('REACT_APP_VAPID_PUBLIC_KEY missing in env vars');
+}
+
 function urlB64ToUint8Array(b) {
   const pad = '='.repeat((4 - b.length % 4) % 4);
   const base64 = (b + pad).replace(/-/g, '+').replace(/_/g, '/');
@@ -14,20 +38,128 @@ function arraysEqual(a, b) {
   for (let i = 0; i < va.length; i++) if (va[i] !== vb[i]) return false;
   return true;
 }
+
+// Cache module-level pour éviter d'attacher les listeners Capacitor 2x
+// quand plusieurs composants utilisent le hook simultanément.
+let _nativeListenersAttached = false;
+
+// Permission native mappée vers les mêmes valeurs que `Notification.permission`
+// pour que les consommers du hook n'aient pas à brancher.
+function mapNativePerm(receive) {
+  if (receive === 'granted') return 'granted';
+  if (receive === 'denied') return 'denied';
+  return 'default'; // 'prompt' | 'prompt-with-rationale'
+}
+
+// ──────────────────────────────────────────────────────────────────────────
 // Hook unifié : prend EITHER un clientId OR un coachId. Persiste la sub
 // dans push_subscriptions avec le bon champ (cf. CHECK constraint migration
 // 048 : exactement un des deux est set).
+//
+// Sur natif, le coach n'est jamais consommer de ce hook (le coach reste
+// web only) — on garde quand même la branche coachId pour symétrie.
+// ──────────────────────────────────────────────────────────────────────────
 export function usePushNotifications(arg) {
   // Rétrocompatibilité : si on passe une string, c'est un clientId.
   // Sinon objet { clientId } ou { coachId }.
   const clientId = typeof arg === 'string' ? arg : arg?.clientId || null;
   const coachId = typeof arg === 'object' && arg ? arg.coachId || null : null;
-  const [permission, setPermission] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
+
+  const [permission, setPermission] = useState('default');
   const [subscribed, setSubscribed] = useState(false);
+
+  // Ref pour stocker le token APNs reçu via event listener, pour qu'on
+  // puisse le réutiliser dans resetSubscription sans relancer register().
+  const apnsTokenRef = useRef(null);
+
+  // Init : récupère l'état de permission au mount.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (isNative()) {
+        try {
+          const { PushNotifications } = await import('@capacitor/push-notifications');
+          const status = await PushNotifications.checkPermissions();
+          if (!cancelled) setPermission(mapNativePerm(status.receive));
+        } catch (e) {
+          // Plugin absent ou erreur — on dégrade silencieusement
+          if (!cancelled) setPermission('default');
+        }
+      } else if (typeof Notification !== 'undefined') {
+        setPermission(Notification.permission);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // ─── Subscribe : enregistre la sub et la persiste en DB ────────────────
   const subscribe = useCallback(async () => {
     try {
-      if (!VAPID_PUBLIC_KEY) return;
       if (!clientId && !coachId) return;
+
+      if (isNative()) {
+        // ─── BRANCHE NATIVE (APNs / FCM via Capacitor) ──────────────────
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+
+        // Attache les listeners une seule fois pour toute la session.
+        if (!_nativeListenersAttached) {
+          _nativeListenersAttached = true;
+
+          await PushNotifications.addListener('registration', async (token) => {
+            // token.value = le token APNs (ou FCM sur Android). On le
+            // persiste dans push_subscriptions.
+            apnsTokenRef.current = token.value;
+            try {
+              await persistNativeToken({ token: token.value, clientId, coachId });
+              setSubscribed(true);
+
+              // Purge des web push subs Apple PWA pour CE client : si
+              // l'athlète avait installé la PWA iOS avant l'app native, la
+              // sub Apple PWA est encore vivante côté DB → il recevrait
+              // chaque notif en double. On les supprime côté DB.
+              if (isIOSNative() && clientId) {
+                await supabase
+                  .from('push_subscriptions')
+                  .delete()
+                  .eq('client_id', clientId)
+                  .like('endpoint', 'https://web.push.apple.com/%');
+              }
+            } catch (e) {
+              console.error('[apns] persist failed:', e);
+            }
+          });
+
+          await PushNotifications.addListener('registrationError', (err) => {
+            console.error('[apns] registration error:', err);
+          });
+
+          // pushNotificationReceived : notif arrive QUAND l'app est au
+          // foreground. Apple ne l'affiche pas automatiquement dans ce cas
+          // → on pourrait afficher un toast custom, mais pour la wave 5 on
+          // se contente de logger.
+          await PushNotifications.addListener('pushNotificationReceived', (notif) => {
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[apns] foreground notif:', notif);
+            }
+          });
+
+          // pushNotificationActionPerformed : l'utilisateur a tapé une
+          // notif (app était background ou closed). À enrichir Wave 6+
+          // avec un deep link vers la séance / message du jour.
+          await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[apns] tap action:', action);
+            }
+          });
+        }
+
+        // Lance le register : déclenche l'event 'registration' avec le token.
+        await PushNotifications.register();
+        return;
+      }
+
+      // ─── BRANCHE WEB (Web Push / VAPID) — inchangée ─────────────────
+      if (!VAPID_PUBLIC_KEY) return;
       const reg = await navigator.serviceWorker.ready;
       const expectedKey = urlB64ToUint8Array(VAPID_PUBLIC_KEY);
       let sub = await reg.pushManager.getSubscription();
@@ -53,7 +185,24 @@ export function usePushNotifications(arg) {
       setSubscribed(true);
     } catch(e) { console.error('Push:', e); }
   }, [clientId, coachId]);
+
+  // ─── Request permission : prompt natif iOS ou prompt navigateur ───────
   const requestPermission = useCallback(async () => {
+    if (isNative()) {
+      try {
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        const status = await PushNotifications.requestPermissions();
+        const mapped = mapNativePerm(status.receive);
+        setPermission(mapped);
+        if (mapped === 'granted') await subscribe();
+        return mapped;
+      } catch (e) {
+        console.error('[apns] requestPermissions failed:', e);
+        setPermission('denied');
+        return 'denied';
+      }
+    }
+
     if (typeof window === 'undefined' || !('Notification' in window)) {
       setPermission('denied');
       return 'denied';
@@ -63,39 +212,94 @@ export function usePushNotifications(arg) {
     if (perm === 'granted') await subscribe();
     return perm;
   }, [subscribe]);
-  // resetSubscription : force la régénération d'une sub neuve côté Apple/FCM.
-  // Use case : la sub a été silently invalidée par Apple Push Service (cas
-  // connu sur iOS où Apple accepte sent:1 mais ne délivre plus). L'utilisateur
-  // ne reçoit plus rien sans erreur côté serveur. Un simple re-subscribe ne
-  // suffit pas car getSubscription() retourne la vieille sub valide côté JS.
-  // → On unsubscribe explicitement, on supprime la row côté DB, puis on
-  //   refait subscribe() qui génère un endpoint neuf.
+
+  // ─── resetSubscription : force la régénération d'une sub neuve ────────
+  // Use case : la sub a été silently invalidée par Apple Push Service.
+  // L'utilisateur ne reçoit plus rien sans erreur côté serveur. Sur web on
+  // unsubscribe + re-subscribe. Sur natif, on n'a pas accès à l'unregister
+  // côté Capacitor PushNotifications — la rotation du token APNs est gérée
+  // par iOS lui-même. On supprime juste la row DB et on re-register : iOS
+  // renverra soit le même token (encore valide) soit un nouveau.
   const resetSubscription = useCallback(async () => {
     try {
+      if (isNative()) {
+        const oldToken = apnsTokenRef.current;
+        if (oldToken && (clientId || coachId)) {
+          await supabase
+            .from('push_subscriptions')
+            .delete()
+            .eq('apns_token', oldToken);
+        }
+        apnsTokenRef.current = null;
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        await PushNotifications.register(); // re-trigger l'event 'registration'
+        return { ok: true, oldEndpoint: oldToken };
+      }
+
+      // Web push reset — inchangé
       if (!('serviceWorker' in navigator) || !VAPID_PUBLIC_KEY) {
         return { ok: false, reason: 'unsupported' };
       }
       const reg = await navigator.serviceWorker.ready;
       const oldSub = await reg.pushManager.getSubscription();
       const oldEndpoint = oldSub?.endpoint;
-      // 1) Unsubscribe côté SW
       if (oldSub) {
         try { await oldSub.unsubscribe(); } catch {}
       }
-      // 2) Supprime la row côté DB (matching endpoint pour pas wiper d'autres devices)
       if (oldEndpoint) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', oldEndpoint);
       }
-      // 3) Re-subscribe (génère un endpoint neuf si Apple/FCM coopèrent)
       await subscribe();
       return { ok: true, oldEndpoint };
     } catch (e) {
       console.error('[push] resetSubscription failed:', e);
       return { ok: false, reason: e.message };
     }
-  }, [subscribe]);
+  }, [subscribe, clientId, coachId]);
+
+  // Auto-subscribe quand on a déjà la permission au mount (couvre le cas
+  // où l'utilisateur a déjà accordé la permission lors d'une précédente
+  // session).
   useEffect(() => {
     if (permission === 'granted' && (clientId || coachId)) subscribe();
   }, [clientId, coachId, permission, subscribe]);
+
   return { permission, subscribed, requestPermission, resetSubscription };
+}
+
+// ─── Helper : persiste le token APNs/FCM en DB ────────────────────────────
+// On évite l'upsert PostgREST avec partial unique index (pas supporté
+// proprement) → on fait un dedup manuel : si même token déjà présent, no-op.
+// Sinon on remplace les autres tokens du même client (réinstallation app =
+// nouveau token, l'ancien est dead).
+async function persistNativeToken({ token, clientId, coachId }) {
+  if (!token) return;
+  const owner = coachId ? { coach_id: coachId, col: 'coach_id' } : { client_id: clientId, col: 'client_id' };
+  const ownerId = coachId || clientId;
+
+  // 1. Token identique déjà présent ? → idempotent
+  const { data: existing } = await supabase
+    .from('push_subscriptions')
+    .select('id')
+    .eq(owner.col, ownerId)
+    .eq('apns_token', token)
+    .maybeSingle();
+  if (existing) return;
+
+  // 2. Wipe les anciens tokens natifs pour ce même owner (un device = un token vivant)
+  await supabase
+    .from('push_subscriptions')
+    .delete()
+    .eq(owner.col, ownerId)
+    .not('apns_token', 'is', null)
+    .neq('apns_token', token);
+
+  // 3. Insère la nouvelle row APNs (endpoint et subscription restent NULL)
+  const row = coachId
+    ? { coach_id: coachId, client_id: null, apns_token: token, endpoint: null, subscription: null }
+    : { client_id: clientId, coach_id: null, apns_token: token, endpoint: null, subscription: null };
+  const { error } = await supabase.from('push_subscriptions').insert(row);
+  if (error) {
+    console.warn('[apns] insert failed:', error.message);
+  }
 }

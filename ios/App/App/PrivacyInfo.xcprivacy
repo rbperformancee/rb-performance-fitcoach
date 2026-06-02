@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PrivacyInfo.xcprivacy — RB Perform (athlète iOS)
+
+  Référence Apple :
+  https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+
+  Périmètre : app athlète (le coach reste web). Si on ajoute des SDKs
+  natifs ou des features qui touchent à d'autres Required Reason APIs,
+  les déclarer ici AVANT submission, sinon rejet auto par App Review.
+
+  Roadmap : APP_STORE_ROADMAP.md (Wave 2).
+-->
+<plist version="1.0">
+<dict>
+    <!-- Tracking cross-app : NON. On n'utilise pas l'IDFA, pas d'ATT prompt. -->
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <!-- Domaines tiers contactés pour du tracking : aucun. -->
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <!-- Données collectées côté athlète RB Perform.
+         Toutes sont "Linked to user" (compte) et servent exclusivement à
+         "App Functionality" (faire fonctionner le coaching). Pas de pub,
+         pas d'analytics tiers, pas de profilage. -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array>
+        <!-- Email : création de compte + magic link + communications -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeEmailAddress</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <!-- Prénom/Nom : affichage dans l'app + messagerie coach -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeName</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <!-- Photos check-in (body composition) partagées avec le coach -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePhotosorVideos</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <!-- Health & Fitness : poids, RPE, performances, mesures -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeFitness</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <!-- Device ID : token APNs pour notifs push (rappels séance, message coach) -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeDeviceID</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <!-- Diagnostic crashes : on a Sentry web, mais sur natif on n'envoie que les crashes/erreurs nécessaires au debug -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeCrashData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- Required Reason APIs utilisées.
+         Référence : https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api
+         À enrichir au moment où une wave introduit une nouvelle API. -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <!-- UserDefaults : utilisé par @capacitor/preferences (Wave 6 cache offline) -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- CA92.1 = Access info from same app group / extension -->
+                <string>CA92.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>

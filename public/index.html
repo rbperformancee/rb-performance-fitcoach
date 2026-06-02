@@ -181,15 +181,22 @@
       // Sans ca : pas de cache offline, pas de push notifications, pas de PWA fullsize.
       // Skip en localhost pour eviter le cache aggressif qui masque les changements
       // de chunks lazy (Onboarding, etc.) pendant le dev.
+      // Skip aussi en WebView Capacitor (iOS/Android natif) : le SW entre en
+      // conflit avec WKWebView et le cache offline natif passe par
+      // @capacitor/preferences (cf APP_STORE_ROADMAP.md Wave 6). De plus, si
+      // l'utilisateur avait installé la PWA avant l'app native, on purge le
+      // SW résiduel pour éviter une double couche de cache.
       var isLocalDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      if ('serviceWorker' in navigator && !isLocalDev) {
+      var isNativeWebView = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+      if ('serviceWorker' in navigator && !isLocalDev && !isNativeWebView) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js').catch(function(err) {
             console.warn('[SW] registration failed:', err);
           });
         });
-      } else if (isLocalDev && 'serviceWorker' in navigator) {
-        // Auto-unregister tout SW existant en local pour purger le cache
+      } else if ('serviceWorker' in navigator && (isLocalDev || isNativeWebView)) {
+        // Auto-unregister tout SW existant pour purger le cache (local dev OU
+        // 1ère ouverture native après une PWA pré-existante).
         navigator.serviceWorker.getRegistrations().then(function(regs) {
           regs.forEach(function(r) { r.unregister(); });
         });

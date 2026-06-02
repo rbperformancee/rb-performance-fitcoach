@@ -747,6 +747,7 @@ function AppInner() {
   const [showMentions,    setShowMentions]    = useState(false);
   const [showCGU,         setShowCGU]         = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingAccount,   setDeletingAccount]   = useState(false);
   const [showSubscribe, setShowSubscribe] = useState(false);
   const [showCoachChat, setShowCoachChat] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -1347,41 +1348,48 @@ function AppInner() {
   const sessionComplete = sessionTotal > 0 && sessionDone === sessionTotal;
 
 
+  // RGPD art. 17 + Apple App Store Guideline 5.1.1(v).
+  //
+  // L'ancienne version faisait un cascade SQL client-side, table par table,
+  // ce qui (1) oubliait des tables ajoutées depuis (check_ins,
+  // push_subscriptions, exercise_video_replies, etc.) et surtout (2) ne
+  // supprimait pas la ligne auth.users → l'utilisateur restait dans le pool
+  // Supabase et ne pouvait pas se recréer un compte avec la même adresse.
+  //
+  // On délègue maintenant à `/api/gdpr-delete` (server-side, service role,
+  // cascade via FKs ON DELETE CASCADE + delete auth.users + email confirm +
+  // audit). Même contrat que MonCompte côté coach.
   const handleDeleteAccount = async () => {
     if (!client) return;
-    const clientEmail = client.email;
-    const clientName = client.full_name;
-    // Supprimer toutes les donnees — on log les erreurs mais on continue le cascade
-    // pour que la sign-out finale s'execute meme si une table rate
-    const deletions = [
-      ["weight_logs",   supabase.from("weight_logs").delete().eq("client_id", client.id)],
-      ["exercise_logs", supabase.from("exercise_logs").delete().eq("client_id", client.id)],
-      ["session_rpe",   supabase.from("session_rpe").delete().eq("client_id", client.id)],
-      ["messages",      supabase.from("messages").delete().eq("client_id", client.id)],
-      ["programmes",    supabase.from("programmes").delete().eq("client_id", client.id)],
-      ["clients",       supabase.from("clients").delete().eq("id", client.id)],
-    ];
-    const errors = [];
-    for (const [name, q] of deletions) {
-      const { error } = await q;
-      if (error) { console.error(`[delete ${name}]`, error); errors.push(name); }
-    }
-    if (errors.length) {
-      // Best-effort : on continue quand meme, mais on loggue pour debug
-      console.warn("Tables non supprimees :", errors.join(", "));
-    }
-    // Email de confirmation de suppression
+    if (deletingAccount) return; // garde anti double-clic
+    setDeletingAccount(true);
     try {
-      await supabase.functions.invoke("send-welcome", {
-        body: {
-          email: clientEmail,
-          full_name: clientName,
-          type: "deletion_confirmation",
-        },
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token;
+      if (!jwt) {
+        toast.error("Session expirée — reconnecte-toi");
+        return;
+      }
+      const res = await fetch("/api/gdpr-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({ confirm: "SUPPRIMER" }),
       });
-    } catch (e) { console.warn("Email suppression non envoye", e); }
-    await supabase.auth.signOut();
-    window.location.href = "/login";
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Suppression échouée");
+      }
+      toast.success("Compte supprimé. Email de confirmation envoyé.");
+      // On laisse le toast lisible quelques secondes avant la redirection.
+      setTimeout(async () => {
+        try { await supabase.auth.signOut(); } catch {}
+        window.location.href = "/login";
+      }, 2500);
+    } catch (e) {
+      console.error("[delete account] failed:", e);
+      toast.error(e.message || "Suppression indisponible — contacte le support");
+      setDeletingAccount(false);
+    }
   };
 
   const handleExportPDF = async () => {
@@ -1405,11 +1413,15 @@ function AppInner() {
       {showMentions && <MentionsLegales onClose={() => setShowMentions(false)} />}
       {showCGU && <CGU onClose={() => setShowCGU(false)} />}
 
-      {/* Modal suppression données */}
+      {/* Modal suppression compte (RGPD art. 17 + Apple 5.1.1(v)).
+          On NE ferme PAS la modale au confirm — handleDeleteAccount est async
+          et la modale doit rester visible en mode "busy" pendant l'appel.
+          La redirection finale window.location.href démonte tout. */}
       {showDeleteConfirm && (
         <DeleteConfirmModal
-          onConfirm={() => { setShowDeleteConfirm(false); handleDeleteAccount(); }}
-          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDeleteAccount}
+          onCancel={() => { if (!deletingAccount) setShowDeleteConfirm(false); }}
+          busy={deletingAccount}
         />
       )}
 

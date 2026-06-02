@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { setSentryUser } from "../lib/sentry";
+import { setProgrammeHtml } from "../lib/offline";
 
 export function useAuth() {
   const [user,        setUser]        = useState(null);
@@ -38,10 +39,9 @@ export function useAuth() {
       if (data?.html_content) {
         setProgramme(data.html_content);
         stopPolling();
-        // Cache offline
-        if (navigator.serviceWorker?.controller) {
-          navigator.serviceWorker.controller.postMessage({ type: "CACHE_PROGRAMME", html: data.html_content });
-        }
+        // Cache offline — abstraction Wave 6 : SW postMessage en web,
+        // @capacitor/preferences en natif iOS. Idempotent et non bloquant.
+        setProgrammeHtml(data.html_content);
         if ('Notification' in window && Notification.permission === 'granted') {
           new Notification('Programme pret', {
             body: 'Ton programme est pret ! Lance-toi.',
@@ -78,10 +78,8 @@ export function useAuth() {
       if (progData?.html_content) {
         setProgramme(progData.html_content);
         setProgrammeMeta({ id: progData.id, programme_name: progData.programme_name, programme_accepted_at: progData.programme_accepted_at, programme_start_date: progData.programme_start_date, accepted_by: progData.accepted_by, start_date: progData.start_date, training_days: progData.training_days, skipped_dates: progData.skipped_dates || [] });
-        // Cache programme pour acces offline
-        if (navigator.serviceWorker?.controller) {
-          navigator.serviceWorker.controller.postMessage({ type: "CACHE_PROGRAMME", html: progData.html_content });
-        }
+        // Cache programme pour acces offline (web SW ou Capacitor Preferences)
+        setProgrammeHtml(progData.html_content);
       } else {
         startPolling(clientData.id);
       }

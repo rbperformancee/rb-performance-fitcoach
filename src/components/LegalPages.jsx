@@ -171,21 +171,70 @@ export function CGU({ onClose }) {
 }
 
 /* ── EMAIL SUPPRESSION CONFIRMATION (utilisé dans App.jsx) ── */
-export function DeleteConfirmModal({ onConfirm, onCancel }) {
+// RGPD art. 17 + Apple App Store Guideline 5.1.1(v) :
+// la suppression doit être facile à demander MAIS difficile à déclencher par
+// accident. On exige donc le typed-confirm "SUPPRIMER" (en majuscules) —
+// même contrat que côté backend `api/gdpr-delete.js`.
+//
+// `busy` = état contrôlé par le parent pendant l'appel réseau (désactive le
+// bouton, évite double-submit). Si non passé, le bouton reste actif.
+export function DeleteConfirmModal({ onConfirm, onCancel, busy = false }) {
+  const [typed, setTyped] = useState("");
+  const ready = typed.trim().toUpperCase() === "SUPPRIMER";
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 998, background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ background: "#141414", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", fontFamily: "'Inter',sans-serif" }}>
         <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
-        <h2 style={{ fontSize: 18, fontWeight: 800, color: "#f5f5f5", marginBottom: 8 }}>Supprimer mes données</h2>
-        <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.7, marginBottom: 24 }}>
-          Cette action supprimera définitivement toutes tes données : programme, historique, poids, messages et compte. <strong style={{ color: "#f5f5f5" }}>Cette action est irréversible.</strong>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: "#f5f5f5", marginBottom: 8 }}>Supprimer mon compte</h2>
+        <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.7, marginBottom: 18 }}>
+          Cette action supprimera définitivement ton compte et toutes tes données : programme, historique, poids, photos, messages.{" "}
+          <strong style={{ color: "#f5f5f5" }}>Aucune récupération possible.</strong>
         </p>
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, marginBottom: 10 }}>
+          Pour confirmer, tape <strong style={{ color: "#ef4444" }}>SUPPRIMER</strong> ci-dessous :
+        </p>
+        <input
+          type="text"
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          placeholder="SUPPRIMER"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          disabled={busy}
+          style={{
+            width: "100%", padding: "12px 14px", marginBottom: 18,
+            background: "rgba(0,0,0,0.4)",
+            border: `1px solid ${ready ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.08)"}`,
+            borderRadius: 10, color: "#f5f5f5", fontSize: 14, fontWeight: 600,
+            textAlign: "center", letterSpacing: "0.12em",
+            outline: "none", boxSizing: "border-box",
+            fontFamily: "inherit",
+          }}
+        />
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={onCancel} style={{ flex: 1, padding: "12px", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#9ca3af", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            style={{ flex: 1, padding: "12px", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#9ca3af", fontSize: 13, fontWeight: 700, cursor: busy ? "wait" : "pointer", opacity: busy ? 0.5 : 1 }}
+          >
             Annuler
           </button>
-          <button onClick={onConfirm} style={{ flex: 1, padding: "12px", background: "#ef4444", border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-            Supprimer tout
+          <button
+            onClick={() => ready && !busy && onConfirm()}
+            disabled={!ready || busy}
+            style={{
+              flex: 1, padding: "12px",
+              background: ready && !busy ? "#ef4444" : "rgba(239,68,68,0.25)",
+              border: "none", borderRadius: 10, color: "#fff",
+              fontSize: 13, fontWeight: 700,
+              cursor: ready && !busy ? "pointer" : "not-allowed",
+              transition: "background 0.15s ease",
+            }}
+          >
+            {busy ? "Suppression…" : "Supprimer définitivement"}
           </button>
         </div>
       </div>
