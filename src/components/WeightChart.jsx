@@ -13,6 +13,8 @@ import EmptyState from "./EmptyState";
 import haptic from "../lib/haptic";
 import Spinner from "./Spinner";
 import HabitsCard from "./client/HabitsCard";
+import { isNative } from "../lib/native";
+import { isHealthAvailable, requestStepsPermission, getTodaySteps } from "../lib/health";
 
 export default function WeightChart({ clientId, client, programme, appData }) {
   const t = useT();
@@ -45,6 +47,44 @@ export default function WeightChart({ clientId, client, programme, appData }) {
     if (appData?.dailyTracking?.pas != null) setDailySteps(appData.dailyTracking.pas);
     if (appData?.nutritionGoals?.pas != null) setStepsGoal(appData.nutritionGoals.pas);
   }, [appData?.dailyTracking?.pas, appData?.nutritionGoals?.pas]);
+
+  // Apple Health / Health Connect : auto-fill du compteur de pas du jour sur natif.
+  // On lit HealthKit (iPhone + Apple Watch fusionnés) une fois au mount, puis
+  // toutes les 5 minutes tant que l'app est foreground (Capacitor coupe le JS
+  // en background donc pas besoin de gérer ça). Si la lecture retourne un nombre
+  // plus haut que ce qu'on a en DB, on push automatiquement (l'user n'a plus
+  // besoin de taper ses pas — l'app les détecte).
+  useEffect(() => {
+    if (!isNative() || !clientId) return;
+    let cancelled = false;
+    const syncFromHealth = async () => {
+      try {
+        const ok = await isHealthAvailable();
+        if (!ok || cancelled) return;
+        // requestStepsPermission est idempotent sur iOS (le system prompt
+        // n'apparaît qu'une fois — Apple gère le déjà-demandé en interne).
+        await requestStepsPermission();
+        if (cancelled) return;
+        const steps = await getTodaySteps();
+        if (cancelled || steps == null) return;
+        // On ne push que si HealthKit a une valeur > celle en DB — évite
+        // d'écraser une saisie manuelle plus haute qui aurait été faite
+        // depuis un autre device (Galaxy Watch sync par exemple).
+        if (steps > (dailySteps || 0)) {
+          saveSteps(steps);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("[healthkit] sync steps failed:", e);
+      }
+    };
+    syncFromHealth();
+    const id = setInterval(syncFromHealth, 5 * 60 * 1000); // 5 min
+    return () => { cancelled = true; clearInterval(id); };
+    // dailySteps & saveSteps volontairement omis — on capture juste la value
+    // initiale au mount + on push si HealthKit > value en DB ; pas besoin de
+    // re-poll au moindre changement de pas saisis manuellement.
+  }, [clientId]); // eslint-disable-line
 
   // Bilan hebdo : visible uniquement le jour du bilan (dimanche, jour du
   // cron prompt 19h UTC) + lundi en rattrapage. Hidden si déjà soumis pour

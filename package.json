@@ -36,6 +36,7 @@
     "@vercel/og": "^0.11.1",
     "@vercel/speed-insights": "^2.0.0",
     "ai": "^6.0.175",
+    "capacitor-health": "^8.1.2",
     "dompurify": "^3.4.1",
     "dotenv": "^17.4.2",
     "lamejs": "^1.2.1",
