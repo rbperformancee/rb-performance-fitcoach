@@ -306,7 +306,7 @@ function TempoExplainModal({ tempo, onClose }) {
  * CompoundSetRow — UI guidée pour un set cluster ou dégressif.
  * L'athlète saisit chaque bloc/charge ; une seule validation pour le set.
  */
-function CompoundSetRow({ index, done, isActive, type, segments, currentEntry, defaultWeight, onDone }) {
+function CompoundSetRow({ index, done, isActive, type, segments, currentEntry, defaultWeight, onDone, clusterRest }) {
   const isCluster = type === "cluster";
   const N = segments.length;
 
@@ -345,7 +345,9 @@ function CompoundSetRow({ index, done, isActive, type, segments, currentEntry, d
   const accent = type === "degressive" ? "#f59e0b" : GREEN;
   const accentDim = type === "degressive" ? "rgba(245,158,11,0.12)" : GREEN_DIM;
   const label = isCluster ? "Cluster" : "Dégressive";
-  const hint = isCluster ? "Repos court entre les blocs, même charge" : "Enchaîné sans repos, la charge descend";
+  const hint = isCluster
+    ? (clusterRest ? `Repos ${clusterRest} entre chaque bloc, même charge` : "Repos court entre les blocs, même charge")
+    : "Enchaîné sans repos, la charge descend";
 
   const inStyle = {
     background: done ? "rgba(2,209,186,0.06)" : "rgba(255,255,255,0.08)",
@@ -726,13 +728,14 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                   </span>
                 )}
                 {compound && (
-                  <span style={{
+                  <span title={ex.clusterRest ? `Mini-rest ${ex.clusterRest} entre chaque bloc` : null} style={{
                     fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 100,
                     color: compound.type === "degressive" ? "#f59e0b" : GREEN,
                     background: compound.type === "degressive" ? "rgba(245,158,11,0.1)" : "rgba(2,209,186,0.08)",
                     border: `1px solid ${compound.type === "degressive" ? "rgba(245,158,11,0.25)" : "rgba(2,209,186,0.2)"}`,
                   }}>
                     {compound.type === "degressive" ? "Dégressive" : "Cluster"}
+                    {compound.type === "cluster" && ex.clusterRest ? ` · ${ex.clusterRest}` : ""}
                   </span>
                 )}
                 {ex.rest && <span onClick={() => restSecs && restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets })} style={{ fontSize: 11, color: "rgba(255,165,0,0.7)", background: "rgba(255,165,0,0.07)", padding: "5px 12px", borderRadius: 100, cursor: restSecs ? "pointer" : "default" }}>⏱ {ex.rest}</span>}
@@ -874,6 +877,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                   currentEntry={completedSetsRef.current[i]}
                   defaultWeight={restoredW}
                   onDone={handleSetDone}
+                  clusterRest={ex.clusterRest || ""}
                 />
               );
             }

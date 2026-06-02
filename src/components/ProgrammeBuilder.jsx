@@ -66,6 +66,7 @@ function buildHTML(p) {
           <input id="et-${eid}" value="${escAttr(ex.tempo)}" />
           <select id="eri-${eid}"><option selected value="${escAttr(ex.rir)}">${escAttr(ex.rir)}</option></select>
           <input id="ers-${eid}" value="${escAttr(ex.rest)}" />
+          <input id="ecrs-${eid}" value="${escAttr(ex.clusterRest || '')}" />
           <input id="eg-${eid}" value="${escAttr(ex.group || '')}" />
           <input id="ev-${eid}" value="${escAttr(ex.vidUrl || '')}" />
           <input id="ermt-${eid}" value="${escAttr(ex.rmTest != null ? String(ex.rmTest) : '')}" />
@@ -174,7 +175,7 @@ ${weeksHtml}
 // Quand rmTest est non-null, c'est un nombre = reps cibles du test
 // (= N dans NRM). L'athlete loggue le poids souleve + on calcule le
 // 1RM estime via Epley pour calibrer les charges programme suivantes.
-const newExercise = () => ({ id: uid(), name: "", reps: "", charge: "", tempo: "", rir: "", rest: "", group: "", vidUrl: "", rmTest: null });
+const newExercise = () => ({ id: uid(), name: "", reps: "", charge: "", tempo: "", rir: "", rest: "", clusterRest: "", group: "", vidUrl: "", rmTest: null });
 const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", bonus: false, warmup: null, runs: [], fieldSessions: [], amraps: [], ergos: [], exercises: [newExercise()] });
 const newWarmupMovement = (name = "", spec = "") => ({ id: uid(), name, spec });
 const newWarmupCircuit = () => ({
@@ -551,6 +552,7 @@ function fromParsed(parsed) {
           tempo: e.tempo || "",
           rir: e.rir || "",
           rest: e.rest || "",
+          clusterRest: e.clusterRest || "",
           group: e.group || "",
           vidUrl: e.vidUrl || "",
         })),
@@ -1136,6 +1138,26 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
         <SuggestField label="RIR" value={ex.rir} onChange={(v) => update("rir", v)} placeholder="1" suggestions={RIR_SUGGESTIONS} />
         <SuggestField label="Repos" value={ex.rest} onChange={(v) => update("rest", v)} placeholder="2'" suggestions={REST_SUGGESTIONS} />
       </div>
+      {/* Repos cluster — mini-rest entre les micro-reps d'un set composé
+          ("5+5+5", "4X1+1+1+1", etc.). Apparaît UNIQUEMENT si le champ Reps
+          contient un "+" (= notation cluster). Le coach saisit "15s" ou
+          "10s" ; l'athlète voit ça affiché entre chaque bloc dans la cluster
+          card (et ça déclenche un mini timer dédié). */}
+      {/\+/.test(ex.reps || "") && (
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 4fr", gap: 6, marginTop: 6 }}>
+          <SuggestField
+            label="Repos cluster"
+            value={ex.clusterRest}
+            onChange={(v) => update("clusterRest", v)}
+            placeholder="15s"
+            suggestions={["10s", "15s", "20s", "30s", "45s", "1'"]}
+            accent="#a78bfa"
+          />
+          <div style={{ display: "flex", alignItems: "center", padding: "0 4px", fontSize: 10, color: "rgba(167,139,250,0.65)", lineHeight: 1.4 }}>
+            ↑ Mini-repos entre chaque bloc du cluster (ex. "1 rep + repos 15s + 1 rep…"). Séparé du repos inter-séries.
+          </div>
+        </div>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: 6, marginTop: 6 }}>
         <TextField label="Groupe" value={ex.group} onChange={(v) => update("group", v)} placeholder="A1, A2…" />
         <TextField label="Vidéo URL" value={ex.vidUrl} onChange={(v) => update("vidUrl", v)} placeholder="Auto-rempli si tu choisis depuis la liste" />

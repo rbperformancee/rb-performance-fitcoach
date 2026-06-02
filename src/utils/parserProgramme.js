@@ -198,6 +198,14 @@ export function parseProgrammeHTML(htmlString) {
           ""
         ).trim() || null;
 
+        /* Repos cluster : mini-rest entre les blocs d'un set composé
+           ("5+5+5", "4X1+1+1+1"…). Distinct du `rest` inter-séries. */
+        const clusterRest = (
+          doc.getElementById(`ecrs-${eid}`)?.value ||
+          doc.getElementById(`ecrs-${eid}`)?.getAttribute("value") ||
+          ""
+        ).trim() || null;
+
         /* Charge imposée par le coach (texte libre : "80kg", "60% 1RM",
            "RPE 8", "BW + 20kg"…). Indépendant des reps pour permettre
            l'évolution week-over-week et un affichage clair côté athlète. */
@@ -251,6 +259,7 @@ export function parseProgrammeHTML(htmlString) {
 
         exercises.push({
           name: exName,
+          clusterRest,
           rawReps,   // ← "4X8-10" tel que saisi — affiché directement dans le chip
           sets,      // ← number (4) ou null
           reps,      // ← string "8-10" ou null (utilisé comme placeholder input)
