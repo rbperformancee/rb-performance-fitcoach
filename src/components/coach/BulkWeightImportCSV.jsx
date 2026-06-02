@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -312,7 +313,7 @@ export default function BulkWeightImportCSV({ open, onClose, clientId, clientNam
                           display: "flex", justifyContent: "space-between", gap: 10,
                         }}>
                           <div style={{ color: "rgba(255,255,255,0.7)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                            {new Date(r.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
+                            {new Date(r.date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short", year: "numeric" })}
                           </div>
                           <div style={{ color: G, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
                             {r.weight}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>

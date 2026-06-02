@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
-import { useT, getLocale } from "../lib/i18n";
+import { useT, getLocale, getDateLocale } from "../lib/i18n";
 import { navigateAfterAuth } from "../lib/native";
 
 const fillTpl = (s, vars) => {
@@ -662,7 +662,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       const d = new Date(now);
       d.setDate(d.getDate() + i);
       const date = d.toISOString().split("T")[0];
-      const label = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      const label = d.toLocaleDateString(getDateLocale(), { weekday: "long", day: "numeric", month: "long" });
       // Today : filter past hours (round up to next hour)
       const hours = i === 0 ? allHours.filter(h => parseInt(h, 10) >= now.getHours() + 1) : allHours;
       if (hours.length > 0) days.push({ date, label, hours });

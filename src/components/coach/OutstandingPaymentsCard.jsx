@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from "react";
+import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -238,7 +239,7 @@ export default function OutstandingPaymentsCard({ coachId, coachData }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {group.items.map((s) => {
                 const isLate = s.computed_status === "late";
-                const due = new Date(s.due_date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+                const due = new Date(s.due_date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short" });
                 return (
                   <div key={s.id} style={{
                     display: "flex", alignItems: "center", gap: 8,

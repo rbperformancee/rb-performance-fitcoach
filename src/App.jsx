@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense, lazy } from "react";
+import { getDateLocale } from "./lib/i18n";
 import { RB_SUPPORT_EMAIL } from "./lib/branding";
 import { useInactivityAlerts } from "./hooks/useInactivityAlerts";
 import { ToastProvider, toast } from "./components/Toast";
@@ -377,7 +378,7 @@ function TrainLocked({ client, sessionsDone = 0, onContact, onBook, coachName = 
   const slotDate = booking?.coach_slots?.date;
   const slotHeure = booking?.coach_slots?.heure;
   const dateStr = slotDate
-    ? new Date(slotDate + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })
+    ? new Date(slotDate + "T12:00:00").toLocaleDateString(getDateLocale(), { weekday: "long", day: "numeric", month: "long" })
     : null;
 
   return (

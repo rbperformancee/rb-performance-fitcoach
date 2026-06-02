@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState, useMemo } from "react";
+import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -238,7 +239,7 @@ export default function InvoiceHistory({ coachId }) {
 
 function Row({ number, client, amount, date, extra, badge, onDownload, downloading, hasPdf }) {
   const G = "#02d1ba";
-  const dStr = date ? new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
+  const dStr = date ? new Date(date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short", year: "2-digit" }) : "—";
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 10,

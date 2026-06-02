@@ -7,13 +7,16 @@
  *   - monthly  → 1er du mois
  * La contrainte UNIQUE (client_id, week_start) garantit 1 bilan par période.
  */
+import { getDateLocale, t } from "./i18n";
 
 export const FREQUENCIES = ["weekly", "biweekly", "monthly"];
 
+// Wrapped en getter pour suivre la locale courante a chaque acces.
+// L'ancien const map etait fige au build et ne se traduisait jamais.
 export const FREQ_LABELS = {
-  weekly: "Hebdomadaire",
-  biweekly: "Toutes les 2 semaines",
-  monthly: "Mensuel",
+  get weekly()   { return t("checkin.freq_weekly", "Hebdomadaire"); },
+  get biweekly() { return t("checkin.freq_biweekly", "Toutes les 2 semaines"); },
+  get monthly()  { return t("checkin.freq_monthly", "Mensuel"); },
 };
 
 // Date locale au format YYYY-MM-DD (évite les décalages de fuseau d'ISO).
@@ -51,17 +54,17 @@ export function periodStart(freq, date = new Date()) {
 
 /** Complément de phrase : « Bilan <de la semaine> ». */
 export function periodNoun(freq) {
-  if (freq === "monthly") return "du mois";
-  if (freq === "biweekly") return "de la quinzaine";
-  return "de la semaine";
+  if (freq === "monthly") return t("checkin.period_month", "du mois");
+  if (freq === "biweekly") return t("checkin.period_biweek", "de la quinzaine");
+  return t("checkin.period_week", "de la semaine");
 }
 
 /** Libellé d'une période à partir de son ancre (week_start). */
 export function periodLabel(freq, ws) {
   const d = new Date(ws + "T00:00:00");
   if (freq === "monthly") {
-    return d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    return d.toLocaleDateString(getDateLocale(), { month: "long", year: "numeric" });
   }
-  const prefix = freq === "biweekly" ? "Quinzaine du " : "Semaine du ";
-  return prefix + d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  const prefix = freq === "biweekly" ? t("checkin.label_biweek_prefix", "Quinzaine du ") : t("checkin.label_week_prefix", "Semaine du ");
+  return prefix + d.toLocaleDateString(getDateLocale(), { day: "numeric", month: "long" });
 }

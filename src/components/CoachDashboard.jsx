@@ -67,7 +67,7 @@ import NotificationBell from "./coach/NotificationBell";
 import CommandPalette from "./coach/CommandPalette";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
 import usePullToRefresh from "../hooks/usePullToRefresh";
-import { useT, getLocale, t as tStatic } from "../lib/i18n";
+import { useT, getLocale, t as tStatic, getDateLocale } from "../lib/i18n";
 
 const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
 const fillTpl = (s, vars) => {
@@ -205,7 +205,7 @@ function ProgrammeCalendarSection({ programmeId, clientId }) {
 
       {/* Stats grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
-        <Stat label="Démarré le" value={data.start_date ? new Date(data.start_date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "—"} />
+        <Stat label="Démarré le" value={data.start_date ? new Date(data.start_date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short" }) : "—"} />
         <Stat label="Séances" value={completions.length} valueColor="#02d1ba" />
         <Stat label="Reportées" value={data.reported_days_count || 0} valueColor={data.reported_days_count > 0 ? "#f97316" : "rgba(255,255,255,0.5)"} />
         <Stat label="Repos pris" value={data.rest_days_count || 0} valueColor={data.rest_days_count > 0 ? "#a78bfa" : "rgba(255,255,255,0.5)"} />
@@ -238,7 +238,7 @@ function ProgrammeCalendarSection({ programmeId, clientId }) {
           };
           const isToday = d.status === "today";
           return (
-            <div key={i} title={d.date.toLocaleDateString("fr-FR")} style={{
+            <div key={i} title={d.date.toLocaleDateString(getDateLocale())} style={{
               flex: 1, height: 24, borderRadius: 4,
               // Today : transparent + contour vif. Sinon : background plein.
               background: isToday ? "transparent" : colors[d.status],
@@ -361,7 +361,7 @@ function ProgrammesHistorySection({ client, onEdit, onReuse }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.programme_name}</div>
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                    {new Date(p.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                    {new Date(p.uploaded_at).toLocaleDateString(getDateLocale(), { day: "numeric", month: "short", year: "numeric" })}
                   </div>
                 </div>
                 <button type="button" onClick={() => onEdit(p.id)} style={{ padding: "5px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Éditer</button>
@@ -410,7 +410,7 @@ function ProgrammeBlocksSection({ client, onEdit, onNewBlock }) {
   });
 
   const fmt = (iso) => iso
-    ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+    ? new Date(iso).toLocaleDateString(getDateLocale(), { day: "numeric", month: "long", year: "numeric" })
     : null;
 
   return (
@@ -495,7 +495,7 @@ function ProgrammeCompareModal({ data, onClose }) {
             <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16 }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 6 }}>{i === 0 ? "Programme A" : "Programme B"}</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{side.src.programme_name}</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>{new Date(side.src.uploaded_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>{new Date(side.src.uploaded_at).toLocaleDateString(getDateLocale(), { day: "numeric", month: "long", year: "numeric" })}</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 14 }}>
                 {[{ l: "Sem", v: side.s.weeks }, { l: "Séances", v: side.s.sessions }, { l: "Exos", v: side.s.exos }].map((x, j) => (
                   <div key={j} style={{ padding: "8px 10px", background: "rgba(255,255,255,0.03)", borderRadius: 8, textAlign: "center" }}>
@@ -684,7 +684,7 @@ function LineGraph({ data, color = G, height = 200, unit = "kg", valueKey = "wei
     const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T12:00:00");
     xLabels.push({
       x: points[i].x,
-      label: d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
+      label: d.toLocaleDateString(getDateLocale(), { day: "numeric", month: "short" }),
     });
   }
 
@@ -801,7 +801,7 @@ function CreneauxManager() {
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{b.clients?.full_name || b.clients?.email}</div>
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>
-                      {slot ? new Date(slot.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) + " · " + slot.heure : "Créneau inconnu"}
+                      {slot ? new Date(slot.date + "T12:00:00").toLocaleDateString(getDateLocale(), { weekday: "long", day: "numeric", month: "long" }) + " · " + slot.heure : "Créneau inconnu"}
                     </div>
                   </div>
                   <div style={{ background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, padding: "4px 12px", fontSize: 10, color: G, fontWeight: 700 }}>Confirmé</div>
@@ -843,7 +843,7 @@ function CreneauxManager() {
               <div key={slot.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
-                    {new Date(slot.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                    {new Date(slot.date + "T12:00:00").toLocaleDateString(getDateLocale(), { weekday: "long", day: "numeric", month: "long" })}
                   </div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{slot.heure}</div>
                 </div>
@@ -863,7 +863,7 @@ function CreneauxManager() {
             {slots.filter(s => !s.is_available).map(slot => (
               <div key={slot.id} style={{ background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.5 }}>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-                  {new Date(slot.date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} · {slot.heure}
+                  {new Date(slot.date + "T12:00:00").toLocaleDateString(getDateLocale(), { day: "numeric", month: "short" })} · {slot.heure}
                 </div>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Réservé</div>
               </div>
@@ -1188,7 +1188,7 @@ function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) 
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <span style={{ textTransform: "capitalize" }}>
-                {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                {date.toLocaleDateString(getDateLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               </span>
               {durationMin != null && (
                 <>
@@ -1415,7 +1415,7 @@ function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) 
                         fontSize: 11,
                       }}>
                         <span style={{ color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, fontSize: 9 }}>
-                          Vs {new Date(prev.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
+                          Vs {new Date(prev.date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short" })}
                         </span>
                         <span style={{ fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", color: "rgba(255,255,255,0.55)" }}>{fmtKg(prev.maxW)}kg</span>
                         <span style={{ color: "rgba(255,255,255,0.2)" }}>→</span>
@@ -1667,7 +1667,7 @@ function ExerciseProgressionModal({ data, onClose }) {
               {exName}
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", ...numStyle }}>
-              {totalSessions} séance{totalSessions > 1 ? "s" : ""} · première {firstEntry ? new Date(firstEntry.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+              {totalSessions} séance{totalSessions > 1 ? "s" : ""} · première {firstEntry ? new Date(firstEntry.date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short", year: "numeric" }) : "—"}
             </div>
           </div>
           <button
@@ -1761,7 +1761,7 @@ function ExerciseProgressionModal({ data, onClose }) {
                     fontSize: 12,
                   }}>
                     <div style={{ ...numStyle, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-                      {new Date(h.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "2-digit" })}
+                      {new Date(h.date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short", year: "2-digit" })}
                     </div>
                     <div style={{ ...numStyle, textAlign: "right", color: G_LOCAL, fontWeight: 700 }}>
                       {fmtKg(h.maxW)}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginLeft: 2, fontWeight: 500 }}>kg</span>
@@ -4065,7 +4065,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               {lastPayment ? (() => {
                 const today = new Date().toISOString().slice(0, 10);
                 const expired = lastPayment.period_end < today;
-                const fmt = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+                const fmt = (d) => new Date(d).toLocaleDateString(getDateLocale(), { day: "numeric", month: "short" });
                 return (
                   <>
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4, letterSpacing: 0.5 }}>Dernier paiement</div>
@@ -6561,7 +6561,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               if (h < 24) return `dans ${h}h`;
               const d = Math.round(h / 24);
               if (d <= 7) return `dans ${d}j`;
-              return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+              return new Date(iso).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short" });
             };
             return (
               <div style={{ marginBottom: 32, padding: 16, background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.12)", borderRadius: 12 }}>

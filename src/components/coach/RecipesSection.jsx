@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
@@ -259,7 +260,7 @@ function PlanCard({ plan, onSelectRecipe }) {
             {plan.title || "Plan sans titre"}
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-            {plan.recipes_extracted} recettes · {plan.page_count}p · {new Date(plan.created_at).toLocaleDateString("fr-FR")}
+            {plan.recipes_extracted} recettes · {plan.page_count}p · {new Date(plan.created_at).toLocaleDateString(getDateLocale())}
           </div>
         </div>
         <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginLeft: 12 }}>{expanded ? "▲" : "▼"}</span>

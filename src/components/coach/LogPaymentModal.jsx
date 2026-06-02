@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -139,7 +140,7 @@ export default function LogPaymentModal({
           .limit(1);
         if (Array.isArray(overlap) && overlap.length > 0) {
           const existing = overlap[0];
-          const fmt = (d) => new Date(d).toLocaleDateString("fr-FR");
+          const fmt = (d) => new Date(d).toLocaleDateString(getDateLocale());
           const ok = window.confirm(
             `Un paiement existe déjà pour cette période :\n\n` +
             `  • ${parseFloat(existing.amount_eur).toFixed(2)} € reçu le ${fmt(existing.received_date)}\n` +
@@ -331,7 +332,7 @@ export default function LogPaymentModal({
                 <strong style={{ color: G }}>{installmentAmount.toFixed(2)} €/échéance</strong>
                 {" · "}1ère aujourd'hui, dernière le{" "}
                 <strong style={{ color: "#fff" }}>
-                  {lastDueDate ? new Date(lastDueDate).toLocaleDateString("fr-FR") : "—"}
+                  {lastDueDate ? new Date(lastDueDate).toLocaleDateString(getDateLocale()) : "—"}
                 </strong>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
                   Le montant ci-dessous est ce que tu reçois MAINTENANT.

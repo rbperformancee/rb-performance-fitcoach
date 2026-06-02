@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getDateLocale } from "../lib/i18n";
 import { supabase } from "../lib/supabase";
 import AppIcon from "./AppIcon";
 
@@ -79,7 +80,7 @@ export function MessageBanner({ clientId }) {
         </div>
         <div style={{ fontSize: 13, color: "#f5f5f5", lineHeight: 1.55 }}>{msg.content}</div>
         <div style={{ fontSize: 10, color: "#555", marginTop: 5 }}>
-          {new Date(msg.created_at).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+          {new Date(msg.created_at).toLocaleDateString(getDateLocale(), { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
           {messages.length > 1 && <span style={{ marginLeft: 8, color: "#444" }}>· {current + 1}/{messages.length}</span>}
         </div>
       </div>

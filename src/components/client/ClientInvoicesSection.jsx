@@ -9,6 +9,7 @@
  */
 
 import React, { useEffect, useState } from "react";
+import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -135,7 +136,7 @@ export default function ClientInvoicesSection({ client, accent = G }) {
 function ClientDocRow({ type, number, amount, date, extra, onDownload, downloading, hasPdf, accent }) {
   const isInvoice = type === "invoice";
   const label = isInvoice ? "Facture" : "Reçu";
-  const dStr = date ? new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
+  const dStr = date ? new Date(date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short", year: "2-digit" }) : "—";
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 10,

@@ -2467,6 +2467,16 @@ const fr = {
     "xp.activity_session_completed": "Séance complétée",
     "xp.activity_weighin": "Pesée · {kg} kg",
     "xp.activity_run": "Course · {km} km",
+
+    // ===== Checkin period labels (lib/checkinPeriod.js) =====
+    "checkin.freq_weekly": "Hebdomadaire",
+    "checkin.freq_biweekly": "Toutes les 2 semaines",
+    "checkin.freq_monthly": "Mensuel",
+    "checkin.period_month": "du mois",
+    "checkin.period_biweek": "de la quinzaine",
+    "checkin.period_week": "de la semaine",
+    "checkin.label_biweek_prefix": "Quinzaine du ",
+    "checkin.label_week_prefix": "Semaine du ",
 };
 
 export default fr;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 
 const G = "#02d1ba";
@@ -83,7 +84,7 @@ export default function HabitsHeatmap7d({ clientId }) {
     d.setDate(d.getDate() - i);
     days.push({
       date: d.toISOString().slice(0, 10),
-      label: d.toLocaleDateString("fr-FR", { weekday: "narrow" }),
+      label: d.toLocaleDateString(getDateLocale(), { weekday: "narrow" }),
       isToday: i === 0,
     });
   }
