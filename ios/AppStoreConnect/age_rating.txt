@@ -1,0 +1,18 @@
+AGE RATING ANSWERS — copy into App Store Connect "Age Rating" wizard
+
+Cartoon or Fantasy Violence       : None
+Realistic Violence                 : None
+Sexual Content or Nudity          : None
+Profanity or Crude Humor          : None
+Alcohol, Tobacco, or Drug Use     : None
+Mature/Suggestive Themes          : None
+Horror/Fear Themes                : None
+Gambling                          : None
+Contests                          : None
+Unrestricted Web Access           : No
+Medical/Treatment Information     : Infrequent/Mild
+  Reason: Generic sports performance metrics (weight, RPE, training
+  load). Not medical advice; user must consult a healthcare professional.
+
+→ Resulting age rating : 4+ (target)
+→ All territories : Yes

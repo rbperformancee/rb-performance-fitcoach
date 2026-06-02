@@ -1,0 +1,55 @@
+RB Perform, c'est ton coaching sportif personnalisé directement sur ton iPhone.
+
+Programme construit par ton coach humain (pas une IA), suivi en temps réel, vidéos HD pour chaque exercice, nutrition adaptée et messagerie directe avec ton coach.
+
+————————————
+
+CE QUE TU TROUVES DANS L'APP
+
+• Ton programme de la semaine, séance par séance
+Renforcement musculaire, course, mobilité, athlétisme : ton plan complet adapté à ton sport, ton niveau, tes objectifs.
+
+• Tracker de charges, reps et RPE
+Logge chaque série au moment où tu la fais. L'app te montre tes progrès semaine après semaine. Détection automatique des records personnels (PR) et alerte ton coach quand tu en bats un.
+
+• Vidéo HD pour chaque exercice
+Plus de doute sur la technique : appui une fois sur l'exercice pour voir la démo filmée par ton coach.
+
+• Timer de repos intelligent
+Démarrage automatique après chaque série. Push notification quand c'est l'heure de reprendre, même app fermée.
+
+• Test 1RM intégré
+Saisis "3RM" dans les reps : l'app calcule ton 1RM estimé via formule Epley après ta série.
+
+• Nutrition + scanner code-barre
+Logge tes repas en 30 secondes. Scanner code-barre intégré pour les produits emballés. Objectifs calories/protéines personnalisés selon ton sport.
+
+• Messagerie directe coach
+Messages texte + vocaux + photos pour échanger avec ton coach entre les séances. Réponses en moins de 24h ouvrées.
+
+• Check-in hebdomadaire
+Photos progression + poids + ressenti. Ton coach voit l'évolution et adapte le programme.
+
+————————————
+
+POUR QUI ?
+
+— Athlètes amateurs et confirmés qui veulent un suivi sérieux
+— Pratiquants de musculation, sports de combat, athlétisme, sports collectifs
+— Personnes en prep physique pour une compétition ou un objectif précis
+— Reconversion physique : perte de poids structurée, prise de masse, retour au sport
+
+————————————
+
+PAS DE COMPTE COACH ?
+
+L'app fonctionne en duo avec un coach RB Perform. Si tu n'as pas encore de coach, visite rbperform.app pour trouver le coach qui te correspond.
+
+————————————
+
+RGPD & VIE PRIVÉE
+
+Tes données restent en Europe (Supabase Frankfurt). Pas de tracking publicitaire. Pas de partage de données avec des tiers. Suppression de compte en un clic depuis l'app (Réglages → Compte → Supprimer mon compte).
+
+Politique de confidentialité : https://rbperform.app/legal.html
+Support : rb.performancee@gmail.com

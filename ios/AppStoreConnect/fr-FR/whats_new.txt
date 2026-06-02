@@ -1,0 +1,8 @@
+Première version sur iPhone — l'expérience RB Perform en natif iOS :
+
+• Notifications push instantanées pour les nouveaux programmes et les messages de ton coach
+• Mode offline : tes séances accessibles sans réseau dans la salle de sport
+• Performance native dans toute l'app
+• Scanner code-barre nutrition optimisé pour iPhone
+
+Bonne séance.

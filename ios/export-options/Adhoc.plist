@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ExportOptions.plist — RB Perform iOS · build Ad-Hoc (devices internes)
+
+  Utilité : générer un .ipa installable directement sur tes 100 devices
+  enregistrés dans Apple Developer (UDID). Pratique pour beta testers
+  hors TestFlight.
+
+    xcodebuild -exportArchive \
+      -archivePath build/RBPerform.xcarchive \
+      -exportPath  build/RBPerform-adhoc \
+      -exportOptionsPlist ios/export-options/Adhoc.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>release-testing</string>
+
+    <key>teamID</key>
+    <string>TEAMIDXXXX</string>
+
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <key>uploadSymbols</key>
+    <true/>
+    <key>compileBitcode</key>
+    <false/>
+    <key>stripSwiftSymbols</key>
+    <true/>
+</dict>
+</plist>

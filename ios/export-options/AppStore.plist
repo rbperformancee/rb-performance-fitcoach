@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ExportOptions.plist — RB Perform iOS · destination App Store Connect
+
+  Utilisation (après archive Xcode → .xcarchive) :
+    xcodebuild -exportArchive \
+      -archivePath build/RBPerform.xcarchive \
+      -exportPath  build/RBPerform-ipa \
+      -exportOptionsPlist ios/export-options/AppStore.plist
+
+  Le résultat sera un .ipa signé prêt à uploader via Transporter.app ou via :
+    xcrun altool --upload-app -f build/RBPerform-ipa/App.ipa \
+      -t ios --apiKey <KEY_ID> --apiIssuer <ISSUER_ID>
+
+  Pré-requis :
+    - Compte Apple Developer Program actif
+    - App ID 'app.rbperform' provisionné dans developer.apple.com
+    - Distribution certificate + provisioning profile dans Keychain
+    - team ID renseigné ci-dessous (REMPLACE 'TEAMIDXXXX' par ton vrai team ID
+      Apple — 10 chars alphanumériques)
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+
+    <key>destination</key>
+    <string>upload</string>
+
+    <key>teamID</key>
+    <string>TEAMIDXXXX</string>
+
+    <!-- Signing automatique : Xcode résout le bon profil distribution
+         depuis App ID + team. Plus simple que de gérer les profils à la main. -->
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <!-- Symbols à inclure pour les rapports crash App Store Connect.
+         dSYMs OUI (debug), bitcode NON (deprecated depuis iOS 14). -->
+    <key>uploadSymbols</key>
+    <true/>
+    <key>uploadBitcode</key>
+    <false/>
+
+    <!-- Strip pour réduire la taille de l'app livrée. Apple recompile
+         côté serveur si besoin, donc on garde le minimum. -->
+    <key>compileBitcode</key>
+    <false/>
+
+    <key>stripSwiftSymbols</key>
+    <true/>
+
+    <!-- Manage app version automatically (Xcode incrémente le build au
+         besoin si on push une version qui existe déjà). -->
+    <key>manageAppVersionAndBuildNumber</key>
+    <true/>
+</dict>
+</plist>

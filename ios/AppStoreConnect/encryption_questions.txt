@@ -1,0 +1,25 @@
+EXPORT COMPLIANCE QUESTIONS — copy into App Store Connect
+
+Does your app use encryption?
+  → Yes
+Does your app qualify for any exemptions provided in Category 5 Part 2 of the U.S. Export Administration Regulations?
+  → Yes
+Does your app implement any standard encryption algorithms instead of, or in addition to, using or accessing the encryption within Apple's operating system?
+  → No
+  (We only use HTTPS / TLS provided by iOS itself — no custom crypto.)
+Does your app meet any of the following exemption conditions?
+  → "Your app uses, accesses, contains, implements, or incorporates encryption
+     for authentication only" — YES (Supabase auth tokens via TLS)
+  → "Your app uses, accesses, contains, implements, or incorporates encryption
+     with key lengths not exceeding 56 bits symmetric, 512 bits asymmetric,
+     and/or 112 bits for elliptic curve" — No (we use TLS which is stronger)
+  → "Your app is a mass market product that uses encryption with key lengths
+     not exceeding 64 bits symmetric" — No
+  → "Your app uses or accesses cryptographic functionality provided by
+     iOS or macOS" — YES ✓ (Apple TLS, URLSession, Keychain)
+  → "Your app is specially designed for medical end-use" — No
+  → None of the above — No
+
+→ Final answer: exempt from export compliance review.
+   Info.plist already sets ITSAppUsesNonExemptEncryption = false
+   (so this questionnaire won't appear at TestFlight upload).

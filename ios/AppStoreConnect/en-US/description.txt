@@ -1,0 +1,55 @@
+RB Perform is your personalized sports coaching, right on your iPhone.
+
+Program built by a real coach (not AI), real-time tracking, HD videos for every exercise, custom nutrition, and direct messaging with your coach.
+
+————————————
+
+WHAT'S INSIDE
+
+• Your weekly program, session by session
+Strength, running, mobility, athletics — your complete plan adapted to your sport, level, and goals.
+
+• Load, reps and RPE tracker
+Log each set right when you do it. The app shows your progress week over week. Personal record (PR) detection that pings your coach when you hit a new max.
+
+• HD video for every exercise
+No more guessing on form — tap the exercise to see the demo filmed by your coach.
+
+• Smart rest timer
+Automatic start after each set. Push notification when it's time to go again, even with the app closed.
+
+• Built-in 1RM test
+Type "3RM" in the reps field — the app calculates your estimated 1RM using the Epley formula after your set.
+
+• Nutrition + barcode scanner
+Log meals in 30 seconds. Built-in barcode scanner for packaged foods. Personalized calorie and protein goals based on your sport.
+
+• Direct coach messaging
+Text, voice and photo messages with your coach between sessions. Responses within 24 business hours.
+
+• Weekly check-in
+Progress photos + weight + how you feel. Your coach sees the trend and adapts the program.
+
+————————————
+
+WHO IT'S FOR
+
+— Amateur and competitive athletes who want serious follow-up
+— Lifters, fighters, runners, team sport athletes
+— Anyone prepping for a competition or a specific physical goal
+— Body recomposition: structured weight loss, lean bulking, return to sport
+
+————————————
+
+NO COACH YET?
+
+The app works hand-in-hand with an RB Perform coach. If you don't have one yet, visit rbperform.app to find the coach who fits you.
+
+————————————
+
+GDPR & PRIVACY
+
+Your data stays in Europe (Supabase Frankfurt). No ad tracking. No data sharing with third parties. One-tap account deletion from inside the app (Settings → Account → Delete my account).
+
+Privacy policy: https://rbperform.app/legal.html
+Support: rb.performancee@gmail.com

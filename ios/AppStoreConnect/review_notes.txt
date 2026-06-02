@@ -1,0 +1,38 @@
+REVIEW NOTES — for Apple App Review team
+
+App overview:
+RB Perform is a personalized sports coaching companion app. Athletes use it to receive their training program from a human coach, track their workouts (loads, reps, RPE), watch HD exercise videos, log nutrition (with barcode scanner), and message their coach directly.
+
+ACCOUNT REQUIREMENT:
+Yes — login is via passwordless magic link (email OTP). The app pairs an athlete with a coach. To review the full experience, please use the demo account below (already linked to a demo coach with a complete sample program).
+
+DEMO ACCOUNT (athlete side):
+Email    : lucas.demo@rbperform.app
+Password : N/A — passwordless magic link via email.
+           Use the "Continuer en mode démo" button on the login screen
+           to bypass the email step entirely. This loads a read-only
+           demo with sample data (program, history, messages).
+
+THIRD-PARTY SERVICES USED:
+• Supabase (auth + data, Frankfurt EU region)
+• Vercel (web app delivery)
+• Stripe (payments — billing happens on the coach side, not athletes)
+• Zoho Mail (transactional emails)
+• @capacitor/push-notifications (push) — using APNs
+
+DATA COLLECTION & PRIVACY:
+Disclosed via Privacy Manifest (PrivacyInfo.xcprivacy):
+• Email (account, linked, App Functionality)
+• Name (display, linked, App Functionality)
+• Photos (weekly check-in body photos shared with coach, linked, App Functionality)
+• Health & Fitness data (weight, RPE, performance metrics, linked, App Functionality)
+• Device ID (APNs token for push, linked, App Functionality)
+• Crash data (debug, not linked, App Functionality)
+No tracking. No third-party ad networks. No data sale.
+
+ACCOUNT DELETION:
+Settings → Compte → Supprimer mon compte (typed-confirm "SUPPRIMER" required).
+Calls /api/gdpr-delete which performs cascade delete + auth.users removal + email confirmation.
+
+SUPPORT CONTACT:
+rb.performancee@gmail.com
