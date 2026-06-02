@@ -86,7 +86,12 @@ export async function initSentry() {
       release: RELEASE,
       tracesSampleRate: ENV === "production" ? 0.1 : 1.0,
       replaysSessionSampleRate: 0,         // Pas de capture sur session normale
-      replaysOnErrorSampleRate: 1.0,        // 100% de capture quand erreur arrive
+      // 10% des erreurs declenchent un replay (down from 100% — 3 juin 2026).
+      // Plan free Sentry = 50 replays/mois. Avec 100% on saturait au bout de
+      // ~10j ("Replays are being dropped"). 10% nous garde sous la limite
+      // toute l'année + on capte quand meme 1 replay sur 10 pour les bugs
+      // recurrents. Si on upgrade plan Sentry, on pourra remettre a 1.0.
+      replaysOnErrorSampleRate: 0.1,
       integrations,
       ignoreErrors: IGNORE,
       beforeSend(event) {
