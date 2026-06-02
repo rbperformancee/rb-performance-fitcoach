@@ -1552,6 +1552,11 @@ function AppInner() {
           {page === 'weight' && <WeightChart clientId={client?.id} client={client} appData={appData} />}
           {page === 'move' && <MovePage client={client} appData={appData} />}
           {page === 'fuel' && <FuelPage client={client} appData={appData} />}
+          {/* onDeleteRequest n'est PAS gated en mode démo : Apple reviewer doit pouvoir
+              tester le flow delete (5.1.1(v)). La simulation est server-side dans
+              api/gdpr-delete.js — pour DEMO_EMAILS, l'endpoint répond 200 OK sans
+              toucher à la DB. Le reviewer voit le toast success, est logout proprement,
+              et le compte démo reste vivant pour le prochain reviewer. */}
           {page === 'profile' && <ProfilePage client={client} coachInfo={coachInfo} onLogout={isClientDemo ? () => toast.info("Désactivé en mode démo") : () => supabase.auth.signOut().then(() => navigateAfterAuth("/login"))} supabase={supabase} appData={appData} onDeleteRequest={() => setShowDeleteConfirm(true)} onShowPrivacy={() => setShowPrivacy(true)} onShowMentions={() => setShowMentions(true)} onShowCGU={() => setShowCGU(true)} />}
           <nav style={{position:'fixed',bottom:'calc(env(safe-area-inset-bottom,0px) + 20px)',left:'50%',transform:'translateX(-50%)',display:'flex',gap:0,background:'rgba(18,18,18,0.88)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:100,padding:5,zIndex:100,WebkitBackdropFilter: 'blur(20px)', backdropFilter: 'blur(20px)',WebkitBackdropFilter:'blur(20px)'}}>
             {[

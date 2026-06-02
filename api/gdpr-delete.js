@@ -88,6 +88,28 @@ module.exports = async (req, res) => {
     const profileEmail = (coach || client).email;
     const profileName = (coach || client).full_name || profileEmail;
 
+    // Demo accounts (Apple App Review + showcase coach onboarding) :
+    // l'app iOS doit montrer un flow delete fonctionnel pour conformité
+    // 5.1.1(v), mais si Apple reviewer (ou un prospect) supprime le compte
+    // démo, le compte de test est définitivement détruit et les prochains
+    // reviewers ne peuvent plus tester. On simule donc un succès SANS
+    // toucher à la DB. L'UX est identique : toast, redirect, logout.
+    const DEMO_EMAILS = new Set([
+      "lucas.demo@rbperform.app",  // client demo (cf api/demo-client.js)
+      "demo@rbperform.app",        // coach demo (cf api/demo-coach.js)
+    ]);
+    if (DEMO_EMAILS.has((profileEmail || "").toLowerCase())) {
+      // Logout côté serveur via revoke session (l'utilisateur sera déconnecté
+      // proprement côté client après le toast). On ne touche PAS à auth.users
+      // ni aux tables — le compte démo reste vivant.
+      try { await supabase.auth.admin.signOut(user.id); } catch (_) {}
+      return res.status(200).json({
+        ok: true,
+        demo: true,
+        message: "Compte démo : suppression simulée (vraie suppression désactivée pour préserver le compte de test).",
+      });
+    }
+
     // 4. Suppression
     const deletionLog = {
       user_id: user.id,

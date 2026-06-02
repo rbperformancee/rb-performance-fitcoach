@@ -13,6 +13,15 @@ const ALLOWED_ORIGINS = [
   "https://www.rbperform.app",
   "https://app.rbperform.app",
   "https://rb-perfor.vercel.app",
+  // iOS Capacitor : WKWebView envoie `Origin: capacitor://localhost` pour TOUS
+  // les fetch vers nos endpoints /api/* depuis l'app native. Sans ça, l'app
+  // iOS reçoit 403 sur gdpr-delete (Apple 5.1.1(v) BLOCKER), demo-coach,
+  // demo-client, et tout autre endpoint protégé par secureRequest().
+  // Cf [[feedback-capacitor-navigation-loop]] dans la memory.
+  "capacitor://localhost",
+  // Android Capacitor (si on porte plus tard) : scheme androidScheme = 'https'
+  // dans capacitor.config.ts → Origin = https://localhost. À garder couvert.
+  "https://localhost",
 ];
 // Tolere aussi les preview deployments vercel
 const VERCEL_PREVIEW_REGEX = /^https:\/\/[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$/;
