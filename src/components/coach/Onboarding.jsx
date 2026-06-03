@@ -15,10 +15,10 @@ const fillTpl = (s, vars) => {
 };
 
 const SPECIALITIES = [
-  "Musculation", "Cardio", "CrossFit",
-  "Sèche", "Force", "Performance",
-  "Remise en forme", "Running",
-  "Arts martiaux", "Nutrition",
+  t("on.spec_musculation", "Musculation"), t("on.spec_cardio", "Cardio"), t("on.spec_crossfit", "CrossFit"),
+  t("on.spec_seche", "Sèche"), t("on.spec_force", "Force"), t("on.spec_performance", "Performance"),
+  t("on.spec_remise_forme", "Remise en forme"), t("on.spec_running", "Running"),
+  t("on.spec_arts_martiaux", "Arts martiaux"), t("on.spec_nutrition", "Nutrition"),
 ];
 
 const LEGAL_FORMS = [
@@ -107,7 +107,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
     const file = e.target?.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Format image attendu (JPG, PNG)."); return;
+      setError(t("on.err_image_format", "Format image attendu (JPG, PNG).")); return;
     }
     if (file.size > 5 * 1024 * 1024) {
       setError("Photo trop lourde (max 5 Mo)."); return;
@@ -133,8 +133,8 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
 
   async function saveIdentity() {
     setError("");
-    if (!firstName.trim()) { setError("Ton prénom est requis."); return; }
-    if (specialties.length === 0) { setError("Choisis au moins 1 spécialité."); return; }
+    if (!firstName.trim()) { setError(t("on.err_first_name_req", "Ton prénom est requis.")); return; }
+    if (specialties.length === 0) { setError(t("on.err_one_specialty", "Choisis au moins 1 spécialité.")); return; }
     haptic.selection();
     setSaving(true);
     try {
@@ -194,7 +194,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
     for (const p of active) {
       if (!p.name?.trim()) { setError("Chaque offre doit avoir un nom."); return; }
       if (!p.price_per_month || p.price_per_month < 1) { setError("Prix mensuel requis (≥ 1€)."); return; }
-      if (!p.duration_months || p.duration_months < 1) { setError("Durée requise (≥ 1 mois)."); return; }
+      if (!p.duration_months || p.duration_months < 1) { setError(t("on.err_duration_req", "Durée requise (≥ 1 mois).")); return; }
     }
     haptic.selection();
     setSaving(true);
@@ -225,7 +225,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
     setError("");
     const slug = slugify(publicSlug || `${firstName}-${lastName}`);
     if (publicEnabled && slug.length < 3) {
-      setError("Le slug public doit faire au moins 3 caractères.");
+      setError(t("on.err_slug_3chars", "Le slug public doit faire au moins 3 caractères."));
       return;
     }
     haptic.selection();
@@ -272,7 +272,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
     setInviteLoading(true);
     try {
       if (preview) {
-        toast.success(fillTpl(t("onb.toast_invite_sent") || "Invitation envoyée à {email}", { email: mail }));
+        toast.success(fillTpl(t("onb.toast_invite_sent") || t("on.toast_invite_sent", "Invitation envoyée à {email}"), { email: mail }));
         setInviteSent(true);
         setTimeout(() => setStep(7), 400);
         setInviteLoading(false);
@@ -302,7 +302,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
         } catch (_) {}
       }
 
-      toast.success(fillTpl(t("onb.toast_invite_sent") || "Invitation envoyée à {email}", { email: mail }));
+      toast.success(fillTpl(t("onb.toast_invite_sent") || t("on.toast_invite_sent", "Invitation envoyée à {email}"), { email: mail }));
       setInviteSent(true);
       setTimeout(() => setStep(7), 400);
     } catch (e) {
@@ -949,8 +949,8 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
         {/* ───── STEP 1 — PRÉSENTATION ───── */}
         {step === 1 && (
           <div className="onb-card" key="s1">
-            <h1 className="onb-h1">Présente-toi.</h1>
-            <p className="onb-sub">Ton nom, ta photo et tes spécialités apparaîtront à tes clients dans l'app.</p>
+            <h1 className="onb-h1">{t("on.s1_h1", t("on.s1_h1", "Présente-toi."))}</h1>
+            <p className="onb-sub">{t("on.s1_sub", t("on.s1_sub", "Ton nom, ta photo et tes spécialités apparaîtront à tes clients dans l'app."))}</p>
 
             <div className="onb-photo-wrap">
               <input
@@ -964,7 +964,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
                 type="button"
                 className="onb-photo-avatar"
                 onClick={() => fileInputRef.current?.click()}
-                aria-label="Ajouter une photo"
+                aria-label={t("on.photo_aria_add", "Ajouter une photo")}
               >
                 {photoUrl ? (
                   <img src={photoUrl} alt="" />
@@ -976,13 +976,13 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
                 )}
               </button>
               <div className="onb-photo-label">
-                {photoUploading ? "Upload en cours…" : photoUrl ? "Photo ajoutée — clique pour changer" : "Ajouter une photo (optionnel)"}
+                {photoUploading ? t("on.photo_uploading", "Upload en cours…") : photoUrl ? t("on.photo_added", "Photo ajoutée — clique pour changer") : t("on.photo_add_optional", "Ajouter une photo (optionnel)")}
               </div>
             </div>
 
             <div className="onb-row">
               <div className="onb-field" style={{ flex: 1, marginBottom: 0 }}>
-                <label className="onb-label">Prénom</label>
+                <label className="onb-label">{t("on.label_first_name", t("on.label_first_name", "Prénom"))}</label>
                 <input
                   type="text"
                   value={firstName}
@@ -993,7 +993,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
                 />
               </div>
               <div className="onb-field" style={{ flex: 1, marginBottom: 0 }}>
-                <label className="onb-label">Nom</label>
+                <label className="onb-label">{t("on.label_last_name", t("on.label_last_name", "Nom"))}</label>
                 <input
                   type="text"
                   value={lastName}
@@ -1004,7 +1004,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
               </div>
             </div>
 
-            <div className="onb-section-label">Tes spécialités</div>
+            <div className="onb-section-label">{t("on.section_specialties", t("on.section_specialties", "Tes spécialités"))}</div>
             <div className="onb-pills">
               {SPECIALITIES.map((s) => (
                 <button
@@ -1025,7 +1025,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
               disabled={saving || specialties.length === 0 || !firstName.trim()}
               className="onb-btn"
             >
-              {saving ? "Enregistrement…" : "Continuer"}
+              {saving ? t("on.btn_saving", "Enregistrement…") : t("on.btn_continue", "Continuer")}
             </button>
           </div>
         )}
@@ -1033,8 +1033,8 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
         {/* ───── STEP 2 — INFOS PRO ───── */}
         {step === 2 && (
           <div className="onb-card" key="s2">
-            <h1 className="onb-h1">Tes infos pro.</h1>
-            <p className="onb-sub">Nécessaires pour facturer tes clients et générer tes CGV automatiquement.</p>
+            <h1 className="onb-h1">{t("on.s2_h1", t("on.s2_h1", "Tes infos pro."))}</h1>
+            <p className="onb-sub">{t("on.s2_sub", t("on.s2_sub", "Nécessaires pour facturer tes clients et générer tes CGV automatiquement."))}</p>
 
             <div className="onb-field">
               <label className="onb-label">SIRET</label>
@@ -1052,7 +1052,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
 
             <div className="onb-row">
               <div className="onb-field" style={{ flex: 1, marginBottom: 12 }}>
-                <label className="onb-label">Forme juridique</label>
+                <label className="onb-label">{t("on.label_legal_form", t("on.label_legal_form", "Forme juridique"))}</label>
                 <select
                   value={legalForm}
                   onChange={(e) => setLegalForm(e.target.value)}
@@ -1063,7 +1063,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
                 </select>
               </div>
               <div className="onb-field" style={{ flex: 1, marginBottom: 12 }}>
-                <label className="onb-label">Téléphone</label>
+                <label className="onb-label">{t("on.label_phone", t("on.label_phone", "Téléphone"))}</label>
                 <input
                   type="tel"
                   value={phone}
@@ -1095,7 +1095,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
               className="onb-btn"
               style={{ marginTop: 8 }}
             >
-              {saving ? "Enregistrement…" : "Continuer"}
+              {saving ? t("on.btn_saving", "Enregistrement…") : t("on.btn_continue", "Continuer")}
             </button>
             <button type="button" onClick={() => setStep(3)} className="onb-link">
               Compléter plus tard
@@ -1106,7 +1106,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
         {/* ───── STEP 3 — TES OFFRES ───── */}
         {step === 3 && (
           <div className="onb-card" key="s3-plans">
-            <h1 className="onb-h1">Tes offres.</h1>
+            <h1 className="onb-h1">{t("on.s3_h1", t("on.s3_h1", "Tes offres."))}</h1>
             <p className="onb-sub">
               Renseigne les plans que tu proposes à tes clients. Tu pourras les <strong style={{ color: "rgba(255,255,255,.75)", fontWeight: 600 }}>ajuster à tout moment</strong>, varier les tarifs par client, ou en ajouter d'autres depuis tes Settings.
             </p>
@@ -1131,14 +1131,14 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
                       type="button"
                       onClick={() => { haptic.light(); togglePlan(i); }}
                       className="onb-plan-toggle"
-                      title={p._disabled ? "Réactiver" : "Désactiver"}
+                      title={p._disabled ? t("on.btn_reactivate", "Réactiver") : t("on.btn_deactivate", "Désactiver")}
                     >
                       {p._disabled ? "+" : "×"}
                     </button>
                   </div>
                   <div className="onb-plan-body">
                     <div className="onb-plan-field">
-                      <label className="onb-label">Prix mensuel</label>
+                      <label className="onb-label">{t("on.label_monthly_price", t("on.label_monthly_price", "Prix mensuel"))}</label>
                       <div className="onb-plan-input-wrap">
                         <input
                           type="number"
@@ -1153,7 +1153,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
                       </div>
                     </div>
                     <div className="onb-plan-field">
-                      <label className="onb-label">Durée</label>
+                      <label className="onb-label">{t("on.label_duration", t("on.label_duration", "Durée"))}</label>
                       <div className="onb-plan-input-wrap">
                         <input
                           type="number"
@@ -1185,7 +1185,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
               className="onb-btn"
               style={{ marginTop: 8 }}
             >
-              {saving ? "Enregistrement…" : "Continuer"}
+              {saving ? t("on.btn_saving", "Enregistrement…") : t("on.btn_continue", "Continuer")}
             </button>
             <button type="button" onClick={() => setStep(4)} className="onb-link">
               Configurer plus tard
@@ -1196,7 +1196,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
         {/* ───── STEP 4 — PROFIL PUBLIC ───── */}
         {step === 4 && (
           <div className="onb-card" key="s4-public">
-            <h1 className="onb-h1">Ton profil public.</h1>
+            <h1 className="onb-h1">{t("on.s4_h1", t("on.s4_h1", "Ton profil public."))}</h1>
             <p className="onb-sub">
               Ta page <strong style={{ color: "rgba(255,255,255,.75)", fontWeight: 600 }}>rbperform.app/coach/{slugify(publicSlug || `${firstName}-${lastName}`) || "ton-nom"}</strong> — visible par les prospects, partageable en bio Insta. Ajustable plus tard.
             </p>
@@ -1255,12 +1255,12 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
               <label className="onb-toggle-row">
                 <input type="checkbox" checked={publicEnabled} onChange={(e) => setPublicEnabled(e.target.checked)} className="onb-toggle-input" />
                 <span className="onb-toggle-slider" />
-                <span className="onb-toggle-label">Activer ma page publique</span>
+                <span className="onb-toggle-label">{t("on.toggle_enable_public", t("on.toggle_enable_public", "Activer ma page publique"))}</span>
               </label>
               <label className="onb-toggle-row">
                 <input type="checkbox" checked={showRbBadge} onChange={(e) => setShowRbBadge(e.target.checked)} className="onb-toggle-input" />
                 <span className="onb-toggle-slider" />
-                <span className="onb-toggle-label">Afficher le badge "Founding Member"</span>
+                <span className="onb-toggle-label">{t("on.toggle_founding_badge", "Afficher le badge \"Founding Member\"")}</span>
               </label>
             </div>
 
@@ -1272,7 +1272,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
               className="onb-btn"
               style={{ marginTop: 8 }}
             >
-              {saving ? "Enregistrement…" : "Continuer"}
+              {saving ? t("on.btn_saving", "Enregistrement…") : t("on.btn_continue", "Continuer")}
             </button>
             <button type="button" onClick={() => setStep(5)} className="onb-link">
               Configurer plus tard
@@ -1283,7 +1283,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
         {/* ───── STEP 5 — PUSH + SENTINEL ───── */}
         {step === 5 && (
           <div className="onb-card" key="s5-push">
-            <h1 className="onb-h1">Sentinel veille pour toi.</h1>
+            <h1 className="onb-h1">{t("on.s5_h1", t("on.s5_h1", "Sentinel veille pour toi."))}</h1>
             <p className="onb-sub">
               Notre IA surveille 7 signaux par client en continu (inactivité, RPE en baisse, no-show, etc.) et te ping quand ça vaut la peine. Tu réagis avant qu'il décroche.
             </p>
@@ -1296,7 +1296,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
                 </svg>
               </div>
               <div>
-                <div className="onb-sentinel-title">Sentinel IA — activé</div>
+                <div className="onb-sentinel-title">{t("on.sentinel_title", t("on.sentinel_title", "Sentinel IA — activé"))}</div>
                 <div className="onb-sentinel-body">
                   Inclus dans ton plan Founding. Voici les 3 alertes que tu vas voir le plus :
                 </div>
@@ -1342,7 +1342,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
             </div>
 
             {pushPerm === "granted" && pushAttempted && (
-              <div className="onb-push-status ok">Notifications activées.</div>
+              <div className="onb-push-status ok">{t("on.push_status_granted", t("on.push_status_granted", "Notifications activées."))}</div>
             )}
             {pushPerm === "denied" && pushAttempted && (
               <div className="onb-push-status denied">
@@ -1351,22 +1351,22 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
             )}
 
             <button onClick={activatePush} className="onb-btn">
-              {pushPerm === "granted" ? "Continuer" : "Activer les notifications"}
+              {pushPerm === "granted" ? t("on.btn_continue", "Continuer") : t("on.btn_enable_notifs", "Activer les notifications")}
             </button>
-            <button type="button" onClick={skipPush} className="onb-link">Plus tard</button>
+            <button type="button" onClick={skipPush} className="onb-link">{t("on.link_later", t("on.link_later", "Plus tard"))}</button>
           </div>
         )}
 
         {/* ───── STEP 6 — PREMIER CLIENT ───── */}
         {step === 6 && (
           <div className="onb-card" key="s6-invite">
-            <h1 className="onb-h1">Invite ton premier client.</h1>
+            <h1 className="onb-h1">{t("on.s6_h1", t("on.s6_h1", "Invite ton premier client."))}</h1>
             <p className="onb-sub">
               Il reçoit un code par mail, télécharge l'app, et tu vois tout remonter en temps réel.
             </p>
 
             <div className="onb-field">
-              <label className="onb-label">Email du client</label>
+              <label className="onb-label">{t("on.label_client_email", t("on.label_client_email", "Email du client"))}</label>
               <input
                 type="email"
                 value={clientEmail}
@@ -1429,7 +1429,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
               <path d="M18 33 L28 43 L46 24" />
             </svg>
 
-            <h1 className="onb-h1" style={{ marginBottom: 12 }}>Tout est prêt.</h1>
+            <h1 className="onb-h1" style={{ marginBottom: 12 }}>{t("on.s7_h1", t("on.s7_h1", "Tout est prêt."))}</h1>
             <p className="onb-sub" style={{ marginBottom: 8 }}>
               Tu peux toujours ajuster ces réglages depuis ton profil.
             </p>
@@ -1439,7 +1439,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
                 <span className="onb-recap-check done">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                 </span>
-                <span>Profil et spécialités configurés</span>
+                <span>{t("on.s7_check_profile", t("on.s7_check_profile", "Profil et spécialités configurés"))}</span>
               </div>
               <div className="onb-recap-item">
                 <span className={`onb-recap-check ${siret ? "done" : "skip"}`}>
@@ -1498,8 +1498,8 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
             </div>
 
             <div className="onb-booking">
-              <div className="onb-booking-eyebrow">Inclus Founding</div>
-              <div className="onb-booking-title">Réserve ton onboarding 1:1 avec Rayan</div>
+              <div className="onb-booking-eyebrow">{t("on.booking_eyebrow", t("on.booking_eyebrow", "Inclus Founding"))}</div>
+              <div className="onb-booking-title">{t("on.booking_title", t("on.booking_title", "Réserve ton onboarding 1:1 avec Rayan"))}</div>
               <div className="onb-booking-sub">
                 20 minutes pour configurer ton premier client, calibrer Sentinel et te montrer les raccourcis pros.
               </div>
