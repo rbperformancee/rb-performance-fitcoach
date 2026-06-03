@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -19,6 +20,7 @@ const G = "#02d1ba";
  *   - Liste des parrainages réussis (referred coach name + status)
  */
 export default function CoachReferralSection({ coachData, isDemo = false }) {
+  const t = useT();
   const [code, setCode] = useState(coachData?.referral_code || "");
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);

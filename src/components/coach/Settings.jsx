@@ -846,7 +846,7 @@ function PublicProfileSection({ coachData, isDemo }) {
 
       {/* CITY */}
       <div style={{ marginBottom: 16 }}>
-        <div style={sectionSubtitle}>Ville</div>
+        <div style={sectionSubtitle}>{t("st.ville", "Ville")}</div>
         <input
           className="set-input"
           value={city}
@@ -1108,7 +1108,7 @@ function TestimonialsManager({ coachData, isDemo }) {
       </div>
 
       {loading && (
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", padding: "12px 0" }}>Chargement…</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", padding: "12px 0" }}>{t("st.chargement", "Chargement…")}</div>
       )}
 
       {!loading && items.length === 0 && editing === null && (
@@ -1154,8 +1154,8 @@ function TestimonialsManager({ coachData, isDemo }) {
                 <button onClick={() => move(t, -1)} disabled={i === 0} style={miniBtn(i === 0)}>↑</button>
                 <button onClick={() => move(t, 1)} disabled={i === items.length - 1} style={miniBtn(i === items.length - 1)}>↓</button>
                 <button onClick={() => toggleVisible(t)} style={miniBtn(false)}>{t.visible ? "Masquer" : "Afficher"}</button>
-                <button onClick={() => startEdit(t)} style={miniBtn(false)}>Éditer</button>
-                <button onClick={() => remove(t)} style={{ ...miniBtn(false), color: "#ff6b6b", borderColor: "rgba(255,107,107,.25)" }}>Supprimer</button>
+                <button onClick={() => startEdit(t)} style={miniBtn(false)}>{t("st.diter", "Éditer")}</button>
+                <button onClick={() => remove(t)} style={{ ...miniBtn(false), color: "#ff6b6b", borderColor: "rgba(255,107,107,.25)" }}>{t("st.supprimer", "Supprimer")}</button>
               </div>
             </div>
           ))}
@@ -1220,7 +1220,7 @@ function TestimonialsManager({ coachData, isDemo }) {
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={cancel} style={{ ...btnGhost, flex: 1 }}>Annuler</button>
+            <button onClick={cancel} style={{ ...btnGhost, flex: 1 }}>{t("st.annuler", "Annuler")}</button>
             <button onClick={save} disabled={saving} style={{ ...btnPrimary, flex: 1, opacity: saving ? 0.5 : 1 }}>
               {saving ? "…" : "Enregistrer"}
             </button>

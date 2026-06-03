@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 
 /**
@@ -186,6 +187,7 @@ function generateMenu(target, mealsCount) {
 }
 
 export default function MenuGenerator({ clientId }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState({ calories: 2000, proteines: 150, glucides: 250, lipides: 70 });
   const [meals, setMeals] = useState(4);

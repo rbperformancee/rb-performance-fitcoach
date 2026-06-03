@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -23,6 +24,7 @@ const G = "#02d1ba";
  *   open, onClose, clients (liste complète), coachId, onDone
  */
 export default function BulkAssignProgramme({ open, onClose, clients, coachId, onDone }) {
+  const t = useT();
   const [sourceClientId, setSourceClientId] = useState("");
   const [selectedTargets, setSelectedTargets] = useState(new Set());
   const [sourceHtml, setSourceHtml] = useState(null);
@@ -148,7 +150,7 @@ export default function BulkAssignProgramme({ open, onClose, clients, coachId, o
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("bap.fermer", "Fermer")}
             style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 16, lineHeight: 1, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           >×</button>
         </div>
@@ -194,7 +196,7 @@ export default function BulkAssignProgramme({ open, onClose, clients, coachId, o
               </div>
             )}
             {sourceClientId && loading && (
-              <div style={{ marginTop: 8, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Chargement…</div>
+              <div style={{ marginTop: 8, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{t("bap.chargement", "Chargement…")}</div>
             )}
           </div>
 
@@ -214,7 +216,7 @@ export default function BulkAssignProgramme({ open, onClose, clients, coachId, o
                   type="button"
                   onClick={unselectAll}
                   style={{ padding: "3px 8px", fontSize: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "rgba(255,255,255,0.55)", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, letterSpacing: ".05em" }}
-                >Aucun</button>
+                >{t("bap.aucun", "Aucun")}</button>
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 320, overflowY: "auto" }}>

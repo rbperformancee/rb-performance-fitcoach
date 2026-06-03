@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { periodStart, periodLabel, periodNoun, FREQUENCIES } from "../../lib/checkinPeriod";
 
@@ -32,6 +33,7 @@ function fmtNum(n) {
 }
 
 export default function BilanPhysique({ clientId, checkins, client }) {
+  const t = useT();
   const [rows, setRows] = useState(checkins || []);
   const [measEnabled, setMeasEnabled] = useState(!!client?.checkin_measurements_enabled);
   const [freq, setFreq] = useState(client?.checkin_frequency || "weekly");
@@ -474,7 +476,7 @@ function BilanCard({ row, freq, measEnabled, deltaFor, onSaveAnnotation, onOpenP
                 fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.5)", padding: "8px 14px",
                 background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
-              }}>Annuler</button>
+              }}>{t("bp.annuler", "Annuler")}</button>
               <button onClick={save} disabled={saving} style={{
                 flex: 1, fontSize: 11, fontWeight: 800, color: "#000", padding: "8px 14px",
                 background: G, border: "none", borderRadius: 8, cursor: saving ? "wait" : "pointer",

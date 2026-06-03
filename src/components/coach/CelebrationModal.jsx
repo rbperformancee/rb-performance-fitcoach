@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import haptic from "../../lib/haptic";
 
 const G = "#02d1ba";
@@ -46,6 +47,7 @@ const CONFIG = {
 };
 
 export default function CelebrationModal({ milestone, onClose, accent = G }) {
+  const t = useT();
   const cfg = CONFIG[milestone];
 
   useEffect(() => {

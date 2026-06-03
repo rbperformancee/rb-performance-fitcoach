@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -29,6 +30,7 @@ const COLORS = ["#02d1ba", "#a78bfa", "#f472b6", "#fbbf24", "#34d399", "#fb923c"
  * Limite soft à 5 habitudes actives (UI hint, pas un check DB).
  */
 export default function HabitsManager({ open, onClose, onChange, client }) {
+  const t = useT();
   const notify = () => { if (typeof onChange === "function") onChange(); };
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -163,14 +165,14 @@ export default function HabitsManager({ open, onClose, onChange, client }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("hm.fermer", "Fermer")}
             style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 16, lineHeight: 1, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           >×</button>
         </div>
 
         {/* CONTENT */}
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px 22px" }}>
-          {loading && <div style={{ textAlign: "center", padding: 30, color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Chargement…</div>}
+          {loading && <div style={{ textAlign: "center", padding: 30, color: "rgba(255,255,255,0.4)", fontSize: 12 }}>{t("hm.chargement", "Chargement…")}</div>}
 
           {!loading && (
             <div style={{
@@ -317,7 +319,7 @@ export default function HabitsManager({ open, onClose, onChange, client }) {
                     borderRadius: 8, color: "rgba(255,255,255,0.5)",
                     fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                   }}
-                >Annuler</button>
+                >{t("hm.annuler", "Annuler")}</button>
               </div>
             </div>
           )}
@@ -425,7 +427,7 @@ function HabitRow({ habit, onRename, onToggleActive, onChangeColor, onDelete, on
       <button
         type="button"
         onClick={onDelete}
-        title="Supprimer"
+        title={t("hm.supprimer", "Supprimer")}
         style={{
           width: 26, height: 26, borderRadius: 6,
           background: "transparent", border: "1px solid rgba(255,255,255,0.06)",

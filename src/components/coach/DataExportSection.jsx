@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -49,6 +50,7 @@ function downloadCsv(filename, content) {
 }
 
 export default function DataExportSection({ coachId, isDemo = false }) {
+  const t = useT();
   const [busy, setBusy] = useState(null); // 'clients' | 'weights' | 'sessions' | 'programmes' | null
 
   async function exportClients() {

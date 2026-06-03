@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -18,6 +19,7 @@ const G = "#02d1ba";
 const BORDER = "rgba(255,255,255,0.08)";
 
 export default function EditScheduleModal({ open, schedule, onClose, onSaved }) {
+  const t = useT();
   const [dueDate, setDueDate] = useState("");
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
@@ -93,7 +95,7 @@ export default function EditScheduleModal({ open, schedule, onClose, onSaved }) 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("esm.fermer", "Fermer")}
             style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}
           >×</button>
         </div>
@@ -139,7 +141,7 @@ export default function EditScheduleModal({ open, schedule, onClose, onSaved }) 
               fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
               letterSpacing: 0.5, textTransform: "uppercase",
             }}
-          >Annuler</button>
+          >{t("esm.annuler", "Annuler")}</button>
           <button
             type="button"
             onClick={save}

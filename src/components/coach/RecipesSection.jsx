@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useT } from "../../lib/i18n";
 import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import AppIcon from "../AppIcon";
@@ -26,6 +27,7 @@ const YELLOW = "#fbbf24";
  *   failed -> badge rouge + bouton retry
  */
 export default function RecipesSection({ coachId }) {
+  const t = useT();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState({ standalone: [], plans: [] });
   const [uploading, setUploading] = useState(false);
@@ -324,7 +326,7 @@ function RecipeCard({ recipe, onClick, onDelete, compact }) {
           {onDelete && (
             <button
               type="button"
-              aria-label="Supprimer"
+              aria-label={t("rs.supprimer", "Supprimer")}
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               style={{
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -471,7 +473,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
   if (loading || !recipe) {
     return (
       <Modal onClose={onClose}>
-        <div style={{ padding: 60, textAlign: "center", color: "rgba(255,255,255,0.5)" }}>Chargement...</div>
+        <div style={{ padding: 60, textAlign: "center", color: "rgba(255,255,255,0.5)" }}>{t("rs.chargement", "Chargement...")}</div>
       </Modal>
     );
   }
@@ -518,7 +520,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
         </div>
 
         {/* Description + meta */}
-        <Field label="Description" >
+        <Field label={t("rs.description", "Description")} >
           <textarea
             value={edits.description ?? recipe.description ?? ""}
             onChange={(e) => updateField("description", e.target.value)}
@@ -641,7 +643,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
               background: "transparent", border: "1px solid rgba(255,255,255,0.15)",
               color: "rgba(255,255,255,0.7)", cursor: "pointer",
             }}
-          >Annuler</button>
+          >{t("rs.annuler", "Annuler")}</button>
           <button
             onClick={() => save(false)}
             disabled={saving}
@@ -650,7 +652,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
               background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
               color: "#fff", cursor: saving ? "wait" : "pointer",
             }}
-          >Sauvegarder</button>
+          >{t("rs.sauvegarder", "Sauvegarder")}</button>
           <button
             onClick={() => save(true)}
             disabled={saving}

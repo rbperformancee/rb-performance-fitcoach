@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState, useMemo } from "react";
+import { useT } from "../../lib/i18n";
 import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
@@ -21,6 +22,7 @@ const G = "#02d1ba";
 const BORDER = "rgba(255,255,255,0.08)";
 
 export default function InvoiceHistory({ coachId }) {
+  const t = useT();
   const [invoices, setInvoices] = useState([]);
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);

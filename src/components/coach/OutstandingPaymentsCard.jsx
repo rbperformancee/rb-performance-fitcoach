@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from "react";
+import { useT } from "../../lib/i18n";
 import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
@@ -30,6 +31,7 @@ const RED = "#ef4444";
 const ORANGE = "#f97316";
 
 export default function OutstandingPaymentsCard({ coachId, coachData }) {
+  const t = useT();
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(null); // id de l'échéance en cours d'action
@@ -290,7 +292,7 @@ export default function OutstandingPaymentsCard({ coachId, coachData }) {
                         fontFamily: "inherit", flexShrink: 0,
                       }}
                       title="Modifier la date ou le montant"
-                      aria-label="Modifier"
+                      aria-label={t("opc.modifier", "Modifier")}
                     >
                       ✏️
                     </button>

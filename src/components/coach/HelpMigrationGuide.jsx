@@ -1,4 +1,5 @@
 import React from "react";
+import { useT } from "../../lib/i18n";
 
 const G = "#02d1ba";
 
@@ -25,6 +26,7 @@ export default function HelpMigrationGuide({
   onOpenWeightImport,
   onOpenDataExport,
 }) {
+  const t = useT();
   if (!open) return null;
 
   const sections = [
@@ -95,7 +97,7 @@ export default function HelpMigrationGuide({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("hmg.fermer", "Fermer")}
             style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 18, lineHeight: 1, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           >×</button>
         </div>

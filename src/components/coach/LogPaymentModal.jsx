@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
@@ -49,6 +50,7 @@ export default function LogPaymentModal({
   defaultAmount = 300,
   defaultPeriodStart,
 }) {
+  const t = useT();
   const today = new Date().toISOString().slice(0, 10);
   const startDefault = defaultPeriodStart || today;
 
@@ -242,7 +244,7 @@ export default function LogPaymentModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("lpm.fermer", "Fermer")}
             style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}
           >×</button>
         </div>
@@ -434,7 +436,7 @@ export default function LogPaymentModal({
               fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
               letterSpacing: 0.5, textTransform: "uppercase",
             }}
-          >Annuler</button>
+          >{t("lpm.annuler", "Annuler")}</button>
           <button
             type="button"
             onClick={() => save()}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import { getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 
@@ -16,6 +17,7 @@ const G = "#02d1ba";
  * Hidden si 0 habit active (cohérent avec HabitsCard côté client).
  */
 export default function HabitsHeatmap7d({ clientId }) {
+  const t = useT();
   const [habits, setHabits] = useState([]);
   const [logsByHabit, setLogsByHabit] = useState({}); // habit_id → Set<date>
   const [loading, setLoading] = useState(true);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 
 const G = "#02d1ba";
@@ -22,6 +23,7 @@ const G = "#02d1ba";
  *   clientsById: Map<id, name>  (déjà loadé par le dashboard)
  */
 export default function ActivityFeedToday({ coachId, clientsById }) {
+  const t = useT();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 

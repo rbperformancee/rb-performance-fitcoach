@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -78,6 +79,7 @@ function detectCols(headers) {
 const isValidEmail = (e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
 
 export default function BulkInviteCSV({ open, onClose, coachId, onDone }) {
+  const t = useT();
   const fileRef = useRef(null);
   const [file, setFile] = useState(null);
   const [parsed, setParsed] = useState(null); // { headers, rawHeaders, rows }
@@ -243,7 +245,7 @@ export default function BulkInviteCSV({ open, onClose, coachId, onDone }) {
             type="button"
             onClick={() => { if (!submitting) { reset(); onClose?.(); } }}
             disabled={submitting}
-            aria-label="Fermer"
+            aria-label={t("bi.fermer", "Fermer")}
             style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", cursor: submitting ? "not-allowed" : "pointer", fontSize: 18, lineHeight: 1, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           >×</button>
         </div>
