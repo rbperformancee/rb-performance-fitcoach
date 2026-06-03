@@ -803,6 +803,7 @@ function AppInner() {
   const [showHome, setShowHome] = useState(true);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = React.useRef(0);
+
   const [_sessionsDone, setSessionsDone] = React.useState(0);
   const appData = useAppData(client?.id);
   const [_todayDone, setTodayDone] = React.useState(false);

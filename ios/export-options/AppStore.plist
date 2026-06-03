@@ -16,7 +16,7 @@
     - Compte Apple Developer Program actif
     - App ID 'app.rbperform' provisionné dans developer.apple.com
     - Distribution certificate + provisioning profile dans Keychain
-    - team ID renseigné ci-dessous (REMPLACE 'TEAMIDXXXX' par ton vrai team ID
+    - team ID renseigné ci-dessous (REMPLACE 'XC54HYT28Q' par ton vrai team ID
       Apple — 10 chars alphanumériques)
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -29,7 +29,7 @@
     <string>upload</string>
 
     <key>teamID</key>
-    <string>TEAMIDXXXX</string>
+    <string>XC54HYT28Q</string>
 
     <!-- Signing automatique : Xcode résout le bon profil distribution
          depuis App ID + team. Plus simple que de gérer les profils à la main. -->
