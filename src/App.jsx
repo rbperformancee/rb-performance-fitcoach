@@ -61,6 +61,7 @@ import StreakBadge from "./components/StreakBadge";
 import { useHaptic } from "./hooks/useHaptic";
 import { useStreak } from "./hooks/useStreak";
 import { usePushNotifications } from "./hooks/usePushNotifications";
+import { getLocale } from "./lib/i18n";
 import SplashScreen from "./components/SplashScreen";
 
 import { parseProgrammeHTML, expandProgrammeWeeks } from "./utils/parserProgramme";
@@ -1165,9 +1166,20 @@ function AppInner() {
 
   if (showHome && !isCoach) {
     const _h = new Date().getHours();
-    const _g = _h < 12 ? 'Bonjour' : _h < 18 ? 'Bon apres-midi' : 'Bonsoir';
-    const _fn = client?.full_name?.split(' ')[0] || 'Athlete';
-    const _quotes = [
+    const _isEN = getLocale() === 'en';
+    const _g = _isEN
+      ? (_h < 12 ? 'Good morning' : _h < 18 ? 'Good afternoon' : 'Good evening')
+      : (_h < 12 ? 'Bonjour' : _h < 18 ? 'Bon apres-midi' : 'Bonsoir');
+    const _fn = client?.full_name?.split(' ')[0] || (_isEN ? 'Athlete' : 'Athlete');
+    const _quotes = _isEN ? [
+      "TODAY'S PAIN IS TOMORROW'S STRENGTH.",
+      "CHAMPIONS ARE NOT BORN. THEY ARE BUILT.",
+      "ZERO EXCUSES. MAXIMUM RESULTS.",
+      "ONE DAY YOU'LL BE GLAD YOU KEPT GOING.",
+      "DISCIPLINE IS FREEDOM.",
+      "EVERY REP TAKES YOU CLOSER TO WHO YOU WANT TO BE.",
+      "THE BODY ACHIEVES WHAT THE MIND BELIEVES.",
+    ] : [
       "LA DOULEUR D AUJOURD HUI EST LA FORCE DE DEMAIN.",
       "LES CHAMPIONS NE NAISSENT PAS. ILS SE CONSTRUISENT.",
       "ZERO EXCUSE. MAXIMUM RESULTAT.",
@@ -1182,8 +1194,12 @@ function AppInner() {
     const _te = programme?.weeks?.reduce((a,w) => a + (w.sessions?.reduce((b,s) => b + (s.exercises?.length||0), 0)||0), 0) || 0;
     const _now = new Date();
     const _time = String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
-    const _days = ['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
-    const _months = ['JAN','FEV','MAR','AVR','MAI','JUN','JUL','AOU','SEP','OCT','NOV','DEC'];
+    const _days = _isEN
+      ? ['SUN','MON','TUE','WED','THU','FRI','SAT']
+      : ['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
+    const _months = _isEN
+      ? ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+      : ['JAN','FEV','MAR','AVR','MAI','JUN','JUL','AOU','SEP','OCT','NOV','DEC'];
     const _dash = 2 * Math.PI * 40;
     const _pct = _ts > 0 ? Math.min(Math.round((_sessionsDone / _ts) * 100), 100) : 0;
     
@@ -1233,7 +1249,7 @@ function AppInner() {
 
         {/* CITATION NIKE — le wow factor */}
         <div style={{padding:'36px 28px 0',position:'relative',zIndex:2}}>
-          <div style={{fontSize:11,color:'rgba(2,209,186,0.5)',fontWeight:700,letterSpacing:'4px',textTransform:'uppercase',marginBottom:16}}>Citation du jour</div>
+          <div style={{fontSize:11,color:'rgba(2,209,186,0.5)',fontWeight:700,letterSpacing:'4px',textTransform:'uppercase',marginBottom:16}}>{_isEN ? 'Quote of the day' : 'Citation du jour'}</div>
           <div style={{fontSize:22,fontWeight:900,color:'rgba(255,255,255,0.92)',lineHeight:1.35,letterSpacing:'-0.3px'}}>
             {_q.split(' ').map((word, i) => (
               <span key={i} style={{
@@ -1252,10 +1268,10 @@ function AppInner() {
         {programme && (
           <div style={{padding:'24px 28px 0',position:'relative',zIndex:2}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-              <div style={{fontSize:10,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'3px',textTransform:'uppercase'}}>Programme actif</div>
+              <div style={{fontSize:10,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'3px',textTransform:'uppercase'}}>{_isEN ? 'Active programme' : 'Programme actif'}</div>
               <div style={{display:'flex',gap:6}}>
-                <span style={{fontSize:10,color:'rgba(2,209,186,0.7)',background:'rgba(2,209,186,0.1)',border:'1px solid rgba(2,209,186,0.2)',borderRadius:20,padding:'3px 10px',fontWeight:600}}>{_tw} SEM.</span>
-                <span style={{fontSize:10,color:'rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.05)',borderRadius:20,padding:'3px 10px',fontWeight:600}}>{_ts} SÉANCES</span>
+                <span style={{fontSize:10,color:'rgba(2,209,186,0.7)',background:'rgba(2,209,186,0.1)',border:'1px solid rgba(2,209,186,0.2)',borderRadius:20,padding:'3px 10px',fontWeight:600}}>{_tw} {_isEN ? 'WK.' : 'SEM.'}</span>
+                <span style={{fontSize:10,color:'rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.05)',borderRadius:20,padding:'3px 10px',fontWeight:600}}>{_ts} {_isEN ? 'SESSIONS' : 'SÉANCES'}</span>
               </div>
             </div>
             <div style={{fontSize:30,fontWeight:800,color:'#fff',letterSpacing:'-1px'}}>{programme.name}</div>
@@ -1269,9 +1285,9 @@ function AppInner() {
         {/* STATS — Tesla data */}
         <div style={{padding:'24px 28px 0',display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,position:'relative',zIndex:2}}>
           {[
-            {label:'Séances',value:_ts,unit:'total',color:'#02d1ba'},
-            {label:'Semaines',value:_tw,unit:'programme',color:'rgba(255,255,255,0.5)'},
-            {label:'Exercices',value:_te,unit:'total',color:'#02d1ba'},
+            {label: _isEN ? 'Sessions' : 'Séances', value:_ts, unit:'total', color:'#02d1ba'},
+            {label: _isEN ? 'Weeks' : 'Semaines', value:_tw, unit:'programme', color:'rgba(255,255,255,0.5)'},
+            {label: _isEN ? 'Exercises' : 'Exercices', value:_te, unit:'total', color:'#02d1ba'},
           ].map((s,i)=>(
             <div key={i} style={{borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:14}}>
               <div style={{fontSize:32,fontWeight:200,color:s.color,letterSpacing:'-1.5px',lineHeight:1}}>{s.value}</div>
