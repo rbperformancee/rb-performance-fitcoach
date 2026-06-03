@@ -330,6 +330,7 @@ function Sparkline({ values }) {
 }
 
 function BilanCard({ row, freq, measEnabled, deltaFor, onSaveAnnotation, onOpenPhoto }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [comment, setComment] = useState(row.coach_comment || "");
   const [status, setStatus] = useState(row.coach_status || null);

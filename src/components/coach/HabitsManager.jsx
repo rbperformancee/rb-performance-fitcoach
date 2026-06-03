@@ -330,6 +330,7 @@ export default function HabitsManager({ open, onClose, onChange, client }) {
 }
 
 function HabitRow({ habit, onRename, onToggleActive, onChangeColor, onDelete, onMoveUp, onMoveDown }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(habit.name);
 

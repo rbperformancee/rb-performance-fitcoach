@@ -282,6 +282,7 @@ function PlanCard({ plan, onSelectRecipe }) {
 // RecipeCard
 // =====================================================
 function RecipeCard({ recipe, onClick, onDelete, compact }) {
+  const t = useT();
   const status = recipe.parsing_status;
   const statusColor =
     status === "published" ? G :
@@ -372,6 +373,7 @@ function RecipeCard({ recipe, onClick, onDelete, compact }) {
 // RecipeReviewModal — split-screen edit + publish
 // =====================================================
 function RecipeReviewModal({ recipeId, onClose, onSaved }) {
+  const t = useT();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

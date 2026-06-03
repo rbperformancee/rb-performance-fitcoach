@@ -2247,6 +2247,7 @@ function AnalyticsPanel({ programme }) {
 }
 
 function Preview({ programme, showAnalytics }) {
+  const t = useT();
   const totalEx = (programme.weeks || []).reduce((a, w) => a + (w.sessions || []).reduce((b, s) => b + (s.exercises || []).length, 0), 0);
   // Compte aussi les runs : un programme 100% running (ex. prep 10km) doit
   // pouvoir afficher son volume cardio dans le résumé header, sinon le

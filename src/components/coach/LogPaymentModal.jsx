@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useT } from "../../lib/i18n";
-import { getDateLocale } from "../../lib/i18n";
+import { useT, t as tStatic, getDateLocale } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
@@ -17,9 +16,10 @@ const PRESETS = [
   { id: "custom", label: "Custom", days: null },
 ];
 
-const METHODS = [
-  { id: "virement", label: t("lpm.method_transfer", "Virement") },
-  { id: "stripe_perso", label: t("lpm.method_stripe_perso", "Stripe perso") },
+// Factory evaluée au render pour suivre la locale courante.
+const getMethods = () => [
+  { id: "virement", label: tStatic("lpm.method_transfer", "Virement") },
+  { id: "stripe_perso", label: tStatic("lpm.method_stripe_perso", "Stripe perso") },
   { id: "paypal", label: "PayPal" },
   { id: "cash", label: "Espèces" },
   { id: "autre", label: "Autre" },
@@ -362,7 +362,7 @@ export default function LogPaymentModal({
           </Field>
           <Field label="Méthode">
             <select value={method} onChange={(e) => setMethod(e.target.value)} style={input}>
-              {METHODS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+              {getMethods().map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
             </select>
           </Field>
         </div>
