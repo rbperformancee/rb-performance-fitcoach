@@ -440,7 +440,7 @@ function InvoicingSection({ coachData, isDemo }) {
         <select value={tvaStatus} onChange={(e) => setTvaStatus(e.target.value)} style={input}>
           <option value="">— Choisir —</option>
           <option value="franchise">Franchise en base (TVA non applicable - art. 293 B CGI)</option>
-          <option value="applicable">Assujetti TVA</option>
+          <option value="applicable">{t("st.opt_tva_applicable", "Assujetti TVA")}</option>
         </select>
       </ReqField>
 
@@ -546,7 +546,7 @@ function LatePaymentsClientNotifSection({ coachData, isDemo }) {
       {enabled && (
         <>
           <div style={{ marginTop: 16 }}>
-            <div style={sectionSubtitle}>Message envoyé au client (personnalisable)</div>
+            <div style={sectionSubtitle}>{t("st.msg_client_personalize", "Message envoyé au client (personnalisable)")}</div>
             <textarea
               className="set-input"
               value={template}
@@ -790,7 +790,7 @@ function PublicProfileSection({ coachData, isDemo }) {
 
       {/* PHOTO */}
       <div style={{ marginBottom: 16 }}>
-        <div style={sectionSubtitle}>Photo vitrine</div>
+        <div style={sectionSubtitle}>{t("st.photo_showcase", "Photo vitrine")}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ position: "relative", width: 72, height: 72, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,.04)", border: `1px solid ${G}33`, flexShrink: 0 }}>
             {photoUrl ? (
@@ -858,7 +858,7 @@ function PublicProfileSection({ coachData, isDemo }) {
 
       {/* BIO */}
       <div style={{ marginBottom: 16 }}>
-        <div style={sectionSubtitle}>Bio (max 500 caractères)</div>
+        <div style={sectionSubtitle}>{t("st.bio_max_500", "Bio (max 500 caractères)")}</div>
         <textarea
           className="set-input"
           value={bio}
@@ -874,7 +874,7 @@ function PublicProfileSection({ coachData, isDemo }) {
 
       {/* SPECIALITES */}
       <div style={{ marginBottom: 18 }}>
-        <div style={sectionSubtitle}>Spécialités (max 6)</div>
+        <div style={sectionSubtitle}>{t("st.specs_max_6", "Spécialités (max 6)")}</div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
           {specialties.map((s, i) => (
             <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", background: `${G}10`, border: `.5px solid ${G}40`, borderRadius: 100, fontSize: 12, color: "#fff", fontWeight: 600 }}>
@@ -900,7 +900,7 @@ function PublicProfileSection({ coachData, isDemo }) {
 
       {/* CTA URL */}
       <div style={{ marginBottom: 18 }}>
-        <div style={sectionSubtitle}>Bouton "Demander un accès" — destination</div>
+        <div style={sectionSubtitle}>{t("st.cta_destination", "Bouton \"Demander un accès\" — destination")}</div>
         <input
           className="set-input"
           value={ctaUrl}
@@ -916,14 +916,14 @@ function PublicProfileSection({ coachData, isDemo }) {
             <li><code style={{ color: G, fontSize: 11 }}>https://wa.me/33XXX</code> → WhatsApp</li>
             <li><code style={{ color: G, fontSize: 11 }}>https://ig.me/m/username</code> → DM Insta direct</li>
             <li><code style={{ color: G, fontSize: 11 }}>https://calendly.com/...</code> → ton Calendly</li>
-            <li>Vide → mailto vers ton email (par défaut)</li>
+            <li>{t("st.empty_mailto_default", "Vide → mailto vers ton email (par défaut)")}</li>
           </ul>
         </div>
       </div>
 
       {/* LIEN RÉSERVATION (booking secondaire sur la vitrine publique) */}
       <div style={{ marginBottom: 18 }}>
-        <div style={sectionSubtitle}>Lien de réservation (appel découverte)</div>
+        <div style={sectionSubtitle}>{t("st.booking_link", "Lien de réservation (appel découverte)")}</div>
         <input
           className="set-input"
           value={calendarUrl}
@@ -1187,7 +1187,7 @@ function TestimonialsManager({ coachData, isDemo }) {
           </div>
 
           <div style={{ marginBottom: 10 }}>
-            <div style={sectionSubtitle}>Prénom du client</div>
+            <div style={sectionSubtitle}>{t("st.testi_first_name", "Prénom du client")}</div>
             <input className="set-input" value={draft.client_name} onChange={e => setDraft(d => ({ ...d, client_name: e.target.value.slice(0, 60) }))} placeholder="Lucas" style={input} />
           </div>
 
@@ -1205,7 +1205,7 @@ function TestimonialsManager({ coachData, isDemo }) {
           </div>
 
           <div style={{ marginBottom: 14 }}>
-            <div style={sectionSubtitle}>Témoignage (max 280 caractères)</div>
+            <div style={sectionSubtitle}>{t("st.testi_quote_max", "Témoignage (max 280 caractères)")}</div>
             <textarea
               className="set-input"
               value={draft.content}

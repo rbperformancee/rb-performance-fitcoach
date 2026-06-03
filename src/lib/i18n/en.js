@@ -2641,6 +2641,18 @@ const en = {
     "hm.fermer": "Close",
     "hm.chargement": "Loading…",
     "hmg.fermer": "Close",
+
+    // ===== Settings deep (Phase 3d+) =====
+    "st.opt_tva_applicable": "VAT applicable",
+    "st.msg_client_personalize": "Message sent to the client (customizable)",
+    "st.photo_showcase": "Showcase photo",
+    "st.bio_max_500": "Bio (max 500 characters)",
+    "st.specs_max_6": "Specialties (max 6)",
+    "st.cta_destination": "Button \"Request access\" — destination",
+    "st.empty_mailto_default": "Empty → mailto to your email (default)",
+    "st.booking_link": "Booking link (discovery call)",
+    "st.testi_first_name": "Client first name",
+    "st.testi_quote_max": "Testimonial (max 280 characters)",
 };
 
 export default en;

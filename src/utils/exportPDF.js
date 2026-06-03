@@ -1,7 +1,14 @@
 /**
  * Export PDF de progression — RB Perform FitCoach
  * Utilise jsPDF (CDN) chargé dynamiquement
+ *
+ * Locale : les dates sont formatees selon la locale courante du coach
+ * (fr-FR ou en-US). Le contenu (labels Volume/Programme/etc.) reste FR
+ * en attendant une refacto template bilingue (Phase 4a non urgente —
+ * le PDF est genere coach-side et envoye au client; FR-only acceptable
+ * si coach FR avec client FR).
  */
+import { getDateLocale } from "../lib/i18n";
 
 function loadJsPDF() {
   return new Promise((resolve, reject) => {
@@ -110,7 +117,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
     doc.setFontSize(6);
     doc.setTextColor(107, 114, 1282);
     doc.setFont("helvetica", "normal");
-    const date = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+    const date = new Date().toLocaleDateString(getDateLocale(), { day: "2-digit", month: "long", year: "numeric" });
     doc.text(`Généré le ${date} · rbperform.app`, ML, H - 8);
     doc.setFillColor(13, 13, 132);
     doc.rect(0, H - 14, W, 14, "F");
@@ -150,7 +157,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(107, 114, 128);
-  doc.text(new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }), W - MR, MT + 6.5, { align: "right" });
+  doc.text(new Date().toLocaleDateString(getDateLocale(), { day: "2-digit", month: "long", year: "numeric" }), W - MR, MT + 6.5, { align: "right" });
 
   // Ligne verte déco
   doc.setFillColor(2, 209, 186);
@@ -329,7 +336,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
       drawSparkline(doc, ML + 5, yPos + 41, W - ML - MR - 28, 9, hist, GREEN);
 
       // Date dernière mesure
-      const dateStr = new Date(latest.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+      const dateStr = new Date(latest.date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short" });
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6);
       doc.setTextColor(107, 114, 1282);
@@ -402,7 +409,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(107, 114, 128);
-      doc.text(new Date(entry.date).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" }), ML + 2, y + 2);
+      doc.text(new Date(entry.date).toLocaleDateString(getDateLocale(), { weekday: "short", day: "2-digit", month: "short" }), ML + 2, y + 2);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(245, 245, 245);
       doc.text(`${entry.weight} kg`, ML + 52, y + 2);
@@ -552,7 +559,7 @@ export async function exportProgrammePDF(p) {
   // Footer dernière page
   doc.setTextColor(...GRAY);
   doc.setFontSize(7);
-  doc.text('Généré par RB Perform · ' + new Date().toLocaleDateString('fr-FR'), W / 2, H - 8, { align: 'center' });
+  doc.text('Généré par RB Perform · ' + new Date().toLocaleDateString(getDateLocale()), W / 2, H - 8, { align: 'center' });
 
   const date = new Date().toISOString().slice(0, 10);
   const filename = (p.name || 'programme').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '_' + date + '.pdf';

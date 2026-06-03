@@ -2641,6 +2641,18 @@ const fr = {
     "hm.fermer": "Fermer",
     "hm.chargement": "Chargement…",
     "hmg.fermer": "Fermer",
+
+    // ===== Settings deep (Phase 3d+) =====
+    "st.opt_tva_applicable": "Assujetti TVA",
+    "st.msg_client_personalize": "Message envoyé au client (personnalisable)",
+    "st.photo_showcase": "Photo vitrine",
+    "st.bio_max_500": "Bio (max 500 caractères)",
+    "st.specs_max_6": "Spécialités (max 6)",
+    "st.cta_destination": "Bouton \"Demander un accès\" — destination",
+    "st.empty_mailto_default": "Vide → mailto vers ton email (par défaut)",
+    "st.booking_link": "Lien de réservation (appel découverte)",
+    "st.testi_first_name": "Prénom du client",
+    "st.testi_quote_max": "Témoignage (max 280 caractères)",
 };
 
 export default fr;
