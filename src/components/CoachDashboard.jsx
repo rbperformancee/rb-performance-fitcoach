@@ -207,9 +207,9 @@ function ProgrammeCalendarSection({ programmeId, clientId }) {
 
       {/* Stats grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
-        <Stat label="Démarré le" value={data.start_date ? new Date(data.start_date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short" }) : "—"} />
-        <Stat label="Séances" value={completions.length} valueColor="#02d1ba" />
-        <Stat label="Reportées" value={data.reported_days_count || 0} valueColor={data.reported_days_count > 0 ? "#f97316" : "rgba(255,255,255,0.5)"} />
+        <Stat label={t("cd.stat_started_on", "Démarré le")} value={data.start_date ? new Date(data.start_date).toLocaleDateString(getDateLocale(), { day: "2-digit", month: "short" }) : "—"} />
+        <Stat label={t("cd.stat_sessions", "Séances")} value={completions.length} valueColor="#02d1ba" />
+        <Stat label={t("cd.stat_reported", "Reportées")} value={data.reported_days_count || 0} valueColor={data.reported_days_count > 0 ? "#f97316" : "rgba(255,255,255,0.5)"} />
         <Stat label="Repos pris" value={data.rest_days_count || 0} valueColor={data.rest_days_count > 0 ? "#a78bfa" : "rgba(255,255,255,0.5)"} />
       </div>
 
@@ -329,7 +329,7 @@ function ProgrammesHistorySection({ client, onEdit, onReuse }) {
         style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "transparent", border: "none", color: "#fff", padding: 0, cursor: "pointer", fontFamily: "inherit" }}
       >
         <div>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.55)", textTransform: "uppercase", marginBottom: 4 }}>Historique programmes</div>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.55)", textTransform: "uppercase", marginBottom: 4 }}>{t("cd.pg_history", "Historique programmes")}</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>{archived.length} programme{archived.length > 1 ? "s" : ""} archivé{archived.length > 1 ? "s" : ""}</div>
         </div>
         <span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)" }}>{expanded ? "−" : "+"}</span>
@@ -341,9 +341,9 @@ function ProgrammesHistorySection({ client, onEdit, onReuse }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", marginBottom: 10, background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 8, fontSize: 11 }}>
               <div style={{ color: "rgba(255,255,255,0.7)" }}>{compareIds.length}/2 sélectionnés pour comparer</div>
               <div style={{ display: "flex", gap: 8 }}>
-                <button type="button" onClick={() => setCompareIds([])} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 11, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>Annuler</button>
+                <button type="button" onClick={() => setCompareIds([])} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 11, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>{t("cd.btn_cancel", "Annuler")}</button>
                 {compareIds.length === 2 && (
-                  <button type="button" onClick={openCompare} style={{ background: "#02d1ba", border: "none", color: "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: "4px 10px", borderRadius: 6 }}>Comparer →</button>
+                  <button type="button" onClick={openCompare} style={{ background: "#02d1ba", border: "none", color: "#000", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: "4px 10px", borderRadius: 6 }}>{t("cd.btn_compare", "Comparer →")}</button>
                 )}
               </div>
             </div>
@@ -366,8 +366,8 @@ function ProgrammesHistorySection({ client, onEdit, onReuse }) {
                     {new Date(p.uploaded_at).toLocaleDateString(getDateLocale(), { day: "numeric", month: "short", year: "numeric" })}
                   </div>
                 </div>
-                <button type="button" onClick={() => onEdit(p.id)} style={{ padding: "5px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Éditer</button>
-                <button type="button" onClick={() => onReuse(p.id)} style={{ padding: "5px 10px", background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 6, color: "#02d1ba", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Réutiliser</button>
+                <button type="button" onClick={() => onEdit(p.id)} style={{ padding: "5px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{t("cd.btn_edit", "Éditer")}</button>
+                <button type="button" onClick={() => onReuse(p.id)} style={{ padding: "5px 10px", background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 6, color: "#02d1ba", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{t("cd.btn_reuse", "Réutiliser")}</button>
               </div>
             );
           })}
@@ -419,7 +419,7 @@ function ProgrammeBlocksSection({ client, onEdit, onNewBlock }) {
     <div style={{ marginTop: 16, padding: 16, background: "rgba(2,209,186,0.03)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <div>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 4 }}>File de blocs</div>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 4 }}>{t("cd.block_queue", "File de blocs")}</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>{blocks.length} blocs — s'enchaînent automatiquement</div>
         </div>
         {onNewBlock && (
@@ -449,7 +449,7 @@ function ProgrammeBlocksSection({ client, onEdit, onNewBlock }) {
               </div>
             </div>
             <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 0.8, color: labelColor, flexShrink: 0 }}>{label}</span>
-            <button type="button" onClick={() => onEdit(b.id)} style={{ padding: "5px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>Éditer</button>
+            <button type="button" onClick={() => onEdit(b.id)} style={{ padding: "5px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>{t("cd.btn_edit", "Éditer")}</button>
           </div>
         );
       })}
@@ -486,8 +486,8 @@ function ProgrammeCompareModal({ data, onClose }) {
       <div style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, maxWidth: 900, width: "100%", maxHeight: "90vh", padding: 28, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: "#02d1ba", textTransform: "uppercase", marginBottom: 6 }}>Comparateur</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>Comparaison de programmes</div>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: "#02d1ba", textTransform: "uppercase", marginBottom: 6 }}>{t("cd.comparator", "Comparateur")}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>{t("cd.compare_programmes", "Comparaison de programmes")}</div>
           </div>
           <button type="button" onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
         </div>
@@ -511,7 +511,7 @@ function ProgrammeCompareModal({ data, onClose }) {
         </div>
 
         <div style={{ marginTop: 18, padding: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 10 }}>Diff exos</div>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 10 }}>{t("cd.diff_exos", "Diff exos")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, fontSize: 11 }}>
             <div>
               <div style={{ color: "#ff8888", fontWeight: 700, marginBottom: 4 }}>− Retirés ({onlyA.length})</div>
@@ -637,7 +637,7 @@ function MiniSparkline({ data, color = G, w = 80, h = 28 }) {
 // Graphique ligne premium avec axes, dates, grille, points
 // Utilise pour le drawer poids (et potentiellement eau/sommeil)
 function LineGraph({ data, color = G, height = 200, unit = "kg", valueKey = "weight" }) {
-  if (!data || data.length < 2) return <div style={{ textAlign: "center", padding: 32, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Pas assez de donnees</div>;
+  if (!data || data.length < 2) return <div style={{ textAlign: "center", padding: 32, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>{t("cd.not_enough_data", "Pas assez de donnees")}</div>;
 
   const W = 100; // pourcentage, le SVG sera responsive
   const H = height;
@@ -794,7 +794,7 @@ function CreneauxManager() {
       {/* Réservations */}
       {bookings.length > 0 && (
         <div>
-          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: G, marginBottom: 12 }}>Appels réservés</div>
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: G, marginBottom: 12 }}>{t("cd.booked_calls", "Appels réservés")}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {bookings.map(b => {
               const slot = slots.find(s => s.id === b.slot_id);
@@ -806,7 +806,7 @@ function CreneauxManager() {
                       {slot ? new Date(slot.date + "T12:00:00").toLocaleDateString(getDateLocale(), { weekday: "long", day: "numeric", month: "long" }) + " · " + slot.heure : "Créneau inconnu"}
                     </div>
                   </div>
-                  <div style={{ background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, padding: "4px 12px", fontSize: 10, color: G, fontWeight: 700 }}>Confirmé</div>
+                  <div style={{ background: "rgba(2,209,186,0.1)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, padding: "4px 12px", fontSize: 10, color: G, fontWeight: 700 }}>{t("cd.confirmed", "Confirmé")}</div>
                 </div>
               );
             })}
@@ -816,7 +816,7 @@ function CreneauxManager() {
 
       {/* Ajouter un créneau */}
       <div>
-        <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Ajouter un créneau</div>
+        <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>{t("cd.add_slot", "Ajouter un créneau")}</div>
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
             min={new Date().toISOString().split("T")[0]}
@@ -834,11 +834,11 @@ function CreneauxManager() {
 
       {/* Liste des créneaux */}
       <div>
-        <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Créneaux disponibles</div>
+        <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>{t("cd.available_slots", "Créneaux disponibles")}</div>
         {loading ? (
           <div style={{ padding: "20px 0" }}><Spinner variant="dots" size={22} /></div>
         ) : slots.filter(s => s.is_available).length === 0 ? (
-          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, fontStyle: "italic" }}>Aucun créneau disponible</div>
+          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, fontStyle: "italic" }}>{t("cd.no_slots", "Aucun créneau disponible")}</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {slots.filter(s => s.is_available).map(slot => (
@@ -860,14 +860,14 @@ function CreneauxManager() {
       {/* Créneaux passés/réservés */}
       {slots.filter(s => !s.is_available).length > 0 && (
         <div>
-          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Créneaux réservés / passés</div>
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>{t("cd.booked_or_past", "Créneaux réservés / passés")}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {slots.filter(s => !s.is_available).map(slot => (
               <div key={slot.id} style={{ background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.5 }}>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
                   {new Date(slot.date + "T12:00:00").toLocaleDateString(getDateLocale(), { day: "numeric", month: "short" })} · {slot.heure}
                 </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Réservé</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{t("cd.booked", "Réservé")}</div>
               </div>
             ))}
           </div>
@@ -1402,7 +1402,7 @@ function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) 
                           )}
                         </>
                       ) : (
-                        <span style={{ color: "rgba(255,170,0,0.6)" }}>Aucun set loggé</span>
+                        <span style={{ color: "rgba(255,170,0,0.6)" }}>{t("cd.no_set_logged", "Aucun set loggé")}</span>
                       )}
                     </div>
                     {/* Référence séance précédente : ligne dédiée seulement si on a un précédent */}
@@ -1450,8 +1450,8 @@ function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) 
                         borderBottom: "1px solid rgba(255,255,255,0.04)",
                       }}>
                         <div>Sér.</div>
-                        <div>Charge × reps</div>
-                        <div style={{ textAlign: "right" }}>Volume</div>
+                        <div>{t("cd.load_reps", "Charge × reps")}</div>
+                        <div style={{ textAlign: "right" }}>{t("cd.volume", "Volume")}</div>
                         <div style={{ textAlign: "right" }}>1RM est.</div>
                         <div></div>
                       </div>
@@ -1547,7 +1547,7 @@ function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) 
                                   </button>
                                   <button
                                     type="button" onClick={cancelEdit} disabled={savingEdit}
-                                    title="Annuler"
+                                    title={t("cd.btn_cancel", "Annuler")}
                                     style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", cursor: savingEdit ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}
                                   >×</button>
                                 </>
@@ -1579,7 +1579,7 @@ function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) 
                             fontSize: 10,
                           }}>
                             <div></div>
-                            <div style={{ fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase", color: "rgba(255,255,255,0.5)", fontSize: 9 }}>Volume total exercice</div>
+                            <div style={{ fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase", color: "rgba(255,255,255,0.5)", fontSize: 9 }}>{t("cd.total_volume_ex", "Volume total exercice")}</div>
                             <div style={{ textAlign: "right", fontFamily: NUM_FONT, fontVariantNumeric: "tabular-nums slashed-zero", fontFeatureSettings: "'tnum' 1, 'zero' 1", fontWeight: 700, color: G_LOCAL, fontSize: 12 }}>
                               {totalVol.toLocaleString("fr-FR")}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginLeft: 2 }}>kg</span>
                             </div>
@@ -1752,7 +1752,7 @@ function ExerciseProgressionModal({ data, onClose }) {
                 }}>
                   <div>Date</div>
                   <div style={{ textAlign: "right" }}>Max</div>
-                  <div style={{ textAlign: "right" }}>Volume</div>
+                  <div style={{ textAlign: "right" }}>{t("cd.volume", "Volume")}</div>
                   <div style={{ textAlign: "right" }}>1RM est.</div>
                 </div>
                 {[...history].reverse().map((h, i) => (
@@ -3053,7 +3053,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           <div style={{ ...section, animation: "cpFadeUp 0.4s ease 0.05s both" }}>
             <div style={{ ...card, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", marginBottom: 4 }}>Programme actif</div>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.7)", marginBottom: 4 }}>{t("cd.active_programme", "Programme actif")}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {prog.programme_name}
                 </div>
@@ -4070,7 +4070,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 const fmt = (d) => new Date(d).toLocaleDateString(getDateLocale(), { day: "numeric", month: "short" });
                 return (
                   <>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4, letterSpacing: 0.5 }}>Dernier paiement</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4, letterSpacing: 0.5 }}>{t("cd.last_payment", "Dernier paiement")}</div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 2 }}>
                       {parseFloat(lastPayment.amount_eur).toFixed(0)} € · {fmt(lastPayment.received_date)}
                     </div>
@@ -4081,7 +4081,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                 );
               })() : (
                 <>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4, letterSpacing: 0.5 }}>Statut</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4, letterSpacing: 0.5 }}>{t("cd.status", "Statut")}</div>
                   <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>
                     Aucun paiement loggé pour ce client.
                   </div>
@@ -4140,11 +4140,11 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
               onClick={(e) => e.stopPropagation()}
               style={{ width: "100%", maxWidth: 440, background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24 }}
             >
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Changer l'email du client</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{t("cd.change_client_email", "Changer l'email du client")}</div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 16 }}>
                 Met à jour la connexion + la fiche. Le client devra utiliser le nouvel email pour se connecter.
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>Email actuel</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>{t("cd.current_email", "Email actuel")}</div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginBottom: 16, padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 8 }}>
                 {client.email}
               </div>
@@ -4171,7 +4171,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   disabled={savingEmail}
                   onClick={() => setShowEmailEdit(false)}
                   style={{ padding: "10px 18px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, cursor: savingEmail ? "wait" : "pointer", fontFamily: "inherit" }}
-                >Annuler</button>
+                >{t("cd.btn_cancel", "Annuler")}</button>
                 <button
                   type="button"
                   disabled={savingEmail || !newClientEmail.trim() || newClientEmail.trim().toLowerCase() === (client.email || "").toLowerCase()}
@@ -6103,7 +6103,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       {uploading && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(8,12,20,0.9)", WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18 }}>
           <div style={{ width: 48, height: 48, border: "2.5px solid rgba(2,209,186,0.12)", borderTopColor: G, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-          <div style={{ color: G, fontSize: 12, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" }}>Upload en cours</div>
+          <div style={{ color: G, fontSize: 12, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" }}>{t("cd.upload_in_progress", "Upload en cours")}</div>
         </div>
       )}
 
