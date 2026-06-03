@@ -2653,6 +2653,30 @@ const en = {
     "st.booking_link": "Booking link (discovery call)",
     "st.testi_first_name": "Client first name",
     "st.testi_quote_max": "Testimonial (max 280 characters)",
+
+    // ===== LogPaymentModal (Phase 3e) =====
+    "lpm.soon": "Soon",
+    "lpm.engagement_type": "Engagement type",
+    "lpm.period_covered": "Period covered by this payment",
+    "lpm.method_transfer": "Bank transfer",
+    "lpm.method_stripe_perso": "Personal Stripe",
+    "lpm.err_invoice_paid": "This invoice already has a payment recorded",
+    "lpm.err_save": "Save error",
+    "lpm.new_payment": "New payment",
+    "lpm.single_payment": "Single payment",
+    "lpm.single_payment_hint": "1 payment, simple period",
+    "lpm.plan_payments": "Installment plan",
+    "lpm.plan_payments_hint": "N scheduled installments",
+    "lpm.total_plan_amount": "Total plan amount (€)",
+    "lpm.nb_installments": "Number of installments",
+    "lpm.amount_received_now": "Amount received now (€)",
+    "lpm.amount": "Amount (€)",
+    "lpm.date_received": "Date received",
+    "lpm.period_end_custom": "End (custom)",
+    "lpm.period_end_auto": "End (auto)",
+    "lpm.notes_optional": "Notes (optional)",
+    "lpm.btn_saving": "Saving…",
+    "lpm.btn_save_payment": "Save the payment",
 };
 
 export default en;

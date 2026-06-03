@@ -18,8 +18,8 @@ const PRESETS = [
 ];
 
 const METHODS = [
-  { id: "virement", label: "Virement" },
-  { id: "stripe_perso", label: "Stripe perso" },
+  { id: "virement", label: t("lpm.method_transfer", "Virement") },
+  { id: "stripe_perso", label: t("lpm.method_stripe_perso", "Stripe perso") },
   { id: "paypal", label: "PayPal" },
   { id: "cash", label: "Espèces" },
   { id: "autre", label: "Autre" },
@@ -170,7 +170,7 @@ export default function LogPaymentModal({
       if (error) {
         // Couche 1 (DB) : si erreur unique sur invoice_id → déjà payé
         if (String(error.message || "").includes("payments_invoice_unique")) {
-          toast.error("Cette facture a déjà un paiement enregistré");
+          toast.error(t("lpm.err_invoice_paid", "Cette facture a déjà un paiement enregistré"));
         } else {
           throw error;
         }
@@ -258,18 +258,18 @@ export default function LogPaymentModal({
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
           </div>
           <div style={{ flex: 1, minWidth: 0, fontSize: 11, lineHeight: 1.45, color: "rgba(255,255,255,0.55)" }}>
-            <strong style={{ color: G, fontWeight: 800, letterSpacing: 0.5 }}>Bientôt</strong>
+            <strong style={{ color: G, fontWeight: 800, letterSpacing: 0.5 }}>{t("lpm.soon", "Bientôt")}</strong>
             {" · "}intégration Stripe Connect (Q3 2026) — paiements clients automatiques, fini le log manuel.
           </div>
         </div>
 
         {/* Type d'engagement : 1x vs plan multi-échéances */}
         <div style={{ marginBottom: 16 }}>
-          <div style={subtitle}>Type d'engagement</div>
+          <div style={subtitle}>{t("lpm.engagement_type", "Type d'engagement")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             {[
-              { id: false, label: "Paiement unique", hint: "1 paiement, période simple" },
-              { id: true, label: "Plan en plusieurs fois", hint: "N échéances planifiées" },
+              { id: false, label: t("lpm.single_payment", "Paiement unique"), hint: t("lpm.single_payment_hint", "1 paiement, période simple") },
+              { id: true, label: t("lpm.plan_payments", "Plan en plusieurs fois"), hint: t("lpm.plan_payments_hint", "N échéances planifiées") },
             ].map((opt) => {
               const active = installmentMode === opt.id;
               return (
@@ -303,7 +303,7 @@ export default function LogPaymentModal({
             background: `${G}08`, border: `1px solid ${G}22`, borderRadius: 12,
           }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <Field label="Montant total du plan (€)">
+              <Field label={t("lpm.total_plan_amount", "Montant total du plan (€)")}>
                 <input
                   type="number" step="0.01" min="0"
                   value={totalPlanAmount}
@@ -313,7 +313,7 @@ export default function LogPaymentModal({
                   inputMode="decimal"
                 />
               </Field>
-              <Field label="Nb d'échéances">
+              <Field label={t("lpm.nb_installments", "Nb d'échéances")}>
                 <select
                   value={nInstallments}
                   onChange={(e) => setNInstallments(parseInt(e.target.value, 10))}
@@ -368,13 +368,13 @@ export default function LogPaymentModal({
         </div>
 
         {/* Date reçue */}
-        <Field label="Date reçue">
+        <Field label={t("lpm.date_received", "Date reçue")}>
           <input type="date" value={receivedDate} onChange={(e) => setReceivedDate(e.target.value)} style={input} />
         </Field>
 
         {/* Période couverte */}
         <div style={{ marginTop: 16 }}>
-          <div style={subtitle}>Période couverte par ce paiement</div>
+          <div style={subtitle}>{t("lpm.period_covered", "Période couverte par ce paiement")}</div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
             {PRESETS.map((p) => (
               <button
@@ -413,7 +413,7 @@ export default function LogPaymentModal({
 
         {/* Notes */}
         <div style={{ marginTop: 16 }}>
-          <Field label="Notes (optionnel)">
+          <Field label={t("lpm.notes_optional", "Notes (optionnel)")}>
             <input
               type="text"
               value={notes}

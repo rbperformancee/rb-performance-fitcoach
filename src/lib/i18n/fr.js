@@ -2653,6 +2653,30 @@ const fr = {
     "st.booking_link": "Lien de réservation (appel découverte)",
     "st.testi_first_name": "Prénom du client",
     "st.testi_quote_max": "Témoignage (max 280 caractères)",
+
+    // ===== LogPaymentModal (Phase 3e) =====
+    "lpm.soon": "Bientôt",
+    "lpm.engagement_type": "Type d'engagement",
+    "lpm.period_covered": "Période couverte par ce paiement",
+    "lpm.method_transfer": "Virement",
+    "lpm.method_stripe_perso": "Stripe perso",
+    "lpm.err_invoice_paid": "Cette facture a déjà un paiement enregistré",
+    "lpm.err_save": "Erreur enregistrement",
+    "lpm.new_payment": "Nouveau paiement",
+    "lpm.single_payment": "Paiement unique",
+    "lpm.single_payment_hint": "1 paiement, période simple",
+    "lpm.plan_payments": "Plan en plusieurs fois",
+    "lpm.plan_payments_hint": "N échéances planifiées",
+    "lpm.total_plan_amount": "Montant total du plan (€)",
+    "lpm.nb_installments": "Nb d'échéances",
+    "lpm.amount_received_now": "Montant reçu maintenant (€)",
+    "lpm.amount": "Montant (€)",
+    "lpm.date_received": "Date reçue",
+    "lpm.period_end_custom": "Fin (custom)",
+    "lpm.period_end_auto": "Fin (auto)",
+    "lpm.notes_optional": "Notes (optionnel)",
+    "lpm.btn_saving": "Enregistrement…",
+    "lpm.btn_save_payment": "Enregistrer le paiement",
 };
 
 export default fr;
