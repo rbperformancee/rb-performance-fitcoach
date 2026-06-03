@@ -11,7 +11,7 @@ import CarbCycling from "./coach/CarbCycling";
 import MenuGenerator from "./coach/MenuGenerator";
 import DemoBanner from "./DemoBanner";
 import { toast } from "./Toast";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import DOMPurify from "dompurify";
 import { navigateAfterAuth } from "../lib/native";
 import { supabase } from "../lib/supabase";
@@ -5054,7 +5054,10 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   const showToast = (msg, type = "ok") => { setToastMsg({ msg, type }); setTimeout(() => setToastMsg(null), 3000); };
 
-  const loadClients = async () => {
+  // useCallback : la fonction reste stable entre renders sauf si coachId change.
+  // Sinon useEffect([loadClients]) en dessous rerunnait a chaque render (qui
+  // recreait loadClients), causant un refetch infini ou une stale closure.
+  const loadClients = useCallback(async () => {
     setLoading(true);
     try {
       // ===== MULTI-TENANT : filtrage par coach_id =====
@@ -5177,9 +5180,9 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     } finally {
       setLoading(false);
     }
-  };
+  }, [coachId]);
 
-  useEffect(() => { loadClients(); }, []);
+  useEffect(() => { loadClients(); }, [loadClients]);
 
   // Détection milestones (celebration confetti) — flags localStorage par coach.
   // Pas de polling : juste reactif au state qui change après loadClients.
