@@ -146,6 +146,18 @@ export function LoginScreen({ onBack }) {
   // ===== CLIENT : verifier OTP =====
   const verifyingRef = useRef(false);
   const verifiedRef = useRef(false);
+  // Ref pour le timeout du filet de securite (reload 1.5s apres OTP success).
+  // Si l'utilisateur navigue away avant l'echeance, on clear pour eviter
+  // un reload fantome qui pourrait casser la nouvelle vue (et leaker une
+  // closure stale en memoire).
+  const reloadTimeoutRef = useRef(null);
+  useEffect(() => {
+    return () => {
+      if (reloadTimeoutRef.current) {
+        clearTimeout(reloadTimeoutRef.current);
+      }
+    };
+  }, []);
   const verifyOTP = async (code) => {
     if (code.length < 6) return;
     // Bloque les appels concurrents (auto-verify au 6e chiffre + click bouton)
@@ -174,7 +186,7 @@ export function LoginScreen({ onBack }) {
         // Filet de securite : si onAuthStateChange ne redirige pas en 1.5s,
         // on reload la page actuelle pour que React relise la session
         // (et reste sur /app.html, pas sur la landing).
-        setTimeout(() => {
+        reloadTimeoutRef.current = setTimeout(() => {
           if (document.body.contains(otpRef.current)) {
             window.location.reload();
           }

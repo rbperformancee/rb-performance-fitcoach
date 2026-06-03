@@ -396,8 +396,26 @@ export default function WeightChart({ clientId, client, programme, appData }) {
             <input type="number" inputMode="decimal" step="0.1" placeholder={"Actuel: " + goal + " kg"} value={newGoal}
               onChange={e => setNewGoal(e.target.value)}
               style={{ flex: 1, background: "transparent", border: "1px solid rgba(2,209,186,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none" }} />
-            <button onClick={async () => { const g = parseFloat(newGoal); if (isNaN(g)) return; haptic.success(); await saveGoal(g); setLocalGoal(g); setEditGoal(false); setNewGoal(""); }}
-              style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer" }}>OK</button>
+            <button
+              onClick={async () => {
+                const g = parseFloat(newGoal);
+                if (isNaN(g) || savingGoal) return;
+                setSavingGoal(true);
+                haptic.success();
+                try {
+                  await saveGoal(g);
+                  setLocalGoal(g);
+                  setEditGoal(false);
+                  setNewGoal("");
+                } finally {
+                  // Cleanup garanti meme si saveGoal rejecte (Supabase rate-limit,
+                  // RLS violation, etc.) — evite que le bouton reste lock en
+                  // "loading" silencieux et bloque le user pour la session.
+                  setSavingGoal(false);
+                }
+              }}
+              disabled={savingGoal}
+              style={{ background: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: savingGoal ? "default" : "pointer", opacity: savingGoal ? 0.7 : 1 }}>{savingGoal ? <Spinner variant="dots" size={14} color="#000" /> : "OK"}</button>
             <button onClick={() => setEditGoal(false)}
               style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 14px", color: "rgba(255,255,255,0.3)", cursor: "pointer" }}>✕</button>
           </div>

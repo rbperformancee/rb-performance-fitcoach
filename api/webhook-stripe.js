@@ -473,9 +473,23 @@ module.exports = async (req, res) => {
 
       console.log(`[webhook] New coach: ${email}, plan: ${plan}`);
 
-      // 1. Vérifier si le user existe déjà dans Supabase Auth
-      const { data: existingUsers } = await getSupabase().auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(u => u.email === email.toLowerCase());
+      // 1. Vérifier si le user existe déjà dans Supabase Auth.
+      // listUsers() peut timeout ou rate-limit ; on protege avec try/catch
+      // sinon une exception non-catchée fait passer ce webhook en "silently
+      // 200 OK" alors que le coach n'est jamais créé → il pense ne pas avoir
+      // payé. Si listUsers échoue, on continue vers createUser() qui retournera
+      // une 422 "email_taken" si le user existe deja (geré ligne 493+).
+      let existingUser = null;
+      try {
+        const { data: existingUsers } = await getSupabase().auth.admin.listUsers();
+        existingUser = existingUsers?.users?.find(u => u.email === email.toLowerCase()) || null;
+      } catch (listErr) {
+        console.warn(`[WEBHOOK_LIST_USERS_FAIL] email=${email} reason="${listErr.message}" — proceeding with createUser`);
+        await captureException(listErr, {
+          tags: { endpoint: 'webhook-stripe', stage: 'list_users', plan },
+          extra: { email, customerId, subscriptionId },
+        });
+      }
 
       let userId;
 
