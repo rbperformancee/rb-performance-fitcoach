@@ -13,6 +13,7 @@ import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSe
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { exportProgrammePDF } from "../utils/exportPDF";
+import { useT } from "../lib/i18n";
 import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
 
 const G = "#02d1ba";
@@ -862,7 +863,7 @@ function WarmupCircuitEditor({ warmup, onUpdate, onUpdateMovement, onAddMovement
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke={G} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12a9 9 0 1 1-3.5-7.1"/><polyline points="21 4 21 9 16 9"/>
             </svg>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase" }}>Circuit · Échauffement</span>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase" }}>{t("pb.eyebrow_circuit_warmup", "Circuit · Échauffement")}</span>
           </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 0.2 }}>
             En boucle — préparation neuro-musculaire avant la séance
@@ -877,12 +878,12 @@ function WarmupCircuitEditor({ warmup, onUpdate, onUpdateMovement, onAddMovement
             fontWeight: 600, letterSpacing: 0.3,
           }}
           title="Retirer le circuit"
-        >Retirer</button>
+        >{t("pb.btn_remove", "Retirer")}</button>
       </div>
 
       {/* Presets en 1 clic */}
       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 }}>
-        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", alignSelf: "center", marginRight: 4 }}>Presets</span>
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", alignSelf: "center", marginRight: 4 }}>{t("pb.label_presets", "Presets")}</span>
         {PRESETS.map((p) => (
           <button
             key={p.name}
@@ -922,7 +923,7 @@ function WarmupCircuitEditor({ warmup, onUpdate, onUpdateMovement, onAddMovement
           </div>
         </label>
         <label style={{ display: "block" }}>
-          <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>Repos entre tours</div>
+          <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>{t("pb.label_rest_between", "Repos entre tours")}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", background: "rgba(0,0,0,0.25)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 10 }}>
             <input
               value={warmup.restBetween || ""}
@@ -940,7 +941,7 @@ function WarmupCircuitEditor({ warmup, onUpdate, onUpdateMovement, onAddMovement
       </div>
 
       {/* Mouvements */}
-      <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 10 }}>Mouvements</div>
+      <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 10 }}>{t("pb.label_movements", "Mouvements")}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
         {(warmup.movements || []).map((m, mi) => (
           <div key={m.id || mi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -975,7 +976,7 @@ function WarmupCircuitEditor({ warmup, onUpdate, onUpdateMovement, onAddMovement
             <button
               type="button"
               onClick={() => onRemoveMovement(mi)}
-              title="Retirer"
+              title={t("pb.btn_remove", "Retirer")}
               style={{
                 flexShrink: 0, width: 28, height: 28, padding: 0,
                 background: "transparent", border: "1px solid rgba(255,255,255,0.06)",
@@ -1000,7 +1001,7 @@ function WarmupCircuitEditor({ warmup, onUpdate, onUpdateMovement, onAddMovement
 
       {/* Notes */}
       <label style={{ display: "block" }}>
-        <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>Notes (optionnel)</div>
+        <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 2.5, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>{t("pb.label_notes_optional", "Notes (optionnel)")}</div>
         <input
           value={warmup.notes || ""}
           onChange={(e) => onUpdate({ notes: e.target.value })}
@@ -1190,8 +1191,8 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
           onClick={(e) => { if (e.target === e.currentTarget) setShowCustomUrl(false); }}
         >
           <div style={{ background: "#0e0e0e", border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 460, width: "100%", padding: 24 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>Vidéo personnelle</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 4, letterSpacing: -0.3 }}>Remplacer la démo externe</div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>{t("pb.label_personal_video", "Vidéo personnelle")}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 4, letterSpacing: -0.3 }}>{t("pb.replace_external_demo", "Remplacer la démo externe")}</div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 18, lineHeight: 1.5 }}>
               Colle l'URL YouTube de TA vidéo pour <strong style={{ color: "#fff" }}>{ex.name || "cet exercice"}</strong>. Elle remplacera la démo externe pour tous tes clients.
             </div>
@@ -1214,13 +1215,13 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
                 type="button"
                 onClick={() => setShowCustomUrl(false)}
                 style={{ flex: 1, padding: "10px 16px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 10, color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase" }}
-              >Annuler</button>
+              >{t("pb.btn_cancel", "Annuler")}</button>
               <button
                 type="button"
                 disabled={!customUrlDraft.trim()}
                 onClick={() => { update("vidUrl", customUrlDraft.trim()); setShowCustomUrl(false); }}
                 style={{ flex: 2, padding: "10px 16px", background: customUrlDraft.trim() ? `linear-gradient(135deg, ${G}, #0891b2)` : "rgba(255,255,255,0.04)", border: "none", borderRadius: 10, color: customUrlDraft.trim() ? "#000" : "rgba(255,255,255,0.3)", fontSize: 11, fontWeight: 800, cursor: customUrlDraft.trim() ? "pointer" : "not-allowed", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase", boxShadow: customUrlDraft.trim() ? "0 6px 20px rgba(2,209,186,0.25)" : "none" }}
-              >Utiliser cette vidéo</button>
+              >{t("pb.btn_use_video", "Utiliser cette vidéo")}</button>
             </div>
           </div>
         </div>
@@ -1395,7 +1396,7 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8.5" x2="12" y2="15.5"/><line x1="8.5" y1="12" x2="15.5" y2="12"/></svg>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: session.bonus ? G : "rgba(255,255,255,0.72)" }}>Séance bonus / extra</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: session.bonus ? G : "rgba(255,255,255,0.72)" }}>{t("pb.session_bonus", "Séance bonus / extra")}</div>
           <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.4)", marginTop: 1, lineHeight: 1.35 }}>
             {session.bonus ? "Optionnelle — ne bloque pas la semaine, comptée si le client la fait." : "Activer pour une séance optionnelle, hors calendrier."}
           </div>
@@ -1456,13 +1457,13 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 12a9 9 0 1 1-3.5-7.1"/><polyline points="21 4 21 9 16 9"/>
           </svg>
-          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2.5, textTransform: "uppercase", color: G }}>Circuit échauffement</span>
+          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2.5, textTransform: "uppercase", color: G }}>{t("pb.eyebrow_circuit_warmup_short", "Circuit échauffement")}</span>
           <span style={{ opacity: 0.5 }}>·</span>
-          <span>Préparer le corps avant la séance</span>
+          <span>{t("pb.tmpl_warmup_msg", "Préparer le corps avant la séance")}</span>
         </button>
       )}
 
-      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 10 }}>Exercices</div>
+      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 10 }}>{t("pb.label_exercises", "Exercices")}</div>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -1529,7 +1530,7 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
                 fontSize: 10, fontWeight: 800, letterSpacing: 0.5, cursor: "pointer", fontFamily: "inherit",
               }}
             >{isFrac ? "FRAC ✓" : "FRAC"}</button>
-            <button type="button" onClick={() => removeRun(i)} title="Retirer"
+            <button type="button" onClick={() => removeRun(i)} title={t("pb.btn_remove", "Retirer")}
               style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
             >×</button>
           </div>
@@ -1851,7 +1852,7 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
               placeholder="Moment (18h…)"
               style={{ flex: 1, minWidth: 0, padding: "7px 9px", background: "rgba(255,255,255,0.03)", border: "1px solid " + BORDER, borderRadius: 8, color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" }}
             />
-            <button type="button" onClick={() => removeFieldSession(i)} title="Retirer"
+            <button type="button" onClick={() => removeFieldSession(i)} title={t("pb.btn_remove", "Retirer")}
               style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
             >×</button>
           </div>
@@ -1908,7 +1909,7 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
               />
               <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: 0.5 }}>min</span>
             </div>
-            <button type="button" onClick={() => removeErgo(i)} title="Retirer"
+            <button type="button" onClick={() => removeErgo(i)} title={t("pb.btn_remove", "Retirer")}
               style={{ flexShrink: 0, padding: "7px 10px", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.25)", borderRadius: 8, color: "#c0392b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
             >×</button>
           </div>
@@ -2182,7 +2183,7 @@ function AnalyticsPanel({ programme }) {
   return (
     <div>
       {/* Volume par groupe musculaire */}
-      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Volume par muscle</div>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>{t("pb.label_volume_muscle", "Volume par muscle")}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
         {sortedGroups.map(([grp, sets]) => {
           const pct = (sets / totalSets) * 100;
@@ -2201,7 +2202,7 @@ function AnalyticsPanel({ programme }) {
       {/* Balance Push/Pull/Legs */}
       {(pushSets + pullSets + legsSets > 0) && (
         <>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Balance</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>{t("pb.label_balance", "Balance")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
             <Stat label="Push" value={pushSets} />
             <Stat label="Pull" value={pullSets} />
@@ -2213,7 +2214,7 @@ function AnalyticsPanel({ programme }) {
       {/* Volume par semaine */}
       {weeklyTotals.length > 1 && (
         <>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Volume par semaine</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>{t("pb.label_volume_week", "Volume par semaine")}</div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 100, marginBottom: 20, padding: "4px 0" }}>
             {weeklyTotals.map((w, i) => (
               <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
@@ -2229,7 +2230,7 @@ function AnalyticsPanel({ programme }) {
       {/* Alertes */}
       {alerts.length > 0 && (
         <>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>Suggestions</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: G, textTransform: "uppercase", marginBottom: 10 }}>{t("pb.label_suggestions", "Suggestions")}</div>
           {alerts.map((a, i) => (
             <div key={i} style={{ padding: 10, marginBottom: 6, background: a.level === "warn" ? "rgba(239,68,68,0.06)" : "rgba(2,209,186,0.04)", border: "1px solid " + (a.level === "warn" ? "rgba(239,68,68,0.2)" : "rgba(2,209,186,0.15)"), borderRadius: 8, fontSize: 11, color: a.level === "warn" ? "#ff8888" : "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
               <span style={{ marginRight: 6, fontWeight: 700, color: a.level === "warn" ? "#ff8888" : G }}>{a.level === "warn" ? "⚠" : "·"}</span>{a.msg}
@@ -2252,7 +2253,7 @@ function Preview({ programme, showAnalytics }) {
   if (showAnalytics) {
     return (
       <div style={{ background: "#050505", borderRadius: 16, padding: 24, height: "100%", overflowY: "auto" }}>
-        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 3, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 16 }}>Analytics programme</div>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 3, color: "rgba(2,209,186,0.6)", textTransform: "uppercase", marginBottom: 16 }}>{t("pb.label_analytics", "Analytics programme")}</div>
         <AnalyticsPanel programme={programme} />
       </div>
     );
@@ -2273,7 +2274,7 @@ function Preview({ programme, showAnalytics }) {
       <div style={{ display: "flex", gap: 14, marginBottom: 24 }}>
         <Stat label="Semaines" value={programme.weeks.length} />
         <Stat label="Séances" value={totalSessions} />
-        <Stat label="Exercices" value={totalEx} />
+        <Stat label={t("pb.label_exercises", "Exercices")} value={totalEx} />
         {totalRuns > 0 && <Stat label="Runs" value={totalRuns} />}
       </div>
 
@@ -2282,7 +2283,7 @@ function Preview({ programme, showAnalytics }) {
           padding: 32, textAlign: "center",
           background: "rgba(255,255,255,0.02)", border: "1px dashed " + BORDER,
           borderRadius: 14, color: "rgba(255,255,255,0.4)",
-        }}>Aucune semaine. Ajoute la première semaine à gauche.</div>
+        }}>{t("pb.empty_no_weeks", "Aucune semaine. Ajoute la première semaine à gauche.")}</div>
       ) : null}
 
       {(programme.weeks || []).map((w, wi) => (
@@ -2397,6 +2398,7 @@ function Preview({ programme, showAnalytics }) {
 }
 
 export default function ProgrammeBuilder({ client, onClose, onSaved, existingProgramme }) {
+  const t = useT();
   // Autosave désactivé en mode "edit existing" (on travaille sur une copie live).
   const editMode = !!(existingProgramme && existingProgramme.html_content);
   // Clé draft localStorage scopée PAR BLOC (et non par client) : sinon, avec
@@ -2817,14 +2819,14 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
       {showSaveTemplate ? (
         <div style={{ position: "absolute", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
           <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 460, width: "100%", padding: 28 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>Template perso</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5, marginBottom: 8 }}>Sauvegarder ce programme</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 18 }}>Réutilisable dans la modal Templates pour tes prochains programmes.</div>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>{t("pb.tmpl_eyebrow", "Template perso")}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5, marginBottom: 8 }}>{t("pb.tmpl_save_title", "Sauvegarder ce programme")}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 18 }}>{t("pb.tmpl_save_desc", "Réutilisable dans la modal Templates pour tes prochains programmes.")}</div>
             <TextField label="Nom du template" value={tplName} onChange={setTplName} placeholder="ex: PPL Hypertrophie 4 sem" />
             <div style={{ height: 10 }} />
             <TextField label="Description (optionnel)" value={tplDesc} onChange={setTplDesc} placeholder="ex: Volume → intensité, intermédiaire" />
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
-              <button type="button" onClick={() => setShowSaveTemplate(false)} style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid " + BORDER, borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}>Annuler</button>
+              <button type="button" onClick={() => setShowSaveTemplate(false)} style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid " + BORDER, borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}>{t("pb.btn_cancel", "Annuler")}</button>
               <button type="button" onClick={saveAsTemplate} disabled={savingTpl || !tplName.trim()}
                 style={{ padding: "10px 22px", background: savingTpl || !tplName.trim() ? "rgba(2,209,186,0.2)" : "linear-gradient(135deg, " + G + ", #0891b2)", border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: savingTpl || !tplName.trim() ? "not-allowed" : "pointer", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase", opacity: savingTpl || !tplName.trim() ? 0.5 : 1 }}
               >{savingTpl ? "Sauvegarde…" : "Sauvegarder"}</button>
@@ -2838,8 +2840,8 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 580, width: "100%", padding: 28, maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 18 }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>Bulk apply</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>Appliquer à plusieurs clients</div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>{t("pb.bulk_eyebrow", "Bulk apply")}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>{t("pb.bulk_title", "Appliquer à plusieurs clients")}</div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>"{programme.name}" deviendra leur programme actif. Les anciens seront désactivés.</div>
               </div>
               <button type="button" onClick={() => setShowApplyMulti(false)} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
@@ -2853,8 +2855,8 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               ) : (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, padding: "0 4px" }}>
-                    <button type="button" onClick={() => setSelectedClients(coachClients.map((c) => c.id))} style={{ background: "transparent", border: "none", color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>Tout sélectionner</button>
-                    <button type="button" onClick={() => setSelectedClients([])} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>Désélectionner</button>
+                    <button type="button" onClick={() => setSelectedClients(coachClients.map((c) => c.id))} style={{ background: "transparent", border: "none", color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>{t("pb.btn_select_all", "Tout sélectionner")}</button>
+                    <button type="button" onClick={() => setSelectedClients([])} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>{t("pb.btn_deselect", "Désélectionner")}</button>
                   </div>
                   {coachClients.map((c) => {
                     const sel = selectedClients.includes(c.id);
@@ -2886,7 +2888,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             <div style={{ display: "flex", gap: 10, justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{selectedClients.length} client{selectedClients.length > 1 ? "s" : ""} sélectionné{selectedClients.length > 1 ? "s" : ""}</div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setShowApplyMulti(false)} style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid " + BORDER, borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}>Annuler</button>
+                <button type="button" onClick={() => setShowApplyMulti(false)} style={{ padding: "10px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid " + BORDER, borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.5 }}>{t("pb.btn_cancel", "Annuler")}</button>
                 <button type="button" disabled={applying || selectedClients.length === 0} onClick={applyToSelectedClients}
                   style={{ padding: "10px 22px", background: applying || selectedClients.length === 0 ? "rgba(2,209,186,0.2)" : "linear-gradient(135deg, " + G + ", #0891b2)", border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: applying || selectedClients.length === 0 ? "not-allowed" : "pointer", fontFamily: "inherit", letterSpacing: 0.5, textTransform: "uppercase", opacity: applying || selectedClients.length === 0 ? 0.5 : 1 }}
                 >{applying ? "Application…" : "Appliquer"}</button>
@@ -2901,9 +2903,9 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           <div style={{ background: BG_2, border: "1px solid " + BORDER, borderRadius: 18, maxWidth: 720, width: "100%", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 18 }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>Démarrer rapidement</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>Choisis un template</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>Tu remplis le squelette via l'autocomplete exos. Tu modifies tout après.</div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: G, textTransform: "uppercase", marginBottom: 6 }}>{t("pb.qs_eyebrow", "Démarrer rapidement")}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>{t("pb.qs_title", "Choisis un template")}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>{t("pb.qs_desc", "Tu remplis le squelette via l'autocomplete exos. Tu modifies tout après.")}</div>
               </div>
               <button type="button" onClick={() => setShowTemplates(false)} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + BORDER, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 16 }}>×</button>
             </div>
@@ -2932,7 +2934,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
                     </div>
                   ))}
                 </div>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginBottom: 10 }}>Templates par défaut</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginBottom: 10 }}>{t("pb.qs_default_templates", "Templates par défaut")}</div>
               </>
             ) : null}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -2999,7 +3001,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             <button
               type="button"
               onClick={() => setShowTemplates(true)}
-              title="Templates"
+              title={t("pb.btn_templates", "Templates")}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 7,
                 padding: "8px 12px", background: "rgba(255,255,255,0.03)",
@@ -3008,7 +3010,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               }}
             >
               <ToolbarIcon name="templates" />
-              <span>Templates</span>
+              <span>{t("pb.btn_templates", "Templates")}</span>
             </button>
           )}
           {!isMobile && (
@@ -3065,7 +3067,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             <button
               type="button"
               onClick={openApplyMulti}
-              title="Appliquer à plusieurs clients"
+              title={t("pb.bulk_title", "Appliquer à plusieurs clients")}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 7,
                 padding: "8px 12px", background: "rgba(255,255,255,0.03)",
@@ -3074,7 +3076,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               }}
             >
               <ToolbarIcon name="users" />
-              <span>Multi-clients</span>
+              <span>{t("pb.btn_multiclients", "Multi-clients")}</span>
             </button>
           )}
           {!isMobile && (
@@ -3090,7 +3092,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               }}
             >
               <ToolbarIcon name="star" />
-              <span>Template</span>
+              <span>{t("pb.btn_template", "Template")}</span>
             </button>
           )}
           <div style={{ position: "relative", display: "inline-block" }}>
@@ -3128,8 +3130,8 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
                   onMouseEnter={(e) => e.currentTarget.style.background = "rgba(2,209,186,0.08)"}
                   onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                 >
-                  <div>Publier maintenant</div>
-                  <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>Le client le voit immédiatement</div>
+                  <div>{t("pb.btn_publish_now", "Publier maintenant")}</div>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{t("pb.publish_now_sub", "Le client le voit immédiatement")}</div>
                 </button>
                 <button
                   type="button" onClick={handleSchedule}
@@ -3137,7 +3139,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
                   onMouseEnter={(e) => e.currentTarget.style.background = "rgba(2,209,186,0.08)"}
                   onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                 >
-                  <div>Planifier la publication</div>
+                  <div>{t("pb.btn_schedule_publish", "Planifier la publication")}</div>
                   <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>Bascule auto à une date / heure</div>
                 </button>
                 <button
@@ -3397,7 +3399,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
             onClick={(e) => e.stopPropagation()}
             style={{ width: "100%", maxWidth: 420, background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24 }}
           >
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 6 }}>Planifier la publication</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 6 }}>{t("pb.btn_schedule_publish", "Planifier la publication")}</div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 18 }}>
               Le client gardera son programme actuel jusqu'à cette date, puis basculera automatiquement sur celui-ci.
             </div>
@@ -3420,7 +3422,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               <button
                 type="button" onClick={() => setShowScheduleModal(false)}
                 style={{ padding: "10px 18px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
-              >Annuler</button>
+              >{t("pb.btn_cancel", "Annuler")}</button>
               <button
                 type="button" onClick={confirmSchedule}
                 style={{ padding: "10px 18px", background: "linear-gradient(135deg, " + G + ", #0891b2)", border: "none", borderRadius: 10, color: "#000", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3 }}
