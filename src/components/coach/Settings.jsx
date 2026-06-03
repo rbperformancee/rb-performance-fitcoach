@@ -954,6 +954,7 @@ function PublicProfileSection({ coachData, isDemo }) {
 
 // ===== TÉMOIGNAGES MANAGER =====
 function TestimonialsManager({ coachData, isDemo }) {
+  const t = useT();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | "new" | id

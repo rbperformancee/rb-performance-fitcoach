@@ -155,6 +155,7 @@ function ConfirmDeleteProgramme({ progName, onCancel, onConfirm }) {
 // start_date, training_days configurés, jours reportés / repos pris,
 // total séances complétées, mini-calendrier des 14 derniers jours.
 function ProgrammeCalendarSection({ programmeId, clientId }) {
+  const t = useT();
   const [data, setData] = React.useState(null);
   const [completions, setCompletions] = React.useState([]);
 
@@ -281,6 +282,7 @@ function Stat({ label, value, valueColor }) {
 // ProgrammesHistorySection — liste tous les programmes (actifs + archivés) du
 // client avec dates et actions Re-utiliser / Éditer / Comparer.
 function ProgrammesHistorySection({ client, onEdit, onReuse }) {
+  const t = useT();
   const [history, setHistory] = React.useState([]);
   const [expanded, setExpanded] = React.useState(false);
   const [compareIds, setCompareIds] = React.useState([]);
@@ -383,6 +385,7 @@ function ProgrammesHistorySection({ client, onEdit, onReuse }) {
 // Liste les programmes actifs du client par ordre de published_at : le bloc
 // en cours + les blocs planifiés qui s'enchaîneront automatiquement à leur date.
 function ProgrammeBlocksSection({ client, onEdit, onNewBlock }) {
+  const t = useT();
   const [blocks, setBlocks] = React.useState([]);
 
   React.useEffect(() => {
@@ -459,6 +462,7 @@ function ProgrammeBlocksSection({ client, onEdit, onNewBlock }) {
 
 // ProgrammeCompareModal — affiche 2 programmes côte à côte (#C feature)
 function ProgrammeCompareModal({ data, onClose }) {
+  const t = useT();
   const [parsedA, parsedB] = React.useMemo(() => {
     try {
       const Parser = require("../utils/parserProgramme");
@@ -637,6 +641,7 @@ function MiniSparkline({ data, color = G, w = 80, h = 28 }) {
 // Graphique ligne premium avec axes, dates, grille, points
 // Utilise pour le drawer poids (et potentiellement eau/sommeil)
 function LineGraph({ data, color = G, height = 200, unit = "kg", valueKey = "weight" }) {
+  const t = useT();
   if (!data || data.length < 2) return <div style={{ textAlign: "center", padding: 32, color: "rgba(255,255,255,0.3)", fontSize: 12 }}>{t("cd.not_enough_data", "Pas assez de donnees")}</div>;
 
   const W = 100; // pourcentage, le SVG sera responsive
@@ -743,6 +748,7 @@ function LineGraph({ data, color = G, height = 200, unit = "kg", valueKey = "wei
 
 /* ── Gestionnaire de créneaux ── */
 function CreneauxManager() {
+  const t = useT();
   const G = "#02d1ba";
   const [slots, setSlots] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -982,6 +988,7 @@ function epley1rm(w, r) {
   return Math.round(Number(w) * (1 + Number(r) / 30) * 10) / 10;
 }
 function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) {
+  const t = useT();
   const { session, dayExs: initialDayExs, resolveExName, allExLogs } = data;
   const date = new Date(session.logged_at);
   const sessionDateStr = (session.logged_at || "").slice(0, 10);
@@ -1605,6 +1612,7 @@ function SessionDetailModal({ data, onClose, onShowProgression, onSetUpdated }) 
    sur toutes les séances historiques de cet exo. Ouverte au clic sur le nom
    d'un exo dans SessionDetailModal. ── */
 function ExerciseProgressionModal({ data, onClose }) {
+  const t = useT();
   const { exKey, exName, allExLogs } = data;
   const G_LOCAL = "#02d1ba";
   // Reconstruit l'historique : 1 entrée par date avec maxW, totalVolume, best1rm

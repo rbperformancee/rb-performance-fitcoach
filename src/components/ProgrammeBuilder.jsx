@@ -817,6 +817,7 @@ function ExercisePicker({ value, onChange, onPickFull }) {
 // d'échauffement (tours en boucle de N mouvements). Posé en tête de séance,
 // noir sur cyan subtil pour différencier visuellement des exos principaux.
 function WarmupCircuitEditor({ warmup, onUpdate, onUpdateMovement, onAddMovement, onRemoveMovement, onDisable, isMobile }) {
+  const t = useT();
   const PRESETS = [
     { name: "Mobility", rounds: 2, restBetween: "—", notes: "Lent et contrôlé. Cherche l'amplitude.", movements: [
       { name: "Hip openers", spec: "8/côté" },
@@ -1037,6 +1038,7 @@ function SortableExercise({ ex, idx, total, onUpdate, onRemove, onMove, onDuplic
 }
 
 function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps }) {
+  const t = useT();
   const update = (k, v) => onUpdate({ ...ex, [k]: v });
   const isMobile = useIsMobile();
   const iconBtn = { width: 24, height: 24, borderRadius: 6, border: "1px solid " + BORDER, background: "transparent", color: "rgba(255,255,255,0.45)", cursor: "pointer", fontSize: 11, flexShrink: 0, fontFamily: "inherit" };
@@ -1251,6 +1253,7 @@ function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDu
 }
 
 function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps, collapseSignal }) {
+  const t = useT();
   const update = (k, v) => onUpdate({ ...session, [k]: v });
   // Repli/dépli : une séance déjà remplie démarre repliée pour que la liste
   // des séances reste scannable (le coach déplie celle qu'il veut éditer).
@@ -2128,6 +2131,7 @@ function Stat({ label, value }) {
 }
 
 function AnalyticsPanel({ programme }) {
+  const t = useT();
   // Volume agrégé sur tout le programme, par groupe musculaire
   const totalByGroup = useMemo(() => {
     const acc = {};

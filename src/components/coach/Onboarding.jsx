@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
-import { useT } from "../../lib/i18n";
+import { useT, t as tStatic } from "../../lib/i18n";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import HelpMigrationGuide from "./HelpMigrationGuide";
 
@@ -14,11 +14,12 @@ const fillTpl = (s, vars) => {
   return out;
 };
 
-const SPECIALITIES = [
-  t("on.spec_musculation", "Musculation"), t("on.spec_cardio", "Cardio"), t("on.spec_crossfit", "CrossFit"),
-  t("on.spec_seche", "Sèche"), t("on.spec_force", "Force"), t("on.spec_performance", "Performance"),
-  t("on.spec_remise_forme", "Remise en forme"), t("on.spec_running", "Running"),
-  t("on.spec_arts_martiaux", "Arts martiaux"), t("on.spec_nutrition", "Nutrition"),
+// Évalué à chaque rendu pour respecter la locale courante (FR/EN switch).
+const getSpecialities = () => [
+  tStatic("on.spec_musculation", "Musculation"), tStatic("on.spec_cardio", "Cardio"), tStatic("on.spec_crossfit", "CrossFit"),
+  tStatic("on.spec_seche", "Sèche"), tStatic("on.spec_force", "Force"), tStatic("on.spec_performance", "Performance"),
+  tStatic("on.spec_remise_forme", "Remise en forme"), tStatic("on.spec_running", "Running"),
+  tStatic("on.spec_arts_martiaux", "Arts martiaux"), tStatic("on.spec_nutrition", "Nutrition"),
 ];
 
 const LEGAL_FORMS = [
@@ -1006,7 +1007,7 @@ export default function Onboarding({ coach, onComplete, preview = false }) {
 
             <div className="onb-section-label">{t("on.section_specialties", t("on.section_specialties", "Tes spécialités"))}</div>
             <div className="onb-pills">
-              {SPECIALITIES.map((s) => (
+              {getSpecialities().map((s) => (
                 <button
                   key={s}
                   type="button"
