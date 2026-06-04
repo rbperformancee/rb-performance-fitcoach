@@ -781,11 +781,11 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
               Je propose plusieurs formats. Cette info m'aide à te proposer le bon.
             </div>
             {[
-              { v: "lt_100",  label: "Moins de 100€",            hint: "Programme self-service" },
-              { v: "100",     label: "~100€",                    hint: "Coaching essentiel" },
-              { v: "150",     label: "~150€",                    hint: "Offre principale" },
-              { v: "gt_200",  label: "200€ +",                   hint: "Accompagnement premium" },
-              { v: "discuss", label: "J'en parle d'abord avec toi", hint: "" },
+              { v: "lt_100",  label: "Moins de 100€" },
+              { v: "100",     label: "~100€" },
+              { v: "150",     label: "~150€" },
+              { v: "gt_200",  label: "200€ +" },
+              { v: "discuss", label: "J'en parle d'abord avec toi" },
             ].map((opt) => {
               const isSel = form.budget_mensuel === opt.v;
               return (
@@ -814,11 +814,6 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
                   }}
                 >
                   <span>{opt.label}</span>
-                  {opt.hint && (
-                    <span style={{ fontSize: 11, color: isSel ? GREEN : "rgba(255,255,255,0.4)", fontWeight: 500 }}>
-                      {opt.hint}
-                    </span>
-                  )}
                 </button>
               );
             })}
