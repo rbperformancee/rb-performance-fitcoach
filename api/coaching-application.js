@@ -69,6 +69,13 @@ const applicationSchema = z.object({
   motivation_principale: z.string().max(2000).optional().nullable(),
   risques_abandon: z.string().max(2000).optional().nullable(),
   autres_infos: z.string().max(2000).optional().nullable(),
+  // Qualification budget — 4 paliers (offre principale = 150€)
+  // + escape 'discuss' pour les indecis. Aucun palier ne bloque la
+  // soumission cote API : Rayan trie en admin.
+  budget_mensuel: z.enum(['lt_100', '100', '150', 'gt_200', 'discuss']).optional().nullable(),
+  // Anchoring : depense mensuelle deja consentie pour la perf
+  // (salle + supplements + coach precedent). Champ libre.
+  depense_actuelle_perf: z.string().max(500).optional().nullable(),
   source: z.string().max(50).optional().nullable(),
   utm_source: z.string().max(100).optional().nullable(),
   utm_medium: z.string().max(100).optional().nullable(),
@@ -98,10 +105,25 @@ function formatSlot(s) {
   } catch { return `${s.date} ${s.time}`; }
 }
 
+// Map budget enum to display label + color (admin email badge).
+const BUDGET_LABELS = {
+  lt_100:  { label: 'Moins de 100€/mois',     color: '#ff5757', tone: 'rgba(255,87,87,0.12)' },
+  '100':   { label: '~100€/mois',             color: '#f0a93b', tone: 'rgba(240,169,59,0.12)' },
+  '150':   { label: '~150€/mois (cible)',     color: '#02d1ba', tone: 'rgba(2,209,186,0.14)' },
+  gt_200:  { label: '200€+/mois (premium)',   color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
+  discuss: { label: 'J\'en parle d\'abord',   color: 'rgba(255,255,255,0.6)', tone: 'rgba(255,255,255,0.06)' },
+};
+
 function buildAdminEmail(app) {
   const score = app.motivation_score != null ? `${app.motivation_score}/10` : '?';
   const obj = (app.objectifs_3mois || app.objectifs_6semaines || '').slice(0, 80);
   const fmt = (k, v) => v ? `<tr><td style="padding:4px 12px 4px 0;color:rgba(255,255,255,0.45);font-size:12px;width:160px;vertical-align:top">${escHtml(k)}</td><td style="padding:4px 0;color:#fff;font-size:13px">${escHtml(v)}</td></tr>` : '';
+
+  // Budget badge — surfacé en haut de l'email pour triage rapide.
+  const b = BUDGET_LABELS[app.budget_mensuel];
+  const budgetBadge = b
+    ? `<div style="display:inline-block;padding:6px 12px;margin-bottom:18px;background:${b.tone};border:1px solid ${b.color}55;border-radius:100px;font-size:11px;font-weight:800;color:${b.color};letter-spacing:.05em;text-transform:uppercase">Budget : ${escHtml(b.label)}</div>`
+    : '';
 
   const slotsHtml = Array.isArray(app.preferred_slots) && app.preferred_slots.length
     ? `<div style="margin-bottom:24px;padding:18px;background:rgba(2,209,186,0.08);border:1px solid rgba(2,209,186,0.3);border-radius:12px">
@@ -117,7 +139,8 @@ function buildAdminEmail(app) {
   <tr><td style="background:#111;border-radius:16px;border:1px solid rgba(2,209,186,0.2);padding:32px">
     <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};margin-bottom:12px;font-weight:700">Nouvelle candidature high-ticket</div>
     <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:8px">${escHtml(app.nom_prenom || 'Anonyme')}<span style="color:${G}">.</span></div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px">Score motivation : <strong style="color:${G}">${escHtml(score)}</strong> · Objectif : "${escHtml(obj)}"</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:14px">Score motivation : <strong style="color:${G}">${escHtml(score)}</strong> · Objectif : "${escHtml(obj)}"</div>
+    ${budgetBadge}
 
     ${slotsHtml}
 
@@ -148,6 +171,8 @@ function buildAdminEmail(app) {
       ${fmt('Motivation principale', app.motivation_principale)}
       ${fmt('Risques d\'abandon', app.risques_abandon)}
       ${fmt('Autres infos', app.autres_infos)}
+      ${fmt('Investissement actuel /mois', app.depense_actuelle_perf)}
+      ${fmt('Budget envisagé', b ? b.label : app.budget_mensuel)}
       ${fmt('Source', app.source || 'instagram')}
       ${fmt('UTM source', app.utm_source)}
       ${fmt('UTM campaign', app.utm_campaign)}

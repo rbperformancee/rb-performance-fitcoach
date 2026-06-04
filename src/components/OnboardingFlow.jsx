@@ -172,9 +172,9 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [bookedSlot, setBookedSlot] = useState(null);
-  // Mode application : qualification investissement avant soumission.
-  // Filtre les leads qui pensent que c'est gratuit. null = pas répondu, 'yes' = OK, 'no' = bloqué.
-  const [ackInvest, setAckInvest] = useState(null);
+  // Note : l'ancien `ackInvest` (qualif binaire 200-400€ oui/non avec
+  // rejection visible) a ete remplace par `form.budget_mensuel` (4 paliers
+  // + escape, stocke directement dans le form). Cf etape 6 application.
 
   const [form, setForm] = useState(() => {
     const empty = {
@@ -188,6 +188,12 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       one_rm_bench: "", one_rm_squat: "", one_rm_traction: "",
       motivation_principale: "", risques_abandon: "", autres_infos: "",
       preferred_slots: [],  // Mode application : 3 creneaux preferes (JSON array of {date, time})
+      // Mode application : qualification budget non-bloquante.
+      // depense_actuelle_perf = anchoring (etape 5), champ libre.
+      // budget_mensuel = palier choisi a l'etape 6 — 4 valeurs + escape :
+      //   'lt_100' | '100' | '150' (offre principale) | 'gt_200' | 'discuss'
+      depense_actuelle_perf: "",
+      budget_mensuel: "",
     };
     try {
       const raw = localStorage.getItem(draftKey);
@@ -643,6 +649,19 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           <Input label={t("obf.main_motivation_label")} placeholder={t("obf.main_motivation_placeholder")} value={form.motivation_principale} onChange={set("motivation_principale")} textarea />
           <Input label={t("obf.abandon_risks_label")} placeholder={t("obf.abandon_risks_placeholder")} value={form.risques_abandon} onChange={set("risques_abandon")} textarea />
           <Input label={t("obf.other_info_label")} placeholder={t("obf.other_info_placeholder")} value={form.autres_infos} onChange={set("autres_infos")} textarea />
+
+          {/* Anchoring budget (mode application uniquement) — normalise l'idee
+              d'investir avant la question budget de l'etape 6. Champ libre. */}
+          {isApplication && (
+            <Input
+              label="Tu investis déjà combien chaque mois dans ta perf ?"
+              placeholder="Ex : 60€ salle + 50€ suppléments + 0 coach = 110€/mois"
+              value={form.depense_actuelle_perf}
+              onChange={set("depense_actuelle_perf")}
+              textarea
+            />
+          )}
+
           <button style={S.btn()} onClick={nextStep} disabled={saving}>
             {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />{t("obf.saving")}</span>) : (isApplication ? "Choisir mes dispos →" : t("obf.book_call_btn"))}
           </button>
@@ -749,65 +768,66 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
             ))}
           </div>
 
-          {/* Qualification investissement — filtre les leads qui pensent que c'est gratuit */}
+          {/* Qualification budget — 4 paliers calibres autour de l'offre principale (150€).
+              Aucun palier ne bloque la soumission : Rayan trie en admin. */}
           <div style={{ marginTop: 32, marginBottom: 24, padding: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)", lineHeight: 1.6, marginBottom: 14 }}>
-              Cet accompagnement représente un investissement sérieux (gamme 200-400€/mois selon profil).<br/>
-              Es-tu prêt à investir dans cette gamme pour atteindre tes objectifs ?
+            <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 10, fontWeight: 700 }}>
+              Investissement
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <button
-                type="button"
-                onClick={() => setAckInvest("yes")}
-                style={{
-                  padding: "12px 16px",
-                  background: ackInvest === "yes" ? GREEN : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${ackInvest === "yes" ? GREEN : "rgba(255,255,255,0.08)"}`,
-                  borderRadius: 100,
-                  color: ackInvest === "yes" ? "#000" : "#fff",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  letterSpacing: "0.3px",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                  fontFamily: "-apple-system,Inter,sans-serif",
-                  textAlign: "left",
-                }}
-              >
-                Oui, je suis prêt à investir
-              </button>
-              <button
-                type="button"
-                onClick={() => setAckInvest("no")}
-                style={{
-                  padding: "12px 16px",
-                  background: ackInvest === "no" ? "rgba(255,87,87,0.15)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${ackInvest === "no" ? "rgba(255,87,87,0.4)" : "rgba(255,255,255,0.08)"}`,
-                  borderRadius: 100,
-                  color: ackInvest === "no" ? "rgba(255,200,200,0.95)" : "#fff",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  letterSpacing: "0.3px",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                  fontFamily: "-apple-system,Inter,sans-serif",
-                  textAlign: "left",
-                }}
-              >
-                Non, je cherche un accompagnement gratuit ou moins cher
-              </button>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)", lineHeight: 1.5, marginBottom: 6 }}>
+              Quel budget mensuel envisages-tu pour ton accompagnement ?
             </div>
-            {ackInvest === "no" && (
-              <div style={{ marginTop: 14, padding: 12, background: "rgba(255,87,87,0.08)", border: "1px solid rgba(255,87,87,0.2)", borderRadius: 8, fontSize: 12, color: "rgba(255,200,200,0.9)", lineHeight: 1.5 }}>
-                Pas de souci — cet accompagnement n'est pas pour toi en l'état. Reviens quand tu seras prêt à investir dans ta transformation. Aucune candidature ne sera enregistrée.
-              </div>
-            )}
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginBottom: 14 }}>
+              Je propose plusieurs formats. Cette info m'aide à te proposer le bon.
+            </div>
+            {[
+              { v: "lt_100",  label: "Moins de 100€",            hint: "Programme self-service" },
+              { v: "100",     label: "~100€",                    hint: "Coaching essentiel" },
+              { v: "150",     label: "~150€",                    hint: "Offre principale" },
+              { v: "gt_200",  label: "200€ +",                   hint: "Accompagnement premium" },
+              { v: "discuss", label: "J'en parle d'abord avec toi", hint: "" },
+            ].map((opt) => {
+              const isSel = form.budget_mensuel === opt.v;
+              return (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => { haptic.selection(); set("budget_mensuel")(opt.v); }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                    padding: "13px 16px",
+                    marginBottom: 8,
+                    background: isSel ? "rgba(2,209,186,0.12)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${isSel ? GREEN : "rgba(255,255,255,0.08)"}`,
+                    borderRadius: 12,
+                    color: "#fff",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    letterSpacing: "0.2px",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                    fontFamily: "-apple-system,Inter,sans-serif",
+                    textAlign: "left",
+                  }}
+                >
+                  <span>{opt.label}</span>
+                  {opt.hint && (
+                    <span style={{ fontSize: 11, color: isSel ? GREEN : "rgba(255,255,255,0.4)", fontWeight: 500 }}>
+                      {opt.hint}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <button
-            style={S.btn(selected.length === 3 && ackInvest === "yes")}
+            style={S.btn(selected.length === 3 && !!form.budget_mensuel)}
             onClick={nextStep}
-            disabled={saving || selected.length !== 3 || ackInvest !== "yes"}
+            disabled={saving || selected.length !== 3 || !form.budget_mensuel}
           >
             {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Envoi…</span>) : "Envoyer ma candidature →"}
           </button>
