@@ -1,14 +1,56 @@
 import UIKit
 import Capacitor
+import AVFoundation
+import UserNotifications
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Configure AVAudioSession pour débloquer getUserMedia({audio:true}) dans
+        // WKWebView. Sans ça, MediaRecorder côté web reçoit "NotAllowedError" sur
+        // certaines versions iOS même si NSMicrophoneUsageDescription est OK.
+        // .playAndRecord = autorise enregistrement + lecture (vocaux entrants).
+        // .defaultToSpeaker = haut-parleur au lieu d'écouteur interne.
+        // .allowBluetooth = compatible AirPods.
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playAndRecord,
+                                    mode: .default,
+                                    options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
+            try session.setActive(true)
+        } catch {
+            print("[AppDelegate] AVAudioSession setup failed: \(error)")
+        }
+
+        // CRITIQUE : force iOS à afficher banner + SON même quand l'app est
+        // foreground. Par défaut iOS suppresse les local notifications en
+        // foreground → le timer de repos "sonne dans le vide" si l'user a
+        // l'app ouverte à l'expiration. Sans ce delegate, aucun son.
+        UNUserNotificationCenter.current().delegate = self
+
         return true
+    }
+
+    // MARK: - UNUserNotificationCenterDelegate
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Foreground : banner + sound + badge.
+        if #available(iOS 14.0, *) {
+            completionHandler([.banner, .list, .sound, .badge])
+        } else {
+            completionHandler([.alert, .sound, .badge])
+        }
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        completionHandler()
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

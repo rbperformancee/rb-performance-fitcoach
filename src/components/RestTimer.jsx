@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useT } from "../lib/i18n";
+import { showNotif, cancelAllNotifs, requestNotifPermission } from "../lib/localNotif";
+import { startRestActivity, stopRestActivity } from "../lib/restTimerLiveActivity";
+import { isNative } from "../lib/native";
 
 const fillTpl = (s, vars) => {
   let out = s;
@@ -65,20 +68,30 @@ function Arc({ radius, progress, size, strokeWidth, color, glowColor }) {
     if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
   }, []);
 
-  // Son fin de timer
-  const playBeep = React.useCallback(() => {
+  // Son fin de timer — robust iOS WKWebView via resumed AudioContext
+  const audioCtxRef = React.useRef(null);
+  const playBeep = React.useCallback(async () => {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      let ctx = audioCtxRef.current;
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtxRef.current = ctx;
+      }
+      // iOS WKWebView : AudioContext démarre "suspended", faut resume()
+      // explicite. Sans ça, les oscillators ne jouent pas de son.
+      if (ctx.state === "suspended") {
+        try { await ctx.resume(); } catch (_) {}
+      }
       [[0, 660], [0.15, 660], [0.3, 880]].forEach(([delay, freq]) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.2);
+        gain.gain.setValueAtTime(0.6, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.25);
         osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + 0.25);
+        osc.stop(ctx.currentTime + delay + 0.3);
       });
     } catch(e) {}
   }, []);
@@ -148,19 +161,24 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
     ? fillTpl(t("rt.next_set"), { n: nextSet, total: totalSets })
     : (exName ? fillTpl(t("rt.next"), { name: exName }) : null);
   
-  // Enregistrer SW et demander permission
+  // Demande permission notifs (idempotent : iOS la permission push couvre déjà)
+  // + enregistre le SW web pour les timers en background (web seulement).
   useEffect(() => {
     const setup = async () => {
-      if ('Notification' in window && Notification.permission === 'default') {
-        await Notification.requestPermission();
-      }
-      if ('serviceWorker' in navigator) {
+      await requestNotifPermission();
+      if (!isNative() && 'serviceWorker' in navigator) {
         try {
           await navigator.serviceWorker.register('/sw-timer.js');
         } catch(e) {}
       }
     };
     setup();
+    // Cleanup au unmount du composant entier (= timer terminé ou skippé) :
+    // stop le Live Activity et clear les notifs en attente.
+    return () => {
+      cancelAllNotifs();
+      stopRestActivity();
+    };
   }, []);
   const [running, setRunning] = useState(true);
   const [extra, setExtra] = useState(0);          // secondes ajoutées manuellement
@@ -205,6 +223,7 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
           setRunning(false);
           vibrate();
           playBeep();
+          stopRestActivity();
         } else {
           setTimeLeft(remaining);
         }
@@ -225,6 +244,9 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
         setRunning(false);
         vibrate();
         playBeep();
+        // Termine la Live Activity iOS (sinon elle reste affichée
+        // après expiration du timer).
+        stopRestActivity();
         clearInterval(intervalRef.current);
       } else {
         setTimeLeft(remaining);
@@ -233,19 +255,47 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
     return () => clearInterval(intervalRef.current);
   }, [running, vibrate]);
 
-  // Programmer notification via Service Worker (fonctionne en arrière-plan)
+  // Programmer notification à la fin du repos.
+  // - iOS natif : LocalNotifications plugin + Live Activity (Dynamic Island)
+  // - Web : Notification API + Service Worker pour le background
+  // IMPORTANT : on track started via ref pour éviter de re-créer l'activity
+  // à chaque render (re-render flicker).
+  const activityStartedRef = useRef(false);
   useEffect(() => {
-    if (!running) return;
+    if (!running) {
+      activityStartedRef.current = false;
+      return;
+    }
+    if (activityStartedRef.current) return; // déjà démarré, skip
+    activityStartedRef.current = true;
+    const title = t("rt.notif_title");
+    const body = nextSet
+      ? fillTpl(t("rt.notif_next_set"), { n: nextSet, total: totalSets })
+      : exName ? fillTpl(t("rt.notif_next"), { name: exName }) : t("rt.notif_lets_go");
+
+    if (isNative()) {
+      const setLabelStr = nextSet && totalSets ? `Série ${nextSet} / ${totalSets}` : "";
+      const nextExStr = exName || "";
+      startRestActivity({
+        durationSec: totalRef.current,
+        nextExerciseName: nextExStr,
+        setLabel: setLabelStr,
+      });
+      showNotif({ title, body, whenSec: totalRef.current, tag: "rb-rest-timer" });
+      // PAS de cancelAllNotifs() ici : ce cleanup fire QUAND running passe a
+      // false (= expiration naturelle), et l'appel race avec la livraison de
+      // la notif iOS → le son est annule juste avant qu'iOS le joue. Le
+      // cleanup global (mount unmount, ligne ~180) gere les cancels reels.
+      return undefined;
+    }
+    // Web : Service Worker (fonctionne quand l'onglet est en background)
     if ('Notification' in window && Notification.permission === 'granted' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(reg => {
         if (reg.active) {
           reg.active.postMessage({
             type: 'SCHEDULE_TIMER',
             delay: totalRef.current,
-            title: t("rt.notif_title"),
-            body: nextSet
-              ? fillTpl(t("rt.notif_next_set"), { n: nextSet, total: totalSets })
-              : exName ? fillTpl(t("rt.notif_next"), { name: exName }) : t("rt.notif_lets_go"),
+            title, body,
           });
         }
       });
@@ -255,7 +305,7 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
         });
       };
     }
-  }, [running, exName, nextSet, totalSets]);
+  }, [running, exName, nextSet, totalSets, t]);
 
   const persist = () => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ start: startRef.current, total: totalRef.current })); } catch {}

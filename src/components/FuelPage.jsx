@@ -942,14 +942,102 @@ export default function FuelPage({ client, appData }) {
   // Snap -> photo Blob -> BarcodeDetector.detect() native -> EAN-13 decode.
   // Aucune permission web requise, marche en PWA iOS standalone, marche sur Android.
 
-  const triggerPhotoScan = useCallback(() => {
+  // Helper : à partir d'un code-barre décodé, lance le lookup OpenFoodFacts
+  // et affiche le résultat. Partagé entre scan natif (ML Kit) et scan photo (zbar).
+  const handleBarcodeDecoded = useCallback(async (decodedText) => {
+    if (!decodedText) return;
+    if (navigator.vibrate) navigator.vibrate(60);
+    // Toast TOUJOURS visible (même si la modal scan se ferme) :
+    toast.info(`Code ${decodedText} détecté · Recherche…`);
+    setScanLoading(true);
+    setScanStatus("Code " + decodedText + " · Recherche du produit...");
+    let food = null;
+    try {
+      food = await scanBarcode(decodedText);
+    } catch (err) {
+      setScanLoading(false);
+      setScanStatus("");
+      const msg = "Erreur réseau lookup : " + (err?.message || "inconnue") + " — Code " + decodedText;
+      setScanError(msg);
+      toast.error(msg);
+      return;
+    }
+    setScanLoading(false);
+    setScanStatus("");
+    if (!food || !food.calories) {
+      const msg = "Produit " + decodedText + " introuvable. Ajoute-le manuellement.";
+      setScanError(msg);
+      toast.error(msg);
+      return;
+    }
+    toast.success(`✓ ${food.name || food.product_name || decodedText} ajouté`);
+    setScannedFood(food);
+    setScanQuantite(100);
+  }, [scanBarcode]);
+
+  // Sur iOS natif (Capacitor), utilise le scanner live ML Kit (style Yuka) :
+  // camera fullscreen, détection auto en temps réel, retour direct du code.
+  // Pas de photo intermédiaire, pas de prompt OS, pas d'attente.
+  const triggerNativeScan = useCallback(async () => {
     setScanError("");
     setScanStatus("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""; // permet de re-selectionner la meme image
-      fileInputRef.current.click();
+    try {
+      const { isNative } = await import("../lib/native");
+      if (!isNative()) return false;
+      const { BarcodeScanner } = await import("@capacitor-mlkit/barcode-scanning");
+      // Permissions camera
+      const perm = await BarcodeScanner.requestPermissions();
+      if (perm?.camera !== "granted" && perm?.camera !== "limited") {
+        setScanError("Permission caméra refusée.");
+        return true; // handled (no fallback)
+      }
+      // Vérifie que ML Kit est dispo
+      const supported = await BarcodeScanner.isSupported();
+      if (!supported?.supported) return false;
+      setScanLoading(true);
+      setScanStatus("Scanner ouvert…");
+      const { barcodes } = await BarcodeScanner.scan({
+        formats: ["EAN_13", "EAN_8", "UPC_A", "UPC_E"],
+      });
+      setScanLoading(false);
+      setScanStatus("");
+      const decoded = barcodes?.[0]?.rawValue;
+      if (decoded) {
+        await handleBarcodeDecoded(decoded);
+      } else {
+        setScanError("Aucun code-barre détecté.");
+      }
+      return true;
+    } catch (err) {
+      setScanLoading(false);
+      setScanStatus("");
+      console.error("[barcode-native]", err);
+      return false; // fallback to photo input
     }
   }, []);
+
+  const triggerPhotoScan = useCallback(async () => {
+    setScanError("");
+    setScanStatus("");
+    // iOS natif : scanner LIVE via AVFoundation (style Yuka — détection auto
+    // en temps réel, pas besoin de prendre de photo).
+    try {
+      const { scanBarcodeLive } = await import("../lib/nativeBarcodeScanner");
+      const res = await scanBarcodeLive();
+      if (res) {
+        if (res.cancelled) return;
+        if (res.rawValue) {
+          await handleBarcodeDecoded(res.rawValue);
+          return;
+        }
+      }
+    } catch (_) {}
+    // Web / fallback : input file capture camera
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      fileInputRef.current.click();
+    }
+  }, [handleBarcodeDecoded]);
 
   const handlePhotoSelected = useCallback(async (e) => {
     const file = e?.target?.files?.[0];
@@ -960,9 +1048,25 @@ export default function FuelPage({ client, appData }) {
 
     let decodedText = null;
 
+    // Strategie 0 : iOS natif via Vision framework (Capacitor plugin custom).
+    // Plus rapide que zbar-wasm + plus précis sur EAN-13 dégradés.
+    try {
+      const { decodeBarcodeNative } = await import("../lib/nativeBarcodeScanner");
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const nativeDecoded = await decodeBarcodeNative(base64);
+      if (nativeDecoded) {
+        decodedText = nativeDecoded;
+      }
+    } catch (_) {}
+
     // Strategie 1 : BarcodeDetector natif si dispo (Android Chrome, Edge, desktop Chrome).
     // ~10x plus rapide que zbar-wasm car execute par l'OS, et zero download.
-    if (hasBarcodeDetector) {
+    if (!decodedText && hasBarcodeDetector) {
       try {
         let formats = BARCODE_FORMATS;
         try {
@@ -2295,8 +2399,49 @@ export default function FuelPage({ client, appData }) {
               {t("fuel.scan_meal_label")} <span style={{ color: PURPLE, fontWeight: 700 }}>{repasLabel(selectedRepas)}</span>
             </div>
             {scanError && (
-              <div style={{ fontSize: 12, color: "#ef4444", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "10px 12px", textAlign: "center" }}>
-                {scanError}
+              <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, padding: "12px 14px" }}>
+                <div style={{ fontSize: 12, color: "#ef4444", textAlign: "center", marginBottom: 10, lineHeight: 1.5 }}>
+                  {scanError}
+                </div>
+                {/* CTA fallback : pas de dead-end. Rescanner OU saisie manuelle. */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => { setScanError(""); triggerPhotoScan(); }}
+                    style={{
+                      flex: 1,
+                      padding: "10px 12px",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 10,
+                      color: "#fff",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: "0.3px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    ↻ Rescanner
+                  </button>
+                  <button
+                    onClick={() => { setScanError(""); setShowScan(false); }}
+                    style={{
+                      flex: 1,
+                      padding: "10px 12px",
+                      background: PURPLE,
+                      border: "none",
+                      borderRadius: 10,
+                      color: "#0a0a0a",
+                      fontSize: 12,
+                      fontWeight: 800,
+                      letterSpacing: "0.3px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Ajouter manuellement
+                  </button>
+                </div>
               </div>
             )}
           </div>
