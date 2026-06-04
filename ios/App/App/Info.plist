@@ -65,12 +65,16 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>RB Perform enregistre dans ta photothèque les visuels de progression que tu génères depuis l'app.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>RB Perform utilise le microphone pour t'envoyer des messages vocaux à ton coach depuis la messagerie.</string>
+	<string>RB Perform utilise le microphone pour les messages vocaux au coach et pour la saisie vocale de tes repas dans l'onglet Fuel.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>RB Perform lit ton compteur de pas Apple Health pour pré-remplir automatiquement ton suivi quotidien. Tes données restent privées entre ton coach et toi.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>RB Perform peut enregistrer dans Apple Health les séances que tu valides dans l'app (durée, calories, type d'exercice).</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Live Activities (iOS 16.1+) pour le timer de repos dans la Dynamic
+	     Island + Lock Screen. Requis pour qu'ActivityKit fonctionne. -->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 </dict>
 </plist>

@@ -846,19 +846,121 @@ export default function FuelPage({ client, appData }) {
     return acc;
   }, {});
 
-  const startVoice = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { toast.error("Reconnaissance vocale non supportee sur ce navigateur."); return; }
-    const rec = new SR();
-    rec.lang = "fr-FR";
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.onstart = () => setRecording(true);
-    rec.onend = () => setRecording(false);
-    rec.onresult = (e) => { const t = e.results[0][0].transcript; setVoiceText(t); analyzeWithAI(t); };
-    rec.onerror = () => setRecording(false);
-    recognitionRef.current = rec;
-    rec.start();
+  // startVoice : MediaRecorder + /api/voice-transcribe (Mistral Voxtral).
+  // Marche sur iOS WKWebView (Capacitor), Safari iOS, Chrome, Android.
+  // Pourquoi pas window.SpeechRecognition ? Pas dispo dans WKWebView iOS
+  // (Capacitor) — c'etait la cause du "rien ne se passe" sur l'app native.
+  const startVoice = async () => {
+    // Toggle stop si deja en enregistrement
+    if (recognitionRef.current && recognitionRef.current.state === "recording") {
+      try { recognitionRef.current.stop(); } catch (_) {}
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error("Micro indisponible sur ce navigateur.");
+      return;
+    }
+
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      console.error("[voice] getUserMedia denied/failed:", err);
+      toast.error("Permission micro refusee. Active-la dans Reglages > RB Perform.");
+      return;
+    }
+
+    // mimeType : iOS donne audio/mp4 (m4a), web donne audio/webm
+    let mimeType = "";
+    const candidates = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/wav"];
+    for (const c of candidates) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c)) {
+        mimeType = c;
+        break;
+      }
+    }
+
+    let mr;
+    try {
+      mr = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+    } catch (err) {
+      console.error("[voice] MediaRecorder ctor failed:", err);
+      toast.error("Enregistrement audio non supporte.");
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
+
+    const chunks = [];
+    mr.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    mr.onstart = () => setRecording(true);
+    mr.onerror = (e) => {
+      console.error("[voice] MediaRecorder error:", e);
+      setRecording(false);
+      stream.getTracks().forEach((t) => t.stop());
+    };
+    mr.onstop = async () => {
+      setRecording(false);
+      stream.getTracks().forEach((t) => t.stop());
+      const blob = new Blob(chunks, { type: mr.mimeType || mimeType || "audio/mp4" });
+      if (blob.size < 800) {
+        toast.error("Trop court — reparle un peu plus longtemps.");
+        return;
+      }
+
+      setVoiceLoading(true);
+      try {
+        // Convert Blob → base64 (pas de FormData : plus simple pour Vercel JSON)
+        const audioB64 = await new Promise((resolve, reject) => {
+          const fr = new FileReader();
+          fr.onloadend = () => {
+            const dataUrl = fr.result || "";
+            const idx = String(dataUrl).indexOf(",");
+            resolve(idx >= 0 ? String(dataUrl).slice(idx + 1) : "");
+          };
+          fr.onerror = reject;
+          fr.readAsDataURL(blob);
+        });
+
+        const { data: { session } } = await supabase.auth.getSession();
+        const jwt = session?.access_token;
+        if (!jwt) { toast.error("Session expiree — reconnecte-toi."); setVoiceLoading(false); return; }
+
+        const tr = await fetch("/api/voice-transcribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+          body: JSON.stringify({ audio: audioB64, mimeType: blob.type, lang: "fr" }),
+        });
+        const trData = await tr.json();
+        if (!tr.ok) {
+          toast.error(trData?.error || "Transcription echouee. Reessaye.");
+          setVoiceLoading(false);
+          return;
+        }
+        const transcript = (trData.text || "").trim();
+        if (!transcript) {
+          toast.error(trData.warning || "Rien capte — reparle plus pres du micro.");
+          setVoiceLoading(false);
+          return;
+        }
+        setVoiceText(transcript);
+        // setVoiceLoading reste true le temps de l'analyse macros
+        analyzeWithAI(transcript);
+      } catch (err) {
+        console.error("[voice] transcribe pipeline failed:", err);
+        toast.error("Erreur reseau. Reessaye.");
+        setVoiceLoading(false);
+      }
+    };
+
+    recognitionRef.current = mr;
+    try {
+      mr.start();
+    } catch (err) {
+      console.error("[voice] mr.start failed:", err);
+      toast.error("Demarrage enregistrement echoue.");
+      stream.getTracks().forEach((t) => t.stop());
+    }
   };
 
   const analyzeWithAI = async (text) => {
