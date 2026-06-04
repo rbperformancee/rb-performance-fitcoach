@@ -205,9 +205,18 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ start: startRef.current, total: totalRef.current })); } catch {}
   }, []);
 
-  // Vibration à la fin (si supporté)
+  // Vibration à la fin du repos.
+  // - Web (Android) : navigator.vibrate pattern
+  // - iOS natif     : Capacitor Haptics chaîné ~2.5s (style sonnerie alarme)
+  //                   → fallback si user en mode silencieux (pas de son joué).
   const vibrate = useCallback(() => {
     if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    // iOS natif : long buzz Capacitor Haptics (impacts heavy chaînés ~2.5s)
+    if (isNative()) {
+      import("../lib/haptic").then(({ haptic }) => {
+        haptic.longBuzz(2500);
+      }).catch(() => {});
+    }
   }, []);
 
   // Gérer visibilité page (arrière-plan)

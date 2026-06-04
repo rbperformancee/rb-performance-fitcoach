@@ -29,6 +29,24 @@ preloadActiveLocale().catch(() => {}).finally(() => {
       <ConsentAwareAnalytics />
     </ErrorBoundary>
   );
+  // Hide le splash natif iOS UNE FOIS que React a monté + peint.
+  // capacitor.config.ts a `launchAutoHide: false` → sans ce hide() le
+  // splash reste 4s (fallback launchShowDuration). Avec ce hide(),
+  // transition seamless splash → app (plus de noir 1.5s).
+  // requestAnimationFrame x2 = attend qu'un frame réel ait été peint.
+  if (typeof window !== "undefined" && window.Capacitor?.isNativePlatform?.()) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
+        try {
+          const mod = await import("@capacitor/splash-screen");
+          await mod.SplashScreen.hide({ fadeOutDuration: 200 });
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn("[splash] hide failed:", e);
+        }
+      });
+    });
+  }
 });
 
 // Hook pour capturer les unhandled promise rejections

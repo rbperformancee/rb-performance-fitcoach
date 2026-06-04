@@ -6,7 +6,10 @@ const config: CapacitorConfig = {
   webDir: 'build',
   ios: {
     scheme: 'RB Perform',
-    contentInset: 'always',
+    // 'never' = la WebView occupe TOUT l'écran y compris derrière le notch/
+    // Dynamic Island. Le body CSS background #050505 peint la zone safe-area.
+    // 'always' laissait une bande blanche au-dessus du status bar.
+    contentInset: 'never',
   },
   android: {
     allowMixedContent: true,
@@ -16,8 +19,16 @@ const config: CapacitorConfig = {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
     SplashScreen: {
-      launchAutoHide: true,
-      backgroundColor: '#080C14',
+      // Auto-hide = false → on garde le splash natif iOS tant que React
+      // n'a pas monté. Sans ça, iOS hide à 500ms puis la WebView affiche
+      // ~1.5s d'écran noir avant que index.html peinte. Le hide() explicite
+      // est appelé dans App.jsx après le 1er paint.
+      launchAutoHide: false,
+      // Fallback : si JS plante / n'appelle jamais hide(), iOS hide après 4s.
+      launchShowDuration: 4000,
+      // #050505 = même couleur que body de index.html → zero flash de
+      // couleur entre splash natif et HTML.
+      backgroundColor: '#050505',
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
