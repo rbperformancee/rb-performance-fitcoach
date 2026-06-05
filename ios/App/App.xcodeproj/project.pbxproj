@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1ADAD2E3295CB9B7B3DB4536 /* RunTrackerPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD0739F5A140521DA329362 /* RunTrackerPlugin.swift */; };
 		1EEB62D65FCCEC0554CD8A40 /* HealthStepsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A08031DD1D8A11875E2814D2 /* HealthStepsPlugin.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
@@ -51,8 +52,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		03FD4C7977E52EED507325EB /* rb_alarm.caf */ = {isa = PBXFileReference; includeInIndex = 1; path = rb_alarm.caf; sourceTree = "<group>"; };
+		03FD4C7977E52EED507325EB /* rb_alarm.caf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = rb_alarm.caf; sourceTree = "<group>"; };
 		10DAAFAB0B6B0C4FA4CD1DC2 /* MyBridgeViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MyBridgeViewController.swift; sourceTree = "<group>"; };
+		2DD0739F5A140521DA329362 /* RunTrackerPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RunTrackerPlugin.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		32C798134FD808F27353C098 /* BarcodeScannerPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BarcodeScannerPlugin.swift; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
@@ -73,7 +75,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A1CC8F0D2FD0FA7C008B0EF2 /* Exceptions for "RestTimerWidget" folder in "RestTimerWidgetExtension" target */ = {
+		A1CC8F0D2FD0FA7C008B0EF2 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -83,18 +85,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A1CC8EFB2FD0FA7A008B0EF2 /* RestTimerWidget */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				A1CC8F0D2FD0FA7C008B0EF2 /* Exceptions for "RestTimerWidget" folder in "RestTimerWidgetExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = RestTimerWidget;
-			sourceTree = "<group>";
-		};
+		A1CC8EFB2FD0FA7A008B0EF2 /* RestTimerWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (A1CC8F0D2FD0FA7C008B0EF2 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = RestTimerWidget; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,13 +109,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		129275F43CCEA61D156BA557 /* RunTracker */ = {
+			isa = PBXGroup;
+			children = (
+				2DD0739F5A140521DA329362 /* RunTrackerPlugin.swift */,
+			);
+			path = RunTracker;
+			sourceTree = "<group>";
+		};
 		3CC93B8868C0E021F1C6D615 /* RestTimerLiveActivity */ = {
 			isa = PBXGroup;
 			children = (
 				96CADA74D524487530B2826B /* RestTimerActivityPlugin.swift */,
 				95E3133068174A8E57EF0D1E /* RestTimerAttributesShared.swift */,
 			);
-			name = RestTimerLiveActivity;
 			path = RestTimerLiveActivity;
 			sourceTree = "<group>";
 		};
@@ -171,7 +169,6 @@
 			children = (
 				A08031DD1D8A11875E2814D2 /* HealthStepsPlugin.swift */,
 			);
-			name = HealthSteps;
 			path = HealthSteps;
 			sourceTree = "<group>";
 		};
@@ -190,8 +187,8 @@
 				3CC93B8868C0E021F1C6D615 /* RestTimerLiveActivity */,
 				ED8EC31DFFF7DCE752D9B3EF /* BarcodeScanner */,
 				67644BB0A30673F46A43D175 /* HealthSteps */,
+				129275F43CCEA61D156BA557 /* RunTracker */,
 			);
-			name = Plugins;
 			path = Plugins;
 			sourceTree = "<group>";
 		};
@@ -200,7 +197,6 @@
 			children = (
 				32C798134FD808F27353C098 /* BarcodeScannerPlugin.swift */,
 			);
-			name = BarcodeScanner;
 			path = BarcodeScanner;
 			sourceTree = "<group>";
 		};
@@ -325,6 +321,7 @@
 				DA41BEF8F85CBE312CC7A682 /* MyBridgeViewController.swift in Sources */,
 				F2DA785FBFBB6221D41BDA43 /* BarcodeScannerPlugin.swift in Sources */,
 				1EEB62D65FCCEC0554CD8A40 /* HealthStepsPlugin.swift in Sources */,
+				1ADAD2E3295CB9B7B3DB4536 /* RunTrackerPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,7 +475,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = XC54HYT28Q;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -502,7 +499,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = XC54HYT28Q;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -531,7 +528,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = XC54HYT28Q;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -575,7 +572,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = XC54HYT28Q;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
