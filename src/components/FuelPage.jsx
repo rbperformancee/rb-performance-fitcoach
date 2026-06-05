@@ -12,6 +12,7 @@ import EmptyState from "./EmptyState";
 import Spinner from "./Spinner";
 import { toast } from "./Toast";
 import ClientRecipesBrowser, { preloadRecipes } from "./client/ClientRecipesBrowser";
+import { apiUrl } from "../lib/api";
 
 // ===== Scanner code-barre via BarcodeDetector API native =====
 // Marche sur : iOS Safari 17+ (donc iOS 18), Chrome Android 83+, Chrome desktop, Edge.
@@ -926,7 +927,7 @@ export default function FuelPage({ client, appData }) {
         const jwt = session?.access_token;
         if (!jwt) { toast.error("Session expiree — reconnecte-toi."); setVoiceLoading(false); return; }
 
-        const tr = await fetch("/api/voice-transcribe", {
+        const tr = await fetch(apiUrl("/api/voice-transcribe"), {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
           body: JSON.stringify({ audio: audioB64, mimeType: blob.type, lang: "fr" }),
@@ -971,7 +972,7 @@ export default function FuelPage({ client, appData }) {
       const { data: { session } } = await supabase.auth.getSession();
       const jwt = session?.access_token;
       if (!jwt) throw new Error("Session expirée — reconnecte-toi");
-      const res = await fetch("/api/voice-analyze", {
+      const res = await fetch(apiUrl("/api/voice-analyze"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
