@@ -1,20 +1,27 @@
 // src/components/RunSession.jsx
 //
-// Tracker de course LIVE — Phase 1 MVP.
+// Tracker de course LIVE — Phases 1+2+3.
 //
-// UI plein écran : distance + chrono + pace + cadence en gros, splits par km
-// en dessous, contrôles Start/Pause/Resume/Stop. Audio cues à chaque km
-// (Web Speech, marche sur iOS WKWebView).
+// Phase 1 — MVP GPS :
+//   • Distance + chrono + pace + cadence live, splits par km
+//   • Contrôles Start/Pause/Resume/Stop, audio cues TTS FR par km
+//   • Sauvegarde run_logs Supabase (route_coords + splits)
 //
-// Pipeline data :
-//   1. requestPermission() pour GPS (Always en natif, when_in_use sur web)
-//   2. startRun() → événements locationUpdate + kmReached arrivent en push
-//   3. On affiche les stats live, on accumule les splits
-//   4. stopRun() → on récupère le summary, on save Supabase run_logs
+// Phase 2 — Coach-aware :
+//   • Prop `prescribedTarget` = run prescrit par le coach (cible distance,
+//     durée, allure, bpm, HIIT). Briefing screen avant le start.
+//   • Pendant le run : pace delta chip vs cible (vert / jaune / rouge)
+//   • Après le stop : bloc comparaison Cible vs Réalisé + verdict
+//   • Sauvegarde avec programme_id + tags pour visibilité coach
 //
-// Le composant gère son state interne. Le parent fournit `client` + `onClose`.
+// Phase 3 — Premium polish :
+//   • HealthKit : workout running enregistré (distance, durée, route GPS)
+//   • Live Activity : Dynamic Island + Lock Screen avec stats live
+//
+// Le composant gère son state interne. Le parent fournit `client`,
+// `onClose` et optionnellement `prescribedTarget`.
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   requestPermission, startRun, pauseRun, resumeRun, stopRun,
   onLocation, onKm, onAutoPause, onCadence,
@@ -25,6 +32,9 @@ import { toast } from "./Toast";
 import { isNative } from "../lib/native";
 import haptic from "../lib/haptic";
 import RunShareStory from "./RunShareStory";
+import { saveRunWorkout, requestWorkoutPermission } from "../lib/health";
+import runActivity from "../lib/runLiveActivity";
+import { parseTarget, compareToTarget } from "../lib/runTarget";
 
 const G = "#02d1ba";
 const RED = "#ef4444";
@@ -42,8 +52,11 @@ function speakKmAudio(km, paceSec) {
   try { window.speechSynthesis.speak(utterance); } catch (_) {}
 }
 
-export default function RunSession({ client, onClose }) {
+export default function RunSession({ client, onClose, prescribedTarget = null }) {
+  const target = useMemo(() => parseTarget(prescribedTarget), [prescribedTarget]);
+
   const [phase, setPhase] = useState("idle"); // idle | requesting | active | paused | stopping | done
+  // eslint-disable-next-line no-unused-vars
   const [permLevel, setPermLevel] = useState(null);
   const [distance, setDistance] = useState(0); // meters
   const [duration, setDuration] = useState(0); // s (computed locally from startedAt)
@@ -51,6 +64,7 @@ export default function RunSession({ client, onClose }) {
   const [cadence, setCadence] = useState(0); // spm
   const [splits, setSplits] = useState([]); // [{km, time, pace}]
   const [autoPaused, setAutoPaused] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [audioCues, setAudioCues] = useState(true);
   const [route, setRoute] = useState([]); // [{lat, lng, t}]
   const [summary, setSummary] = useState(null);
@@ -61,6 +75,10 @@ export default function RunSession({ client, onClose }) {
   const pausedAtRef = useRef(null);
   const unsubsRef = useRef([]);
   const tickIntervalRef = useRef(null);
+  // Refs miroir pour Live Activity (évite stale closures dans le setInterval)
+  const distanceRef = useRef(0);
+  const paceRef = useRef(0);
+  const isPausedRef = useRef(false);
 
   // ── Permission ──
   const askPermission = useCallback(async () => {
@@ -88,23 +106,45 @@ export default function RunSession({ client, onClose }) {
     setSplits([]); setRoute([]); setSummary(null); setAutoPaused(false);
     setPhase("active");
 
-    // Tick local pour le chrono (1 hz)
+    // Live Activity (Dynamic Island + Lock Screen) — best effort
+    runActivity.start({
+      targetDistanceM: target.distanceM || 0,
+      targetPaceSPerKm: target.paceSPerKm || 0,
+      startedAtMs: startedAtRef.current,
+    });
+
+    // Tick local pour le chrono (1 hz) + update Live Activity (toutes les 3s)
+    distanceRef.current = 0; paceRef.current = 0; isPausedRef.current = false;
+    let liveTick = 0;
     tickIntervalRef.current = setInterval(() => {
       if (!startedAtRef.current) return;
       const now = Date.now();
       const dur = (now - startedAtRef.current - pausedTotalRef.current - (pausedAtRef.current ? now - pausedAtRef.current : 0)) / 1000;
       setDuration(Math.max(0, dur));
+      liveTick = (liveTick + 1) % 3;
+      if (liveTick === 0) {
+        runActivity.update({
+          distanceM: distanceRef.current,
+          durationS: Math.max(0, dur),
+          paceSPerKm: paceRef.current,
+          isPaused: isPausedRef.current,
+        });
+      }
     }, 1000);
 
     // Listeners
     unsubsRef.current = [
       onLocation((d) => {
-        setDistance(d.distanceM || 0);
+        const distM = d.distanceM || 0;
+        setDistance(distM);
+        distanceRef.current = distM;
         setRoute((prev) => [...prev, { lat: d.lat, lng: d.lng, t: d.t, alt: d.alt }]);
         // Pace live (lissé sur durée totale)
         const dur = (Date.now() - startedAtRef.current - pausedTotalRef.current) / 1000;
-        if (d.distanceM > 100 && dur > 5) {
-          setPace(dur / (d.distanceM / 1000));
+        if (distM > 100 && dur > 5) {
+          const p = dur / (distM / 1000);
+          setPace(p);
+          paceRef.current = p;
         }
       }),
       onKm((d) => {
@@ -128,7 +168,14 @@ export default function RunSession({ client, onClose }) {
     if (phase === "active") {
       haptic.medium();
       pausedAtRef.current = Date.now();
+      isPausedRef.current = true;
       await pauseRun();
+      runActivity.update({
+        distanceM: distanceRef.current,
+        durationS: duration,
+        paceSPerKm: paceRef.current,
+        isPaused: true,
+      });
       setPhase("paused");
     } else if (phase === "paused") {
       haptic.medium();
@@ -136,13 +183,20 @@ export default function RunSession({ client, onClose }) {
         pausedTotalRef.current += Date.now() - pausedAtRef.current;
         pausedAtRef.current = null;
       }
+      isPausedRef.current = false;
       setAutoPaused(false);
       await resumeRun();
+      runActivity.update({
+        distanceM: distanceRef.current,
+        durationS: duration,
+        paceSPerKm: paceRef.current,
+        isPaused: false,
+      });
       setPhase("active");
     }
-  }, [phase]);
+  }, [phase, duration]);
 
-  // ── Stop + save Supabase ──
+  // ── Stop + save Supabase + HealthKit + end Live Activity ──
   const stop = useCallback(async () => {
     haptic.heavy();
     setPhase("stopping");
@@ -153,6 +207,9 @@ export default function RunSession({ client, onClose }) {
     const s = await stopRun();
     setSummary(s);
     setPhase("done");
+
+    // Live Activity : fermeture avec auto-dismiss 2s
+    runActivity.end();
 
     // Sauvegarde Supabase
     if (client?.id && s && s.distanceM > 50) {
@@ -175,6 +232,20 @@ export default function RunSession({ client, onClose }) {
           route_coords: route,
           splits: splits,
         };
+
+        // Tags programme si run prescrit
+        if (prescribedTarget) {
+          payload.programme_id = prescribedTarget.programmeId || null;
+          payload.programme_week = prescribedTarget.programmeWeek || prescribedTarget.viewWeek || null;
+          payload.programme_session = prescribedTarget.sessionIndex ?? null;
+          payload.programme_run_index = prescribedTarget.runIndex ?? null;
+          payload.target_label = prescribedTarget.name || null;
+          payload.target_distance = prescribedTarget.distance || null;
+          payload.target_duration = prescribedTarget.duration || null;
+          payload.target_bpm = prescribedTarget.bpm || null;
+          payload.programme_name = "Move";
+        }
+
         const { error } = await supabase.from("run_logs").insert(payload);
         if (error) {
           console.error("[runSession] save failed:", error.message);
@@ -187,15 +258,50 @@ export default function RunSession({ client, onClose }) {
         toast.error("Erreur sauvegarde");
       }
     }
-  }, [client?.id, route, splits]);
 
-  // ── Cleanup unmount ──
+    // Phase 3 : HealthKit workout save (natif iOS uniquement, best effort)
+    if (isNative() && s && s.distanceM > 50) {
+      try {
+        await requestWorkoutPermission();
+        await saveRunWorkout({
+          distanceM: s.distanceM,
+          durationS: s.durationS,
+          startedAt: s.startedAt,
+          endedAt: s.endedAt,
+          routeCoords: route,
+        });
+      } catch (e) {
+        console.warn("[runSession] HealthKit save failed:", e?.message || e);
+      }
+    }
+  }, [client?.id, route, splits, prescribedTarget]);
+
+  // ── Cleanup unmount : kill tick + listeners + Live Activity dangling ──
   useEffect(() => {
     return () => {
       if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
       unsubsRef.current.forEach((u) => u?.());
+      runActivity.end();
     };
   }, []);
+
+  // ── Comparaison verdict pour done screen ──
+  const verdict = useMemo(() => {
+    if (!summary || !target.hasTarget) return null;
+    return compareToTarget(summary, target);
+  }, [summary, target]);
+
+  // ── Pace delta vs cible (chip live) ──
+  const paceDelta = useMemo(() => {
+    if (!target.paceSPerKm || !pace) return null;
+    const delta = Math.round(pace - target.paceSPerKm);
+    let color;
+    if (delta < -5) color = G;        // plus rapide que cible
+    else if (delta > 15) color = RED;  // significativement plus lent
+    else color = "#fbbf24";            // dans la zone (±15s)
+    const sign = delta < 0 ? "−" : "+";
+    return { delta, color, label: `${sign}${Math.abs(delta)}s vs cible` };
+  }, [pace, target.paceSPerKm]);
 
   // ===== RENDER =====
 
@@ -203,16 +309,50 @@ export default function RunSession({ client, onClose }) {
     return (
       <div style={S.wrap}>
         <div style={S.idleInner}>
-          <div style={S.iconBig}>🏃‍♂️</div>
-          <div style={S.idleTitle}>Course<span style={{ color: G }}>.</span></div>
-          <div style={S.idleSub}>
-            Distance, allure et splits trackés en temps réel.
-            {isNative() ? " Marche en arrière-plan." : " (Mode web : reste sur cette page pendant la course.)"}
-          </div>
-          <button style={S.bigBtn(G)} onClick={start} disabled={phase === "requesting"}>
-            {phase === "requesting" ? "Démarrage..." : "Démarrer ma course"}
-          </button>
-          <button style={S.linkBtn} onClick={onClose}>Annuler</button>
+          {target.hasTarget ? (
+            <>
+              <div style={S.briefingEyebrow}>Aujourd'hui</div>
+              <div style={S.briefingTitle}>{target.name || "Run prescrit"}</div>
+              <div style={S.briefingSub}>
+                Cible coach. Démarre quand tu es prêt.
+                {isNative() ? " GPS actif en arrière-plan." : ""}
+              </div>
+              <div style={S.targetCard}>
+                {target.distanceM ? (
+                  <TargetMetric label="Distance" value={`${(target.distanceM / 1000).toFixed(target.distanceM % 1000 ? 1 : 0)} km`} />
+                ) : null}
+                {target.durationS ? (
+                  <TargetMetric label="Durée" value={formatDuration(target.durationS)} />
+                ) : null}
+                {target.paceSPerKm ? (
+                  <TargetMetric label="Allure" value={`${formatPace(target.paceSPerKm)} /km`} accent />
+                ) : null}
+                {target.bpm ? (
+                  <TargetMetric label="BPM" value={`${target.bpm}`} />
+                ) : null}
+                {target.isHiit ? (
+                  <TargetMetric label="HIIT" value={target.hiitLabel} accent />
+                ) : null}
+              </div>
+              <button style={S.bigBtn(G)} onClick={start} disabled={phase === "requesting"}>
+                {phase === "requesting" ? "Démarrage..." : "Démarrer"}
+              </button>
+              <button style={S.linkBtn} onClick={onClose}>Annuler</button>
+            </>
+          ) : (
+            <>
+              <div style={S.iconBig}>🏃‍♂️</div>
+              <div style={S.idleTitle}>Course<span style={{ color: G }}>.</span></div>
+              <div style={S.idleSub}>
+                Distance, allure et splits trackés en temps réel.
+                {isNative() ? " Marche en arrière-plan." : " (Mode web : reste sur cette page pendant la course.)"}
+              </div>
+              <button style={S.bigBtn(G)} onClick={start} disabled={phase === "requesting"}>
+                {phase === "requesting" ? "Démarrage..." : "Démarrer ma course"}
+              </button>
+              <button style={S.linkBtn} onClick={onClose}>Annuler</button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -231,6 +371,43 @@ export default function RunSession({ client, onClose }) {
             <Stat label="Durée" value={formatDuration(summary.durationS)} />
             <Stat label="Allure" value={`${formatPace(summary.paceSPerKm)} /km`} />
           </div>
+          {verdict && (
+            <div style={{ ...S.verdictBox, borderColor: verdict.status === "ok" ? "rgba(2,209,186,0.3)" : verdict.status === "over" ? "rgba(2,209,186,0.3)" : "rgba(251,191,36,0.3)", background: verdict.status === "ok" || verdict.status === "over" ? "rgba(2,209,186,0.06)" : "rgba(251,191,36,0.06)" }}>
+              <div style={{ ...S.verdictLabel, color: verdict.status === "ok" || verdict.status === "over" ? G : "#fbbf24" }}>
+                {verdict.status === "ok" ? "✓ " : verdict.status === "over" ? "📈 " : "▾ "}
+                {verdict.label}
+              </div>
+              <div style={S.verdictGrid}>
+                {target.distanceM ? (
+                  <VerdictRow
+                    metric="Distance"
+                    target={`${(target.distanceM / 1000).toFixed(target.distanceM % 1000 ? 1 : 0)} km`}
+                    actual={formatDistance(summary.distanceM)}
+                    delta={verdict.deltaM ? `${verdict.deltaM >= 0 ? "+" : "−"}${Math.abs(Math.round(verdict.deltaM))} m` : null}
+                    deltaPositive={verdict.deltaM >= 0}
+                  />
+                ) : null}
+                {target.durationS ? (
+                  <VerdictRow
+                    metric="Durée"
+                    target={formatDuration(target.durationS)}
+                    actual={formatDuration(summary.durationS)}
+                    delta={verdict.deltaS ? `${verdict.deltaS >= 0 ? "+" : "−"}${formatDuration(Math.abs(Math.round(verdict.deltaS)))}` : null}
+                    deltaPositive={verdict.deltaS <= 0}
+                  />
+                ) : null}
+                {target.paceSPerKm ? (
+                  <VerdictRow
+                    metric="Allure"
+                    target={`${formatPace(target.paceSPerKm)} /km`}
+                    actual={`${formatPace(summary.paceSPerKm)} /km`}
+                    delta={verdict.deltaPaceS ? `${verdict.deltaPaceS >= 0 ? "+" : "−"}${Math.abs(Math.round(verdict.deltaPaceS))}s /km` : null}
+                    deltaPositive={verdict.deltaPaceS <= 0}
+                  />
+                ) : null}
+              </div>
+            </div>
+          )}
           {splits.length > 0 && (
             <div style={{ width: "100%", maxWidth: 420, marginTop: 24 }}>
               <div style={S.sectionLabel}>Splits</div>
@@ -274,21 +451,40 @@ export default function RunSession({ client, onClose }) {
   }
 
   // Active or paused
+  const targetProgress = target.distanceM ? Math.min(100, (distance / target.distanceM) * 100) : 0;
   return (
     <div style={S.wrap}>
       <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 12px) 24px 24px", display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
         {autoPaused && (
           <div style={S.autoPauseBanner}>⏸ Auto-pause (tu sembles à l'arrêt)</div>
         )}
+        {/* Progress bar vs cible coach */}
+        {target.distanceM ? (
+          <div style={S.targetProgressWrap}>
+            <div style={S.targetProgressLabel}>
+              <span>Cible : {(target.distanceM / 1000).toFixed(target.distanceM % 1000 ? 1 : 0)} km</span>
+              <span style={{ color: targetProgress >= 100 ? G : "rgba(255,255,255,0.5)" }}>
+                {targetProgress >= 100 ? "✓ Atteint" : `${Math.round(targetProgress)}%`}
+              </span>
+            </div>
+            <div style={S.targetProgressTrack}>
+              <div style={{
+                ...S.targetProgressFill,
+                width: `${targetProgress}%`,
+                background: targetProgress >= 100 ? G : "linear-gradient(90deg, #02d1ba, rgba(2,209,186,0.5))",
+              }} />
+            </div>
+          </div>
+        ) : null}
         {/* Distance hero */}
-        <div style={{ textAlign: "center", marginTop: 30, marginBottom: 16 }}>
+        <div style={{ textAlign: "center", marginTop: 24, marginBottom: 16 }}>
           <div style={S.bigStat}>{formatDistance(distance)}</div>
           <div style={S.bigStatLabel}>{phase === "paused" ? "EN PAUSE" : "Distance"}</div>
         </div>
         {/* Stats row */}
         <div style={S.statsRow}>
           <Stat label="Durée" value={formatDuration(duration)} />
-          <Stat label="Allure" value={`${formatPace(pace)} /km`} />
+          <Stat label="Allure" value={`${formatPace(pace)} /km`} delta={paceDelta} />
         </div>
         {cadence > 0 && (
           <div style={{ ...S.statsRow, marginTop: 12 }}>
@@ -324,11 +520,64 @@ export default function RunSession({ client, onClose }) {
   );
 }
 
-function Stat({ label, value }) {
+function Stat({ label, value, delta }) {
   return (
     <div style={S.statBox}>
       <div style={S.statValue}>{value}</div>
       <div style={S.statLabel}>{label}</div>
+      {delta && (
+        <div style={{
+          marginTop: 6,
+          display: "inline-block",
+          padding: "3px 8px",
+          background: delta.color + "22",
+          color: delta.color,
+          borderRadius: 999,
+          fontSize: 9,
+          fontWeight: 800,
+          letterSpacing: 0.4,
+          textTransform: "uppercase",
+        }}>
+          {delta.label}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TargetMetric({ label, value, accent }) {
+  return (
+    <div style={S.targetMetricBox}>
+      <div style={S.targetMetricLabel}>{label}</div>
+      <div style={{ ...S.targetMetricValue, color: accent ? G : "#fff" }}>{value}</div>
+    </div>
+  );
+}
+
+function VerdictRow({ metric, target, actual, delta, deltaPositive }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "70px 1fr 1fr auto", gap: 8, alignItems: "center", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700 }}>{metric}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+        <span style={{ fontSize: 8, letterSpacing: 1.5, textTransform: "uppercase", display: "block", color: "rgba(255,255,255,0.35)" }}>Cible</span>
+        {target}
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 800 }}>
+        <span style={{ fontSize: 8, letterSpacing: 1.5, textTransform: "uppercase", display: "block", color: "rgba(255,255,255,0.35)", fontWeight: 700 }}>Réalisé</span>
+        {actual}
+      </div>
+      {delta && (
+        <div style={{
+          fontSize: 10, fontWeight: 800, letterSpacing: 0.3,
+          padding: "3px 7px",
+          background: deltaPositive ? "rgba(2,209,186,0.18)" : "rgba(251,191,36,0.15)",
+          color: deltaPositive ? G : "#fbbf24",
+          borderRadius: 999,
+          whiteSpace: "nowrap",
+        }}>
+          {delta}
+        </div>
+      )}
     </div>
   );
 }
@@ -398,4 +647,69 @@ const S = {
     fontSize: 12, fontWeight: 700, color: "#fbbf24", textAlign: "center",
     marginTop: 8,
   },
+  // ─── Briefing screen (Phase 2) ───
+  briefingEyebrow: {
+    fontSize: 11, color: G, letterSpacing: "3px", textTransform: "uppercase",
+    fontWeight: 800, marginBottom: 10,
+  },
+  briefingTitle: {
+    fontSize: 34, fontWeight: 900, letterSpacing: "-1.2px", lineHeight: 1.05,
+    textAlign: "center", marginBottom: 8, maxWidth: 360,
+  },
+  briefingSub: {
+    fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.55,
+    maxWidth: 320, marginBottom: 22, textAlign: "center",
+  },
+  targetCard: {
+    width: "100%", maxWidth: 360,
+    background: "rgba(2,209,186,0.04)",
+    border: "1px solid rgba(2,209,186,0.18)",
+    borderRadius: 18, padding: 16,
+    display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10,
+    marginBottom: 28,
+  },
+  targetMetricBox: {
+    padding: "12px 14px",
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.05)",
+    borderRadius: 12,
+  },
+  targetMetricLabel: {
+    fontSize: 9, color: "rgba(255,255,255,0.45)",
+    letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700,
+    marginBottom: 4,
+  },
+  targetMetricValue: {
+    fontSize: 18, fontWeight: 900, letterSpacing: "-0.4px",
+  },
+  // ─── Progress bar vs target (Phase 2 live) ───
+  targetProgressWrap: {
+    marginTop: 4, marginBottom: 8,
+  },
+  targetProgressLabel: {
+    display: "flex", justifyContent: "space-between",
+    fontSize: 10, color: "rgba(255,255,255,0.55)",
+    letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700,
+    marginBottom: 6,
+  },
+  targetProgressTrack: {
+    height: 4, borderRadius: 999, overflow: "hidden",
+    background: "rgba(255,255,255,0.06)",
+  },
+  targetProgressFill: {
+    height: "100%", borderRadius: 999,
+    transition: "width 0.4s cubic-bezier(.4,1.6,.5,1)",
+  },
+  // ─── Verdict block (done screen, Phase 2) ───
+  verdictBox: {
+    width: "100%", maxWidth: 420,
+    border: "1px solid rgba(255,255,255,0.06)",
+    borderRadius: 14, padding: "14px 16px",
+    marginTop: 18,
+  },
+  verdictLabel: {
+    fontSize: 11, letterSpacing: "1.8px", textTransform: "uppercase",
+    fontWeight: 800, marginBottom: 8,
+  },
+  verdictGrid: { display: "flex", flexDirection: "column" },
 };

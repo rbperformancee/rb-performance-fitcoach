@@ -6,6 +6,7 @@ import haptic from "../lib/haptic";
 import { useScheduledRuns } from "../hooks/useScheduledRuns";
 import { useT, getLocale } from "../lib/i18n";
 import RunIntervalTimer from "./RunIntervalTimer";
+import RunSession from "./RunSession";
 
 /**
  * Detection HIIT time-based : si work ET rest sont des durees parsables
@@ -35,6 +36,9 @@ export default function MovePage({ client, appData }) {
   const [runs, setRuns] = useState(appData?.runs || []);
   const [weekRuns, setWeekRuns] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [showRunSession, setShowRunSession] = useState(false);
+  const [runSessionTarget, setRunSessionTarget] = useState(null); // null = free run, sinon run prescrit
+  const [logChoiceFor, setLogChoiceFor] = useState(null);          // run prescrit en attente de choix GPS/Manuel
   const [loading, setLoading] = useState(!appData || appData.loading);
   const [form, setForm] = useState({ distance: "", heures: "0", minutes: "", note: "" });
   const [saving, setSaving] = useState(false);
@@ -162,7 +166,24 @@ export default function MovePage({ client, appData }) {
       setPendingTimer(run);
       return;
     }
-    // Tente de pre-remplir distance + duree depuis les cibles
+    // Run continu/distance → propose le choix GPS Live ou Log manuel
+    setLogChoiceFor(run);
+  };
+
+  // Mode GPS live : run prescrit avec cibles → RunSession tracker
+  const startGpsForPrescribed = (run) => {
+    setLogChoiceFor(null);
+    setRunSessionTarget({
+      ...run,
+      programmeId: scheduled.programmeId,
+      programmeWeek: scheduled.viewWeek,
+    });
+    setShowRunSession(true);
+  };
+
+  // Mode log manuel (existant) — pre-remplit form depuis cibles
+  const startManualForPrescribed = (run) => {
+    setLogChoiceFor(null);
     const distMatch = run.distance?.match(/(\d+(?:[.,]\d+)?)/);
     const durMatch = run.duration?.match(/(\d+)\s*h\s*(\d+)?|(\d+)\s*min/i);
     let h = "0", m = "";
@@ -638,7 +659,12 @@ export default function MovePage({ client, appData }) {
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase" }}>{t("move.history")}</div>
-            <button onClick={() => setShowAdd(true)} style={{ background: RED, color: "#fff", border: "none", borderRadius: 100, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t("move.add_short")}</button>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setShowRunSession(true)} style={{ background: "linear-gradient(135deg, #02d1ba, #14e6c5)", color: "#050505", border: "none", borderRadius: 100, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }} aria-label="Démarrer une course GPS">
+                <span style={{ fontSize: 14 }}>🏃</span>GPS
+              </button>
+              <button onClick={() => setShowAdd(true)} style={{ background: RED, color: "#fff", border: "none", borderRadius: 100, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t("move.add_short")}</button>
+            </div>
           </div>
 
           {runs.length === 0 ? (
@@ -770,6 +796,114 @@ export default function MovePage({ client, appData }) {
                 </button>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* RUN SESSION GPS LIVE (Phase 1+2+3 — free run ou run prescrit) */}
+      {showRunSession && (
+        <RunSession
+          client={client}
+          prescribedTarget={runSessionTarget}
+          onClose={() => {
+            setShowRunSession(false);
+            setRunSessionTarget(null);
+            // Refresh historique runs + prescribed list (statut "done" si run tagué)
+            (async () => {
+              const r = await supabase.from("run_logs").select("*").eq("client_id", client.id).order("date", { ascending: false }).limit(10);
+              if (r.data) setRuns(r.data);
+              await scheduled.refresh();
+            })();
+          }}
+        />
+      )}
+
+      {/* Choix de log pour un run prescrit (GPS ou Manuel) */}
+      {logChoiceFor && (
+        <div
+          onClick={() => setLogChoiceFor(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "flex-end",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              background: "#0a0a0a",
+              borderTopLeftRadius: 22, borderTopRightRadius: 22,
+              padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderBottom: "none",
+            }}
+          >
+            <div style={{ width: 40, height: 4, background: "rgba(255,255,255,0.25)", borderRadius: 999, margin: "8px auto 16px" }} />
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", marginBottom: 4 }}>
+              {logChoiceFor.name || "Logger ce run"}
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 20 }}>
+              Comment veux-tu enregistrer cette séance ?
+            </div>
+            <button
+              onClick={() => startGpsForPrescribed(logChoiceFor)}
+              style={{
+                width: "100%",
+                background: "linear-gradient(135deg, #02d1ba, #14e6c5)",
+                color: "#050505", border: "none", borderRadius: 14,
+                padding: "16px 18px",
+                fontSize: 14, fontWeight: 900, letterSpacing: "0.3px",
+                cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                marginBottom: 10,
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 20 }}>🏃</span>
+                <span>
+                  GPS Live
+                  <span style={{ display: "block", fontSize: 10, fontWeight: 700, opacity: 0.7, marginTop: 2 }}>
+                    Distance, allure & trace en temps réel
+                  </span>
+                </span>
+              </span>
+              <span style={{ fontSize: 18 }}>›</span>
+            </button>
+            <button
+              onClick={() => startManualForPrescribed(logChoiceFor)}
+              style={{
+                width: "100%",
+                background: "rgba(255,255,255,0.05)",
+                color: "#fff", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14,
+                padding: "16px 18px",
+                fontSize: 13, fontWeight: 700, letterSpacing: "0.3px",
+                cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>✏️</span>
+                <span>
+                  Log manuel
+                  <span style={{ display: "block", fontSize: 10, fontWeight: 500, opacity: 0.55, marginTop: 2 }}>
+                    Je saisis distance & temps à la main
+                  </span>
+                </span>
+              </span>
+              <span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)" }}>›</span>
+            </button>
+            <button
+              onClick={() => setLogChoiceFor(null)}
+              style={{
+                width: "100%",
+                background: "transparent", color: "rgba(255,255,255,0.4)",
+                border: "none", padding: "14px 0", marginTop: 8,
+                fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              Annuler
+            </button>
           </div>
         </div>
       )}

@@ -1,117 +1,115 @@
 // src/lib/health.js
 //
-// Apple Health / Health Connect (Android) wrapper pour RB Perform.
+// Wrapper Apple Health (HealthKit) — utilise notre plugin custom Swift
+// `HealthSteps` (cf MyBridgeViewController.swift + HealthStepsPlugin.swift)
+// au lieu de capacitor-health 8.1.2 qui retourne parfois 0 ou null.
 //
-// Cas d'usage actuel : auto-fill du compteur de pas du jour dans WeightChart.
-// L'utilisateur n'a plus à taper son nombre de pas manuellement — on lit
-// HealthKit (iPhone + Apple Watch) au mount.
-//
-// Comportement par plateforme :
-// - iOS natif : utilise HealthKit via capacitor-health plugin
-//   (NSHealthShareUsageDescription requis dans Info.plist + HealthKit
-//    entitlement dans App.entitlements)
-// - Android natif : utilise Google Health Connect (requiert l'app HC installée)
-// - Web (Safari/Chrome PWA) : retourne null partout — pas d'équivalent web
-//   universel (Web Bluetooth pour fitness trackers est trop fragmenté)
-//
-// Tout est défensif : import dynamique, try/catch, retour `null` plutôt que
-// throw — l'app continue à fonctionner avec saisie manuelle si HealthKit
-// indisponible ou refusé.
+// API utilisée par WeightChart pour auto-fill le compteur de pas du jour.
 
+import { registerPlugin } from "@capacitor/core";
 import { isNative } from "./native";
 
-let _Health = null;
-let _importFailed = false;
-
-async function getHealth() {
-  if (_Health) return _Health;
-  if (_importFailed || !isNative()) return null;
+let _plugin = null;
+function getPlugin() {
+  if (_plugin) return _plugin;
   try {
-    const mod = await import("capacitor-health");
-    _Health = mod.Health;
-    return _Health;
+    _plugin = registerPlugin("HealthSteps");
+  } catch {
+    _plugin = null;
+  }
+  return _plugin;
+}
+
+/**
+ * `true` si HealthKit est disponible (toujours vrai sur iPhone moderne).
+ */
+export async function isHealthAvailable() {
+  return isNative();
+}
+
+/**
+ * Demande la permission de lire les pas. Apple ne révèle pas la réponse,
+ * donc on retourne juste true si l'API a pu être appelée.
+ */
+export async function requestStepsPermission() {
+  if (!isNative()) return false;
+  const p = getPlugin();
+  if (!p) return false;
+  try {
+    await p.requestPermission();
+    return true;
   } catch (e) {
-    _importFailed = true;
     // eslint-disable-next-line no-console
-    console.error("[health] dynamic import failed:", e);
+    console.error("[health] requestPermission failed:", e);
+    return false;
+  }
+}
+
+/**
+ * Retourne le total de pas effectués aujourd'hui (00:00 → maintenant).
+ * Returns null si erreur, 0 si pas de données ou refus.
+ */
+export async function getTodaySteps() {
+  if (!isNative()) return null;
+  const p = getPlugin();
+  if (!p) return null;
+  try {
+    const res = await p.getTodaySteps();
+    const steps = Number(res?.steps);
+    return Number.isFinite(steps) ? steps : 0;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("[health] getTodaySteps failed:", e);
     return null;
   }
 }
 
 /**
- * `true` si HealthKit/Health Connect est disponible sur ce device.
- * iOS : toujours true depuis iOS 8 (donc effectivement vrai sur tout iPhone moderne).
- * Android : false si l'app Health Connect n'est pas installée.
- * Web : false.
+ * Demande la permission d'écrire un workout running + sa route GPS.
+ * Apple ne révèle pas la réponse réelle.
  */
-export async function isHealthAvailable() {
+export async function requestWorkoutPermission() {
   if (!isNative()) return false;
-  const Health = await getHealth();
-  if (!Health) return false;
+  const p = getPlugin();
+  if (!p) return false;
   try {
-    const res = await Health.isHealthAvailable();
-    return !!res?.available;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Demande la permission de lire les pas.
- *
- * iOS spécifique : Apple n'expose PAS si l'user a accepté ou refusé (privacy by
- * design). On request blindement — la prochaine requête `queryAggregated`
- * retournera 0 si refusé ou si pas de données.
- *
- * À appeler une seule fois après que l'user soit logged-in et ait fait son
- * onboarding (pas au boot global, sinon le system prompt s'affiche avant que
- * l'user comprenne pourquoi).
- */
-export async function requestStepsPermission() {
-  const Health = await getHealth();
-  if (!Health) return false;
-  try {
-    await Health.requestHealthPermissions({ permissions: ["READ_STEPS"] });
+    await p.requestWorkoutPermission();
     return true;
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.error("[health] permission request failed:", e);
+    console.error("[health] requestWorkoutPermission failed:", e);
     return false;
   }
 }
 
 /**
- * Retourne le nombre total de pas effectués aujourd'hui (00:00 jusqu'à maintenant).
- * Source : HealthKit iOS (iPhone + Apple Watch fusionnés) ou Health Connect Android.
+ * Sauvegarde un workout running dans Apple Health avec sa route GPS.
  *
- * Retourne `null` si :
- * - pas sur natif (web)
- * - permission refusée
- * - aucune donnée (user n'a pas marché ou device tout neuf)
- * - erreur API
- *
- * L'appelant doit gérer `null` en gardant la valeur saisie manuellement.
+ * @param {object} args
+ * @param {number} args.distanceM       Distance totale en mètres
+ * @param {number} args.durationS       Durée active (hors pauses) en secondes
+ * @param {number} args.startedAt       Timestamp UNIX en secondes (start)
+ * @param {number} args.endedAt         Timestamp UNIX en secondes (end)
+ * @param {Array<{lat,lng,alt?,t?}>} args.routeCoords  Points GPS optionnels
+ * @returns {Promise<{saved:boolean, withRoute:boolean, kcal:number} | null>}
  */
-export async function getTodaySteps() {
-  const Health = await getHealth();
-  if (!Health) return null;
+export async function saveRunWorkout({ distanceM, durationS, startedAt, endedAt, routeCoords }) {
+  if (!isNative()) return null;
+  if (!(distanceM > 50) || !(durationS > 5)) return null;
+  const p = getPlugin();
+  if (!p) return null;
   try {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date();
-    const res = await Health.queryAggregated({
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
-      dataType: "steps",
-      bucket: "day",
+    const res = await p.saveRunWorkout({
+      distanceM,
+      durationS,
+      startedAt,
+      endedAt,
+      routeCoords: Array.isArray(routeCoords) ? routeCoords : [],
     });
-    const samples = res?.aggregatedData || [];
-    if (samples.length === 0) return 0;
-    const total = samples.reduce((sum, s) => sum + (Number(s.value) || 0), 0);
-    return Math.round(total);
+    return res;
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.error("[health] queryAggregated steps failed:", e);
+    console.error("[health] saveRunWorkout failed:", e);
     return null;
   }
 }
