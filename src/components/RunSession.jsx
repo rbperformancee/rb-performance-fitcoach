@@ -357,13 +357,18 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
         const durationS = Math.round(s.durationS || 0);
         const paceMinPerKm = s.paceSPerKm ? (s.paceSPerKm / 60) : null;
 
+        // Match schema run_logs : distance_km (number), duree_min (number),
+        // allure_min_km (string "M:SS"). Le code Phase 1 envoyait à tort
+        // distance/duration → silent fail PGRST204 sur tous les GPS runs.
+        const allureStr = s.paceSPerKm && isFinite(s.paceSPerKm)
+          ? `${Math.floor(s.paceSPerKm / 60)}:${String(Math.round(s.paceSPerKm % 60)).padStart(2, "0")}`
+          : null;
         const payload = {
           client_id: client.id,
           date: new Date().toISOString().slice(0, 10),
-          distance: distanceKm,
-          duration: durationS,
-          allure_min_km: paceMinPerKm ? Number(paceMinPerKm.toFixed(2)) : null,
-          bpm: null,
+          distance_km: distanceKm,
+          duree_min: Math.round(durationS / 60),
+          allure_min_km: allureStr,
           source: isNative() ? "gps_native" : "gps_web",
           started_at: s.startedAt ? new Date(s.startedAt * 1000).toISOString() : null,
           ended_at: s.endedAt ? new Date(s.endedAt * 1000).toISOString() : null,

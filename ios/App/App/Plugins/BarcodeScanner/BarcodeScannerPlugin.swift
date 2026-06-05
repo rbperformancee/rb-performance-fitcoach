@@ -22,10 +22,10 @@ import Capacitor
 import AVFoundation
 import UIKit
 
-@objc(BarcodeScannerPlugin)
-public class BarcodeScannerPlugin: CAPPlugin, CAPBridgedPlugin {
-    public let identifier = "BarcodeScannerPlugin"
-    public let jsName = "BarcodeScanner"
+@objc(BarcodeScannerLivePlugin)
+public class BarcodeScannerLivePlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "BarcodeScannerLivePlugin"
+    public let jsName = "BarcodeScannerLive"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "scanLive", returnType: CAPPluginReturnPromise),
     ]
