@@ -813,6 +813,15 @@ function AppInner() {
     setPrevPage(page);
     setPage(newPage);
   };
+  // Cross-tab nav vers Move quand TrainingPage demande de lancer un run GPS
+  // sur une cible prescrite. MovePage écoute le même event pour ouvrir
+  // RunSession avec la target. Sans ce listener, l'athlète resterait sur
+  // Training et le RunSession ne s'ouvrirait jamais.
+  React.useEffect(() => {
+    const onLaunchRun = () => { if (page !== "move") navigateTo("move"); };
+    window.addEventListener("rb:launch-run-gps", onLaunchRun);
+    return () => window.removeEventListener("rb:launch-run-gps", onLaunchRun);
+  }, [page]);
   const [showReport,      setShowReport]      = useState(false);
   const [exporting,       setExporting]       = useState(false);
   const [showPrivacy,     setShowPrivacy]     = useState(false);

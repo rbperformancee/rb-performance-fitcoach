@@ -9,6 +9,7 @@
 import UIKit
 import Capacitor
 import AVFoundation
+import ActivityKit
 
 class MyBridgeViewController: CAPBridgeViewController {
 
@@ -24,9 +25,11 @@ class MyBridgeViewController: CAPBridgeViewController {
         // pour éviter collision avec @capacitor-mlkit/barcode-scanning qui
         // s'enregistre aussi en "BarcodeScanner".
         bridge?.registerPluginInstance(BarcodeScannerLivePlugin())
-        // TODO Phase 3 polish : registerPluginInstance(RunActivityPlugin())
-        // après ajout du fichier au target App via xcodeproj (synchronized
-        // groups pas configurés pour Plugins/, ajout manuel requis).
+        // Plugin RunActivity : Live Activity Dynamic Island pour le run GPS.
+        // Inlined plus bas pour bypass l'ajout au target (cf AlarmSoundPlugin).
+        if #available(iOS 16.1, *) {
+            bridge?.registerPluginInstance(RunActivityPlugin())
+        }
         // Plugin HealthSteps custom (HKHealthStore direct, plus fiable que
         // capacitor-health 8.1.2).
         bridge?.registerPluginInstance(HealthStepsPlugin())
@@ -117,16 +120,178 @@ public class AlarmSoundPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func restoreSession() {
-        // Restaure la catégorie .playAndRecord configurée par AppDelegate
-        // (nécessaire pour getUserMedia côté JS).
+        // Restaure la catégorie .playAndRecord (idem AppDelegate) PUIS désactive
+        // explicitement la session → la musique reprend la chaîne audio en A2DP
+        // pleine qualité. .allowBluetoothA2DP (pas .allowBluetooth/HFP) pour
+        // éviter de dégrader la musique en stéréo basse qualité.
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playAndRecord,
                                     mode: .default,
-                                    options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
-            try session.setActive(true, options: [.notifyOthersOnDeactivation])
+                                    options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
+            try session.setActive(false, options: [.notifyOthersOnDeactivation])
         } catch {
             // Silent fail — pas critique, prochaine activation tentera de nouveau.
+        }
+    }
+}
+
+// MARK: - RunActivity (Live Activity Dynamic Island pour le run GPS)
+//
+// Pour les mêmes raisons que AlarmSoundPlugin (target App n'utilise pas de
+// PBXFileSystemSynchronizedRootGroup), on inline ici la struct ActivityAttributes
+// + le plugin Capacitor. Les copies dans Plugins/RunLiveActivity/ et dans
+// RestTimerWidget/ doivent rester identiques (encoding ActivityKit).
+//
+// API JS :
+//   await RunActivity.start({ targetDistanceM?, targetPaceSPerKm?, startedAtMs })
+//   await RunActivity.update({ distanceM, durationS, paceSPerKm, isPaused })
+//   await RunActivity.end()
+
+@available(iOS 16.1, *)
+public struct RunActivityAttributes: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        public var distanceM: Double
+        public var durationS: Double
+        public var paceSPerKm: Double
+        public var isPaused: Bool
+        public var targetDistanceM: Double
+        public var targetPaceSPerKm: Double
+        public var startedAt: Date
+
+        public init(
+            distanceM: Double,
+            durationS: Double,
+            paceSPerKm: Double,
+            isPaused: Bool,
+            targetDistanceM: Double,
+            targetPaceSPerKm: Double,
+            startedAt: Date
+        ) {
+            self.distanceM = distanceM
+            self.durationS = durationS
+            self.paceSPerKm = paceSPerKm
+            self.isPaused = isPaused
+            self.targetDistanceM = targetDistanceM
+            self.targetPaceSPerKm = targetPaceSPerKm
+            self.startedAt = startedAt
+        }
+    }
+
+    public var sessionId: String
+
+    public init(sessionId: String) {
+        self.sessionId = sessionId
+    }
+}
+
+@objc(RunActivityPlugin)
+public class RunActivityPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "RunActivityPlugin"
+    public let jsName = "RunActivity"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "start", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "update", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "end", returnType: CAPPluginReturnPromise),
+    ]
+
+    @objc func start(_ call: CAPPluginCall) {
+        if #available(iOS 16.1, *) {
+            let targetDist = call.getDouble("targetDistanceM") ?? 0
+            let targetPace = call.getDouble("targetPaceSPerKm") ?? 0
+            let startedAtMs = call.getDouble("startedAtMs") ?? Date().timeIntervalSince1970 * 1000
+            let startedAt = Date(timeIntervalSince1970: startedAtMs / 1000)
+            let sessionId = UUID().uuidString
+
+            let attributes = RunActivityAttributes(sessionId: sessionId)
+            let state = RunActivityAttributes.ContentState(
+                distanceM: 0,
+                durationS: 0,
+                paceSPerKm: 0,
+                isPaused: false,
+                targetDistanceM: targetDist,
+                targetPaceSPerKm: targetPace,
+                startedAt: startedAt
+            )
+
+            do {
+                if #available(iOS 16.2, *) {
+                    let content = ActivityContent(state: state, staleDate: nil)
+                    let activity = try Activity.request(
+                        attributes: attributes,
+                        content: content,
+                        pushType: nil
+                    )
+                    call.resolve(["sessionId": sessionId, "activityId": activity.id])
+                } else {
+                    let activity = try Activity.request(
+                        attributes: attributes,
+                        contentState: state,
+                        pushType: nil
+                    )
+                    call.resolve(["sessionId": sessionId, "activityId": activity.id])
+                }
+            } catch {
+                call.reject("Failed to start run activity: \(error.localizedDescription)")
+            }
+        } else {
+            call.resolve(["sessionId": "", "activityId": "", "supported": false])
+        }
+    }
+
+    @objc func update(_ call: CAPPluginCall) {
+        if #available(iOS 16.1, *) {
+            let distanceM = call.getDouble("distanceM") ?? 0
+            let durationS = call.getDouble("durationS") ?? 0
+            let paceSPerKm = call.getDouble("paceSPerKm") ?? 0
+            let isPaused = call.getBool("isPaused") ?? false
+
+            Task {
+                for activity in Activity<RunActivityAttributes>.activities {
+                    let prev: RunActivityAttributes.ContentState
+                    if #available(iOS 16.2, *) {
+                        prev = activity.content.state
+                    } else {
+                        prev = activity.contentState
+                    }
+                    let next = RunActivityAttributes.ContentState(
+                        distanceM: distanceM,
+                        durationS: durationS,
+                        paceSPerKm: paceSPerKm,
+                        isPaused: isPaused,
+                        targetDistanceM: prev.targetDistanceM,
+                        targetPaceSPerKm: prev.targetPaceSPerKm,
+                        startedAt: prev.startedAt
+                    )
+                    if #available(iOS 16.2, *) {
+                        await activity.update(ActivityContent(state: next, staleDate: nil))
+                    } else {
+                        await activity.update(using: next)
+                    }
+                }
+                call.resolve()
+            }
+        } else {
+            call.resolve()
+        }
+    }
+
+    @objc func end(_ call: CAPPluginCall) {
+        if #available(iOS 16.1, *) {
+            Task {
+                for activity in Activity<RunActivityAttributes>.activities {
+                    if #available(iOS 16.2, *) {
+                        let prev = activity.content.state
+                        let final = ActivityContent(state: prev, staleDate: Date().addingTimeInterval(2))
+                        await activity.end(final, dismissalPolicy: .after(Date().addingTimeInterval(2)))
+                    } else {
+                        await activity.end(dismissalPolicy: .immediate)
+                    }
+                }
+                call.resolve()
+            }
+        } else {
+            call.resolve()
         }
     }
 }

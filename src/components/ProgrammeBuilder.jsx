@@ -9,7 +9,7 @@ import LogPaymentModal, { checkPaymentNeeded } from "./coach/LogPaymentModal";
 import { detectPletnev, detectPoliquin } from "../utils/parserProgramme";
 import CountdownBlockCard from "./CountdownBlockCard";
 import { addBreadcrumb } from "../lib/sentry";
-import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { exportProgrammePDF } from "../utils/exportPDF";
@@ -60,7 +60,7 @@ function buildHTML(p) {
         // ermt = nombre de reps cible si l'exercice est un test RM
         // (1RM/2RM/3RM/5RM/8RM/10RM/15RM…). Vide si exo normal.
         return `
-        <div class="exercise-item" id="ex-${eid}"${ex.rmTest ? ` data-rmtest="${escAttr(String(ex.rmTest))}"` : ''}>
+        <div class="exercise-item" id="ex-${eid}"${ex.rmTest ? ` data-rmtest="${escAttr(String(ex.rmTest))}"` : ''}${ex.extra ? ' data-extra="1"' : ''}>
           <input id="en-${eid}" value="${escAttr(ex.name)}" />
           <input id="er-${eid}" value="${escAttr(ex.reps)}" />
           <input id="ech-${eid}" value="${escAttr(ex.charge || '')}" />
@@ -176,7 +176,7 @@ ${weeksHtml}
 // Quand rmTest est non-null, c'est un nombre = reps cibles du test
 // (= N dans NRM). L'athlete loggue le poids souleve + on calcule le
 // 1RM estime via Epley pour calibrer les charges programme suivantes.
-const newExercise = () => ({ id: uid(), name: "", reps: "", charge: "", tempo: "", rir: "", rest: "", clusterRest: "", group: "", vidUrl: "", rmTest: null });
+const newExercise = () => ({ id: uid(), name: "", reps: "", charge: "", tempo: "", rir: "", rest: "", clusterRest: "", group: "", vidUrl: "", rmTest: null, extra: false });
 const newSession = (n = 1) => ({ id: uid(), name: `Séance ${n}`, description: "", finisher: "", bonus: false, warmup: null, runs: [], fieldSessions: [], amraps: [], ergos: [], exercises: [newExercise()] });
 const newWarmupMovement = (name = "", spec = "") => ({ id: uid(), name, spec });
 const newWarmupCircuit = () => ({
@@ -556,6 +556,7 @@ function fromParsed(parsed) {
           clusterRest: e.clusterRest || "",
           group: e.group || "",
           vidUrl: e.vidUrl || "",
+          extra: !!e.extra,
         })),
       })),
     })),
@@ -1184,6 +1185,41 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
         <TextField label="Vidéo URL" value={ex.vidUrl} onChange={(v) => update("vidUrl", v)} placeholder="Auto-rempli si tu choisis depuis la liste" />
       </div>
 
+      {/* Toggle EXTRA — exo bonus / optionnel. L'athlète le voit avec un
+          style atténué + badge "EXTRA", peut le sauter sans casser la
+          validation de séance. Utile pour exos d'accessoire facultatifs. */}
+      <button
+        type="button"
+        onClick={() => update("extra", !ex.extra)}
+        title={ex.extra ? "Exo marqué optionnel — l'athlète peut le sauter" : "Marquer cet exo comme optionnel"}
+        style={{
+          marginTop: 8, padding: "8px 12px",
+          width: "100%",
+          background: ex.extra ? "rgba(167,139,250,0.08)" : "rgba(255,255,255,0.02)",
+          border: "1px dashed " + (ex.extra ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.12)"),
+          borderRadius: 10,
+          color: ex.extra ? "rgba(167,139,250,0.95)" : "rgba(255,255,255,0.4)",
+          fontSize: 10.5, fontWeight: 700, letterSpacing: 0.5,
+          cursor: "pointer", fontFamily: "inherit",
+          display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, textTransform: "uppercase",
+        }}
+      >
+        <span style={{
+          width: 14, height: 14, borderRadius: 4,
+          background: ex.extra ? "#a78bfa" : "transparent",
+          border: "1.5px solid " + (ex.extra ? "#a78bfa" : "rgba(255,255,255,0.3)"),
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          {ex.extra && (
+            <svg viewBox="0 0 12 12" width={8} height={8} fill="none" stroke="#0a0a0a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="2 6 5 9 10 3" />
+            </svg>
+          )}
+        </span>
+        {ex.extra ? "Exo extra · optionnel pour l'athlète" : "Marquer extra (optionnel)"}
+      </button>
+
       {/* Indicateur source vidéo + CTA remplacer si fallback externe */}
       {videoSource !== "none" && !ex.vidUrl && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, padding: "6px 10px", background: videoSource === "fallback" ? "rgba(255,165,0,0.06)" : "rgba(2,209,186,0.06)", border: "1px solid " + (videoSource === "fallback" ? "rgba(255,165,0,0.2)" : "rgba(2,209,186,0.2)"), borderRadius: 8, fontSize: 11 }}>
@@ -1250,7 +1286,27 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
   );
 }
 
-function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, collapseSignal }) {
+// WeekDroppable — zone de drop pour les séances cross-week. id format
+// "week-drop-N" décodé dans le handleDragEnd root pour insérer la séance
+// draguée à la fin du tableau sessions de cette semaine. Visuel feedback
+// quand un drag survole : bordure violet pâle + bg léger.
+function WeekDroppable({ weekIdx, children }) {
+  const { isOver, setNodeRef } = useDroppable({ id: `week-drop-${weekIdx}` });
+  return (
+    <div ref={setNodeRef} style={{
+      borderRadius: 14,
+      transition: "background 0.15s, outline 0.15s",
+      outline: isOver ? "2px dashed rgba(167,139,250,0.55)" : "none",
+      outlineOffset: 4,
+      background: isOver ? "rgba(167,139,250,0.04)" : "transparent",
+      minHeight: 60,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function SortableSession({ session, idx, total, weekIdx, weekNames, onCopyToWeek, onUpdate, onRemove, onMove, onDuplicate, collapseSignal }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: session.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -1262,6 +1318,7 @@ function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDu
     <div ref={setNodeRef} style={style}>
       <SessionPanel
         session={session} idx={idx} total={total}
+        weekIdx={weekIdx} weekNames={weekNames} onCopyToWeek={onCopyToWeek}
         collapseSignal={collapseSignal}
         onUpdate={onUpdate} onRemove={onRemove} onMove={onMove} onDuplicate={onDuplicate}
         dragHandleProps={{ ...attributes, ...listeners }}
@@ -1270,12 +1327,15 @@ function SortableSession({ session, idx, total, onUpdate, onRemove, onMove, onDu
   );
 }
 
-function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps, collapseSignal }) {
+function SessionPanel({ session, idx, total, weekIdx, weekNames, onCopyToWeek, onUpdate, onRemove, onMove, onDuplicate, dragHandleProps, collapseSignal }) {
   const t = useT();
   const update = (k, v) => onUpdate({ ...session, [k]: v });
   // Repli/dépli : une séance déjà remplie démarre repliée pour que la liste
   // des séances reste scannable (le coach déplie celle qu'il veut éditer).
   const [collapsed, setCollapsed] = useState((session.exercises || []).length > 0);
+  // Menu "Copier vers semaine X" — remplace le drag-drop cross-week qui ne
+  // peut pas marcher avec dnd-kit (1 DndContext par semaine, pas de drag entre).
+  const [copyMenuOpen, setCopyMenuOpen] = useState(false);
   // Réagit au bouton « Tout replier / déplier ».
   useEffect(() => {
     if (collapseSignal && collapseSignal.val !== null) setCollapsed(collapseSignal.val);
@@ -1434,9 +1494,50 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
         {!isMobile && idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre la séance"
           style={{ padding: "6px 8px", background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
         >↓</button>}
-        <button type="button" onClick={onDuplicate} title="Dupliquer la séance"
+        <button type="button" onClick={onDuplicate} title="Dupliquer la séance dans la même semaine"
           style={{ padding: "6px 10px", background: G_DIM, border: "1px solid rgba(2,209,186,0.25)", borderRadius: 8, color: G, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
         >⎘</button>
+        {Array.isArray(weekNames) && weekNames.length > 1 && onCopyToWeek && (
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button type="button"
+              onClick={() => setCopyMenuOpen((v) => !v)}
+              title="Copier cette séance vers une autre semaine"
+              style={{ padding: "6px 10px", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 8, color: "#a78bfa", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+              </svg>
+              Sem
+            </button>
+            {copyMenuOpen && (
+              <>
+                <div onClick={() => setCopyMenuOpen(false)}
+                  style={{ position: "fixed", inset: 0, zIndex: 90 }} />
+                <div style={{
+                  position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 100,
+                  minWidth: 180, padding: 6,
+                  background: "#0a0a0a", border: "1px solid rgba(167,139,250,0.3)",
+                  borderRadius: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                }}>
+                  <div style={{ padding: "6px 10px", fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: "rgba(167,139,250,0.7)", textTransform: "uppercase" }}>
+                    Copier vers
+                  </div>
+                  {weekNames.map((wn, wi) => (
+                    wi === weekIdx ? null : (
+                      <button key={wi} type="button"
+                        onClick={() => { onCopyToWeek(wi); setCopyMenuOpen(false); }}
+                        style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 10px", background: "transparent", border: "none", borderRadius: 6, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(167,139,250,0.12)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        {wn}
+                      </button>
+                    )
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
         <button
           type="button"
           onClick={onRemove}
@@ -2049,7 +2150,7 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
   );
 }
 
-function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove, collapseSignal }) {
+function SortableWeek({ week, weekIdx, totalWeeks, weekNames, onCopySessionToWeek, onUpdate, onRemove, onDuplicate, onMove, collapseSignal }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: week.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -2060,6 +2161,7 @@ function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplica
     <div ref={setNodeRef} style={style}>
       <WeekPanel
         week={week} weekIdx={weekIdx} totalWeeks={totalWeeks}
+        weekNames={weekNames} onCopySessionToWeek={onCopySessionToWeek}
         collapseSignal={collapseSignal}
         onUpdate={onUpdate} onRemove={onRemove} onDuplicate={onDuplicate} onMove={onMove}
         dragHandleProps={{ ...attributes, ...listeners }}
@@ -2068,7 +2170,7 @@ function SortableWeek({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplica
   );
 }
 
-function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate, onMove, dragHandleProps, collapseSignal }) {
+function WeekPanel({ week, weekIdx, totalWeeks, weekNames, onCopySessionToWeek, onUpdate, onRemove, onDuplicate, onMove, dragHandleProps, collapseSignal }) {
   const update = (k, v) => onUpdate({ ...week, [k]: v });
   const isMobile = useIsMobile();
   const sensors = useDragSensors();
@@ -2192,22 +2294,19 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
       })()}
 
       {!collapsed && (<>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={(event) => {
-          const { active, over } = event;
-          if (!over || active.id === over.id) return;
-          const oldIdx = week.sessions.findIndex((s) => s.id === active.id);
-          const newIdx = week.sessions.findIndex((s) => s.id === over.id);
-          if (oldIdx < 0 || newIdx < 0) return;
-          onUpdate({ ...week, sessions: arrayMove(week.sessions, oldIdx, newIdx) });
-        }}
-      >
+      {/* Plus de DndContext per-week — c'est le DndContext root (Builder) qui
+          gère désormais TOUS les drags : weeks ET sessions cross-week. On
+          garde juste un SortableContext local pour les sessions de cette
+          semaine. Le wrapper WeekDroppable enveloppe la liste pour servir
+          de zone de drop quand la semaine est vide. */}
+      <WeekDroppable weekIdx={weekIdx}>
         <SortableContext items={(week.sessions || []).map((s) => s.id)} strategy={verticalListSortingStrategy}>
           {(week.sessions || []).map((s, i) => (
             <SortableSession key={s.id} session={s} idx={i} total={week.sessions.length}
               collapseSignal={collapseSignal}
+              weekIdx={weekIdx}
+              weekNames={weekNames}
+              onCopyToWeek={(toIdx) => onCopySessionToWeek && onCopySessionToWeek(i, toIdx)}
               onUpdate={(ns) => updateSession(i, ns)}
               onRemove={() => removeSession(i)}
               onMove={(dir) => moveSession(i, dir)}
@@ -2215,7 +2314,7 @@ function WeekPanel({ week, weekIdx, totalWeeks, onUpdate, onRemove, onDuplicate,
             />
           ))}
         </SortableContext>
-      </DndContext>
+      </WeekDroppable>
       <button
         type="button"
         onClick={addSession}
@@ -2782,6 +2881,26 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
 
   const update = (k, v) => setProgramme((p) => ({ ...p, [k]: v }));
   const updateWeek = (idx, w) => setProgramme((p) => ({ ...p, weeks: p.weeks.map((x, i) => i === idx ? w : x) }));
+  // Copie une séance d'une semaine source vers une semaine cible (avec
+  // nouveaux UUIDs sur la séance + ses exos pour éviter les collisions
+  // d'id qui casseraient le drag-drop intra-week ensuite).
+  const copySessionToWeek = (fromWeekIdx, sIdx, toWeekIdx) => {
+    setProgramme((p) => {
+      const sess = p.weeks?.[fromWeekIdx]?.sessions?.[sIdx];
+      if (!sess) return p;
+      const dup = {
+        ...JSON.parse(JSON.stringify(sess)),
+        id: uid(),
+      };
+      dup.exercises = (dup.exercises || []).map((e) => ({ ...e, id: uid() }));
+      return {
+        ...p,
+        weeks: p.weeks.map((w, wi) => wi === toWeekIdx
+          ? { ...w, sessions: [...(w.sessions || []), dup] }
+          : w),
+      };
+    });
+  };
   const addWeek = () => setProgramme((p) => ({ ...p, weeks: [...p.weeks, newWeek(p.weeks.length + 1)] }));
   const duplicateWeek = (idx) => setProgramme((p) => {
     const orig = p.weeks[idx];
@@ -3433,10 +3552,54 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               const { active, over } = event;
               if (!over || active.id === over.id) return;
               setProgramme((p) => {
-                const oldIdx = p.weeks.findIndex((w) => w.id === active.id);
-                const newIdx = p.weeks.findIndex((w) => w.id === over.id);
-                if (oldIdx < 0 || newIdx < 0) return p;
-                return { ...p, weeks: arrayMove(p.weeks, oldIdx, newIdx) };
+                // Cas 1 : drag d'une SEMAINE → réordonne la liste de semaines.
+                const wOld = p.weeks.findIndex((w) => w.id === active.id);
+                if (wOld >= 0) {
+                  const wNew = p.weeks.findIndex((w) => w.id === over.id);
+                  if (wNew < 0) return p;
+                  return { ...p, weeks: arrayMove(p.weeks, wOld, wNew) };
+                }
+                // Cas 2 : drag d'une SÉANCE — trouve sa semaine source.
+                let srcW = -1, srcS = -1;
+                for (let wi = 0; wi < p.weeks.length; wi++) {
+                  const si = (p.weeks[wi].sessions || []).findIndex((s) => s.id === active.id);
+                  if (si >= 0) { srcW = wi; srcS = si; break; }
+                }
+                if (srcW < 0) return p;
+                // Trouve la cible : soit une autre séance (= insertion), soit
+                // un Droppable de semaine vide (id "week-drop-N").
+                let tgtW = -1, tgtS = -1;
+                if (typeof over.id === "string" && over.id.startsWith("week-drop-")) {
+                  tgtW = parseInt(over.id.slice("week-drop-".length), 10);
+                  tgtS = (p.weeks[tgtW]?.sessions || []).length;
+                } else {
+                  for (let wi = 0; wi < p.weeks.length; wi++) {
+                    const si = (p.weeks[wi].sessions || []).findIndex((s) => s.id === over.id);
+                    if (si >= 0) { tgtW = wi; tgtS = si; break; }
+                  }
+                }
+                if (tgtW < 0) return p;
+                if (srcW === tgtW) {
+                  // Même semaine → arrayMove dans son tableau sessions.
+                  const newWeeks = [...p.weeks];
+                  newWeeks[srcW] = { ...newWeeks[srcW], sessions: arrayMove(newWeeks[srcW].sessions, srcS, tgtS) };
+                  return { ...p, weeks: newWeeks };
+                }
+                // Cross-week → on retire de la source, on insère dans la cible.
+                const movingSess = p.weeks[srcW].sessions[srcS];
+                const newWeeks = p.weeks.map((w, wi) => {
+                  if (wi === srcW) {
+                    return { ...w, sessions: w.sessions.filter((_, i) => i !== srcS) };
+                  }
+                  if (wi === tgtW) {
+                    const arr = [...(w.sessions || [])];
+                    const insertAt = Math.min(tgtS, arr.length);
+                    arr.splice(insertAt, 0, movingSess);
+                    return { ...w, sessions: arr };
+                  }
+                  return w;
+                });
+                return { ...p, weeks: newWeeks };
               });
             }}
           >
@@ -3447,6 +3610,8 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
                   week={w}
                   weekIdx={i}
                   totalWeeks={programme.weeks.length}
+                  weekNames={(programme.weeks || []).map((wk, wi) => wk.name || `Semaine ${wi + 1}`)}
+                  onCopySessionToWeek={(sIdx, toIdx) => copySessionToWeek(i, sIdx, toIdx)}
                   collapseSignal={collapseSignal}
                   onUpdate={(nw) => updateWeek(i, nw)}
                   onRemove={() => removeWeek(i)}

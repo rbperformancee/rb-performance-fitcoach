@@ -6,6 +6,8 @@ import { ExerciseCard } from "./ExerciseCard";
 import { findVideo } from "../data/exerciseVideos";
 import { findFallbackVideo } from "../data/fallbackVideos";
 import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
+import { detectPoliquin } from "../utils/parserProgramme";
+import { isNative as isNativeApp } from "../lib/native";
 import FieldSessionCard from "./FieldSessionCard";
 import { uploadChatPhoto } from "../lib/chatMedia";
 import SessionOptionsModal from "./SessionOptionsModal";
@@ -1103,8 +1105,16 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     }, 0);
   }, 0);
   const globalPct = totalSessions > 0 ? Math.min(Math.round((doneSessions / totalSessions) * 100), 100) : 0;
-  const totalEx = currentSession?.exercises?.length || 0;
-  const doneEx = (currentSession?.exercises || []).filter((_, ei) => (getHistory(activeWeek, activeSession, ei) || []).length > 0).length;
+  // totalEx exclut les exos marqués extra (optionnels) du dénominateur de
+  // progression. Si athlète fait tous les exos obligatoires + 0 extras, la
+  // séance est à 100% (et donc validable). Faire un extra est un bonus mais
+  // ne pas le faire n'empêche pas la validation.
+  const nonExtraExos = (currentSession?.exercises || []).filter((ex) => !ex.extra);
+  const totalEx = nonExtraExos.length;
+  const doneEx = (currentSession?.exercises || [])
+    .map((ex, ei) => ({ ex, ei }))
+    .filter(({ ex, ei }) => !ex.extra && (getHistory(activeWeek, activeSession, ei) || []).length > 0)
+    .length;
   const sessionPct = totalEx > 0 ? Math.round((doneEx / totalEx) * 100) : 0;
 
   const volumeTotal = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
@@ -1542,8 +1552,14 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             // Une seance n est marquee "DONE" QUE si validee explicitement (localStorage / Supabase),
             // jamais juste parce qu on la depasse en navigation.
             const isDone = isActive ? sessionValidee : isSessionValidee(activeWeek, i);
-            const sexs = s.exercises?.length || 0;
-            const doneS = (s.exercises || []).filter((_, ei) => (getHistory(activeWeek, i, ei) || []).length > 0).length;
+            // Idem que ci-dessus : on exclut les extras du dénominateur pour
+            // que la progression atteigne 100% sans avoir à faire les bonus.
+            const nonExtras = (s.exercises || []).filter((ex) => !ex.extra);
+            const sexs = nonExtras.length;
+            const doneS = (s.exercises || [])
+              .map((ex, ei) => ({ ex, ei }))
+              .filter(({ ex, ei }) => !ex.extra && (getHistory(activeWeek, i, ei) || []).length > 0)
+              .length;
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
             return (
               <div key={i} data-session-idx={i} onClick={() => setActiveSession(i)} style={{ flexShrink: 0, width: 128, padding: "16px 14px", borderRadius: 20, cursor: "pointer", background: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)", border: isActive ? `2px solid ${G}` : "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
@@ -1688,19 +1704,35 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
               if (r && String(r).trim()) { supersetRest = r; break; }
             }
 
+            // Méthode Poliquin — détection au niveau du bloc : si TOUS les
+            // membres du superset ont un tempo X (eXplosive concentric =
+            // signature Charles Poliquin), on affiche un badge rose dédié et
+            // un mini header expliquant la méthode. Sinon, header standard.
+            const allPoliquin = block.members.length >= 2
+              && block.members.every(({ ex }) => detectPoliquin(ex.tempo));
             return (
-              <div key={"sset-" + bi} style={{ marginBottom: 10, border: "1px solid rgba(2,209,186,0.18)", borderRadius: 18, padding: "8px 8px 0", background: "rgba(2,209,186,0.025)" }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 7, padding: "5px 8px 9px" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase", color: "rgba(2,209,186,0.85)" }}>
+              <div key={"sset-" + bi} style={{ marginBottom: 10, border: allPoliquin ? "1px solid rgba(244,114,182,0.28)" : "1px solid rgba(2,209,186,0.18)", borderRadius: 18, padding: "8px 8px 0", background: allPoliquin ? "rgba(244,114,182,0.035)" : "rgba(2,209,186,0.025)" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 7, padding: "5px 8px 9px", flexWrap: "wrap" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 9, fontWeight: 800, letterSpacing: "1.5px", textTransform: "uppercase", color: allPoliquin ? "rgba(244,114,182,0.9)" : "rgba(2,209,186,0.85)" }}>
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" style={{ flexShrink: 0 }}>
                       <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
                     </svg>
                     {supersetTypeLabel(block.members.length)} · {block.key}
                   </span>
+                  {allPoliquin && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 7px", borderRadius: 6, background: "rgba(244,114,182,0.14)", border: "1px solid rgba(244,114,182,0.4)", fontSize: 9, fontWeight: 800, letterSpacing: 0.8, color: "#f472b6", textTransform: "uppercase" }}>
+                      Méthode Poliquin
+                    </span>
+                  )}
                   <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
                     — une série de chaque, sans repos
-                    {supersetRest ? <> · puis <strong style={{ color: "rgba(2,209,186,0.9)" }}>⏱ {supersetRest}</strong> avant le tour suivant</> : null}
+                    {supersetRest ? <> · puis <strong style={{ color: allPoliquin ? "rgba(244,114,182,0.9)" : "rgba(2,209,186,0.9)" }}>⏱ {supersetRest}</strong> avant le tour suivant</> : null}
                   </span>
+                  {allPoliquin && (
+                    <div style={{ width: "100%", fontSize: 10.5, color: "rgba(244,114,182,0.7)", lineHeight: 1.4, marginTop: 4, fontStyle: "italic" }}>
+                      Tempo eXplosive : la phase concentrique se fait <strong>aussi vite que possible</strong>. Excentrique contrôlée selon le tempo.
+                    </div>
+                  )}
                 </div>
                 {block.members.map(({ ex, index }, mi) =>
                   // Dernier membre porte le repos effectif du superset (lu
@@ -1815,6 +1847,47 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                     </span>
                   )}
                 </div>
+                {/* CTA "▶ Lancer en GPS" — bypass le tour par MovePage pour
+                    les runs continus/distance. Pour HIIT time-based, le timer
+                    interval (en dessous) reste la meilleure UX. Dispatch un
+                    CustomEvent que MovePage + App.jsx ecoutent : tab switch +
+                    ouverture RunSession avec target pre-remplie. */}
+                {!isTimeBased && isNativeApp() && (
+                  <button
+                    onClick={() => {
+                      try {
+                        const target = {
+                          ...r,
+                          programmeWeek: activeWeek + 1,
+                          sessionIndex: activeSession,
+                          runIndex: ri,
+                        };
+                        window.dispatchEvent(new CustomEvent("rb:launch-run-gps", { detail: target }));
+                      } catch (_) {}
+                    }}
+                    style={{
+                      marginTop: 10, width: "100%",
+                      padding: "12px 16px",
+                      background: "linear-gradient(135deg, #02d1ba 0%, #0891b2 100%)",
+                      border: "none",
+                      borderRadius: 12,
+                      color: "#000",
+                      fontSize: 13, fontWeight: 800,
+                      letterSpacing: 0.3,
+                      cursor: "pointer",
+                      boxShadow: "0 8px 22px rgba(2,209,186,0.25)",
+                      fontFamily: "inherit",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width={15} height={15} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Lancer ce run en GPS
+                    <span style={{ fontSize: 16, lineHeight: 1, opacity: 0.7 }}>→</span>
+                  </button>
+                )}
                 {/* Timer interval lancable pour HIIT time-based.
                     storageKey unique par semaine+session+rundIdx pour isoler
                     les etats si plusieurs runs dans la meme session. */}

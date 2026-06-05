@@ -350,8 +350,15 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
     try { (await hrUnsubRef.current)?.(); } catch (_) {}
     hrUnsubRef.current = null;
 
-    // Sauvegarde Supabase
-    if (client?.id && s && s.distanceM > 50) {
+    // Sauvegarde Supabase. Toast explicite quand on saute la save (course
+    // trop courte ou pas de client) → user comprend pourquoi rien n'apparaît
+    // dans l'historique. Seuil 30m (au lieu de 50m) car test sur place peut
+    // donner 35-45m de drift GPS.
+    if (!client?.id) {
+      toast.error("Pas de compte client — course non sauvegardée");
+    } else if (!s || s.distanceM <= 30) {
+      toast.error(`Course trop courte (${Math.round(s?.distanceM || 0)}m) — pas sauvegardée`);
+    } else if (client?.id && s && s.distanceM > 30) {
       try {
         const distanceKm = Number((s.distanceM / 1000).toFixed(2));
         const durationS = Math.round(s.durationS || 0);
@@ -426,8 +433,9 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
       }
     }
 
-    // Phase 3 : HealthKit workout save (natif iOS uniquement, best effort)
-    if (isNative() && s && s.distanceM > 50) {
+    // Phase 3 : HealthKit workout save (natif iOS uniquement, best effort).
+    // Même seuil 30m que la save Supabase.
+    if (isNative() && s && s.distanceM > 30) {
       try {
         await requestWorkoutPermission();
         await saveRunWorkout({
@@ -553,7 +561,16 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
             </>
           ) : (
             <>
-              <div style={S.iconBig}>🏃‍♂️</div>
+              {/* Icône SVG runner (plus de 🏃‍♂️ emoji). Look minimaliste,
+                  premium, cohérent avec le reste des icônes du run screen. */}
+              <div style={{ marginBottom: 12 }}>
+                <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke={G} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="13" cy="4" r="2" />
+                  <path d="M14.5 17.5L18 19.5 21 16" />
+                  <path d="M8 22l2.5-3 2-4 1.5-3.5 4 1.5" />
+                  <path d="M9 12l-2 1.5L4 11" />
+                </svg>
+              </div>
               <div style={S.idleTitle}>Course<span style={{ color: G }}>.</span></div>
               <div style={S.idleSub}>
                 Distance, allure et splits trackés en temps réel.
@@ -573,15 +590,35 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   if (phase === "done" && summary) {
     return (
       <div style={S.wrap}>
-        <div style={S.idleInner}>
+        {/* Done screen — scrollable depuis le haut, padding safe-area bas pour
+            que les boutons Partager / Retour restent toujours atteignables
+            sur petit écran (iPhone SE) même avec verdict + splits + photo. */}
+        <div style={{
+          ...S.idleInner,
+          justifyContent: "flex-start",
+          padding: "calc(env(safe-area-inset-top, 0px) + 28px) 22px calc(env(safe-area-inset-bottom, 0px) + 32px)",
+        }}>
           <div style={{ fontSize: 11, color: G, letterSpacing: "3px", textTransform: "uppercase", fontWeight: 800, marginBottom: 14 }}>
             Course terminée
           </div>
+          {/* HERO triple — Distance + Allure + Durée. Allure passe en grand
+              (typo 56px) parce qu'avant en stat box 24px elle était noyée. */}
           <div style={S.bigStat}>{formatDistance(summary.distanceM)}</div>
           <div style={S.bigStatLabel}>Distance</div>
-          <div style={S.statsRow}>
-            <Stat label="Durée" value={formatDuration(summary.durationS)} />
-            <Stat label="Allure" value={`${formatPace(summary.paceSPerKm)} /km`} />
+          <div style={{ width: "100%", maxWidth: 420, marginTop: 24, display: "flex", gap: 14, justifyContent: "center", alignItems: "flex-end" }}>
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: "-1.5px", lineHeight: 1, color: G }}>
+                {formatPace(summary.paceSPerKm)}
+              </div>
+              <div style={{ ...S.bigStatLabel, marginTop: 6 }}>Allure /km</div>
+            </div>
+            <div style={{ width: 1, height: 40, background: "rgba(255,255,255,0.08)", alignSelf: "center" }} />
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: "-1.5px", lineHeight: 1, color: "#fff" }}>
+                {formatDuration(summary.durationS)}
+              </div>
+              <div style={{ ...S.bigStatLabel, marginTop: 6 }}>Durée</div>
+            </div>
           </div>
           {verdict && (
             <div style={{ ...S.verdictBox, borderColor: verdict.status === "ok" ? "rgba(2,209,186,0.3)" : verdict.status === "over" ? "rgba(2,209,186,0.3)" : "rgba(251,191,36,0.3)", background: verdict.status === "ok" || verdict.status === "over" ? "rgba(2,209,186,0.06)" : "rgba(251,191,36,0.06)" }}>
@@ -631,16 +668,54 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
               ))}
             </div>
           )}
-          {/* Photo finish — Camera native iOS / web file */}
+          {/* Photo finish — Camera native iOS / web file. Style premium :
+              icône SVG appareil photo, label clair, indique état si déjà pris. */}
           <button style={S.photoFinishBtn} onClick={takeFinishPhoto}>
-            {finishPhoto ? "🔄 Reprendre la photo" : "📸 Selfie finish"}
+            <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14.5 4l2 2H20a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h3.5l2-2h5z" />
+              <circle cx="12" cy="13" r="3.5" />
+            </svg>
+            {finishPhoto ? "Reprendre le selfie" : "Selfie finish"}
           </button>
-          <div style={{ display: "flex", gap: 12, marginTop: 16, width: "100%", maxWidth: 420 }}>
+          {/* Copier stats format texte — pour Insta story où l'athlète colle
+              juste les stats sur sa propre image (sans passer par l'éditeur
+              Strava-style RunShareStory). 1 tap = clipboard ready. */}
+          <button
+            style={{
+              ...S.photoFinishBtn,
+              marginTop: 10,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px dashed rgba(255,255,255,0.18)",
+              color: "rgba(255,255,255,0.85)",
+            }}
+            onClick={async () => {
+              const km = (summary.distanceM / 1000).toFixed(2);
+              const dur = formatDuration(summary.durationS);
+              const pace = formatPace(summary.paceSPerKm);
+              const txt = `🏃 ${km} km · ${dur} · ${pace}/km`;
+              try {
+                await navigator.clipboard.writeText(txt);
+                haptic.success();
+                toast.success("Stats copiées — colle sur ta story");
+              } catch {
+                // Fallback : prompt() pour iOS WKWebView sans HTTPS context
+                try { window.prompt("Copie tes stats :", txt); } catch (_) {}
+              }
+            }}
+          >
+            <svg viewBox="0 0 24 24" width={17} height={17} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>
+            Copier les stats (texte)
+          </button>
+          {/* Share + Retour : SVG icons, full-width sur mobile, padding garanti */}
+          <div style={{ display: "flex", gap: 10, marginTop: 14, width: "100%", maxWidth: 420 }}>
             <button
-              style={{ ...S.bigBtn(G), flex: 1 }}
+              style={{ ...S.bigBtn(G), flex: 1, minWidth: 0, padding: "16px 14px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               onClick={() => { haptic.medium(); setShowShare(true); }}
             >
-              <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#050505" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 7, verticalAlign: "middle" }}>
+              <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#050505" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 3v13" />
                 <path d="M7 8l5-5 5 5" />
                 <path d="M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5" />
@@ -648,9 +723,13 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
               Partager
             </button>
             <button
-              style={{ ...S.bigBtn("rgba(255,255,255,0.1)"), color: "#fff", flex: 1 }}
+              style={{ ...S.bigBtn("rgba(255,255,255,0.08)"), color: "#fff", flex: 1, minWidth: 0, padding: "16px 14px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, border: "1px solid rgba(255,255,255,0.12)" }}
               onClick={onClose}
             >
+              <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#fff" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
               Retour
             </button>
           </div>
@@ -734,13 +813,31 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
           </div>
         )}
         {!splits.length && <div style={{ flex: 1 }} />}
-        {/* Controls */}
+        {/* Controls — icônes SVG (plus de ⏸/⏹ emoji style "vieux") */}
         <div style={{ display: "flex", gap: 10, marginTop: 16, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
           <button style={S.controlBtn(phase === "paused" ? G : "rgba(255,255,255,0.1)")} onClick={togglePause}>
-            {phase === "paused" ? "▶ Reprendre" : "⏸ Pause"}
+            {phase === "paused" ? (
+              <>
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" style={{ marginRight: 8, verticalAlign: "middle" }} aria-hidden="true">
+                  <polygon points="6,4 20,12 6,20" />
+                </svg>
+                Reprendre
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" style={{ marginRight: 8, verticalAlign: "middle" }} aria-hidden="true">
+                  <rect x="6" y="4" width="4" height="16" rx="1.5" />
+                  <rect x="14" y="4" width="4" height="16" rx="1.5" />
+                </svg>
+                Pause
+              </>
+            )}
           </button>
           <button style={S.controlBtn(RED, true)} onClick={stop}>
-            ⏹ Stop
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" style={{ marginRight: 8, verticalAlign: "middle" }} aria-hidden="true">
+              <rect x="5" y="5" width="14" height="14" rx="2" />
+            </svg>
+            Stop
           </button>
         </div>
       </div>
@@ -1027,12 +1124,13 @@ const S = {
   photoFinishBtn: {
     width: "100%", maxWidth: 420,
     marginTop: 18,
-    padding: "12px 24px",
-    background: "rgba(255,255,255,0.05)",
-    color: "#fff",
-    border: "1px solid rgba(255,255,255,0.12)",
+    padding: "14px 20px",
+    background: "rgba(2,209,186,0.06)",
+    color: "rgba(2,209,186,0.95)",
+    border: "1px dashed rgba(2,209,186,0.35)",
     borderRadius: 14,
     fontSize: 13, fontWeight: 800, letterSpacing: 0.4,
     cursor: "pointer", fontFamily: "inherit",
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 9,
   },
 };

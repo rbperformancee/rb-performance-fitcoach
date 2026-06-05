@@ -6,7 +6,7 @@ import haptic from "../lib/haptic";
 import { useT, getLocale } from "../lib/i18n";
 import { findVideo } from "../data/exerciseVideos";
 import { findFallbackVideo } from "../data/fallbackVideos";
-import { detectPletnev } from "../utils/parserProgramme";
+import { detectPletnev, detectPoliquin } from "../utils/parserProgramme";
 
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
@@ -449,12 +449,29 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const [resetKey, setResetKey] = useState(0);
   // Hydrate completedSetsRef depuis localStorage AVANT doneCount — sur iOS qui
   // tue le JS thread, on retrouve les poids tapés et pas juste un compteur.
+  // Hydrate completedSetsRef depuis localStorage. Si vide, on tente le cloud
+  // (entrée du jour persistée par saveLog) — couvre le cas où l'athlète a
+  // validé des séries puis l'app a été tuée/réinstallée → localStorage perdu
+  // mais les sets restent dans Supabase grâce au save par-série (ci-dessous).
   const completedSetsRef = useRef((() => {
     try {
       const raw = localStorage.getItem(storageDataKey);
       const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
-    } catch { return []; }
+      if (Array.isArray(arr) && arr.length > 0) return arr;
+    } catch {}
+    // Fallback cloud : on regarde si une entrée d'AUJOURD'HUI existe pour cet
+    // exo dans l'historique (= persistée par saveLog précédent). Si oui, on
+    // restaure les sets pour repartir d'où l'athlète s'est arrêté.
+    try {
+      const hist = typeof getCrossWeekHistory === "function"
+        ? getCrossWeekHistory(sessionIdx, exIdx)
+        : (getHistory ? getHistory(weekIdx, sessionIdx, exIdx) : []);
+      const todayEntry = (hist || []).find((h) => h?.date === today);
+      if (todayEntry && Array.isArray(todayEntry.sets) && todayEntry.sets.length > 0) {
+        return todayEntry.sets.map((s, i) => ({ weight: s.weight, reps: s.reps, index: i }));
+      }
+    } catch {}
+    return [];
   })());
   const [doneCount, setDoneCount] = useState(() => {
     // Source de vérité = la longueur de completedSetsRef (les vraies données),
@@ -536,10 +553,16 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
       localStorage.setItem(storageKey, String(n));
       localStorage.setItem(storageDataKey, JSON.stringify(completedSetsRef.current));
     } catch {}
+    // CLOUD SAVE : on persiste à CHAQUE série validée, pas seulement à la
+    // dernière. Sans ça, un athlète qui fait 2/3 puis quitte (ou se fait
+    // tuer l'app par iOS) perd tout au retour car localStorage WKWebView
+    // n'est pas durable face à un cold restart. Avec le save par-série,
+    // le hydrate cloud (cf completedSetsRef initializer ci-dessus) restaure
+    // les sets validés depuis Supabase.
+    const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
+    saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n - 1].reps, completedSetsRef.current, ex.name);
     haptic.medium(); // Set valide
     if (n >= setsCount) {
-      const avg = completedSetsRef.current.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0) / n;
-      saveLog(weekIdx, sessionIdx, exIdx, avg, completedSetsRef.current[n - 1].reps, completedSetsRef.current, ex.name);
       haptic.success(); // Exercice termine
       // Dernière série faite → le repos annonce l'exercice suivant.
       if (restSecs) setTimeout(() => restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets: null }), 600);
@@ -583,6 +606,12 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                       {ex.rmTest}RM
                     </span>
                   )}
+                  {ex.extra && (
+                    <span title="Exo optionnel — le coach l'a marqué extra, tu peux le sauter sans bloquer la validation."
+                      style={{ fontSize: 8.5, fontWeight: 800, color: "#a78bfa", background: "rgba(167,139,250,0.14)", border: "1px solid rgba(167,139,250,0.4)", padding: "2px 7px", borderRadius: 100, letterSpacing: 0.6, textTransform: "uppercase" }}>
+                      Extra
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", marginTop: 3 }}>
                   {chipsReps}
@@ -599,6 +628,19 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                         style={{ cursor: "pointer", borderBottom: "1px dotted rgba(255,255,255,0.25)" }}
                         title="Voir l'explication du tempo"
                       >{ex.tempo}</span>
+                      {/* Mini-badge Poliquin si tempo X → signal visuel rapide
+                          que c'est une rep explosive (signature Charles Poliquin). */}
+                      {(() => {
+                        const pq = detectPoliquin(ex.tempo);
+                        return pq ? (
+                          <span
+                            title={`Méthode Poliquin — ${pq.tutPerRep}s par rep · concentrique explosive`}
+                            style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 5, background: "rgba(244,114,182,0.14)", border: "1px solid rgba(244,114,182,0.4)", fontSize: 8.5, fontWeight: 800, letterSpacing: 0.6, color: "#f472b6", textTransform: "uppercase", verticalAlign: "1px" }}
+                          >
+                            Poliquin
+                          </span>
+                        ) : null;
+                      })()}
                     </>
                   )}
                   {ex.rest ? ` · ⏱ ${ex.rest}` : ""}
@@ -725,6 +767,15 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                       <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
                     </svg>
                     PLETNEV · {pletnev.rounds} round{pletnev.rounds > 1 ? "s" : ""}
+                  </span>
+                )}
+                {ex.extra && (
+                  <span title="Exo optionnel — le coach l'a marqué extra, tu peux le sauter sans bloquer la validation."
+                    style={{ fontSize: 11, fontWeight: 800, color: "#a78bfa", background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.4)", padding: "5px 12px", borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 5, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                    </svg>
+                    Extra · optionnel
                   </span>
                 )}
                 {chipsReps && <span style={{ fontSize: 11, color: "rgba(2,209,186,0.8)", background: "rgba(2,209,186,0.08)", padding: "5px 12px", borderRadius: 100, fontWeight: 600 }}>{chipsReps}</span>}

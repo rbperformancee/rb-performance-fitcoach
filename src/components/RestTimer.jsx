@@ -569,6 +569,23 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
         ))}
       </div>
 
+      {/* Warning silent mode iOS — la vraie raison du "pas de sonnerie" hors
+          app. Apple ne laisse pas bypass le switch silencieux pour des notifs
+          locales sauf entitlement Critical Alerts (médical/urgence). On le
+          dit clairement à l'athlète plutôt que de faire semblant. */}
+      {isNative() && (
+        <div style={{
+          marginBottom: 14, padding: "8px 14px",
+          background: "rgba(251,191,36,0.06)",
+          border: "1px solid rgba(251,191,36,0.22)",
+          borderRadius: 10,
+          fontSize: 10.5, color: "rgba(251,191,36,0.85)",
+          textAlign: "center", maxWidth: 320, lineHeight: 1.5,
+        }}>
+          📵 En mode silencieux → pas de sonnerie hors app, juste vibration. Désactive le silencieux pour entendre la fin du repos.
+        </div>
+      )}
+
       {/* Boutons principaux */}
       <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 280 }}>
         {/* Pause/Reprendre */}

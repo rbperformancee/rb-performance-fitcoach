@@ -7,6 +7,7 @@ import { useScheduledRuns } from "../hooks/useScheduledRuns";
 import { useT, getLocale } from "../lib/i18n";
 import RunIntervalTimer from "./RunIntervalTimer";
 import RunSession from "./RunSession";
+import { isNative } from "../lib/native";
 
 /**
  * Detection HIIT time-based : si work ET rest sont des durees parsables
@@ -46,6 +47,10 @@ export default function MovePage({ client, appData }) {
   const [pendingPrescribed, setPendingPrescribed] = useState(null);
   // Run prescrit en mode HIIT timer (chrono lance, pas de save form)
   const [pendingTimer, setPendingTimer] = useState(null);
+  // Edit/trim run a posteriori (athlete oubli de stopper le chrono, par ex.)
+  const [editingRun, setEditingRun] = useState(null);
+  const [editForm, setEditForm] = useState({ distance_km: "", duree_min: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Runs prescrits par le coach pour la semaine en cours
   const scheduled = useScheduledRuns(client?.id);
@@ -67,6 +72,84 @@ export default function MovePage({ client, appData }) {
   }, [client?.id, today]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Hydrate le form d'édition quand on ouvre un run en édition
+  useEffect(() => {
+    if (editingRun) {
+      setEditForm({
+        distance_km: String(editingRun.distance_km ?? ""),
+        duree_min: String(editingRun.duree_min ?? ""),
+      });
+    }
+  }, [editingRun]);
+
+  // UPDATE le run en BDD + recalcule allure_min_km (M:SS) à partir des
+  // nouvelles distance/durée. Sans recalc, l'allure affichée serait fausse
+  // après trim (= mauvaise UX) car c'est ce qui sert au record perso.
+  const saveEditRun = async () => {
+    if (!editingRun) return;
+    const distKm = parseFloat(editForm.distance_km);
+    const durMin = parseInt(editForm.duree_min, 10);
+    if (!isFinite(distKm) || distKm <= 0 || !isFinite(durMin) || durMin <= 0) {
+      toast.error("Distance et durée doivent être > 0");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const allureSec = Math.round((durMin * 60) / distKm);
+      const allureStr = `${Math.floor(allureSec / 60)}:${String(allureSec % 60).padStart(2, "0")}`;
+      const { error } = await supabase
+        .from("run_logs")
+        .update({ distance_km: distKm, duree_min: durMin, allure_min_km: allureStr })
+        .eq("id", editingRun.id);
+      if (error) {
+        toast.error("Update échoué : " + error.message);
+        setSavingEdit(false);
+        return;
+      }
+      // Update local state pour feedback immédiat
+      setRuns(prev => prev.map(r => r.id === editingRun.id
+        ? { ...r, distance_km: distKm, duree_min: durMin, allure_min_km: allureStr }
+        : r));
+      toast.success("Run mis à jour");
+      setEditingRun(null);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  // Supprime le run en BDD (utile si run loggé par erreur ou vraiment hors sujet).
+  const deleteEditRun = async () => {
+    if (!editingRun) return;
+    if (!window.confirm("Supprimer ce run définitivement ?")) return;
+    setSavingEdit(true);
+    try {
+      const { error } = await supabase.from("run_logs").delete().eq("id", editingRun.id);
+      if (error) {
+        toast.error("Suppression échouée : " + error.message);
+        setSavingEdit(false);
+        return;
+      }
+      setRuns(prev => prev.filter(r => r.id !== editingRun.id));
+      toast.success("Run supprimé");
+      setEditingRun(null);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  // Listener event "rb:launch-run-gps" → permet au TrainingPage de demander
+  // de lancer un run GPS sur une cible prescrite, sans copier-coller la logique.
+  // Le tab switch (training → move) est géré par App.jsx qui écoute le même event.
+  useEffect(() => {
+    const onLaunchRun = (e) => {
+      const target = e?.detail || null;
+      setRunSessionTarget(target);
+      setShowRunSession(true);
+    };
+    window.addEventListener("rb:launch-run-gps", onLaunchRun);
+    return () => window.removeEventListener("rb:launch-run-gps", onLaunchRun);
+  }, []);
 
   const addRun = async () => {
     const dist = parseFloat(form.distance) || 0;
@@ -655,16 +738,53 @@ export default function MovePage({ client, appData }) {
 
         <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 24px 20px" }} />
 
+        {/* HERO CTA — Lancer un run GPS. Caché en PWA/web : Core Location
+            n'a pas de background mode et la Live Activity ne marche pas, donc
+            l'UX devient pourrie (timer pause au verrouillage, GPS perdu).
+            On le réserve aux clients natif iOS — sur PWA c'est juste le log
+            manuel "+ Add" qui reste dispo. */}
+        {isNative() && (
+        <div style={{ padding: "0 24px", marginBottom: 22 }}>
+          <button
+            onClick={() => { setRunSessionTarget(null); setShowRunSession(true); }}
+            aria-label="Lancer un run GPS libre"
+            style={{
+              width: "100%",
+              padding: "18px 22px",
+              background: "linear-gradient(135deg, #02d1ba 0%, #0891b2 100%)",
+              border: "none",
+              borderRadius: 16,
+              color: "#000",
+              fontSize: 15, fontWeight: 800,
+              letterSpacing: "0.4px",
+              cursor: "pointer",
+              boxShadow: "0 14px 36px rgba(2,209,186,0.32)",
+              fontFamily: "inherit",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <circle cx="12" cy="12" r="3" />
+              <line x1="12" y1="3" x2="12" y2="6" />
+              <line x1="12" y1="18" x2="12" y2="21" />
+              <line x1="3" y1="12" x2="6" y2="12" />
+              <line x1="18" y1="12" x2="21" y2="12" />
+            </svg>
+            Lancer un run GPS
+            <span style={{ fontSize: 18, lineHeight: 1, opacity: 0.7 }}>→</span>
+          </button>
+          <div style={{ marginTop: 8, fontSize: 10.5, color: "rgba(255,255,255,0.4)", textAlign: "center", letterSpacing: 0.3 }}>
+            Run libre · distance, allure, splits en temps réel
+          </div>
+        </div>
+        )}
+
         {/* HISTORIQUE COURSES */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "3px", textTransform: "uppercase" }}>{t("move.history")}</div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => setShowRunSession(true)} style={{ background: "linear-gradient(135deg, #02d1ba, #14e6c5)", color: "#050505", border: "none", borderRadius: 100, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }} aria-label="Démarrer une course GPS">
-                <span style={{ fontSize: 14 }}>🏃</span>GPS
-              </button>
-              <button onClick={() => setShowAdd(true)} style={{ background: RED, color: "#fff", border: "none", borderRadius: 100, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t("move.add_short")}</button>
-            </div>
+            <button onClick={() => setShowAdd(true)} style={{ background: RED, color: "#fff", border: "none", borderRadius: 100, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t("move.add_short")}</button>
           </div>
 
           {runs.length === 0 ? (
@@ -683,9 +803,21 @@ export default function MovePage({ client, appData }) {
                 const opacity = Math.max(1 - i * 0.15, 0.3);
                 const color = `rgba(239,68,68,${opacity})`;
                 return (
-                  <div key={run.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14 }}>
+                  <button
+                    key={run.id}
+                    onClick={() => setEditingRun(run)}
+                    title="Modifier ce run (distance, durée)"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "14px 16px",
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.05)",
+                      borderRadius: 14,
+                      cursor: "pointer", textAlign: "left", fontFamily: "inherit",
+                      width: "100%",
+                    }}
+                  >
                     <div style={{ width: 3, height: 36, borderRadius: 2, background: color, flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
                         {run.note || t("move.run_default_label")}
                       </div>
@@ -697,7 +829,7 @@ export default function MovePage({ client, appData }) {
                       <div style={{ fontSize: 18, color, fontWeight: 600 }}>{run.allure_min_km}</div>
                       <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>{t("move.min_per_km")}</div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -796,6 +928,106 @@ export default function MovePage({ client, appData }) {
                 </button>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ÉDITER / TRIM UN RUN — pour quand l'athlète a oublié de stopper
+          le chrono et son run montre 5.8km au lieu de 5km, par exemple.
+          Édite distance + durée, recalcule allure automatiquement, et offre
+          aussi la suppression si run vraiment hors sujet. */}
+      {editingRun && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) setEditingRun(null); }}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)",
+            zIndex: 200, display: "flex", flexDirection: "column",
+            justifyContent: "flex-end", alignItems: "center",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+          }}
+        >
+          <div style={{
+            background: "#0a0a0a", borderRadius: "24px 24px 0 0",
+            padding: "20px 22px calc(env(safe-area-inset-bottom, 0px) + 22px)",
+            width: "100%", maxWidth: 480, boxSizing: "border-box",
+            border: "1px solid rgba(255,255,255,0.08)", borderBottom: "none",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: "rgba(2,209,186,0.85)", textTransform: "uppercase", marginBottom: 4 }}>
+                  Modifier ce run
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>
+                  {new Date(editingRun.date).toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "short" })}
+                </div>
+              </div>
+              <button onClick={() => setEditingRun(null)} aria-label="Fermer"
+                style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: "50%", width: 32, height: 32, color: "rgba(255,255,255,0.6)", fontSize: 18, cursor: "pointer" }}>×</button>
+            </div>
+
+            <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, marginBottom: 8 }}>Distance (km)</div>
+                <input
+                  type="number" inputMode="decimal" step="0.1" min="0"
+                  value={editForm.distance_km}
+                  onChange={e => setEditForm(p => ({ ...p, distance_km: e.target.value }))}
+                  placeholder="5.0"
+                  style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, color: "#fff", fontSize: 18, fontWeight: 400, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, marginBottom: 8 }}>Durée (min)</div>
+                <input
+                  type="number" inputMode="numeric" min="0"
+                  value={editForm.duree_min}
+                  onChange={e => setEditForm(p => ({ ...p, duree_min: e.target.value }))}
+                  placeholder="30"
+                  style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, color: "#fff", fontSize: 18, fontWeight: 400, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+                />
+              </div>
+            </div>
+
+            {/* Allure recalculée preview */}
+            {(() => {
+              const d = parseFloat(editForm.distance_km);
+              const m = parseInt(editForm.duree_min, 10);
+              if (!isFinite(d) || d <= 0 || !isFinite(m) || m <= 0) return null;
+              const sec = Math.round((m * 60) / d);
+              const mm = Math.floor(sec / 60);
+              const ss = String(sec % 60).padStart(2, "0");
+              return (
+                <div style={{ marginBottom: 16, padding: "10px 14px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.22)", borderRadius: 12, fontSize: 12, color: "rgba(2,209,186,0.85)", textAlign: "center" }}>
+                  Nouvelle allure : <strong>{mm}:{ss}</strong> min/km
+                </div>
+              );
+            })()}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={deleteEditRun}
+                disabled={savingEdit}
+                style={{
+                  padding: "14px 16px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)",
+                  borderRadius: 12, color: "#ef4444", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit", flex: "0 0 auto",
+                }}
+                aria-label="Supprimer ce run"
+              >
+                Supprimer
+              </button>
+              <button
+                onClick={saveEditRun}
+                disabled={savingEdit}
+                style={{
+                  flex: 1, padding: 14, background: savingEdit ? "rgba(2,209,186,0.4)" : "linear-gradient(135deg, #02d1ba 0%, #0891b2 100%)",
+                  border: "none", borderRadius: 12, color: "#000", fontSize: 14, fontWeight: 800,
+                  letterSpacing: 0.4, cursor: savingEdit ? "wait" : "pointer", fontFamily: "inherit",
+                }}
+              >
+                {savingEdit ? "Sauvegarde…" : "Enregistrer"}
+              </button>
+            </div>
           </div>
         </div>
       )}

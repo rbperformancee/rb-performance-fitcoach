@@ -286,6 +286,10 @@ export function parseProgrammeHTML(htmlString) {
         const rmTestNum = parseInt(rmTestRaw, 10);
         const rmTest = !isNaN(rmTestNum) && rmTestNum > 0 ? rmTestNum : null;
 
+        /* Exo "extra" : data-extra="1" sur le div parent. L'athlète voit le
+           badge OPTIONNEL et peut sauter sans casser la validation séance. */
+        const extra = exEl.getAttribute("data-extra") === "1";
+
         exercises.push({
           name: exName,
           clusterRest,
@@ -301,6 +305,7 @@ export function parseProgrammeHTML(htmlString) {
           vidUrl,
           thumbUrl,
           rmTest,    // ← number (N pour NRM) ou null si exo standard
+          extra,     // ← bool, true = optionnel pour l'athlète
         });
       });
 

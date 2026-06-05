@@ -12,15 +12,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Configure AVAudioSession pour débloquer getUserMedia({audio:true}) dans
         // WKWebView. Sans ça, MediaRecorder côté web reçoit "NotAllowedError" sur
         // certaines versions iOS même si NSMicrophoneUsageDescription est OK.
-        // .playAndRecord = autorise enregistrement + lecture (vocaux entrants).
-        // .defaultToSpeaker = haut-parleur au lieu d'écouteur interne.
-        // .allowBluetooth = compatible AirPods.
+        //
+        // CRITIQUE : .allowBluetooth route via HFP (mono 8kHz, qualité voix)
+        // → la musique de l'user devient pourrie quand il ouvre l'app.
+        // .allowBluetoothA2DP route via A2DP (stéréo haute qualité, profil
+        // musique standard). On veut A2DP par défaut, HFP seulement quand
+        // l'user enregistre vraiment une note vocale.
+        //
+        // De plus, on NE FAIT PAS setActive(true) au boot — ça hijack la
+        // chaîne audio du système. Le système active la session à la demande
+        // (premier play/record). AlarmSoundPlugin et getUserMedia activent
+        // explicitement quand ils ont besoin.
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playAndRecord,
                                     mode: .default,
-                                    options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
-            try session.setActive(true)
+                                    options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
+            // PAS de setActive(true) ici — laisser dormant pour préserver la
+            // qualité musique tant qu'on n'a pas besoin de micro/HP.
         } catch {
             print("[AppDelegate] AVAudioSession setup failed: \(error)")
         }
@@ -30,6 +39,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // foreground → le timer de repos "sonne dans le vide" si l'user a
         // l'app ouverte à l'expiration. Sans ce delegate, aucun son.
         UNUserNotificationCenter.current().delegate = self
+
+        // Désactive le "Shake to Undo" iOS — quand l'athlète secoue le téléphone
+        // pendant un run (mouvement naturel), iOS popait un dialogue système
+        // "Annuler la saisie / Refaire / Annuler" qui pourrit l'UX en course.
+        // applicationSupportsShakeToEdit = false coupe la détection globale.
+        application.applicationSupportsShakeToEdit = false
 
         return true
     }
