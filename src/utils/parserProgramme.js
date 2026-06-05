@@ -69,6 +69,35 @@ export function detectPletnev(rawReps) {
   };
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// Méthode Poliquin — détection signature.
+//
+// Charles Poliquin a popularisé la notation 4-chiffres avec **X** sur la
+// phase concentrique (eXplosive = "as fast as possible"). Format :
+//   eccentric / pause_bas / concentric / pause_haut
+//   4 0 X 0 = 4s descente, 0 pause, explosif remontée, 0 pause haut
+//   3 0 X 0 = 3s descente, explosif
+//   3 1 X 0 = 3s descente, 1s pause bas, explosif (signature Poliquin pause+X)
+//   5 0 X 0 = tempo super lent (typique back/biceps Poliquin)
+//
+// Détection : tempo = string 4 chars dont le 3e = X (ou x). On retourne le
+// TUT estimé par rep (= eccentric + pause_bas + ~1s concentric + pause_haut)
+// pour que l'UI puisse afficher le volume de travail mécanique.
+export function detectPoliquin(rawTempo) {
+  if (!rawTempo || typeof rawTempo !== "string") return null;
+  const t = rawTempo.trim().replace(/\s+/g, "");
+  // Format strict : 4 digits dont position 2 (0-indexed) = X
+  // Accepte "40X0", "30X0", "31X0", "50X0", "21X0", etc.
+  const m = t.match(/^(\d)(\d)[xX](\d)$/);
+  if (!m) return null;
+  const eccentric = parseInt(m[1], 10);
+  const pauseBottom = parseInt(m[2], 10);
+  const pauseTop = parseInt(m[3], 10);
+  // TUT/rep ≈ ecc + pause_bas + 1s explo + pause_haut
+  const tutPerRep = eccentric + pauseBottom + 1 + pauseTop;
+  return { eccentric, pauseBottom, concentric: "X", pauseTop, tutPerRep };
+}
+
 export function parseReps(raw) {
   if (!raw || raw === "—" || raw === "") return { sets: null, reps: null, rawReps: null };
   const trimmed = raw.trim();

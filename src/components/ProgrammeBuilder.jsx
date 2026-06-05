@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 import { findVideo, EXERCISE_VIDEOS } from "../data/exerciseVideos";
 import { findFallbackVideo, FALLBACK_VIDEOS } from "../data/fallbackVideos";
 import LogPaymentModal, { checkPaymentNeeded } from "./coach/LogPaymentModal";
-import { detectPletnev } from "../utils/parserProgramme";
+import { detectPletnev, detectPoliquin } from "../utils/parserProgramme";
 import CountdownBlockCard from "./CountdownBlockCard";
 import { addBreadcrumb } from "../lib/sentry";
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -1113,6 +1113,24 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
             </div>
           ) : null;
         })()}
+        {/* Méthode Poliquin — détection signature sur le tempo. Charles Poliquin
+            a popularisé la notation 4-chiffres avec X (eXplosive concentric).
+            Format reconnu : "40X0", "30X0", "31X0", "50X0", "21X0", etc.
+            Le badge affiche le TUT par rep pour que le coach voie le volume
+            de travail mécanique (clé du système Poliquin = TUT 20-70s/série). */}
+        {(() => {
+          const pq = detectPoliquin(ex.tempo);
+          return pq ? (
+            <div title={`Méthode Poliquin — tempo ${pq.eccentric}-${pq.pauseBottom}-X-${pq.pauseTop} · ${pq.tutPerRep}s par rep · explosive concentric`}
+              style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 24, padding: "0 8px",
+                background: "rgba(244,114,182,0.14)", border: "1px solid rgba(244,114,182,0.4)",
+                borderRadius: 6, flexShrink: 0, fontSize: 10, fontWeight: 800,
+                color: "#f472b6", letterSpacing: 0.5, textTransform: "uppercase",
+              }}>
+              Poliquin · {pq.tutPerRep}s/rep
+            </div>
+          ) : null;
+        })()}
         {!isMobile && idx > 0 && <button type="button" onClick={() => onMove(-1)} title="Monter" style={iconBtn}>↑</button>}
         {!isMobile && idx < total - 1 && <button type="button" onClick={() => onMove(1)} title="Descendre" style={iconBtn}>↓</button>}
         <button type="button" onClick={onDuplicate} title="Dupliquer" style={{ ...iconBtn, background: G_DIM, borderColor: "rgba(2,209,186,0.25)", color: G }}>⎘</button>
@@ -1266,6 +1284,41 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
   const sensors = useDragSensors();
   const updateExercise = (exIdx, ex) => onUpdate({ ...session, exercises: session.exercises.map((e, i) => i === exIdx ? ex : e) });
   const addExercise = () => onUpdate({ ...session, exercises: [...session.exercises, newExercise()] });
+
+  // Trouve la prochaine lettre de groupe libre (A1/B1/C1…). Scanne tous les
+  // groupes existants, garde la lettre alphabétique max, retourne next.
+  const nextGroupLetter = () => {
+    const used = new Set();
+    (session.exercises || []).forEach((e) => {
+      const m = String(e.group || "").trim().match(/^([A-Z])/i);
+      if (m) used.add(m[1].toUpperCase());
+    });
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (const L of alphabet) if (!used.has(L)) return L;
+    return "Z";
+  };
+
+  // Quick-add : circuit abdos 4 tours, 30-60s par position.
+  // Notation reps "4X45s" → l'athlète voit "4 séries × 45 secondes" en session.
+  // Repos 10s entre positions (transition), 1min entre tours (sur le dernier).
+  const addAbsCircuit = () => {
+    const L = nextGroupLetter();
+    const mk = (reps, rest, suffix) => ({
+      ...newExercise(),
+      reps,
+      tempo: "",
+      rir: "0",
+      rest,
+      group: `${L}${suffix}`,
+    });
+    const block = [
+      mk("4X45s", "10s", 1),  // position 1 — gainage / hollow
+      mk("4X45s", "10s", 2),  // position 2 — crunch / leg raise
+      mk("4X45s", "10s", 3),  // position 3 — oblique / russian twist
+      mk("4X45s", "1min", 4), // position 4 — finish + repos inter-tour
+    ];
+    onUpdate({ ...session, exercises: [...(session.exercises || []), ...block] });
+  };
   const removeExercise = (exIdx) => onUpdate({ ...session, exercises: session.exercises.filter((_, i) => i !== exIdx) });
   const moveExercise = (exIdx, dir) => {
     const arr = [...session.exercises];
@@ -1500,6 +1553,24 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
           letterSpacing: 0.5,
         }}
       >+ Ajouter un exercice</button>
+
+      {/* Quick-add : circuit abdos time-based (4 positions × 45s, ajustable).
+          Insère 4 exos groupés sous la même lettre → l'athlète enchaîne en
+          giant set. Pour Poliquin, c'est de la détection sur tempo (badge
+          automatique quand 3e digit = X). */}
+      <button
+        type="button"
+        onClick={addAbsCircuit}
+        title="Circuit abdos 4 tours — 4 positions × 45s, 10s entre positions, 1min entre tours. Modifie les reps après si tu veux du 30s ou 1min."
+        style={{
+          width: "100%", padding: "10px 12px", marginTop: 6, background: "rgba(255,180,80,0.04)",
+          border: "1px dashed rgba(255,180,80,0.25)", borderRadius: 10,
+          color: "rgba(255,200,120,0.9)", fontSize: 11, fontWeight: 700, cursor: "pointer",
+          fontFamily: "inherit", letterSpacing: 0.4, textAlign: "left",
+        }}
+      >
+        + Circuit abdos <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>· 4 tours × 45s · ajustable</span>
+      </button>
 
       {/* CARDIO / RUN — apparaît dans la séance ET dans la page Run du client */}
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>

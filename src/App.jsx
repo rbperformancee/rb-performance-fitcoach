@@ -1025,11 +1025,14 @@ function AppInner() {
   }
 
   // ── Écran de chargement ──
-  // Rien à rendre : le splash inline de index.html (bolt animé + bar) reste
-  // visible tant que React n'a rien à afficher. Background body = #050505,
-  // donc même si le splash s'auto-retire à 1.7s et que l'auth est encore en
-  // cours, l'écran reste dans le bon ton (pas de flash blanc).
-  if (authLoading) return null;
+  // Auth en cours (Supabase getSession ~500ms-1.5s au boot). Sur iOS natif,
+  // capacitor.config.ts a launchAutoHide=false → le splash natif reste affiché
+  // jusqu'à ce que SplashScreen.hide() soit appelé depuis index.js (rAF×2 après
+  // root.render()). MAIS root.render() ne paint pas synchroniquement : le hide
+  // peut tirer avant le 1er paint réel → entre splash natif fadé et React qui
+  // render `null`, il y avait 1.5s d'écran noir. Fix : un placeholder #050505
+  // (= couleur du splash natif) qui colmate le gap → transition seamless.
+  if (authLoading) return <div style={{ minHeight: "100dvh", background: "#050505" }} />;
 
   // ── Demo client en cours de connexion → loading premium avec progress ──
   if (!user && isClientDemo) {

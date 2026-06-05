@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useT } from "../lib/i18n";
 import { showNotif, cancelAllNotifs, requestNotifPermission } from "../lib/localNotif";
 import { startRestActivity, stopRestActivity } from "../lib/restTimerLiveActivity";
+import { playRestEndAlarm, stopRestEndAlarm } from "../lib/alarmSound";
 import { isNative } from "../lib/native";
 
 const fillTpl = (s, vars) => {
@@ -120,7 +121,15 @@ function Arc({ radius, progress, size, strokeWidth, color, glowColor }) {
   );
 }
 
+// Fin-de-repos : son audible même en mode silencieux.
+// - iOS natif : AlarmSound plugin (AVAudioPlayer en .playback → bypass silent switch)
+// - Web      : Web Audio oscillator (fallback)
+// Le plugin natif fait son propre Promise — fire-and-forget côté JS.
 function playBeep() {
+  if (isNative()) {
+    playRestEndAlarm();
+    return;
+  }
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     [[0, 660], [0.15, 660], [0.3, 880]].forEach(([delay, freq]) => {
@@ -174,10 +183,12 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
     };
     setup();
     // Cleanup au unmount du composant entier (= timer terminé ou skippé) :
-    // stop le Live Activity et clear les notifs en attente.
+    // stop le Live Activity, clear les notifs en attente, et coupe le son
+    // d'alarme en cours (sinon il continue à boucler ~1.7s après dismiss).
     return () => {
       cancelAllNotifs();
       stopRestActivity();
+      stopRestEndAlarm();
     };
   }, []);
   const [running, setRunning] = useState(true);
