@@ -61,11 +61,22 @@
 	<key>NSCameraUsageDescription</key>
 	<string>RB Perform utilise la caméra pour scanner les codes-barres d'aliments lors du suivi nutritionnel et pour prendre tes photos de check-in hebdomadaire.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>RB Perform accède à ta photothèque pour importer tes photos de check-in et tes photos de progression à partager avec ton coach.</string>
+	<string>RB Perform accède à ta photothèque pour importer tes photos de check-in, tes photos de progression à partager avec ton coach, et pour mettre une photo en fond quand tu partages ta course en story.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>RB Perform enregistre dans ta photothèque les visuels de progression que tu génères depuis l'app.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>RB Perform utilise le microphone pour les messages vocaux au coach et pour la saisie vocale de tes repas dans l'onglet Fuel.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RB Perform utilise ta position GPS pendant tes courses pour mesurer la distance, l'allure et tracer ton parcours.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>RB Perform continue de tracker ta course quand l'écran est verrouillé ou l'app en arrière-plan, pour mesurer ta distance complète.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>RB Perform utilise les capteurs de mouvement pour mesurer ta cadence (pas/minute) pendant tes courses.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>remote-notification</string>
+	</array>
 	<key>NSHealthShareUsageDescription</key>
 	<string>RB Perform lit ton compteur de pas Apple Health pour pré-remplir automatiquement ton suivi quotidien. Tes données restent privées entre ton coach et toi.</string>
 	<key>NSHealthUpdateUsageDescription</key>
