@@ -1298,6 +1298,30 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
     return "Z";
   };
 
+  // Quick-add : bloc Poliquin 6-12-25 (giant set signature back/biceps).
+  // 3 exos B1/B2/B3 enchaînés × 4 tours. Tempos 40X0/30X0/20X0 (tous explosifs
+  // en concentrique). 1RIR. Repos 10s entre B1/B2 et B2/B3 (transition rapide),
+  // puis 3min repos sur B3 = fin du cluster avant tour suivant.
+  // Le coach n'a plus qu'à taper les 3 noms d'exos (ex: traction supination,
+  // tirage horizontal, face pull).
+  const addPoliquinBlock = () => {
+    const L = nextGroupLetter();
+    const mk = (reps, tempo, rest, suffix) => ({
+      ...newExercise(),
+      reps,
+      tempo,
+      rir: "1",
+      rest,
+      group: `${L}${suffix}`,
+    });
+    const block = [
+      mk("4X6", "40X0", "10s", 1),   // B1 — heavy compound, eccentric lent 4s
+      mk("4X12", "30X0", "10s", 2),  // B2 — mid load, eccentric 3s
+      mk("4X25", "20X0", "3min", 3), // B3 — endurance, eccentric 2s, repos fin cluster
+    ];
+    onUpdate({ ...session, exercises: [...(session.exercises || []), ...block] });
+  };
+
   // Quick-add : circuit abdos 4 tours, 30-60s par position.
   // Notation reps "4X45s" → l'athlète voit "4 séries × 45 secondes" en session.
   // Repos 10s entre positions (transition), 1min entre tours (sur le dernier).
@@ -1554,23 +1578,38 @@ function SessionPanel({ session, idx, total, onUpdate, onRemove, onMove, onDupli
         }}
       >+ Ajouter un exercice</button>
 
-      {/* Quick-add : circuit abdos time-based (4 positions × 45s, ajustable).
-          Insère 4 exos groupés sous la même lettre → l'athlète enchaîne en
-          giant set. Pour Poliquin, c'est de la détection sur tempo (badge
-          automatique quand 3e digit = X). */}
-      <button
-        type="button"
-        onClick={addAbsCircuit}
-        title="Circuit abdos 4 tours — 4 positions × 45s, 10s entre positions, 1min entre tours. Modifie les reps après si tu veux du 30s ou 1min."
-        style={{
-          width: "100%", padding: "10px 12px", marginTop: 6, background: "rgba(255,180,80,0.04)",
-          border: "1px dashed rgba(255,180,80,0.25)", borderRadius: 10,
-          color: "rgba(255,200,120,0.9)", fontSize: 11, fontWeight: 700, cursor: "pointer",
-          fontFamily: "inherit", letterSpacing: 0.4, textAlign: "left",
-        }}
-      >
-        + Circuit abdos <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>· 4 tours × 45s · ajustable</span>
-      </button>
+      {/* Quick-adds : Poliquin 6-12-25 + circuit abdos. Insèrent des blocs
+          d'exos pré-groupés avec tempo/RIR/repos cohérents → le coach n'a
+          plus qu'à taper les noms d'exos. Le badge Poliquin par-exo (détection
+          sur tempo X) reste actif et marque chaque ligne du bloc. */}
+      <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={addPoliquinBlock}
+          title="Giant set 6-12-25 (signature Charles Poliquin) — 3 exos B1/B2/B3 enchaînés × 4 tours, tempos 40X0/30X0/20X0 (explosive concentric), 1RIR, 3min de repos en fin de cluster. Coach : tape juste les 3 noms d'exos (ex: traction supination / tirage horizontal / face pull)."
+          style={{
+            flex: "1 1 220px", padding: "10px 12px", background: "rgba(244,114,182,0.06)",
+            border: "1px dashed rgba(244,114,182,0.28)", borderRadius: 10,
+            color: "rgba(244,114,182,0.95)", fontSize: 11, fontWeight: 700, cursor: "pointer",
+            fontFamily: "inherit", letterSpacing: 0.4, textAlign: "left",
+          }}
+        >
+          + Bloc Poliquin 6-12-25 <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>· tempo 40X0/30X0/20X0</span>
+        </button>
+        <button
+          type="button"
+          onClick={addAbsCircuit}
+          title="Circuit abdos 4 tours — 4 positions × 45s, 10s entre positions, 1min entre tours. Modifie les reps après si tu veux du 30s ou 1min."
+          style={{
+            flex: "1 1 220px", padding: "10px 12px", background: "rgba(255,180,80,0.04)",
+            border: "1px dashed rgba(255,180,80,0.25)", borderRadius: 10,
+            color: "rgba(255,200,120,0.9)", fontSize: 11, fontWeight: 700, cursor: "pointer",
+            fontFamily: "inherit", letterSpacing: 0.4, textAlign: "left",
+          }}
+        >
+          + Circuit abdos <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>· 4 tours × 45s · ajustable</span>
+        </button>
+      </div>
 
       {/* CARDIO / RUN — apparaît dans la séance ET dans la page Run du client */}
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
