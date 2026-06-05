@@ -32,9 +32,12 @@ import { toast } from "./Toast";
 import { isNative } from "../lib/native";
 import haptic from "../lib/haptic";
 import RunShareStory from "./RunShareStory";
-import { saveRunWorkout, requestWorkoutPermission } from "../lib/health";
+import { saveRunWorkout, requestWorkoutPermission, requestHeartRatePermission, startHeartRateStream } from "../lib/health";
 import runActivity from "../lib/runLiveActivity";
 import { parseTarget, compareToTarget } from "../lib/runTarget";
+import { fetchCurrentWeather } from "../lib/weather";
+import { buildSchedule, nextPhase as nextIntervalPhase, parseSegment, announceText } from "../lib/runIntervals";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 
 const G = "#02d1ba";
 const RED = "#ef4444";
@@ -50,6 +53,58 @@ function speakKmAudio(km, paceSec) {
   utterance.pitch = 1.0;
   utterance.volume = 1.0;
   try { window.speechSynthesis.speak(utterance); } catch (_) {}
+}
+
+// Voix FR pour annoncer une phase d'intervalle
+function speakIntervalPhase(text) {
+  if (!("speechSynthesis" in window) || !text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "fr-FR"; u.rate = 1.0; u.volume = 1.0;
+  try { window.speechSynthesis.speak(u); } catch (_) {}
+}
+
+// Calcule la zone HR à partir d'un bpm (FCM Karvonen simplifié, base 220-30).
+// On ne demande pas l'âge à l'athlète pour l'instant — défaut 30 ans.
+function computeHrZone(bpm, age = 30) {
+  if (!(bpm > 0)) return 0;
+  const max = 220 - age;
+  const pct = bpm / max;
+  if (pct < 0.6) return 1;   // Z1 récup
+  if (pct < 0.7) return 2;   // Z2 fondamental
+  if (pct < 0.8) return 3;   // Z3 tempo
+  if (pct < 0.9) return 4;   // Z4 seuil
+  return 5;                   // Z5 max
+}
+function zoneColor(z) {
+  return ["#71717a", "#71717a", "#02d1ba", "#fbbf24", "#fb923c", "#ef4444"][z] || "#71717a";
+}
+
+// Génère le timing d'une phase d'interval (target en time ou distance).
+function computeIntervalPhaseTiming(phaseInfo, schedule, startedAtMs, currentDistM) {
+  if (!phaseInfo || phaseInfo.phase === "done") return phaseInfo;
+  const seg = phaseInfo.phase === "work" ? schedule.work : schedule.rest;
+  if (!seg) return phaseInfo;
+  if (seg.kind === "time") {
+    return {
+      ...phaseInfo,
+      endTimeMs: Date.now() + seg.value * 1000,
+      durationS: seg.value,
+    };
+  }
+  // distance-based
+  return {
+    ...phaseInfo,
+    lapStartDistM: currentDistM,
+    targetDistM: currentDistM + seg.value,
+    distanceLeftM: seg.value,
+  };
+}
+
+function announceIntervalPhase(phaseInfo, schedule) {
+  if (!phaseInfo) return;
+  const isFinal = phaseInfo.phase === "work" && phaseInfo.rep === schedule.repeats;
+  const text = announceText(phaseInfo, phaseInfo.rep, schedule.repeats, isFinal);
+  if (text) speakIntervalPhase(text);
 }
 
 export default function RunSession({ client, onClose, prescribedTarget = null }) {
@@ -69,6 +124,12 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   const [route, setRoute] = useState([]); // [{lat, lng, t}]
   const [summary, setSummary] = useState(null);
   const [showShare, setShowShare] = useState(false);
+  // Phase 4 :
+  const [hrBpm, setHrBpm] = useState(0);          // dernière valeur HR live
+  const [hrSamples, setHrSamples] = useState([]); // pour calcul avg/max
+  const [weather, setWeather] = useState(null);   // {tempC, windKmh, ...}
+  const [intervalPhase, setIntervalPhase] = useState(null); // {phase, rep, block, endTime?, targetDistM?, lapStartDist?}
+  const [finishPhoto, setFinishPhoto] = useState(null); // dataUrl du selfie post-run
 
   const startedAtRef = useRef(null);
   const pausedTotalRef = useRef(0);
@@ -79,6 +140,18 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   const distanceRef = useRef(0);
   const paceRef = useRef(0);
   const isPausedRef = useRef(false);
+  const hrUnsubRef = useRef(null);
+  const intervalPhaseRef = useRef(null);
+  const intervalScheduleRef = useRef(null);
+  const lastLapDistRef = useRef(0);
+  const intervalAdvanceRef = useRef(null);
+  const weatherRef = useRef(null);
+
+  // Schedule HIIT (si target est HIIT exploitable)
+  const intervalSchedule = useMemo(() => {
+    if (!target.isHiit) return null;
+    return buildSchedule(prescribedTarget || {});
+  }, [target.isHiit, prescribedTarget]);
 
   // ── Permission ──
   const askPermission = useCallback(async () => {
@@ -113,7 +186,31 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
       startedAtMs: startedAtRef.current,
     });
 
+    // Phase 4.a : HR stream (Apple Watch). Best effort — pas critique si refusé
+    (async () => {
+      try {
+        if (!isNative()) return;
+        await requestHeartRatePermission();
+        hrUnsubRef.current = await startHeartRateStream((bpm) => {
+          setHrBpm(bpm);
+          setHrSamples((prev) => prev.length < 5000 ? [...prev, bpm] : prev);
+        });
+      } catch (e) { /* silencieux */ }
+    })();
+
+    // Phase 4.b : Intervals scheduler (auto-démarre si target HIIT)
+    if (intervalSchedule) {
+      intervalScheduleRef.current = intervalSchedule;
+      const first = nextIntervalPhase(null, intervalSchedule);
+      const phaseInfo = computeIntervalPhaseTiming(first, intervalSchedule, startedAtRef.current, 0);
+      intervalPhaseRef.current = phaseInfo;
+      setIntervalPhase(phaseInfo);
+      announceIntervalPhase(first, intervalSchedule);
+      haptic.success();
+    }
+
     // Tick local pour le chrono (1 hz) + update Live Activity (toutes les 3s)
+    // + tick scheduler intervals time-based
     distanceRef.current = 0; paceRef.current = 0; isPausedRef.current = false;
     let liveTick = 0;
     tickIntervalRef.current = setInterval(() => {
@@ -130,7 +227,34 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
           isPaused: isPausedRef.current,
         });
       }
+      // Time-based intervals : si la phase courante a un endTimeMs et qu'on l'a dépassé → avance
+      const cur = intervalPhaseRef.current;
+      if (cur && cur.endTimeMs && now >= cur.endTimeMs) {
+        advanceIntervalPhase();
+      }
     }, 1000);
+
+    // Helper local : avance le scheduler interval à la phase suivante
+    function advanceIntervalPhase() {
+      const schedule = intervalScheduleRef.current;
+      const prev = intervalPhaseRef.current;
+      if (!schedule || !prev) return;
+      const next = nextIntervalPhase(prev, schedule);
+      if (!next || next.phase === "done") {
+        intervalPhaseRef.current = { phase: "done" };
+        setIntervalPhase({ phase: "done" });
+        speakIntervalPhase(announceText({ phase: "done" }, prev.rep, schedule.repeats, false));
+        haptic.success();
+        return;
+      }
+      const phaseInfo = computeIntervalPhaseTiming(next, schedule, startedAtRef.current, distanceRef.current);
+      intervalPhaseRef.current = phaseInfo;
+      setIntervalPhase(phaseInfo);
+      announceIntervalPhase(next, schedule);
+      haptic.success();
+    }
+    // Expose pour onLocation distance-based advance
+    intervalAdvanceRef.current = advanceIntervalPhase;
 
     // Listeners
     unsubsRef.current = [
@@ -145,6 +269,17 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
           const p = dur / (distM / 1000);
           setPace(p);
           paceRef.current = p;
+        }
+        // Phase 4.c : Météo au premier GPS lock
+        if (!weatherRef.current && d.lat && d.lng) {
+          fetchCurrentWeather({ lat: d.lat, lng: d.lng })
+            .then((w) => { if (w) { weatherRef.current = w; setWeather(w); } })
+            .catch(() => {});
+        }
+        // Phase 4.d : Avance scheduler intervals si distance-based target atteint
+        const cur = intervalPhaseRef.current;
+        if (cur && cur.targetDistM && distM >= cur.targetDistM && intervalAdvanceRef.current) {
+          intervalAdvanceRef.current();
         }
       }),
       onKm((d) => {
@@ -211,6 +346,10 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
     // Live Activity : fermeture avec auto-dismiss 2s
     runActivity.end();
 
+    // Phase 4 : ferme HR stream
+    try { (await hrUnsubRef.current)?.(); } catch (_) {}
+    hrUnsubRef.current = null;
+
     // Sauvegarde Supabase
     if (client?.id && s && s.distanceM > 50) {
       try {
@@ -246,7 +385,30 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
           payload.programme_name = "Move";
         }
 
-        const { error } = await supabase.from("run_logs").insert(payload);
+        // Phase 4 metrics — colonnes nullables ajoutées par migration 112.
+        // Si migration pas encore appliquée, l'insert va échouer → retry sans
+        // ces colonnes pour ne pas perdre la save de base.
+        const phase4Cols = {};
+        if (hrSamples.length > 0) {
+          phase4Cols.bpm_avg = Math.round(hrSamples.reduce((a, b) => a + b, 0) / hrSamples.length);
+          phase4Cols.bpm_max = Math.max(...hrSamples);
+        }
+        if (weatherRef.current) phase4Cols.weather = weatherRef.current;
+        if (intervalSchedule) {
+          const cur = intervalPhaseRef.current;
+          phase4Cols.intervals_total = intervalSchedule.repeats * intervalSchedule.blocks;
+          phase4Cols.intervals_completed = cur?.phase === "done"
+            ? phase4Cols.intervals_total
+            : Math.max(0, ((cur?.block || 1) - 1) * intervalSchedule.repeats + (cur?.rep || 1) - (cur?.phase === "work" ? 1 : 0));
+        }
+
+        const fullPayload = { ...payload, ...phase4Cols };
+        let { error } = await supabase.from("run_logs").insert(fullPayload);
+        if (error && Object.keys(phase4Cols).length > 0) {
+          // Fallback : migration 112 pas appliquée, on insert sans Phase 4 metrics
+          console.warn("[runSession] Phase 4 columns missing, fallback insert");
+          ({ error } = await supabase.from("run_logs").insert(payload));
+        }
         if (error) {
           console.error("[runSession] save failed:", error.message);
           toast.error("Sauvegarde échouée : " + error.message);
@@ -291,6 +453,41 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
     return compareToTarget(summary, target);
   }, [summary, target]);
 
+  // ── Photo finish (Camera native ou input file fallback) ──
+  const takeFinishPhoto = useCallback(async () => {
+    try {
+      if (isNative()) {
+        const photo = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+          direction: "FRONT", // selfie post-run
+        });
+        if (photo?.dataUrl) {
+          setFinishPhoto(photo.dataUrl);
+          haptic.success();
+        }
+      } else {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.capture = "user";
+        input.onchange = (e) => {
+          const f = e.target.files?.[0];
+          if (f) {
+            const reader = new FileReader();
+            reader.onload = (ev) => setFinishPhoto(ev.target?.result);
+            reader.readAsDataURL(f);
+          }
+        };
+        input.click();
+      }
+    } catch (e) {
+      console.warn("[runSession] photo finish:", e?.message || e);
+    }
+  }, []);
+
   // ── Pace delta vs cible (chip live) ──
   const paceDelta = useMemo(() => {
     if (!target.paceSPerKm || !pace) return null;
@@ -334,6 +531,16 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
                   <TargetMetric label="HIIT" value={target.hiitLabel} accent />
                 ) : null}
               </div>
+              {weather && (
+                <div style={S.weatherChip}>
+                  <span style={{ fontSize: 18 }}>{weather.emoji}</span>
+                  <span style={{ fontWeight: 700 }}>{weather.tempC}°C</span>
+                  <span style={{ color: "rgba(255,255,255,0.45)" }}>·</span>
+                  <span>{weather.windKmh} km/h</span>
+                  <span style={{ color: "rgba(255,255,255,0.45)" }}>·</span>
+                  <span>{weather.humidityPct}%</span>
+                </div>
+              )}
               <button style={S.bigBtn(G)} onClick={start} disabled={phase === "requesting"}>
                 {phase === "requesting" ? "Démarrage..." : "Démarrer"}
               </button>
@@ -419,7 +626,11 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
               ))}
             </div>
           )}
-          <div style={{ display: "flex", gap: 12, marginTop: 28, width: "100%", maxWidth: 420 }}>
+          {/* Photo finish — Camera native iOS / web file */}
+          <button style={S.photoFinishBtn} onClick={takeFinishPhoto}>
+            {finishPhoto ? "🔄 Reprendre la photo" : "📸 Selfie finish"}
+          </button>
+          <div style={{ display: "flex", gap: 12, marginTop: 16, width: "100%", maxWidth: 420 }}>
             <button
               style={{ ...S.bigBtn(G), flex: 1 }}
               onClick={() => { haptic.medium(); setShowShare(true); }}
@@ -443,6 +654,8 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
           <RunShareStory
             route={route}
             summary={summary}
+            preloadedPhoto={finishPhoto}
+            weather={weather}
             onClose={() => setShowShare(false)}
           />
         )}
@@ -457,6 +670,10 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
       <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 12px) 24px 24px", display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
         {autoPaused && (
           <div style={S.autoPauseBanner}>⏸ Auto-pause (tu sembles à l'arrêt)</div>
+        )}
+        {/* Intervals banner — phase courante HIIT */}
+        {intervalPhase && intervalPhase.phase !== "done" && intervalSchedule && (
+          <IntervalsBanner phase={intervalPhase} schedule={intervalSchedule} distanceM={distance} />
         )}
         {/* Progress bar vs cible coach */}
         {target.distanceM ? (
@@ -489,6 +706,12 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
         {cadence > 0 && (
           <div style={{ ...S.statsRow, marginTop: 12 }}>
             <Stat label="Cadence" value={`${cadence} pas/min`} />
+          </div>
+        )}
+        {/* HR chip live + zone */}
+        {hrBpm > 0 && (
+          <div style={{ ...S.statsRow, marginTop: 12 }}>
+            <HrStat bpm={hrBpm} />
           </div>
         )}
         {/* Splits live */}
@@ -550,6 +773,73 @@ function TargetMetric({ label, value, accent }) {
     <div style={S.targetMetricBox}>
       <div style={S.targetMetricLabel}>{label}</div>
       <div style={{ ...S.targetMetricValue, color: accent ? G : "#fff" }}>{value}</div>
+    </div>
+  );
+}
+
+// Banner overlay during HIIT intervals (phase: work | rest)
+function IntervalsBanner({ phase, schedule, distanceM }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!phase?.endTimeMs) return;
+    const id = setInterval(() => setNow(Date.now()), 300);
+    return () => clearInterval(id);
+  }, [phase?.endTimeMs]);
+  if (!phase || phase.phase === "done") return null;
+  const isWork = phase.phase === "work";
+  const accent = isWork ? "#ef4444" : G;
+  let remainingTxt = "";
+  if (phase.endTimeMs) {
+    const ms = Math.max(0, phase.endTimeMs - now);
+    remainingTxt = formatDuration(Math.ceil(ms / 1000));
+  } else if (phase.targetDistM) {
+    const left = Math.max(0, phase.targetDistM - distanceM);
+    remainingTxt = `${Math.round(left)} m`;
+  }
+  const total = schedule.repeats * schedule.blocks;
+  const currentNum = (phase.block - 1) * schedule.repeats + phase.rep;
+  return (
+    <div style={{ ...S.intervalsBanner, borderColor: accent + "55", background: accent + "11" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: 2, textTransform: "uppercase" }}>
+            {isWork ? "Pousse" : "Récup"}
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: "-0.5px", marginTop: 2 }}>
+            Round {currentNum}/{total}
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 28, fontWeight: 900, color: accent, letterSpacing: "-1px", lineHeight: 1, fontFamily: "monospace" }}>
+            {remainingTxt}
+          </div>
+          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.5)", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, marginTop: 4 }}>
+            Restant
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// HR stat avec zone Karvonen
+function HrStat({ bpm }) {
+  const zone = computeHrZone(bpm);
+  const color = zoneColor(zone);
+  return (
+    <div style={{ ...S.statBox, gridColumn: "span 2" }}>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 8 }}>
+        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.5px", color }}>{bpm}</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 700 }}>bpm</div>
+        <div style={{
+          padding: "2px 8px",
+          background: color + "22", color,
+          borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: 0.6, textTransform: "uppercase",
+        }}>
+          Zone {zone}
+        </div>
+      </div>
+      <div style={S.statLabel}>Cardio</div>
     </div>
   );
 }
@@ -712,4 +1002,32 @@ const S = {
     fontWeight: 800, marginBottom: 8,
   },
   verdictGrid: { display: "flex", flexDirection: "column" },
+  // ─── Phase 4 ───
+  weatherChip: {
+    display: "inline-flex", alignItems: "center", gap: 8,
+    padding: "8px 14px",
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.06)",
+    borderRadius: 100,
+    fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
+    marginTop: -8, marginBottom: 22,
+  },
+  intervalsBanner: {
+    marginTop: 4, marginBottom: 12,
+    padding: "12px 16px",
+    background: "rgba(2,209,186,0.06)",
+    border: "1px solid rgba(2,209,186,0.25)",
+    borderRadius: 14,
+  },
+  photoFinishBtn: {
+    width: "100%", maxWidth: 420,
+    marginTop: 18,
+    padding: "12px 24px",
+    background: "rgba(255,255,255,0.05)",
+    color: "#fff",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: 14,
+    fontSize: 13, fontWeight: 800, letterSpacing: 0.4,
+    cursor: "pointer", fontFamily: "inherit",
+  },
 };

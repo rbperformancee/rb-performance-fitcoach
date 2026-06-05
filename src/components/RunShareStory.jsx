@@ -81,7 +81,7 @@ function routeToSvgPath(route, boxW, boxH, padding = 12) {
   return { d, end: pts[pts.length - 1] };
 }
 
-export default function RunShareStory({ route, summary, onClose }) {
+export default function RunShareStory({ route, summary, onClose, preloadedPhoto = null, weather = null }) {
   // Le path de la trace est calculé une fois pour une viewBox 240×200
   const tracePath = useMemo(
     () => routeToSvgPath(route || [], 240, 200, 14),
@@ -89,7 +89,7 @@ export default function RunShareStory({ route, summary, onClose }) {
   );
 
   // État
-  const [bgUrl, setBgUrl] = useState(null);
+  const [bgUrl, setBgUrl] = useState(preloadedPhoto);
   const [color, setColor] = useState(COLORS[0]);
   const [layout, setLayout] = useState("strava");
   const [tab, setTab] = useState("trace");
