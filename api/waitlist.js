@@ -77,18 +77,21 @@ module.exports = async (req, res) => {
     const trunc = (s, n) => (s == null ? null : String(s).slice(0, n));
 
     // Save to Supabase
+    // NB 05/06/26 : colonnes utm_* + referrer absentes du schema prod (migration
+    // 033_waitlist_utm.sql jamais appliquée). On stocke en stringifié dans
+    // problem en attendant la régul migration.
     let dbOk = false;
     try {
       const supabase = getServiceClient();
+      const utmBag = [utm_source, utm_medium, utm_campaign, utm_content, referrer]
+        .filter(Boolean).join(' | ');
+      const problemWithTracking = utmBag
+        ? `${(problem || '').trim()}${problem ? '\n\n---\n' : ''}[tracking] ${utmBag}`.slice(0, 500)
+        : (problem || null);
       const { error: dbErr } = await supabase.from('waitlist').upsert({
         name: (name || '').trim(), email: cleanEmail,
-        clients: clients || null, problem: problem || null,
+        clients: clients || null, problem: problemWithTracking,
         source: source || 'waitlist',
-        utm_source: trunc(utm_source, 100),
-        utm_medium: trunc(utm_medium, 100),
-        utm_campaign: trunc(utm_campaign, 100),
-        utm_content: trunc(utm_content, 100),
-        referrer: trunc(referrer, 200),
         created_at: new Date().toISOString(),
       }, { onConflict: 'email' });
       if (dbErr) throw dbErr;
