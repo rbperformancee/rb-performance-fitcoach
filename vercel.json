@@ -133,6 +133,7 @@
     { "source": "/coaches", "destination": "/api/coaches-directory" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap.xml" },
     { "source": "/candidature", "destination": "/app.html?candidature=true" },
+    { "source": "/liste", "destination": "/app.html" },
     { "source": "/blog/:slug", "destination": "/blog/:slug.html" },
     { "source": "/blog", "destination": "/blog/index.html" },
     { "source": "/meilleurs-logiciels-coach-sportif-2026", "destination": "/meilleurs-logiciels-coach-sportif-2026.html" },

@@ -21,6 +21,7 @@ const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
 const BaselineMaxesForm = lazy(() => import("./components/client/BaselineMaxesForm"));
 const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
+const EbookMethodeWaitlist = lazy(() => import("./components/EbookMethodeWaitlist"));
 const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
 // Texte cyclique pour le splash demo client (3 etapes, 1.5s chacune).
@@ -485,6 +486,15 @@ function AppInner() {
     return <Suspense fallback={null}><CoachingApplicationLanding /></Suspense>;
   }
 
+  // ===== WAITLIST EBOOK MÉTHODE ATHLÈTE (/liste) =====
+  // Migration depuis rbperform.com (déploiement Vercel en panne 05/06/26).
+  // Form POST /api/waitlist existant (Supabase + Zoho SMTP).
+  const isListe = typeof window !== "undefined" &&
+    window.location.pathname === "/liste";
+  if (isListe) {
+    return <Suspense fallback={<div style={{ minHeight: "100dvh", background: "#050505" }} />}><EbookMethodeWaitlist /></Suspense>;
+  }
+
   // ===== VITRINE PUBLIQUE COACH (/coach/:slug) =====
   // Page publique servie via RLS anon (public_profile_enabled = true).
   const coachVitrineSlug = (() => {
@@ -743,6 +753,29 @@ function AppInner() {
       setTimeout(() => requestPermission(), 2000);
     }
   }, [client?.id, isCoach, permission, requestPermission]);
+
+  // Demander permission HealthKit (iOS) après le prompt push, pour le
+  // compteur de pas dans WeightChart. iOS = Apple ne révèle pas si l'user
+  // a refusé, donc on retente à chaque session jusqu'à ce que le prompt
+  // soit accepté (on ne stocke pas de flag — Apple gère la persistance
+  // de la réponse au niveau système).
+  React.useEffect(() => {
+    if (!isNative()) return;
+    if (window.__rb_healthkit_attempted) return;
+    if (!client?.id || isCoach) return;
+    window.__rb_healthkit_attempted = true;
+    const tid = setTimeout(async () => {
+      try {
+        // Plugin custom HealthSteps (cf HealthStepsPlugin.swift)
+        const { requestStepsPermission } = await import("./lib/health");
+        await requestStepsPermission();
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("[HealthKit prompt]", e?.message || e);
+      }
+    }, 5000);
+    return () => clearTimeout(tid);
+  }, [client?.id, isCoach]);
   const [splashDone, setSplashDone] = React.useState(false);
   const [showCoachDash, setShowCoachDash] = useState(true);
   const [showGlobalHelp, setShowGlobalHelp] = useState(false);
