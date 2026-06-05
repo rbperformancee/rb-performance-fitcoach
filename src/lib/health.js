@@ -93,6 +93,59 @@ export async function requestWorkoutPermission() {
  * @param {Array<{lat,lng,alt?,t?}>} args.routeCoords  Points GPS optionnels
  * @returns {Promise<{saved:boolean, withRoute:boolean, kcal:number} | null>}
  */
+/**
+ * Demande la permission de lire le rythme cardiaque (HR).
+ * Affiche la sheet HealthKit avec un toggle "Cardio" — pas de plist à ajouter,
+ * NSHealthShareUsageDescription est déjà présent.
+ */
+export async function requestHeartRatePermission() {
+  if (!isNative()) return false;
+  const p = getPlugin();
+  if (!p) return false;
+  try {
+    await p.requestHeartRatePermission();
+    return true;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("[health] requestHeartRatePermission failed:", e);
+    return false;
+  }
+}
+
+/**
+ * Démarre un stream live du rythme cardiaque (HKAnchoredObjectQuery).
+ * Nécessite une Apple Watch appairée et le toggle "Cardio" coché.
+ *
+ * Renvoie une fonction d'unsubscribe.
+ *
+ * @param {(bpm:number, t:number) => void} cb
+ * @returns {Promise<() => void>}
+ */
+export async function startHeartRateStream(cb) {
+  if (!isNative()) return () => {};
+  const p = getPlugin();
+  if (!p) return () => {};
+  let handlePromise = null;
+  try {
+    handlePromise = p.addListener("heartRateUpdate", (d) => {
+      const bpm = Number(d?.bpm);
+      const t = Number(d?.t);
+      if (Number.isFinite(bpm) && bpm > 0) cb(bpm, t);
+    });
+    await p.startHeartRateStream();
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn("[health] startHeartRateStream failed:", e?.message || e);
+  }
+  return async () => {
+    try {
+      const h = await handlePromise;
+      h?.remove?.();
+    } catch (_) {}
+    try { await p.stopHeartRateStream(); } catch (_) {}
+  };
+}
+
 export async function saveRunWorkout({ distanceM, durationS, startedAt, endedAt, routeCoords }) {
   if (!isNative()) return null;
   if (!(distanceM > 50) || !(durationS > 5)) return null;

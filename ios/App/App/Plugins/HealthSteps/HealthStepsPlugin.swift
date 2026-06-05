@@ -27,9 +27,14 @@ public class HealthStepsPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getTodaySteps", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "requestWorkoutPermission", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "saveRunWorkout", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestHeartRatePermission", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "startHeartRateStream", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stopHeartRateStream", returnType: CAPPluginReturnPromise),
     ]
 
     private let store = HKHealthStore()
+    private var heartRateQuery: HKAnchoredObjectQuery?
+    private var heartRateAnchor: HKQueryAnchor?
 
     @objc func requestPermission(_ call: CAPPluginCall) {
         guard HKHealthStore.isHealthDataAvailable() else {
@@ -169,6 +174,81 @@ public class HealthStepsPlugin: CAPPlugin, CAPBridgedPlugin {
                 call.resolve(["saved": true, "withRoute": false, "kcal": Int(kcal)])
             }
         }
+    }
+
+    // MARK: - Heart Rate (live stream)
+
+    @objc func requestHeartRatePermission(_ call: CAPPluginCall) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            call.reject("HealthKit not available on this device")
+            return
+        }
+        guard let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate) else {
+            call.reject("Heart rate type unavailable")
+            return
+        }
+        store.requestAuthorization(toShare: nil, read: [hrType]) { success, error in
+            if let error = error {
+                call.reject("HR perm failed: \(error.localizedDescription)")
+                return
+            }
+            call.resolve(["granted": success])
+        }
+    }
+
+    /// Démarre un flux temps réel des BPM via HKAnchoredObjectQuery.
+    /// Les nouveaux samples (typiquement transmis par l'Apple Watch toutes les 1-5 s)
+    /// sont émis comme événement JS "heartRateUpdate" : { bpm:Int, t:Double(timestamp) }.
+    @objc func startHeartRateStream(_ call: CAPPluginCall) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            call.reject("HealthKit not available")
+            return
+        }
+        guard let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate) else {
+            call.reject("Heart rate type unavailable")
+            return
+        }
+        // Si un stream tourne déjà, on stop avant de relancer
+        if let existing = heartRateQuery {
+            store.stop(existing)
+            heartRateQuery = nil
+        }
+        heartRateAnchor = nil
+
+        let hrUnit = HKUnit(from: "count/min")
+        let predicate = HKQuery.predicateForSamples(withStart: Date(), end: nil, options: .strictStartDate)
+
+        let resultHandler: (HKAnchoredObjectQuery, [HKSample]?, [HKDeletedObject]?, HKQueryAnchor?, Error?) -> Void = { [weak self] _, samples, _, newAnchor, _ in
+            self?.heartRateAnchor = newAnchor
+            guard let qs = samples as? [HKQuantitySample], !qs.isEmpty else { return }
+            // On émet seulement le sample le plus récent (rafraîchi)
+            if let latest = qs.max(by: { $0.endDate < $1.endDate }) {
+                let bpm = Int(latest.quantity.doubleValue(for: hrUnit).rounded())
+                let t = latest.endDate.timeIntervalSince1970
+                self?.notifyListeners("heartRateUpdate", data: ["bpm": bpm, "t": t])
+            }
+        }
+
+        let query = HKAnchoredObjectQuery(
+            type: hrType,
+            predicate: predicate,
+            anchor: heartRateAnchor,
+            limit: HKObjectQueryNoLimit,
+            resultsHandler: resultHandler
+        )
+        query.updateHandler = resultHandler
+        heartRateQuery = query
+        store.execute(query)
+        call.resolve(["streaming": true])
+    }
+
+    @objc func stopHeartRateStream(_ call: CAPPluginCall) {
+        if let q = heartRateQuery {
+            store.stop(q)
+            heartRateQuery = nil
+        }
+        heartRateAnchor = nil
+        call.resolve()
     }
 
     // MARK: - Helpers
