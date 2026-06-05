@@ -10,7 +10,12 @@ import FieldSessionCard from "./FieldSessionCard";
 import { uploadChatPhoto } from "../lib/chatMedia";
 import SessionOptionsModal from "./SessionOptionsModal";
 import { useProgrammeOverrides } from "../hooks/useProgrammeOverrides";
-import { useT } from "../lib/i18n";
+import { useT, getLocale } from "../lib/i18n";
+import {
+  computeCurrentWeekIdx,
+  computeWeekProgress,
+  weekdayLabelsForRecommended,
+} from "../lib/weekProgress";
 
 const G = "#02d1ba";
 const G_DIM = "rgba(2,209,186,0.1)";
@@ -727,51 +732,44 @@ function WarmupCard({ warmup, weekIdx, sessionIdx }) {
 
 // Compute today's expected session based on programme.start_date + training_days,
 // en sautant les dates dans skipped_dates (Reporter / Jour de repos).
-function computeTodaysSession(programmeMeta, programme) {
-  if (!programmeMeta?.start_date || !programmeMeta?.training_days?.length || !programme?.weeks?.length) {
+// computeTodaysSession — mode "objectifs semaine" (v2)
+//
+// Plus d'auto-shift cascade : on retourne juste la prochaine séance non
+// validée de la semaine courante. La semaine en cours est calculée
+// uniquement à partir de start_date (écoulement temps), indépendamment
+// de skipped_dates ou training_days. L'athlète peut faire ses N séances
+// quand il veut dans la semaine.
+//
+// Types retournés :
+//   { type: "not_started", daysUntil }   - programme commence dans N jours
+//   { type: "finished" }                 - dépassé la dernière semaine
+//   { type: "week_done", week }          - toutes les séances normales de la semaine sont faites
+//   { type: "session", week, session }   - prochaine séance à faire
+function computeTodaysSession(programmeMeta, programme, doneSet) {
+  if (!programmeMeta?.start_date || !programme?.weeks?.length) {
     return null;
   }
   const start = new Date(programmeMeta.start_date + "T00:00:00");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().slice(0, 10);
-  const skipped = new Set(programmeMeta.skipped_dates || []);
-  const msPerDay = 86400000;
-  const daysSinceStart = Math.floor((today.getTime() - start.getTime()) / msPerDay);
+  const daysSinceStart = Math.floor((today.getTime() - start.getTime()) / 86400000);
   if (daysSinceStart < 0) return { type: "not_started", daysUntil: -daysSinceStart };
 
-  // Aujourd'hui marqué comme skip via le bouton Reporter ou Jour de repos
-  if (skipped.has(todayStr)) return { type: "rest" };
+  const weekIdx = Math.floor(daysSinceStart / 7);
+  if (weekIdx >= programme.weeks.length) return { type: "finished" };
 
-  const weekday = ((today.getDay() + 6) % 7) + 1;
-  const trainingDays = programmeMeta.training_days.slice().sort((a, b) => a - b);
-  if (!trainingDays.includes(weekday)) return { type: "rest" };
-
-  // Compte les training days "effectifs" (non skippés) jusqu'à aujourd'hui.
-  // Si le client a skip 1 mardi, le mercredi suivant prend la session qui
-  // était prévue ce mardi → effet "session reportée d'1 jour".
-  let effectiveIdx = -1;
-  for (let d = 0; d <= daysSinceStart; d++) {
-    const date = new Date(start.getTime() + d * msPerDay);
-    const dateStr = date.toISOString().slice(0, 10);
-    const dayWeekday = ((date.getDay() + 6) % 7) + 1;
-    if (trainingDays.includes(dayWeekday) && !skipped.has(dateStr)) {
-      effectiveIdx++;
+  // Prochaine séance non validée non-bonus de la semaine courante
+  const sessions = programme.weeks[weekIdx]?.sessions || [];
+  for (let i = 0; i < sessions.length; i++) {
+    if (sessions[i]?.bonus) continue;
+    const key = `${weekIdx}-${i}`;
+    if (!doneSet || !doneSet.has(key)) {
+      return { type: "session", week: weekIdx, session: i };
     }
   }
-  if (effectiveIdx < 0) return { type: "rest" };
 
-  const sessionsPerWeek = trainingDays.length;
-  const weekIdx = Math.floor(effectiveIdx / sessionsPerWeek);
-  const sessionPos = effectiveIdx % sessionsPerWeek;
-  if (weekIdx >= programme.weeks.length) return { type: "finished" };
-  // Le calendrier ne mappe que les séances « normales » : les séances bonus
-  // sont optionnelles et n'occupent aucun jour d'entraînement.
-  const weekSessions = programme.weeks[weekIdx]?.sessions || [];
-  const normalIdx = weekSessions.map((s, i) => (s && s.bonus) ? -1 : i).filter((i) => i >= 0);
-  if (sessionPos >= normalIdx.length) return { type: "rest" };
-  const sessionIdx = normalIdx[sessionPos];
-  return { type: "session", week: weekIdx, session: sessionIdx, sessionsPerWeek };
+  // Toutes les séances normales de cette semaine sont faites
+  return { type: "week_done", week: weekIdx };
 }
 
 export default function TrainingPage({ client, programme, programmeMeta, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta, onStartSession }) {
@@ -782,6 +780,9 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   // Bypass de l'ecran "Jour de repos" via le bouton "Voir le programme quand
   // meme" : sans ce state l'early-return (l. ~583) renvoie tjs l'ecran repos.
   const [forceShowProgramme, setForceShowProgramme] = useState(false);
+  // Set des sessions validées (clés "wIdx-sIdx"). Hydraté depuis cloud
+  // session_completions + miroir local (refresh à la validation in-app).
+  const [doneSet, setDoneSet] = useState(() => new Set());
   // Helper : verifier si une seance (week, sessionIdx) est validee via localStorage
   const isSessionValidee = useCallback((wIdx, sIdx) => {
     try {
@@ -790,10 +791,30 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     } catch (e) { return false; }
   }, []);
 
-  // Calcul de la séance prévue AUJOURD'HUI selon programme.start_date + training_days
+  // Calcul de la prochaine séance à faire — mode "objectifs semaine".
+  // Plus d'auto-shift cascade. L'athlète fait ses N séances de la sem en
+  // cours dans l'ordre quand il veut. doneSet inclut les validations cloud.
   const todaysSession = useMemo(
-    () => computeTodaysSession(programmeMeta, programme),
-    [programmeMeta?.start_date, programmeMeta?.training_days, programme?.weeks?.length]
+    () => computeTodaysSession(programmeMeta, programme, doneSet),
+    [programmeMeta?.start_date, programme?.weeks?.length, doneSet]
+  );
+
+  // Progression de la semaine en cours : { target, done, sessions[], nextSession }
+  const currentWeekIdx = useMemo(
+    () => computeCurrentWeekIdx(programmeMeta),
+    [programmeMeta?.start_date]
+  );
+  const weekProgress = useMemo(
+    () => (currentWeekIdx != null && currentWeekIdx >= 0)
+      ? computeWeekProgress({ programme, weekIdx: currentWeekIdx, doneSet })
+      : null,
+    [programme, currentWeekIdx, doneSet]
+  );
+
+  // Recommended training days label (e.g. "Lun · Mer · Ven · Sam")
+  const recommendedDaysLabel = useMemo(
+    () => weekdayLabelsForRecommended(programmeMeta?.training_days, getLocale()),
+    [programmeMeta?.training_days]
   );
 
   // Mini-calendrier hebdo : pour chaque jour de la semaine en cours (Lun-Dim)
@@ -853,6 +874,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       // courant. programme_id NULL = lignes legacy (ancien programme unique).
       const curProgId = programmeMeta?.id || null;
       const completed = new Set();
+      const completedNewFormat = new Set(); // pour weekProgress (clé "w-s")
       (data || [])
         .filter((c) => !c.programme_id || !curProgId || c.programme_id === curProgId)
         .forEach((c) => {
@@ -867,7 +889,10 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           }));
         } catch {}
         completed.add(`${c.week_idx}_${c.session_idx}`);
+        completedNewFormat.add(`${c.week_idx}-${c.session_idx}`);
       });
+      // Hydrate le state pour computeTodaysSession + weekProgress
+      setDoneSet(completedNewFormat);
 
       // Priorité 1 : si on a un calendrier ET qu'aujourd'hui est un training day → on y va
       // Priorité 2 : 1re séance non-complétée
@@ -994,16 +1019,32 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         if (s.start) setChrono(Math.floor((Date.now() - s.start) / 1000));
       } catch(e) {}
     }, 1000);
-    // Au retour sur l app iOS
-    const onVisible = () => {
-      if (document.visibilityState !== "visible") return;
+    // Recalcule depuis le timestamp au retour foreground (web + iOS).
+    const recompute = () => {
       try {
         const s = JSON.parse(localStorage.getItem(CKEY) || "{}");
         if (s.start) setChrono(Math.floor((Date.now() - s.start) / 1000));
       } catch(e) {}
     };
+    const onVisible = () => { if (document.visibilityState === "visible") recompute(); };
     document.addEventListener("visibilitychange", onVisible);
-    return () => { clearInterval(intervalRef.current); document.removeEventListener("visibilitychange", onVisible); };
+    // iOS Capacitor : visibilitychange ne fire pas toujours quand l'app
+    // revient de background. On branche aussi App.resume du plugin Capacitor.
+    let capListener = null;
+    (async () => {
+      try {
+        const { isNative } = await import("../lib/native");
+        if (!isNative()) return;
+        const { App: CapApp } = await import("@capacitor/app").catch(() => ({ App: null }));
+        if (!CapApp) return;
+        capListener = await CapApp.addListener("resume", recompute);
+      } catch (_) {}
+    })();
+    return () => {
+      clearInterval(intervalRef.current);
+      document.removeEventListener("visibilitychange", onVisible);
+      if (capListener?.remove) capListener.remove();
+    };
   }, [chronoOn, CKEY]);
 
   // Auto-scroll la rangee horizontale des seances pour centrer la seance active
@@ -1200,16 +1241,18 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     </div>
   );
 
-  // Écran "Repos" si aujourd'hui n'est pas un training day OU programme pas démarré
+  // Écran plein : programme pas démarré, terminé, OU semaine bouclée.
   // (bypass via setForceShowProgramme — bouton "Voir le programme quand meme")
-  if (!forceShowProgramme && (todaysSession?.type === "rest" || todaysSession?.type === "not_started" || todaysSession?.type === "finished")) {
-    const isRest = todaysSession.type === "rest";
+  // Plus de "rest" jour par jour : on n'affiche cet écran QUE si l'athlète
+  // a fini toutes ses séances normales de la semaine ('week_done').
+  if (!forceShowProgramme && (todaysSession?.type === "week_done" || todaysSession?.type === "not_started" || todaysSession?.type === "finished")) {
+    const isRest = todaysSession.type === "week_done"; // semaine bouclée (gardé le nom isRest pour réutiliser le rendering)
     const isNotStarted = todaysSession.type === "not_started";
     const isFinished = todaysSession.type === "finished";
     return (
       <div style={{ minHeight: "100dvh", background: "linear-gradient(180deg, #060606 0%, #050505 60%)", color: "#fff", fontFamily: "-apple-system, Inter, sans-serif", padding: "calc(env(safe-area-inset-top, 0px) + 60px) 24px 120px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
         <div style={{ fontSize: 10, color: G, letterSpacing: "4px", textTransform: "uppercase", fontWeight: 700, marginBottom: 24, opacity: 0.7 }}>
-          {isRest ? "Aujourd'hui" : isNotStarted ? "Programme à venir" : "Programme terminé"}
+          {isRest ? "Semaine bouclée" : isNotStarted ? "Programme à venir" : "Programme terminé"}
         </div>
         {/* Pictogramme custom — design premium teal/glow, evite l'emoji OS qui detonne */}
         <div style={{ marginBottom: 28, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1268,13 +1311,13 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
               if (!m) return s;
               return <>{m[1]}<span style={{ color: G }}>{m[2]}</span>{m[3]}</>;
             };
-            if (isRest) return renderColored(t('train.day_rest_text'));
+            if (isRest) return <>Bravo<span style={{ color: G }}>.</span><br/>Semaine bouclée.</>;
             if (isNotStarted) return renderColored(t(todaysSession.daysUntil > 1 ? 'train.starts_in_days_many' : 'train.starts_in_days_one'), { n: todaysSession.daysUntil });
             return renderColored(t('train.cycle_finished_text'));
           })()}
         </div>
         <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, maxWidth: 360, marginBottom: 36 }}>
-          {isRest && "Profite. Hydrate-toi, mange propre, dors bien. Le corps progresse pendant le repos."}
+          {isRest && "Tu as fait toutes tes séances de la semaine. Récupère, hydrate-toi, dors. Le corps progresse pendant le repos."}
           {isNotStarted && "Ton programme commence bientôt. Reviens à la date prévue pour démarrer."}
           {isFinished && "Tu as terminé ton cycle. Bilan avec ton coach pour la suite."}
         </div>
@@ -1286,7 +1329,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             if (next) { setActiveWeek(next.wi); setActiveSession(next.si); }
             setForceShowProgramme(true);
           }} style={{ padding: "13px 26px", borderRadius: 12, border: "1px solid rgba(2,209,186,0.25)", background: "rgba(2,209,186,0.06)", color: G, fontSize: 12, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", cursor: "pointer" }}>
-            Voir le programme quand même
+            Voir le programme
           </button>
         )}
       </div>
@@ -1296,46 +1339,105 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)" }}>
 
-      {/* BANNER : séances ratées */}
-      {missedCount > 0 && (
-        <div style={{ margin: "8px 20px 0", padding: "10px 14px", background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.22)", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontSize: 16 }}>⚠️</div>
-          <div style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
-            {(() => {
-              const raw = missedCount === 1 ? t('train.missed_one_session') : t('train.missed_multiple').split('{n}').join(String(missedCount));
-              // On met en orange le segment quantifié pour garder le visuel
-              // existant. Découpe naïve sur le 1er chiffre rencontré.
-              const m = raw.match(/^(.*?)(\d+\s+\S+)(.*)$/);
-              if (!m) return raw;
-              return <>{m[1]}<strong style={{ color: "#f97316" }}>{m[2]}</strong>{m[3]}</>;
-            })()}
+      {/* CARTE PROGRESSION SEMAINE (mode "objectifs semaine") */}
+      {weekProgress && (
+        <div style={{
+          margin: "10px 20px 4px",
+          padding: "14px 16px",
+          background: "rgba(2,209,186,0.05)",
+          border: "1px solid rgba(2,209,186,0.18)",
+          borderRadius: 14,
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+            <div style={{ fontSize: 10, color: G, letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 800 }}>
+              Semaine {(currentWeekIdx || 0) + 1}
+            </div>
+            <div style={{ fontSize: 13, color: "#fff", fontWeight: 700 }}>
+              <span style={{ color: G }}>{weekProgress.done}</span>
+              <span style={{ color: "rgba(255,255,255,0.45)" }}> / {weekProgress.target} séances</span>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* MINI-CALENDRIER HEBDO */}
-      {weekStrip && (
-        <div style={{ margin: "12px 20px 4px", display: "flex", justifyContent: "space-between", gap: 4 }}>
-          {weekStrip.map((d, i) => {
-            const labels = ["L", "M", "M", "J", "V", "S", "D"];
-            const colors = {
-              done: { bg: "rgba(2,209,186,0.18)", dot: G, txt: G },
-              today: { bg: "rgba(2,209,186,0.06)", dot: G, txt: "#fff", ring: G },
-              missed: { bg: "rgba(249,115,22,0.1)", dot: "#f97316", txt: "rgba(255,255,255,0.7)" },
-              future_training: { bg: "rgba(255,255,255,0.03)", dot: "rgba(255,255,255,0.25)", txt: "rgba(255,255,255,0.45)" },
-              rest: { bg: "rgba(255,255,255,0.015)", dot: "rgba(255,255,255,0.1)", txt: "rgba(255,255,255,0.25)" },
-              future: { bg: "rgba(255,255,255,0.015)", dot: "rgba(255,255,255,0.06)", txt: "rgba(255,255,255,0.2)" },
-            };
-            const c = colors[d.status] || colors.rest;
-            const isToday = d.status === "today";
-            return (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "6px 0", borderRadius: 8, background: c.bg, border: isToday ? `1px solid ${c.ring}` : "1px solid transparent" }}>
-                <div style={{ fontSize: 9, color: c.txt, fontWeight: 700, letterSpacing: "0.5px" }}>{labels[i]}</div>
-                <div style={{ fontSize: 11, color: c.txt, fontWeight: isToday ? 800 : 500 }}>{d.date.getDate()}</div>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot }} />
-              </div>
-            );
-          })}
+          {/* Progress bar */}
+          <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 100, overflow: "hidden", marginBottom: 12 }}>
+            <div style={{
+              height: "100%",
+              width: weekProgress.target > 0 ? `${Math.min(100, (weekProgress.done / weekProgress.target) * 100)}%` : "0%",
+              background: `linear-gradient(90deg, ${G}, ${G})`,
+              borderRadius: 100,
+              transition: "width 0.4s ease",
+            }} />
+          </div>
+          {/* Liste séances avec status */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {weekProgress.sessions.filter(s => !s.isBonus).map((s) => {
+              const isDone = s.status === "done";
+              const isNext = s.status === "next";
+              return (
+                <button
+                  key={s.idx}
+                  type="button"
+                  onClick={() => {
+                    if (isDone) return; // no-op, déjà fait
+                    setActiveWeek(currentWeekIdx);
+                    setActiveSession(s.idx);
+                  }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 12px",
+                    background: isNext ? "rgba(2,209,186,0.10)" : isDone ? "rgba(2,209,186,0.03)" : "rgba(255,255,255,0.02)",
+                    border: isNext ? `1px solid ${G}` : "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 10,
+                    cursor: isDone ? "default" : "pointer",
+                    textAlign: "left",
+                    fontFamily: "inherit",
+                    width: "100%",
+                  }}
+                >
+                  {/* Dot status */}
+                  <div style={{
+                    width: 14, height: 14, borderRadius: "50%",
+                    background: isDone ? G : isNext ? "transparent" : "rgba(255,255,255,0.06)",
+                    border: isNext ? `2px solid ${G}` : "none",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                    {isDone && (
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 13,
+                      fontWeight: isNext ? 700 : 500,
+                      color: isDone ? "rgba(255,255,255,0.45)" : "#fff",
+                      textDecoration: isDone ? "line-through" : "none",
+                      whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    }}>
+                      {s.name}
+                    </div>
+                    {s.focus && (
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 1 }}>
+                        {s.focus}
+                      </div>
+                    )}
+                  </div>
+                  {isNext && (
+                    <div style={{ fontSize: 9, color: G, fontWeight: 800, letterSpacing: "1px", textTransform: "uppercase" }}>
+                      → prochaine
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {/* Recommandation coach (discreet) */}
+          {recommendedDaysLabel && (
+            <div style={{ marginTop: 10, fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "0.5px" }}>
+              Plan idéal du coach&nbsp;: {recommendedDaysLabel}
+            </div>
+          )}
         </div>
       )}
 
@@ -1540,7 +1642,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
             const isExActive = forceActive || (firstUndoneIdx !== -1 && firstUndoneIdx === ei);
             return (
-              <div key={ei} style={{ marginBottom: 10, opacity: isDone || isExActive || (getHistory(activeWeek, activeSession, ei - 1) || []).length > 0 || ei === 0 ? 1 : 0.4 }}>
+              <div key={ei} style={{ marginBottom: 10 }}>
                 <ExerciseCard
                   ex={ex}
                   weekIdx={activeWeek}

@@ -76,6 +76,10 @@
       "schedule": "0 18 * * *"
     },
     {
+      "path": "/api/cron-end-of-week-catchup",
+      "schedule": "0 17 * * 0"
+    },
+    {
       "path": "/api/cron-client-weekly-email",
       "schedule": "0 8 * * 1"
     },

@@ -3262,7 +3262,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
               <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Vide = aujourd'hui</div>
             </div>
             <div>
-              <label style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: 6 }}>Jours d'entraînement</label>
+              <label style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: "0.5px", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: 6 }}>Jours recommandés</label>
               <div style={{ display: "flex", gap: 4 }}>
                 {[
                   { d: 1, l: "L" }, { d: 2, l: "M" }, { d: 3, l: "M" },
@@ -3294,8 +3294,11 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
                   );
                 })}
               </div>
-              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
-                {programme.trainingDays?.length || 1} jour{(programme.trainingDays?.length || 1) > 1 ? "s" : ""} / sem · vide = lundi
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4, lineHeight: 1.5 }}>
+                {programme.trainingDays?.length || 1} séance{(programme.trainingDays?.length || 1) > 1 ? "s" : ""} / sem.<br/>
+                <span style={{ color: "rgba(255,255,255,0.25)" }}>
+                  Ces jours sont une suggestion pour l'athlète. Il peut décaler tant qu'il fait ses séances dans la semaine.
+                </span>
               </div>
             </div>
           </div>
