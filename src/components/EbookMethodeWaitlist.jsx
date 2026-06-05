@@ -25,8 +25,20 @@ const KEYFRAMES = `
 `;
 
 export default function EbookMethodeWaitlist() {
+  // Compteur live d'inscrits — fetch /api/waitlist-count au mount (cache edge 60s)
+  const [signupCount, setSignupCount] = useState(null);
+
   useEffect(() => {
     document.title = "Liste · Méthode ATHLÈTE COMPLET — RB Perform";
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/waitlist-count?source=methode-athlete")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (alive && d && Number.isFinite(d.count)) setSignupCount(d.count); })
+      .catch(() => { /* silencieux */ });
+    return () => { alive = false; };
   }, []);
 
   return (
@@ -107,7 +119,9 @@ export default function EbookMethodeWaitlist() {
               color: GREEN, fontWeight: 700,
             }}
           >
-            Méthode signature · 30 places fondateur
+            {signupCount != null && signupCount > 0
+              ? `${signupCount} inscrit${signupCount > 1 ? "s" : ""} · 30 places fondateur`
+              : "Méthode signature · 30 places fondateur"}
           </div>
         </div>
 

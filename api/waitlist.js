@@ -103,33 +103,23 @@ module.exports = async (req, res) => {
 
     // Send emails via Zoho SMTP
     const transporter = getTransporter();
+
+    // Détermine le contexte du mail selon la source : ebook athlète ou
+    // SaaS coach Founding. Évite d'envoyer un mail "coach Founding" à un
+    // athlète qui s'inscrit pour le livre.
+    const isMethodeAthlete = (source || '').toLowerCase() === 'methode-athlete';
+    const prospectMail = isMethodeAthlete
+      ? buildMethodeAthleteEmail(firstName)
+      : buildCoachFoundingEmail(firstName);
+
     if (transporter) {
       // 1. Email confirmation au prospect
       try {
         await transporter.sendMail({
           from: `RB Perform <${SMTP_USER}>`,
           to: [cleanEmail],
-          subject: `${firstName}, tu es sur la liste`,
-          html: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px"><tr><td align="center">
-<table width="500" cellpadding="0" cellspacing="0" style="max-width:500px;width:100%">
-  <tr><td align="center" style="padding-bottom:24px">
-    <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.5);margin-bottom:6px">Coaching Premium</div>
-    <div style="font-size:24px;font-weight:900;color:#f0f0f0;letter-spacing:-1px">RB<span style="color:${G}">.</span>Perform</div>
-  </td></tr>
-  <tr><td style="background:#111;border-radius:20px;border:1px solid rgba(255,255,255,0.06);padding:40px 32px">
-    <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px">Salut ${firstName},</div>
-    <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:16px;line-height:1.3">Tu es sur la liste<span style="color:${G}">.</span></div>
-    <div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:24px">RB Perform lance en mai 2026. Tu fais partie des premiers coachs a avoir reserve ta place. On te previent des que c'est pret.</div>
-    <div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:24px">En attendant, tu peux deja tester la demo :</div>
-    <div style="text-align:center;margin-bottom:24px">
-      <a href="https://rbperform.app/demo" style="display:inline-block;background:${G};color:#000;font-size:13px;font-weight:800;text-decoration:none;padding:14px 28px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase">Tester la demo coach</a>
-    </div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.25);text-align:center">30 places Founding Coach a 199EUR/mois verrouille a vie.</div>
-  </td></tr>
-  <tr><td style="padding:24px 0 0;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.15)">RB Perform — rayan@rbperform.app</div></td></tr>
-</table></td></tr></table></body></html>`,
+          subject: prospectMail.subject,
+          html: prospectMail.html,
         });
       } catch (e) {
         console.error(`[WAITLIST_EMAIL_FAILED] prospect email=${cleanEmail} reason="${e.message}" db_ok=${dbOk}`);
@@ -152,7 +142,9 @@ module.exports = async (req, res) => {
         await transporter.sendMail({
           from: `RB Perform <${SMTP_USER}>`,
           to: [NOTIFY_EMAIL],
-          subject: `Nouveau inscrit waitlist : ${subjectName}`,
+          subject: isMethodeAthlete
+            ? `Nouvel inscrit MÉTHODE ATHLÈTE : ${subjectName}`
+            : `Nouvel inscrit waitlist coach : ${subjectName}`,
           html: `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:32px 16px"><tr><td align="center">
@@ -187,3 +179,66 @@ module.exports = async (req, res) => {
     return res.status(200).json({ ok: true });
   }
 };
+
+// ─── Email templates ─────────────────────────────────────────────────
+
+// Template SaaS coach Founding (waitlist B2B historique).
+function buildCoachFoundingEmail(firstName) {
+  return {
+    subject: `${firstName}, tu es sur la liste`,
+    html: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px"><tr><td align="center">
+<table width="500" cellpadding="0" cellspacing="0" style="max-width:500px;width:100%">
+  <tr><td align="center" style="padding-bottom:24px">
+    <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.5);margin-bottom:6px">Coaching Premium</div>
+    <div style="font-size:24px;font-weight:900;color:#f0f0f0;letter-spacing:-1px">RB<span style="color:${G}">.</span>Perform</div>
+  </td></tr>
+  <tr><td style="background:#111;border-radius:20px;border:1px solid rgba(255,255,255,0.06);padding:40px 32px">
+    <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px">Salut ${firstName},</div>
+    <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:16px;line-height:1.3">Tu es sur la liste<span style="color:${G}">.</span></div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:24px">RB Perform lance en juin 2026. Tu fais partie des premiers coachs a avoir reserve ta place. On te previent des que c'est pret.</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:24px">En attendant, tu peux deja tester la demo :</div>
+    <div style="text-align:center;margin-bottom:24px">
+      <a href="https://rbperform.app/demo" style="display:inline-block;background:${G};color:#000;font-size:13px;font-weight:800;text-decoration:none;padding:14px 28px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase">Tester la demo coach</a>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.25);text-align:center">30 places Founding Coach a 199EUR/mois verrouille a vie.</div>
+  </td></tr>
+  <tr><td style="padding:24px 0 0;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.15)">RB Perform — rayan@rbperform.app</div></td></tr>
+</table></td></tr></table></body></html>`,
+  };
+}
+
+// Template Méthode ATHLÈTE COMPLET (waitlist ebook, /liste).
+function buildMethodeAthleteEmail(firstName) {
+  return {
+    subject: `${firstName}, tu es sur la liste athlète`,
+    html: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px"><tr><td align="center">
+<table width="500" cellpadding="0" cellspacing="0" style="max-width:500px;width:100%">
+  <tr><td align="center" style="padding-bottom:24px">
+    <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(2,209,186,0.5);margin-bottom:6px">Methode Athlete Complet</div>
+    <div style="font-size:24px;font-weight:900;color:#f0f0f0;letter-spacing:-1px">RB<span style="color:${G}">.</span>Perform</div>
+  </td></tr>
+  <tr><td style="background:#111;border-radius:20px;border:1px solid rgba(255,255,255,0.06);padding:40px 32px">
+    <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px">Salut ${firstName},</div>
+    <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:16px;line-height:1.3">Tu es sur la liste<span style="color:${G}">.</span></div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:18px">
+      La <strong style="color:#fff">Methode ATHLETE COMPLET</strong> sort <strong style="color:${G}">lundi 15 juin a 9h</strong>. Tu vas recevoir le lien direct ce matin la, en avant-premiere.
+    </div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:22px">
+      110 pages editoriales + 12 semaines + 60 seances + nutrition + recettes. Tout ce qui fait un athlete complet, dans un seul livret.
+    </div>
+    <div style="background:rgba(2,209,186,0.07);border:1px solid rgba(2,209,186,0.25);border-radius:14px;padding:18px;margin-bottom:24px">
+      <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};font-weight:700;margin-bottom:6px">★ Bonus fondateur</div>
+      <div style="font-size:14px;color:#fff;font-weight:700;line-height:1.5;margin-bottom:4px">Les 30 premiers acheteurs ont leur programme sur l'app RB Perform.</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.6">Pas un PDF fige : tes seances dans l'app, tes charges sauvegardees, ton suivi en live.</div>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:8px">Ca se joue a la rapidite lundi 9h. Reste attentif a ta boite.</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6">A lundi,<br/><strong style="color:#fff">Rayan</strong></div>
+  </td></tr>
+  <tr><td style="padding:24px 0 0;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.15)">RB Perform — rayan@rbperform.app</div></td></tr>
+</table></td></tr></table></body></html>`,
+  };
+}
