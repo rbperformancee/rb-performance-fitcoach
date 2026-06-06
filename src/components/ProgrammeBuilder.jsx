@@ -9,7 +9,7 @@ import LogPaymentModal, { checkPaymentNeeded } from "./coach/LogPaymentModal";
 import { detectPletnev, detectPoliquin } from "../utils/parserProgramme";
 import CountdownBlockCard from "./CountdownBlockCard";
 import { addBreadcrumb } from "../lib/sentry";
-import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
+import { DndContext, closestCenter, closestCorners, PointerSensor, TouchSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { exportProgrammePDF } from "../utils/exportPDF";
@@ -3547,7 +3547,54 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
           </div>
           <DndContext
             sensors={dragSensors}
-            collisionDetection={closestCenter}
+            // closestCorners marche mieux que closestCenter pour les sortable
+            // multi-containers (sessions dans des semaines différentes). Sans
+            // ça, le drop cross-week n'était pas détecté côté collision.
+            collisionDetection={closestCorners}
+            onDragOver={(event) => {
+              const { active, over } = event;
+              if (!over || active.id === over.id) return;
+              setProgramme((p) => {
+                // Skip si c'est un drag de semaine (= weeks réorgs, géré par onDragEnd)
+                const isWeekDrag = p.weeks.some((w) => w.id === active.id);
+                if (isWeekDrag) return p;
+
+                // Trouve la semaine source de la séance draguée
+                let srcW = -1, srcS = -1;
+                for (let wi = 0; wi < p.weeks.length; wi++) {
+                  const si = (p.weeks[wi].sessions || []).findIndex((s) => s.id === active.id);
+                  if (si >= 0) { srcW = wi; srcS = si; break; }
+                }
+                if (srcW < 0) return p;
+
+                // Trouve la semaine cible : soit via WeekDroppable id, soit
+                // via une autre session
+                let tgtW = -1;
+                if (typeof over.id === "string" && over.id.startsWith("week-drop-")) {
+                  tgtW = parseInt(over.id.slice("week-drop-".length), 10);
+                } else {
+                  for (let wi = 0; wi < p.weeks.length; wi++) {
+                    if ((p.weeks[wi].sessions || []).some((s) => s.id === over.id)) {
+                      tgtW = wi; break;
+                    }
+                  }
+                }
+                if (tgtW < 0 || tgtW === srcW) return p; // intra-semaine = géré par onDragEnd
+
+                // Déplace optimisticly vers la semaine cible (à la fin) pour
+                // que dnd-kit voie l'item dans le nouveau SortableContext et
+                // ne perde pas le track pendant le drag.
+                const movingSess = p.weeks[srcW].sessions[srcS];
+                return {
+                  ...p,
+                  weeks: p.weeks.map((w, wi) => {
+                    if (wi === srcW) return { ...w, sessions: w.sessions.filter((_, i) => i !== srcS) };
+                    if (wi === tgtW) return { ...w, sessions: [...(w.sessions || []), movingSess] };
+                    return w;
+                  }),
+                };
+              });
+            }}
             onDragEnd={(event) => {
               const { active, over } = event;
               if (!over || active.id === over.id) return;
