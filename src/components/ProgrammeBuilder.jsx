@@ -1286,6 +1286,72 @@ function ExerciseRow({ ex, idx, total, onUpdate, onRemove, onMove, onDuplicate, 
   );
 }
 
+// QuickAddPresets — bouton/menu "+ Plus…" qui regroupe TOUS les ajouts
+// secondaires (préréglages Poliquin/Abs, run/cardio, AMRAP, ergo, séance
+// terrain, échauffement). But : un seul point d'entrée discret au lieu de
+// 6 boutons toujours visibles qui polluent la vue par défaut. Toggle =
+// clic ouvre une liste d'options inline, re-clic ou choix referme.
+function QuickAddPresets({
+  onPoliquin, onAbsCircuit,
+  onRun, onAmrap, onErgo, onField, onWarmup,
+  hasWarmup,
+}) {
+  const [open, setOpen] = useState(false);
+  const opts = [
+    onWarmup && !hasWarmup ? { key: "warmup", label: "Échauffement (circuit)", color: "rgba(2,209,186,0.85)", bg: "rgba(2,209,186,0.06)", border: "rgba(2,209,186,0.3)", fn: onWarmup } : null,
+    onPoliquin ? { key: "poliquin", label: "Bloc Poliquin 6-12-25", sub: "tempo 40X0/30X0/20X0", color: "#f472b6", bg: "rgba(244,114,182,0.08)", border: "rgba(244,114,182,0.32)", fn: onPoliquin } : null,
+    onAbsCircuit ? { key: "abs", label: "Circuit abdos", sub: "4 tours × 45s", color: "#fbbf24", bg: "rgba(255,180,80,0.06)", border: "rgba(255,180,80,0.28)", fn: onAbsCircuit } : null,
+    onRun ? { key: "run", label: "Run / Cardio", sub: "continu, fractionné, HIIT", color: "#02d1ba", bg: "rgba(2,209,186,0.06)", border: "rgba(2,209,186,0.28)", fn: onRun } : null,
+    onAmrap ? { key: "amrap", label: "AMRAP / WOD", sub: "chrono countdown", color: "#ef4444", bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.28)", fn: onAmrap } : null,
+    onErgo ? { key: "ergo", label: "Ergo (rameur, vélo…)", sub: "fin de séance", color: "#38bdf8", bg: "rgba(56,189,248,0.06)", border: "rgba(56,189,248,0.28)", fn: onErgo } : null,
+    onField ? { key: "field", label: "Séance terrain", sub: "foot, rugby, drill…", color: "#a78bfa", bg: "rgba(167,139,250,0.06)", border: "rgba(167,139,250,0.28)", fn: onField } : null,
+  ].filter(Boolean);
+  if (opts.length === 0) return null;
+  return (
+    <div style={{ marginTop: 8 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%", padding: "8px 12px", background: "transparent",
+          border: "1px dashed rgba(255,255,255,0.12)", borderRadius: 10,
+          color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
+          cursor: "pointer", fontFamily: "inherit",
+          display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+        }}
+      >
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+          style={{ transform: open ? "rotate(45deg)" : "none", transition: "transform .2s" }} aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        {open ? "Fermer" : "Plus de blocs"}
+      </button>
+      {open && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 6 }}>
+          {opts.map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => { o.fn(); setOpen(false); }}
+              style={{
+                width: "100%", padding: "9px 12px",
+                background: o.bg,
+                border: "1px dashed " + o.border,
+                borderRadius: 10,
+                color: o.color, fontSize: 11.5, fontWeight: 700, letterSpacing: 0.3,
+                cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+              }}
+            >
+              + {o.label}
+              {o.sub && <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600, marginLeft: 6 }}>· {o.sub}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // WeekDroppable — zone de drop pour les séances cross-week. id format
 // "week-drop-N" décodé dans le handleDragEnd root pour insérer la séance
 // draguée à la fin du tableau sessions de cette semaine. Visuel feedback
@@ -1608,41 +1674,7 @@ function SessionPanel({ session, idx, total, weekIdx, weekNames, onCopyToWeek, o
           onDisable={disableWarmup}
           isMobile={isMobile}
         />
-      ) : (
-        <button
-          type="button"
-          onClick={enableWarmup}
-          style={{
-            width: "100%", padding: "13px 14px", marginBottom: 14,
-            background: "transparent",
-            border: "1px dashed rgba(255,255,255,0.13)",
-            borderRadius: 12,
-            color: "rgba(255,255,255,0.55)",
-            fontSize: 11, fontFamily: "inherit",
-            cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 9,
-            letterSpacing: 0.3,
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-            e.currentTarget.style.borderColor = "rgba(2,209,186,0.3)";
-            e.currentTarget.style.color = "rgba(255,255,255,0.85)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)";
-            e.currentTarget.style.color = "rgba(255,255,255,0.55)";
-          }}
-        >
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a9 9 0 1 1-3.5-7.1"/><polyline points="21 4 21 9 16 9"/>
-          </svg>
-          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2.5, textTransform: "uppercase", color: G }}>{t("pb.eyebrow_circuit_warmup_short", "Circuit échauffement")}</span>
-          <span style={{ opacity: 0.5 }}>·</span>
-          <span>{t("pb.tmpl_warmup_msg", "Préparer le corps avant la séance")}</span>
-        </button>
-      )}
+      ) : null}
 
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 10 }}>{t("pb.label_exercises", "Exercices")}</div>
       <DndContext
@@ -1679,44 +1711,30 @@ function SessionPanel({ session, idx, total, weekIdx, weekNames, onCopyToWeek, o
         }}
       >+ Ajouter un exercice</button>
 
-      {/* Quick-adds : Poliquin 6-12-25 + circuit abdos. Insèrent des blocs
-          d'exos pré-groupés avec tempo/RIR/repos cohérents → le coach n'a
-          plus qu'à taper les noms d'exos. Le badge Poliquin par-exo (détection
-          sur tempo X) reste actif et marque chaque ligne du bloc. */}
-      <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={addPoliquinBlock}
-          title="Giant set 6-12-25 (signature Charles Poliquin) — 3 exos B1/B2/B3 enchaînés × 4 tours, tempos 40X0/30X0/20X0 (explosive concentric), 1RIR, 3min de repos en fin de cluster. Coach : tape juste les 3 noms d'exos (ex: traction supination / tirage horizontal / face pull)."
-          style={{
-            flex: "1 1 220px", padding: "10px 12px", background: "rgba(244,114,182,0.06)",
-            border: "1px dashed rgba(244,114,182,0.28)", borderRadius: 10,
-            color: "rgba(244,114,182,0.95)", fontSize: 11, fontWeight: 700, cursor: "pointer",
-            fontFamily: "inherit", letterSpacing: 0.4, textAlign: "left",
-          }}
-        >
-          + Bloc Poliquin 6-12-25 <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>· tempo 40X0/30X0/20X0</span>
-        </button>
-        <button
-          type="button"
-          onClick={addAbsCircuit}
-          title="Circuit abdos 4 tours — 4 positions × 45s, 10s entre positions, 1min entre tours. Modifie les reps après si tu veux du 30s ou 1min."
-          style={{
-            flex: "1 1 220px", padding: "10px 12px", background: "rgba(255,180,80,0.04)",
-            border: "1px dashed rgba(255,180,80,0.25)", borderRadius: 10,
-            color: "rgba(255,200,120,0.9)", fontSize: 11, fontWeight: 700, cursor: "pointer",
-            fontFamily: "inherit", letterSpacing: 0.4, textAlign: "left",
-          }}
-        >
-          + Circuit abdos <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>· 4 tours × 45s · ajustable</span>
-        </button>
-      </div>
+      {/* Plus de blocs (Poliquin + abs + run + AMRAP + ergo + terrain +
+          échauffement) cachés derrière UN toggle discret. Les sections
+          ci-dessous (Cardio/Run, AMRAP, Terrain, Ergo) ne s'affichent que
+          si elles ont déjà au moins un item — vue par défaut clean. */}
+      <QuickAddPresets
+        onPoliquin={addPoliquinBlock}
+        onAbsCircuit={addAbsCircuit}
+        onRun={addRun}
+        onAmrap={addAmrap}
+        onErgo={addErgo}
+        onField={addFieldSession}
+        onWarmup={enableWarmup}
+        hasWarmup={!!warmup}
+      />
 
-      {/* CARDIO / RUN — apparaît dans la séance ET dans la page Run du client */}
+      {/* CARDIO / RUN — header masqué si vide (= sans run prescrit).
+          Le coach ajoute via QuickAddPresets ci-dessus → onRun crée la 1ère
+          ligne et la section devient visible. */}
+      {runs.length > 0 && (
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
         Cardio / Run{" "}
         <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(alimente la page Run)</span>
       </div>
+      )}
       {runs.map((r, i) => {
         const isFrac = (r.repeats != null && r.repeats >= 2) || !!r.work;
         return (
@@ -1889,23 +1907,21 @@ function SessionPanel({ session, idx, total, weekIdx, weekNames, onCopyToWeek, o
         </div>
         );
       })}
-      <button
-        type="button"
-        onClick={addRun}
-        style={{
-          width: "100%", padding: 10, background: "transparent",
-          border: "1px dashed rgba(2,209,186,0.3)", borderRadius: 12,
-          color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-          letterSpacing: 0.5,
-        }}
-      >+ Ajouter un run</button>
+      {runs.length > 0 && (
+        <button
+          type="button"
+          onClick={addRun}
+          style={{
+            width: "100%", padding: 10, background: "transparent",
+            border: "1px dashed rgba(2,209,186,0.3)", borderRadius: 12,
+            color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            letterSpacing: 0.5,
+          }}
+        >+ Ajouter un run</button>
+      )}
 
-      {/* AMRAP / WOD — bloc à temps avec chrono countdown côté client.
-          Placé juste après Cardio/Run car même famille (effort cardio
-          chronométré, lancé par l'athlète). Distinct de Run :
-          le Run mesure du fractionné où chaque round est minuté
-          (8×400m, Tabata 20/10×8). L'AMRAP mesure le nombre de
-          rounds réalisés dans une fenêtre donnée (12 min, score libre). */}
+      {/* AMRAP / WOD — section gated sur amraps.length pour cleanup vue */}
+      {amraps.length > 0 && (
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(239,68,68,0.85)", textTransform: "uppercase", margin: "18px 0 10px", display: "flex", alignItems: "center", gap: 6 }}>
         <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
@@ -1915,6 +1931,7 @@ function SessionPanel({ session, idx, total, weekIdx, weekNames, onCopyToWeek, o
           — chrono countdown lançable par l'athlète
         </span>
       </div>
+      )}
       {amraps.map((a, i) => (
         <div key={a.id || i} style={{
           background: "linear-gradient(160deg, rgba(239,68,68,0.06) 0%, rgba(15,15,15,0.4) 100%)",
@@ -2030,27 +2047,31 @@ function SessionPanel({ session, idx, total, weekIdx, weekNames, onCopyToWeek, o
           )}
         </div>
       ))}
-      <button
-        type="button"
-        onClick={addAmrap}
-        style={{
-          width: "100%", padding: 12, background: "transparent",
-          border: "1px dashed rgba(239,68,68,0.35)", borderRadius: 12,
-          color: "#ef4444", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-          letterSpacing: 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-        }}
-      >
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
-        </svg>
-        Ajouter un bloc AMRAP / EMOM / WOD
-      </button>
+      {amraps.length > 0 && (
+        <button
+          type="button"
+          onClick={addAmrap}
+          style={{
+            width: "100%", padding: 12, background: "transparent",
+            border: "1px dashed rgba(239,68,68,0.35)", borderRadius: 12,
+            color: "#ef4444", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            letterSpacing: 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" />
+          </svg>
+          Ajouter un bloc AMRAP / EMOM / WOD
+        </button>
+      )}
 
-      {/* SÉANCES TERRAIN — foot, rugby… le même jour, à un autre moment */}
+      {/* SÉANCES TERRAIN — foot, rugby… section gated sur fieldSessions.length */}
+      {fieldSessions.length > 0 && (
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
         Séances terrain{" "}
         <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(foot, rugby… le même jour)</span>
       </div>
+      )}
       {fieldSessions.map((f, i) => (
         <div key={f.id} style={{ background: "rgba(2,209,186,0.04)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
@@ -2079,22 +2100,26 @@ function SessionPanel({ session, idx, total, weekIdx, weekNames, onCopyToWeek, o
           />
         </div>
       ))}
-      <button
-        type="button"
-        onClick={addFieldSession}
-        style={{
-          width: "100%", padding: 10, background: "transparent",
-          border: "1px dashed rgba(2,209,186,0.3)", borderRadius: 12,
-          color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-          letterSpacing: 0.5,
-        }}
-      >+ Ajouter une séance terrain</button>
+      {fieldSessions.length > 0 && (
+        <button
+          type="button"
+          onClick={addFieldSession}
+          style={{
+            width: "100%", padding: 10, background: "transparent",
+            border: "1px dashed rgba(2,209,186,0.3)", borderRadius: 12,
+            color: G, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            letterSpacing: 0.5,
+          }}
+        >+ Ajouter une séance terrain</button>
+      )}
 
-      {/* ERGO / CARDIO FIN DE SÉANCE — rameur, vélo, ski-erg, assault bike */}
+      {/* ERGO — section gated sur ergos.length */}
+      {ergos.length > 0 && (
       <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", margin: "18px 0 10px" }}>
         Ergo (fin de séance){" "}
         <span style={{ textTransform: "none", letterSpacing: 0, color: "rgba(255,255,255,0.25)" }}>(rameur, vélo, ski-erg, assault…)</span>
       </div>
+      )}
       {ergos.map((e, i) => (
         <div key={e.id || i} style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.22)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
@@ -2135,16 +2160,18 @@ function SessionPanel({ session, idx, total, weekIdx, weekNames, onCopyToWeek, o
           />
         </div>
       ))}
-      <button
-        type="button"
-        onClick={addErgo}
-        style={{
-          width: "100%", padding: 10, background: "transparent",
-          border: "1px dashed rgba(56,189,248,0.4)", borderRadius: 12,
-          color: "#38bdf8", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-          letterSpacing: 0.5,
-        }}
-      >+ Ajouter un ergo (rameur / vélo / ski-erg…)</button>
+      {ergos.length > 0 && (
+        <button
+          type="button"
+          onClick={addErgo}
+          style={{
+            width: "100%", padding: 10, background: "transparent",
+            border: "1px dashed rgba(56,189,248,0.4)", borderRadius: 12,
+            color: "#38bdf8", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            letterSpacing: 0.5,
+          }}
+        >+ Ajouter un ergo (rameur / vélo / ski-erg…)</button>
+      )}
       </>)}
     </div>
   );
