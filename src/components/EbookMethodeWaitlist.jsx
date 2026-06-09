@@ -8,6 +8,7 @@
 // Source taggée 'methode-athlete' pour distinguer dans la table.
 
 import React, { useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 const GREEN = "#02d1ba";
 const BG = "#050505";
@@ -420,27 +421,38 @@ function WaitlistForm() {
     if (status === "loading") return;
     setStatus("loading");
     setErrMsg("");
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim() || null;
+    // Write direct Supabase (anon key, RLS autorise les inserts). Source
+    // de vérité : si ça passe, le lead est capturé. /api/waitlist était
+    // 404 sur prod (function non déployée) → on perdait les leads.
     try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim() || null,
-          email: email.trim().toLowerCase(),
-          source: "methode-athlete",
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      const { error: dbErr } = await supabase.from("waitlist").upsert({
+        email: cleanEmail,
+        name: cleanName || "",
+        source: "methode-athlete",
+      }, { onConflict: "email" });
+      if (dbErr) {
         setStatus("error");
-        setErrMsg(data?.error || "Une erreur est survenue.");
+        setErrMsg("Une erreur est survenue. Réessaie.");
         return;
       }
       setStatus("success");
     } catch (_) {
       setStatus("error");
       setErrMsg("Connexion impossible. Réessaie.");
+      return;
     }
+    // Best-effort : déclenche l'email de confirmation via l'API si elle
+    // est dispo (re-déploiement à venir). Ne bloque pas la confirmation
+    // UX si elle 404 — le lead est déjà en DB.
+    try {
+      fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: cleanName, email: cleanEmail, source: "methode-athlete" }),
+      }).catch(() => {});
+    } catch (_) { /* silent */ }
   }
 
   if (status === "success") {
