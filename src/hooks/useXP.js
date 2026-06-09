@@ -132,5 +132,5 @@ export function useXP(clientId) {
 
   useEffect(() => { fetchXP(); }, [fetchXP]);
 
-  return { xp, loading, recentActivity, levelInfo: getLevelInfo(xp), runCount, totalKm };
+  return { xp, loading, recentActivity, levelInfo: getLevelInfo(xp), runCount, totalKm, refresh: fetchXP };
 }

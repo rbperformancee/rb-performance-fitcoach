@@ -4,6 +4,9 @@ import { BadgeSystem } from "./BadgeSystem";
 import { useStreak } from "../hooks/useStreak";
 import { useWeightTracking } from "../hooks/useWeightTracking";
 import { useXP, getLevelInfo } from "../hooks/useXP";
+import usePullToRefresh from "../hooks/usePullToRefresh";
+import PullToRefreshIndicator from "./PullToRefreshIndicator";
+import { isNative } from "../lib/native";
 import { supabase } from "../lib/supabase";
 import ChatCoach from "./ChatCoach";
 // FaqAssistant retire — Centre d'aide suffit
@@ -102,7 +105,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
   const bestStreak = appData?.bestStreak ?? streakData.bestStreak;
   const weights = appData?.weights || [];
   const latest = weights[weights.length - 1];
-  const { xp, recentActivity, levelInfo, runCount, totalKm } = useXP(client?.id);
+  const { xp, recentActivity, levelInfo, runCount, totalKm, refresh: refreshXP } = useXP(client?.id);
   const [sessionCount, setSessionCount] = useState(0);
   const [adnData, setAdnData] = useState(null);
 
@@ -140,8 +143,19 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
   const streakPct = bestStreak ? Math.min(Math.round((streak / bestStreak) * 100), 100) : 100;
   const { current: lvl, next: nextLvl, pct: xpPct } = levelInfo;
 
+  // Pull-to-refresh — re-fetch XP/activité/badges depuis Supabase. Limité au
+  // natif (iOS) pour pas hijacker le scroll au desktop/PWA.
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.success();
+      if (typeof refreshXP === "function") await refreshXP();
+    },
+    disabled: !isNative(),
+  });
+
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)", position: "relative", overflowX: "hidden" }}>
+      <PullToRefreshIndicator pulling={ptr.pulling} progress={ptr.progress} refreshing={ptr.refreshing} />
 
       {/* Ambient */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "50%", background: "radial-gradient(ellipse at 30% 0%, rgba(2,209,186,0.1) 0%, transparent 55%), radial-gradient(ellipse at 80% 0%, rgba(129,140,248,0.06) 0%, transparent 50%)", pointerEvents: "none", zIndex: 0 }} />
@@ -308,7 +322,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
         {/* MESSAGERIE COACH */}
         <div style={{ padding: "0 24px", marginBottom: 20 }}>
           <div style={{ fontSize: 10, color: "rgba(2,209,186,0.55)", letterSpacing: "3px", textTransform: "uppercase", marginBottom: 12 }}>{t("profile.messages")}</div>
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, overflow: "hidden", height: "min(70vh, 560px)", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, overflow: "hidden", height: "min(45vh, 380px)", display: "flex", flexDirection: "column" }}>
             {client?.id && <ChatCoach clientId={client.id} coachEmail="" isCoach={false} />}
           </div>
         </div>
