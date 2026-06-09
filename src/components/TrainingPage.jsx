@@ -1111,21 +1111,27 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   // ne pas le faire n'empêche pas la validation.
   const nonExtraExos = (currentSession?.exercises || []).filter((ex) => !ex.extra);
   const totalEx = nonExtraExos.length;
+  // Tous les compteurs de progression/volume sont scopés à la date du jour :
+  // sans ça, une séance répétée chaque semaine sur le même weekIdx empile les
+  // logs et la séance d'aujourd'hui apparaît "60% faite" avant même d'avoir
+  // commencé (Camille, 8 juin 2026).
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayEntry = (wIdx, sIdx, eIdx) =>
+    (getHistory(wIdx, sIdx, eIdx) || []).find((e) => e?.date === todayStr);
   const doneEx = (currentSession?.exercises || [])
     .map((ex, ei) => ({ ex, ei }))
-    .filter(({ ex, ei }) => !ex.extra && (getHistory(activeWeek, activeSession, ei) || []).length > 0)
+    .filter(({ ex, ei }) => !ex.extra && !!todayEntry(activeWeek, activeSession, ei))
     .length;
   const sessionPct = totalEx > 0 ? Math.round((doneEx / totalEx) * 100) : 0;
 
   const volumeTotal = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
-    const h = getHistory(activeWeek, activeSession, ei) || [];
-    if (h.length === 0) return tot;
-    return tot + (parseFloat(h[h.length - 1]?.weight) || 0) * (parseInt(ex.sets) || 1) * (parseInt(ex.reps) || 1);
+    const e = todayEntry(activeWeek, activeSession, ei);
+    if (!e) return tot;
+    return tot + (parseFloat(e.weight) || 0) * (parseInt(ex.sets) || 1) * (parseInt(ex.reps) || 1);
   }, 0);
 
   const seriesDone = (currentSession?.exercises || []).reduce((tot, ex, ei) => {
-    const h = getHistory(activeWeek, activeSession, ei) || [];
-    return tot + (h.length > 0 ? parseInt(ex.sets) || 1 : 0);
+    return tot + (todayEntry(activeWeek, activeSession, ei) ? parseInt(ex.sets) || 1 : 0);
   }, 0);
 
   const handleBilan = async () => {
@@ -1558,7 +1564,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             const sexs = nonExtras.length;
             const doneS = (s.exercises || [])
               .map((ex, ei) => ({ ex, ei }))
-              .filter(({ ex, ei }) => !ex.extra && (getHistory(activeWeek, i, ei) || []).length > 0)
+              .filter(({ ex, ei }) => !ex.extra && !!todayEntry(activeWeek, i, ei))
               .length;
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
             return (
@@ -1644,14 +1650,10 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>{t("train.exercises_header")}</div>
         {(() => {
           const exs = currentSession.exercises || [];
-          // "Fait" = il existe une entrée d'AUJOURD'HUI pour cet exo. Sans
-          // ce scope date, une séance répétée chaque semaine (programme bloqué
-          // sur weekIdx=0) verrait les exos validés la semaine dernière comme
-          // "déjà faits" → carte fermée, athlète bloqué sur les premiers
-          // supersets (bug reporté par Camille, 8 juin 2026).
-          const todayStr = new Date().toISOString().slice(0, 10);
-          const isDoneToday = (ei) =>
-            (getHistory(activeWeek, activeSession, ei) || []).some((e) => e?.date === todayStr);
+          // "Fait" = entrée d'AUJOURD'HUI sur cet exo (scope date assuré par
+          // todayEntry défini au niveau composant — sans ça les supersets de
+          // la semaine d'avant restent locked, cf. Camille 8 juin 2026).
+          const isDoneToday = (ei) => !!todayEntry(activeWeek, activeSession, ei);
           const firstUndoneIdx = exs.findIndex((_, ei) => !isDoneToday(ei));
           // Rend une carte d'exercice à l'index global `ei`.
           // forceActive : utilisé pour les supersets — tous les exercices du
@@ -2138,9 +2140,9 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                   <div style={{ background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.15)", borderRadius: 18, padding: "16px 12px", textAlign: "center" }}>
                     <div style={{ fontSize: 28, fontWeight: 100, color: G, letterSpacing: "-1.5px", lineHeight: 1 }}>
                       {Math.round((currentSession?.exercises || []).reduce((tot, ex, ei) => {
-                        const h = getHistory(activeWeek, activeSession, ei) || [];
-                        if (h.length === 0) return tot;
-                        return tot + (parseFloat(h[h.length-1]?.weight) || 0) * (parseInt(ex.sets)||1) * (parseInt(ex.reps)||1);
+                        const e = todayEntry(activeWeek, activeSession, ei);
+                        if (!e) return tot;
+                        return tot + (parseFloat(e.weight) || 0) * (parseInt(ex.sets)||1) * (parseInt(ex.reps)||1);
                       }, 0))}
                     </div>
                     <div style={{ fontSize: 8, color: "rgba(2,209,186,0.4)", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 6 }}>{t("train.volume_kg")}</div>
@@ -2158,8 +2160,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                   const sessionsExos = currentSession?.exercises || [];
                   let setsDone = 0;
                   sessionsExos.forEach((ex, ei) => {
-                    const h = getHistory(activeWeek, activeSession, ei) || [];
-                    if (h.length > 0) setsDone += parseInt(ex.sets) || 1;
+                    if (todayEntry(activeWeek, activeSession, ei)) setsDone += parseInt(ex.sets) || 1;
                   });
                   const chronoMin = Math.round(chrono / 60);
                   const estimatedFromSets = setsDone > 0 ? (8 + setsDone * 2) : 0;
@@ -2167,9 +2168,9 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                   const durationMin = chronoMin >= 5 ? chronoMin : Math.max(1, estimatedFromSets);
                   const wasEstimated = chronoMin < 5 && setsDone > 0;
                   const volume = sessionsExos.reduce((tot, ex, ei) => {
-                    const h = getHistory(activeWeek, activeSession, ei) || [];
-                    if (h.length === 0) return tot;
-                    return tot + (parseFloat(h[h.length-1]?.weight) || 0) * (parseInt(ex.sets)||1) * (parseInt(ex.reps)||1);
+                    const e = todayEntry(activeWeek, activeSession, ei);
+                    if (!e) return tot;
+                    return tot + (parseFloat(e.weight) || 0) * (parseInt(ex.sets)||1) * (parseInt(ex.reps)||1);
                   }, 0);
                   // MET musculation : 3 (modéré) à 6 (intense). Calibré selon RPE 1-5.
                   const met = 3.5 + (selectedRessenti || 2) * 0.6;
