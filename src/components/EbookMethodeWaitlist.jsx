@@ -423,16 +423,19 @@ function WaitlistForm() {
     setErrMsg("");
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim() || null;
-    // Write direct Supabase (anon key, RLS autorise les inserts). Source
-    // de vérité : si ça passe, le lead est capturé. /api/waitlist était
-    // 404 sur prod (function non déployée) → on perdait les leads.
+    // Write direct Supabase (anon key, RLS autorise INSERT mais pas
+    // UPDATE → on évite .upsert() qui send `Prefer: resolution=
+    // merge-duplicates` et se prend un 401). /api/waitlist était 404
+    // sur prod → on perdait les leads.
     try {
-      const { error: dbErr } = await supabase.from("waitlist").upsert({
+      const { error: dbErr } = await supabase.from("waitlist").insert({
         email: cleanEmail,
         name: cleanName || "",
         source: "methode-athlete",
-      }, { onConflict: "email" });
-      if (dbErr) {
+      });
+      // Code 23505 = unique violation : l'email est déjà inscrit, on
+      // traite comme un succès (idempotence côté UX).
+      if (dbErr && dbErr.code !== "23505") {
         setStatus("error");
         setErrMsg("Une erreur est survenue. Réessaie.");
         return;
