@@ -12,6 +12,9 @@ import FieldSessionCard from "./FieldSessionCard";
 import { uploadChatPhoto } from "../lib/chatMedia";
 import SessionOptionsModal from "./SessionOptionsModal";
 import { useProgrammeOverrides } from "../hooks/useProgrammeOverrides";
+import usePullToRefresh from "../hooks/usePullToRefresh";
+import PullToRefreshIndicator from "./PullToRefreshIndicator";
+import { haptic } from "../lib/haptic";
 import { useT, getLocale } from "../lib/i18n";
 import {
   computeCurrentWeekIdx,
@@ -785,7 +788,7 @@ function computeTodaysSession(programmeMeta, programme, doneSet) {
   return { type: "week_done", week: weekIdx };
 }
 
-export default function TrainingPage({ client, programme, programmeMeta, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta, onStartSession }) {
+export default function TrainingPage({ client, programme, programmeMeta, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta, refreshLogs, onStartSession }) {
   const t = useT();
   const [showRessenti, setShowRessenti] = useState(false);
   const [sessionValidee, setSessionValidee] = useState(false);
@@ -1381,8 +1384,19 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     );
   }
 
+  // Pull-to-refresh — re-fetch logs depuis Supabase. Désactivé pendant les
+  // overlays (chrono ressenti, options, etc.) pour pas trigger en plein bilan.
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.success();
+      if (typeof refreshLogs === "function") await refreshLogs();
+    },
+    disabled: !isNativeApp() || showRessenti || showOptions || showConfirm,
+  });
+
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)" }}>
+      <PullToRefreshIndicator pulling={ptr.pulling} progress={ptr.progress} refreshing={ptr.refreshing} />
 
       {/* CARTE PROGRESSION SEMAINE (mode "objectifs semaine") */}
       {weekProgress && (

@@ -891,7 +891,7 @@ function AppInner() {
   const rawHtml = cloudProgramme || localProgramme;
   const programme = useMemo(() => rawHtml ? expandProgrammeWeeks(parseProgrammeHTML(rawHtml)) : null, [rawHtml]);
 
-  const { getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta } = useLogs(
+  const { getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta, refresh: refreshLogs } = useLogs(
     client ? `client_${client.id}` : programme?.name,
     client?.id || null
   );
@@ -1706,6 +1706,7 @@ function AppInner() {
                   getLatest={getLatest}
                   saveLog={saveLog}
                   getDelta={getDelta}
+                  refreshLogs={refreshLogs}
                   onStartSession={setSessionStarted}
                 />
             ) : page === "move" ? (

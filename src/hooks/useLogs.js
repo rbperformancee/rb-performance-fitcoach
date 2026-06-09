@@ -100,6 +100,36 @@ export function useLogs(programmeName, clientId = null) {
     saveToStorage(logs);
   }, [logs]);
 
+  // Hydrate logs depuis Supabase. Factorisé pour réutiliser depuis
+  // useEffect (mount/clientId) ET depuis pull-to-refresh côté iOS.
+  const hydrateFromCloud = useCallback(async () => {
+    if (!clientId) return;
+    const { data } = await supabase
+      .from("exercise_logs")
+      .select("ex_key, date, weight, reps, logged_at")
+      .eq("client_id", clientId)
+      .order("logged_at", { ascending: true })
+      .limit(2000);
+    if (!Array.isArray(data) || data.length === 0) return;
+    // Merge cloud → local (cloud gagne sur les doublons par date)
+    setLogs((prev) => {
+      const next = { ...prev };
+      for (const r of data) {
+        const key = r.ex_key;
+        if (!key) continue;
+        const arr = (next[key] || []).filter((e) => e.date !== r.date);
+        arr.push({
+          date: r.date || (r.logged_at || "").slice(0, 10),
+          weight: parseFloat(r.weight) || 0,
+          reps: r.reps || "",
+        });
+        arr.sort((a, b) => a.date.localeCompare(b.date));
+        next[key] = arr;
+      }
+      return next;
+    });
+  }, [clientId]);
+
   // Hydrate localStorage depuis Supabase au mount + apres changement clientId.
   // Permet au coach de voir l'historique depuis n'importe quel device et au
   // client de retrouver ses logs apres reinstall / changement de tel.
@@ -107,33 +137,11 @@ export function useLogs(programmeName, clientId = null) {
     if (!clientId) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("exercise_logs")
-        .select("ex_key, date, weight, reps, logged_at")
-        .eq("client_id", clientId)
-        .order("logged_at", { ascending: true })
-        .limit(2000);
-      if (cancelled || !Array.isArray(data) || data.length === 0) return;
-      // Merge cloud → local (cloud gagne sur les doublons par date)
-      setLogs((prev) => {
-        const next = { ...prev };
-        for (const r of data) {
-          const key = r.ex_key;
-          if (!key) continue;
-          const arr = (next[key] || []).filter((e) => e.date !== r.date);
-          arr.push({
-            date: r.date || (r.logged_at || "").slice(0, 10),
-            weight: parseFloat(r.weight) || 0,
-            reps: r.reps || "",
-          });
-          arr.sort((a, b) => a.date.localeCompare(b.date));
-          next[key] = arr;
-        }
-        return next;
-      });
+      if (cancelled) return;
+      await hydrateFromCloud();
     })();
     return () => { cancelled = true; };
-  }, [clientId]);
+  }, [clientId, hydrateFromCloud]);
 
   // Retourne l'historique du même (semaine, séance, exo).
   // Utilisé pour : "as-tu fait CET exo cette semaine ?" (badge done, progression
@@ -287,5 +295,5 @@ export function useLogs(programmeName, clientId = null) {
     [getCrossWeekHistory]
   );
 
-  return { getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta };
+  return { getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta, refresh: hydrateFromCloud };
 }

@@ -35,7 +35,11 @@ const config: CapacitorConfig = {
       splashImmersive: true,
     },
     StatusBar: {
-      style: 'DARK',
+      // 'LIGHT' = icônes/texte CLAIRS sur un fond sombre (Capacitor :
+      // Style.Light correspond à UIStatusBarStyleLightContent). L'app
+      // est dark mode → icônes blanches sur #080C14, sinon elles sont
+      // noires-sur-sombre = invisibles.
+      style: 'LIGHT',
       backgroundColor: '#080C14',
     },
   },
