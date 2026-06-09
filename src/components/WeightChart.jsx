@@ -15,6 +15,8 @@ import Spinner from "./Spinner";
 import HabitsCard from "./client/HabitsCard";
 import { isNative } from "../lib/native";
 import { isHealthAvailable, requestStepsPermission, getTodaySteps } from "../lib/health";
+import usePullToRefresh from "../hooks/usePullToRefresh";
+import PullToRefreshIndicator from "./PullToRefreshIndicator";
 
 export default function WeightChart({ clientId, client, programme, appData }) {
   const t = useT();
@@ -22,7 +24,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
   // Toujours utiliser tracking.weights pour avoir l optimistic update
   const weights = tracking.weights.length > 0 ? tracking.weights : (appData?.weights || []);
   const loading = tracking.loading;
-  const { addWeight, deleteWeight, saveGoal } = tracking;
+  const { addWeight, deleteWeight, saveGoal, refresh: refreshWeights } = tracking;
   const latest = weights[weights.length - 1];
   const first = weights[0];
   const diff = latest && first ? (latest.weight - first.weight).toFixed(1) : null;
@@ -59,17 +61,13 @@ export default function WeightChart({ clientId, client, programme, appData }) {
     let cancelled = false;
     const syncFromHealth = async () => {
       try {
-        const ok = await isHealthAvailable();
-        if (!ok || cancelled) return;
-        // requestStepsPermission est idempotent sur iOS (le system prompt
-        // n'apparaît qu'une fois — Apple gère le déjà-demandé en interne).
-        await requestStepsPermission();
+        // Skip isHealthAvailable() check — capacitor-health 8.1.2 le retourne
+        // false sur certaines configs. Demande la permission + lit les pas
+        // directement. Si KO, l'app continue avec saisie manuelle.
+        try { await requestStepsPermission(); } catch (_) {}
         if (cancelled) return;
         const steps = await getTodaySteps();
         if (cancelled || steps == null) return;
-        // On ne push que si HealthKit a une valeur > celle en DB — évite
-        // d'écraser une saisie manuelle plus haute qui aurait été faite
-        // depuis un autre device (Galaxy Watch sync par exemple).
         if (steps > (dailySteps || 0)) {
           saveSteps(steps);
         }
@@ -222,8 +220,17 @@ export default function WeightChart({ clientId, client, programme, appData }) {
   const areaD = vals.length > 1 ? "M" + toX(0).toFixed(1) + "," + H + " " + vals.map((v, i) => "L" + toX(i).toFixed(1) + "," + toY(v).toFixed(1)).join(" ") + " L" + toX(vals.length - 1).toFixed(1) + "," + H + " Z" : "";
   const goalY = goal ? toY(goal) : -9999;
 
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.success();
+      if (typeof refreshWeights === "function") await refreshWeights();
+    },
+    disabled: !isNative() || editGoal,
+  });
+
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)", opacity: loading ? 0 : 1, transition: "opacity 0.4s ease" }}>
+      <PullToRefreshIndicator pulling={ptr.pulling} progress={ptr.progress} refreshing={ptr.refreshing} />
 
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 400, height: 400, background: "radial-gradient(ellipse, rgba(2,209,186,0.08) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 

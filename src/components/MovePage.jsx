@@ -8,6 +8,8 @@ import { useT, getLocale } from "../lib/i18n";
 import RunIntervalTimer from "./RunIntervalTimer";
 import RunSession from "./RunSession";
 import { isNative } from "../lib/native";
+import usePullToRefresh from "../hooks/usePullToRefresh";
+import PullToRefreshIndicator from "./PullToRefreshIndicator";
 
 /**
  * Detection HIIT time-based : si work ET rest sont des durees parsables
@@ -354,8 +356,18 @@ export default function MovePage({ client, appData }) {
   const bars = getWeekBars();
   const maxKm = Math.max(...bars.map(b => b.km), 1);
 
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.success();
+      await fetchAll();
+      if (scheduled?.refresh) await scheduled.refresh();
+    },
+    disabled: !isNative() || showAdd || showRunSession || !!editingRun,
+  });
+
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)", opacity: loading ? 0 : 1, transition: "opacity 0.4s ease" }}>
+      <PullToRefreshIndicator pulling={ptr.pulling} progress={ptr.progress} refreshing={ptr.refreshing} />
 
       {/* Ambient */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "40%", background: "radial-gradient(ellipse at 50% 0%, rgba(239,68,68,0.09) 0%, transparent 55%)", pointerEvents: "none", zIndex: 0 }} />

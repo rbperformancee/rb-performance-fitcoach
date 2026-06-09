@@ -60,5 +60,5 @@ export function useWeightTracking(clientId) {
     if (error) { console.error('deleteWeight error:', error.message); await fetchWeights(); }
   }, [clientId, fetchWeights]);
 
-  return { weights, loading, addWeight, deleteWeight, latest, diff, saveGoal };
+  return { weights, loading, addWeight, deleteWeight, latest, diff, saveGoal, refresh: fetchWeights };
 }

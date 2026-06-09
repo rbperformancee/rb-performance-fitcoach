@@ -13,6 +13,10 @@ import Spinner from "./Spinner";
 import { toast } from "./Toast";
 import ClientRecipesBrowser, { preloadRecipes } from "./client/ClientRecipesBrowser";
 import { apiUrl } from "../lib/api";
+import usePullToRefresh from "../hooks/usePullToRefresh";
+import PullToRefreshIndicator from "./PullToRefreshIndicator";
+import { isNative as isNativeApp } from "../lib/native";
+import haptic from "../lib/haptic";
 
 // ===== Scanner code-barre via BarcodeDetector API native =====
 // Marche sur : iOS Safari 17+ (donc iOS 18), Chrome Android 83+, Chrome desktop, Edge.
@@ -1556,8 +1560,17 @@ export default function FuelPage({ client, appData }) {
     </div>
   );
 
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.success();
+      if (typeof fetchAll === "function") await fetchAll();
+    },
+    disabled: !isNativeApp() || showAdd || showVoice || showScan,
+  });
+
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)", opacity: loading ? 0 : 1, transition: "opacity 0.4s ease" }}>
+      <PullToRefreshIndicator pulling={ptr.pulling} progress={ptr.progress} refreshing={ptr.refreshing} />
 
       {/* Ambient */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "40%", background: "radial-gradient(ellipse at 40% 0%, rgba(249,115,22,0.09) 0%, transparent 55%)", pointerEvents: "none", zIndex: 0 }} />
