@@ -23,6 +23,17 @@ const G = "#02d1ba";
 const G_DIM = "rgba(2,209,186,0.1)";
 const G_BORDER = "rgba(2,209,186,0.25)";
 
+// Lundi 00:00 de la semaine calendaire courante (locale du device).
+// Sert à scoper les validations de séance : une session validée la semaine
+// précédente ne doit pas verrouiller le bilan de la semaine en cours.
+function startOfCalendarWeek(date = new Date()) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const dow = (d.getDay() + 6) % 7; // 0=Mon..6=Sun
+  d.setDate(d.getDate() - dow);
+  return d;
+}
+
 function getProgressStatus(history) {
   if (!history || history.length < 2) return "neutral";
   const last = history[history.length - 1]?.weight;
@@ -785,11 +796,17 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   // Set des sessions validées (clés "wIdx-sIdx"). Hydraté depuis cloud
   // session_completions + miroir local (refresh à la validation in-app).
   const [doneSet, setDoneSet] = useState(() => new Set());
-  // Helper : verifier si une seance (week, sessionIdx) est validee via localStorage
+  // Helper : verifier si une seance (week, sessionIdx) est validee via localStorage.
+  // Scope semaine calendaire : une validation antérieure au lundi 00h de la
+  // semaine courante n'est plus considérée comme validante (sinon valider
+  // lundi sem 0 verrouille tous les lundis suivants pour les programmes qui
+  // se rejouent — bug observé pour Camille, 8 juin 2026).
   const isSessionValidee = useCallback((wIdx, sIdx) => {
     try {
       const s = JSON.parse(localStorage.getItem(`rb_c_${wIdx}_${sIdx}`) || "{}");
-      return !!s.validee;
+      if (!s.validee) return false;
+      if (!s.validated_at) return true; // legacy : pas de date stockée → on accepte
+      return new Date(s.validated_at).getTime() >= startOfCalendarWeek().getTime();
     } catch (e) { return false; }
   }, []);
 
@@ -877,6 +894,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       const curProgId = programmeMeta?.id || null;
       const completed = new Set();
       const completedNewFormat = new Set(); // pour weekProgress (clé "w-s")
+      const weekStart = startOfCalendarWeek().getTime();
       (data || [])
         .filter((c) => !c.programme_id || !curProgId || c.programme_id === curProgId)
         .forEach((c) => {
@@ -888,10 +906,17 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             validee: true,
             done: true,
             total: c.chrono_seconds || cur.total || 0,
+            validated_at: c.validated_at || cur.validated_at,
           }));
         } catch {}
-        completed.add(`${c.week_idx}_${c.session_idx}`);
-        completedNewFormat.add(`${c.week_idx}-${c.session_idx}`);
+        // doneSet → utilisé par computeTodaysSession/weekProgress pour
+        // "session faite cette semaine". Ne pas inclure une validation
+        // d'une semaine précédente, sinon la séance reste "done" à vie.
+        const validatedMs = c.validated_at ? new Date(c.validated_at).getTime() : 0;
+        if (validatedMs >= weekStart) {
+          completed.add(`${c.week_idx}_${c.session_idx}`);
+          completedNewFormat.add(`${c.week_idx}-${c.session_idx}`);
+        }
       });
       // Hydrate le state pour computeTodaysSession + weekProgress
       setDoneSet(completedNewFormat);
@@ -924,11 +949,8 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
 
   // Recharger depuis Supabase + localStorage quand on change de seance
   useEffect(() => {
-    // D abord localStorage pour reactivite immediate
-    try {
-      const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${activeSession}`) || "{}");
-      setSessionValidee(!!s.validee);
-    } catch(e) { setSessionValidee(false); }
+    // D abord localStorage pour reactivite immediate (scope semaine inclus)
+    setSessionValidee(isSessionValidee(activeWeek, activeSession));
     // Puis Supabase pour sync cross-device
     if (client?.id) {
       supabase.from("session_completions")
@@ -942,17 +964,24 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           const curProgId = programmeMeta?.id || null;
           if (data && data.programme_id && curProgId && data.programme_id !== curProgId) return;
           if (data?.validated_at) {
-            setSessionValidee(true);
-            // Sync localStorage
+            const inCurrentWeek = new Date(data.validated_at).getTime() >= startOfCalendarWeek().getTime();
+            if (inCurrentWeek) setSessionValidee(true);
+            // Sync localStorage (toujours, pour que isSessionValidee décide ensuite)
             try {
               const ckey = `rb_c_${activeWeek}_${activeSession}`;
               const s = JSON.parse(localStorage.getItem(ckey) || "{}");
-              localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true, done: true, total: data.chrono_seconds || 0 }));
+              localStorage.setItem(ckey, JSON.stringify({
+                ...s,
+                validee: true,
+                done: true,
+                total: data.chrono_seconds || 0,
+                validated_at: data.validated_at,
+              }));
             } catch(e) {}
           }
         });
     }
-  }, [activeWeek, activeSession, client?.id, programmeMeta?.id]);
+  }, [activeWeek, activeSession, client?.id, programmeMeta?.id, isSessionValidee]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [selectedRessenti, setSelectedRessenti] = useState(null);
@@ -1663,7 +1692,19 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             const history = getHistory(activeWeek, activeSession, ei) || [];
             const status = getProgressStatus(history);
             const isDone = isDoneToday(ei);
-            const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
+            // Ghost = la dernière fois qu'elle a fait CET exo (toutes
+            // semaines confondues), mais en excluant aujourd'hui pour ne
+            // pas afficher ce qu'elle vient juste de logguer. Sans
+            // cross-week, le ghost restait masqué quand activeWeek=0.
+            const crossHist = typeof getCrossWeekHistory === "function"
+              ? (getCrossWeekHistory(activeSession, ei) || [])
+              : [];
+            const ghostData = (() => {
+              for (let i = crossHist.length - 1; i >= 0; i--) {
+                if (crossHist[i]?.date && crossHist[i].date !== todayStr) return crossHist[i];
+              }
+              return null;
+            })();
             const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
             const isExActive = forceActive || (firstUndoneIdx !== -1 && firstUndoneIdx === ei);
             return (
@@ -2218,15 +2259,16 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                     setShowRessenti(false);
                     setSessionValidee(true);
                     if (typeof onStartSession === "function") onStartSession(false);
+                    const validatedAt = new Date().toISOString();
                     try {
                       const ckey = `rb_c_${activeWeek}_${activeSession}`;
                       const s = JSON.parse(localStorage.getItem(ckey) || "{}");
-                      localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
+                      localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true, validated_at: validatedAt }));
                     } catch(e) {}
                     if (client?.id) {
                       supabase.from("session_completions").upsert({
                         client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
-                        validated_at: new Date().toISOString(),
+                        validated_at: validatedAt,
                         chrono_seconds: chrono,
                         rpe: selectedRessenti + 1,
                         programme_id: programmeMeta?.id || null
@@ -2327,15 +2369,16 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                       setShowRessenti(false);
                       setSessionValidee(true);
                       if (typeof onStartSession === "function") onStartSession(false);
+                      const validatedAt = new Date().toISOString();
                       try {
                         const ckey = `rb_c_${activeWeek}_${activeSession}`;
                         const s = JSON.parse(localStorage.getItem(ckey) || "{}");
-                        localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
+                        localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true, validated_at: validatedAt }));
                       } catch(e) {}
                       if (client?.id) {
                         supabase.from("session_completions").upsert({
                           client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
-                          validated_at: new Date().toISOString(),
+                          validated_at: validatedAt,
                           chrono_seconds: chrono,
                           rpe: selectedRessenti + 1,
                           programme_id: programmeMeta?.id || null
@@ -2361,15 +2404,16 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                       setShowRessenti(false);
                       setSessionValidee(true);
                       if (typeof onStartSession === "function") onStartSession(false);
+                      const validatedAt = new Date().toISOString();
                       try {
                         const ckey = `rb_c_${activeWeek}_${activeSession}`;
                         const s = JSON.parse(localStorage.getItem(ckey) || "{}");
-                        localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true }));
+                        localStorage.setItem(ckey, JSON.stringify({ ...s, validee: true, validated_at: validatedAt }));
                       } catch(e) {}
                       if (client?.id) {
                         supabase.from("session_completions").upsert({
                           client_id: client.id, week_idx: activeWeek, session_idx: activeSession,
-                          validated_at: new Date().toISOString(),
+                          validated_at: validatedAt,
                           chrono_seconds: chrono,
                           rpe: selectedRessenti + 1,
                           programme_id: programmeMeta?.id || null
