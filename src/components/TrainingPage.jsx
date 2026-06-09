@@ -1644,8 +1644,15 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>{t("train.exercises_header")}</div>
         {(() => {
           const exs = currentSession.exercises || [];
-          // Le premier exercice "non-fait" est le seul a etre marque ACTIF.
-          const firstUndoneIdx = exs.findIndex((_, ei) => (getHistory(activeWeek, activeSession, ei) || []).length === 0);
+          // "Fait" = il existe une entrée d'AUJOURD'HUI pour cet exo. Sans
+          // ce scope date, une séance répétée chaque semaine (programme bloqué
+          // sur weekIdx=0) verrait les exos validés la semaine dernière comme
+          // "déjà faits" → carte fermée, athlète bloqué sur les premiers
+          // supersets (bug reporté par Camille, 8 juin 2026).
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const isDoneToday = (ei) =>
+            (getHistory(activeWeek, activeSession, ei) || []).some((e) => e?.date === todayStr);
+          const firstUndoneIdx = exs.findIndex((_, ei) => !isDoneToday(ei));
           // Rend une carte d'exercice à l'index global `ei`.
           // forceActive : utilisé pour les supersets — tous les exercices du
           // superset sont ouverts en même temps pour que l'athlète puisse
@@ -1653,7 +1660,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           const renderCard = (ex, ei, forceActive = false) => {
             const history = getHistory(activeWeek, activeSession, ei) || [];
             const status = getProgressStatus(history);
-            const isDone = history.length > 0;
+            const isDone = isDoneToday(ei);
             const ghostData = activeWeek > 0 ? getLatest(activeWeek - 1, activeSession, ei) : null;
             const bandColor = isDone ? G : status === "green" ? "rgba(2,209,186,0.5)" : status === "yellow" ? "rgba(251,191,36,0.5)" : status === "red" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)";
             const isExActive = forceActive || (firstUndoneIdx !== -1 && firstUndoneIdx === ei);
