@@ -314,7 +314,7 @@ function macrosForServing(food, grams) {
 const nfmt = (x) => (Math.round((x || 0) * 10) / 10).toString();
 
 // ===== SUPPLEMENTS TAB COMPONENT =====
-function SupplementsTab({ clientId }) {
+function SupplementsTab({ clientId, onNutritionChange }) {
   const [supplements, setSupplements] = useState([]);
   const [logs, setLogs] = useState({});
   const [loading, setLoading] = useState(true);
@@ -370,7 +370,9 @@ function SupplementsTab({ clientId }) {
       taken: !wasTaken,
     }, { onConflict: "supplement_id,date" });
     // Complément à macros → on synchronise la nutrition du jour : coché =
-    // une ligne dans nutrition_logs, décoché = on la retire.
+    // une ligne dans nutrition_logs, décoché = on la retire. Le parent doit
+    // re-fetch pour que `totals.calories` reflète la ligne (sinon le tick
+    // est silencieux dans le compteur du haut — bug 9 juin 2026).
     if (sup.counts_nutrition) {
       try {
         if (!wasTaken) {
@@ -385,6 +387,7 @@ function SupplementsTab({ clientId }) {
           await supabase.from("nutrition_logs").delete()
             .eq("supplement_id", sup.id).eq("date", today);
         }
+        if (typeof onNutritionChange === "function") await onNutritionChange();
       } catch (e) { console.error("[supplements] nutrition sync failed", e); }
     }
   };
@@ -667,7 +670,7 @@ export default function FuelPage({ client, appData }) {
   // Si on consulte la veille, n'utilise PAS appData (qui est toujours today)
   const dailyTracking = dateSel.isToday ? (fuelData.dailyTracking || appData?.dailyTracking) : fuelData.dailyTracking;
   const loading = appData ? appData.loading : fuelData.loading;
-  const { totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score } = fuelData;
+  const { totals, addFood, removeFood, updateFood, updateTracking, updateGoals, score, fetchAll } = fuelData;
   const { results, loading: searching, search, scanBarcode } = useOpenFoodFacts();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedRepas, setSelectedRepas] = useState("Dejeuner");
@@ -1627,7 +1630,7 @@ export default function FuelPage({ client, appData }) {
         </div>
 
         {/* ===== SUPPLEMENTS TAB ===== */}
-        {fuelTab === "supplements" && <SupplementsTab clientId={client?.id} />}
+        {fuelTab === "supplements" && <SupplementsTab clientId={client?.id} onNutritionChange={fetchAll} />}
 
         <div style={{ display: fuelTab === "nutrition" ? "block" : "none" }}>
         {/* SCORE ENERGIE */}
