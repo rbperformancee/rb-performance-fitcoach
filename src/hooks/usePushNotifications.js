@@ -75,6 +75,10 @@ export function usePushNotifications(arg) {
   // toast UI puisse la montrer (sinon les échecs RLS / réseau étaient
   // silencieux et l'utilisateur ne savait jamais pourquoi rien ne marchait).
   const [lastError, setLastError] = useState(null);
+  // Promesse résolue par le listener 'registration' (ou rejetée par
+  // 'registrationError'). Permet à resetSubscription d'attendre vraiment
+  // le callback iOS au lieu de retourner ok:true sans preuve.
+  const registrationDeferredRef = useRef(null);
 
   // Init : récupère l'état de permission au mount.
   useEffect(() => {
@@ -117,6 +121,8 @@ export function usePushNotifications(arg) {
               await persistNativeToken({ token: token.value, clientId, coachId });
               setSubscribed(true);
               setLastError(null);
+              registrationDeferredRef.current?.resolve?.({ ok: true, token: token.value });
+              registrationDeferredRef.current = null;
 
               // Purge des web push subs Apple PWA pour CE client : si
               // l'athlète avait installé la PWA iOS avant l'app native, la
@@ -132,12 +138,17 @@ export function usePushNotifications(arg) {
             } catch (e) {
               console.error('[apns] persist failed:', e);
               setLastError(`persist_failed: ${e.message || e.code || 'unknown'}`);
+              registrationDeferredRef.current?.resolve?.({ ok: false, reason: `persist_failed: ${e.message}` });
+              registrationDeferredRef.current = null;
             }
           });
 
           await PushNotifications.addListener('registrationError', (err) => {
             console.error('[apns] registration error:', err);
-            setLastError(`registration_error: ${err?.error || err?.message || JSON.stringify(err)}`);
+            const msg = `registration_error: ${err?.error || err?.message || JSON.stringify(err)}`;
+            setLastError(msg);
+            registrationDeferredRef.current?.resolve?.({ ok: false, reason: msg });
+            registrationDeferredRef.current = null;
           });
 
           // pushNotificationReceived : notif arrive QUAND l'app est au
@@ -239,7 +250,26 @@ export function usePushNotifications(arg) {
         }
         apnsTokenRef.current = null;
         const { PushNotifications } = await import('@capacitor/push-notifications');
-        await PushNotifications.register(); // re-trigger l'event 'registration'
+        // Garantit que les listeners sont attachés AVANT register, sinon
+        // si _nativeListenersAttached était false (premier call) le register
+        // tournerait sans listener actif et le callback iOS serait perdu.
+        await subscribe();
+        // Setup une promesse que les listeners vont résoudre. Timeout 5s
+        // pour détecter le cas où iOS ne callback jamais (bug Capacitor 8
+        // sur iOS 26, ou provisioning sans push capability).
+        const deferred = {};
+        const waitPromise = new Promise((resolve) => { deferred.resolve = resolve; });
+        registrationDeferredRef.current = deferred;
+        await PushNotifications.register();
+        const result = await Promise.race([
+          waitPromise,
+          new Promise((resolve) => setTimeout(() => resolve({ ok: false, reason: 'timeout_5s_no_callback' }), 5000)),
+        ]);
+        registrationDeferredRef.current = null;
+        if (!result.ok) {
+          setLastError(result.reason);
+          return { ok: false, reason: result.reason, oldEndpoint: oldToken };
+        }
         return { ok: true, oldEndpoint: oldToken };
       }
 
