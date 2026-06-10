@@ -22,3 +22,16 @@ AUDIT-*.md
 .env*.local
 .env.local.*
 supabase/migrations/supabase/
+
+# Apple secrets — JAMAIS commiter
+*.p8
+AuthKey_*.p8
+ios/secrets/
+*.p12
+*.mobileprovision
+
+# iOS build artefacts
+.spm-packages/
+build-ios/
+ios/App/build/
+ios/App/.spm-packages/
