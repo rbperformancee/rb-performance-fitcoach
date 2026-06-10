@@ -114,6 +114,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // Ref : https://capacitorjs.com/docs/apis/push-notifications#ios
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // DIAG : si tu sens cette vibration en tapant Reset, iOS appelle bien
+        // notre handler — le problème est ailleurs (NotificationCenter ou JS).
+        // Sinon, iOS n'appelle JAMAIS le handler → problème système (Apple ID
+        // pas signé, restrictions, APNs unreachable, etc.).
+        let gen = UINotificationFeedbackGenerator()
+        gen.notificationOccurred(.success)
+        // Persist le token en hex dans UserDefaults pour pouvoir le lire
+        // côté JS via un endpoint diagnostic (au cas où NotificationCenter
+        // post ne porte pas correctement).
+        let hex = deviceToken.map { String(format: "%02x", $0) }.joined()
+        UserDefaults.standard.set(hex, forKey: "rb_diag_apns_token")
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "rb_diag_apns_ts")
         NotificationCenter.default.post(
             name: .capacitorDidRegisterForRemoteNotifications,
             object: deviceToken
@@ -121,6 +133,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // DIAG : vibration "warning" si iOS appelle le handler mais en échec.
+        let gen = UINotificationFeedbackGenerator()
+        gen.notificationOccurred(.warning)
+        UserDefaults.standard.set("FAIL: \(error.localizedDescription)", forKey: "rb_diag_apns_token")
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "rb_diag_apns_ts")
         NotificationCenter.default.post(
             name: .capacitorDidFailToRegisterForRemoteNotifications,
             object: error
