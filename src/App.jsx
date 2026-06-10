@@ -1259,7 +1259,7 @@ function AppInner() {
     };
     const _ctx = getContextMsg();
     return (
-      <div style={{minHeight:'100dvh',background:'#050505',display:'flex',flexDirection:'column',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflow:'hidden',maxWidth:isClientDemo?430:'none',margin:isClientDemo?'0 auto':0}}>
+      <div style={{minHeight:'100dvh',background:'#050505',fontFamily:'-apple-system,Inter,sans-serif',position:'relative',overflowX:'hidden',maxWidth:isClientDemo?430:'none',margin:isClientDemo?'0 auto':0}}>
         {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
         {isClientDemo && <div style={{height:52}} />}
 
