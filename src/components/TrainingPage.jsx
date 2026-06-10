@@ -1150,9 +1150,30 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   const todayStr = new Date().toISOString().slice(0, 10);
   const todayEntry = (wIdx, sIdx, eIdx) =>
     (getHistory(wIdx, sIdx, eIdx) || []).find((e) => e?.date === todayStr);
+  // Sets attendus pour un exo : ex.sets ou rawReps "Nx..." sinon 1.
+  // Garde la même logique que ExerciseCard.parsedSets pour cohérence.
+  const expectedSetsFor = (ex) => {
+    if (!ex) return 1;
+    if (typeof ex.sets === "number" && ex.sets > 0) return ex.sets;
+    if (ex.rawReps) {
+      const m = String(ex.rawReps).match(/^(\d+)\s*[xX×]/);
+      if (m) return parseInt(m[1], 10);
+    }
+    return 1;
+  };
+  // "Fully done" : tous les sets validés aujourd'hui, pas juste 1 set qui a
+  // déjà créé une entry. Sans ça, valider le set 1/4 fait avancer le focus
+  // vers l'exo suivant alors qu'il reste 3 séries (Alicia, 10 juin 2026).
+  // Source de vérité = le compteur localStorage maintenu par ExerciseCard.
+  const isFullyDoneToday = (wIdx, sIdx, eIdx, ex) => {
+    const expected = expectedSetsFor(ex);
+    try {
+      return parseInt(localStorage.getItem(`sets_done_${wIdx}_${sIdx}_${eIdx}_${todayStr}`) || "0") >= expected;
+    } catch { return false; }
+  };
   const doneEx = (currentSession?.exercises || [])
     .map((ex, ei) => ({ ex, ei }))
-    .filter(({ ex, ei }) => !ex.extra && !!todayEntry(activeWeek, activeSession, ei))
+    .filter(({ ex, ei }) => !ex.extra && isFullyDoneToday(activeWeek, activeSession, ei, ex))
     .length;
   const sessionPct = totalEx > 0 ? Math.round((doneEx / totalEx) * 100) : 0;
 
@@ -1608,7 +1629,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
             const sexs = nonExtras.length;
             const doneS = (s.exercises || [])
               .map((ex, ei) => ({ ex, ei }))
-              .filter(({ ex, ei }) => !ex.extra && !!todayEntry(activeWeek, i, ei))
+              .filter(({ ex, ei }) => !ex.extra && isFullyDoneToday(activeWeek, i, ei, ex))
               .length;
             const pct = sexs > 0 ? Math.round((doneS / sexs) * 100) : 0;
             return (
@@ -1696,8 +1717,9 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           const exs = currentSession.exercises || [];
           // "Fait" = entrée d'AUJOURD'HUI sur cet exo (scope date assuré par
           // todayEntry défini au niveau composant — sans ça les supersets de
-          // la semaine d'avant restent locked, cf. Camille 8 juin 2026).
-          const isDoneToday = (ei) => !!todayEntry(activeWeek, activeSession, ei);
+          // la semaine d'avant restent locked, cf. Camille 8 juin 2026.
+          // "Done" = fully done (tous les sets validés). 1 set sur 4 ≠ done.
+          const isDoneToday = (ei) => isFullyDoneToday(activeWeek, activeSession, ei, exs[ei]);
           const firstUndoneIdx = exs.findIndex((_, ei) => !isDoneToday(ei));
           // Rend une carte d'exercice à l'index global `ei`.
           // forceActive : utilisé pour les supersets — tous les exercices du

@@ -489,7 +489,15 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const history = (typeof getCrossWeekHistory === "function"
     ? getCrossWeekHistory(sessionIdx, exIdx)
     : getHistory(weekIdx, sessionIdx, exIdx));
-  const latest = getLatest(weekIdx, sessionIdx, exIdx);
+  // `latest` pour le prefill des sets non-faits = LA DERNIÈRE FOIS, pas la
+  // séance en cours. Si on inclut l'entry du jour, le prefill du set 2 saute
+  // de "60kg (last session set 2)" à "50kg (today's avg du set 1)" dès que
+  // l'athlète valide son set 1 — visuellement choquant (Alicia, 10 juin 2026).
+  // On filtre l'entry de today pour stabiliser le prefill pendant la séance.
+  const latest = (() => {
+    const prev = history.filter((h) => h?.date !== today);
+    return prev.length > 0 ? prev[prev.length - 1] : null;
+  })();
   const delta = getDelta(weekIdx, sessionIdx, exIdx);
 
   // Notation composée (cluster "5+5+5" / dégressive "10_10") : chaque SÉRIE
