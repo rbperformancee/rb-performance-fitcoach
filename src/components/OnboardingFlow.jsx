@@ -233,7 +233,10 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
     setSaving(true);
     try { localStorage.setItem(draftKey, JSON.stringify({ form, ts: Date.now() })); } catch {}
 
-    // Mode application (publique, /candidature) : POST vers /api/coaching-application
+    // Mode application (publique, /candidature) : insert direct Supabase
+    // (anon key, RLS autorise insert). /api/coaching-application était 404
+    // sur prod depuis ~4 juin → 6+ jours de candidatures perdues. L'API peut
+    // toujours être tentée en best-effort pour l'email de confirmation.
     if (isApplication) {
       try {
         // UTM tracking depuis sessionStorage (capture sur la landing)
@@ -256,32 +259,34 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           one_rm_squat: cleanNum(form.one_rm_squat),
           one_rm_traction: cleanNum(form.one_rm_traction),
         };
+        const payload = {
+          ...cleaned,
+          source: "instagram",
+          utm_source: utm.utm_source || null,
+          utm_medium: utm.utm_medium || null,
+          utm_campaign: utm.utm_campaign || null,
+          utm_content: utm.utm_content || null,
+          referrer: utm.referrer || document.referrer || null,
+        };
 
-        const res = await fetch("/api/coaching-application", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...cleaned,
-            source: "instagram",
-            utm_source: utm.utm_source || null,
-            utm_medium: utm.utm_medium || null,
-            utm_campaign: utm.utm_campaign || null,
-            utm_content: utm.utm_content || null,
-            referrer: utm.referrer || document.referrer || null,
-          }),
-        });
-        const json = await res.json();
+        const { error: dbErr } = await supabase
+          .from("coaching_applications")
+          .insert(payload);
         setSaving(false);
-        if (!res.ok || !json.ok) {
-          // Surface le champ qui a echoue (zod details) pour aider l'utilisateur
-          const fieldErrors = json.details ? Object.keys(json.details).join(", ") : null;
-          const reason = fieldErrors
-            ? `${json.error || "Donnees invalides"} (champs : ${fieldErrors})`
-            : (json.error || "submit_failed");
-          console.error("[application] submit failed:", reason, json.details || "");
-          return { ok: false, reason };
+        if (dbErr) {
+          console.error("[application] submit failed:", dbErr);
+          return { ok: false, reason: dbErr.message || "submit_failed" };
         }
         try { localStorage.removeItem(draftKey); } catch {}
+        // Best-effort : tente l'email de confirmation via l'API quand elle
+        // reviendra. Pas bloquant — la candidature est déjà en DB.
+        try {
+          fetch("/api/coaching-application", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }).catch(() => {});
+        } catch { /* silent */ }
         return { ok: true };
       } catch (e) {
         console.error("[application] submit exception:", e.message);
