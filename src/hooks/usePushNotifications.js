@@ -71,6 +71,10 @@ export function usePushNotifications(arg) {
   // Ref pour stocker le token APNs reçu via event listener, pour qu'on
   // puisse le réutiliser dans resetSubscription sans relancer register().
   const apnsTokenRef = useRef(null);
+  // Dernière erreur d'enregistrement / persist — exposée pour qu'un
+  // toast UI puisse la montrer (sinon les échecs RLS / réseau étaient
+  // silencieux et l'utilisateur ne savait jamais pourquoi rien ne marchait).
+  const [lastError, setLastError] = useState(null);
 
   // Init : récupère l'état de permission au mount.
   useEffect(() => {
@@ -112,6 +116,7 @@ export function usePushNotifications(arg) {
             try {
               await persistNativeToken({ token: token.value, clientId, coachId });
               setSubscribed(true);
+              setLastError(null);
 
               // Purge des web push subs Apple PWA pour CE client : si
               // l'athlète avait installé la PWA iOS avant l'app native, la
@@ -126,11 +131,13 @@ export function usePushNotifications(arg) {
               }
             } catch (e) {
               console.error('[apns] persist failed:', e);
+              setLastError(`persist_failed: ${e.message || e.code || 'unknown'}`);
             }
           });
 
           await PushNotifications.addListener('registrationError', (err) => {
             console.error('[apns] registration error:', err);
+            setLastError(`registration_error: ${err?.error || err?.message || JSON.stringify(err)}`);
           });
 
           // pushNotificationReceived : notif arrive QUAND l'app est au
@@ -264,7 +271,54 @@ export function usePushNotifications(arg) {
     if (permission === 'granted' && (clientId || coachId)) subscribe();
   }, [clientId, coachId, permission, subscribe]);
 
-  return { permission, subscribed, requestPermission, resetSubscription };
+  // Diagnostic : compte des subs natives (apns_token non-null) en DB pour
+  // cet owner. Utilisé pour afficher "X device(s) enregistré(s)" dans Profil
+  // et confirmer visuellement que la persist a fonctionné.
+  const [deviceCount, setDeviceCount] = useState(null);
+  const refreshDeviceCount = useCallback(async () => {
+    if (!clientId && !coachId) return;
+    const col = coachId ? 'coach_id' : 'client_id';
+    const id = coachId || clientId;
+    const { count } = await supabase
+      .from('push_subscriptions')
+      .select('id', { count: 'exact', head: true })
+      .eq(col, id)
+      .not('apns_token', 'is', null);
+    setDeviceCount(typeof count === 'number' ? count : null);
+  }, [clientId, coachId]);
+  useEffect(() => { refreshDeviceCount(); }, [refreshDeviceCount, subscribed]);
+
+  // Diagnostic : envoie une push de test à TOUS les devices natifs du user.
+  // Permet à l'athlète de confirmer "j'ai bien reçu" sans attendre un cron.
+  const sendTestPush = useCallback(async () => {
+    if (!clientId && !coachId) return { ok: false, reason: 'no_owner' };
+    const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+    const ANON = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !ANON) return { ok: false, reason: 'no_env' };
+    try {
+      // Appelle l'edge function send-push (web + native) avec la session JWT
+      // du user — l'edge function décide qui peut envoyer à quel destinataire.
+      const session = await supabase.auth.getSession();
+      const jwt = session?.data?.session?.access_token;
+      if (!jwt) return { ok: false, reason: 'no_session' };
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({
+          client_id: clientId, coach_id: coachId,
+          title: 'RB Perform',
+          body: 'Test push reçu — tout fonctionne 🎉',
+          url: '/',
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      return { ok: resp.ok, status: resp.status, ...data };
+    } catch (e) {
+      return { ok: false, reason: e.message };
+    }
+  }, [clientId, coachId]);
+
+  return { permission, subscribed, requestPermission, resetSubscription, lastError, deviceCount, refreshDeviceCount, sendTestPush };
 }
 
 // ─── Helper : persiste le token APNs/FCM en DB ────────────────────────────
@@ -273,9 +327,10 @@ export function usePushNotifications(arg) {
 // Sinon on remplace les autres tokens du même client (réinstallation app =
 // nouveau token, l'ancien est dead).
 async function persistNativeToken({ token, clientId, coachId }) {
-  if (!token) return;
+  if (!token) throw new Error('empty_token');
   const owner = coachId ? { coach_id: coachId, col: 'coach_id' } : { client_id: clientId, col: 'client_id' };
   const ownerId = coachId || clientId;
+  if (!ownerId) throw new Error('no_owner_id');
 
   // 1. Token identique déjà présent ? → idempotent
   const { data: existing } = await supabase
@@ -300,6 +355,10 @@ async function persistNativeToken({ token, clientId, coachId }) {
     : { client_id: clientId, coach_id: null, apns_token: token, endpoint: null, subscription: null };
   const { error } = await supabase.from('push_subscriptions').insert(row);
   if (error) {
-    console.warn('[apns] insert failed:', error.message);
+    // Re-throw pour que le caller puisse exposer l'erreur via lastError →
+    // toast UI. Avant on swallow silencieusement et le user ne savait
+    // jamais pourquoi il ne recevait rien (RLS / réseau / session expirée).
+    console.error('[apns] insert failed:', error.message, error.code);
+    throw new Error(`db_${error.code || 'insert'}: ${error.message}`);
   }
 }
