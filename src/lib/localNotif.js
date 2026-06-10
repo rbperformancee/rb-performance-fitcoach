@@ -51,10 +51,26 @@ export async function showNotif({ title, body, whenSec = 0, tag } = {}) {
   if (isNative()) {
     const LN = await getLocalNotif();
     if (!LN) return false;
+    // Re-check permission AVANT le schedule. Avant on supposait que le mount
+    // de RestTimer avait déjà fait requestPermissions(), mais si l'user a
+    // refusé une fois, la sub-call schedule fail silencieusement. Maintenant
+    // on force un requestPermissions juste avant — iOS retourne le statut
+    // déjà accordé/refusé sans re-prompter (idempotent).
+    try {
+      const perm = await LN.requestPermissions();
+      if (perm?.display !== "granted") {
+        // eslint-disable-next-line no-console
+        console.warn("[localNotif] permission not granted:", perm?.display);
+        return false;
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("[localNotif] requestPermissions failed:", e);
+    }
     try {
       const id = tag ? Math.abs(hashStr(tag)) % 2147483647 : Date.now() % 2147483647;
       const schedule = whenSec > 0
-        ? { at: new Date(Date.now() + whenSec * 1000) }
+        ? { at: new Date(Date.now() + whenSec * 1000), allowWhileIdle: true }
         : undefined;
       // ATTENTION : Capacitor 8 mappe `sound: "default"` à un fichier
       // bundle nommé littéralement "default" (qui n'existe pas) → AUCUN
@@ -68,6 +84,13 @@ export async function showNotif({ title, body, whenSec = 0, tag } = {}) {
           body,
           schedule,
           sound: "rb_alarm.caf",
+          // iOS 15+ : timeSensitive perce Focus Mode (sauf "Ne pas
+          // déranger" stricte). Sans ça les notifs rest timer sont
+          // silencées si l'user est en mode Concentration/Travail.
+          // Tag interruptionLevel passe via channelId sur Android, ignoré
+          // mais pas casseur. Sur iOS il est ignoré par Capacitor 8 mais
+          // on le laisse pour la prochaine version qui pourrait le mapper.
+          extra: { interruptionLevel: "timeSensitive" },
         }],
       });
       return true;

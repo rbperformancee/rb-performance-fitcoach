@@ -643,6 +643,24 @@ function AppInner() {
     import("./components/ProfilePage");
   }, [user, isDemo, isClientDemo]);
 
+  // Hide le splash natif iOS QUAND l'auth a fini de charger. Avant on hidait
+  // dès le 1er paint React (index.js) → flash visuel entre splash → loading.
+  // Maintenant : le logo éclair RB reste visible jusqu'à ce que l'app soit
+  // vraiment prête à rendre. Fadeout 250ms pour la transition smooth.
+  React.useEffect(() => {
+    if (authLoading) return;
+    if (typeof window === "undefined" || !window.Capacitor?.isNativePlatform?.()) return;
+    (async () => {
+      try {
+        const mod = await import("@capacitor/splash-screen");
+        await mod.SplashScreen.hide({ fadeOutDuration: 250 });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("[splash] hide failed:", e);
+      }
+    })();
+  }, [authLoading]);
+
   // ===== ROUTING COACH vs CLIENT =====
   // Check si l'utilisateur connecte est un coach (table `coaches`) OU un
   // super_admin (table `super_admins`). Les deux restent dans l'interface
@@ -1042,17 +1060,13 @@ function AppInner() {
   // peut tirer avant le 1er paint réel → entre splash natif fadé et React qui
   // render `null`, il y avait 1.5s d'écran noir. Fix : un placeholder #050505
   // (= couleur du splash natif) qui colmate le gap → transition seamless.
-  // Loading écran : logo + spinner centré. Avant c'était un div noir vide,
-  // donc au cold-launch (après que iOS a killé l'app pendant que l'user était
-  // hors-app pendant son repos), il voyait juste du noir = sensation de bug.
-  // Le logo donne le feedback "OK l'app redémarre".
-  if (authLoading) return (
-    <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, color: "#02d1ba" }}>
-      <img src="/icon-192.png" alt="" width={72} height={72} style={{ borderRadius: 18, opacity: 0.9 }} />
-      <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid rgba(2,209,186,0.18)", borderTopColor: "#02d1ba", animation: "rbSpin 0.7s linear infinite" }} />
-      <style>{`@keyframes rbSpin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+  // Loading : on rend un fond #050505 identique au splash natif iOS (et
+  // identique au backgroundColor SplashScreen plugin). Le splash natif est
+  // configuré avec launchAutoHide=false → il reste visible (logo éclair RB)
+  // tant que React ne l'a pas hidé. Le SplashScreen.hide() côté JS est appelé
+  // dans index.js après le 1er paint. Si l'auth est encore loading, on
+  // laisse juste le fond colmater le gap visuel — pas de spinner moche.
+  if (authLoading) return <div style={{ minHeight: "100dvh", background: "#050505" }} />;
 
   // ── Demo client en cours de connexion → loading premium avec progress ──
   if (!user && isClientDemo) {

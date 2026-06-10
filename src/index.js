@@ -29,24 +29,11 @@ preloadActiveLocale().catch(() => {}).finally(() => {
       <ConsentAwareAnalytics />
     </ErrorBoundary>
   );
-  // Hide le splash natif iOS UNE FOIS que React a monté + peint.
-  // capacitor.config.ts a `launchAutoHide: false` → sans ce hide() le
-  // splash reste 4s (fallback launchShowDuration). Avec ce hide(),
-  // transition seamless splash → app (plus de noir 1.5s).
-  // requestAnimationFrame x2 = attend qu'un frame réel ait été peint.
-  if (typeof window !== "undefined" && window.Capacitor?.isNativePlatform?.()) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(async () => {
-        try {
-          const mod = await import("@capacitor/splash-screen");
-          await mod.SplashScreen.hide({ fadeOutDuration: 200 });
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.warn("[splash] hide failed:", e);
-        }
-      });
-    });
-  }
+  // Le hide du splash natif iOS est déclenché depuis App.jsx via un useEffect
+  // qui watch `authLoading`. Avant il était hidé ici dès le 1er paint, mais
+  // ça causait un flash noir entre splash → React (auth pas encore prête).
+  // Maintenant : le splash logo éclair RB reste visible jusqu'à ce que l'auth
+  // soit chargée, puis on hide en fondu.
 });
 
 // Hook pour capturer les unhandled promise rejections

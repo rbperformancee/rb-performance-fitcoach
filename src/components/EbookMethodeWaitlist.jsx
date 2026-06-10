@@ -246,11 +246,11 @@ export default function EbookMethodeWaitlist() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
             {[
+              { t: "★ Accès anticipé app RB Perform · 100 jours", d: "Pas un PDF figé. Tes 60 séances dans l'app, tes charges sauvegardées, tes chronos auto. Le programme évolue avec tes retours. Réservé aux 30 premiers — l'app n'est pas en vente publique.", featured: true },
               { t: "110 pages éditoriales premium", d: "Le book MÉTHODE ATHLÈTE COMPLET — édition 2026 numérotée." },
               { t: "Programme ATHLÈTE 90 — 12 semaines", d: "+60 séances détaillées sur 3 blocs PPG → PPS → Affûtage." },
               { t: "Nutrition athlète + 12 recettes", d: "Macros, timing, hydratation, électrolytes. Plats calculés." },
               { t: "Mobilité, récup, mindset", d: "Tout ce qui se passe en dehors de l'entraînement — et qui décide de ta progression." },
-              { t: "★ Programme sur l'app RB Perform", d: "Pas un PDF figé. Tes séances dans l'app, tes charges sauvegardées. Réservé aux 30 premiers.", featured: true },
             ].map((x, i) => (
               <div
                 key={i}
