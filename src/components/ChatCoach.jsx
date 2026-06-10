@@ -110,9 +110,19 @@ export default function ChatCoach({ clientId, coachEmail, isCoach, coachName }) 
         }
       )
       .subscribe();
-    // Filet de sécurité si le realtime ne délivre pas : refetch toutes les 6 s.
-    const poll = setInterval(fetchMessages, 6000);
-    return () => { supabase.removeChannel(channel); clearInterval(poll); };
+    // Filet de sécurité si le realtime ne délivre pas : refetch toutes les 60s
+    // (était 6s avant, mais sur les longs threads coach-athlète c'est 10×
+    // trop de reads — Camille = 100+ messages, ça faisait ~6 reads × 60s/min
+    // × 60min × 8h ouverte = ~17 000 reads / jour rien que pour le polling).
+    // Refetch immédiat aussi au retour foreground (cold-launch après notif).
+    const poll = setInterval(fetchMessages, 60000);
+    const onVis = () => { if (document.visibilityState === "visible") fetchMessages(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [clientId, fetchMessages]);
 
   useEffect(() => {
