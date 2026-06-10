@@ -103,4 +103,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+    // MARK: - Push Notifications (APNs)
+    //
+    // Capacitor 8 utilise NotificationCenter pour forward le token APNs
+    // depuis l'AppDelegate vers le plugin PushNotifications. Sans ces deux
+    // handlers, le swizzle automatique échoue dès qu'on a custom le
+    // didFinishLaunchingWithOptions → didRegisterForRemoteNotifications
+    // never fires côté JS → timeout 5s (Rayan, 10 juin 2026).
+    //
+    // Ref : https://capacitorjs.com/docs/apis/push-notifications#ios
+
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(
+            name: .capacitorDidRegisterForRemoteNotifications,
+            object: deviceToken
+        )
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(
+            name: .capacitorDidFailToRegisterForRemoteNotifications,
+            object: error
+        )
+    }
+
 }
