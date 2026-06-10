@@ -95,8 +95,13 @@
       /* Fix iOS Safari 100vh bug : 100vh inclut la barre URL sur iOS.
          -webkit-fill-available est le fix canonique Apple.
          100dvh est le fix moderne (iOS 15.4+). */
-      html { height: 100%; height: -webkit-fill-available; }
+      html { height: 100%; height: -webkit-fill-available; background: #050505; }
       body { background: #050505; overscroll-behavior: none; min-height: 100%; min-height: -webkit-fill-available; min-height: 100dvh; }
+      /* Quand un input prend le focus, on lui réserve 100px de respiration
+         depuis le haut/bas du viewport — sinon le clavier iOS le cache
+         dans les modals position:fixed (TrainingPage bilan textarea,
+         FuelPage ajout aliment, etc.). */
+      input, textarea, select { scroll-margin-top: 100px; scroll-margin-bottom: 100px; }
       ::-webkit-scrollbar { width: 0; background: transparent; }
       #splash {
         position: fixed; inset: 0;
@@ -125,6 +130,25 @@
   (function(){var pid='__META_PIXEL_ID__';if(/[^0-9]/.test(pid)||pid.length<10)return;!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',pid);fbq('track','PageView');})();
   </script>
   <!-- End Meta Pixel -->
+  <!-- Keyboard scroll-into-view fix : sur Capacitor iOS, un input dans une
+       modal position:fixed n'est pas scrollé automatiquement par WKWebView
+       quand le clavier monte. On force le scrollIntoView avec un délai
+       qui laisse le clavier déployer son animation (~300ms). -->
+  <script>
+    (function(){
+      var pending = null;
+      document.addEventListener('focusin', function(e){
+        var t = e.target;
+        if (!t || !t.matches || !t.matches('input,textarea,[contenteditable="true"]')) return;
+        // Ignore les boutons radio/checkbox/file qui n'ouvrent pas le clavier
+        if (t.type === 'radio' || t.type === 'checkbox' || t.type === 'file') return;
+        clearTimeout(pending);
+        pending = setTimeout(function(){
+          try { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch(_) {}
+        }, 320);
+      });
+    })();
+  </script>
 </head>
   <body>
     <div id="splash">

@@ -2088,7 +2088,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       {/* MODAL RPE + RECAP */}
       {showRessenti && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)", zIndex: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "0 0 0 0" }}>
-          <div style={{ width: "100%", maxWidth: 420, background: "#0a0a0a", borderRadius: "28px 28px 0 0", padding: "32px 24px calc(env(safe-area-inset-bottom,0px) + 32px)", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none" }}>
+          <div style={{ width: "100%", maxWidth: 420, maxHeight: "92dvh", overflowY: "auto", background: "#0a0a0a", borderRadius: "28px 28px 0 0", padding: "32px 24px calc(env(safe-area-inset-bottom,0px) + 32px)", border: "1px solid rgba(255,255,255,0.06)", borderBottom: "none", WebkitOverflowScrolling: "touch" }}>
 
             {selectedRessenti === null ? (
               /* ETAPE 1 : RPE */
