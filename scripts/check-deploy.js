@@ -33,7 +33,14 @@ const CHECKS = [
   { name: "/api/billing-portal no auth", method: "POST", url: "/api/billing-portal",                   expect: 401, headers: { "Origin": BASE, "Content-Type": "application/json" }, body: "{}" },
   { name: "/api/checkout OPTIONS",   method: "OPTIONS", url: "/api/checkout",                          expect: 200, headers: { "Origin": BASE } },
   { name: "/api/webhook bad sig",    method: "POST", url: "/api/webhook-stripe",                       expect: 400, headers: { "stripe-signature": "invalid", "Origin": BASE }, body: "{}" },
-  // Capture endpoints
+  // Capture endpoints — POST avec body invalide pour PROUVER que la function
+  // existe et tourne (un 400 = la function a chargé et zod a rejeté).
+  // Un OPTIONS seul peut être satisfait par le rewrite catch-all même si la
+  // function est absente du bundle — c'est ce qui nous est passé sous le
+  // nez le 4-9 juin 2026, 6 jours de candidatures perdues.
+  { name: "/api/waitlist exists",            method: "POST", url: "/api/waitlist",              expect: 400, headers: { "Origin": BASE, "Content-Type": "application/json" }, body: "{}" },
+  { name: "/api/coaching-application exists",method: "POST", url: "/api/coaching-application",  expect: 400, headers: { "Origin": BASE, "Content-Type": "application/json" }, body: "{}" },
+  { name: "/api/diagnostic-submit exists",   method: "POST", url: "/api/diagnostic-submit",     expect: 400, headers: { "Origin": BASE, "Content-Type": "application/json" }, body: "{}" },
   { name: "/api/waitlist OPTIONS",   method: "OPTIONS", url: "/api/waitlist",                          expect: 200, headers: { "Origin": BASE } },
   { name: "/api/vitals OPTIONS",     method: "OPTIONS", url: "/api/vitals",                            expect: 200, headers: { "Origin": BASE } },
   // CORS headers
