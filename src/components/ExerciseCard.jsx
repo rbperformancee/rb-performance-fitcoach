@@ -905,7 +905,19 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase" }}>{t("ec.ghost_label")}</div>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontStyle: "italic", fontWeight: 200 }}>
-                {ghostData.weight} kg × {ghostData.reps}
+                {(() => {
+                  // Si on a les sets détaillés, on les affiche compactés
+                  // (ex: '80×10 / 75×10 / 70×8') — c'est ce que l'athlète
+                  // a fait pour de vrai, pas la moyenne. Sinon fallback
+                  // sur weight (avg legacy) × reps (dernier set).
+                  const sets = Array.isArray(ghostData.sets) ? ghostData.sets : null;
+                  if (sets && sets.length > 0) {
+                    const allSame = sets.every((s) => Number(s.weight) === Number(sets[0].weight) && String(s.reps) === String(sets[0].reps));
+                    if (allSame) return `${sets.length}×${sets[0].weight} kg × ${sets[0].reps}`;
+                    return sets.map((s) => `${s.weight}×${s.reps}`).join(" / ");
+                  }
+                  return `${ghostData.weight} kg × ${ghostData.reps}`;
+                })()}
               </div>
             </div>
           )}

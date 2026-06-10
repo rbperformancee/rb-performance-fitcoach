@@ -104,9 +104,15 @@ export function useLogs(programmeName, clientId = null) {
   // useEffect (mount/clientId) ET depuis pull-to-refresh côté iOS.
   const hydrateFromCloud = useCallback(async () => {
     if (!clientId) return;
+    // SELECT inclut `sets` (JSONB des sets détaillés) : sans ça, le hydrate
+    // ne conservait que weight (moyenne) et reps (dernier set) → le ghost
+    // "la dernière fois" affichait avg × lastReps qui ne correspond à aucun
+    // set réel (ex: 80×10/75×10/70×8 → ghost "75kg × 8" jamais fait). Le
+    // prefill du SetRow utilise aussi sets[i]?.weight pour pre-remplir le
+    // set i avec le poids réel de cette série précédente.
     const { data } = await supabase
       .from("exercise_logs")
-      .select("ex_key, date, weight, reps, logged_at")
+      .select("ex_key, date, weight, reps, sets, logged_at")
       .eq("client_id", clientId)
       .order("logged_at", { ascending: true })
       .limit(2000);
@@ -122,6 +128,7 @@ export function useLogs(programmeName, clientId = null) {
           date: r.date || (r.logged_at || "").slice(0, 10),
           weight: parseFloat(r.weight) || 0,
           reps: r.reps || "",
+          sets: Array.isArray(r.sets) ? r.sets : null,
         });
         arr.sort((a, b) => a.date.localeCompare(b.date));
         next[key] = arr;
