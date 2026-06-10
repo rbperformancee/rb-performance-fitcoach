@@ -5,6 +5,7 @@ import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 import { generateSchedules, addMonths } from "../../lib/paymentSchedules";
 
+import { todayLocal } from "../../lib/date";
 const G = "#02d1ba";
 const BORDER = "rgba(255,255,255,0.08)";
 
@@ -51,7 +52,7 @@ export default function LogPaymentModal({
   defaultPeriodStart,
 }) {
   const t = useT();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocal();
   const startDefault = defaultPeriodStart || today;
 
   const [amount, setAmount] = useState(String(defaultAmount));
@@ -497,7 +498,7 @@ export async function checkPaymentNeeded(clientId) {
       .maybeSingle();
     if (error) throw error;
     if (!data) return { needs: true, reason: "undefined" };
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocal();
     if (data.period_end < today) return { needs: true, reason: "expired", periodEnd: data.period_end };
     return { needs: false, periodEnd: data.period_end };
   } catch (e) {

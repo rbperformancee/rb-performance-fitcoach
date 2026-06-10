@@ -21,6 +21,7 @@ import {
   computeWeekProgress,
   weekdayLabelsForRecommended,
 } from "../lib/weekProgress";
+import { todayLocal } from "../lib/date";
 
 const G = "#02d1ba";
 const G_DIM = "rgba(2,209,186,0.1)";
@@ -1147,7 +1148,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   // sans ça, une séance répétée chaque semaine sur le même weekIdx empile les
   // logs et la séance d'aujourd'hui apparaît "60% faite" avant même d'avoir
   // commencé (Camille, 8 juin 2026).
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = todayLocal();
   const todayEntry = (wIdx, sIdx, eIdx) =>
     (getHistory(wIdx, sIdx, eIdx) || []).find((e) => e?.date === todayStr);
   // Sets attendus pour un exo : ex.sets ou rawReps "Nx..." sinon 1.
@@ -1254,7 +1255,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       client_id: client.id,
       session_name: currentSession?.name,
       rpe: idx + 1,
-      date: new Date().toISOString().split("T")[0],
+      date: todayLocal(),
     });
 
     // 3. Badges automatiques (n'allume qu'à la 1ère validation, pas à chaque
@@ -1274,7 +1275,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       }
 
       // 4. XP +40 via daily_tracking (1x par séance validée)
-      const today = new Date().toISOString().split("T")[0];
+      const today = todayLocal();
       const { data: dt } = await supabase.from("daily_tracking").select("xp").eq("client_id", client.id).eq("date", today).maybeSingle();
       const currentXP = dt?.xp || 0;
       await supabase.from("daily_tracking").upsert({ client_id: client.id, date: today, xp: currentXP + 40 }, { onConflict: "client_id,date" });

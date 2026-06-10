@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import haptic from "../../lib/haptic";
 
+import { todayLocal } from "../../lib/date";
 const G = "#02d1ba";
 
 /**
@@ -68,7 +69,7 @@ export default function BaselineMaxesForm({ open, clientId, onDone }) {
     haptic.selection();
     setSaving(true);
     try {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocal();
       const now = new Date().toISOString();
       const rows = filled.map((l) => {
         const w = parseFloat(values[l.id].weight);

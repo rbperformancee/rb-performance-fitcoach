@@ -6,6 +6,7 @@ import AppIcon from "../AppIcon";
 import haptic from "../../lib/haptic";
 import { toast } from "../Toast";
 
+import { apiUrl } from "../../lib/api";
 const G = "#02d1ba";
 const RED = "#ef4444";
 const YELLOW = "#fbbf24";
@@ -39,7 +40,7 @@ export default function RecipesSection({ coachId }) {
   const load = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const r = await fetch("/api/recipes/list", {
+      const r = await fetch(apiUrl("/api/recipes/list"), {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!r.ok) throw new Error(`list failed ${r.status}`);
@@ -111,7 +112,7 @@ export default function RecipesSection({ coachId }) {
       const { data: { session } } = await supabase.auth.getSession();
       // Refresh la liste après ~1s pour attraper le stub backend
       setTimeout(() => { load(); }, 1500);
-      const r = await fetch("/api/recipes/create", {
+      const r = await fetch(apiUrl("/api/recipes/create"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -384,7 +385,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        const r = await fetch(`/api/recipes/get?id=${recipeId}`, {
+        const r = await fetch(apiUrl(`/api/recipes/get?id=${recipeId}`), {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         if (!r.ok) throw new Error(`fetch ${r.status}`);
@@ -408,7 +409,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
     haptic.medium();
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const r = await fetch('/api/recipes/generate-variant', {
+      const r = await fetch(apiUrl('/api/recipes/generate-variant'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -451,7 +452,7 @@ function RecipeReviewModal({ recipeId, onClose, onSaved }) {
       const { data: { session } } = await supabase.auth.getSession();
       const body = { ...edits };
       if (publish) body.publish = true;
-      const r = await fetch(`/api/recipes/update?id=${recipeId}`, {
+      const r = await fetch(apiUrl(`/api/recipes/update?id=${recipeId}`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

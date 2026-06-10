@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
+import { todayLocal } from "../lib/date";
 // Throttle module-level pour eviter le spam de coach_activity_log :
 // chaque slider bump (calories, proteines, eau, pas) declenche updateGoals,
 // et sans throttle on inserait 10+ rows par session. Window de 5s glissante
@@ -16,16 +17,25 @@ export function useFuel(clientId, dateOverride) {
   const [loading, setLoading] = useState(true);
 
   // Si on consulte une date passee, on utilise dateOverride. Sinon today.
-  const today = dateOverride || new Date().toISOString().split("T")[0];
+  const today = dateOverride || todayLocal();
 
   const fetchAll = useCallback(async () => {
     if (!clientId) return;
     setLoading(true);
-    const [goalsRes, logsRes, trackingRes] = await Promise.all([
-      supabase.from("nutrition_goals").select("*").eq("client_id", clientId).maybeSingle(),
-      supabase.from("nutrition_logs").select("*").eq("client_id", clientId).eq("date", today).order("logged_at", { ascending: true }),
-      supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).maybeSingle(),
-    ]);
+    let goalsRes, logsRes, trackingRes;
+    try {
+      [goalsRes, logsRes, trackingRes] = await Promise.all([
+        supabase.from("nutrition_goals").select("*").eq("client_id", clientId).maybeSingle(),
+        supabase.from("nutrition_logs").select("*").eq("client_id", clientId).eq("date", today).order("logged_at", { ascending: true }),
+        supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).maybeSingle(),
+      ]);
+    } catch (e) {
+      // Promise.all reject (offline / RLS / JWT) → débloquer la UI pour
+      // éviter spinner infini sur FuelPage. Valeurs par défaut affichées.
+      console.error("useFuel fetchAll:", e);
+      setLoading(false);
+      return;
+    }
     // Carb cycling : si un planning est défini, on résout le type de jour
     // d'aujourd'hui et on remplace les macros par celles de ce type.
     // Tout échec → fallback sur l'objectif unique. eau_ml/pas restent les
@@ -101,12 +111,25 @@ export function useFuel(clientId, dateOverride) {
   };
 
   const removeFood = async (id) => {
-    await supabase.from("nutrition_logs").delete().eq("id", id);
+    // Optimistic remove + rollback si RLS/réseau refuse. Avant on swallowait
+    // l'erreur en silence : l'aliment disparaissait UI, refresh → il revenait
+    // (zombie food). Le retour { ok, error } permet à l'UI de toaster.
+    const previous = logs;
     setLogs(prev => prev.filter(l => l.id !== id));
+    const { error } = await supabase.from("nutrition_logs").delete().eq("id", id);
+    if (error) {
+      console.error("[removeFood] delete failed", error);
+      setLogs(previous); // rollback
+      return { ok: false, error: error.message || error.code || "Erreur" };
+    }
+    return { ok: true };
   };
 
   const updateFood = async (id, updates) => {
-    const { data } = await supabase
+    // Idem removeFood : on doit surface l'erreur si la row ne se met pas à jour
+    // (RLS, JWT expirée, conflit). Avant on ignorait, et l'UI affichait des
+    // macros incohérentes avec le serveur.
+    const { data, error } = await supabase
       .from("nutrition_logs")
       .update({
         aliment: updates.aliment,
@@ -120,8 +143,12 @@ export function useFuel(clientId, dateOverride) {
       .eq("id", id)
       .select()
       .single();
+    if (error) {
+      console.error("[updateFood] update failed", error);
+      return { ok: false, error: error.message || error.code || "Erreur" };
+    }
     if (data) setLogs(prev => prev.map(l => l.id === id ? data : l));
-    return data;
+    return { ok: true, data };
   };
 
   const updateTracking = async (field, value) => {

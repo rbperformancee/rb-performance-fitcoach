@@ -8,6 +8,7 @@ import React, { useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import haptic from "../lib/haptic";
 
+import { todayLocal } from "../lib/date";
 const G = "#02d1ba";
 
 export default function ClientFirstLoginFlow({ client, user, onComplete }) {
@@ -43,7 +44,7 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
     setError("");
     setSaving(true);
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const today = todayLocal();
       const w = parseFloat(poids);
       // Si l'utilisateur a saisi un poids hors limites, on stoppe et on lui dit.
       // Un champ vide est OK (skippable).

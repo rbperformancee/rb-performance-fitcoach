@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useT } from "../../lib/i18n";
 import { supabase } from "../../lib/supabase";
 
+import { todayLocal } from "../../lib/date";
 const G = "#02d1ba";
 
 /**
@@ -35,7 +36,7 @@ export default function ActivityFeedToday({ coachId, clientsById }) {
     }
     const ids = Array.from(clientsById.keys());
     const since24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocal();
     // Lundi semaine en cours pour les checkins
     const d = new Date();
     const day = d.getDay();

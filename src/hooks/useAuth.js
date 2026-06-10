@@ -48,7 +48,14 @@ export function useAuth() {
             icon: '/icon-192.png',
           });
         }
-        setTimeout(() => window.location.reload(), 500);
+        // Reload pour forcer le rechargement du programme. Guard :
+        // ne reload PAS si l'app est passée background (iOS WebView le
+        // ferait apparaître comme un crash au foreground) OU si l'user
+        // s'est sign-out entre temps. Sinon UX = "l'app crash toute seule".
+        setTimeout(() => {
+          if (document.visibilityState === 'hidden') return;
+          window.location.reload();
+        }, 500);
       }
     }, 5000);
   }, [stopPolling]);
@@ -91,6 +98,10 @@ export function useAuth() {
   }, [startPolling]);
 
   useEffect(() => {
+    // Si getSession() reject (SecureStorage Capacitor corrompue après update
+    // app sur iOS — vu plusieurs fois), il faut absolument setLoading(false)
+    // sinon white screen of death : l'app reste bloquée sur le spinner et
+    // l'utilisateur doit désinstaller-réinstaller. catch obligatoire.
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
@@ -106,6 +117,9 @@ export function useAuth() {
         }
       }
       else setLoading(false);
+    }, (e) => {
+      console.error("getSession failed:", e);
+      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {

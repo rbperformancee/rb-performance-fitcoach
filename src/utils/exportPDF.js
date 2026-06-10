@@ -10,6 +10,7 @@
  */
 import { getDateLocale } from "../lib/i18n";
 
+import { todayLocal } from "../lib/date";
 function loadJsPDF() {
   return new Promise((resolve, reject) => {
     if (window.jspdf) return resolve(window.jspdf.jsPDF);
@@ -434,7 +435,7 @@ export async function exportProgressPDF({ programme, getHistory, entries: weight
   }
 
   // Save
-  const date = new Date().toISOString().slice(0, 10);
+  const date = todayLocal();
   const filename = `${(programme.name || "programme").toLowerCase().replace(/\s+/g, "-")}_progression_${date}.pdf`;
   doc.save(filename);
 }
@@ -561,7 +562,7 @@ export async function exportProgrammePDF(p) {
   doc.setFontSize(7);
   doc.text('Généré par RB Perform · ' + new Date().toLocaleDateString(getDateLocale()), W / 2, H - 8, { align: 'center' });
 
-  const date = new Date().toISOString().slice(0, 10);
+  const date = todayLocal();
   const filename = (p.name || 'programme').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '_' + date + '.pdf';
   doc.save(filename);
 }

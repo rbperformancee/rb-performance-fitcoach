@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import haptic from "../../lib/haptic";
 import { toast } from "../Toast";
 
+import { todayLocal } from "../../lib/date";
 const G = "#02d1ba";
 
 /**
@@ -97,7 +98,7 @@ export default function HabitsCard({ clientId, dailyTracking }) {
   const [fetchedTracking, setFetchedTracking] = useState(null); // daily_tracking du jour
   const [loading, setLoading] = useState(true);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocal();
 
   useEffect(() => {
     if (!clientId) return;

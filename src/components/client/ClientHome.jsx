@@ -88,7 +88,11 @@ export default function ClientHome({ client, coach, accent, onTabChange }) {
   }, [sessions]);
 
   return (
-    <div style={{ padding: "32px 20px 20px" }}>
+    // minHeight + background : sans ça, le ClientHome ne couvrait pas la
+    // zone safe-area-top (Dynamic Island/notch) et on voyait une bande noire
+    // du wrap parent — alors que TrainingPage/FuelPage/MovePage couvrent leur
+    // root avec #050505 et n'ont pas ce souci. Match avec les autres pages.
+    <div style={{ minHeight: "100dvh", background: "#050505", padding: "32px 20px 20px" }}>
       {/* ===== HEADER ===== */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 28 }}>
         <div style={{ flex: 1, minWidth: 0 }}>

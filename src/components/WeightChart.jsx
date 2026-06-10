@@ -18,6 +18,7 @@ import { isHealthAvailable, requestStepsPermission, getTodaySteps } from "../lib
 import usePullToRefresh from "../hooks/usePullToRefresh";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
 
+import { todayLocal } from "../lib/date";
 export default function WeightChart({ clientId, client, programme, appData }) {
   const t = useT();
   const tracking = useWeightTracking(clientId);
@@ -114,7 +115,7 @@ export default function WeightChart({ clientId, client, programme, appData }) {
   const saveSteps = async (steps) => {
     setDailySteps(steps);
     if (!clientId) return;
-    const today = new Date().toISOString().split("T")[0];
+    const today = todayLocal();
     // Recupere les autres champs pour ne pas les ecraser a 0.
     const { data: existing } = await supabase
       .from("daily_tracking")

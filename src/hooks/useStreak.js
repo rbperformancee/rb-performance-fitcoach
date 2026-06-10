@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+import { todayLocal } from "../lib/date";
 export function useStreak(clientId) {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
@@ -21,7 +22,7 @@ export function useStreak(clientId) {
       let current = 0;
       let best = 0;
       let temp = 1;
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayLocal();
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
       
       if (dates[0] === today || dates[0] === yesterday) {

@@ -3,6 +3,8 @@ import { supabase } from "../../lib/supabase";
 import haptic from "../../lib/haptic";
 import { toast } from "../Toast";
 
+import { apiUrl } from "../../lib/api";
+import { todayLocal } from "../../lib/date";
 const G = "#02d1ba";
 const ORANGE = "#f97316";
 
@@ -185,7 +187,7 @@ async function toggleFavorite(recipeId, favorites, setFavorites) {
   haptic.selection();
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    const r = await fetch('/api/recipes/favorite', {
+    const r = await fetch(apiUrl('/api/recipes/favorite'), {
       method: isFav ? 'DELETE' : 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -307,7 +309,7 @@ function RecipeRow({ recipe, isFavorite, onClick, onToggleFav }) {
 
 function RecipeDetail({ recipe, isFavorite, defaultDate, defaultMealType, onClose, onToggleFav, onAdded }) {
   const [servings, setServings] = useState(1);
-  const [date, setDate] = useState(defaultDate || new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(defaultDate || todayLocal());
   const [mealType, setMealType] = useState(defaultMealType || 'Dejeuner');
   const [adding, setAdding] = useState(false);
 
@@ -355,7 +357,7 @@ function RecipeDetail({ recipe, isFavorite, defaultDate, defaultMealType, onClos
       const ingredient_overrides = baseIngredients
         .filter((i) => Number(quantities[i.id]) !== Number(i.quantity))
         .map((i) => ({ id: i.id, quantity: Number(quantities[i.id]) }));
-      const r = await fetch('/api/recipes/add-to-meal', {
+      const r = await fetch(apiUrl('/api/recipes/add-to-meal'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

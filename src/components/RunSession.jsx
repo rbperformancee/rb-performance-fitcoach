@@ -39,6 +39,7 @@ import { fetchCurrentWeather } from "../lib/weather";
 import { buildSchedule, nextPhase as nextIntervalPhase, parseSegment, announceText } from "../lib/runIntervals";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 
+import { todayLocal } from "../lib/date";
 const G = "#02d1ba";
 const RED = "#ef4444";
 
@@ -372,7 +373,7 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
           : null;
         const payload = {
           client_id: client.id,
-          date: new Date().toISOString().slice(0, 10),
+          date: todayLocal(),
           distance_km: distanceKm,
           duree_min: Math.round(durationS / 60),
           allure_min_km: allureStr,

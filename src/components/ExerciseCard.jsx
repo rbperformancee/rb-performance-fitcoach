@@ -8,6 +8,7 @@ import { findVideo } from "../data/exerciseVideos";
 import { findFallbackVideo } from "../data/fallbackVideos";
 import { detectPletnev, detectPoliquin } from "../utils/parserProgramme";
 
+import { todayLocal } from "../lib/date";
 const GREEN = "#02d1ba";
 const GREEN_DIM = "rgba(2,209,186,0.12)";
 
@@ -443,7 +444,7 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   const [showVideo, setShowVideo] = useState(false);
   const [showTempo, setShowTempo] = useState(false); // modale d'explication du tempo (ex. "3010")
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocal();
   const storageKey = "sets_done_" + weekIdx + "_" + sessionIdx + "_" + exIdx + "_" + today;
   const storageDataKey = "sets_data_" + weekIdx + "_" + sessionIdx + "_" + exIdx + "_" + today;
   const [resetKey, setResetKey] = useState(0);

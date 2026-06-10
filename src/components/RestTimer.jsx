@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useT } from "../lib/i18n";
 import { showNotif, cancelAllNotifs, requestNotifPermission } from "../lib/localNotif";
 import { startRestActivity, stopRestActivity } from "../lib/restTimerLiveActivity";
-import { playRestEndAlarm, stopRestEndAlarm } from "../lib/alarmSound";
+import { playRestEndAlarm, stopRestEndAlarm, startRestKeepalive, stopRestKeepalive } from "../lib/alarmSound";
 import { isNative } from "../lib/native";
 
 const fillTpl = (s, vars) => {
@@ -171,11 +171,16 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
     : (exName ? fillTpl(t("rt.next"), { name: exName }) : null);
   
   // Demande permission notifs (idempotent : iOS la permission push couvre déjà)
-  // + enregistre le SW web pour les timers en background (web seulement).
+  // + enregistre le SW web pour les timers en background (web seulement)
+  // + démarre l'audio keepalive natif (iOS) pour empêcher iOS de killer l'app
+  //   pendant que l'user va sur Insta/Music. Sans ça : cold-launch noir au
+  //   tap de la notif de fin de repos.
   useEffect(() => {
     const setup = async () => {
       await requestNotifPermission();
-      if (!isNative() && 'serviceWorker' in navigator) {
+      if (isNative()) {
+        startRestKeepalive(); // fire-and-forget
+      } else if ('serviceWorker' in navigator) {
         try {
           await navigator.serviceWorker.register('/sw-timer.js');
         } catch(e) {}
@@ -183,12 +188,13 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
     };
     setup();
     // Cleanup au unmount du composant entier (= timer terminé ou skippé) :
-    // stop le Live Activity, clear les notifs en attente, et coupe le son
-    // d'alarme en cours (sinon il continue à boucler ~1.7s après dismiss).
+    // stop le Live Activity, clear les notifs en attente, coupe le son
+    // d'alarme en cours, et arrête le keepalive audio.
     return () => {
       cancelAllNotifs();
       stopRestActivity();
       stopRestEndAlarm();
+      stopRestKeepalive();
     };
   }, []);
   const [running, setRunning] = useState(true);

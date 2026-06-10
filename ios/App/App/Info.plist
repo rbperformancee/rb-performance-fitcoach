@@ -69,6 +69,7 @@
 	<array>
 		<string>location</string>
 		<string>remote-notification</string>
+		<string>audio</string>
 	</array>
 	<key>NSHealthShareUsageDescription</key>
 	<string>RB Perform lit ton compteur de pas Apple Health pour pré-remplir automatiquement ton suivi quotidien. Tes données restent privées entre ton coach et toi.</string>

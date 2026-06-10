@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
+import { todayLocal } from "../lib/date";
 const STORAGE_KEY = "fitcoach_logs_v1";
 
 function buildExKey(programmeName, weekIdx, sessionIdx, exIdx) {
@@ -214,7 +215,7 @@ export function useLogs(programmeName, clientId = null) {
   const saveLog = useCallback(
     (weekIdx, sessionIdx, exIdx, weight, reps, setsArr = null, exName = null) => {
       const key = buildExKey(programmeName, weekIdx, sessionIdx, exIdx);
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocal();
       const w = parseFloat(weight) || 0;
       const r = reps || "";
       // Normalise le tableau : on ne garde que weight (number) + reps (number/string)
@@ -257,20 +258,37 @@ export function useLogs(programmeName, clientId = null) {
         return { ...prev, [key]: [...filtered, newEntry] };
       });
 
-      // Persist en cloud (fire-and-forget). Sans ça le coach ne voit jamais
-      // les charges et le client perd tout en changeant de device.
-      // Upsert manuel via delete-then-insert sur (client_id, ex_key, date)
-      // car la table n'a pas de contrainte unique declaree.
+      // Persist en cloud. Sans ça le coach ne voit jamais les charges et le
+      // client perd tout en changeant de device.
+      //
+      // Atomicité : avant on faisait delete-then-insert sans transaction. Si
+      // le insert plantait (drop wifi mid-write, RLS, JWT expirée), la row
+      // était perdue à jamais — seul un console.warn fire-and-forget. Camille
+      // a déjà eu ce bug en wifi→4G handoff au milieu d'une série.
+      //
+      // Fix : on garde un snapshot des anciennes rows AVANT delete, et si
+      // l'insert fail on les ré-insère pour restaurer l'état initial. Le
+      // log local (localStorage) reste, donc le retry à la prochaine entrée
+      // de la même série remettra tout d'aplomb.
       if (clientId) {
         (async () => {
+          let backup = null;
           try {
-            await supabase
+            const { data: existing } = await supabase
+              .from("exercise_logs")
+              .select("*")
+              .eq("client_id", clientId)
+              .eq("ex_key", key)
+              .eq("date", today);
+            backup = existing || [];
+            const { error: delErr } = await supabase
               .from("exercise_logs")
               .delete()
               .eq("client_id", clientId)
               .eq("ex_key", key)
               .eq("date", today);
-            await supabase.from("exercise_logs").insert({
+            if (delErr) throw delErr;
+            const { error: insErr } = await supabase.from("exercise_logs").insert({
               client_id: clientId,
               ex_key: key,
               date: today,
@@ -279,8 +297,20 @@ export function useLogs(programmeName, clientId = null) {
               sets: normalizedSets,
               logged_at: new Date().toISOString(),
             });
+            if (insErr) throw insErr;
           } catch (e) {
-            console.warn("[useLogs] cloud persist failed (offline?):", e?.message);
+            console.warn("[useLogs] cloud persist failed:", e?.message);
+            // Restaurer le snapshot pour éviter une perte définitive si le
+            // delete a réussi mais le insert a échoué.
+            if (backup && backup.length > 0) {
+              try {
+                await supabase.from("exercise_logs").insert(
+                  backup.map(({ id: _id, ...row }) => row) // strip id
+                );
+              } catch (restoreErr) {
+                console.error("[useLogs] backup restore failed:", restoreErr?.message);
+              }
+            }
           }
         })();
       }

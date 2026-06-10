@@ -58,6 +58,7 @@ import AchievementsSection from "./coach/AchievementsSection";
 import RecipesSection from "./coach/RecipesSection";
 import TransformationView from "./coach/TransformationView";
 import AIAnalyze from "./coach/AIAnalyze";
+import { todayLocal } from "../lib/date";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
 import CoachHomeScreen from "./coach/CoachHomeScreen";
 import MonCompte from "./coach/MonCompte";
@@ -78,6 +79,7 @@ const fillTpl = (s, vars) => {
 import ThemeSwitcher from "./ThemeSwitcher";
 import { calculateChurnRisk } from "../lib/coachIntelligence";
 
+import { apiUrl } from "../lib/api";
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 // DEPRECATED — anciennes constantes, remplacées par coach_plans table
 const SUB_PLANS_LEGACY = [
@@ -825,7 +827,7 @@ function CreneauxManager() {
         <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>{t("cd.add_slot", "Ajouter un créneau")}</div>
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
-            min={new Date().toISOString().split("T")[0]}
+            min={todayLocal()}
             style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 16, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }} />
           <select value={heure} onChange={e => setHeure(e.target.value)}
             style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 16, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
@@ -1801,7 +1803,7 @@ function WeightNudgeButton({ client }) {
   const [sending, setSending] = React.useState(false);
   const [sentToday, setSentToday] = React.useState(() => {
     try {
-      const k = `weight_nudge_${client?.id}_${new Date().toISOString().slice(0,10)}`;
+      const k = `weight_nudge_${client?.id}_${todayLocal()}`;
       return localStorage.getItem(k) === "1";
     } catch { return false; }
   });
@@ -1832,7 +1834,7 @@ function WeightNudgeButton({ client }) {
       if (res.ok && (json.sent || 0) > 0) {
         toast.success(fillTpl(t("coach.weight_nudge_toast_sent"), { name: firstName }));
         try {
-          localStorage.setItem(`weight_nudge_${client.id}_${new Date().toISOString().slice(0,10)}`, "1");
+          localStorage.setItem(`weight_nudge_${client.id}_${todayLocal()}`, "1");
         } catch {}
         setSentToday(true);
       } else if (res.ok && json.total === 0) {
@@ -2099,7 +2101,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       .then(({ data }) => setWeeklyCheckins(data || []));
     // Compliance habitudes du jour (migration 058)
     (async () => {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocal();
       const [{ data: hs }, { data: lgs }] = await Promise.all([
         supabase.from("habits").select("id").eq("client_id", client.id).eq("active", true),
         supabase.from("habit_logs").select("habit_id").eq("client_id", client.id).eq("date", today),
@@ -2641,7 +2643,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   try {
                     const { data: { session } } = await supabase.auth.getSession();
                     const jwt = session?.access_token;
-                    const r = await fetch("/api/send-welcome", {
+                    const r = await fetch(apiUrl("/api/send-welcome"), {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
@@ -2824,10 +2826,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             // Construire les 7 derniers jours avec placeholders si pas de log.
             // Bug timezone : `new Date().setHours(0,0,0,0)` donne minuit LOCAL,
             // dont l'ISO bascule sur la date UTC précédente en CEST. Or
-            // FuelPage stocke `new Date().toISOString().slice(0,10)` (date UTC)
+            // FuelPage stocke `todayLocal()` (date UTC)
             // → mismatch des clés → chart vide tout l'été. On utilise donc la
             // date UTC partout pour rester aligné avec ce qui est stocké.
-            const todayUtcStr = new Date().toISOString().slice(0, 10);
+            const todayUtcStr = todayLocal();
             const [ty, tm, td] = todayUtcStr.split("-").map(Number);
             const todayMs = Date.UTC(ty, tm - 1, td);
             const msDay = 86400000;
@@ -4073,7 +4075,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 180 }}>
               {lastPayment ? (() => {
-                const today = new Date().toISOString().slice(0, 10);
+                const today = todayLocal();
                 const expired = lastPayment.period_end < today;
                 const fmt = (d) => new Date(d).toLocaleDateString(getDateLocale(), { day: "numeric", month: "short" });
                 return (
@@ -4191,7 +4193,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     setSavingEmail(true);
                     try {
                       const { data: { session } } = await supabase.auth.getSession();
-                      const r = await fetch("/api/coach-update-client-email", {
+                      const r = await fetch(apiUrl("/api/coach-update-client-email"), {
                         method: "POST",
                         headers: {
                           "Content-Type": "application/json",
@@ -5153,7 +5155,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         // On calcule les updates AVANT setClients pour pouvoir mettre à jour
         // la version locale en même temps que la DB — sinon le Kanban affiche
         // l'ancien statut pour tout le rest de la session (state stale).
-        const sentinel = `pipeline_auto_${coachId}_${new Date().toISOString().split("T")[0]}`;
+        const sentinel = `pipeline_auto_${coachId}_${todayLocal()}`;
         let finalClients = enrichedWithIntel;
         if (!sessionStorage.getItem(sentinel)) {
           const updates = [];
@@ -5232,7 +5234,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       const diff = day === 0 ? 6 : day - 1;
       d.setDate(d.getDate() - diff);
       const weekStart = d.toISOString().slice(0, 10);
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocal();
       const [{ data: checkins }, { data: habits }, { data: habitLogs }] = await Promise.all([
         supabase.from("weekly_checkins").select("client_id").in("client_id", ids).eq("week_start", weekStart),
         supabase.from("habits").select("id, client_id").in("client_id", ids).eq("active", true),
@@ -5336,7 +5338,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     // Sans ça, signInWithOtp(shouldCreateUser:false) renvoie "Signups not
     // allowed for otp" → "Compte inexistant" cote login.
     try {
-      await fetch("/api/auth/check-invitation", {
+      await fetch(apiUrl("/api/auth/check-invitation"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -5351,7 +5353,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const jwt = session?.access_token;
-      const r = await fetch("/api/send-welcome", {
+      const r = await fetch(apiUrl("/api/send-welcome"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

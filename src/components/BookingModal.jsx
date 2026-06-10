@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
 import { useT, getLocale } from "../lib/i18n";
 
+import { todayLocal } from "../lib/date";
 const GREEN = "#02d1ba";
 const intlLocale = () => getLocale() === "en" ? "en-US" : "fr-FR";
 
@@ -30,7 +31,7 @@ export default function BookingModal({ client, onClose, onBooked, title, subtitl
 
   const fetchSlots = useCallback(async () => {
     setLoading(true);
-    const today = new Date().toISOString().split("T")[0];
+    const today = todayLocal();
     const { data } = await supabase
       .from("coach_slots")
       .select("*")

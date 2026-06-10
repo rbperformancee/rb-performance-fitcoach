@@ -4,6 +4,7 @@ import Spinner from "./Spinner";
 import haptic from "../lib/haptic";
 import { useT, getLocale } from "../lib/i18n";
 
+import { todayLocal } from "../lib/date";
 const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
 
 // ===== CHARTE — alignée avec le reste de l'app (Syne + Inter + JetBrains Mono) =====
@@ -655,7 +656,7 @@ export default function SuperAdminDashboard({ onSwitchToCoach, onExit }) {
             {activityFeed.length === 0 ? (
               <div style={{ padding: 32, textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Aucune activité dans les dernières 48h.</div>
             ) : (() => {
-              const todayStr = new Date().toISOString().split("T")[0];
+              const todayStr = todayLocal();
               const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split("T")[0];
               const groups = {};
               activityFeed.forEach((ev) => {

@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { toast } from "../Toast";
 import { useT } from "../../lib/i18n";
 
+import { apiUrl } from "../../lib/api";
 const G = "#02d1ba";
 
 const fillTpl = (s, vars) => {
@@ -134,7 +135,7 @@ export default function ProgrammeDuplicateModal({ programme, clients = [], onClo
               (async () => {
                 const { data: { session } } = await supabase.auth.getSession();
                 const jwt = session?.access_token;
-                fetch("/api/send-welcome", {
+                fetch(apiUrl("/api/send-welcome"), {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",

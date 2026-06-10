@@ -16,6 +16,7 @@ import { exportProgrammePDF } from "../utils/exportPDF";
 import { useT } from "../lib/i18n";
 import { buildExerciseBlocks, supersetTypeLabel } from "../lib/supersets";
 
+import { apiUrl } from "../lib/api";
 const G = "#02d1ba";
 const G_DIM = "rgba(2,209,186,0.1)";
 const BG = "#0a0a0a";
@@ -3019,7 +3020,7 @@ export default function ProgrammeBuilder({ client, onClose, onSaved, existingPro
       if (mode === "publish-now" && inserted?.id) {
         try {
           const { data: { session } } = await supabase.auth.getSession();
-          fetch("/api/notify-client-programme-published", {
+          fetch(apiUrl("/api/notify-client-programme-published"), {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

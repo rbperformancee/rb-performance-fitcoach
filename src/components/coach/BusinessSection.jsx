@@ -26,6 +26,7 @@ import haptic from "../../lib/haptic";
 import { useT, getLocale } from "../../lib/i18n";
 import OutstandingPaymentsCard from "./OutstandingPaymentsCard";
 
+import { todayLocal } from "../../lib/date";
 const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
 const fillTpl = (s, vars) => {
   let out = s;
@@ -124,7 +125,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
     let mounted = true;
     const lastMonthEnd = new Date();
     lastMonthEnd.setDate(0);
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = todayLocal();
     const since30Str = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
 
     Promise.all([
@@ -196,7 +197,7 @@ export default function BusinessSection({ coachData, clients = [], hasSentinelAc
   // Snapshot une seule fois par session (sentinel localStorage par jour)
   useEffect(() => {
     if (!coachData?.id || clients.length === 0) return;
-    const today = new Date().toISOString().split("T")[0];
+    const today = todayLocal();
     const sentinel = `bs_snap_${coachData.id}_${today}`;
     try { if (sessionStorage.getItem(sentinel)) return; } catch {}
     supabase.from("coach_business_snapshots").upsert({

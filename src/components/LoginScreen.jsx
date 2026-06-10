@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useT } from '../lib/i18n';
 import { isNative, navigateAfterAuth } from '../lib/native';
 
+import { apiUrl } from "../lib/api";
 const G = '#02d1ba';
 
 /**
@@ -107,7 +108,7 @@ export function LoginScreen({ onBack }) {
         // L'endpoint cree auth.users a la volee si clients existe ; on
         // retente immediatement signInWithOtp pour envoyer le code.
         try {
-          const r = await fetch('/api/auth/check-invitation', {
+          const r = await fetch(apiUrl('/api/auth/check-invitation'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: effectiveEmail }),
@@ -448,7 +449,7 @@ export function LoginScreen({ onBack }) {
                 setLoading(true);
                 setError('');
                 try {
-                  const res = await fetch('/api/demo-client');
+                  const res = await fetch(apiUrl('/api/demo-client'));
                   const json = await res.json();
                   if (!json.access_token) {
                     throw new Error(json.error || 'Demo session failed');

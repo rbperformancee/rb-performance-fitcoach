@@ -111,6 +111,7 @@ const HelpPage = lazy(() => import("./components/HelpPage"));
 
 import Spinner from "./components/Spinner";
 
+import { apiUrl } from "./lib/api";
 // Fallback minimal pour Suspense (pas de flash blanc)
 // Fallback transparent : pas d'overlay sombre qui flashe pendant les ~200ms de
 // chargement d'un chunk lazy. Le bg de l'app (#050505) reste visible, ainsi
@@ -579,7 +580,7 @@ function AppInner() {
       if (existing?.user?.email === DEMO_EMAIL) return;
       if (existing) await supabase.auth.signOut();
       try {
-        const res = await fetch("/api/demo-coach");
+        const res = await fetch(apiUrl("/api/demo-coach"));
         const json = await res.json();
         if (cancelled || !json.access_token) {
           console.error("[demo-coach] API error:", json.error || "no token");
@@ -607,7 +608,7 @@ function AppInner() {
       // Si connecte avec un autre compte, deconnecter d'abord
       if (existing) await supabase.auth.signOut();
       try {
-        const res = await fetch("/api/demo-client");
+        const res = await fetch(apiUrl("/api/demo-client"));
         const json = await res.json();
         if (cancelled || !json.access_token) {
           console.error("[demo-client] API error:", json.error || "no token");
@@ -1041,7 +1042,17 @@ function AppInner() {
   // peut tirer avant le 1er paint réel → entre splash natif fadé et React qui
   // render `null`, il y avait 1.5s d'écran noir. Fix : un placeholder #050505
   // (= couleur du splash natif) qui colmate le gap → transition seamless.
-  if (authLoading) return <div style={{ minHeight: "100dvh", background: "#050505" }} />;
+  // Loading écran : logo + spinner centré. Avant c'était un div noir vide,
+  // donc au cold-launch (après que iOS a killé l'app pendant que l'user était
+  // hors-app pendant son repos), il voyait juste du noir = sensation de bug.
+  // Le logo donne le feedback "OK l'app redémarre".
+  if (authLoading) return (
+    <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, color: "#02d1ba" }}>
+      <img src="/icon-192.png" alt="" width={72} height={72} style={{ borderRadius: 18, opacity: 0.9 }} />
+      <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid rgba(2,209,186,0.18)", borderTopColor: "#02d1ba", animation: "rbSpin 0.7s linear infinite" }} />
+      <style>{`@keyframes rbSpin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 
   // ── Demo client en cours de connexion → loading premium avec progress ──
   if (!user && isClientDemo) {
@@ -1481,7 +1492,7 @@ function AppInner() {
         toast.error("Session expirée — reconnecte-toi");
         return;
       }
-      const res = await fetch("/api/gdpr-delete", {
+      const res = await fetch(apiUrl("/api/gdpr-delete"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
         body: JSON.stringify({ confirm: "SUPPRIMER" }),

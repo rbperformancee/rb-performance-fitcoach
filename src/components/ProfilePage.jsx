@@ -381,7 +381,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
 /* ── Modale Paramètres : regroupe notifs / langue / légal / compte ── */
 function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPrivacy, onShowMentions, onShowCGU }) {
   const t = useT();
-  const { permission: pushPerm, requestPermission: requestPush, resetSubscription: resetPush, lastError: pushLastError, deviceCount: pushDeviceCount, refreshDeviceCount: refreshPushDevices, sendTestPush } = usePushNotifications(client?.id);
+  const { permission: pushPerm, requestPermission: requestPush, resetSubscription: resetPush } = usePushNotifications(client?.id);
   // pushOn : on se base sur la permission iOS persistée et NON sur `subscribed`
   // (qui est un useState resetté à false à chaque remount). Sinon le bouton
   // re-affichait 'Activer' à chaque réouverture de la PWA alors que la
@@ -389,26 +389,13 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
   const pushOn = pushPerm === "granted";
   const [pushBusy, setPushBusy] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
-  const [testBusy, setTestBusy] = useState(false);
-
-  // Surface l'erreur de persist côté UI dès qu'elle survient. Avant on
-  // swallow silencieusement et le user ne savait jamais pourquoi rien ne
-  // marchait (RLS / session expirée / réseau).
-  useEffect(() => {
-    if (pushLastError) toast.error(`Push: ${pushLastError}`);
-  }, [pushLastError]);
 
   const handleEnableNotifs = async () => {
     haptic.light();
     setPushBusy(true);
     try {
       const perm = await requestPush();
-      if (perm === "granted") {
-        toast.success(t("settings.toast_notifs_on"));
-        // Petit délai pour laisser le listener registration tourner +
-        // persistNativeToken finir avant de refetch le compteur.
-        setTimeout(() => refreshPushDevices?.(), 2500);
-      }
+      if (perm === "granted") toast.success(t("settings.toast_notifs_on"));
       else if (perm === "denied") toast.error(t("settings.toast_notifs_denied"));
       else toast.error(t("settings.toast_notifs_failed"));
     } finally { setPushBusy(false); }
@@ -422,29 +409,9 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
     setResetBusy(true);
     try {
       const r = await resetPush();
-      if (r.ok) {
-        toast.success("Notifications réinitialisées");
-        setTimeout(() => refreshPushDevices?.(), 2500);
-      }
+      if (r.ok) toast.success("Notifications réinitialisées");
       else toast.error("Échec — réinstalle la PWA");
     } finally { setResetBusy(false); }
-  };
-
-  // Diagnostic : envoie un push de test pour vérifier que la chaîne complète
-  // (token registered + APNs/FCM live + device reachable) fonctionne.
-  const handleTestPush = async () => {
-    haptic.light();
-    setTestBusy(true);
-    try {
-      const r = await sendTestPush();
-      if (r.ok && (r.sent > 0 || r.results?.some?.((x) => x.sent))) {
-        toast.success(`Push test envoyé (${r.sent || '?'} device(s))`);
-      } else if (r.ok && r.sent === 0) {
-        toast.error("0 device ciblé — token pas encore enregistré ?");
-      } else {
-        toast.error(`Push test échoué: ${r.reason || r.error || r.status || 'unknown'}`);
-      }
-    } finally { setTestBusy(false); }
   };
 
   // Empêche le scroll en arrière-plan pendant l'ouverture de la modale
@@ -518,27 +485,6 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
           )}
           {pushOn && (
             <>
-              {/* Diagnostic device count : 0 = enregistrement n'a jamais
-                  abouti côté DB (RLS, session, réseau). >0 = chaîne OK. */}
-              <div style={{ marginTop: 8, padding: "8px 12px", fontSize: 11, color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>
-                  {pushDeviceCount == null ? "…" : pushDeviceCount === 0 ? "⚠ 0 device enregistré" : `${pushDeviceCount} device(s) enregistré(s)`}
-                </span>
-                <button
-                  onClick={handleTestPush}
-                  disabled={testBusy || !pushDeviceCount}
-                  style={{
-                    padding: "5px 10px", fontSize: 10, fontWeight: 700,
-                    color: pushDeviceCount ? GREEN : "rgba(255,255,255,0.3)",
-                    background: pushDeviceCount ? "rgba(2,209,186,0.08)" : "transparent",
-                    border: `1px solid ${pushDeviceCount ? "rgba(2,209,186,0.25)" : "rgba(255,255,255,0.08)"}`,
-                    borderRadius: 6, cursor: pushDeviceCount && !testBusy ? "pointer" : "default",
-                    fontFamily: "inherit", letterSpacing: "0.04em", textTransform: "uppercase",
-                  }}
-                >
-                  {testBusy ? "…" : "Tester"}
-                </button>
-              </div>
               <button
                 onClick={handleResetNotifs}
                 disabled={resetBusy}

@@ -72,9 +72,18 @@ public class AlarmSoundPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "playRestEnd", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "startKeepalive", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stopKeepalive", returnType: CAPPluginReturnPromise),
     ]
 
     private var player: AVAudioPlayer?
+    // Keepalive player : joue rb_alarm.caf en volume 0, loop infini, pendant
+    // le repos. Sert UNIQUEMENT à empêcher iOS de killer l'app quand le user
+    // sort sur Insta/Music pendant son repos. Sans ça, iOS récupère la mémoire
+    // après ~30s background → cold-launch au tap de la notif fin de repos →
+    // user voit un écran de chargement noir.
+    // Requiert UIBackgroundModes "audio" dans Info.plist.
+    private var keepalivePlayer: AVAudioPlayer?
 
     @objc func playRestEnd(_ call: CAPPluginCall) {
         DispatchQueue.main.async { [weak self] in
@@ -83,6 +92,9 @@ public class AlarmSoundPlugin: CAPPlugin, CAPBridgedPlugin {
                 call.reject("rb_alarm.caf not found in bundle")
                 return
             }
+            // Stop keepalive avant l'alarme pour éviter conflit de session
+            self.keepalivePlayer?.stop()
+            self.keepalivePlayer = nil
             do {
                 // Bascule en .playback pour bypass silent switch. .duckOthers
                 // baisse la musique en cours sans la couper.
@@ -114,7 +126,55 @@ public class AlarmSoundPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             self?.player?.stop()
             self?.player = nil
+            self?.keepalivePlayer?.stop()
+            self?.keepalivePlayer = nil
             self?.restoreSession()
+            call.resolve()
+        }
+    }
+
+    @objc func startKeepalive(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            // Si déjà actif on resolve direct (idempotent)
+            if let kp = self.keepalivePlayer, kp.isPlaying {
+                call.resolve()
+                return
+            }
+            guard let url = Bundle.main.url(forResource: "rb_alarm", withExtension: "caf") else {
+                call.reject("rb_alarm.caf not found in bundle")
+                return
+            }
+            do {
+                // .playback + .mixWithOthers : on n'interrompt PAS la musique de
+                // l'user (Spotify continue en A2DP). Le silent switch ne s'applique
+                // pas mais comme volume = 0 c'est silencieux de toute manière.
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try session.setActive(true, options: [])
+
+                let p = try AVAudioPlayer(contentsOf: url)
+                p.numberOfLoops = -1   // boucle infinie
+                p.volume = 0.0         // silencieux
+                p.prepareToPlay()
+                p.play()
+                self.keepalivePlayer = p
+                call.resolve()
+            } catch {
+                call.reject("Failed to start keepalive: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    @objc func stopKeepalive(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { [weak self] in
+            self?.keepalivePlayer?.stop()
+            self?.keepalivePlayer = nil
+            // Restaure la session seulement si le player principal n'est pas
+            // en train de jouer l'alarme finale.
+            if self?.player?.isPlaying != true {
+                self?.restoreSession()
+            }
             call.resolve()
         }
     }

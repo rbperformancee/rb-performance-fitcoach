@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { useT } from "../../lib/i18n";
 import { isClientDemoMode } from "../../lib/demoMode";
 
+import { todayLocal } from "../../lib/date";
 const fillTpl = (s, vars) => {
   let out = s;
   Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
@@ -26,12 +27,19 @@ export default function ClientSuivi({ client, accent }) {
   }, [client?.id]);
 
   async function loadMeasurements() {
-    const { data } = await supabase
+    // Avant on ignorait `error` → si RLS / JWT refusait, le graphe restait
+    // vide sans message, l'athlète croyait que son historique avait été
+    // effacé. On loggue et on garde l'état précédent intact.
+    const { data, error } = await supabase
       .from("weight_logs")
       .select("id, weight, date")
       .eq("client_id", client.id)
       .order("date", { ascending: true })
       .limit(50);
+    if (error) {
+      console.error("[ClientSuivi] loadMeasurements failed", error);
+      return;
+    }
     // Adapte au format historique attendu : weight → weight_kg, date → measured_at
     setMeasurements((data || []).map(r => ({ id: r.id, weight_kg: r.weight, measured_at: r.date })));
   }
@@ -51,7 +59,7 @@ export default function ClientSuivi({ client, accent }) {
     try {
       const { error } = await supabase
         .from("weight_logs")
-        .insert({ client_id: client.id, weight: w, date: new Date().toISOString().slice(0,10) });
+        .insert({ client_id: client.id, weight: w, date: todayLocal() });
       if (error) throw error;
       setWeight("");
       setSuccess(true);

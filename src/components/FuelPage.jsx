@@ -18,6 +18,7 @@ import PullToRefreshIndicator from "./PullToRefreshIndicator";
 import { isNative as isNativeApp } from "../lib/native";
 import haptic from "../lib/haptic";
 
+import { todayLocal } from "../lib/date";
 // ===== Scanner code-barre via BarcodeDetector API native =====
 // Marche sur : iOS Safari 17+ (donc iOS 18), Chrome Android 83+, Chrome desktop, Edge.
 // Ne marche pas sur : Firefox, vieux Safari < 17 (message clair affiche).
@@ -329,7 +330,7 @@ function SupplementsTab({ clientId, onNutritionChange }) {
   // complément portera des macros et alimentera la nutrition une fois coché.
   const [detected, setDetected] = useState(null);
   const [portionG, setPortionG] = useState("30");
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocal();
 
   useEffect(() => {
     const m = searchLocalFoods((newName || "").trim());
@@ -367,12 +368,21 @@ function SupplementsTab({ clientId, onNutritionChange }) {
   const toggleTaken = async (sup) => {
     const wasTaken = logs[sup.id] || false;
     setLogs(prev => ({ ...prev, [sup.id]: !wasTaken }));
-    await supabase.from("supplement_logs").upsert({
+    // Rollback optimiste si l'upsert échoue (RLS / JWT / réseau). Avant on
+    // ignorait silencieusement → la checkbox se cochait UI mais le serveur
+    // n'avait rien, refresh = zombie.
+    const { error: upsertErr } = await supabase.from("supplement_logs").upsert({
       client_id: clientId,
       supplement_id: sup.id,
       date: today,
       taken: !wasTaken,
     }, { onConflict: "supplement_id,date" });
+    if (upsertErr) {
+      console.error("[supplements] toggleTaken upsert failed", upsertErr);
+      setLogs(prev => ({ ...prev, [sup.id]: wasTaken })); // rollback
+      toast.error(`Erreur: ${upsertErr.message || upsertErr.code || "Sauvegarde impossible"}`);
+      return;
+    }
     // Complément à macros → on synchronise la nutrition du jour : coché =
     // une ligne dans nutrition_logs, décoché = on la retire. Le parent doit
     // re-fetch pour que `totals.calories` reflète la ligne (sinon le tick
@@ -770,7 +780,7 @@ export default function FuelPage({ client, appData }) {
 
   const saveEditFood = useCallback(async () => {
     if (!editingFood) return;
-    await updateFood(editingFood.id, {
+    const r = await updateFood(editingFood.id, {
       aliment: editAliment.trim() || editingFood.aliment,
       calories: Math.round(editKcal) || 0,
       proteines: parseFloat(editProt) || 0,
@@ -779,13 +789,15 @@ export default function FuelPage({ client, appData }) {
       quantite_g: parseInt(editQuantite) || editingFood.quantite_g,
       unit: editingFood.unit || "g",
     });
+    if (r && r.ok === false) { toast.error(`Erreur: ${r.error}`); return; }
     setEditingFood(null);
     if (navigator.vibrate) navigator.vibrate(30);
   }, [editingFood, editAliment, editKcal, editProt, editGluc, editLip, editQuantite, updateFood]);
 
   const deleteEditFood = useCallback(async () => {
     if (!editingFood) return;
-    await removeFood(editingFood.id);
+    const r = await removeFood(editingFood.id);
+    if (r && r.ok === false) { toast.error(`Erreur: ${r.error}`); return; }
     setEditingFood(null);
   }, [editingFood, removeFood]);
 
@@ -1800,7 +1812,11 @@ export default function FuelPage({ client, appData }) {
                           </div>
                           <div style={{ fontSize: 14, fontWeight: 700, color: col, flexShrink: 0, marginRight: 4 }}>{log.calories}<span style={{ fontSize: 9, fontWeight: 400, color: "rgba(255,255,255,0.2)" }}> kcal</span></div>
                           <button
-                            onClick={(e) => { e.stopPropagation(); removeFood(log.id); }}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const r = await removeFood(log.id);
+                              if (r && r.ok === false) toast.error(`Erreur: ${r.error}`);
+                            }}
                             style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, width: 26, height: 26, color: "#ef4444", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                           >
                             ×

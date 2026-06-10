@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { searchLocalFoods } from "../lib/foodDatabase";
 
+import { apiUrl } from "../lib/api";
 // Hook de recherche d'aliments en 3 etages :
 //
 // 1. Base locale CIQUAL (synchrone, instantane, ~456 aliments generiques francais)
@@ -54,7 +55,7 @@ export function useOpenFoodFacts() {
     }
 
     // ========== ETAGE 2 et 3 : Edamam + OpenFoodFacts en parallele ==========
-    const edamamPromise = fetch(`/api/food-search?q=${encodeURIComponent(query)}`)
+    const edamamPromise = fetch(apiUrl(`/api/food-search?q=${encodeURIComponent(query)}`))
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null);
 

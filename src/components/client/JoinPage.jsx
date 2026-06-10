@@ -4,6 +4,7 @@ import { useT } from "../../lib/i18n";
 import { AuthVisual, AuthStyles, G } from "../auth/AuthShared";
 import { navigateAfterAuth } from "../../lib/native";
 
+import { apiUrl } from "../../lib/api";
 const fillTpl = (s, vars) => {
   let out = s;
   Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
@@ -110,7 +111,7 @@ export default function JoinPage() {
       const params = new URLSearchParams(window.location.search);
       const token = params.get("token");
 
-      const r = await fetch("/api/auth/redeem-invitation", {
+      const r = await fetch(apiUrl("/api/auth/redeem-invitation"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password, prenom: prenom.trim() }),

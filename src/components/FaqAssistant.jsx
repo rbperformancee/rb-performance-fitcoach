@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useT } from "../lib/i18n";
 
+import { apiUrl } from "../lib/api";
 const G = "#02d1ba";
 
 export default function FaqAssistant({ inline = false }) {
@@ -23,7 +24,7 @@ export default function FaqAssistant({ inline = false }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/faq-assistant", {
+      const res = await fetch(apiUrl("/api/faq-assistant"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: updated.map(m => ({ role: m.role, content: m.content })) }),

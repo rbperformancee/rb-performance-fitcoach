@@ -5,6 +5,8 @@ import haptic from "../lib/haptic";
 import { useT, getLocale, getDateLocale } from "../lib/i18n";
 import { navigateAfterAuth } from "../lib/native";
 
+import { apiUrl } from "../lib/api";
+import { todayLocal } from "../lib/date";
 const fillTpl = (s, vars) => {
   let out = s;
   Object.entries(vars).forEach(([k, v]) => { out = out.split(`{${k}}`).join(String(v)); });
@@ -217,7 +219,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
   }, [step, isApplication]);
 
   const fetchSlots = async () => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = todayLocal();
     const { data } = await supabase
       .from("coach_slots")
       .select("*")
@@ -281,7 +283,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
         // Best-effort : tente l'email de confirmation via l'API quand elle
         // reviendra. Pas bloquant — la candidature est déjà en DB.
         try {
-          fetch("/api/coaching-application", {
+          fetch(apiUrl("/api/coaching-application"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),

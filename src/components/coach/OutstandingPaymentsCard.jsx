@@ -26,6 +26,7 @@ import AppIcon from "../AppIcon";
 import EditScheduleModal from "./EditScheduleModal";
 import { emitReceipt } from "../../lib/invoiceStorage";
 
+import { todayLocal } from "../../lib/date";
 const G = "#02d1ba";
 const RED = "#ef4444";
 const ORANGE = "#f97316";
@@ -124,7 +125,7 @@ export default function OutstandingPaymentsCard({ coachId, coachData }) {
           coach_id: coachId,
           amount_eur: Number(schedule.expected_amount),
           payment_method: "virement",
-          received_date: new Date().toISOString().slice(0, 10),
+          received_date: todayLocal(),
           period_start: schedule.due_date,
           period_end: periodEnd,
           notes: `Échéance ${schedule.sequence_num}/${schedule.total_sequence}`,

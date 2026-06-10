@@ -4,6 +4,7 @@ import { toast } from './Toast';
 import AppIcon from './AppIcon';
 import { useT, getLocale } from '../lib/i18n';
 
+import { todayLocal } from "../lib/date";
 const intlLocale = () => (getLocale() === "en" ? "en-US" : "fr-FR");
 
 const fillTpl = (s, vars) => {
@@ -41,7 +42,7 @@ export default function ActivityWidget({ clientId }) {
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState([]);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayLocal();
 
   const fetchData = useCallback(async () => {
     if (!clientId) return;
@@ -78,7 +79,7 @@ export default function ActivityWidget({ clientId }) {
       client_id: clientId,
       metric: key,
       value: parseFloat(inputVal),
-      logged_at: new Date().toISOString().split('T')[0] + 'T12:00:00Z',
+      logged_at: todayLocal() + 'T12:00:00Z',
     }, { onConflict: 'client_id,metric,logged_at' });
     setInputVal('');
     setEditing(null);

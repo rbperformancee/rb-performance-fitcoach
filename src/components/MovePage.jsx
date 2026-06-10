@@ -11,6 +11,7 @@ import { isNative } from "../lib/native";
 import usePullToRefresh from "../hooks/usePullToRefresh";
 import PullToRefreshIndicator from "./PullToRefreshIndicator";
 
+import { todayLocal } from "../lib/date";
 /**
  * Detection HIIT time-based : si work ET rest sont des durees parsables
  * (30s, 1'30, etc), c'est un fractionné chronometre -> on lance le
@@ -57,12 +58,20 @@ export default function MovePage({ client, appData }) {
   // Runs prescrits par le coach pour la semaine en cours
   const scheduled = useScheduledRuns(client?.id);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayLocal();
 
   const fetchAll = useCallback(async () => {
     if (!client?.id) return;
     setLoading(true);
-    const runsRes = await supabase.from("run_logs").select("*").eq("client_id", client.id).order("date", { ascending: false }).limit(10);
+    let runsRes;
+    try {
+      runsRes = await supabase.from("run_logs").select("*").eq("client_id", client.id).order("date", { ascending: false }).limit(10);
+    } catch (e) {
+      // Offline / RLS / JWT → débloquer la UI (spinner infini sinon).
+      console.error("MovePage fetchAll:", e);
+      setLoading(false);
+      return;
+    }
     setRuns(runsRes.data || []);
 
     // Calcul km cette semaine

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
+import { todayLocal } from "../lib/date";
 export function useAppData(clientId) {
   const [data, setData] = useState({
     weights: [],
@@ -14,31 +15,41 @@ export function useAppData(clientId) {
     loading: true,
   });
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayLocal();
 
   const fetchAll = useCallback(async () => {
     if (!clientId) return;
 
-    const [
-      weightsRes,
-      runsRes,
-      nutritionLogsRes,
-      dailyTrackingRes,
-      nutritionGoalsRes,
-      sessionLogsRes,
-    ] = await Promise.all([
-      supabase.from("weight_logs").select("weight,date,note,fat_pct").eq("client_id", clientId).order("date", { ascending: true }).limit(30),
-      supabase.from("run_logs").select("*").eq("client_id", clientId).order("date", { ascending: false }).limit(20),
-      supabase.from("nutrition_logs").select("*").eq("client_id", clientId).eq("date", today).order("logged_at", { ascending: true }),
-      supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).maybeSingle(),
-      supabase.from("nutrition_goals").select("*").eq("client_id", clientId).maybeSingle(),
-      supabase.from("session_logs").select("logged_at").eq("client_id", clientId).order("logged_at", { ascending: false }).limit(60),
-    ]);
+    let weightsRes, runsRes, nutritionLogsRes, dailyTrackingRes, nutritionGoalsRes, sessionLogsRes;
+    try {
+      [
+        weightsRes,
+        runsRes,
+        nutritionLogsRes,
+        dailyTrackingRes,
+        nutritionGoalsRes,
+        sessionLogsRes,
+      ] = await Promise.all([
+        supabase.from("weight_logs").select("weight,date,note,fat_pct").eq("client_id", clientId).order("date", { ascending: true }).limit(30),
+        supabase.from("run_logs").select("*").eq("client_id", clientId).order("date", { ascending: false }).limit(20),
+        supabase.from("nutrition_logs").select("*").eq("client_id", clientId).eq("date", today).order("logged_at", { ascending: true }),
+        supabase.from("daily_tracking").select("*").eq("client_id", clientId).eq("date", today).maybeSingle(),
+        supabase.from("nutrition_goals").select("*").eq("client_id", clientId).maybeSingle(),
+        supabase.from("session_logs").select("logged_at").eq("client_id", clientId).order("logged_at", { ascending: false }).limit(60),
+      ]);
+    } catch (e) {
+      // Si Promise.all reject (offline, RLS, JWT expirée) on doit débloquer
+      // la UI sinon spinner infini sur Home. Les valeurs par défaut ci-dessous
+      // sont affichées et `refresh` permet à l'user de retry.
+      console.error("useAppData fetchAll:", e);
+      setData((prev) => ({ ...prev, loading: false }));
+      return;
+    }
 
     // Calculer streak
     const dates = [...new Set((sessionLogsRes.data || []).map(d => d.logged_at?.split("T")[0]))].sort().reverse();
     let streak = 0;
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = todayLocal();
     const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
     let bestStreak = 0;
     let temp = 1;

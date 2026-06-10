@@ -20,6 +20,7 @@ import { toast } from "../Toast";
 import Confetti from "../Confetti";
 import { useT, t as tStatic } from "../../lib/i18n";
 
+import { todayLocal } from "../../lib/date";
 const G = "#02d1ba";
 const VIOLET = "#a78bfa";
 const ORANGE = "#f97316";
@@ -60,7 +61,7 @@ export default function AchievementsSection({ coachData, clients = [] }) {
     const load = async () => {
       // Batch parallele : badges + snapshots streak + scores plateforme
       const since90 = new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0];
-      const todayStr = new Date().toISOString().split("T")[0];
+      const todayStr = todayLocal();
       const [existingRes, snapsRes, allScoresRes] = await Promise.all([
         supabase.from("coach_badges").select("badge_id, earned_at").eq("coach_id", coachData.id),
         supabase.from("coach_business_snapshots").select("snapshot_date, activity_score").eq("coach_id", coachData.id).gte("snapshot_date", since90).order("snapshot_date", { ascending: false }),

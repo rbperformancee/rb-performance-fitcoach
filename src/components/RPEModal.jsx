@@ -4,6 +4,7 @@ import AppIcon from "./AppIcon";
 import haptic from "../lib/haptic";
 import { useT } from "../lib/i18n";
 
+import { todayLocal } from "../lib/date";
 const GREEN = "#02d1ba";
 
 const LABEL_KEYS = ["rpe.label_easy", "rpe.label_correct", "rpe.label_hard", "rpe.label_very_hard", "rpe.label_exhausting"];
@@ -28,7 +29,7 @@ export function RPEModal({ clientId, sessionName, onClose }) {
     haptic.success();
     await supabase.from("session_rpe").upsert({
       client_id: clientId,
-      date: new Date().toISOString().slice(0, 10),
+      date: todayLocal(),
       rpe,
       note: note.trim() || null,
     }, { onConflict: "client_id,date" });

@@ -14,6 +14,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
+import { todayLocal } from "../lib/date";
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const API_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
@@ -52,7 +53,7 @@ async function sendPush(clientId, title, body) {
 function canSend(clientId, type) {
   const key = `relance_${type}_${clientId}`;
   const last = localStorage.getItem(key);
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayLocal();
   if (last === today) return false;
   localStorage.setItem(key, today);
   return true;

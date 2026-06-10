@@ -10,6 +10,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 
+import { apiUrl } from "../lib/api";
 const GREEN = "#02d1ba";
 const BG = "#050505";
 
@@ -35,7 +36,7 @@ export default function EbookMethodeWaitlist() {
 
   useEffect(() => {
     let alive = true;
-    fetch("/api/waitlist-count?source=methode-athlete")
+    fetch(apiUrl("/api/waitlist-count?source=methode-athlete"))
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (alive && d && Number.isFinite(d.count)) setSignupCount(d.count); })
       .catch(() => { /* silencieux */ });
@@ -450,7 +451,7 @@ function WaitlistForm() {
     // est dispo (re-déploiement à venir). Ne bloque pas la confirmation
     // UX si elle 404 — le lead est déjà en DB.
     try {
-      fetch("/api/waitlist", {
+      fetch(apiUrl("/api/waitlist"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: cleanName, email: cleanEmail, source: "methode-athlete" }),

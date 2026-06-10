@@ -57,3 +57,41 @@ export async function stopRestEndAlarm() {
     return false;
   }
 }
+
+/**
+ * Démarre une boucle audio silencieuse en background pour empêcher iOS de
+ * killer l'app pendant le repos. À appeler au début du RestTimer.
+ *
+ * Sans ça : si l'user sort sur Insta/Music pendant son repos, iOS récupère
+ * la mémoire après ~30s background. Au tap de la notif de fin de repos,
+ * l'app cold-relaunch → écran chargement noir 500-1500ms.
+ *
+ * Requiert UIBackgroundModes "audio" dans Info.plist.
+ */
+export async function startRestKeepalive() {
+  if (!isNative()) return false;
+  const p = getPlugin();
+  if (!p) return false;
+  try {
+    await p.startKeepalive();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Arrête la boucle silencieuse keepalive. À appeler à la fin du RestTimer
+ * (peu importe si l'user dismiss avant la fin ou si le timer arrive à 0).
+ */
+export async function stopRestKeepalive() {
+  if (!isNative()) return false;
+  const p = getPlugin();
+  if (!p) return false;
+  try {
+    await p.stopKeepalive();
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -8,6 +8,7 @@ import DataExportSection from "./DataExportSection";
 import HelpMigrationGuide from "./HelpMigrationGuide";
 import CoachReferralSection from "./CoachReferralSection";
 
+import { apiUrl } from "../../lib/api";
 const G = "#02d1ba";
 const RED = "#ff6b6b";
 
@@ -118,7 +119,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
       const jwt = session?.access_token;
       if (!jwt) { toast.error("Session expirée"); return; }
       toast.info("Préparation de l'export…");
-      const res = await fetch("/api/gdpr-export", {
+      const res = await fetch(apiUrl("/api/gdpr-export"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
       });
@@ -153,7 +154,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
       const { data: { session } } = await supabase.auth.getSession();
       const jwt = session?.access_token;
       if (!jwt) { toast.error("Session expirée"); return; }
-      const res = await fetch("/api/gdpr-delete", {
+      const res = await fetch(apiUrl("/api/gdpr-delete"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
         body: JSON.stringify({ confirm: "SUPPRIMER" }),
@@ -182,7 +183,7 @@ export default function MonCompte({ coachData, isDemo = false, initialTab, onClo
         return;
       }
 
-      const res = await fetch("/api/billing-portal", {
+      const res = await fetch(apiUrl("/api/billing-portal"), {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
