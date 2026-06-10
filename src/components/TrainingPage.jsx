@@ -1283,6 +1283,17 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
     setShowFeedbackExtra(false);
   };
 
+  // PTR avant les early returns : règle des hooks React (toujours appelés
+  // dans le même ordre à chaque render, sinon "rendered more hooks than
+  // during the previous render" → crash).
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.success();
+      if (typeof refreshLogs === "function") await refreshLogs();
+    },
+    disabled: !isNativeApp() || showRessenti || showOptions || showConfirm,
+  });
+
   if (!programme || !currentWeek || !currentSession) return (
     <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>{t("train.no_programme")}</div>
@@ -1383,16 +1394,6 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       </div>
     );
   }
-
-  // Pull-to-refresh — re-fetch logs depuis Supabase. Désactivé pendant les
-  // overlays (chrono ressenti, options, etc.) pour pas trigger en plein bilan.
-  const ptr = usePullToRefresh({
-    onRefresh: async () => {
-      haptic.success();
-      if (typeof refreshLogs === "function") await refreshLogs();
-    },
-    disabled: !isNativeApp() || showRessenti || showOptions || showConfirm,
-  });
 
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)" }}>

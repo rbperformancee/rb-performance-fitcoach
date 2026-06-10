@@ -1552,6 +1552,15 @@ export default function FuelPage({ client, appData }) {
     setShowScan(false);
   }, [scannedFood, scanQuantite, selectedRepas, addFood]);
 
+  // PTR avant l'early return loading (regle des hooks React).
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.success();
+      if (typeof fetchAll === "function") await fetchAll();
+    },
+    disabled: !isNativeApp() || showAdd || showVoice || showScan || loading,
+  });
+
   if (loading) return (
     <div style={{ minHeight: "100dvh", background: "#050505", padding: "0px 24px" }}>
       {[80, 180, 120, 100].map((h, i) => (
@@ -1559,14 +1568,6 @@ export default function FuelPage({ client, appData }) {
       ))}
     </div>
   );
-
-  const ptr = usePullToRefresh({
-    onRefresh: async () => {
-      haptic.success();
-      if (typeof fetchAll === "function") await fetchAll();
-    },
-    disabled: !isNativeApp() || showAdd || showVoice || showScan,
-  });
 
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)", opacity: loading ? 0 : 1, transition: "opacity 0.4s ease" }}>

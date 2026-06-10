@@ -345,6 +345,18 @@ export default function MovePage({ client, appData }) {
     return days;
   };
 
+  // PTR avant l'early return loading : les hooks DOIVENT être appelés à
+  // chaque render dans le même ordre (regle React). Placer le hook après
+  // le `if (loading) return` crashait la page quand loading toggle.
+  const ptr = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.success();
+      await fetchAll();
+      if (scheduled?.refresh) await scheduled.refresh();
+    },
+    disabled: !isNative() || showAdd || showRunSession || !!editingRun || loading,
+  });
+
   if (loading) return (
     <div style={{ minHeight: "100dvh", background: "#050505", padding: "0px 24px" }}>
       {[80, 60, 140, 100].map((h, i) => (
@@ -355,15 +367,6 @@ export default function MovePage({ client, appData }) {
 
   const bars = getWeekBars();
   const maxKm = Math.max(...bars.map(b => b.km), 1);
-
-  const ptr = usePullToRefresh({
-    onRefresh: async () => {
-      haptic.success();
-      await fetchAll();
-      if (scheduled?.refresh) await scheduled.refresh();
-    },
-    disabled: !isNative() || showAdd || showRunSession || !!editingRun,
-  });
 
   return (
     <div style={{ minHeight: "100dvh", background: "#050505", fontFamily: "-apple-system,Inter,sans-serif", color: "#fff", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 180px)", opacity: loading ? 0 : 1, transition: "opacity 0.4s ease" }}>
