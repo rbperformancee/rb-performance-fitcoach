@@ -198,10 +198,20 @@ export function usePushNotifications(arg) {
       const onConflict = coachId ? 'coach_id,endpoint' : 'client_id,endpoint';
       const { error: upsertErr } = await supabase.from('push_subscriptions').upsert(row, { onConflict });
       if (upsertErr) {
+        // Surface l'erreur via lastError → toast UI. Avant on console.warn
+        // silencieusement et le user ne savait jamais pourquoi sa sub web
+        // push n'arrivait pas en DB malgré 'Notifications activées' affiché
+        // (Rayan, 10 juin 2026 — sub Apple créée mais row DB jamais écrite).
         console.warn('[push] subscription upsert failed:', upsertErr.message);
+        setLastError(`web_upsert_failed: ${upsertErr.code || ''} ${upsertErr.message}`);
+        return;
       }
       setSubscribed(true);
-    } catch(e) { console.error('Push:', e); }
+      setLastError(null);
+    } catch(e) {
+      console.error('Push:', e);
+      setLastError(`web_subscribe_exception: ${e.message || e}`);
+    }
   }, [clientId, coachId]);
 
   // ─── Request permission : prompt natif iOS ou prompt navigateur ───────
