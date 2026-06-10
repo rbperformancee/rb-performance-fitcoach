@@ -897,30 +897,57 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
             </div>
           )}
 
-          {/* Fantome semaine precedente */}
-          {ghostData && (
-            <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.02)", borderRadius: 12, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "1px", textTransform: "uppercase" }}>{t("ec.ghost_label")}</div>
+          {/* Fantome semaine precedente — clear, monospace, set-by-set */}
+          {ghostData && (() => {
+            const sets = Array.isArray(ghostData.sets) ? ghostData.sets : null;
+            const isBW = (s) => Number(s.weight) === 0;
+            // Détection bodyweight : tous les sets ont weight=0 → on n'affiche
+            // que les reps avec un badge "BW" (poids du corps).
+            const allBW = sets && sets.length > 0 && sets.every(isBW);
+            // Détection uniforme : tous les sets identiques → compact
+            const allSame = sets && sets.length > 0 && sets.every(
+              (s) => Number(s.weight) === Number(sets[0].weight) && String(s.reps) === String(sets[0].reps)
+            );
+            return (
+              <div style={{ padding: "12px 14px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: sets && sets.length > 0 ? 10 : 0 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700 }}>{t("ec.ghost_label")}</div>
+                  {allBW && (
+                    <span style={{ marginLeft: "auto", fontSize: 8.5, fontWeight: 800, color: "rgba(167,139,250,0.85)", background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)", padding: "1px 7px", borderRadius: 100, letterSpacing: 0.5 }}>BW</span>
+                  )}
+                </div>
+                {sets && sets.length > 0 ? (
+                  allSame ? (
+                    // Tous identiques → 1 ligne grosse, lisible
+                    <div style={{ fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.55)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", letterSpacing: "-0.3px" }}>
+                      {sets.length}<span style={{ color: "rgba(255,255,255,0.3)" }}>×</span>{allBW ? "" : `${sets[0].weight}kg `}<span style={{ color: "rgba(255,255,255,0.3)" }}>×</span> {sets[0].reps} <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>reps</span>
+                    </div>
+                  ) : (
+                    // Sets différents → table compacte
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(sets.length, 5)}, 1fr)`, gap: 6 }}>
+                      {sets.map((s, i) => (
+                        <div key={i} style={{ padding: "6px 4px", background: "rgba(255,255,255,0.03)", borderRadius: 8, textAlign: "center" }}>
+                          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", letterSpacing: "1px", fontWeight: 700, marginBottom: 3 }}>S{i + 1}</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.65)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", lineHeight: 1 }}>
+                            {allBW ? s.reps : <>{s.weight}<span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>kg</span></>}
+                          </div>
+                          {!allBW && (
+                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2, fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}>×{s.reps}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  // Fallback legacy (entries pré-migration 046) : avg × dernier reps
+                  <div style={{ fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.55)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", letterSpacing: "-0.3px" }}>
+                    {ghostData.weight}<span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>kg</span> <span style={{ color: "rgba(255,255,255,0.3)" }}>×</span> {ghostData.reps} <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>reps</span>
+                  </div>
+                )}
               </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontStyle: "italic", fontWeight: 200 }}>
-                {(() => {
-                  // Si on a les sets détaillés, on les affiche compactés
-                  // (ex: '80×10 / 75×10 / 70×8') — c'est ce que l'athlète
-                  // a fait pour de vrai, pas la moyenne. Sinon fallback
-                  // sur weight (avg legacy) × reps (dernier set).
-                  const sets = Array.isArray(ghostData.sets) ? ghostData.sets : null;
-                  if (sets && sets.length > 0) {
-                    const allSame = sets.every((s) => Number(s.weight) === Number(sets[0].weight) && String(s.reps) === String(sets[0].reps));
-                    if (allSame) return `${sets.length}×${sets[0].weight} kg × ${sets[0].reps}`;
-                    return sets.map((s) => `${s.weight}×${s.reps}`).join(" / ");
-                  }
-                  return `${ghostData.weight} kg × ${ghostData.reps}`;
-                })()}
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Series */}
