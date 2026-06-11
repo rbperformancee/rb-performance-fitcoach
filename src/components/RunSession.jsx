@@ -125,6 +125,17 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   const [gpsQuality, setGpsQuality] = useState(null); // strong | good | medium | weak
   const [strideM, setStrideM] = useState(null); // foulée moyenne mètres
   const [indoorMode, setIndoorModeState] = useState(false); // treadmill
+  // Layout actif : ring (PACE1) ou map (PACE3). Persisté localStorage.
+  const [runLayout, setRunLayout] = useState(() => {
+    try { return localStorage.getItem("rb-run-layout") || "ring"; }
+    catch { return "ring"; }
+  });
+  const toggleRunLayout = useCallback(() => {
+    const next = runLayout === "ring" ? "map" : "ring";
+    setRunLayout(next);
+    haptic.medium();
+    try { localStorage.setItem("rb-run-layout", next); } catch (_) {}
+  }, [runLayout]);
   const [splits, setSplits] = useState([]); // [{km, time, pace}]
   const [autoPaused, setAutoPaused] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -923,42 +934,78 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
             </div>
           </div>
         ) : null}
-        {/* Distance hero */}
-        <div style={{ textAlign: "center", marginTop: 24, marginBottom: 16 }}>
-          <div style={S.bigStat}>{formatDistance(distance)}</div>
-          <div style={S.bigStatLabel}>{phase === "paused" ? "EN PAUSE" : "Distance"}</div>
+        {/* Switcher de layout Ring ↔ Map (icône en haut à droite). */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+          <button
+            onClick={toggleRunLayout}
+            aria-label={`Layout ${runLayout === "ring" ? "Ring" : "Map"} — toucher pour basculer`}
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 100,
+              padding: "5px 10px",
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: "rgba(255,255,255,0.65)",
+              textTransform: "uppercase", cursor: "pointer",
+            }}
+          >
+            {runLayout === "ring" ? (
+              <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/></svg>
+            )}
+            {runLayout === "ring" ? "Ring" : "Map"}
+          </button>
         </div>
-        {/* Stats row */}
-        <div style={S.statsRow}>
-          <Stat label="Durée" value={formatDuration(duration)} />
-          <Stat label="Allure" value={`${formatPace(pace)} /km`} delta={paceDelta} />
-        </div>
-        {cadence > 0 && (
-          <div style={{ ...S.statsRow, marginTop: 12 }}>
-            <Stat label="Cadence" value={`${cadence} pas/min`} />
-          </div>
+        {runLayout === "ring" ? (
+          <RunActiveRing
+            distance={distance}
+            duration={duration}
+            pace={pace}
+            paceDelta={paceDelta}
+            targetDistanceM={target.distanceM}
+            phase={phase}
+          />
+        ) : (
+          <RunActiveMap
+            distance={distance}
+            duration={duration}
+            pace={pace}
+            route={route}
+            phase={phase}
+          />
         )}
-        {/* HR chip live + zone */}
-        {hrBpm > 0 && (
-          <div style={{ ...S.statsRow, marginTop: 12 }}>
-            <HrStat bpm={hrBpm} />
-          </div>
-        )}
-        {/* Splits live */}
-        {splits.length > 0 && (
-          <div style={{ marginTop: 20, flex: 1 }}>
-            <div style={S.sectionLabel}>Splits</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 200, overflowY: "auto" }}>
-              {splits.slice().reverse().map((s) => (
-                <div key={s.km} style={S.splitRow}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>Km {s.km}</div>
-                  <div style={{ fontSize: 13, color: G, fontWeight: 700 }}>{formatPace(s.pace)} /km</div>
+        {/* Cadence + HR + Splits — disponibles en layout Ring (Map montre déjà
+            la trace, on garde le bas plus aéré). */}
+        {runLayout === "ring" && (
+          <>
+            {cadence > 0 && (
+              <div style={{ ...S.statsRow, marginTop: 12 }}>
+                <Stat label="Cadence" value={`${cadence} pas/min`} />
+              </div>
+            )}
+            {hrBpm > 0 && (
+              <div style={{ ...S.statsRow, marginTop: 12 }}>
+                <HrStat bpm={hrBpm} />
+              </div>
+            )}
+            {splits.length > 0 && (
+              <div style={{ marginTop: 20, flex: 1 }}>
+                <div style={S.sectionLabel}>Splits</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 200, overflowY: "auto" }}>
+                  {splits.slice().reverse().map((s) => (
+                    <div key={s.km} style={S.splitRow}>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>Km {s.km}</div>
+                      <div style={{ fontSize: 13, color: G, fontWeight: 700 }}>{formatPace(s.pace)} /km</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )}
+            {!splits.length && <div style={{ flex: 1 }} />}
+          </>
         )}
-        {!splits.length && <div style={{ flex: 1 }} />}
+        {runLayout === "map" && <div style={{ flex: 1 }} />}
         {/* Controls — icônes SVG (plus de ⏸/⏹ emoji style "vieux") */}
         <div style={{ display: "flex", gap: 10, marginTop: 16, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
           <button style={S.controlBtn(phase === "paused" ? G : "rgba(255,255,255,0.1)")} onClick={togglePause}>
@@ -988,6 +1035,162 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Layout PACE1 : anneau de progression distance + bloc allure hero ──
+function RunActiveRing({ distance, duration, pace, paceDelta, targetDistanceM, phase }) {
+  // Si target défini → progression vs cible. Sinon → progression vers le
+  // prochain km (ex 2.42 km → 42% du chemin vers 3 km). Donne toujours du
+  // sens à l'anneau, jamais figé à 0%.
+  const km = distance / 1000;
+  const targetKm = targetDistanceM ? targetDistanceM / 1000 : Math.max(1, Math.ceil(km));
+  const progressPct = Math.min(100, Math.max(0, (km / targetKm) * 100));
+  const radius = 132;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - progressPct / 100);
+  const SZ = 290;
+  return (
+    <>
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 12, marginBottom: 6 }}>
+        <svg width={SZ} height={SZ} style={{ transform: "rotate(-90deg)" }} aria-hidden="true">
+          <circle cx={SZ/2} cy={SZ/2} r={radius} stroke="rgba(255,255,255,0.06)" strokeWidth={10} fill="none" />
+          <circle
+            cx={SZ/2} cy={SZ/2} r={radius}
+            stroke="#02d1ba" strokeWidth={10} fill="none" strokeLinecap="round"
+            strokeDasharray={`${circumference} ${circumference}`}
+            strokeDashoffset={dashOffset}
+            style={{ filter: "drop-shadow(0 0 10px rgba(2,209,186,0.5))", transition: "stroke-dashoffset 0.5s ease" }}
+          />
+        </svg>
+        <div style={{ position: "absolute", textAlign: "center" }}>
+          <div style={{ fontSize: 64, fontWeight: 900, letterSpacing: "-3.5px", lineHeight: 0.95, fontVariantNumeric: "tabular-nums" }}>
+            {formatDistance(distance)}
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", letterSpacing: 3, fontWeight: 800, marginTop: 8, textTransform: "uppercase" }}>
+            {targetDistanceM ? `${Math.round(progressPct)}% · ${targetKm.toFixed(targetKm % 1 ? 1 : 0)} km` : (phase === "paused" ? "EN PAUSE" : "Distance")}
+          </div>
+        </div>
+      </div>
+      {/* Allure hero — bordures fines, cyan accent */}
+      <div style={{
+        textAlign: "center",
+        margin: "14px 0 4px",
+        padding: "16px 0",
+        borderTop: "1px solid rgba(255,255,255,0.08)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+      }}>
+        <div style={{
+          fontSize: 64, fontWeight: 900, letterSpacing: "-3px", lineHeight: 0.9,
+          color: "#02d1ba", fontVariantNumeric: "tabular-nums",
+          textShadow: "0 0 14px rgba(2,209,186,0.3)",
+        }}>
+          {formatPace(pace)}<span style={{ fontSize: 22, fontWeight: 700, color: "rgba(2,209,186,0.5)" }}> /km</span>
+        </div>
+        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 3.5, fontWeight: 800, marginTop: 2, textTransform: "uppercase" }}>
+          Allure
+        </div>
+        {paceDelta && (
+          <div style={{
+            marginTop: 6, display: "inline-block",
+            padding: "3px 8px",
+            background: paceDelta.color + "22", color: paceDelta.color,
+            borderRadius: 999, fontSize: 9, fontWeight: 800, letterSpacing: 0.5,
+          }}>{paceDelta.label}</div>
+        )}
+      </div>
+      <div style={{ textAlign: "center", padding: "10px 0 4px", fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 700 }}>
+        Durée <b style={{ color: "#fff", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{formatDuration(duration)}</b>
+      </div>
+    </>
+  );
+}
+
+// ── Layout PACE3 : carte slim avec trace GPS + dual hero distance/allure ──
+function RunActiveMap({ distance, duration, pace, route, phase }) {
+  // Calcule la trace SVG depuis les points GPS collectés. Bbox normalisé.
+  const traceData = useMemo(() => {
+    if (!route || route.length < 2) return null;
+    const lats = route.map(p => p.lat);
+    const lngs = route.map(p => p.lng);
+    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+    const W = 393, H = 230;
+    const pad = 22;
+    const w = W - 2 * pad, h = H - 2 * pad;
+    const dLat = (maxLat - minLat) || 1e-9;
+    const dLng = (maxLng - minLng) || 1e-9;
+    const pts = route.map(p => {
+      const x = pad + ((p.lng - minLng) / dLng) * w;
+      const y = pad + (1 - (p.lat - minLat) / dLat) * h;
+      return [x, y];
+    });
+    let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+    for (let i = 1; i < pts.length; i++) d += ` L ${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)}`;
+    const last = pts[pts.length - 1];
+    const first = pts[0];
+    return { d, last, first, W, H };
+  }, [route]);
+  return (
+    <>
+      {/* Carte slim — trace cyan glow sur grille subtile */}
+      <div style={{
+        position: "relative", height: 230, marginTop: 4, marginBottom: 14,
+        borderRadius: 18, overflow: "hidden",
+        background: "linear-gradient(180deg, #0a1218 0%, #050a0c 100%)",
+        border: "1px solid rgba(255,255,255,0.05)",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "linear-gradient(rgba(2,209,186,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(2,209,186,0.05) 1px, transparent 1px)",
+          backgroundSize: "34px 34px",
+        }} />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "radial-gradient(circle at 55% 50%, rgba(2,209,186,0.15), transparent 60%)",
+        }} />
+        {traceData ? (
+          <svg viewBox={`0 0 ${traceData.W} ${traceData.H}`} preserveAspectRatio="xMidYMid meet"
+               style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+            <path d={traceData.d} fill="none" stroke="#02d1ba" strokeWidth={4}
+                  strokeLinecap="round" strokeLinejoin="round"
+                  style={{ filter: "drop-shadow(0 0 12px rgba(2,209,186,0.7))" }} />
+            <circle cx={traceData.first[0]} cy={traceData.first[1]} r={6} fill="#fff" />
+            <circle cx={traceData.last[0]} cy={traceData.last[1]} r={7} fill="#02d1ba" stroke="#fff" strokeWidth={2.5} />
+          </svg>
+        ) : (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 2, fontWeight: 700, textTransform: "uppercase" }}>
+            Acquisition GPS…
+          </div>
+        )}
+      </div>
+      {/* Dual hero : Distance + Allure même poids */}
+      <div style={{ textAlign: "center", padding: "6px 0" }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 3.5, fontWeight: 800, textTransform: "uppercase" }}>
+          {phase === "paused" ? "En pause · distance" : "— Distance"}
+        </div>
+        <div style={{ fontSize: 76, fontWeight: 900, letterSpacing: "-4.5px", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", marginTop: 4 }}>
+          {formatDistance(distance)}
+        </div>
+      </div>
+      <div style={{ width: 50, height: 1, background: "rgba(255,255,255,0.1)", margin: "10px auto" }} />
+      <div style={{ textAlign: "center", padding: "6px 0" }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 3.5, fontWeight: 800, textTransform: "uppercase" }}>
+          — Allure
+        </div>
+        <div style={{
+          fontSize: 76, fontWeight: 900, letterSpacing: "-4.5px", lineHeight: 0.9,
+          color: "#02d1ba", fontVariantNumeric: "tabular-nums",
+          textShadow: "0 0 18px rgba(2,209,186,0.3)",
+          marginTop: 4,
+        }}>
+          {formatPace(pace)}<span style={{ fontSize: 22, fontWeight: 700, color: "rgba(2,209,186,0.5)" }}> /km</span>
+        </div>
+      </div>
+      <div style={{ textAlign: "center", padding: "12px 0 4px", fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 700 }}>
+        Durée <b style={{ color: "#fff", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{formatDuration(duration)}</b>
+      </div>
+    </>
   );
 }
 
