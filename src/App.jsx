@@ -1306,10 +1306,10 @@ function AppInner() {
             paddingTop = safe-area pur (sans +12px) pour aligner le contenu
             juste sous la status bar iOS — sinon les 12px laissent une bande
             noire visible qui n'apparaît pas sur les pages internes. */}
-        <div style={{padding:'env(safe-area-inset-top, 44px) 28px 0',display:'flex',justifyContent:'space-between',alignItems:'flex-start',position:'relative',zIndex:2,gap:8}}>
+        <div style={{padding:'calc(env(safe-area-inset-top, 44px) + 4px) 28px 0',display:'flex',justifyContent:'space-between',alignItems:'flex-start',position:'relative',zIndex:2,gap:8}}>
           <div>
-            <div style={{fontSize:10,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'3px',textTransform:'uppercase',marginBottom:12}}>{_days[_now.getDay()]} · {_now.getDate()} {_months[_now.getMonth()]}</div>
-            <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontWeight:400,letterSpacing:'1px',marginBottom:6}}>{_g}</div>
+            <div style={{fontSize:10,color:'rgba(255,255,255,0.2)',fontWeight:600,letterSpacing:'3px',textTransform:'uppercase',marginBottom:4}}>{_days[_now.getDay()]} · {_now.getDate()} {_months[_now.getMonth()]}</div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.25)',fontWeight:400,letterSpacing:'1px',marginBottom:4}}>{_g}</div>
             <div style={{fontSize:44,fontWeight:800,color:'#ffffff',letterSpacing:'-2px',lineHeight:1,wordBreak:'break-word',maxWidth:'54vw'}}>{_fn}<span style={{color:'#02d1ba'}}>.</span></div>
           </div>
 

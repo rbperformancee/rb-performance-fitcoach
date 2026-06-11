@@ -35,13 +35,13 @@ import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
 import { isNative } from "../lib/native";
 import haptic from "../lib/haptic";
-import RunShareStory from "./RunShareStory";
+// RunShareStory retiré : share simplifié à text-copy + GPX seulement.
 import { saveRunWorkout, requestWorkoutPermission, requestHeartRatePermission, startHeartRateStream } from "../lib/health";
 import runActivity from "../lib/runLiveActivity";
 import { parseTarget, compareToTarget } from "../lib/runTarget";
 import { fetchCurrentWeather } from "../lib/weather";
 import { buildSchedule, nextPhase as nextIntervalPhase, parseSegment, announceText } from "../lib/runIntervals";
-import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+// Camera retiré : plus de selfie finish.
 
 import { todayLocal } from "../lib/date";
 const G = "#02d1ba";
@@ -125,6 +125,9 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   const [gpsQuality, setGpsQuality] = useState(null); // strong | good | medium | weak
   const [strideM, setStrideM] = useState(null); // foulée moyenne mètres
   const [indoorMode, setIndoorModeState] = useState(false); // treadmill
+  // HIIT : laps enregistrés à chaque fin de phase work (pour chart post-run)
+  const [intervalLaps, setIntervalLaps] = useState([]); // [{rep, kind:"work"|"rest", durationS, distanceM, paceSPerKm}]
+  const intervalLapStartRef = useRef({ atMs: 0, atDistM: 0 }); // début de la phase courante
   // Layout actif : ring (PACE1) ou map (PACE3). Persisté localStorage.
   const [runLayout, setRunLayout] = useState(() => {
     try { return localStorage.getItem("rb-run-layout") || "ring"; }
@@ -142,13 +145,13 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   const [audioCues, setAudioCues] = useState(true);
   const [route, setRoute] = useState([]); // [{lat, lng, t}]
   const [summary, setSummary] = useState(null);
-  const [showShare, setShowShare] = useState(false);
+  // showShare retiré (plus d'éditeur image).
   // Phase 4 :
   const [hrBpm, setHrBpm] = useState(0);          // dernière valeur HR live
   const [hrSamples, setHrSamples] = useState([]); // pour calcul avg/max
   const [weather, setWeather] = useState(null);   // {tempC, windKmh, ...}
   const [intervalPhase, setIntervalPhase] = useState(null); // {phase, rep, block, endTime?, targetDistM?, lapStartDist?}
-  const [finishPhoto, setFinishPhoto] = useState(null); // dataUrl du selfie post-run
+  // finishPhoto retiré (plus de selfie finish).
 
   const startedAtRef = useRef(null);
   const pausedTotalRef = useRef(0);
@@ -224,6 +227,8 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
       const phaseInfo = computeIntervalPhaseTiming(first, intervalSchedule, startedAtRef.current, 0);
       intervalPhaseRef.current = phaseInfo;
       setIntervalPhase(phaseInfo);
+      // Init du tracker de lap : début de la 1re phase = maintenant, dist = 0.
+      intervalLapStartRef.current = { atMs: Date.now(), atDistM: 0 };
       announceIntervalPhase(first, intervalSchedule);
       haptic.success();
     }
@@ -258,6 +263,22 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
       const schedule = intervalScheduleRef.current;
       const prev = intervalPhaseRef.current;
       if (!schedule || !prev) return;
+      // Enregistre le lap qui vient de se terminer (pour chart post-run).
+      // Skip si pas de start tracking (premier passage) ou prev = done.
+      const lapStart = intervalLapStartRef.current;
+      if (prev.phase && prev.phase !== "done" && lapStart.atMs > 0) {
+        const lapDurS = (Date.now() - lapStart.atMs) / 1000;
+        const lapDistM = Math.max(0, distanceRef.current - lapStart.atDistM);
+        const lapPace = lapDistM > 30 ? lapDurS / (lapDistM / 1000) : null;
+        setIntervalLaps((prev2) => [...prev2, {
+          rep: prev.rep,
+          block: prev.block,
+          kind: prev.phase, // "work" | "rest"
+          durationS: lapDurS,
+          distanceM: lapDistM,
+          paceSPerKm: lapPace,
+        }]);
+      }
       const next = nextIntervalPhase(prev, schedule);
       if (!next || next.phase === "done") {
         intervalPhaseRef.current = { phase: "done" };
@@ -269,6 +290,8 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
       const phaseInfo = computeIntervalPhaseTiming(next, schedule, startedAtRef.current, distanceRef.current);
       intervalPhaseRef.current = phaseInfo;
       setIntervalPhase(phaseInfo);
+      // Reset le tracker de lap pour la nouvelle phase.
+      intervalLapStartRef.current = { atMs: Date.now(), atDistM: distanceRef.current };
       announceIntervalPhase(next, schedule);
       haptic.success();
     }
@@ -501,40 +524,7 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
     return compareToTarget(summary, target);
   }, [summary, target]);
 
-  // ── Photo finish (Camera native ou input file fallback) ──
-  const takeFinishPhoto = useCallback(async () => {
-    try {
-      if (isNative()) {
-        const photo = await Camera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          resultType: CameraResultType.DataUrl,
-          source: CameraSource.Camera,
-          direction: "FRONT", // selfie post-run
-        });
-        if (photo?.dataUrl) {
-          setFinishPhoto(photo.dataUrl);
-          haptic.success();
-        }
-      } else {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        input.capture = "user";
-        input.onchange = (e) => {
-          const f = e.target.files?.[0];
-          if (f) {
-            const reader = new FileReader();
-            reader.onload = (ev) => setFinishPhoto(ev.target?.result);
-            reader.readAsDataURL(f);
-          }
-        };
-        input.click();
-      }
-    } catch (e) {
-      console.warn("[runSession] photo finish:", e?.message || e);
-    }
-  }, []);
+  // Photo finish retirée — l'athlète veut juste copier les stats (Strava-style).
 
   // ── Pace delta vs cible (chip live) ──
   const paceDelta = useMemo(() => {
@@ -730,15 +720,8 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
               ))}
             </div>
           )}
-          {/* Photo finish — Camera native iOS / web file. Style premium :
-              icône SVG appareil photo, label clair, indique état si déjà pris. */}
-          <button style={S.photoFinishBtn} onClick={takeFinishPhoto}>
-            <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M14.5 4l2 2H20a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h3.5l2-2h5z" />
-              <circle cx="12" cy="13" r="3.5" />
-            </svg>
-            {finishPhoto ? "Reprendre le selfie" : "Selfie finish"}
-          </button>
+          {/* Chart HIIT — barres allure par rep, meilleur rep highlighted. */}
+          <HiitLapChart laps={intervalLaps} />
           {/* Métrique stride length (foulée). Indicateur pro de forme :
               ~1.20m amateur, 1.50m+ élite. Affichée seulement si CMPedometer
               a au moins 50 pas pour calculer. */}
@@ -837,40 +820,22 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
               Exporter en GPX (Strava / Garmin)
             </button>
           )}
-          {/* Share + Retour : SVG icons, full-width sur mobile, padding garanti */}
-          <div style={{ display: "flex", gap: 10, marginTop: 14, width: "100%", maxWidth: 420 }}>
-            <button
-              style={{ ...S.bigBtn(G), flex: 1, minWidth: 0, padding: "16px 14px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-              onClick={() => { haptic.medium(); setShowShare(true); }}
-            >
-              <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#050505" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 3v13" />
-                <path d="M7 8l5-5 5 5" />
-                <path d="M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5" />
-              </svg>
-              Partager
-            </button>
-            <button
-              style={{ ...S.bigBtn("rgba(255,255,255,0.08)"), color: "#fff", flex: 1, minWidth: 0, padding: "16px 14px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, border: "1px solid rgba(255,255,255,0.12)" }}
-              onClick={onClose}
-            >
-              <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#fff" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M19 12H5" />
-                <path d="M12 19l-7-7 7-7" />
-              </svg>
-              Retour
-            </button>
-          </div>
+          {/* Retour — Strava-style : copier stats + GPX + retour. Pas de
+              partager d'image éditeur (trop friction, l'athlète veut juste
+              copier ses stats et coller dans Insta). */}
+          <button
+            style={{ ...S.bigBtn("rgba(255,255,255,0.08)"), color: "#fff", marginTop: 14, padding: "16px 14px",
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+              border: "1px solid rgba(255,255,255,0.12)", width: "100%", maxWidth: 420 }}
+            onClick={onClose}
+          >
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#fff" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+            Retour
+          </button>
         </div>
-        {showShare && (
-          <RunShareStory
-            route={route}
-            summary={summary}
-            preloadedPhoto={finishPhoto}
-            weather={weather}
-            onClose={() => setShowShare(false)}
-          />
-        )}
       </div>
     );
   }
@@ -913,7 +878,9 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
           <div style={S.autoPauseBanner}>⏸ Auto-pause (tu sembles à l'arrêt)</div>
         )}
         {/* Intervals banner — phase courante HIIT */}
-        {intervalPhase && intervalPhase.phase !== "done" && intervalSchedule && (
+        {/* Le banner classique reste utile si done (résumé) — sinon le layout
+            HIIT dédié rend la bannière redondante. */}
+        {intervalPhase && intervalPhase.phase === "done" && intervalSchedule && (
           <IntervalsBanner phase={intervalPhase} schedule={intervalSchedule} distanceM={distance} />
         )}
         {/* Progress bar vs cible coach */}
@@ -934,30 +901,43 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
             </div>
           </div>
         ) : null}
-        {/* Switcher de layout Ring ↔ Map (icône en haut à droite). */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
-          <button
-            onClick={toggleRunLayout}
-            aria-label={`Layout ${runLayout === "ring" ? "Ring" : "Map"} — toucher pour basculer`}
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 100,
-              padding: "5px 10px",
-              display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: "rgba(255,255,255,0.65)",
-              textTransform: "uppercase", cursor: "pointer",
-            }}
-          >
-            {runLayout === "ring" ? (
-              <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
-            ) : (
-              <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/></svg>
-            )}
-            {runLayout === "ring" ? "Ring" : "Map"}
-          </button>
-        </div>
-        {runLayout === "ring" ? (
+        {/* Switcher Ring ↔ Map — caché en mode HIIT (layout dédié auto). */}
+        {!intervalSchedule && (
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+            <button
+              onClick={toggleRunLayout}
+              aria-label={`Layout ${runLayout === "ring" ? "Ring" : "Map"} — toucher pour basculer`}
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 100,
+                padding: "5px 10px",
+                display: "inline-flex", alignItems: "center", gap: 6,
+                fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: "rgba(255,255,255,0.65)",
+                textTransform: "uppercase", cursor: "pointer",
+              }}
+            >
+              {runLayout === "ring" ? (
+                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+              ) : (
+                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/></svg>
+              )}
+              {runLayout === "ring" ? "Ring" : "Map"}
+            </button>
+          </div>
+        )}
+        {intervalSchedule ? (
+          <RunActiveHiit
+            phaseInfo={intervalPhase}
+            schedule={intervalSchedule}
+            distance={distance}
+            duration={duration}
+            pace={pace}
+            now={now}
+            targetPaceSPerKm={target.paceSPerKm}
+            onSkipPhase={() => { haptic.medium(); intervalAdvanceRef.current?.(); }}
+          />
+        ) : runLayout === "ring" ? (
           <RunActiveRing
             distance={distance}
             duration={duration}
@@ -1006,33 +986,291 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
           </>
         )}
         {runLayout === "map" && <div style={{ flex: 1 }} />}
-        {/* Controls — icônes SVG (plus de ⏸/⏹ emoji style "vieux") */}
-        <div style={{ display: "flex", gap: 10, marginTop: 16, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
-          <button style={S.controlBtn(phase === "paused" ? G : "rgba(255,255,255,0.1)")} onClick={togglePause}>
-            {phase === "paused" ? (
-              <>
-                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" style={{ marginRight: 8, verticalAlign: "middle" }} aria-hidden="true">
-                  <polygon points="6,4 20,12 6,20" />
-                </svg>
-                Reprendre
-              </>
-            ) : (
-              <>
-                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" style={{ marginRight: 8, verticalAlign: "middle" }} aria-hidden="true">
-                  <rect x="6" y="4" width="4" height="16" rx="1.5" />
-                  <rect x="14" y="4" width="4" height="16" rx="1.5" />
-                </svg>
-                Pause
-              </>
-            )}
-          </button>
-          <button style={S.controlBtn(RED, true)} onClick={stop}>
-            <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" style={{ marginRight: 8, verticalAlign: "middle" }} aria-hidden="true">
-              <rect x="5" y="5" width="14" height="14" rx="2" />
-            </svg>
-            Stop
+        <RunControls phase={phase} onTogglePause={togglePause} onStop={stop} />
+        </div>
+    </div>
+  );
+}
+
+// ── Controls premium : Pause circulaire neutre, Stop long-press 1.5s ──
+// Le bouton Stop demande un appui maintenu (ring progress qui se remplit),
+// pour empêcher l'arrêt accidentel pendant une course. Pause reste un tap.
+function RunControls({ phase, onTogglePause, onStop }) {
+  const HOLD_MS = 1500;
+  const [holdPct, setHoldPct] = useState(0);
+  const holdStartRef = useRef(0);
+  const rafRef = useRef(null);
+  const firedRef = useRef(false);
+
+  const cancelHold = useCallback(() => {
+    holdStartRef.current = 0;
+    firedRef.current = false;
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    setHoldPct(0);
+  }, []);
+
+  const startHold = useCallback(() => {
+    if (holdStartRef.current) return;
+    holdStartRef.current = Date.now();
+    firedRef.current = false;
+    haptic.medium();
+    const tick = () => {
+      const elapsed = Date.now() - holdStartRef.current;
+      const pct = Math.min(100, (elapsed / HOLD_MS) * 100);
+      setHoldPct(pct);
+      if (pct >= 100 && !firedRef.current) {
+        firedRef.current = true;
+        haptic.heavy();
+        cancelHold();
+        onStop();
+        return;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, [onStop, cancelHold]);
+
+  // Geometry du SVG ring overlay
+  const SZ = 64;
+  const R = 26;
+  const C = 2 * Math.PI * R;
+
+  return (
+    <div style={{
+      display: "flex", justifyContent: "center", alignItems: "center",
+      gap: 28, marginTop: 14,
+      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)",
+    }}>
+      {/* PAUSE : tap simple, bouton rond neutre */}
+      <button
+        onClick={onTogglePause}
+        aria-label={phase === "paused" ? "Reprendre la course" : "Mettre en pause"}
+        style={{
+          width: 64, height: 64, borderRadius: "50%",
+          background: phase === "paused" ? G : "rgba(255,255,255,0.06)",
+          border: "1px solid " + (phase === "paused" ? G : "rgba(255,255,255,0.12)"),
+          color: phase === "paused" ? "#050505" : "#fff",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", boxShadow: phase === "paused" ? "0 6px 20px rgba(2,209,186,0.35)" : "none",
+        }}
+      >
+        {phase === "paused" ? (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" aria-hidden="true">
+            <polygon points="7,4 20,12 7,20" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+            <rect x="6" y="4" width="4" height="16" rx="1.5" />
+            <rect x="14" y="4" width="4" height="16" rx="1.5" />
+          </svg>
+        )}
+      </button>
+      {/* STOP : long-press 1.5s avec ring de progression */}
+      <div style={{ position: "relative", width: SZ, height: SZ }}>
+        <svg width={SZ} height={SZ} viewBox={`0 0 ${SZ} ${SZ}`} style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)", pointerEvents: "none" }}>
+          <circle cx={SZ/2} cy={SZ/2} r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={3} />
+          <circle
+            cx={SZ/2} cy={SZ/2} r={R} fill="none"
+            stroke="#ef4444" strokeWidth={3} strokeLinecap="round"
+            strokeDasharray={`${C} ${C}`}
+            strokeDashoffset={C * (1 - holdPct / 100)}
+            style={{ filter: "drop-shadow(0 0 6px rgba(239,68,68,0.7))", transition: "stroke-dashoffset 60ms linear" }}
+          />
+        </svg>
+        <button
+          onPointerDown={startHold}
+          onPointerUp={cancelHold}
+          onPointerLeave={cancelHold}
+          onPointerCancel={cancelHold}
+          aria-label="Arrêter la course (maintenir 1,5 seconde)"
+          style={{
+            position: "absolute", inset: 6,
+            width: SZ - 12, height: SZ - 12, borderRadius: "50%",
+            background: "#ef4444", border: "none", color: "#fff",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", touchAction: "none", userSelect: "none",
+            transform: holdPct > 0 ? "scale(0.95)" : "scale(1)",
+            transition: "transform 0.15s ease",
+            boxShadow: "0 6px 20px rgba(239,68,68,0.35)",
+          }}
+        >
+          <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
+            <rect x="6" y="6" width="12" height="12" rx="2" />
+          </svg>
+        </button>
+        {/* Hint mini sous le bouton — la 1re fois seulement, on garde toujours
+            par sécurité info pour l'athlète qui découvre le geste. */}
+        <div style={{
+          position: "absolute", top: SZ + 6, left: "50%", transform: "translateX(-50%)",
+          fontSize: 8, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, fontWeight: 700,
+          whiteSpace: "nowrap", textTransform: "uppercase",
+        }}>
+          Maintiens
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Layout HIIT dédié : chrono phase XL + rep counter + skip ──
+// Auto-activé dès que intervalSchedule existe. En sprint à 400m on regarde
+// pas une carte — on regarde le chrono qui descend et la rep en cours.
+function RunActiveHiit({ phaseInfo, schedule, distance, duration, pace, now, targetPaceSPerKm, onSkipPhase }) {
+  // Calcule le temps restant (time-based) ou la distance restante (distance-based)
+  const isWork = phaseInfo?.phase === "work";
+  const isRest = phaseInfo?.phase === "rest";
+  const isDone = phaseInfo?.phase === "done";
+  const phaseColor = isWork ? "#02d1ba" : isRest ? "#fbbf24" : "rgba(255,255,255,0.5)";
+  const phaseLabel = isWork ? "TEMPO" : isRest ? "RÉCUP" : "TERMINÉ";
+
+  // Compteur : si endTimeMs → temps restant, si targetDistM → mètres restants
+  let countdownLabel = "—";
+  let countdownPct = 0;
+  if (phaseInfo?.endTimeMs) {
+    const remainingMs = Math.max(0, phaseInfo.endTimeMs - now);
+    const elapsedMs = (phaseInfo.durationMs || 1) - remainingMs;
+    countdownPct = Math.min(100, (elapsedMs / (phaseInfo.durationMs || 1)) * 100);
+    countdownLabel = formatDuration(Math.round(remainingMs / 1000));
+  } else if (phaseInfo?.targetDistM && phaseInfo?.lapStartDistM != null) {
+    const remainingM = Math.max(0, phaseInfo.targetDistM - (distance - phaseInfo.lapStartDistM));
+    const elapsedM = phaseInfo.targetDistM - remainingM;
+    countdownPct = Math.min(100, (elapsedM / phaseInfo.targetDistM) * 100);
+    countdownLabel = remainingM >= 100 ? `${Math.round(remainingM)} m` : `${Math.round(remainingM)} m`;
+  }
+
+  // Verdict allure live vs cible (uniquement en phase work avec target défini)
+  let paceVerdict = null;
+  if (isWork && targetPaceSPerKm && pace > 0) {
+    const delta = pace - targetPaceSPerKm; // < 0 = plus rapide
+    if (Math.abs(delta) < 8) paceVerdict = { label: "Dans le rythme", color: "#02d1ba" };
+    else if (delta > 0) paceVerdict = { label: `▾ ${Math.abs(Math.round(delta))}s/km lent`, color: "#fbbf24" };
+    else paceVerdict = { label: `▴ ${Math.abs(Math.round(delta))}s/km vite`, color: "#02d1ba" };
+  }
+
+  const repsTotal = schedule?.repeats || 1;
+  const blocksTotal = schedule?.blocks || 1;
+  const rep = phaseInfo?.rep ?? 1;
+  const block = phaseInfo?.block ?? 1;
+
+  return (
+    <>
+      {/* Phase label + bloc */}
+      <div style={{ textAlign: "center", marginTop: 6 }}>
+        <div style={{ fontSize: 11, color: phaseColor, letterSpacing: 4, fontWeight: 800, textTransform: "uppercase",
+          textShadow: `0 0 12px ${phaseColor}66` }}>
+          {phaseLabel}{blocksTotal > 1 ? ` · Bloc ${block}/${blocksTotal}` : ""}
+        </div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", letterSpacing: 2.5, fontWeight: 700, marginTop: 4 }}>
+          Rep {rep} / {repsTotal}
+        </div>
+      </div>
+      {/* Countdown XL avec ring */}
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 18, marginBottom: 8 }}>
+        <svg width={260} height={260} style={{ transform: "rotate(-90deg)" }} aria-hidden="true">
+          <circle cx={130} cy={130} r={118} stroke="rgba(255,255,255,0.06)" strokeWidth={9} fill="none" />
+          <circle cx={130} cy={130} r={118}
+            stroke={phaseColor} strokeWidth={9} fill="none" strokeLinecap="round"
+            strokeDasharray={`${2 * Math.PI * 118}`}
+            strokeDashoffset={`${2 * Math.PI * 118 * (1 - countdownPct / 100)}`}
+            style={{ filter: `drop-shadow(0 0 12px ${phaseColor}88)`, transition: "stroke-dashoffset 0.5s ease" }} />
+        </svg>
+        <div style={{ position: "absolute", textAlign: "center" }}>
+          <div style={{ fontSize: 76, fontWeight: 900, letterSpacing: "-4px", lineHeight: 0.95, fontVariantNumeric: "tabular-nums", color: isDone ? "#fff" : phaseColor }}>
+            {countdownLabel}
+          </div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 3, fontWeight: 800, marginTop: 8, textTransform: "uppercase" }}>
+            Restant
+          </div>
+        </div>
+      </div>
+      {/* Allure live + verdict */}
+      <div style={{ display: "flex", justifyContent: "space-around", alignItems: "baseline",
+        padding: "12px 0", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-1px", fontVariantNumeric: "tabular-nums", color: "#02d1ba" }}>
+            {formatPace(pace)}<span style={{ fontSize: 13, color: "rgba(2,209,186,0.5)", fontWeight: 700 }}> /km</span>
+          </div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 2, fontWeight: 800, marginTop: 4 }}>ALLURE</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-1px", fontVariantNumeric: "tabular-nums" }}>
+            {formatDistance(distance)}
+          </div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 2, fontWeight: 800, marginTop: 4 }}>DISTANCE</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-1px", fontVariantNumeric: "tabular-nums" }}>
+            {formatDuration(duration)}
+          </div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 2, fontWeight: 800, marginTop: 4 }}>DURÉE</div>
+        </div>
+      </div>
+      {paceVerdict && (
+        <div style={{ textAlign: "center", marginTop: 10 }}>
+          <span style={{ display: "inline-block", padding: "5px 12px", borderRadius: 100, background: paceVerdict.color + "22", color: paceVerdict.color, fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>
+            {paceVerdict.label}
+          </span>
+        </div>
+      )}
+      {/* Skip phase button (utile si l'athlète a fini avant que le timer atteigne 0) */}
+      {!isDone && (
+        <div style={{ textAlign: "center", marginTop: 14 }}>
+          <button onClick={onSkipPhase} style={{
+            background: "transparent", border: "1px solid rgba(255,255,255,0.15)",
+            color: "rgba(255,255,255,0.7)", borderRadius: 100, padding: "8px 18px",
+            fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer",
+          }}>
+            Phase suivante →
           </button>
         </div>
+      )}
+    </>
+  );
+}
+
+// ── Lap chart post-run pour HIIT : barres allure par rep ──
+function HiitLapChart({ laps }) {
+  if (!laps || laps.length === 0) return null;
+  const workLaps = laps.filter(l => l.kind === "work" && l.paceSPerKm && l.paceSPerKm > 0);
+  if (workLaps.length === 0) return null;
+  const minPace = Math.min(...workLaps.map(l => l.paceSPerKm));
+  const maxPace = Math.max(...workLaps.map(l => l.paceSPerKm));
+  const range = maxPace - minPace || 1;
+  // bestRep — laisse la possibilité d'enrichir post-run si on veut.
+  // const bestRep = workLaps.find(l => l.paceSPerKm === minPace);
+  return (
+    <div style={{ width: "100%", maxWidth: 420, marginTop: 18, padding: "14px 16px",
+      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", letterSpacing: 2.5, fontWeight: 800, textTransform: "uppercase" }}>
+          Splits par rep
+        </div>
+        <div style={{ fontSize: 10, color: "#02d1ba", letterSpacing: 1, fontWeight: 700 }}>
+          Meilleur · {formatPace(minPace)}/km
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {workLaps.map((l, i) => {
+          const isBest = l.paceSPerKm === minPace;
+          const widthPct = 25 + ((maxPace - l.paceSPerKm) / range) * 70; // best = 95%, worst = 25%
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.5)", width: 32, letterSpacing: 1 }}>
+                R{i + 1}
+              </div>
+              <div style={{ flex: 1, height: 10, background: "rgba(255,255,255,0.06)", borderRadius: 6, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${widthPct}%`,
+                  background: isBest ? "#02d1ba" : "rgba(2,209,186,0.55)",
+                  boxShadow: isBest ? "0 0 6px rgba(2,209,186,0.5)" : "none",
+                  transition: "width 0.3s ease" }} />
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 800, fontVariantNumeric: "tabular-nums",
+                color: isBest ? "#02d1ba" : "#fff", width: 64, textAlign: "right" }}>
+                {formatPace(l.paceSPerKm)}/km
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
