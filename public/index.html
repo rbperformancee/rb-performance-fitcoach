@@ -191,15 +191,27 @@
         var splash = document.getElementById('splash');
         if (!splash) return;
 
-        // Disparition apres 1.0s (eclair dessine, plus de freeze artificiel).
-        // Sur /demo et /demo-client, la transition est invisible (meme bg) car
-        // le splash React prend immediatement le relais avec progress messaging.
-        setTimeout(function(){
+        var hide = function(){
           splash.classList.add('fade-out');
           setTimeout(function(){
             if (splash.parentNode) splash.parentNode.removeChild(splash);
           }, 700);
-        }, 1000);
+        };
+
+        // Sur Capacitor natif (iOS), on retire la phase 1 (PNG bolt rempli)
+        // qui causait un "retour en arrière" visuel — l'animation HTML
+        // recommençait à zéro après le PNG. Le PNG est maintenant tout noir,
+        // et l'animation HTML doit DURER tout le long de l'ouverture
+        // (jusqu'au signal 'rb-app-ready' de App.jsx quand authLoading=false).
+        var isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+        if (isNative) {
+          window.addEventListener('rb-app-ready', hide, { once: true });
+          // Safety net si jamais React plante / event jamais dispatché : 6s max
+          setTimeout(hide, 6000);
+        } else {
+          // PWA / landing : durée fixe 1.0s comme avant (animation 1.5s couvre)
+          setTimeout(hide, 1000);
+        }
       })();
       // ===== Service Worker registration =====
       // Sans ca : pas de cache offline, pas de push notifications, pas de PWA fullsize.

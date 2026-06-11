@@ -643,19 +643,16 @@ function AppInner() {
     import("./components/ProfilePage");
   }, [user, isDemo, isClientDemo]);
 
-  // Hide le splash natif iOS au 1er paint React. Le HTML #splash dans
-  // index.html prend ensuite le relais avec son animation éclair (stroke
-  // qui se trace en 1.2s + fill cyan + texte RB PERFORM + barre de progress),
-  // exactement comme la PWA et la landing. Le PNG natif est rendu pour
-  // matcher l'état final de cette animation (éclair cyan rempli sur #050505)
-  // → transition splash natif → HTML splash invisible.
+  // Splash natif iOS : on hide le PNG (devenu plain #050505 = invisible)
+  // au 1er paint. La phase visible = uniquement le HTML #splash animé
+  // (stroke éclair qui se trace + fill cyan + texte RB PERFORM + barre).
   React.useEffect(() => {
     if (typeof window === "undefined" || !window.Capacitor?.isNativePlatform?.()) return;
     requestAnimationFrame(() => {
       requestAnimationFrame(async () => {
         try {
           const mod = await import("@capacitor/splash-screen");
-          await mod.SplashScreen.hide({ fadeOutDuration: 200 });
+          await mod.SplashScreen.hide({ fadeOutDuration: 0 });
         } catch (e) {
           // eslint-disable-next-line no-console
           console.warn("[splash] hide failed:", e);
@@ -663,6 +660,16 @@ function AppInner() {
       });
     });
   }, []);
+
+  // Quand l'auth est chargée, on signale au HTML #splash qu'il peut fade.
+  // Sur natif il attend ce signal au lieu de se hide via setTimeout, pour
+  // durer toute l'ouverture (jusqu'à ce que React soit prêt à rendre).
+  React.useEffect(() => {
+    if (authLoading) return;
+    try {
+      window.dispatchEvent(new CustomEvent("rb-app-ready"));
+    } catch {}
+  }, [authLoading]);
 
   // ===== ROUTING COACH vs CLIENT =====
   // Check si l'utilisateur connecte est un coach (table `coaches`) OU un
