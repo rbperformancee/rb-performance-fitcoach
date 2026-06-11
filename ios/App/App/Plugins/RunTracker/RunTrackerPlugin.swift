@@ -566,9 +566,25 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
                 ])
                 // Audio cue vocal (TTS) "Kilomètre N, allure X:YZ par km"
                 self.speakKmCue(km: currentKm, paceSPerKm: paceSPerKm)
+                // Haptic feedback : double tap au km — l'athlète sent le km
+                // dans la main même casque pas brancké ou audio cues off.
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
                 lastKmReached = currentKm
                 lastKmAt = now
             }
+
+            // GPS quality live : publié à chaque update pour que l'UI puisse
+            // afficher "Strong/Medium/Weak" en temps réel (cf overlay screen).
+            let gpsQuality: String
+            if loc.horizontalAccuracy < 5 { gpsQuality = "strong" }
+            else if loc.horizontalAccuracy < 10 { gpsQuality = "good" }
+            else if loc.horizontalAccuracy < 15 { gpsQuality = "medium" }
+            else { gpsQuality = "weak" }
+            notifyListeners("gpsQuality", data: [
+                "quality": gpsQuality,
+                "accuracyM": loc.horizontalAccuracy,
+            ])
         }
     }
 
