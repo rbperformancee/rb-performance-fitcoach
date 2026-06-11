@@ -847,8 +847,24 @@ function AppInner() {
 
   // Programme (cloud si connecté, sinon local)
   const [localProgramme,  setLocalProgramme]  = useState(null);
-  const [activeWeek,      setActiveWeek]      = useState(0);
-  const [activeSession,   setActiveSession]   = useState(0);
+  // activeWeek + activeSession : persistés en localStorage pour qu'un athlète
+  // qui ferme l'app sur la séance du jeudi y retrouve à l'ouverture suivante,
+  // même si on est passé à vendredi. Sans ça, l'auto-routing tombait sur
+  // "première séance non-complétée" = retour Lundi (Rayan, 12 juin 2026).
+  const [activeWeek, setActiveWeek] = useState(() => {
+    try { return parseInt(localStorage.getItem("rb-active-week") || "0", 10) || 0; }
+    catch { return 0; }
+  });
+  const [activeSession, setActiveSession] = useState(() => {
+    try { return parseInt(localStorage.getItem("rb-active-session") || "0", 10) || 0; }
+    catch { return 0; }
+  });
+  React.useEffect(() => {
+    try { localStorage.setItem("rb-active-week", String(activeWeek)); } catch (_) {}
+  }, [activeWeek]);
+  React.useEffect(() => {
+    try { localStorage.setItem("rb-active-session", String(activeSession)); } catch (_) {}
+  }, [activeSession]);
   // sessionStarted : true uniquement quand l utilisateur a clique "Demarrer"
   // sur la page Training. Conditionne le mount de SeanceVivante (overlay coach
   // + flag session_live cote Supabase).
