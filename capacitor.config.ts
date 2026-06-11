@@ -27,7 +27,7 @@ const config: CapacitorConfig = {
       // Fallback : si JS plante / n'appelle jamais hide(), iOS hide après 4s.
       launchShowDuration: 4000,
       // #050505 = même couleur que body de index.html → zero flash de
-      // couleur entre splash natif et HTML.
+      // couleur entre splash natif et HTML #splash (PWA-style éclair 80px).
       backgroundColor: '#050505',
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
