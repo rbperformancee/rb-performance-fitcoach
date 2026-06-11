@@ -29,6 +29,8 @@ import Capacitor
 import CoreLocation
 import CoreMotion
 import HealthKit
+import AVFoundation
+import UIKit
 
 @objc(RunTrackerPlugin)
 public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate {
@@ -41,6 +43,10 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
         CAPPluginMethod(name: "resume", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getStats", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getVO2Max", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getLatestHRV", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setAudioCuesEnabled", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setIndoorMode", returnType: CAPPluginReturnPromise),
     ]
 
     // MARK: - Stored state
@@ -86,6 +92,23 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
     // un filtre accuracy plus strict pour le RUN (vs 30m précédent).
     private let maxRunSpeedMps: Double = 8.0
     private let runAccuracyThresholdM: Double = 20.0  // Strava-tier filter
+
+    // ─── CMMotionActivityManager : iOS détecte automotive/walking/running
+    // → auto-pause plus intelligent que speed-only. Si iOS dit "automotive"
+    // avec confidence haute, on émet un warning event au lieu d'enregistrer
+    // un faux run en voiture.
+    private var motionActivityManager: CMMotionActivityManager?
+    private var lastActivityType: String = "unknown"
+
+    // ─── AVSpeechSynthesizer : audio cues vocaux à chaque km franchi.
+    // Speak en background via AVAudioSession .ambient + .mixWithOthers
+    // (= cohabite avec Spotify, baisse pas la musique).
+    private var speechSynth: AVSpeechSynthesizer?
+    private var audioCuesEnabled: Bool = true
+
+    // ─── Indoor mode : skip GPS, distance via CMPedometer (steps × stride)
+    // Utile sur tapis de course où le GPS donne 0 ou bug.
+    private var isIndoorMode: Bool = false
 
     // MARK: - Permission
 
@@ -316,6 +339,7 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
 
             self.locationManager?.startUpdatingLocation()
             self.startPedometer()
+            self.startMotionActivityDetection()
 
             // CMAltimeter (baromètre) + HKWorkoutBuilder (Apple Health).
             // Fire-and-forget : si user refuse permissions HealthKit, le run
@@ -368,6 +392,7 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
             guard let self = self else { return }
             self.locationManager?.stopUpdatingLocation()
             self.pedometer?.stopUpdates()
+            self.stopMotionActivityDetection()
 
             // Réactive l'auto-lock — fin du run, l'écran peut se verrouiller.
             UIApplication.shared.isIdleTimerDisabled = false
@@ -498,12 +523,15 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
                 let now = Date()
                 let splitDuration = lastKmAt.map { now.timeIntervalSince($0) } ?? 0
                 let totalDuration = now.timeIntervalSince(startedAt) - totalPausedDuration
+                let paceSPerKm = currentKm > 0 && totalDuration > 0
+                                    ? Int(totalDuration / Double(currentKm)) : 0
                 notifyListeners("kmReached", data: [
                     "km": currentKm,
                     "splitDurationS": Int(splitDuration),
-                    "paceSPerKm": currentKm > 0 && totalDuration > 0
-                                    ? Int(totalDuration / Double(currentKm)) : 0,
+                    "paceSPerKm": paceSPerKm,
                 ])
+                // Audio cue vocal (TTS) "Kilomètre N, allure X:YZ par km"
+                self.speakKmCue(km: currentKm, paceSPerKm: paceSPerKm)
                 lastKmReached = currentKm
                 lastKmAt = now
             }
@@ -527,7 +555,177 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
                     let spm = Int(cadence * 60)
                     self.notifyListeners("cadenceUpdate", data: ["stepsPerMinute": spm])
                 }
+                // Indoor mode : on calcule la distance via CMPedometer
+                // (steps + stride length estimé). Sans GPS, sur tapis.
+                if self.isIndoorMode, let pedDist = data.distance?.doubleValue {
+                    self.totalDistance = pedDist
+                    self.notifyListeners("locationUpdate", data: [
+                        "lat": 0, "lng": 0, "speed": 0, "alt": 0, "accuracy": 0, "t": 0,
+                        "distanceM": pedDist, "indoor": true,
+                    ])
+                }
             }
         }
+    }
+
+    // MARK: - CMMotionActivityManager (#3 — auto-détect course/voiture/marche)
+    //
+    // iOS classifie l'activité courante : running/walking/automotive/cycling/
+    // stationary. On l'utilise pour :
+    //  1. Émettre un warning si l'user passe en .automotive pendant un run
+    //     (= il est monté en voiture → on alerte au lieu d'enregistrer un
+    //     faux split à 100 km/h)
+    //  2. Auto-pause plus intelligent (combine avec speed)
+
+    private func startMotionActivityDetection() {
+        guard CMMotionActivityManager.isActivityAvailable() else { return }
+        if motionActivityManager == nil {
+            motionActivityManager = CMMotionActivityManager()
+        }
+        motionActivityManager?.startActivityUpdates(to: .main) { [weak self] activity in
+            guard let self = self, let act = activity else { return }
+            // Confidence : low/medium/high. On agit que sur high.
+            guard act.confidence == .high else { return }
+
+            var type = "unknown"
+            if act.running { type = "running" }
+            else if act.walking { type = "walking" }
+            else if act.cycling { type = "cycling" }
+            else if act.automotive { type = "automotive" }
+            else if act.stationary { type = "stationary" }
+
+            if type != self.lastActivityType {
+                self.lastActivityType = type
+                self.notifyListeners("motionActivityChanged", data: ["type": type])
+
+                // Warning si l'user passe en voiture pendant un run actif
+                if type == "automotive" && self.isRunning && !self.isPaused {
+                    self.notifyListeners("motionAutomotiveDetected", data: [
+                        "warning": "Activité véhicule détectée — ton run est suspect",
+                    ])
+                }
+            }
+        }
+    }
+
+    private func stopMotionActivityDetection() {
+        motionActivityManager?.stopActivityUpdates()
+    }
+
+    // MARK: - Audio cues vocaux (#1 — speak km splits via TTS)
+    //
+    // AVSpeechSynthesizer parle "Kilomètre 1, allure 5 minutes 12, distance
+    // 1 kilomètre". Fonctionne même iPhone verrouillé + en background grâce
+    // à AVAudioSession en .ambient .mixWithOthers (cohabite avec Spotify).
+
+    private func ensureSpeechSynth() {
+        if speechSynth == nil {
+            speechSynth = AVSpeechSynthesizer()
+        }
+        // Configure la session audio pour cohabiter avec la musique de l'user.
+        // .ambient = baisse pas le volume des autres apps, juste parle par-dessus.
+        do {
+            let s = AVAudioSession.sharedInstance()
+            try s.setCategory(.ambient, mode: .default, options: [.mixWithOthers, .duckOthers])
+        } catch {
+            // Silent fail — pas critique
+        }
+    }
+
+    private func speakKmCue(km: Int, paceSPerKm: Int) {
+        guard audioCuesEnabled else { return }
+        ensureSpeechSynth()
+        guard let synth = speechSynth else { return }
+
+        // Format "Kilomètre 3, allure 5 minutes 12 secondes par kilomètre"
+        let paceMin = paceSPerKm / 60
+        let paceSec = paceSPerKm % 60
+        let paceText: String
+        if paceSPerKm == 0 {
+            paceText = ""
+        } else if paceSec == 0 {
+            paceText = ", allure \(paceMin) minutes par kilomètre"
+        } else {
+            paceText = ", allure \(paceMin) minutes \(paceSec) secondes par kilomètre"
+        }
+        let text = "Kilomètre \(km)\(paceText)"
+
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "fr-FR")
+        utterance.rate = 0.5  // un peu plus lent que default (0.5 = naturel)
+        utterance.volume = 1.0
+        utterance.preUtteranceDelay = 0.2
+        synth.speak(utterance)
+    }
+
+    @objc func setAudioCuesEnabled(_ call: CAPPluginCall) {
+        let enabled = call.getBool("enabled") ?? true
+        audioCuesEnabled = enabled
+        call.resolve(["enabled": enabled])
+    }
+
+    // MARK: - Indoor mode (#4 — tapis de course, distance via pédomètre)
+
+    @objc func setIndoorMode(_ call: CAPPluginCall) {
+        let indoor = call.getBool("indoor") ?? false
+        isIndoorMode = indoor
+        // Si indoor, on arrête la consommation GPS pour la batterie
+        DispatchQueue.main.async { [weak self] in
+            if indoor {
+                self?.locationManager?.stopUpdatingLocation()
+            } else if self?.isRunning == true && self?.isPaused == false {
+                self?.locationManager?.startUpdatingLocation()
+            }
+        }
+        call.resolve(["indoor": indoor])
+    }
+
+    // MARK: - VO2max + HRV (#2 + #5 — read latest from HealthKit)
+    //
+    // iOS calcule automatiquement le VO2max si l'user a un Apple Watch
+    // (workouts + HR). On lit le dernier sample. Idem HRV (SDNN).
+
+    @objc func getVO2Max(_ call: CAPPluginCall) {
+        ensureHealthStore()
+        guard let hs = healthStore,
+              let type = HKQuantityType.quantityType(forIdentifier: .vo2Max) else {
+            call.resolve(["available": false]); return
+        }
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
+            guard let sample = samples?.first as? HKQuantitySample else {
+                call.resolve(["available": false]); return
+            }
+            let unit = HKUnit(from: "ml/kg*min")
+            let value = sample.quantity.doubleValue(for: unit)
+            call.resolve([
+                "available": true,
+                "value": value,
+                "date": sample.endDate.timeIntervalSince1970,
+            ])
+        }
+        hs.execute(query)
+    }
+
+    @objc func getLatestHRV(_ call: CAPPluginCall) {
+        ensureHealthStore()
+        guard let hs = healthStore,
+              let type = HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN) else {
+            call.resolve(["available": false]); return
+        }
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
+            guard let sample = samples?.first as? HKQuantitySample else {
+                call.resolve(["available": false]); return
+            }
+            // HRV SDNN unit = milliseconds
+            let value = sample.quantity.doubleValue(for: HKUnit.secondUnit(with: .milli))
+            call.resolve([
+                "available": true,
+                "value": value,
+                "date": sample.endDate.timeIntervalSince1970,
+            ])
+        }
+        hs.execute(query)
     }
 }
