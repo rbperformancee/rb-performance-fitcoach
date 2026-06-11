@@ -36,12 +36,13 @@ import { toast } from "./Toast";
 import { isNative } from "../lib/native";
 import haptic from "../lib/haptic";
 // RunShareStory retiré : share simplifié à text-copy + GPX seulement.
+import { generateRunStory } from "../lib/runStoryGen";
 import { saveRunWorkout, requestWorkoutPermission, requestHeartRatePermission, startHeartRateStream } from "../lib/health";
 import runActivity from "../lib/runLiveActivity";
 import { parseTarget, compareToTarget } from "../lib/runTarget";
 import { fetchCurrentWeather } from "../lib/weather";
 import { buildSchedule, nextPhase as nextIntervalPhase, parseSegment, announceText } from "../lib/runIntervals";
-// Camera retiré : plus de selfie finish.
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 
 import { todayLocal } from "../lib/date";
 const G = "#02d1ba";
@@ -825,6 +826,99 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
             </svg>
             Copier les stats (texte)
           </button>
+          {/* Story share : 2 layouts JPEG (V1 RB top-left + date right · V2
+              date top center + RB mini gauche). Camera → canvas → share
+              sheet iOS → l'athlète colle direct sur Insta. */}
+          {(["v1", "v2"]).map((variant) => (
+            <button
+              key={variant}
+              style={{
+                ...S.photoFinishBtn,
+                marginTop: 10,
+                background: "rgba(2,209,186,0.08)",
+                border: "1px solid rgba(2,209,186,0.25)",
+                color: G,
+              }}
+              onClick={async () => {
+                try {
+                  haptic.medium();
+                  // 1. Photo : caméra native ou input file (PWA)
+                  let photoDataUrl = null;
+                  if (isNative()) {
+                    const photo = await Camera.getPhoto({
+                      quality: 85,
+                      allowEditing: false,
+                      resultType: CameraResultType.DataUrl,
+                      source: CameraSource.Prompt, // laisse le choix camera vs gallery
+                    });
+                    photoDataUrl = photo?.dataUrl;
+                  } else {
+                    photoDataUrl = await new Promise((resolve) => {
+                      const input = document.createElement("input");
+                      input.type = "file"; input.accept = "image/*";
+                      input.onchange = (e) => {
+                        const f = e.target.files?.[0]; if (!f) return resolve(null);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => resolve(ev.target?.result || null);
+                        reader.readAsDataURL(f);
+                      };
+                      input.click();
+                    });
+                  }
+                  if (!photoDataUrl) return;
+                  // 2. Génère le JPEG
+                  const jpegDataUrl = await generateRunStory({
+                    photoDataUrl,
+                    distance: formatDistance(summary.distanceM),
+                    duration: formatDuration(summary.durationS),
+                    pace: `${formatPace(summary.paceSPerKm)} /km`,
+                    date: new Date(),
+                    locality: "",
+                    variant,
+                  });
+                  // 3. Partage — native = Filesystem + Share, PWA = Web Share API ou download
+                  const base64 = jpegDataUrl.split(",")[1];
+                  if (isNative()) {
+                    const ts = Date.now();
+                    const fileName = `RBPerform-story-${variant}-${ts}.jpg`;
+                    const written = await Filesystem.writeFile({
+                      path: fileName, data: base64,
+                      directory: Directory.Cache,
+                    });
+                    await Share.share({
+                      title: "Mon run RB Perform",
+                      url: written.uri,
+                      dialogTitle: "Partager la story",
+                    });
+                  } else {
+                    // PWA fallback : Web Share API si dispo, sinon download direct
+                    try {
+                      const blob = await (await fetch(jpegDataUrl)).blob();
+                      const file = new File([blob], `RBPerform-story-${variant}.jpg`, { type: "image/jpeg" });
+                      if (navigator.canShare?.({ files: [file] })) {
+                        await navigator.share({ files: [file], title: "Mon run RB Perform" });
+                      } else {
+                        const a = document.createElement("a");
+                        a.href = jpegDataUrl;
+                        a.download = `RBPerform-story-${variant}.jpg`;
+                        a.click();
+                      }
+                    } catch (_) {}
+                  }
+                  haptic.success();
+                } catch (e) {
+                  toast.error("Story non générée");
+                }
+              }}
+            >
+              <svg viewBox="0 0 24 24" width={17} height={17} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="M21 15l-5-5L5 21" />
+              </svg>
+              Story photo · {variant === "v1" ? "V1 (brand top)" : "V2 (brand bas)"}
+            </button>
+          ))}
           {/* Export GPX — uniquement sur native, dispo pour upload Strava /
               Garmin Connect. Écrit le fichier dans le cache app puis ouvre
               la sheet de partage native iOS. */}
