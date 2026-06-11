@@ -235,6 +235,67 @@ export async function getStats() {
   });
 }
 
+// VO2max le plus récent depuis HealthKit. Métrique cardio premium.
+export async function getVO2Max() {
+  if (!isNative()) return { available: false };
+  try {
+    const p = plugin();
+    if (!p) return { available: false };
+    return await p.getVO2Max();
+  } catch (_) { return { available: false }; }
+}
+
+// HRV SDNN — récup le dernier sample (lié à la qualité de récup).
+export async function getLatestHRV() {
+  if (!isNative()) return { available: false };
+  try {
+    const p = plugin();
+    if (!p) return { available: false };
+    return await p.getLatestHRV();
+  } catch (_) { return { available: false }; }
+}
+
+// Stride length moyenne (foulée) sur dernière heure — métrique pro de forme.
+export async function getStrideLength() {
+  if (!isNative()) return { available: false };
+  try {
+    const p = plugin();
+    if (!p) return { available: false };
+    return await p.getStrideLength();
+  } catch (_) { return { available: false }; }
+}
+
+// Active/désactive les annonces vocales km franchi (TTS).
+export async function setAudioCuesEnabled(enabled) {
+  if (!isNative()) return;
+  try {
+    const p = plugin();
+    if (!p) return;
+    await p.setAudioCuesEnabled({ enabled });
+  } catch (_) {}
+}
+
+// Active mode indoor (treadmill) — utilise CMPedometer au lieu du GPS.
+export async function setIndoorMode(indoor) {
+  if (!isNative()) return;
+  try {
+    const p = plugin();
+    if (!p) return;
+    await p.setIndoorMode({ indoor });
+  } catch (_) {}
+}
+
+// Export GPX 1.1 du parcours collecté (Strava/Garmin compatible).
+// Retourne { gpx: "<xml>" } à partager via Capacitor Share.
+export async function exportGPX(opts) {
+  if (!isNative()) return null;
+  try {
+    const p = plugin();
+    if (!p) return { available: false };
+    return await p.exportGPX(opts || { name: "RB Perform Run" });
+  } catch (_) { return null; }
+}
+
 export function onLocation(cb) {
   return isNative() ? addListenerNative("locationUpdate", cb) : addListenerWeb("locationUpdate", cb);
 }
@@ -246,6 +307,20 @@ export function onAutoPause(cb) {
 }
 export function onCadence(cb) {
   return isNative() ? addListenerNative("cadenceUpdate", cb) : addListenerWeb("cadenceUpdate", cb);
+}
+// GPS quality live (strong | good | medium | weak) — émis à chaque update.
+// Permet à l'UI d'afficher l'overlay "GPS · sat" en temps réel.
+export function onGpsQuality(cb) {
+  return isNative() ? addListenerNative("gpsQuality", cb) : (() => {});
+}
+// Activity recognition (running/walking/automotive) — émis quand CMMotion change.
+export function onMotionActivity(cb) {
+  return isNative() ? addListenerNative("motionActivityChanged", cb) : (() => {});
+}
+// Warning : système détecte conduite (voiture/vélo rapide) — utile pour
+// auto-pause ou alerte "tu sembles être en voiture, on stop le run ?".
+export function onAutomotiveDetected(cb) {
+  return isNative() ? addListenerNative("motionAutomotiveDetected", cb) : (() => {});
 }
 
 // Helper formatting

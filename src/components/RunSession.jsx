@@ -25,6 +25,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import {
   requestPermission, startRun, pauseRun, resumeRun, stopRun,
   onLocation, onKm, onAutoPause, onCadence,
+  onGpsQuality, onAutomotiveDetected,
   formatPace, formatDuration, formatDistance,
 } from "../lib/runTracker";
 import { supabase } from "../lib/supabase";
@@ -118,6 +119,7 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   const [duration, setDuration] = useState(0); // s (computed locally from startedAt)
   const [pace, setPace] = useState(0); // s/km
   const [cadence, setCadence] = useState(0); // spm
+  const [gpsQuality, setGpsQuality] = useState(null); // strong | good | medium | weak
   const [splits, setSplits] = useState([]); // [{km, time, pace}]
   const [autoPaused, setAutoPaused] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -286,7 +288,10 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
       onKm((d) => {
         haptic.success();
         setSplits((prev) => [...prev, { km: d.km, time: d.splitDurationS, pace: d.paceSPerKm }]);
-        if (audioCues) speakKmAudio(d.km, d.paceSPerKm);
+        // Sur native, le plugin Swift parle déjà via AVSpeechSynthesizer
+        // (qui survit au lock screen, contrairement au Web Speech). On évite
+        // le double-TTS en ne parlant côté JS qu'en web.
+        if (audioCues && !isNative()) speakKmAudio(d.km, d.paceSPerKm);
       }),
       onAutoPause(() => {
         setAutoPaused(true);
@@ -295,6 +300,12 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
       }),
       onCadence((d) => {
         setCadence(d.stepsPerMinute || 0);
+      }),
+      onGpsQuality((d) => {
+        setGpsQuality(d.quality || null);
+      }),
+      onAutomotiveDetected(() => {
+        toast.info("Système détecte un déplacement motorisé — vérifie ton run");
       }),
     ];
   }, [askPermission, audioCues]);
@@ -753,6 +764,35 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   return (
     <div style={S.wrap}>
       <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 12px) 24px 24px", display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+        {/* GPS quality badge live — utile en course pour vérifier que le signal
+            est fiable (tunnel, ville dense). Affiché que en native + actif. */}
+        {gpsQuality && phase === "active" && (
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            alignSelf: "flex-start",
+            padding: "4px 9px",
+            borderRadius: 100,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            fontSize: 9,
+            letterSpacing: 1.5,
+            fontWeight: 800,
+            textTransform: "uppercase",
+            color: gpsQuality === "strong" ? "#02d1ba"
+              : gpsQuality === "good" ? "rgba(2,209,186,0.85)"
+              : gpsQuality === "medium" ? "#fbbf24" : "#ef4444",
+            marginBottom: 10,
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: "currentColor",
+              boxShadow: "0 0 6px currentColor",
+            }} />
+            GPS · {gpsQuality}
+          </div>
+        )}
         {autoPaused && (
           <div style={S.autoPauseBanner}>⏸ Auto-pause (tu sembles à l'arrêt)</div>
         )}
