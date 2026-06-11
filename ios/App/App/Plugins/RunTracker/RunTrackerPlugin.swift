@@ -155,6 +155,13 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
 
             self.locationManager?.startUpdatingLocation()
             self.startPedometer()
+
+            // Empêche l'auto-lock pendant le run : l'écran reste allumé tant
+            // que l'utilisateur court (chronos, allure, distance visibles en
+            // continu). Reset à false dans stop() — sans ça, l'écran resterait
+            // ON indéfiniment et drain la batterie même hors run.
+            UIApplication.shared.isIdleTimerDisabled = true
+
             call.resolve(["startedAt": self.startedAt?.timeIntervalSince1970 ?? 0])
         }
     }
@@ -195,6 +202,9 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
             guard let self = self else { return }
             self.locationManager?.stopUpdatingLocation()
             self.pedometer?.stopUpdates()
+
+            // Réactive l'auto-lock — fin du run, l'écran peut se verrouiller.
+            UIApplication.shared.isIdleTimerDisabled = false
 
             let endedAt = Date()
             let totalDuration = (self.startedAt.map { endedAt.timeIntervalSince($0) } ?? 0)
