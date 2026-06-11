@@ -26,8 +26,11 @@ import {
   requestPermission, startRun, pauseRun, resumeRun, stopRun,
   onLocation, onKm, onAutoPause, onCadence,
   onGpsQuality, onAutomotiveDetected,
+  exportGPX, getStrideLength, setIndoorMode,
   formatPace, formatDuration, formatDistance,
 } from "../lib/runTracker";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 import { supabase } from "../lib/supabase";
 import { toast } from "./Toast";
 import { isNative } from "../lib/native";
@@ -120,6 +123,8 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
   const [pace, setPace] = useState(0); // s/km
   const [cadence, setCadence] = useState(0); // spm
   const [gpsQuality, setGpsQuality] = useState(null); // strong | good | medium | weak
+  const [strideM, setStrideM] = useState(null); // foulée moyenne mètres
+  const [indoorMode, setIndoorModeState] = useState(false); // treadmill
   const [splits, setSplits] = useState([]); // [{km, time, pace}]
   const [autoPaused, setAutoPaused] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -355,6 +360,13 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
     setSummary(s);
     setPhase("done");
 
+    // Stride length post-run — CMPedometer queryPedometerData. Métrique
+    // affichée dans le summary à côté de cadence. Best-effort, silent fail.
+    try {
+      const stride = await getStrideLength();
+      if (stride?.available && stride?.strideM) setStrideM(stride.strideM);
+    } catch (_) {}
+
     // Live Activity : fermeture avec auto-dismiss 2s
     runActivity.end();
 
@@ -588,6 +600,33 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
                 Distance, allure et splits trackés en temps réel.
                 {isNative() ? " Marche en arrière-plan." : " (Mode web : reste sur cette page pendant la course.)"}
               </div>
+              {/* Toggle Indoor (treadmill). En mode indoor, on bascule sur
+                  CMPedometer + stride length plutôt que GPS, parce que
+                  sur tapis le GPS reste à 0. Seulement natif. */}
+              {isNative() && (
+                <button
+                  style={{
+                    marginTop: 16, marginBottom: 8,
+                    padding: "10px 16px",
+                    borderRadius: 100,
+                    border: indoorMode ? "1px solid rgba(2,209,186,0.5)" : "1px solid rgba(255,255,255,0.12)",
+                    background: indoorMode ? "rgba(2,209,186,0.1)" : "rgba(255,255,255,0.04)",
+                    color: indoorMode ? G : "rgba(255,255,255,0.7)",
+                    fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    cursor: "pointer",
+                  }}
+                  onClick={async () => {
+                    haptic.medium();
+                    const next = !indoorMode;
+                    setIndoorModeState(next);
+                    try { await setIndoorMode(next); } catch (_) {}
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>{indoorMode ? "✓" : "○"}</span>
+                  Indoor (tapis)
+                </button>
+              )}
               <button style={S.bigBtn(G)} onClick={start} disabled={phase === "requesting"}>
                 {phase === "requesting" ? "Démarrage..." : "Démarrer ma course"}
               </button>
@@ -689,6 +728,26 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
             </svg>
             {finishPhoto ? "Reprendre le selfie" : "Selfie finish"}
           </button>
+          {/* Métrique stride length (foulée). Indicateur pro de forme :
+              ~1.20m amateur, 1.50m+ élite. Affichée seulement si CMPedometer
+              a au moins 50 pas pour calculer. */}
+          {strideM && (
+            <div style={{
+              width: "100%", maxWidth: 420, marginTop: 18,
+              display: "flex", justifyContent: "space-between",
+              padding: "12px 16px",
+              background: "rgba(2,209,186,0.06)",
+              border: "1px solid rgba(2,209,186,0.2)",
+              borderRadius: 14,
+            }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", letterSpacing: 1.5, fontWeight: 700, textTransform: "uppercase" }}>
+                Foulée moyenne
+              </div>
+              <div style={{ fontSize: 14, color: G, fontWeight: 800 }}>
+                {strideM.toFixed(2)} m
+              </div>
+            </div>
+          )}
           {/* Copier stats format texte — pour Insta story où l'athlète colle
               juste les stats sur sa propre image (sans passer par l'éditeur
               Strava-style RunShareStory). 1 tap = clipboard ready. */}
@@ -721,6 +780,52 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
             </svg>
             Copier les stats (texte)
           </button>
+          {/* Export GPX — uniquement sur native, dispo pour upload Strava /
+              Garmin Connect. Écrit le fichier dans le cache app puis ouvre
+              la sheet de partage native iOS. */}
+          {isNative() && (
+            <button
+              style={{
+                ...S.photoFinishBtn,
+                marginTop: 10,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px dashed rgba(255,255,255,0.18)",
+                color: "rgba(255,255,255,0.85)",
+              }}
+              onClick={async () => {
+                try {
+                  haptic.medium();
+                  const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+                  const result = await exportGPX({ name: `RB Perform ${ts}` });
+                  const gpx = result?.gpx;
+                  if (!gpx) { toast.error("Pas de trace GPS à exporter"); return; }
+                  const fileName = `RBPerform-${ts}.gpx`;
+                  const written = await Filesystem.writeFile({
+                    path: fileName,
+                    data: gpx,
+                    directory: Directory.Cache,
+                    encoding: Encoding.UTF8,
+                  });
+                  await Share.share({
+                    title: "Course RB Perform",
+                    text: "Trace GPX à importer dans Strava ou Garmin Connect",
+                    url: written.uri,
+                    dialogTitle: "Partager le GPX",
+                  });
+                  haptic.success();
+                } catch (e) {
+                  toast.error("Export GPX impossible");
+                }
+              }}
+            >
+              <svg viewBox="0 0 24 24" width={17} height={17} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 3v12" />
+                <path d="M7 10l5 5 5-5" />
+                <path d="M5 21h14" />
+              </svg>
+              Exporter en GPX (Strava / Garmin)
+            </button>
+          )}
           {/* Share + Retour : SVG icons, full-width sur mobile, padding garanti */}
           <div style={{ display: "flex", gap: 10, marginTop: 14, width: "100%", maxWidth: 420 }}>
             <button
