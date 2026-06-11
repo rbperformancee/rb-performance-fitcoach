@@ -47,6 +47,8 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
         CAPPluginMethod(name: "getLatestHRV", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setAudioCuesEnabled", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setIndoorMode", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "exportGPX", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getStrideLength", returnType: CAPPluginReturnPromise),
     ]
 
     // MARK: - Stored state
@@ -109,6 +111,21 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
     // ─── Indoor mode : skip GPS, distance via CMPedometer (steps × stride)
     // Utile sur tapis de course où le GPS donne 0 ou bug.
     private var isIndoorMode: Bool = false
+
+    // ─── Stride length detection : CMPedometer expose averageActivePace
+    // qui permet de calculer la foulée moyenne. Indicateur pro recherché
+    // par les coureurs sérieux (~1.20m amateur, ~1.50m+ élite).
+    private var lastKnownStrideLengthM: Double = 0
+
+    // ─── Kalman filter GPS : maintient un état lissé (position + variance)
+    // pour rejeter les sauts aberrants et lisser les coordonnées sous
+    // tunnel/arbres. Implémentation 2D simple (lat/lng séparés). État =
+    // [lat, lng], variance = horizontalAccuracy².
+    private var kalmanLat: Double?
+    private var kalmanLng: Double?
+    private var kalmanVariance: Double = 0
+    private let kalmanProcessNoise: Double = 1.0  // m²/sec — bruit modèle
+    private var lastKalmanUpdateAt: Date?
 
     // MARK: - Permission
 
@@ -340,6 +357,7 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
             self.locationManager?.startUpdatingLocation()
             self.startPedometer()
             self.startMotionActivityDetection()
+            self.resetKalman()  // état clean pour ce run
 
             // CMAltimeter (baromètre) + HKWorkoutBuilder (Apple Health).
             // Fire-and-forget : si user refuse permissions HealthKit, le run
@@ -473,9 +491,25 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
             // (28 km/h). Au-dessus = bug, on drop.
             if loc.speed > maxRunSpeedMps { continue }
 
+            // Lissage Kalman pour la position publiée et le calcul distance.
+            // Réduit l'impact des sauts GPS sous tunnel/arbres → distance
+            // plus précise. On crée une CLLocation "smoothed" avec les coords
+            // filtrées pour le calcul distance, mais on garde l'altitude /
+            // accuracy d'origine.
+            let (smoothedLat, smoothedLng) = updateKalman(loc: loc)
+            let smoothedLoc = CLLocation(
+                coordinate: CLLocationCoordinate2D(latitude: smoothedLat, longitude: smoothedLng),
+                altitude: loc.altitude,
+                horizontalAccuracy: loc.horizontalAccuracy,
+                verticalAccuracy: loc.verticalAccuracy,
+                course: loc.course,
+                speed: loc.speed,
+                timestamp: loc.timestamp
+            )
+
             // Cumul distance via Haversine (CLLocation.distance utilise WGS84, suffit)
             if let prev = lastNonPausedLocation {
-                let delta = loc.distance(from: prev)
+                let delta = smoothedLoc.distance(from: prev)
                 let dt = loc.timestamp.timeIntervalSince(prev.timestamp)
                 // Filtre les sauts GPS aberrants : > 50m d'un coup OU
                 // vitesse implicite (delta/dt) > maxRunSpeedMps (= delta
@@ -485,7 +519,7 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
                     totalDistance += delta
                 }
             }
-            lastNonPausedLocation = loc
+            lastNonPausedLocation = smoothedLoc
             lastLocation = loc
 
             // ── Route HealthKit : on collecte les points GPS pour le replay
@@ -727,5 +761,143 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
             ])
         }
         hs.execute(query)
+    }
+
+    // MARK: - Stride length (#9 — foulée moyenne via CMPedometer)
+    //
+    // CMPedometer expose la distance estimée à partir des steps + un modèle
+    // interne de stride length (calibré sur l'historique de l'utilisateur).
+    // On calcule la foulée moyenne = distance_pedometer / steps.
+
+    @objc func getStrideLength(_ call: CAPPluginCall) {
+        guard CMPedometer.isStepCountingAvailable() else {
+            call.resolve(["available": false]); return
+        }
+        let pedometer = CMPedometer()
+        // Stride length actuel : on prend la dernière heure pour avoir un
+        // échantillon représentatif (au moins 100 pas idéalement).
+        let oneHourAgo = Date().addingTimeInterval(-3600)
+        pedometer.queryPedometerData(from: oneHourAgo, to: Date()) { data, _ in
+            guard let data = data,
+                  let dist = data.distance?.doubleValue,
+                  data.numberOfSteps.intValue > 50, dist > 0 else {
+                call.resolve(["available": false]); return
+            }
+            let strideM = dist / data.numberOfSteps.doubleValue
+            self.lastKnownStrideLengthM = strideM
+            call.resolve([
+                "available": true,
+                "strideM": strideM,
+                "stepsSample": data.numberOfSteps.intValue,
+            ])
+        }
+    }
+
+    // MARK: - Kalman filter GPS (#10 — lissage state-of-the-art)
+    //
+    // Filtre Kalman 1D simple appliqué à chaque coordonnée (lat, lng).
+    // Maintient un état lissé + variance. Mis à jour à chaque GPS update.
+    //
+    // Formule (1D, mesure scalaire) :
+    //   variance += processNoise × dt
+    //   gain = variance / (variance + measurementVariance)
+    //   estimate = estimate + gain × (measurement - estimate)
+    //   variance = (1 - gain) × variance
+    //
+    // En 2D on l'applique sur lat et lng séparément (couplage faible OK
+    // pour des coords GPS proches).
+
+    /// Met à jour le filtre Kalman avec une nouvelle observation GPS.
+    /// Retourne (smoothedLat, smoothedLng) — à utiliser à la place de loc.coordinate.
+    private func updateKalman(loc: CLLocation) -> (Double, Double) {
+        let measurementVariance = max(loc.horizontalAccuracy * loc.horizontalAccuracy, 1.0)
+        let now = loc.timestamp
+
+        // Première observation : initialise l'état
+        guard let prevLat = kalmanLat, let prevLng = kalmanLng else {
+            kalmanLat = loc.coordinate.latitude
+            kalmanLng = loc.coordinate.longitude
+            kalmanVariance = measurementVariance
+            lastKalmanUpdateAt = now
+            return (loc.coordinate.latitude, loc.coordinate.longitude)
+        }
+
+        // dt depuis dernière update — on inflate la variance
+        let dt = lastKalmanUpdateAt.map { now.timeIntervalSince($0) } ?? 1.0
+        kalmanVariance += kalmanProcessNoise * dt
+
+        // Gain Kalman
+        let gain = kalmanVariance / (kalmanVariance + measurementVariance)
+
+        // Update lat
+        let smoothedLat = prevLat + gain * (loc.coordinate.latitude - prevLat)
+        // Update lng
+        let smoothedLng = prevLng + gain * (loc.coordinate.longitude - prevLng)
+
+        // Update variance
+        kalmanVariance = (1.0 - gain) * kalmanVariance
+
+        kalmanLat = smoothedLat
+        kalmanLng = smoothedLng
+        lastKalmanUpdateAt = now
+
+        return (smoothedLat, smoothedLng)
+    }
+
+    /// Reset le filtre Kalman au début/fin d'un run.
+    private func resetKalman() {
+        kalmanLat = nil
+        kalmanLng = nil
+        kalmanVariance = 0
+        lastKalmanUpdateAt = nil
+    }
+
+    // MARK: - GPX export (#11 — export du parcours au format Strava-compatible)
+    //
+    // Génère un fichier GPX du parcours pour partager sur Strava/Garmin/etc.
+    // Format GPX 1.1 standard. Retourne le contenu XML — le JS s'occupe
+    // de l'écrire sur disque + share sheet.
+
+    @objc func exportGPX(_ call: CAPPluginCall) {
+        guard !collectedRouteLocations.isEmpty else {
+            call.reject("No route data — run a session first or in progress"); return
+        }
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        var gpx = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <gpx version="1.1" creator="RB Perform"
+             xmlns="http://www.topografix.com/GPX/1/1"
+             xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
+          <metadata>
+            <name>RB Perform Run</name>
+            <time>\(isoFormatter.string(from: startedAt ?? Date()))</time>
+          </metadata>
+          <trk>
+            <name>Run</name>
+            <type>running</type>
+            <trkseg>
+
+        """
+        for loc in collectedRouteLocations {
+            let timeStr = isoFormatter.string(from: loc.timestamp)
+            gpx += """
+                  <trkpt lat="\(loc.coordinate.latitude)" lon="\(loc.coordinate.longitude)">
+                    <ele>\(loc.altitude)</ele>
+                    <time>\(timeStr)</time>
+                  </trkpt>
+
+            """
+        }
+        gpx += """
+            </trkseg>
+          </trk>
+        </gpx>
+        """
+        call.resolve([
+            "gpx": gpx,
+            "pointsCount": collectedRouteLocations.count,
+        ])
     }
 }
