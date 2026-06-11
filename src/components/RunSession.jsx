@@ -518,6 +518,57 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
     };
   }, []);
 
+  // ── Resume : si le plugin tournait déjà (app revenue de background killed),
+  // on attache la session existante au lieu de partir d'un écran "idle". On
+  // tire les stats courantes du plugin + on s'abonne aux listeners directement,
+  // sans repasser par askPermission/start (qui resetterait le run). ──
+  useEffect(() => {
+    if (phase !== "idle") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getStats } = await import("../lib/runTracker");
+        const stats = await getStats();
+        if (cancelled || !stats?.isRunning) return;
+        // Reconstitue l'état local depuis le plugin.
+        startedAtRef.current = stats.startedAtMs || Date.now() - (stats.durationS || 0) * 1000;
+        pausedTotalRef.current = (stats.pausedDurationS || 0) * 1000;
+        setDistance(stats.distanceM || 0);
+        distanceRef.current = stats.distanceM || 0;
+        setDuration(stats.durationS || 0);
+        if (stats.paceSPerKm) { setPace(stats.paceSPerKm); paceRef.current = stats.paceSPerKm; }
+        setPhase(stats.isPaused ? "paused" : "active");
+        // Réabonne les listeners au plugin (best effort — duplique pas dans
+        // unsubsRef pour éviter double-handler si start() avait été déjà
+        // câblé sur cette instance).
+        if (unsubsRef.current.length === 0) {
+          unsubsRef.current = [
+            onLocation((d) => {
+              const distM = d.distanceM || 0;
+              setDistance(distM); distanceRef.current = distM;
+              setRoute((prev) => [...prev, { lat: d.lat, lng: d.lng, t: d.t, alt: d.alt }]);
+            }),
+            onKm((d) => {
+              haptic.success();
+              setSplits((prev) => [...prev, { km: d.km, time: d.splitDurationS, pace: d.paceSPerKm }]);
+            }),
+            onCadence((d) => setCadence(d.stepsPerMinute || 0)),
+            onGpsQuality((d) => setGpsQuality(d.quality || null)),
+          ];
+        }
+        // Re-démarre le tick local pour rafraîchir la durée.
+        if (!tickIntervalRef.current) {
+          tickIntervalRef.current = setInterval(() => {
+            if (isPausedRef.current) return;
+            const dur = (Date.now() - startedAtRef.current - pausedTotalRef.current) / 1000;
+            setDuration(Math.max(0, Math.round(dur)));
+          }, 1000);
+        }
+      } catch (_) { /* silent — pas de session à reprendre */ }
+    })();
+    return () => { cancelled = true; };
+  }, [phase]);
+
   // ── Comparaison verdict pour done screen ──
   const verdict = useMemo(() => {
     if (!summary || !target.hasTarget) return null;

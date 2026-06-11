@@ -41,6 +41,21 @@ export default function MovePage({ client, appData }) {
   const [weekRuns, setWeekRuns] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [showRunSession, setShowRunSession] = useState(false);
+  // Auto-reprise du run en cours : si l'app a été tuée pendant que le tracker
+  // GPS tournait en background (notif Live Activity tap), getStats() renvoie
+  // isRunning=true → on rouvre RunSession en transparent pour l'athlète au
+  // lieu de le laisser sur un écran noir / dashboard incohérent.
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getStats } = await import("../lib/runTracker");
+        const stats = await getStats();
+        if (!cancelled && stats?.isRunning) setShowRunSession(true);
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
   const [runSessionTarget, setRunSessionTarget] = useState(null); // null = free run, sinon run prescrit
   const [logChoiceFor, setLogChoiceFor] = useState(null);          // run prescrit en attente de choix GPS/Manuel
   const [loading, setLoading] = useState(!appData || appData.loading);

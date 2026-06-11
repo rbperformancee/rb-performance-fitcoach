@@ -646,19 +646,43 @@ function AppInner() {
   // Splash natif iOS : on hide le PNG (devenu plain #050505 = invisible)
   // au 1er paint. La phase visible = uniquement le HTML #splash animé
   // (stroke éclair qui se trace + fill cyan + texte RB PERFORM + barre).
+  //
+  // CRITIQUE — fix écran noir après tap Live Activity (Rayan, 11 juin 2026) :
+  // quand l'app foreground depuis le lock screen (tap Live Activity pendant
+  // un run en background), iOS peut réafficher le splash natif. Notre hide()
+  // ne tournait qu'au premier mount → resume = splash bloqué = écran noir.
+  // On installe un listener `appStateChange` qui réappelle hide() + re-dispatch
+  // 'rb-app-ready' à chaque retour foreground.
   React.useEffect(() => {
     if (typeof window === "undefined" || !window.Capacitor?.isNativePlatform?.()) return;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(async () => {
-        try {
-          const mod = await import("@capacitor/splash-screen");
-          await mod.SplashScreen.hide({ fadeOutDuration: 0 });
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.warn("[splash] hide failed:", e);
-        }
-      });
-    });
+    let unmounted = false;
+    let appListener = null;
+    const hideSplash = async () => {
+      try {
+        const mod = await import("@capacitor/splash-screen");
+        await mod.SplashScreen.hide({ fadeOutDuration: 0 });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("[splash] hide failed:", e);
+      }
+      try { window.dispatchEvent(new CustomEvent("rb-app-ready")); } catch (_) {}
+    };
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (!unmounted) hideSplash(); }));
+    (async () => {
+      try {
+        const { App: CapApp } = await import("@capacitor/app").catch(() => ({ App: null }));
+        if (!CapApp || unmounted) return;
+        appListener = await CapApp.addListener("appStateChange", (state) => {
+          if (state?.isActive) hideSplash();
+        });
+        // resume aussi quand l'app revient via une autre source (notif, URL)
+        await CapApp.addListener("resume", () => hideSplash()).catch(() => {});
+      } catch (_) {}
+    })();
+    return () => {
+      unmounted = true;
+      try { appListener?.remove(); } catch (_) {}
+    };
   }, []);
 
   // Quand l'auth est chargée, on signale au HTML #splash qu'il peut fade.

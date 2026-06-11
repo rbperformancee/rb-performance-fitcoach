@@ -456,6 +456,11 @@ public class RunTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDel
             "durationS": Int(totalDuration),
             "isRunning": isRunning,
             "isPaused": isPaused,
+            // Reprise app : timestamps requis par JS pour réattacher la session
+            // sans repartir d'un "idle". Sans ces deux champs, le RunSession ne
+            // peut pas reconstituer la durée si l'app est tuée puis revient.
+            "startedAtMs": (startedAt?.timeIntervalSince1970 ?? 0) * 1000,
+            "pausedDurationS": Int(totalPausedDuration),
             // Baromètre — dénivelé live (D+ / D- en mètres)
             "elevationGainM": Int(elevationGainM),
             "elevationLossM": Int(elevationLossM),
