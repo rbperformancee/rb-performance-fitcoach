@@ -924,13 +924,22 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       // Hydrate le state pour computeTodaysSession + weekProgress
       setDoneSet(completedNewFormat);
 
-      // Priorité 1 : si on a un calendrier ET qu'aujourd'hui est un training day → on y va
+      // Priorité 0 : si la séance localStorage est non-complétée ET valide
+      //   → on respecte le dernier choix de l'athlète (jeudi reste jeudi
+      //   quand l'app rouvre, plutôt que de tomber sur Lundi par défaut).
+      // Priorité 1 : si aujourd'hui est un training day → on y va
       // Priorité 2 : 1re séance non-complétée
       let target = null;
-      if (todaysSession?.type === "session") {
+      const weeks = programme?.weeks || [];
+      const currentValid =
+        activeWeek >= 0 && activeWeek < weeks.length &&
+        activeSession >= 0 && activeSession < (weeks[activeWeek]?.sessions?.length || 0);
+      const currentDone = currentValid && completed.has(`${activeWeek}_${activeSession}`);
+      if (currentValid && !currentDone) {
+        target = { w: activeWeek, s: activeSession };
+      } else if (todaysSession?.type === "session") {
         target = { w: todaysSession.week, s: todaysSession.session };
       } else {
-        const weeks = programme?.weeks || [];
         outer: for (let w = 0; w < weeks.length; w++) {
           const sessions = weeks[w].sessions || [];
           for (let s = 0; s < sessions.length; s++) {

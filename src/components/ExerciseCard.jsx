@@ -172,15 +172,22 @@ function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placehold
   const initR = currentR != null && currentR !== "" ? String(currentR) : (defaultR || "");
   const [w, setW] = useState(initW);
   const [r, setR] = useState(initR);
+  // Mode édition post-validation : l'athlète qui s'est trompé (ex. 10 kg au
+  // lieu de 100) peut tap sur l'icône crayon pour rouvrir les champs et
+  // re-valider avec les bonnes valeurs. saveLog côté parent va remplacer
+  // l'entrée existante au lieu de doublonner.
+  const [editing, setEditing] = useState(false);
   // Reps valides = nombre entier > 0. Évite que le client valide juste après
   // avoir saisi le poids (sans toucher reps), ce qui produisait des lignes
   // en DB avec reps=0 → coach voyait "⚠ reps non saisis" partout.
   const repsValid = /^\d+$/.test(String(r).trim()) && parseInt(r, 10) > 0;
-  const canValidate = !!w && repsValid && !done && isActive;
+  const canValidate = !!w && repsValid && (isActive || (done && editing));
+  const inputsDisabled = done && !editing;
   const validate = () => {
     if (!canValidate) return;
     if (navigator.vibrate) navigator.vibrate([30, 10, 60]);
     onDone(w, r, index);
+    setEditing(false);
   };
 
   // Séries non-actives ni faites : on garde une lisibilité correcte (le user
@@ -198,7 +205,7 @@ function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placehold
           <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.15)" }}>{index + 1}</span>
         )}
       </div>
-      <input type="number" inputMode="decimal" value={w} onChange={e => setW(e.target.value)} disabled={done} placeholder="0"
+      <input type="number" inputMode="decimal" value={w} onChange={e => setW(e.target.value)} disabled={inputsDisabled} placeholder="0"
         onKeyDown={e => e.key === "Enter" && validate()}
         style={{
           background: done ? "rgba(2,209,186,0.06)" : isActive ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
@@ -209,7 +216,7 @@ function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placehold
           width: "100%", boxSizing: "border-box",
         }}
       />
-      <input type="number" inputMode="numeric" pattern="[0-9]*" value={r} onChange={e => setR(e.target.value)} disabled={done} placeholder={placeholder || "—"}
+      <input type="number" inputMode="numeric" pattern="[0-9]*" value={r} onChange={e => setR(e.target.value)} disabled={inputsDisabled} placeholder={placeholder || "—"}
         className="rb-reps-input"
         onKeyDown={e => e.key === "Enter" && validate()}
         style={{
@@ -221,15 +228,42 @@ function SetRow({ index, done, defaultW, defaultR, currentW, currentR, placehold
           width: "100%", boxSizing: "border-box",
         }}
       />
-      <button onClick={validate} disabled={!canValidate && !done} style={{
-        width: 48, height: 48, borderRadius: 14, border: "none", cursor: canValidate || done ? "pointer" : "not-allowed",
-        background: done ? "rgba(2,209,186,0.08)" : canValidate ? GREEN : "rgba(255,255,255,0.03)",
-        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-        transition: "all 0.2s", transform: done ? "scale(0.95)" : "scale(1)",
-      }} title={!canValidate && !done ? (w && !repsValid ? "Saisis le nombre de reps" : "Saisis le poids") : ""}>
-        <svg viewBox="0 0 24 24" fill="none" stroke={done ? GREEN : canValidate ? "#050505" : "rgba(255,255,255,0.08)"} strokeWidth="3" strokeLinecap="round" style={{ width: 16, height: 16 }}>
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
+      <button
+        onClick={() => {
+          // Set validé non-éditable → tap = unlock pour corriger la valeur.
+          // Set validé en édition → tap = sauve la nouvelle valeur.
+          // Set actif non validé → tap = valide normalement.
+          if (done && !editing) { setEditing(true); haptic.light?.(); return; }
+          validate();
+        }}
+        disabled={editing ? !canValidate : (!canValidate && !done)}
+        style={{
+          width: 48, height: 48, borderRadius: 14, border: "none",
+          cursor: (canValidate || done) ? "pointer" : "not-allowed",
+          background: editing
+            ? (canValidate ? GREEN : "rgba(255,255,255,0.03)")
+            : (done ? "rgba(2,209,186,0.08)" : canValidate ? GREEN : "rgba(255,255,255,0.03)"),
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          transition: "all 0.2s", transform: done && !editing ? "scale(0.95)" : "scale(1)",
+        }}
+        title={
+          done && !editing ? "Modifier"
+          : editing ? "Enregistrer"
+          : (w && !repsValid ? "Saisis le nombre de reps" : "Saisis le poids")
+        }
+      >
+        {done && !editing ? (
+          // Crayon : tap pour rouvrir et corriger
+          <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
+          </svg>
+        ) : (
+          // Coche : valide (state non-validé OU validation des nouvelles valeurs en édition)
+          <svg viewBox="0 0 24 24" fill="none" stroke={canValidate ? "#050505" : "rgba(255,255,255,0.08)"} strokeWidth="3" strokeLinecap="round" style={{ width: 16, height: 16 }}>
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        )}
       </button>
     </div>
   );
@@ -554,7 +588,16 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
   }, 0);
 
   const handleSetDone = (weight, reps, idx, segments = null) => {
-    completedSetsRef.current = [...completedSetsRef.current, { weight, reps, index: idx, ...(segments ? { segments } : {}) }];
+    // Édition d'un set déjà validé : remplace l'entrée existante au lieu
+    // d'ajouter un doublon. Permet à l'athlète de corriger une erreur (ex.
+    // tapé 10 kg au lieu de 100) sans repartir de zéro.
+    const existing = completedSetsRef.current.findIndex((s) => s.index === idx);
+    const next = { weight, reps, index: idx, ...(segments ? { segments } : {}) };
+    if (existing >= 0) {
+      completedSetsRef.current = completedSetsRef.current.map((s, i) => i === existing ? next : s);
+    } else {
+      completedSetsRef.current = [...completedSetsRef.current, next];
+    }
     const n = completedSetsRef.current.length;
     setDoneCount(n);
     try {
