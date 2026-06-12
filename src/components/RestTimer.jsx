@@ -115,7 +115,7 @@ function Arc({ radius, progress, size, strokeWidth, color, glowColor }) {
         strokeDashoffset={offset}
         transform={`rotate(-90 ${cx} ${cy})`}
         style={{ transition: "stroke-dashoffset 1s linear, stroke 0.3s" }}
-        filter={`drop-shadow(0 0 8px ${glowColor})`}
+        filter={`drop-shadow(0 0 5px ${glowColor})`}
       />
     </>
   );
@@ -384,9 +384,10 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
     ? "rgba(249,115,22,0.4)"
     : GREEN_GLOW;
 
-  const SIZE = 200;
-  const RADIUS = 82;
-  const STROKE = 6;
+  // B2 design 12/06 — ring plus grand mais glow plus subtil (vs B trop too-much).
+  const SIZE = 280;
+  const RADIUS = 124;
+  const STROKE = 8;
 
   // ── Vue réduite : pastille flottante. Le countdown tourne toujours (les
   // effects ne dépendent pas de `minimized`), le client navigue librement. ──
@@ -440,7 +441,10 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
   return (
     <div onClick={unlockAudio} style={{
       position: "fixed", inset: 0, zIndex: 999,
-      background: "rgba(0,0,0,0.88)",
+      background: `
+        radial-gradient(ellipse at 50% 42%, rgba(2,209,186,0.10) 0%, transparent 55%),
+        rgba(0,0,0,0.92)
+      `,
       WebkitBackdropFilter: "blur(20px)", backdropFilter: "blur(20px)",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
@@ -475,9 +479,9 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
 
       {/* Titre */}
       <div style={{
-        fontSize: 10, fontWeight: 700, letterSpacing: "2.5px",
-        textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
-        marginBottom: 6,
+        fontSize: 10, fontWeight: 800, letterSpacing: "3.5px",
+        textTransform: "uppercase", color: "rgba(2,209,186,0.65)",
+        marginBottom: 8,
       }}>
         {t("rt.section_title")}
       </div>
@@ -485,8 +489,8 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
       {/* Série suivante (repos inter-séries) ou exercice suivant */}
       {headline && (
         <div style={{
-          fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)",
-          marginBottom: 32, maxWidth: 260, textAlign: "center",
+          fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.5)",
+          marginBottom: 28, maxWidth: 260, textAlign: "center",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
           {headline}
@@ -526,17 +530,21 @@ export function RestTimer({ restSeconds, onDismiss, exName, betweenSets, minimiz
             <>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
-                fontSize: timeLeft >= 60 ? 44 : 56,
-                fontWeight: 600,
-                color: ringColor,
-                letterSpacing: "-2px",
+                fontSize: timeLeft >= 60 ? 64 : 76,
+                fontWeight: 300,
+                color: "#fff",
+                letterSpacing: "-4px",
                 lineHeight: 1,
                 transition: "color 0.3s",
               }}>
                 {timeStr}
               </div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "'JetBrains Mono',monospace" }}>
-                {running ? t("rt.running") : t("rt.paused")}
+              <div style={{
+                fontSize: 9, color: "rgba(255,255,255,0.35)",
+                fontWeight: 700, letterSpacing: "3px",
+                textTransform: "uppercase", marginTop: 12,
+              }}>
+                {running ? "restant" : t("rt.paused")}
               </div>
             </>
           )}
