@@ -13,6 +13,8 @@ import { isNative, navigateAfterAuth } from "./lib/native";
 // du chunk → import direct.
 import ClientFirstLoginFlow from "./components/ClientFirstLoginFlow";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import NotifSoftPrompt from "./components/NotifSoftPrompt";
+import OnboardingTour, { shouldShowOnboardingTour } from "./components/OnboardingTour";
 
 // ===== Lazy-loaded : composants charges a la demande =====
 const FuelPage = lazy(() => import("./components/FuelPage"));
@@ -1280,6 +1282,11 @@ function AppInner() {
     );
   }
 
+  // Welcome tour 3 slides juste après baseline — explique l'UX (programme
+  // auto-ouvert, coche pour valider, crayon pour corriger). One-shot persisté
+  // dans localStorage. On le rend ci-dessous en overlay (pas un return early)
+  // pour pas bloquer le rendu du dashboard derrière (smooth transition).
+
   // ── Coach → Dashboard admin ──
   // ── Programme avec date de debut future → Countdown ──
   if (user && !isCoach && cloudProgramme && programmeMeta?.programme_start_date) {
@@ -1771,9 +1778,19 @@ function AppInner() {
           ? {}
           : {width:'100%',position:'relative',background:'#050505',minHeight:'100dvh',overflowX:'hidden'}
         }>
+          {/* Soft-prompt notifs au 2e open de l'app — best practice Apple. */}
+          {!isClientDemo && client?.id && <NotifSoftPrompt clientId={client.id} />}
+          {/* Welcome tour 3 slides one-shot pour les nouveaux clients. */}
+          {!isClientDemo && client?.id && userKind === "client" && shouldShowOnboardingTour() && (
+            <OnboardingTour onClose={() => {
+              // Force re-render pour cacher le tour après marquage en localStorage.
+              setForceShowProgramme((v) => !v);
+            }} />
+          )}
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
           {isClientDemo && <div style={{height:52}} />}
           <Suspense fallback={<PageFallback />}>
+          <ErrorBoundaryApp name={`tab-${page}`}>
             {page === "training" ? (
               !cloudProgramme ? <TrainLocked client={client} sessionsDone={_sessionsDone} onContact={() => setShowCoachChat(true)} onBook={() => setShowBookingModal(true)} coachName={coachName} /> :
               // Ebook self-serve : achat reserve la place, mais les 100 jours
@@ -1817,6 +1834,7 @@ function AppInner() {
             ) : (
               <WeightChart key={page} clientId={client?.id} client={client} appData={appData} />
             )}
+          </ErrorBoundaryApp>
           </Suspense>
 
           {showRPE && client && <RPEModal clientId={client.id} sessionName={session?.name} onClose={() => setShowRPE(false)} />}
