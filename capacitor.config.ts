@@ -19,13 +19,14 @@ const config: CapacitorConfig = {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
     SplashScreen: {
-      // Auto-hide = false → on garde le splash natif iOS tant que React
-      // n'a pas monté. Sans ça, iOS hide à 500ms puis la WebView affiche
-      // ~1.5s d'écran noir avant que index.html peinte. Le hide() explicite
-      // est appelé dans App.jsx après le 1er paint.
-      launchAutoHide: false,
-      // Fallback : si JS plante / n'appelle jamais hide(), iOS hide après 4s.
-      launchShowDuration: 4000,
+      // launchAutoHide: true + 5s : iOS ferme le splash natif tout seul
+      // au bout de 5s peu importe ce que fait JS (Rayan 12/06 — flash noir
+      // entre splash et home sur builds 70-72). hide() explicite tourne
+      // toujours en parallèle via rAF×2 dans index.js, donc en pratique
+      // aucun écart visuel ressenti — filet de sécurité pur.
+      launchAutoHide: true,
+      launchShowDuration: 5000,
+      launchFadeOutDuration: 0,
       // #050505 = même couleur que body de index.html → zero flash de
       // couleur entre splash natif et HTML.
       backgroundColor: '#050505',
