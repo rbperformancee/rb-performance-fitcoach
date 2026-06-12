@@ -1780,12 +1780,12 @@ function AppInner() {
         }>
           {/* Soft-prompt notifs au 2e open de l'app — best practice Apple. */}
           {!isClientDemo && client?.id && <NotifSoftPrompt clientId={client.id} />}
-          {/* Welcome tour 3 slides one-shot pour les nouveaux clients. */}
+          {/* Welcome tour 3 slides one-shot pour les nouveaux clients.
+              onClose laissé vide : OnboardingTour persiste seul en localStorage,
+              le re-render naturel au prochain mount le cache. Pas besoin de
+              force-render ici (et setForceShowProgramme n'existe pas). */}
           {!isClientDemo && client?.id && userKind === "client" && shouldShowOnboardingTour() && (
-            <OnboardingTour onClose={() => {
-              // Force re-render pour cacher le tour après marquage en localStorage.
-              setForceShowProgramme((v) => !v);
-            }} />
+            <OnboardingTour onClose={() => {}} />
           )}
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
           {isClientDemo && <div style={{height:52}} />}

@@ -205,8 +205,15 @@
         var isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
         if (isNative) {
           window.addEventListener('rb-app-ready', hide, { once: true });
-          // Safety net si jamais React plante / event jamais dispatché : 6s max
-          setTimeout(hide, 6000);
+          // 2 safety nets cumulatifs : on cache TOUJOURS le splash, même si
+          // React plante / Supabase auth pend / chunk lazy ne charge pas. Sans
+          // ça l'athlète reste figé sur l'éclair (Rayan, 12/06 build 67).
+          // À 3s on tente une 1re fois (rapide pour pas froisser quand auth est
+          // lente mais OK), et à 8s on force-supprime le DOM en cas d'extrême.
+          setTimeout(hide, 3000);
+          setTimeout(function(){
+            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 8000);
         } else {
           // PWA / landing : durée fixe 1.0s comme avant (animation 1.5s couvre)
           setTimeout(hide, 1000);
