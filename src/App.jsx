@@ -1778,13 +1778,12 @@ function AppInner() {
           ? {}
           : {width:'100%',position:'relative',background:'#050505',minHeight:'100dvh',overflowX:'hidden'}
         }>
-          {/* Soft-prompt notifs au 2e open de l'app — best practice Apple. */}
-          {!isClientDemo && client?.id && <NotifSoftPrompt clientId={client.id} />}
-          {/* Welcome tour 3 slides one-shot pour les nouveaux clients.
-              onClose laissé vide : OnboardingTour persiste seul en localStorage,
-              le re-render naturel au prochain mount le cache. Pas besoin de
-              force-render ici (et setForceShowProgramme n'existe pas). */}
-          {!isClientDemo && client?.id && userKind === "client" && shouldShowOnboardingTour() && (
+          {/* Soft-prompt notifs au 2e open — natif uniquement (Capacitor).
+              Gating PWA = OFF pour éviter un crash signalé par utilisateurs
+              le 12/06 pendant le ramp launch. Re-enable PWA après QA. */}
+          {!isClientDemo && client?.id && isNative() && <NotifSoftPrompt clientId={client.id} />}
+          {/* Welcome tour — natif uniquement, même raison que ci-dessus. */}
+          {!isClientDemo && client?.id && userKind === "client" && isNative() && shouldShowOnboardingTour() && (
             <OnboardingTour onClose={() => {}} />
           )}
           {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
