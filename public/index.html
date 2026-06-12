@@ -82,6 +82,32 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="mask-icon" href="/icon.svg" color="#02d1ba" />
     <link rel="manifest" href="/manifest.json" />
+    <!-- SELF-HEAL silencieux : si un user a un SW cassé/stale qui sert un
+         ancien bundle buggé, on l'unregister + on purge les caches + on
+         reload UNE SEULE FOIS (gardé via sessionStorage anti-boucle).
+         L'athlète ne voit rien — juste un flash de splash réapparaître. -->
+    <script>
+      (function(){
+        try {
+          if (!('serviceWorker' in navigator)) return;
+          if (sessionStorage.getItem('rb_self_healed_v1') === '1') return;
+          navigator.serviceWorker.getRegistrations().then(function(regs){
+            if (!regs.length) return;
+            sessionStorage.setItem('rb_self_healed_v1', '1');
+            Promise.all([
+              Promise.all(regs.map(function(r){ return r.unregister(); })),
+              ('caches' in window)
+                ? caches.keys().then(function(ks){
+                    return Promise.all(ks.map(function(k){ return caches.delete(k); }));
+                  })
+                : null,
+            ]).then(function(){
+              window.location.reload();
+            });
+          }).catch(function(){});
+        } catch(_) {}
+      })();
+    </script>
     <!-- Performance : preconnect aux origines critiques pour reduire latency -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
