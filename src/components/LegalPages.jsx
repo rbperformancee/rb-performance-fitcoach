@@ -49,20 +49,26 @@ export function MentionsLegales({ onClose }) {
         <br />
         <p><strong style={{ color: "#f5f5f5" }}>Rayan Bonte
         <br />Micro-entrepreneur — SIRET : 99063780300018</strong><br />
-        Coach sportif personnel<br />
+        Préparateur physique indépendant<br />
         Email : {RB_SUPPORT_EMAIL}
         <br />06 95 12 93 47
-        <br />Hébergement : Vercel Inc., 340 Pine Street, San Francisco, CA 94104, USA<br />
-        Site web : rbperform.app</p>
+        <br />Site web : rbperform.app
+        <br />Application iOS : disponible sur l'App Store (Apple Inc.)</p>
       </Section>
 
-      <Section title="2. Hébergement">
-        <p><strong style={{ color: "#f5f5f5" }}>Application web</strong><br />
+      <Section title="2. Hébergement et distribution">
+        <p><strong style={{ color: "#f5f5f5" }}>Application web (PWA)</strong><br />
         Vercel Inc. — 340 Pine Street, Suite 900, San Francisco, CA 94104, USA<br />
         Serveurs en Europe (conformité RGPD)</p>
         <br />
+        <p><strong style={{ color: "#f5f5f5" }}>Application iOS native</strong><br />
+        Distribuée via l'Apple App Store par Apple Inc. — One Apple Park Way, Cupertino, CA 95014, USA</p>
+        <br />
         <p><strong style={{ color: "#f5f5f5" }}>Base de données</strong><br />
         Supabase Inc. — Serveurs en Irlande, Union Européenne ✅</p>
+        <br />
+        <p><strong style={{ color: "#f5f5f5" }}>Notifications push iOS</strong><br />
+        Apple Push Notification service (APNs) — Apple Inc.</p>
       </Section>
 
       <Section title="3. Propriété intellectuelle">
@@ -81,7 +87,7 @@ export function MentionsLegales({ onClose }) {
       </Section>
 
       <Section title="5. Responsabilité">
-        <p>Les programmes d'entraînement fournis sont à titre indicatif et personnalisés par un préparateur sportif. RB Perform ne peut être tenu responsable des blessures résultant d'une mauvaise exécution des exercices ou d'un état de santé incompatible avec la pratique sportive.</p>
+        <p>Les programmes d'entraînement fournis sont à titre indicatif et personnalisés par un préparateur physique. RB Perform ne peut être tenu responsable des blessures résultant d'une mauvaise exécution des exercices ou d'un état de santé incompatible avec la pratique sportive.</p>
         <br />
         <p>Il est conseillé de consulter un médecin avant de débuter tout programme d'entraînement intensif.</p>
       </Section>
@@ -98,12 +104,16 @@ export function CGU({ onClose }) {
   return (
     <PageWrapper title="Conditions Générales d'Utilisation" subtitle="CGU" onClose={onClose}>
       <Section title="1. Objet">
-        <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application RB Perform, service de suivi sportif personnalisé proposé par Rayan Bonte
-        <br />Micro-entrepreneur — SIRET : 99063780300018.</p>
+        <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation du service RB Perform, proposé par Rayan Bonte (micro-entrepreneur — SIRET : 99063780300018), sous deux formes :</p>
+        <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
+          <li>Une application web progressive (PWA) accessible sur rbperform.app</li>
+          <li>Une application iOS native distribuée via l'Apple App Store</li>
+        </ul>
+        <p>Les deux applications partagent les mêmes fonctionnalités et les mêmes données utilisateur.</p>
       </Section>
 
       <Section title="2. Accès au service">
-        <p>L'accès au service est réservé aux personnes ayant reçu une invitation de la part du coach RB Perform et ayant créé un compte via leur adresse email.</p>
+        <p>L'accès au service est réservé aux personnes ayant reçu une invitation du préparateur physique RB Perform ou ayant souscrit à un programme self-serve, et ayant créé un compte via leur adresse email.</p>
         <br />
         <p>L'utilisateur s'engage à :</p>
         <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
@@ -119,17 +129,29 @@ export function CGU({ onClose }) {
         <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
           <li>Un programme d'entraînement personnalisé créé par Rayan</li>
           <li>Un outil de suivi des charges et de la progression</li>
-          <li>Un timer de repos automatique</li>
-          <li>Un suivi du poids corporel</li>
+          <li>Un timer de repos automatique (avec Live Activity sur iOS 16.1+)</li>
+          <li>Un suivi du poids corporel et des photos de progression</li>
           <li>Une messagerie avec Rayan</li>
           <li>L'export de rapports de progression en PDF</li>
+          <li>Un tracker de course (run) avec GPS, allure et cadence (app iOS uniquement)</li>
         </ul>
+        <br />
+        <p><strong style={{ color: "#f5f5f5" }}>Permissions iOS (app native uniquement)</strong> — l'utilisateur peut être amené à autoriser :</p>
+        <ul style={{ paddingLeft: 16, margin: "8px 0" }}>
+          <li><strong>Localisation</strong> : pour tracker un run GPS (distance, allure, trajet)</li>
+          <li><strong>Apple Health (HealthKit)</strong> : pour enregistrer les courses dans Activité et lire fréquence cardiaque + VO2max (optionnel)</li>
+          <li><strong>Mouvement et forme</strong> : pour mesurer la cadence et détecter le type d'activité</li>
+          <li><strong>Caméra et galerie</strong> : pour les photos de progression et les stories de partage</li>
+          <li><strong>Microphone</strong> : pour les notes vocales dans la messagerie (optionnel)</li>
+          <li><strong>Notifications</strong> : pour les rappels de séance et messages du préparateur</li>
+        </ul>
+        <p>Chaque permission peut être révoquée à tout moment dans Réglages iOS &gt; RB Perform.</p>
       </Section>
 
       <Section title="4. Obligations et responsabilité de l'utilisateur">
         <p>L'utilisateur reconnaît être en bonne condition physique pour pratiquer les exercices proposés et avoir consulté un médecin si nécessaire.</p>
         <br />
-        <p>L'utilisateur s'engage à signaler immédiatement à son coach toute douleur, blessure ou contre-indication médicale.</p>
+        <p>L'utilisateur s'engage à signaler immédiatement à son préparateur physique toute douleur, blessure ou contre-indication médicale.</p>
         <br />
         <p>RB Perform décline toute responsabilité en cas de blessure résultant :</p>
         <ul style={{ paddingLeft: 16, margin: "8px 0" }}>

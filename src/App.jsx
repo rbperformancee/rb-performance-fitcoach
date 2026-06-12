@@ -118,12 +118,12 @@ import { apiUrl } from "./lib/api";
 // que la nav bar fixe → transition perçue comme instantanée.
 const LazyFallback = () => null;
 
-// Fallback localisé pour les pages client : keeps the page background visible,
-// petit indicateur de chargement discret au centre.
+// Fallback localisé pour les pages client. Background TRANSPARENT pour
+// que la page précédente reste visible derrière (évite le flash noir au
+// tab switch quand le chunk est déjà cache mais que React re-prepare le
+// composant — Rayan 12/06).
 const PageFallback = () => (
-  <div style={{ minHeight: "100dvh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
-    <Spinner variant="dots" size={28} />
-  </div>
+  <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center" }} />
 );
 
 const GREEN = "#02d1ba";
@@ -560,13 +560,19 @@ function AppInner() {
   // Demo : pre-fetch les chunks du dashboard EN PARALLELE de l'auth roundtrip.
   // Sans ca, les lazy imports ne demarrent qu'apres user authentifie → 500ms de
   // sequentiel inutile. La (les chunks telechargent pendant que Supabase repond).
+  // Pré-fetch des chunks des 4 onglets bottom-nav dès que l'utilisateur est
+  // authentifié. Sans ça, le 1er tap sur Move/Fuel/Profile déclenche le
+  // chargement du chunk → React Suspense affiche PageFallback (div noir +
+  // spinner) pendant ~300-500ms = clignotement noir (Rayan, 12/06/2026).
+  // Avec prefetch dès l'auth, les 4 onglets sont déjà cachés → switch
+  // instantané sans flash.
   React.useEffect(() => {
-    if (!isDemo && !isClientDemo) return;
+    if (!user && !isDemo && !isClientDemo) return;
     import("./components/TrainingPage");
     import("./components/FuelPage");
     import("./components/MovePage");
     import("./components/ProfilePage");
-  }, [isDemo, isClientDemo]);
+  }, [user, isDemo, isClientDemo]);
 
   // Auto-login demo COACH — bascule en OTP via /api/demo-coach (zero password
   // exposé dans le bundle JS public). Le mot de passe demo a été retiré pour

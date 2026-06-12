@@ -29,7 +29,7 @@ export function PrivacyPolicy({ onClose }) {
           },
           {
             title: "2. Données collectées",
-            content: `Nous collectons les données suivantes :\n\n• Adresse email (identification et authentification)\n• Prénom et nom (optionnel, fourni par Rayan)\n• Données d'entraînement : exercices réalisés, charges, répétitions, séries\n• Données de composition corporelle : poids, pourcentage de masse grasse (saisie volontaire)\n• Ressenti d'entraînement (RPE) : niveau de fatigue perçu après chaque séance\n• Notes personnelles liées aux séances (optionnel)`
+            content: `Nous collectons les données suivantes :\n\n• Adresse email (identification et authentification)\n• Prénom et nom (optionnel, fourni par Rayan)\n• Données d'entraînement : exercices réalisés, charges, répétitions, séries\n• Données de composition corporelle : poids, pourcentage de masse grasse (saisie volontaire)\n• Ressenti d'entraînement (RPE) : niveau de fatigue perçu après chaque séance\n• Notes personnelles liées aux séances (optionnel)\n\nDans l'application iOS native uniquement, et SI vous accordez les permissions :\n\n• Données de localisation pendant un run (trajet GPS, distance, allure) — stockées dans votre compte\n• Données HealthKit (fréquence cardiaque, VO2max, foulée) — lues localement, non transmises sans votre consentement\n• Photos (selfie de fin de séance, story de partage) — stockées dans le cache de l'app puis partagées via le système iOS\n• Identifiant push APNs (token anonyme Apple) — pour vous envoyer les rappels de séance et messages du préparateur`
           },
           {
             title: "3. Finalités du traitement",
@@ -41,26 +41,30 @@ export function PrivacyPolicy({ onClose }) {
           },
           {
             title: "5. Hébergement et sous-traitants",
-            content: `Vos données sont hébergées par :\n\n• Supabase (base de données) — serveurs en Irlande, Union Européenne ✅\n• Vercel (application web) — serveurs en Europe\n• Resend (envoi d'emails) — conformité RGPD garantie\n\nAucune donnée n'est transmise à des tiers à des fins commerciales ou publicitaires.`
+            content: `Vos données sont hébergées et traitées par les sous-traitants suivants :\n\n• Supabase Inc. (base de données) — serveurs en Irlande, Union Européenne ✅\n• Vercel Inc. (application web et API) — serveurs en Europe\n• Resend (envoi d'emails) — conformité RGPD garantie\n• Apple Inc. (distribution iOS et notifications push APNs) — uniquement pour l'application native iOS\n• Mistral AI (assistant FAQ) — serveurs en Europe, uniquement quand vous utilisez l'assistant\n\nAucune donnée n'est transmise à des tiers à des fins commerciales ou publicitaires.\n\nAucune donnée n'est partagée avec Apple à des fins de profilage. L'identifiant de push (APNs token) sert uniquement à acheminer les notifications.`
           },
           {
-            title: "6. Durée de conservation",
+            title: "6. Permissions iOS et contrôle utilisateur (app native)",
+            content: `Sur l'application iOS native, certaines fonctionnalités nécessitent votre autorisation explicite. Vous pouvez les accorder ou les révoquer à tout moment depuis Réglages iOS > RB Perform :\n\n• Localisation (Pendant l'utilisation) — pour tracker un run avec trajet GPS\n• Apple Health — pour enregistrer vos courses dans Activité et lire votre fréquence cardiaque\n• Mouvement et forme — pour mesurer la cadence et l'activité physique\n• Caméra — pour le selfie de finish et les photos de progression\n• Photos — pour partager une photo en story\n• Microphone — pour les notes vocales dans le chat\n• Notifications — pour les rappels et messages du préparateur\n\nAucune fonctionnalité ne collecte de données en arrière-plan sans permission explicite. Aucun tracking publicitaire (IDFA / SKAdNetwork) n'est utilisé.`
+          },
+          {
+            title: "7. Durée de conservation",
             content: `Vos données sont conservées :\n\n• Pendant toute la durée de votre relation avec RB Perform\n• 3 ans après la fin de votre abonnement ou la suppression de votre compte\n\nPassé ce délai, toutes vos données personnelles sont supprimées définitivement.`
           },
           {
-            title: "7. Vos droits",
+            title: "8. Vos droits",
             content: `Conformément au RGPD, vous disposez des droits suivants :\n\n• Droit d'accès : obtenir une copie de vos données\n• Droit de rectification : corriger des données inexactes\n• Droit à l'effacement : demander la suppression de toutes vos données\n• Droit à la portabilité : recevoir vos données dans un format structuré\n• Droit d'opposition : vous opposer au traitement de vos données\n• Droit de retrait du consentement : à tout moment, sans justification\n\nPour exercer vos droits, contactez : ${RB_SUPPORT_EMAIL}\nRéponse garantie sous 30 jours.`
           },
           {
-            title: "8. Suppression du compte",
+            title: "9. Suppression du compte",
             content: `Vous pouvez demander la suppression complète de votre compte et de toutes vos données à tout moment :\n\n• Directement depuis l'application (bouton "Supprimer mes données")\n• Par email à ${RB_SUPPORT_EMAIL}\n\nLa suppression est effective sous 48 heures.`
           },
           {
-            title: "9. Réclamation",
+            title: "10. Réclamation",
             content: `Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de la CNIL (Commission Nationale de l'Informatique et des Libertés) :\n\nCNIL — 3 Place de Fontenoy, 75007 Paris\nwww.cnil.fr`
           },
           {
-            title: "10. Contact",
+            title: "11. Contact",
             content: `Pour toute question relative à cette politique ou à vos données personnelles :\n\nRayan Bonte — RB Perform\nEmail : ${RB_SUPPORT_EMAIL}`
           },
         ].map((section, i) => (

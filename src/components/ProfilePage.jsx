@@ -381,7 +381,7 @@ export default function ProfilePage({ client, onLogout, appData, coachInfo, onDe
 /* ── Modale Paramètres : regroupe notifs / langue / légal / compte ── */
 function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPrivacy, onShowMentions, onShowCGU }) {
   const t = useT();
-  const { permission: pushPerm, requestPermission: requestPush, resetSubscription: resetPush } = usePushNotifications(client?.id);
+  const { permission: pushPerm, requestPermission: requestPush, resetSubscription: resetPush, lastError: pushLastError, sendTestPush } = usePushNotifications(client?.id);
   // pushOn : on se base sur la permission iOS persistée et NON sur `subscribed`
   // (qui est un useState resetté à false à chaque remount). Sinon le bouton
   // re-affichait 'Activer' à chaque réouverture de la PWA alors que la
@@ -484,22 +484,49 @@ function SettingsModal({ client, onClose, onLogout, onDeleteRequest, onShowPriva
             </div>
           )}
           {pushOn && (
-            <>
+            <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
               <button
                 onClick={handleResetNotifs}
                 disabled={resetBusy}
                 style={{
-                  marginTop: 8, padding: "8px 12px", fontSize: 11, fontWeight: 600,
+                  padding: "8px 12px", fontSize: 11, fontWeight: 600,
                   color: "rgba(255,255,255,0.45)", background: "transparent",
                   border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8,
                   cursor: resetBusy ? "wait" : "pointer", fontFamily: "inherit",
-                  width: "auto", letterSpacing: "0.02em",
+                  letterSpacing: "0.02em",
                 }}
                 title="Si tu ne reçois plus les notifs, ça force une nouvelle inscription côté Apple/Google"
               >
-                {resetBusy ? "Réinitialisation…" : "↻ Réinitialiser les notifications"}
+                {resetBusy ? "Réinitialisation…" : "↻ Réinitialiser"}
               </button>
-            </>
+              <button
+                onClick={async () => {
+                  haptic.light();
+                  try {
+                    const r = await sendTestPush();
+                    if (r?.ok) toast.success("Notif test envoyée — vérifie le centre de notifs");
+                    else toast.error(r?.error || "Échec d'envoi");
+                  } catch (e) {
+                    toast.error(`Erreur : ${e?.message || e}`);
+                  }
+                }}
+                style={{
+                  padding: "8px 12px", fontSize: 11, fontWeight: 600,
+                  color: "rgba(2,209,186,0.85)", background: "rgba(2,209,186,0.08)",
+                  border: "1px solid rgba(2,209,186,0.2)", borderRadius: 8,
+                  cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.02em",
+                }}
+              >
+                Tester (envoyer une notif)
+              </button>
+            </div>
+          )}
+          {/* Diagnostic d'erreur si la sub échoue silencieusement — utile à
+              poster en support pour qu'on comprenne pourquoi rien n'arrive. */}
+          {pushLastError && (
+            <div style={{ marginTop: 8, padding: 10, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, fontSize: 10, color: "rgba(252,165,165,0.9)", lineHeight: 1.4, wordBreak: "break-all" }}>
+              <b style={{ color: "#ef4444" }}>Erreur push :</b> {pushLastError}
+            </div>
           )}
         </div>
 
