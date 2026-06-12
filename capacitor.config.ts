@@ -4,12 +4,17 @@ const config: CapacitorConfig = {
   appId: 'app.rbperform',
   appName: 'RB Perform',
   webDir: 'build',
+  // backgroundColor de la WKWebView — couvre la zone derrière la status bar
+  // et l'overscroll. Sans ça, iOS peint la WebView en NOIR pur (#000) par
+  // défaut → bande noire visible au-dessus du body #050505 (Rayan, 12/06).
+  backgroundColor: '#050505',
   ios: {
     scheme: 'RB Perform',
     // 'never' = la WebView occupe TOUT l'écran y compris derrière le notch/
     // Dynamic Island. Le body CSS background #050505 peint la zone safe-area.
     // 'always' laissait une bande blanche au-dessus du status bar.
     contentInset: 'never',
+    backgroundColor: '#050505',
   },
   android: {
     allowMixedContent: true,
