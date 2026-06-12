@@ -44,6 +44,10 @@ export async function initSentry() {
     }
     return;
   }
+  // Hotfix 12/06 : Sentry's console instrumentation throw TDZ "cannot access
+  // uninitialized variable" sur Safari iOS (bug ouvert getsentry/sentry-javascript
+  // avec certaines configs minifier+CRA). Désactivé en attendant un fix amont.
+  return;
   initialized = true;
   // Lazy import : Sentry n'est telecharge QUE si DSN est set
   // → bundle initial reste fin pour les visiteurs sans tracking
