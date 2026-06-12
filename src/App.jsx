@@ -657,6 +657,11 @@ function AppInner() {
     if (typeof window === "undefined" || !window.Capacitor?.isNativePlatform?.()) return;
     let unmounted = false;
     let appListener = null;
+    // Hide UNIQUEMENT le splash natif iOS — PAS le HTML splash. Le HTML
+    // splash a son propre listener `rb-app-ready` qui attend authLoading=false
+    // (cf useEffect plus bas). Si on dispatch rb-app-ready ici, le HTML splash
+    // disparaît avant que React ait monté le contenu réel → écran noir
+    // pendant l'auth roundtrip (Rayan, 12/06/2026).
     const hideSplash = async () => {
       try {
         const mod = await import("@capacitor/splash-screen");
@@ -665,7 +670,6 @@ function AppInner() {
         // eslint-disable-next-line no-console
         console.warn("[splash] hide failed:", e);
       }
-      try { window.dispatchEvent(new CustomEvent("rb-app-ready")); } catch (_) {}
     };
     requestAnimationFrame(() => requestAnimationFrame(() => { if (!unmounted) hideSplash(); }));
     (async () => {
