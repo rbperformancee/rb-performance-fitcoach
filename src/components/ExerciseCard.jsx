@@ -981,12 +981,12 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
           )}
           {Array.from({ length: setsCount }, (_, i) => {
             const restoredW = (() => {
-              // Ignore les 0 hérités d'anciens logs : 0 ?? X retourne 0 et
-              // useState(0||"") => "" -> placeholder "0" qui ressemble à
-              // une valeur fixée par le coach. On veut un vrai poids > 0.
+              // SEUL le poids exact du set i de la dernière séance est utilisé
+              // en pré-fill. On ne tombe PLUS sur latest.weight (= moyenne des
+              // sets précédents) qui était trompeur (Rayan 12/06). Si pas de
+              // données per-set pour ce slot, on laisse vide.
               const sw = latest?.sets?.[i]?.weight;
               if (sw != null && sw !== "" && Number(sw) > 0) return String(sw);
-              if (latest?.weight && Number(latest.weight) > 0) return String(latest.weight);
               return "";
             })();
             if (compound) {
