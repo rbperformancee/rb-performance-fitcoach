@@ -44,6 +44,14 @@ export async function initSentry() {
     }
     return;
   }
+  // HOTFIX 12/06 : Sentry's console instrumentation throw TDZ "cannot access
+  // uninitialized variable" sur Safari iOS / WKWebView (bug ouvert dans
+  // @sentry/javascript avec certains minifier+CRA setups). On désactive
+  // l'init complètement → l'import lazy de @sentry/browser ne se déclenche
+  // jamais → pas de patch console → pas de TDZ. captureError() devient un
+  // no-op silencieux (le tableau bufferedEvents reste vide).
+  return;
+  // eslint-disable-next-line no-unreachable
   initialized = true;
   // Lazy import : Sentry n'est telecharge QUE si DSN est set
   // → bundle initial reste fin pour les visiteurs sans tracking
