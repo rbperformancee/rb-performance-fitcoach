@@ -615,8 +615,9 @@ export function ExerciseCard({ ex, weekIdx, sessionIdx, exIdx, globalIndex, getH
     haptic.medium(); // Set valide
     if (n >= setsCount) {
       haptic.success(); // Exercice termine
-      // Dernière série faite → le repos annonce l'exercice suivant.
-      if (restSecs) setTimeout(() => restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets: null }), 600);
+      // Dernière série faite — PAS de timer repos (l'athlète passe à
+      // l'exo suivant tout de suite, le timer du dernier set est inutile
+      // et frustrant). Rayan, 12/06.
     } else if (restSecs) {
       // Série intermédiaire → le repos annonce la série suivante.
       setTimeout(() => restTimer.start({ restSeconds: restSecs, exName: nextExName, betweenSets: { next: n + 1, total: setsCount } }), 400);
