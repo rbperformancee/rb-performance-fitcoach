@@ -355,11 +355,10 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       }
       const result = await saveForm();
       if (!result?.ok) {
-        // result.reason inclut le champ fautif si zod a renvoyé des details
         const detail = result?.reason && result.reason !== "submit_failed"
           ? `\n\nDétail : ${result.reason}`
           : "";
-        alert(`Impossible d'envoyer ta candidature.${detail}\n\nVerifie tes valeurs (ex : poids 75 et non "75 kg") et reessaye.`);
+        alert(`Impossible d'envoyer ta candidature.${detail}\n\nVérifie que ton âge est bien un nombre et réessaye.`);
         return;
       }
       setStep(7);
