@@ -235,13 +235,14 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
     setSaving(true);
     try { localStorage.setItem(draftKey, JSON.stringify({ form, ts: Date.now() })); } catch {}
 
-    // Mode application (publique, /candidature) : insert direct Supabase
-    // (anon key, RLS autorise insert). /api/coaching-application était 404
-    // sur prod depuis ~4 juin → 6+ jours de candidatures perdues. L'API peut
-    // toujours être tentée en best-effort pour l'email de confirmation.
+    // Mode application (publique, /candidature) : insert via /api/coaching-application
+    // (service_role côté serveur). On NE tente PLUS l'insert direct Supabase :
+    // les nouvelles clés opaques `sb_publishable_*` (mars 2026) ne permettent
+    // plus aux RLS policies anon de passer les WITH CHECK même triviaux,
+    // toutes les candidatures étaient rejetées 42501 (13/06). L'API existe,
+    // tourne en service_role, et fait l'email de confirmation bonus.
     if (isApplication) {
       try {
-        // UTM tracking depuis sessionStorage (capture sur la landing)
         let utm = {};
         try { utm = JSON.parse(sessionStorage.getItem("rb_utm") || "{}"); } catch {}
 
@@ -271,24 +272,22 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           referrer: utm.referrer || document.referrer || null,
         };
 
-        const { error: dbErr } = await supabase
-          .from("coaching_applications")
-          .insert(payload);
+        const resp = await fetch("/api/coaching-application", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
         setSaving(false);
-        if (dbErr) {
-          console.error("[application] submit failed:", dbErr);
-          return { ok: false, reason: dbErr.message || "submit_failed" };
+        if (!resp.ok) {
+          let detail = `HTTP ${resp.status}`;
+          try {
+            const j = await resp.json();
+            detail = j.error || j.message || j.reason || detail;
+          } catch {}
+          console.error("[application] API submit failed:", detail);
+          return { ok: false, reason: detail };
         }
         try { localStorage.removeItem(draftKey); } catch {}
-        // Best-effort : tente l'email de confirmation via l'API quand elle
-        // reviendra. Pas bloquant — la candidature est déjà en DB.
-        try {
-          fetch("/api/coaching-application", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }).catch(() => {});
-        } catch { /* silent */ }
         return { ok: true };
       } catch (e) {
         console.error("[application] submit exception:", e.message);
