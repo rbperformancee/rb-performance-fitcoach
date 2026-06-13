@@ -276,9 +276,6 @@ export default function PublicCoachProfile({ slug }) {
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </a>
-          <div style={{ marginTop: 16, fontSize: 11, color: "rgba(255,255,255,0.42)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>
-            Sélection sur dossier · 5 places
-          </div>
 
           {coach.public_calendar_url && (
             <div style={{ marginTop: 28, display: "flex", alignItems: "center", justifyContent: "center", gap: 14 }}>

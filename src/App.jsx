@@ -21,6 +21,7 @@ const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
 const BaselineMaxesForm = lazy(() => import("./components/client/BaselineMaxesForm"));
 const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
+const CandidatureLevel2 = lazy(() => import("./components/CandidatureLevel2"));
 const EbookMethodeWaitlist = lazy(() => import("./components/EbookMethodeWaitlist"));
 const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
@@ -484,6 +485,16 @@ function AppInner() {
      new URLSearchParams(window.location.search).get("candidature") === "true");
   if (isCandidature) {
     return <Suspense fallback={null}><CoachingApplicationLanding /></Suspense>;
+  }
+
+  // ===== MODE COMPLÉTER PROFIL (/candidature/profil) — Level 2 =====
+  // Après booking, l'athlète remplit les détails approfondis (passé sportif,
+  // diète, mindset, perf, vision) pour rendre l'appel utile. Pas de slot
+  // picker ici — on UPDATE la row existante par email.
+  const isCandidatureL2 = typeof window !== "undefined" &&
+    window.location.pathname === "/candidature/profil";
+  if (isCandidatureL2) {
+    return <Suspense fallback={null}><CandidatureLevel2 /></Suspense>;
   }
 
   // ===== WAITLIST EBOOK MÉTHODE ATHLÈTE (/liste) =====

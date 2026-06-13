@@ -24,7 +24,6 @@ const KEYFRAMES = `
 
 export default function CoachingApplicationLanding() {
   const [showForm, setShowForm] = useState(false);
-  const [showTransfos, setShowTransfos] = useState(false);
   const iphoneRef = useRef(null);
 
   useEffect(() => {
@@ -94,7 +93,7 @@ export default function CoachingApplicationLanding() {
         {/* Eyebrow with live availability dot */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 16px", background: "rgba(2,209,186,0.06)", border: "1px solid rgba(2,209,186,0.2)", borderRadius: 100, marginBottom: 32, animation: "fadeUp 0.6s ease 0.1s both" }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: GREEN, animation: "breath60 1s ease-in-out infinite", boxShadow: `0 0 8px ${GREEN}80` }} />
-          <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: GREEN, fontWeight: 700 }}>Accompagnement Premium · 5 places ouvertes</div>
+          <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: GREEN, fontWeight: 700 }}>Accompagnement Premium</div>
         </div>
 
         {/* Hero title — pas de fadeUp ici : c'est le LCP candidate. Si on
@@ -108,9 +107,39 @@ export default function CoachingApplicationLanding() {
         </h1>
 
         {/* Subhead */}
-        <p style={{ fontSize: 17, lineHeight: 1.65, color: "rgba(255,255,255,0.6)", marginBottom: 40, maxWidth: 520, marginLeft: "auto", marginRight: "auto", animation: "fadeUp 0.7s ease 0.3s both" }}>
-          90 jours. 5 places. Un suivi 24/7 qui ne ressemble à rien d'autre.
+        <p style={{ fontSize: 17, lineHeight: 1.65, color: "rgba(255,255,255,0.6)", marginBottom: 32, maxWidth: 520, marginLeft: "auto", marginRight: "auto", animation: "fadeUp 0.7s ease 0.3s both" }}>
+          3 mois minimum. Un suivi 24/7 qui ne ressemble à rien d'autre.
         </p>
+
+        {/* CTA hero — reduit la friction : pas besoin de scroller pour postuler */}
+        <button
+          onClick={() => setShowForm(true)}
+          style={{
+            width: "100%",
+            maxWidth: 480,
+            padding: "20px 32px",
+            background: `linear-gradient(135deg, ${GREEN}, #0891b2)`,
+            border: "none",
+            borderRadius: 18,
+            color: "#000",
+            fontSize: 15,
+            fontWeight: 900,
+            letterSpacing: "1.5px",
+            textTransform: "uppercase",
+            cursor: "pointer",
+            fontFamily: "-apple-system,Inter,sans-serif",
+            transition: "transform 0.2s ease",
+            marginBottom: 14,
+            animation: "fadeUp 0.7s ease 0.35s both",
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = ""; }}
+        >
+          Postuler maintenant →
+        </button>
+        <div style={{ marginBottom: 48, fontSize: 11, color: "rgba(255,255,255,0.55)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.4s both" }}>
+          5 min · 0€ aujourd'hui · Paiement après appel validé
+        </div>
 
         {/* Profile — vraie photo HD avec ring teal */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 16, marginBottom: 56, padding: "12px 22px 12px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 100, animation: "fadeUp 0.7s ease 0.4s both" }}>
@@ -134,137 +163,10 @@ export default function CoachingApplicationLanding() {
           </div>
         </div>
 
-        {/* Transformations clients — preuve réelle */}
-        <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.45s both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 28 }}>Résultats · pas des promesses</div>
-
-          {!showTransfos && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-              {/* Stack de previews floutées — donne envie de cliquer (curiosité) */}
-              <div style={{ position: "relative", width: 200, height: 120, marginBottom: 4 }}>
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: "50%",
-                      width: 90,
-                      height: 120,
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      border: "2px solid rgba(255,255,255,0.08)",
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
-                      transform: `translateX(${(i - 1) * 56 - 45}px) rotate(${(i - 1) * 6}deg)`,
-                      zIndex: 3 - i,
-                    }}
-                  >
-                    <img
-                      src={`/transfo-${i + 1}-after-400.webp`}
-                      alt=""
-                      aria-hidden="true"
-                      loading="lazy"
-                      decoding="async"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        filter: "blur(8px) brightness(0.6) saturate(0.8)",
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setShowTransfos(true)}
-                style={{
-                  position: "relative",
-                  background: `linear-gradient(135deg, rgba(2,209,186,0.12) 0%, rgba(2,209,186,0.04) 100%)`,
-                  border: `1px solid ${GREEN}`,
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  letterSpacing: "0.5px",
-                  padding: "16px 32px",
-                  borderRadius: 100,
-                  cursor: "pointer",
-                  transition: "all 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
-                  boxShadow: `0 8px 24px rgba(2,209,186,0.18)`,
-                  animation: "ctaGlow 2s ease-in-out infinite",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-                onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 12px 32px rgba(2,209,186,0.35)`; }}
-                onMouseOut={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = `0 8px 24px rgba(2,209,186,0.18)`; }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: GREEN, animation: "breath60Scale 1s ease-in-out infinite", boxShadow: `0 0 12px ${GREEN}` }} />
-                Ils n'ont pas attendu
-              </button>
-
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.62)", letterSpacing: "0.5px" }}>
-                3 transformations · photos privées
-              </div>
-            </div>
-          )}
-
-          {showTransfos && (
-            <div style={{ animation: "fadeUp 0.5s ease both" }}>
-              {[
-                { id: 1, name: "Senan", duration: "3 mois d'accompagnement" },
-                { id: 2, name: "Mael",  duration: "3 mois d'accompagnement" },
-                { id: 3, name: "Léo",   duration: "12 mois d'accompagnement" },
-              ].map((client) => (
-                <div key={client.id} style={{ marginBottom: 28, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    {[
-                      { src: "before", label: "AVANT" },
-                      { src: "after",  label: "APRÈS" },
-                    ].map(({ src, label }) => (
-                      <div key={src} style={{ position: "relative", borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", aspectRatio: "3 / 4", boxShadow: "0 12px 32px rgba(0,0,0,0.5)" }}>
-                        <img
-                          src={`/transfo-${client.id}-${src}-400.webp`}
-                          srcSet={`/transfo-${client.id}-${src}-400.webp 400w, /transfo-${client.id}-${src}-800.webp 800w`}
-                          sizes="(max-width: 600px) 50vw, 240px"
-                          alt={`${client.name} - ${label}`}
-                          loading="lazy"
-                          decoding="async"
-                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                        />
-                        <div style={{ position: "absolute", top: 12, left: 12, padding: "5px 10px", background: src === "after" ? `${GREEN}` : "rgba(0,0,0,0.7)", color: src === "after" ? "#000" : "#fff", fontSize: 9, fontWeight: 800, letterSpacing: "2px", borderRadius: 100 }}>
-                          {label}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.7)", letterSpacing: "0.3px" }}>
-                    <strong style={{ color: "#fff", fontWeight: 700 }}>{client.name}</strong> · {client.duration}
-                  </div>
-                </div>
-              ))}
-
-              <div style={{ display: "flex", gap: 20, justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: 4 }}>
-                <a
-                  href="https://instagram.com/rb_perform"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: "inline-block", fontSize: 12, color: GREEN, textDecoration: "none", letterSpacing: "0.3px", borderBottom: "1px solid rgba(2,209,186,0.45)", paddingBottom: 1 }}
-                >
-                  Plus de transformations sur Instagram →
-                </a>
-                <button
-                  onClick={() => setShowTransfos(false)}
-                  style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 12, letterSpacing: "0.3px", cursor: "pointer", padding: 0 }}
-                  onMouseOver={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
-                  onMouseOut={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
-                >
-                  Masquer
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Transformations retirées de la landing 13/06 → maintenant affichées
+            sur l'écran de confirmation candidature (OnboardingFlow step 7).
+            Logique conversion : preuve sociale post-engagement plutôt que de
+            distraire avant la candidature. */}
 
         {/* Ce que tu reçois — bullets centrés */}
         <div style={{ marginBottom: 56, animation: "fadeUp 0.7s ease 0.5s both" }}>

@@ -194,6 +194,8 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       //   'lt_100' | '100' | '150' (offre principale) | 'gt_200' | 'discuss'
       depense_actuelle_perf: "",
       budget_mensuel: "",
+      // Application short funnel (13/06) : objectif quick-radio à l'étape 1.
+      objectif_principal: "",
     };
     try {
       const raw = localStorage.getItem(draftKey);
@@ -331,10 +333,18 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
 
   const nextStep = async () => {
     haptic.selection();
-    // En mode application :
-    //   step 5 → step 6 (slot picker, pas de save)
-    //   step 6 → submit avec preferred_slots → step 7
-    // En mode client : step 5 → save → step 6 (booking) → step 7
+    // En mode application (short funnel 13/06) :
+    //   step 1 (contact + objectif + budget) → step 6 (slots) → step 7 (confirm)
+    //   On SAUTE les étapes 2-5 (profil détaillé, mindset, perf) — déplacées
+    //   sur une page séparée /candidature/profil que l'athlète remplit APRÈS
+    //   booking pour rendre l'appel utile. Réduit la friction du form de
+    //   8-10 min → 3 min.
+    // En mode client : flow inchangé (step 1 → 2 → ... → 6 → 7).
+    if (step === 1 && isApplication) {
+      setStep(6);
+      window.scrollTo(0, 0);
+      return;
+    }
     if (step === 5 && !isApplication) {
       await saveForm();
     }
@@ -505,11 +515,11 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
         {GLOBAL_STYLES}
         {BG}
         <div key="step1" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={1} total={isApplication ? 5 : 6} label={t("obf.step")} />
+          <StepBar step={1} total={isApplication ? 2 : 6} label={t("obf.step")} />
           <div style={S.eyebrow}>{isApplication ? "Candidature Coaching Premium" : t("obf.step1_eyebrow")}</div>
           <div style={S.h1}>
             {isApplication ? (
-              <>5 places.<br/><span style={{ color: GREEN }}>Pas une de plus.</span></>
+              <>Quelques questions.<br/><span style={{ color: GREEN }}>Pour avancer ensemble.</span></>
             ) : (
               <>{t("obf.step1_title_line1")}<br />
               <span style={{ color: GREEN }}>{t("obf.step1_title_line2")}</span></>
@@ -517,25 +527,77 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           </div>
           {isApplication && (
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 28, maxWidth: 420 }}>
-              Ce questionnaire prend 8-10 min. Je le lis personnellement. Si ton profil match, je te contacte sous 48h.
+              3 min chrono. Je lis chaque candidature personnellement. Si on match, je te contacte sous 48h.
             </div>
           )}
           <Input label={t("obf.name_label")} placeholder={t("obf.name_placeholder")} value={form.nom_prenom} onChange={set("nom_prenom")} />
           {isApplication && (
             <Input label="Email" placeholder="ton@email.com" type="email" value={form.email} onChange={set("email")} />
           )}
-          <div style={S.row}>
-            <Input label={t("obf.age_label")} placeholder={t("obf.age_placeholder")} type="number" value={form.age} onChange={set("age")} half />
-            <Input label={t("obf.weight_label")} placeholder={t("obf.weight_placeholder")} type="number" value={form.poids} onChange={set("poids")} half />
-          </div>
-          <Input label={t("obf.height_label")} placeholder={t("obf.height_placeholder")} type="number" value={form.taille} onChange={set("taille")} />
-          <Input label={t("obf.phone_label")} placeholder={t("obf.phone_placeholder")} type="tel" value={form.telephone} onChange={set("telephone")} />
-          <Input label={t("obf.sport_history_label")} placeholder={t("obf.sport_history_placeholder")} value={form.passe_sportif} onChange={set("passe_sportif")} textarea />
-          <button
-            style={S.btn(!!form.nom_prenom && (!isApplication || /\S+@\S+\.\S+/.test(form.email)))}
-            onClick={nextStep}
-            disabled={isApplication && !/\S+@\S+\.\S+/.test(form.email)}
-          >{t("obf.continue")}</button>
+          {isApplication ? (
+            <>
+              <Input label={t("obf.age_label")} placeholder={t("obf.age_placeholder")} type="number" value={form.age} onChange={set("age")} />
+              <Input label={t("obf.phone_label")} placeholder={t("obf.phone_placeholder")} type="tel" value={form.telephone} onChange={set("telephone")} />
+              {/* Objectif principal — radio, qualification rapide. Le détail
+                  (poids/taille/passé sportif/diète/etc) est demandé après
+                  booking sur /candidature/profil (Level 2). */}
+              <div style={{ marginTop: 4, marginBottom: 4 }}>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 10, fontWeight: 600, letterSpacing: "0.3px" }}>
+                  Ton objectif principal
+                </div>
+                {[
+                  { v: "prise_masse", label: "Prise de masse / muscle" },
+                  { v: "seche",       label: "Sèche / perte de gras" },
+                  { v: "perf",        label: "Performance sportive" },
+                  { v: "recompo",     label: "Recomposition / mixte" },
+                  { v: "autre",       label: "Autre" },
+                ].map((opt) => {
+                  const isSel = form.objectif_principal === opt.v;
+                  return (
+                    <button
+                      key={opt.v}
+                      type="button"
+                      onClick={() => { haptic.selection(); set("objectif_principal")(opt.v); }}
+                      style={{
+                        display: "block", width: "100%", padding: "13px 16px", marginBottom: 8,
+                        background: isSel ? "rgba(2,209,186,0.12)" : "rgba(255,255,255,0.04)",
+                        border: `1px solid ${isSel ? GREEN : "rgba(255,255,255,0.08)"}`,
+                        borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700,
+                        letterSpacing: "0.2px", cursor: "pointer", transition: "all 0.15s",
+                        fontFamily: "-apple-system,Inter,sans-serif", textAlign: "left",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={S.row}>
+                <Input label={t("obf.age_label")} placeholder={t("obf.age_placeholder")} type="number" value={form.age} onChange={set("age")} half />
+                <Input label={t("obf.weight_label")} placeholder={t("obf.weight_placeholder")} type="number" value={form.poids} onChange={set("poids")} half />
+              </div>
+              <Input label={t("obf.height_label")} placeholder={t("obf.height_placeholder")} type="number" value={form.taille} onChange={set("taille")} />
+              <Input label={t("obf.phone_label")} placeholder={t("obf.phone_placeholder")} type="tel" value={form.telephone} onChange={set("telephone")} />
+              <Input label={t("obf.sport_history_label")} placeholder={t("obf.sport_history_placeholder")} value={form.passe_sportif} onChange={set("passe_sportif")} textarea />
+            </>
+          )}
+          {(() => {
+            const baseOK = !!form.nom_prenom && (!isApplication || /\S+@\S+\.\S+/.test(form.email));
+            const appOK = !isApplication || (
+              !!form.telephone && !!form.age && !!form.objectif_principal
+            );
+            const canContinue = baseOK && appOK;
+            return (
+              <button
+                style={S.btn(canContinue)}
+                onClick={nextStep}
+                disabled={!canContinue}
+              >{isApplication ? "Choisir mes dispos →" : t("obf.continue")}</button>
+            );
+          })()}
         </div>
       </div>
     );
@@ -709,7 +771,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
         {GLOBAL_STYLES}
         {BG}
         <div key="step6app" style={{ ...S.inner, position: "relative", zIndex: 1 }}>
-          <StepBar step={6} total={6} label={t("obf.step")} />
+          <StepBar step={2} total={2} label={t("obf.step")} />
           <div style={S.eyebrow}>Tes dispos</div>
           <div style={S.h1}>
             Choisis<br />
@@ -831,7 +893,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           >
             {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Envoi…</span>) : "Envoyer ma candidature →"}
           </button>
-          <button style={S.back} onClick={() => setStep(5)}>{t("obf.back")}</button>
+          <button style={S.back} onClick={() => setStep(1)}>{t("obf.back")}</button>
         </div>
       </div>
     );
@@ -1041,8 +1103,170 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
             {t("obf.sent_line2")}</>
           )}
         </p>
+
+        {/* Rappel des 3 créneaux choisis + add-to-calendar par créneau.
+            Améliore le show-up rate : l'athlète voit ses choix + peut bloquer
+            son agenda dès maintenant (Google / Apple / Outlook via .ics). */}
+        {isApplication && Array.isArray(form.preferred_slots) && form.preferred_slots.length > 0 && (
+          <div style={{ marginBottom: 32, animation: "fadeUp 0.6s ease 0.45s both", textAlign: "left", maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 14, textAlign: "center" }}>
+              Tes 3 créneaux proposés
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {form.preferred_slots.map((s, i) => {
+                const dt = new Date(`${s.date}T${s.time}:00`);
+                const dtEnd = new Date(dt.getTime() + 30 * 60 * 1000);
+                const fmt = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+                const gcalUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Appel RB Perform — créneau " + (i+1))}&dates=${fmt(dt)}/${fmt(dtEnd)}&details=${encodeURIComponent("Appel coaching RB Perform avec Rayan. Je te confirme par message si on garde ce créneau.")}`;
+                const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//RB Perform//FR\nBEGIN:VEVENT\nUID:${s.date}-${s.time}-rbperform@rb-perform\nDTSTAMP:${fmt(new Date())}\nDTSTART:${fmt(dt)}\nDTEND:${fmt(dtEnd)}\nSUMMARY:Appel RB Perform — créneau ${i+1}\nDESCRIPTION:Appel coaching RB Perform avec Rayan. Confirmation par message.\nEND:VEVENT\nEND:VCALENDAR`;
+                const icsUrl = `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
+                const niceDate = dt.toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" });
+                return (
+                  <div key={i} style={{ padding: "12px 14px", background: "rgba(2,209,186,0.05)", border: "1px solid rgba(2,209,186,0.18)", borderRadius: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", textTransform: "capitalize", marginBottom: 2 }}>
+                      {niceDate} · {s.time.replace(":00", "h")}
+                    </div>
+                    <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                      <a href={gcalUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: GREEN, textDecoration: "none", borderBottom: "1px solid rgba(2,209,186,0.4)" }}>Google Calendar</a>
+                      <a href={icsUrl} download={`rb-perform-slot-${i+1}.ics`} style={{ fontSize: 11, color: GREEN, textDecoration: "none", borderBottom: "1px solid rgba(2,209,186,0.4)" }}>Apple / Outlook (.ics)</a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 11, color: "rgba(255,255,255,0.42)", textAlign: "center" }}>
+              Je te confirme par message lequel on garde.
+            </div>
+          </div>
+        )}
+
+        {/* Vidéo perso de Rayan : à ajouter quand Rayan enregistre.
+            Quand uploadée, déposer le fichier dans /public/rayan-confirm-call.mp4
+            et réactiver le bloc commenté. */}
+
+        {/* Préparer l'appel : 3 actions concrètes. Engagement réciproque +
+            qualifie le profil mental "prêt à bouger". */}
+        {isApplication && (
+          <div style={{ marginBottom: 36, animation: "fadeUp 0.6s ease 0.55s both", textAlign: "left", maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 14, textAlign: "center" }}>
+              Avant notre appel
+            </div>
+            {[
+              { n: "1.", t: "Réfléchis à ton vrai pourquoi", d: "Au-delà de \"être plus musclé\" : qu'est-ce qui va changer dans ta vie quand tu auras atteint cet objectif ?" },
+              { n: "2.", t: "Sois dans un endroit calme", d: "Écouteurs, pas en voiture, pas pendant ton service. 30 min focus." },
+              { n: "3.", t: "Prépare une seule chose : ton budget annuel forme", d: "Salle + suppléments + bouffe spéciale + coach éventuel = X€/an. On va parler chiffres au lieu de tourner autour." },
+            ].map((item, i) => (
+              <div key={i} style={{ display: "flex", gap: 12, marginBottom: 16, alignItems: "flex-start" }}>
+                <div style={{ flexShrink: 0, color: GREEN, fontWeight: 900, fontSize: 16, lineHeight: 1.4 }}>{item.n}</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{item.t}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>{item.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Compléter le profil (Level 2) : récupère les infos détaillées
+            (poids/taille/passé/diète/freins/vision/etc) APRÈS booking pour
+            ne pas friction la candidature initiale. */}
+        {isApplication && (
+          <div style={{ marginBottom: 36, animation: "fadeUp 0.6s ease 0.6s both", maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
+            <a
+              href="/candidature/profil"
+              style={{
+                display: "block", padding: "16px 20px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: 14, color: "#fff", textDecoration: "none",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
+                ✨ Envoie-moi ton profil avant l'appel <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11 }}>(facultatif)</span>
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+                Quelques questions pour que je découvre ton profil avant qu'on se parle. Si tu préfères tout garder pour l'appel, c'est nickel aussi.
+              </div>
+            </a>
+          </div>
+        )}
+
+        {/* Preuve sociale APRÈS résa : les transformations clients qui étaient
+            sur la landing sont déplacées ici. Logique conversion : on évite la
+            friction "regarder avant de postuler" — l'athlète voit la preuve une
+            fois qu'il a déjà candidaté. Effet réassurance post-engagement. */}
+        {isApplication && (
+          <div style={{ marginBottom: 36, animation: "fadeUp 0.6s ease 0.55s both" }}>
+            <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 24 }}>
+              Résultats clients · ce qui t'attend
+            </div>
+            {[
+              { id: 1, name: "Senan", duration: "3 mois d'accompagnement" },
+              { id: 2, name: "Mael",  duration: "3 mois d'accompagnement" },
+              { id: 3, name: "Léo",   duration: "12 mois d'accompagnement" },
+            ].map((c) => (
+              <div key={c.id} style={{ marginBottom: 22, maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {[
+                    { src: "before", label: "AVANT" },
+                    { src: "after",  label: "APRÈS" },
+                  ].map(({ src, label }) => (
+                    <div key={src} style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", aspectRatio: "3 / 4", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                      <img
+                        src={`/transfo-${c.id}-${src}-400.webp`}
+                        srcSet={`/transfo-${c.id}-${src}-400.webp 400w, /transfo-${c.id}-${src}-800.webp 800w`}
+                        sizes="(max-width: 600px) 50vw, 210px"
+                        alt={`${c.name} - ${label}`}
+                        loading="lazy"
+                        decoding="async"
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      />
+                      <div style={{ position: "absolute", top: 10, left: 10, padding: "4px 9px", background: src === "after" ? GREEN : "rgba(0,0,0,0.7)", color: src === "after" ? "#000" : "#fff", fontSize: 9, fontWeight: 800, letterSpacing: "2px", borderRadius: 100 }}>
+                        {label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.7)", textAlign: "left" }}>
+                  <strong style={{ color: "#fff", fontWeight: 700 }}>{c.name}</strong> · {c.duration}
+                </div>
+              </div>
+            ))}
+            <a
+              href="https://instagram.com/rb_perform"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-block", marginTop: 8, fontSize: 12, color: GREEN, textDecoration: "none", letterSpacing: "0.3px", borderBottom: "1px solid rgba(2,209,186,0.45)", paddingBottom: 1 }}
+            >
+              Plus de transformations sur Instagram →
+            </a>
+          </div>
+        )}
+
+        {/* Témoignage court — verbatim client. Renforce la confiance juste
+            avant le bouton final. */}
+        {isApplication && (
+          <div style={{ marginBottom: 28, padding: "20px 22px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, maxWidth: 420, marginLeft: "auto", marginRight: "auto", animation: "fadeUp 0.6s ease 0.65s both" }}>
+            <div style={{ fontSize: 22, lineHeight: 1, color: GREEN, marginBottom: 8 }}>"</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, fontStyle: "italic", marginBottom: 10 }}>
+              J'ai pris 6 kg de muscle propre en 4 mois sans coup de mou. Rayan m'a remis sur les rails côté nutrition, c'est ce qui a tout changé.
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", fontWeight: 700, letterSpacing: "0.3px" }}>
+              — Senan · 3 mois d'accompagnement
+            </div>
+          </div>
+        )}
+
+        {/* Engagement réciproque — anti-no-show. */}
+        {isApplication && (
+          <div style={{ marginBottom: 28, padding: "14px 18px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 12, maxWidth: 420, marginLeft: "auto", marginRight: "auto", fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.6, textAlign: "left", animation: "fadeUp 0.6s ease 0.7s both" }}>
+            <strong style={{ color: "#fff", fontWeight: 700 }}>Si tu ne peux plus :</strong> préviens-moi au moins 24h avant. Je bloque exclusivement les créneaux pour des gens sérieux.
+          </div>
+        )}
+
         <button
-          style={{ ...S.btn(), animation: "fadeUp 0.6s ease 0.6s both", opacity: saving ? 0.7 : 1 }}
+          style={{ ...S.btn(), animation: "fadeUp 0.6s ease 0.75s both", opacity: saving ? 0.7 : 1 }}
           disabled={saving}
           onClick={async () => {
             if (saving) return;
