@@ -13,7 +13,6 @@ import SwiftUI
 struct RestTimerWidgetBundle: WidgetBundle {
     var body: some Widget {
         if #available(iOS 16.1, *) {
-            RestTimerLiveActivity()
             RunLiveActivity()
         }
     }

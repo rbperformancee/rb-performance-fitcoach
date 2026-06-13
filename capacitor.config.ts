@@ -28,9 +28,12 @@ const config: CapacitorConfig = {
       // n'a pas monté. Sans ça, iOS hide à 500ms puis la WebView affiche
       // ~1.5s d'écran noir avant que index.html peinte. Le hide() explicite
       // est appelé dans App.jsx après le 1er paint.
-      launchAutoHide: false,
-      // Fallback : si JS plante / n'appelle jamais hide(), iOS hide après 4s.
-      launchShowDuration: 4000,
+      // Auto-hide à 5s : iOS ferme le splash natif tout seul peu importe
+      // ce que fait JS — fini les écrans noirs de plusieurs secondes au
+      // démarrage (Rayan 13/06).
+      launchAutoHide: true,
+      launchShowDuration: 5000,
+      launchFadeOutDuration: 0,
       // #050505 = même couleur que body de index.html → zero flash de
       // couleur entre splash natif et HTML #splash (PWA-style éclair 80px).
       backgroundColor: '#050505',
