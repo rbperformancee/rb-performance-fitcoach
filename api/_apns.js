@@ -19,6 +19,7 @@
  */
 
 const crypto = require("crypto");
+const http2 = require("http2");
 
 const APNS_HOST_PROD = "api.push.apple.com";
 const APNS_HOST_SANDBOX = "api.sandbox.push.apple.com";
@@ -118,35 +119,63 @@ async function sendApnsNotification(apnsToken, notification) {
     ...(notification.url ? { url: String(notification.url) } : {}),
   };
 
-  // Node 18+ supporte fetch nativement, et Vercel garde HTTP/2 ouvert via
-  // undici. Apple exige HTTP/2 mais accepte HTTP/1.1 sur cet endpoint
-  // depuis 2023 (provider API mode legacy). On reste sur fetch standard.
-  try {
-    const res = await fetch(`https://${host}/3/device/${apnsToken}`, {
-      method: "POST",
-      headers: {
-        authorization: `bearer ${jwt}`,
-        "apns-topic": bundleId,
-        "apns-push-type": "alert", // requis iOS 13+
-        "apns-priority": "10",     // immediate (alert)
-        "apns-expiration": String(Math.floor(Date.now() / 1000) + 86400), // 24h
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(apsBody),
-    });
+  // Apple APNs n'expose QUE de l'HTTP/2 — `fetch` (undici) sur Vercel
+  // échoue avec "fetch failed" car la nego ALPN h2 ne passe pas dans le
+  // runtime serverless. On utilise donc `node:http2` directement.
+  return new Promise((resolve) => {
+    let settled = false;
+    const safeResolve = (v) => { if (!settled) { settled = true; resolve(v); } };
 
-    if (res.status === 200) {
-      return { ok: true, status: 200, dead: false };
+    let client;
+    try {
+      client = http2.connect(`https://${host}`);
+    } catch (e) {
+      return safeResolve({ ok: false, status: 0, dead: false, error: `h2_connect: ${e.message}` });
     }
 
-    // 410 = token mort (l'app a été désinstallée ou Apple a invalidé).
-    // 400 + BadDeviceToken = idem.
-    const text = await res.text().catch(() => "");
-    const dead = res.status === 410 || (res.status === 400 && /BadDeviceToken|Unregistered/i.test(text));
-    return { ok: false, status: res.status, dead, error: text.slice(0, 300) };
-  } catch (e) {
-    return { ok: false, status: 0, dead: false, error: String(e.message || e) };
-  }
+    const timer = setTimeout(() => {
+      safeResolve({ ok: false, status: 0, dead: false, error: "h2_timeout_10s" });
+      try { client.close(); } catch {}
+    }, 10000);
+
+    client.on("error", (e) => {
+      clearTimeout(timer);
+      safeResolve({ ok: false, status: 0, dead: false, error: `h2_socket: ${e.message}` });
+    });
+
+    const req = client.request({
+      ":method": "POST",
+      ":path": `/3/device/${apnsToken}`,
+      authorization: `bearer ${jwt}`,
+      "apns-topic": bundleId,
+      "apns-push-type": "alert",
+      "apns-priority": "10",
+      "apns-expiration": String(Math.floor(Date.now() / 1000) + 86400),
+      "content-type": "application/json",
+    });
+
+    let status = 0;
+    let body = "";
+    req.on("response", (h) => { status = h[":status"]; });
+    req.on("data", (chunk) => { body += chunk.toString(); });
+    req.on("error", (e) => {
+      clearTimeout(timer);
+      safeResolve({ ok: false, status: 0, dead: false, error: `h2_req: ${e.message}` });
+      try { client.close(); } catch {}
+    });
+    req.on("end", () => {
+      clearTimeout(timer);
+      try { client.close(); } catch {}
+      if (status === 200) {
+        return safeResolve({ ok: true, status: 200, dead: false });
+      }
+      const dead = status === 410 || (status === 400 && /BadDeviceToken|Unregistered/i.test(body));
+      safeResolve({ ok: false, status, dead, error: body.slice(0, 300) });
+    });
+
+    req.write(JSON.stringify(apsBody));
+    req.end();
+  });
 }
 
 module.exports = {
