@@ -63,7 +63,11 @@ module.exports = async function handler(req, res) {
   }
 
   // ─── 2. Validation body ───
-  const { stripe_session_id, email, full_name, source, raw_metadata } = req.body || {};
+  // bump_app_paid : si true, l'acheteur a payé l'add-on app à +30€ au
+  // checkout. On bypass alors le compteur 30 places (sa place est garantie
+  // hors quota founders). Sert pour les acheteurs Athlète 90 qui arrivent
+  // après les 30 premiers et choisissent de payer l'app au checkout.
+  const { stripe_session_id, email, full_name, source, raw_metadata, bump_app_paid } = req.body || {};
 
   if (!stripe_session_id || typeof stripe_session_id !== 'string' || stripe_session_id.length < 4) {
     return res.status(400).json({ error: 'stripe_session_id_required' });
@@ -146,9 +150,10 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // ─── 6. Compteur 30 places ───
+    // ─── 6. Compteur 30 places (bypassé si bump_app_paid) ───
     const grantedCount = await countGranted(supabase);
-    if (grantedCount >= MAX_GRANTED_SLOTS) {
+    const isBumpAppPaid = bump_app_paid === true;
+    if (grantedCount >= MAX_GRANTED_SLOTS && !isBumpAppPaid) {
       console.log(`[ebook-grant ${reqId}] waitlist (${grantedCount}/${MAX_GRANTED_SLOTS} taken) for ${normalizedEmail}`);
       await supabase.from('ebook_purchases').insert({
         stripe_session_id,
@@ -167,6 +172,9 @@ module.exports = async function handler(req, res) {
         client_id: null,
         programme_id: null,
       });
+    }
+    if (grantedCount >= MAX_GRANTED_SLOTS && isBumpAppPaid) {
+      console.log(`[ebook-grant ${reqId}] bypass 30-quota for ${normalizedEmail} (bump_app_paid=true)`);
     }
 
     // ─── 7. Slot OK → provisioning ───
