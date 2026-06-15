@@ -317,7 +317,7 @@ export default function EbookMethodeWaitlist() {
               lineHeight: 1.6, marginBottom: 32,
             }}
           >
-            Tu reçois le lien direct lundi 15 juin à 9 h. Les 30 premiers acheteurs ont leur programme sur l'app.
+            Tu reçois le lien direct dès la mise en ligne, ce mois de juin. Les 30 premiers acheteurs ont leur programme sur l'app.
           </p>
           <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
             <WaitlistForm />
@@ -340,7 +340,7 @@ export default function EbookMethodeWaitlist() {
           >
             {[
               { n: "01", t: "Tu t'inscris", d: "Email + prénom. 30 secondes." },
-              { n: "02", t: "Tu reçois le lien", d: "Lundi 15 juin · 9 h." },
+              { n: "02", t: "Tu reçois le lien", d: "Dès la mise en ligne · ce mois de juin." },
               { n: "03", t: "Tu prends ta place", d: "30 premiers = app disponible." },
             ].map((step) => (
               <div
@@ -400,7 +400,7 @@ export default function EbookMethodeWaitlist() {
             RB Perform — Édition 2026
           </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
-            Méthode ATHLÈTE COMPLET · Sortie lundi 15 juin
+            Méthode ATHLÈTE COMPLET · Sortie ce mois
           </div>
         </div>
       </div>
@@ -476,7 +476,7 @@ function WaitlistForm() {
           Inscription confirmée.
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>
-          Tu recevras le lien direct vers la méthode <strong style={{ color: "#fff" }}>lundi 15 juin à 9 h</strong>.
+          Tu recevras le lien direct vers la méthode <strong style={{ color: "#fff" }}>dès la mise en ligne ce mois de juin</strong>.
           Les 30 premiers acheteurs ont leur programme sur l'app — ça se joue à la rapidité.
         </div>
       </div>
