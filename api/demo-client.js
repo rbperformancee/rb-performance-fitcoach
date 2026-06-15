@@ -37,6 +37,15 @@ let _cachedSession = null; // { access_token, refresh_token, fetchedAt }
 const SESSION_CACHE_MS = 50 * 60 * 1000;
 
 module.exports = async (req, res) => {
+  // CORS headers — sans ça, WKWebView de l'app native (Origin = capacitor://localhost)
+  // bloque la réponse côté navigateur même si le serveur retourne 200. Apple
+  // App Review a vu le bouton "Continuer en mode démo" lever une erreur sur iPad
+  // pour exactement cette raison (rejection 13/06).
+  const origin = req.headers.origin || "";
+  res.setHeader("Access-Control-Allow-Origin", origin || "https://rbperform.app");
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Cache-Control", "no-store, max-age=0");
 
   // CORS preflight — return early before any auth/rate-limit logic.
