@@ -69,12 +69,21 @@ const applicationSchema = z.object({
   motivation_principale: z.string().max(2000).optional().nullable(),
   risques_abandon: z.string().max(2000).optional().nullable(),
   autres_infos: z.string().max(2000).optional().nullable(),
-  // Qualification budget — 3 paliers (offre principale = 150€)
-  // + escape 'discuss' pour les indecis. Aucun palier ne bloque la
-  // soumission cote API : Rayan trie en admin.
-  // Legacy values 'lt_100' / '100' / 'gt_200' acceptees pour les anciennes
-  // soumissions (compatibilite migration 17/06).
+  // Qualification budget LEGACY — plus demande dans le form actuel
+  // (remplace par commitment_timeline 17/06, approche Hormozi). On garde
+  // l'enum pour ne pas casser les anciennes soumissions.
   budget_mensuel: z.enum(['150', '200', 'gt_300', 'lt_100', '100', 'gt_200', 'discuss']).optional().nullable(),
+  // Qualification engagement (17/06) — 3 valeurs :
+  //   'week'  : prêt à démarrer dans la semaine si match
+  //   'month' : dans le mois (cas normal, jeunes / parents impliques)
+  //   'thinking' : encore en reflexion (nurture)
+  commitment_timeline: z.enum(['week', 'month', 'thinking']).optional().nullable(),
+  // Decideur — uniquement si mineur (age < 18). Permet d'anticiper si
+  // l'appel doit impliquer les parents.
+  //   'self'     : décide seul
+  //   'parents'  : décision avec parents (call à 3 a prévoir)
+  //   'thinking' : pas encore décidé
+  decision_maker: z.enum(['self', 'parents']).optional().nullable(),
   // Anchoring : depense mensuelle deja consentie pour la perf
   // (salle + supplements + coach precedent). Champ libre.
   depense_actuelle_perf: z.string().max(500).optional().nullable(),
@@ -107,16 +116,28 @@ function formatSlot(s) {
   } catch { return `${s.date} ${s.time}`; }
 }
 
-// Map budget enum to display label + color (admin email badge).
+// Map budget enum (LEGACY) to display label + color (admin email badge).
 const BUDGET_LABELS = {
   '150':   { label: '~150€/mois (cible)',     color: '#02d1ba', tone: 'rgba(2,209,186,0.14)' },
   '200':   { label: '~200€/mois',             color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
   gt_300:  { label: '300€+/mois (premium)',   color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
   discuss: { label: 'J\'en parle d\'abord',   color: 'rgba(255,255,255,0.6)', tone: 'rgba(255,255,255,0.06)' },
-  // Legacy
   lt_100:  { label: 'Moins de 100€/mois (legacy)', color: '#ff5757', tone: 'rgba(255,87,87,0.12)' },
   '100':   { label: '~100€/mois (legacy)',         color: '#f0a93b', tone: 'rgba(240,169,59,0.12)' },
   gt_200:  { label: '200€+/mois (legacy)',         color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
+};
+
+// Engagement temporel — utilisé pour prioriser les call-backs.
+const TIMELINE_LABELS = {
+  week:     { label: 'Demarre dans la semaine', color: '#02d1ba', tone: 'rgba(2,209,186,0.14)' },
+  month:    { label: 'Demarre dans le mois',    color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
+  thinking: { label: 'En reflexion',            color: 'rgba(255,255,255,0.6)', tone: 'rgba(255,255,255,0.06)' },
+};
+
+// Décideur (mineurs uniquement).
+const DECISION_LABELS = {
+  self:     { label: 'Decide seul',                color: '#02d1ba', tone: 'rgba(2,209,186,0.14)' },
+  parents:  { label: 'Avec les parents (call 3)',  color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
 };
 
 function buildAdminEmail(app) {
@@ -124,11 +145,24 @@ function buildAdminEmail(app) {
   const obj = (app.objectifs_3mois || app.objectifs_6semaines || '').slice(0, 80);
   const fmt = (k, v) => v ? `<tr><td style="padding:4px 12px 4px 0;color:rgba(255,255,255,0.45);font-size:12px;width:160px;vertical-align:top">${escHtml(k)}</td><td style="padding:4px 0;color:#fff;font-size:13px">${escHtml(v)}</td></tr>` : '';
 
-  // Budget badge — surfacé en haut de l'email pour triage rapide.
+  // Badges qualif — surfacés en haut pour triage rapide.
+  const mkBadge = (label, color, tone) =>
+    `<div style="display:inline-block;padding:6px 12px;margin:0 8px 10px 0;background:${tone};border:1px solid ${color}55;border-radius:100px;font-size:11px;font-weight:800;color:${color};letter-spacing:.05em;text-transform:uppercase">${escHtml(label)}</div>`;
+
   const b = BUDGET_LABELS[app.budget_mensuel];
-  const budgetBadge = b
-    ? `<div style="display:inline-block;padding:6px 12px;margin-bottom:18px;background:${b.tone};border:1px solid ${b.color}55;border-radius:100px;font-size:11px;font-weight:800;color:${b.color};letter-spacing:.05em;text-transform:uppercase">Budget : ${escHtml(b.label)}</div>`
-    : '';
+  const tl = TIMELINE_LABELS[app.commitment_timeline];
+  const dm = DECISION_LABELS[app.decision_maker];
+  const ageNum = parseInt(app.age, 10);
+  const minorBadge = (Number.isFinite(ageNum) && ageNum < 18)
+    ? mkBadge(`Mineur (${ageNum} ans)`, '#ff7b00', 'rgba(255,123,0,0.12)') : '';
+
+  const badges =
+    (tl ? mkBadge(tl.label, tl.color, tl.tone) : '') +
+    (dm ? mkBadge(dm.label, dm.color, dm.tone) : '') +
+    minorBadge +
+    (b ? mkBadge(`Budget legacy : ${b.label}`, b.color, b.tone) : '');
+
+  const budgetBadge = badges ? `<div style="margin-bottom:14px">${badges}</div>` : '';
 
   const slotsHtml = Array.isArray(app.preferred_slots) && app.preferred_slots.length
     ? `<div style="margin-bottom:24px;padding:18px;background:rgba(2,209,186,0.08);border:1px solid rgba(2,209,186,0.3);border-radius:12px">
@@ -177,7 +211,9 @@ function buildAdminEmail(app) {
       ${fmt('Risques d\'abandon', app.risques_abandon)}
       ${fmt('Autres infos', app.autres_infos)}
       ${fmt('Investissement actuel /mois', app.depense_actuelle_perf)}
-      ${fmt('Budget envisagé', b ? b.label : app.budget_mensuel)}
+      ${fmt('Engagement temporel', tl ? tl.label : app.commitment_timeline)}
+      ${fmt('Decideur', dm ? dm.label : app.decision_maker)}
+      ${fmt('Budget envisage (legacy)', b ? b.label : app.budget_mensuel)}
       ${fmt('Source', app.source || 'instagram')}
       ${fmt('UTM source', app.utm_source)}
       ${fmt('UTM campaign', app.utm_campaign)}

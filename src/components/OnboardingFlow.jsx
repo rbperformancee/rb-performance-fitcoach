@@ -188,12 +188,15 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       one_rm_bench: "", one_rm_squat: "", one_rm_traction: "",
       motivation_principale: "", risques_abandon: "", autres_infos: "",
       preferred_slots: [],  // Mode application : 3 creneaux preferes (JSON array of {date, time})
-      // Mode application : qualification budget non-bloquante.
-      // depense_actuelle_perf = anchoring (etape 5), champ libre.
-      // budget_mensuel = palier choisi a l'etape 6 — 4 valeurs + escape :
-      //   '150' (offre principale) | '200' | 'gt_300' | 'discuss'
+      // Mode application — qualification non-budget (Hormozi style 17/06):
+      // - depense_actuelle_perf = anchoring soft (champ libre)
+      // - commitment_timeline = engagement temporel ('week'|'month'|'thinking')
+      // - decision_maker = uniquement si age < 18 ('self'|'parents'|'thinking')
+      // Plus de budget_mensuel demandé directement (legacy values toujours
+      // acceptées API pour les anciennes soumissions).
       depense_actuelle_perf: "",
-      budget_mensuel: "",
+      commitment_timeline: "",
+      decision_maker: "",
       // Application short funnel (13/06) : objectif quick-radio à l'étape 1.
       objectif_principal: "",
     };
@@ -846,48 +849,34 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
             />
           </div>
 
-          {/* Qualification budget — 3 paliers calibres autour de l'offre principale (150€).
-              Aucun palier ne bloque la soumission : Rayan trie en admin. */}
+          {/* Qualification engagement (Hormozi 17/06) — pas de budget demandé.
+              Le timeline filtre les sérieux des curieux sans poser de chiffre. */}
           <div style={{ marginBottom: 24, padding: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
             <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 10, fontWeight: 700 }}>
-              Investissement
+              Engagement
             </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)", lineHeight: 1.5, marginBottom: 6 }}>
-              Quel budget mensuel envisages-tu pour ton accompagnement ?
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginBottom: 14 }}>
-              Je propose plusieurs formats. Cette info m'aide à te proposer le bon.
+            <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)", lineHeight: 1.5, marginBottom: 14 }}>
+              Si on est alignés à l'appel, tu démarres quand&nbsp;?
             </div>
             {[
-              { v: "150",     label: "~150€" },
-              { v: "200",     label: "~200€" },
-              { v: "gt_300",  label: "300€ +" },
-              { v: "discuss", label: "J'en parle d'abord avec toi" },
+              { v: "week",     label: "Dans la semaine" },
+              { v: "month",    label: "Dans le mois" },
+              { v: "thinking", label: "J'ai besoin de réfléchir" },
             ].map((opt) => {
-              const isSel = form.budget_mensuel === opt.v;
+              const isSel = form.commitment_timeline === opt.v;
               return (
                 <button
                   key={opt.v}
                   type="button"
-                  onClick={() => { haptic.selection(); set("budget_mensuel")(opt.v); }}
+                  onClick={() => { haptic.selection(); set("commitment_timeline")(opt.v); }}
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    width: "100%",
-                    padding: "13px 16px",
-                    marginBottom: 8,
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    width: "100%", padding: "13px 16px", marginBottom: 8,
                     background: isSel ? "rgba(2,209,186,0.12)" : "rgba(255,255,255,0.04)",
                     border: `1px solid ${isSel ? GREEN : "rgba(255,255,255,0.08)"}`,
-                    borderRadius: 12,
-                    color: "#fff",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    letterSpacing: "0.2px",
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                    fontFamily: "-apple-system,Inter,sans-serif",
-                    textAlign: "left",
+                    borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700,
+                    letterSpacing: "0.2px", cursor: "pointer", transition: "all 0.15s",
+                    fontFamily: "-apple-system,Inter,sans-serif", textAlign: "left",
                   }}
                 >
                   <span>{opt.label}</span>
@@ -896,13 +885,58 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
             })}
           </div>
 
-          <button
-            style={S.btn(selected.length === 3 && !!form.budget_mensuel)}
-            onClick={nextStep}
-            disabled={saving || selected.length !== 3 || !form.budget_mensuel}
-          >
-            {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Envoi…</span>) : "Envoyer ma candidature →"}
-          </button>
+          {/* Question décideur — uniquement si mineur (age < 18 saisi en step 1).
+              Permet de savoir avant l'appel s'il faut impliquer les parents. */}
+          {parseInt(form.age, 10) < 18 && form.age !== "" && (
+            <div style={{ marginBottom: 24, padding: 20, background: "rgba(255,215,0,0.04)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 12 }}>
+              <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(255,215,0,0.7)", marginBottom: 10, fontWeight: 700 }}>
+                Décision
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)", lineHeight: 1.5, marginBottom: 14 }}>
+                Qui prendra la décision finale&nbsp;?
+              </div>
+              {[
+                { v: "self",     label: "Moi seul" },
+                { v: "parents",  label: "Avec mes parents" },
+              ].map((opt) => {
+                const isSel = form.decision_maker === opt.v;
+                return (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => { haptic.selection(); set("decision_maker")(opt.v); }}
+                    style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      width: "100%", padding: "13px 16px", marginBottom: 8,
+                      background: isSel ? "rgba(255,215,0,0.14)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${isSel ? "#ffd700" : "rgba(255,255,255,0.08)"}`,
+                      borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700,
+                      letterSpacing: "0.2px", cursor: "pointer", transition: "all 0.15s",
+                      fontFamily: "-apple-system,Inter,sans-serif", textAlign: "left",
+                    }}
+                  >
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {(() => {
+            const isMinor = parseInt(form.age, 10) < 18 && form.age !== "";
+            const ok = selected.length === 3
+              && !!form.commitment_timeline
+              && (!isMinor || !!form.decision_maker);
+            return (
+              <button
+                style={S.btn(ok)}
+                onClick={nextStep}
+                disabled={saving || !ok}
+              >
+                {saving ? (<span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><Spinner variant="dots" size={18} color="#000" />Envoi…</span>) : "Envoyer ma candidature →"}
+              </button>
+            );
+          })()}
           <button style={S.back} onClick={() => setStep(1)}>{t("obf.back")}</button>
         </div>
       </div>
