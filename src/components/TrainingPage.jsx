@@ -1033,24 +1033,31 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   });
   const intervalRef = useRef(null);
 
-  // Détecte un nouveau programme : clear les complétions de séance et chrono
-  // finisher en localStorage (sinon les anciennes complétions persistent par index).
+  // Détecte un nouveau programme : clear les complétions de séance, finisher,
+  // warmup et tout cache par-index en localStorage (sinon les flags d'un
+  // ancien block "validee=true" rendent les premières semaines vertes alors
+  // que le client n'a encore rien fait sur le NOUVEAU programme).
+  //
+  // FIX 16/06 Rayan (Maxime Mignard a vu sem 1 et 2 cochées d'office) :
+  //  - Comparaison faite sur programmeMeta.id (DB PK), pas programme?.id qui
+  //    peut être null ou un id HTML qui ne change pas entre blocks.
+  //  - Étend le clear aux rb_warmup_* (state warmup persistant).
   useEffect(() => {
-    const progId = programme?.id || programme?.programme_id;
+    const progId = programmeMeta?.id || programme?.id || programme?.programme_id;
     if (!progId) return;
     const key = "rb_current_prog_id";
     const stored = localStorage.getItem(key);
     if (stored && stored !== String(progId)) {
       try {
         Object.keys(localStorage).forEach(k => {
-          if (k.startsWith("rb_c_") || k.startsWith("rb_finisher_")) {
+          if (k.startsWith("rb_c_") || k.startsWith("rb_finisher_") || k.startsWith("rb_warmup_")) {
             localStorage.removeItem(k);
           }
         });
       } catch {}
     }
     try { localStorage.setItem(key, String(progId)); } catch {}
-  }, [programme?.id, programme?.programme_id]);
+  }, [programmeMeta?.id, programme?.id, programme?.programme_id]);
 
   // Un seul effet - relit le timestamp a chaque tick
   useEffect(() => {
