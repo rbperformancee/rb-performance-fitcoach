@@ -30,6 +30,7 @@ import haptic from "../lib/haptic";
 import { parseProgrammeHTML } from "../utils/parserProgramme";
 import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
+import CRMSection from "./coach/CRMSection";
 import ProgrammeDuplicateModal from "./coach/ProgrammeDuplicateModal";
 import Onboarding from "./coach/Onboarding";
 import BulkWeightImportCSV from "./coach/BulkWeightImportCSV";
@@ -4951,6 +4952,21 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const hasSentinelAccess = isFoundingCoach || SENTINEL_PLANS.includes(coachData?.subscription_plan);
   const [activeTab, setActiveTab] = useState("overview");
   const [celebMilestone, setCelebMilestone] = useState(null);
+
+  // CRM personnel super-admin — onglet caché pour tous les autres coachs.
+  // Check email auth contre la table super_admins au mount.
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const email = u?.user?.email;
+      if (!email) return;
+      const { data } = await supabase.from("super_admins").select("email").eq("email", email).maybeSingle();
+      if (!cancelled) setIsSuperAdmin(!!data);
+    })();
+    return () => { cancelled = true; };
+  }, []);
   // Map clientId → name pour ActivityFeedToday (évite re-fetch des noms)
   const clientsById = React.useMemo(() => {
     const m = new Map();
@@ -5826,12 +5842,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const pillTabs = ["overview", "clients", "programmes", "business"];
+  const pillTabs = ["overview", "clients", "programmes", "business", ...(isSuperAdmin ? ["crm"] : [])];
   const pillItems = [
     { id: "overview",    icon: "chart",       label: t("coach.nav_home"),       shortLabel: "HOME",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
     { id: "clients",     icon: "users",       label: t("coach.nav_clients"),    shortLabel: "CLIENTS", onClick: () => { setSelected(null); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
     { id: "programmes",  icon: "document",    label: t("coach.nav_prog"),       shortLabel: "PROG",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
     { id: "business",    icon: "trending",    label: t("coach.nav_business"),   shortLabel: "BIZ",     onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
+    // CRM perso super-admin (Rayan) — pas dans la pill par défaut, accessible
+    // via tab swap manuel ou bouton (More menu si besoin plus tard). Caché pour
+    // tous les autres coachs.
+    ...(isSuperAdmin ? [{ id: "crm", icon: "users", label: "CRM", shortLabel: "CRM", onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("crm"); } }] : []),
     { id: "more",        icon: "plus",        label: t("cd.pill_more"),      shortLabel: t("cd.pill_more_short"),    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   // Swipe gesture sur la pill
@@ -6643,6 +6663,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               onAssign={(prog) => setDuplicateProgramme(prog)}
               onCreate={(client) => setNewProgClient(client)}
             />
+          )}
+
+          {/* ========== CRM PERSONNEL (Super Admin only — Rayan) ========== */}
+          {!showClientList && activeTab === "crm" && isSuperAdmin && (
+            <CRMSection coachId={coachId} />
           )}
 
           {/* ========== ACHIEVEMENTS (badges + streak + rank) ========== */}
