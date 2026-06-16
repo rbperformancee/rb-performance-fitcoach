@@ -159,13 +159,92 @@ export default function EbookMethodeWaitlist() {
           style={{
             fontSize: 17, lineHeight: 1.65,
             color: "rgba(255,255,255,0.6)",
-            marginBottom: 40, maxWidth: 520,
+            marginBottom: 28, maxWidth: 520,
             marginLeft: "auto", marginRight: "auto",
             animation: "liste_fadeUp 0.7s ease 0.3s both",
           }}
         >
           12 semaines. +60 séances. Un livret de référence qui ne ressemble à rien d'autre.
         </p>
+
+        {/* Compteur places fondateur — visuel avec progress bar. La barre
+            visualise les inscrits sur la waitlist par rapport aux 30 places
+            (cap "soft" à 30 pour rester crédible). Pleine = près du sold-out. */}
+        {(() => {
+          const total = 30;
+          const inscrits = signupCount ?? 0;
+          const fillPct = Math.min(100, Math.max(8, (inscrits / total) * 100));
+          return (
+            <div
+              className="liste-anim"
+              style={{
+                maxWidth: 460, marginLeft: "auto", marginRight: "auto",
+                marginBottom: 36, padding: "18px 22px",
+                background: "rgba(2,209,186,0.05)",
+                border: "1px solid rgba(2,209,186,0.22)",
+                borderRadius: 16,
+                animation: "liste_fadeUp 0.7s ease 0.35s both",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+                <div style={{ fontSize: 10, letterSpacing: "3px", textTransform: "uppercase", color: GREEN, fontWeight: 800 }}>
+                  Places fondateur
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>
+                  <span style={{ color: GREEN, fontSize: 18, fontWeight: 900 }}>{inscrits}</span>
+                  <span style={{ color: "rgba(255,255,255,0.45)" }}> inscrits / {total} places</span>
+                </div>
+              </div>
+              <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3, overflow: "hidden" }}>
+                <div
+                  style={{
+                    width: `${fillPct}%`,
+                    height: "100%",
+                    background: `linear-gradient(90deg, ${GREEN}, #5ee8d4)`,
+                    boxShadow: `0 0 10px rgba(2,209,186,0.55)`,
+                    transition: "width 1s ease",
+                  }}
+                />
+              </div>
+              <div style={{ marginTop: 10, fontSize: 11, color: "rgba(255,255,255,0.5)", letterSpacing: "0.2px" }}>
+                Les inscrits passent en premier dès l'ouverture (juin 2026).
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Formulaire waitlist — remonté tout en haut, juste après le compteur
+            de places, pour réduire au max la friction d'inscription. */}
+        <section id="form" className="liste-anim" style={{ marginBottom: 48, animation: "liste_fadeUp 0.7s ease 0.4s both" }}>
+          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 14 }}>
+            Inscription gratuite
+          </div>
+          <h2
+            style={{
+              fontFamily: '"Inter", -apple-system, sans-serif',
+              fontSize: "clamp(26px, 5vw, 34px)",
+              fontWeight: 900,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+              marginBottom: 14,
+            }}
+          >
+            Je rejoins la liste.
+          </h2>
+          <p
+            style={{
+              maxWidth: 460, marginLeft: "auto", marginRight: "auto",
+              fontSize: 14, color: "rgba(255,255,255,0.6)",
+              lineHeight: 1.6, marginBottom: 22,
+            }}
+          >
+            Lien direct dès la mise en ligne · 30 premiers acheteurs = app offerte.
+          </p>
+          <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
+            <WaitlistForm />
+          </div>
+        </section>
 
         {/* Profile card */}
         <div
@@ -290,39 +369,6 @@ export default function EbookMethodeWaitlist() {
             ))}
           </div>
         </div>
-
-        <div aria-hidden="true" style={{ height: 1, width: 64, background: "rgba(255,255,255,0.1)", margin: "0 auto 56px" }} />
-
-        {/* Formulaire waitlist */}
-        <section id="form" className="liste-anim" style={{ marginBottom: 56, animation: "liste_fadeUp 0.7s ease 0.6s both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 14 }}>
-            Inscription gratuite
-          </div>
-          <h2
-            style={{
-              fontFamily: '"Inter", -apple-system, sans-serif',
-              fontSize: "clamp(28px, 5vw, 38px)",
-              fontWeight: 900,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
-              marginBottom: 16,
-            }}
-          >
-            Rejoins la liste.
-          </h2>
-          <p
-            style={{
-              maxWidth: 460, marginLeft: "auto", marginRight: "auto",
-              fontSize: 14, color: "rgba(255,255,255,0.6)",
-              lineHeight: 1.6, marginBottom: 32,
-            }}
-          >
-            Tu reçois le lien direct dès la mise en ligne, ce mois de juin. Les 30 premiers acheteurs ont leur programme sur l'app.
-          </p>
-          <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
-            <WaitlistForm />
-          </div>
-        </section>
 
         <div aria-hidden="true" style={{ height: 1, width: 64, background: "rgba(255,255,255,0.1)", margin: "0 auto 56px" }} />
 
