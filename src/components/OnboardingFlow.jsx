@@ -191,7 +191,7 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
       // Mode application : qualification budget non-bloquante.
       // depense_actuelle_perf = anchoring (etape 5), champ libre.
       // budget_mensuel = palier choisi a l'etape 6 — 4 valeurs + escape :
-      //   'lt_100' | '100' | '150' (offre principale) | 'gt_200' | 'discuss'
+      //   '150' (offre principale) | '200' | 'gt_300' | 'discuss'
       depense_actuelle_perf: "",
       budget_mensuel: "",
       // Application short funnel (13/06) : objectif quick-radio à l'étape 1.
@@ -833,9 +833,22 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
             ))}
           </div>
 
-          {/* Qualification budget — 4 paliers calibres autour de l'offre principale (150€).
+          {/* Anchoring "tu investis déjà combien" — déplacé ici depuis step 5
+              (qui est SKIPPÉ en mode application). Normalise l'idée d'investir
+              avant la question budget juste en-dessous. */}
+          <div style={{ marginTop: 32, marginBottom: 16 }}>
+            <Input
+              label="Tu investis déjà combien chaque mois dans ta perf ?"
+              placeholder="Ex : 60€ salle + 50€ suppléments + 0 coach = 110€/mois"
+              value={form.depense_actuelle_perf}
+              onChange={set("depense_actuelle_perf")}
+              textarea
+            />
+          </div>
+
+          {/* Qualification budget — 3 paliers calibres autour de l'offre principale (150€).
               Aucun palier ne bloque la soumission : Rayan trie en admin. */}
-          <div style={{ marginTop: 32, marginBottom: 24, padding: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
+          <div style={{ marginBottom: 24, padding: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
             <div style={{ fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: "rgba(2,209,186,0.6)", marginBottom: 10, fontWeight: 700 }}>
               Investissement
             </div>
@@ -846,10 +859,9 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
               Je propose plusieurs formats. Cette info m'aide à te proposer le bon.
             </div>
             {[
-              { v: "lt_100",  label: "Moins de 100€" },
-              { v: "100",     label: "~100€" },
               { v: "150",     label: "~150€" },
-              { v: "gt_200",  label: "200€ +" },
+              { v: "200",     label: "~200€" },
+              { v: "gt_300",  label: "300€ +" },
               { v: "discuss", label: "J'en parle d'abord avec toi" },
             ].map((opt) => {
               const isSel = form.budget_mensuel === opt.v;

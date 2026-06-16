@@ -69,10 +69,12 @@ const applicationSchema = z.object({
   motivation_principale: z.string().max(2000).optional().nullable(),
   risques_abandon: z.string().max(2000).optional().nullable(),
   autres_infos: z.string().max(2000).optional().nullable(),
-  // Qualification budget — 4 paliers (offre principale = 150€)
+  // Qualification budget — 3 paliers (offre principale = 150€)
   // + escape 'discuss' pour les indecis. Aucun palier ne bloque la
   // soumission cote API : Rayan trie en admin.
-  budget_mensuel: z.enum(['lt_100', '100', '150', 'gt_200', 'discuss']).optional().nullable(),
+  // Legacy values 'lt_100' / '100' / 'gt_200' acceptees pour les anciennes
+  // soumissions (compatibilite migration 17/06).
+  budget_mensuel: z.enum(['150', '200', 'gt_300', 'lt_100', '100', 'gt_200', 'discuss']).optional().nullable(),
   // Anchoring : depense mensuelle deja consentie pour la perf
   // (salle + supplements + coach precedent). Champ libre.
   depense_actuelle_perf: z.string().max(500).optional().nullable(),
@@ -107,11 +109,14 @@ function formatSlot(s) {
 
 // Map budget enum to display label + color (admin email badge).
 const BUDGET_LABELS = {
-  lt_100:  { label: 'Moins de 100€/mois',     color: '#ff5757', tone: 'rgba(255,87,87,0.12)' },
-  '100':   { label: '~100€/mois',             color: '#f0a93b', tone: 'rgba(240,169,59,0.12)' },
   '150':   { label: '~150€/mois (cible)',     color: '#02d1ba', tone: 'rgba(2,209,186,0.14)' },
-  gt_200:  { label: '200€+/mois (premium)',   color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
+  '200':   { label: '~200€/mois',             color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
+  gt_300:  { label: '300€+/mois (premium)',   color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
   discuss: { label: 'J\'en parle d\'abord',   color: 'rgba(255,255,255,0.6)', tone: 'rgba(255,255,255,0.06)' },
+  // Legacy
+  lt_100:  { label: 'Moins de 100€/mois (legacy)', color: '#ff5757', tone: 'rgba(255,87,87,0.12)' },
+  '100':   { label: '~100€/mois (legacy)',         color: '#f0a93b', tone: 'rgba(240,169,59,0.12)' },
+  gt_200:  { label: '200€+/mois (legacy)',         color: '#ffd700', tone: 'rgba(255,215,0,0.12)' },
 };
 
 function buildAdminEmail(app) {
