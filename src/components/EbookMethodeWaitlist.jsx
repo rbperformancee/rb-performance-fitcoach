@@ -153,18 +153,48 @@ export default function EbookMethodeWaitlist() {
           </span>
         </h1>
 
+        {/* App-offerte badge — message critique : les 30 premiers ont l'app
+            OFFERTE. Sans ça la promesse n'est pas claire à l'œil. */}
+        <div
+          className="liste-anim"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 20,
+            padding: "10px 18px",
+            background: `linear-gradient(135deg, ${GREEN}, #0891b2)`,
+            borderRadius: 100,
+            boxShadow: "0 4px 20px rgba(2,209,186,0.4)",
+            animation: "liste_fadeUp 0.7s ease 0.25s both",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>🎁</span>
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: "#000",
+              letterSpacing: "0.6px",
+              textTransform: "uppercase",
+            }}
+          >
+            Accès app RB Perform OFFERT aux 30 premiers
+          </span>
+        </div>
+
         {/* Subhead */}
         <p
           className="liste-anim"
           style={{
             fontSize: 17, lineHeight: 1.65,
-            color: "rgba(255,255,255,0.6)",
+            color: "rgba(255,255,255,0.65)",
             marginBottom: 28, maxWidth: 520,
             marginLeft: "auto", marginRight: "auto",
             animation: "liste_fadeUp 0.7s ease 0.3s both",
           }}
         >
-          12 semaines. +60 séances. Un livret de référence qui ne ressemble à rien d'autre.
+          12 semaines · +60 séances · Livret 110 pages <strong style={{ color: "#fff" }}>+ l'app RB Perform offerte pour les 30 premiers</strong>.
         </p>
 
         {/* Compteur places fondateur — visuel avec progress bar. La barre
@@ -235,11 +265,11 @@ export default function EbookMethodeWaitlist() {
           <p
             style={{
               maxWidth: 460, marginLeft: "auto", marginRight: "auto",
-              fontSize: 14, color: "rgba(255,255,255,0.6)",
+              fontSize: 14, color: "rgba(255,255,255,0.65)",
               lineHeight: 1.6, marginBottom: 22,
             }}
           >
-            Lien direct dès la mise en ligne · 30 premiers acheteurs = app offerte.
+            Lien direct dès la mise en ligne. <strong style={{ color: GREEN }}>Les 30 premiers reçoivent l'app RB Perform offerte</strong> — gratuite à vie, non disponible publiquement.
           </p>
           <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
             <WaitlistForm />
