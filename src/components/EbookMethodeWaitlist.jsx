@@ -278,36 +278,72 @@ export default function EbookMethodeWaitlist() {
           </div>
         </div>
 
-        {/* Formulaire waitlist — remonté tout en haut, juste après le compteur
-            de places, pour réduire au max la friction d'inscription. */}
+        {/* Formulaire waitlist — bascule en mode "VAGUE 2" si les 30 founders
+            sont déjà pris. Garde la promesse 30 founders intacte tout en
+            capturant les leads qui arrivent après. */}
         <section id="form" className="liste-anim" style={{ marginBottom: 48, animation: "liste_fadeUp 0.7s ease 0.4s both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 14 }}>
-            Inscription gratuite
-          </div>
-          <h2
-            style={{
-              fontFamily: '"Inter", -apple-system, sans-serif',
-              fontSize: "clamp(26px, 5vw, 34px)",
-              fontWeight: 900,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
-              marginBottom: 14,
-            }}
-          >
-            Je rejoins la liste.
-          </h2>
-          <p
-            style={{
-              maxWidth: 460, marginLeft: "auto", marginRight: "auto",
-              fontSize: 14, color: "rgba(255,255,255,0.65)",
-              lineHeight: 1.6, marginBottom: 22,
-            }}
-          >
-            Lien direct dès la mise en ligne. <strong style={{ color: GREEN }}>Les 30 premiers acheteurs de la méthode reçoivent l'app RB Perform offerte 100 jours</strong> — durée complète de la méthode, non disponible publiquement.
-          </p>
-          <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
-            <WaitlistForm />
-          </div>
+          {(signupCount ?? 0) >= 30 ? (
+            <>
+              {/* Badge SOLD OUT */}
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                padding: "8px 16px", marginBottom: 18,
+                background: "rgba(255,75,75,0.08)",
+                border: "1px solid rgba(255,75,75,0.35)",
+                borderRadius: 100,
+              }}>
+                <span style={{ fontSize: 14 }}>🔒</span>
+                <span style={{
+                  fontSize: 11, letterSpacing: "2.5px", textTransform: "uppercase",
+                  color: "#ff9b9b", fontWeight: 800,
+                }}>
+                  Vague 1 founders · COMPLET
+                </span>
+              </div>
+              <h2 style={{
+                fontFamily: '"Inter", -apple-system, sans-serif',
+                fontSize: "clamp(26px, 5vw, 34px)",
+                fontWeight: 900, letterSpacing: "-0.025em",
+                lineHeight: 1.1, marginBottom: 14,
+              }}>
+                Liste d'attente vague 2.
+              </h2>
+              <p style={{
+                maxWidth: 480, marginLeft: "auto", marginRight: "auto",
+                fontSize: 14, color: "rgba(255,255,255,0.65)",
+                lineHeight: 1.6, marginBottom: 22,
+              }}>
+                Les 30 founders sont pris. <strong style={{ color: "#fff" }}>Inscris-toi sur la vague 2</strong> — tu seras prévenu si une place se libère ou à l'ouverture de la prochaine vague.
+              </p>
+              <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
+                <WaitlistForm source="methode-athlete-vague-2" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 10, letterSpacing: "4px", textTransform: "uppercase", color: "rgba(255,255,255,0.62)", fontWeight: 700, marginBottom: 14 }}>
+                Inscription gratuite
+              </div>
+              <h2 style={{
+                fontFamily: '"Inter", -apple-system, sans-serif',
+                fontSize: "clamp(26px, 5vw, 34px)",
+                fontWeight: 900, letterSpacing: "-0.025em",
+                lineHeight: 1.1, marginBottom: 14,
+              }}>
+                Je rejoins la liste.
+              </h2>
+              <p style={{
+                maxWidth: 460, marginLeft: "auto", marginRight: "auto",
+                fontSize: 14, color: "rgba(255,255,255,0.65)",
+                lineHeight: 1.6, marginBottom: 22,
+              }}>
+                Lien direct dès la mise en ligne. <strong style={{ color: GREEN }}>Les 30 premiers acheteurs de la méthode reçoivent l'app RB Perform offerte 100 jours</strong> — durée complète de la méthode, non disponible publiquement.
+              </p>
+              <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
+                <WaitlistForm />
+              </div>
+            </>
+          )}
         </section>
 
         {/* Profile card */}
@@ -519,7 +555,7 @@ export default function EbookMethodeWaitlist() {
 }
 
 // ─── Form intégré → POST /api/waitlist ────────────────────────────────
-function WaitlistForm() {
+function WaitlistForm({ source = "methode-athlete" }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
@@ -533,18 +569,12 @@ function WaitlistForm() {
     setErrMsg("");
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim() || null;
-    // Write direct Supabase (anon key, RLS autorise INSERT mais pas
-    // UPDATE → on évite .upsert() qui send `Prefer: resolution=
-    // merge-duplicates` et se prend un 401). /api/waitlist était 404
-    // sur prod → on perdait les leads.
     try {
       const { error: dbErr } = await supabase.from("waitlist").insert({
         email: cleanEmail,
         name: cleanName || "",
-        source: "methode-athlete",
+        source,
       });
-      // Code 23505 = unique violation : l'email est déjà inscrit, on
-      // traite comme un succès (idempotence côté UX).
       if (dbErr && dbErr.code !== "23505") {
         setStatus("error");
         setErrMsg("Une erreur est survenue. Réessaie.");
@@ -556,14 +586,11 @@ function WaitlistForm() {
       setErrMsg("Connexion impossible. Réessaie.");
       return;
     }
-    // Best-effort : déclenche l'email de confirmation via l'API si elle
-    // est dispo (re-déploiement à venir). Ne bloque pas la confirmation
-    // UX si elle 404 — le lead est déjà en DB.
     try {
       fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: cleanName, email: cleanEmail, source: "methode-athlete" }),
+        body: JSON.stringify({ name: cleanName, email: cleanEmail, source }),
       }).catch(() => {});
     } catch (_) { /* silent */ }
   }
