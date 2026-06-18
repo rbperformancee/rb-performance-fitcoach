@@ -510,6 +510,7 @@ NUT_PHOTO_Y = MARGIN_BOTTOM
 NUT_PHOTO_H = PAGE_H - NUT_PHOTO_Y - MARGIN_TOP
 
 NUT_IMG_DIR = ROOT / "Downloads/Nutrition-Images-Extraites"
+TEMOIN_IMG_DIR = ROOT / "Downloads/Temoignages-Images"
 NUT_PHOTOS_SEQUENCE = [
     NUT_IMG_DIR / "intro-promesses.jpg",    # INTRO 04 Ce que tu vas apprendre
     NUT_IMG_DIR / "nut-intro-athlete.jpg",  # nutrition 01 Introduction
@@ -1038,10 +1039,9 @@ def build_colophon(story):
         "de l'auteur, est interdite.", leg_s))
     story.append(Paragraph(
         "Les informations contenues dans cet ebook sont fournies à titre "
-        "éducatif uniquement. L'auteur n'est pas titulaire d'un diplôme d'État "
-        "de coach sportif. Toutes les méthodes présentées sont basées sur son "
-        "expérience d'athlète et son contact avec des préparateurs physiques "
-        "du sport de haut niveau.", leg_s))
+        "éducatif uniquement. Toutes les méthodes présentées sont basées sur "
+        "la qualification CQP ALS de l'auteur, son expérience d'athlète et "
+        "son contact avec des préparateurs physiques du sport de haut niveau.", leg_s))
     story.append(Paragraph(
         "Avant de commencer ce programme, consulte un médecin si tu as des "
         "antécédents médicaux, des blessures ou des doutes sur ta capacité à "
@@ -1070,8 +1070,10 @@ def build_value_page(story):
     intro = ParagraphStyle('vp_i', fontName='Inter-Med', fontSize=10.5, leading=14,
                             textColor=GRIS_DARK, alignment=TA_LEFT, spaceAfter=6)
     story.append(Paragraph(
-        "Pas un ebook de plus. Une méthode <b>complète, structurée</b>, "
-        "conçue pour t'éviter 5 ans d'essais-erreurs sur le terrain.",
+        "Pas un ebook de plus. Une méthode <b>complète, structurée</b>, basée "
+        "sur 5 ans d'essais-erreurs que j'ai moi-même réalisés sur le terrain. "
+        "Je vais te partager toutes mes connaissances pour te faire gagner un "
+        "temps fou.",
         intro))
 
     # Bandeau stats hero (preuve de densité)
@@ -1124,7 +1126,7 @@ def build_value_page(story):
          "Le spectre force-vitesse. Plyo, sprint, transferts.", "chapter-3",
          chr(0xe730)),  # person-simple-run
         ("02", "ATHLÈTE 90 — PROGRAMME",
-         "12 sem · 5 séances/sem · 60 séances. Vidéos exo par exo.", "athlete-90",
+         "12 sem · 6 séances/sem · 72 séances. Vidéos exo par exo.", "athlete-90",
          chr(0xe108)),  # calendar
         ("03", "TESTS PHYSIQUES",
          "5 tests baseline pour mesurer ta progression.", "chapter-4",
@@ -1665,7 +1667,7 @@ def build_how_to_use_page(story):
         ("03", "ATTAQUE LE PROGRAMME",
          "Une fois tes tests J0 notés, lance "
          "<link href='#athlete-90'><font color='#00A38F'><b>ATHLÈTE 90</b></font></link> "
-         "— 12 semaines, 5 séances/sem. Va à "
+         "— 12 semaines, 6 séances/sem (4 muscu + 2 course). Va à "
          "l'<link href='#index-seances'><font color='#00A38F'><b>index séances</b></font></link> "
          "pour naviguer vite.",
          chr(0xe2de)),  # lightning
@@ -1773,6 +1775,42 @@ def build_edito_rayan_page(story):
 
     story.append(Paragraph(
         "Le reste, c'est toi qui le fais.",
+        body))
+
+    # ── Passage personnel : ce que cet ebook représente pour moi ──
+    story.append(Paragraph(
+        "<b>Écrire cet ebook compte pour moi.</b> Je suis un réel passionné "
+        "de sport qui vit pour ça. Le sport m'a tout donné — et je lui "
+        "donnerai tout. Alors si mes vidéos t'inspirent, si mon mindset "
+        "t'inspire, si j'arrive à te motiver, à te faire bouger : j'ai "
+        "tout gagné. Il n'y a rien de plus beau.",
+        body))
+
+    story.append(Paragraph(
+        "<b>La souffrance sportive, les baisses d'envie, la fatigue — je "
+        "les connais.</b> Je suis conscient de chaque effort que je te "
+        "demande dans ce livre. Je ne suis pas un prépa qui connaît "
+        "que la théorie. Je vis le sport. Je vis les efforts.",
+        body))
+
+    story.append(Paragraph(
+        "Pendant que tu t'entraînes et que tu enchaînes ces séances, "
+        "mets-toi une chose dans un coin de la tête : au moment où tu "
+        "t'entraînes, je suis probablement sous une barre, sur une "
+        "piste ou au stade en train de transpirer. Je ne compte pas "
+        "mes heures. Je vais tout donner pour te motiver et faire au "
+        "mieux pour que tu deviennes une <b>vraie machine de guerre</b>, "
+        "que tu réalises tes rêves les plus grands.",
+        body))
+
+    story.append(Paragraph(
+        "Car quand on se prouve quelque chose, quand on réussit "
+        "quelque chose, on casse toutes les barrières. Plus rien "
+        "n'est impossible. C'est ce que je souhaite que tu retiennes : "
+        "<b>tout travail est récompensé un jour ou l'autre</b>, peu "
+        "importe le temps que ça prend. Le sport, c'est comme la vie. "
+        "On n'est pas tous égaux. Mais si tu travailles et que tu ne "
+        "t'arrêtes jamais, <b>tu finiras par être récompensé.</b>",
         body))
 
     # Signature
@@ -2520,7 +2558,8 @@ def build_ebook():
 
         story.append(Paragraph("1.  CALCUL DU MÉTABOLISME DE BASE (TMB)", NS_section_h))
         story.append(Paragraph(
-            "Deux méthodes pour connaître ta dépense calorique :", NS_body))
+            "Mes méthodes préférées et les plus connues pour connaître "
+            "ta dépense énergétique sont :", NS_body))
 
         formula_lbl = ParagraphStyle('ns_fl', fontName='Inter-Bold', fontSize=10,
                                       textColor=CYAN_DARK, alignment=TA_LEFT, spaceAfter=4)
@@ -3224,7 +3263,7 @@ def build_ebook():
 
         story.append(Paragraph(
             "Je m'appelle <b>Rayan Bonte</b>. Rugbyman XIII semi-pro au SOA, "
-            "athlète et passionné par la performance physique.",
+            "athlète, titulaire du <b>CQP ALS</b>, passionné par la performance physique.",
             narrative_style))
         story.append(Spacer(1, 4*mm))
 
@@ -3240,7 +3279,9 @@ def build_ebook():
         story.append(Paragraph("·  MA MISSION", is_sec_lbl))
         story.append(Paragraph(
             "T'accompagner vers la meilleure version de toi-même, avec des "
-            "méthodes d'entraînement qui marchent vraiment.", narrative_style))
+            "méthodes d'entraînement qui marchent vraiment. Te partager ma "
+            "passion et ma vision de l'entraînement, le plaisir de se "
+            "dépasser au quotidien.", narrative_style))
 
         story.append(Spacer(1, 8*mm))
 
@@ -3248,10 +3289,10 @@ def build_ebook():
         discl = ParagraphStyle('is_dscl', fontName='Inter-Reg', fontSize=9,
                                 textColor=GRIS_DARK, alignment=TA_LEFT, leading=13)
         story.append(Paragraph(
-            "Je ne suis pas coach sportif diplômé. Tous les conseils donnés ici "
-            "ne sont en aucun cas des conseils médicaux. Ils sont uniquement "
-            "basés sur mon expérience d'athlète et le contact avec des "
-            "préparateurs physiques du sport de haut niveau.", discl))
+            "Tous les conseils donnés ici ne sont en aucun cas des conseils "
+            "médicaux. Ils sont basés sur ma qualification CQP ALS, mon "
+            "expérience d'athlète et le contact avec des préparateurs "
+            "physiques du sport de haut niveau.", discl))
 
         story.append(Spacer(1, 10*mm))
         # Bandeau photo bas — Rayan en action / portrait paysage
@@ -3414,7 +3455,7 @@ def build_ebook():
         promesses = [
             ("01", "Comprendre pourquoi un athlète ne s'entraîne pas comme un bodybuilder."),
             ("02", "Maîtriser les concepts clés : force, puissance, vitesse, pliométrie."),
-            ("03", "ATHLÈTE 90 : programme 12 semaines, 5 séances/sem, vidéos par exo."),
+            ("03", "ATHLÈTE 90 : programme 12 semaines, 6 séances/sem (4 muscu + 2 course), 72 séances, vidéos par exo."),
             ("04", "Une routine nutrition et compléments adaptée à un athlète."),
             ("05", "Les clés de la mobilité et de la récupération pour être performant."),
             ("06", "Le mindset qui sépare ceux qui finissent de ceux qui abandonnent."),
@@ -3593,9 +3634,9 @@ def build_ebook():
             "terme, problème de coordination entre les groupes musculaires.",
             body_p2))
         story.append(Paragraph(
-            "T'as déjà vu une vidéo d'un bodybuilder qui court ? Si oui, tu sais : "
-            "ils sont raides, ça paraît pas naturel. Pourquoi ? Parce que leurs "
-            "muscles n'ont jamais appris à travailler ensemble.",
+            "T'as déjà vu Chris Bumstead courir ? Si oui, tu sais : il est raide, "
+            "ça paraît pas naturel. Pourquoi ? Parce que ses muscles n'ont jamais "
+            "appris à travailler ensemble.",
             body_p2))
 
         story.append(Spacer(1, 8*mm))
@@ -3645,7 +3686,7 @@ def build_ebook():
         opp_v_c = ParagraphStyle('bb_ovc', fontName='Inter-Med', fontSize=9.5,
                                    textColor=HexColor('#A8E5DC'), alignment=TA_CENTER, leading=13)
 
-        box_l = [Paragraph("BB", opp_lbl_g),
+        box_l = [Paragraph("BODYBUILDER", opp_lbl_g),
                   Paragraph("MUSCLES ISOLÉS", opp_h_g),
                   Paragraph("Chaque groupe travaille seul.<br/>Pas de coordination globale.", opp_v_g)]
         box_r = [Paragraph("ATHLÈTE", opp_lbl_c),
@@ -3950,8 +3991,10 @@ def build_ebook():
         story.append(Spacer(1, 8*mm))
 
         story.append(Paragraph(
-            "Un athlète sérieux doit faire <b>les trois</b> dans l'année. "
-            "Pas tout en même temps. Dans cet ordre.", ea_body))
+            "Un athlète sérieux doit faire <b>les trois</b> dans l'année, "
+            "en périodisant. Mais il ne doit <b>jamais arrêter</b> de "
+            "travailler une faculté — il gère juste le <b>volume</b> selon "
+            "la phase.", ea_body))
 
         # ═══════ PAGE 2/7 — LE SPECTRE FORCE-VITESSE ══════════════════════════
         _ea_new_page(story, "02 / 07")
@@ -4847,41 +4890,44 @@ def build_ebook():
         story.append(stats_t)
         story.append(Spacer(1, 12*mm))
 
-        # 3 blocs périodisation ATHLÈTE 90
-        story.append(Paragraph("·  TROIS BLOCS, UNE PROGRESSION", ip_sec_lbl))
+        # 4 phases ATHLÈTE 90 (TEST → BLOC 1 → BLOC 2 → TEST)
+        story.append(Paragraph("·  QUATRE PHASES, UNE PROGRESSION", ip_sec_lbl))
         story.append(Spacer(1, 4*mm))
 
-        bk_n = ParagraphStyle('ip_bn', fontName='Inter-Black', fontSize=18,
-                                textColor=CYAN_DARK, alignment=TA_LEFT, leading=20,
+        bk_n = ParagraphStyle('ip_bn', fontName='Inter-Black', fontSize=16,
+                                textColor=CYAN_DARK, alignment=TA_LEFT, leading=18,
                                 spaceAfter=2)
-        bk_t = ParagraphStyle('ip_bt', fontName='Inter-Black', fontSize=11,
-                                textColor=NOIR, alignment=TA_LEFT, leading=13,
+        bk_t = ParagraphStyle('ip_bt', fontName='Inter-Black', fontSize=10,
+                                textColor=NOIR, alignment=TA_LEFT, leading=12,
                                 spaceAfter=4)
-        bk_b = ParagraphStyle('ip_bb', fontName='Inter-Reg', fontSize=9.5,
-                                textColor=GRIS_DARK, alignment=TA_LEFT, leading=13)
+        bk_b = ParagraphStyle('ip_bb', fontName='Inter-Reg', fontSize=9,
+                                textColor=GRIS_DARK, alignment=TA_LEFT, leading=12)
 
         blocs = [
-            ("PPG", "S1 → S4 · BASE",
-             "Prépa physique générale : volume, technique, hypertrophie ciblée. Tu poses les fondations."),
-            ("PPS", "S5 → S8 · TRANSFERT",
-             "Prépa physique spécifique : force max, vitesse, puissance. Tu transformes la base en explosivité."),
-            ("AFFÛTAGE", "S9 → S12 · PIC",
-             "Pic de performance : volumes réduits, charges max, intentions maximales. Tu arrives prêt."),
+            ("TEST", "S1 · BASELINE",
+             "10 tests pour évaluer ton niveau de départ : force, vitesse, puissance, agilité (T-test), endurance (footing)."),
+            ("BLOC 1", "S2 → S6 · DÉVELOPPEMENT",
+             "Construction des fondations : technique, volume contrôlé, hypertrophie ciblée, base athlétique."),
+            ("BLOC 2", "S7 → S11 · INTENSIFICATION",
+             "Force max, vitesse, puissance explosive. Tu transformes la base en performance pure."),
+            ("TEST", "S12 · RE-TEST",
+             "Mêmes 10 tests qu'en S1. Comparaison chiffrée de tes progrès sur 12 semaines."),
         ]
         bk_cells = []
         for n, t_, b in blocs:
             bk_cells.append([Paragraph(n, bk_n), Paragraph(t_, bk_t),
                               Paragraph(b, bk_b)])
-        bk_t_table = Table([bk_cells], colWidths=[55*mm, 55*mm, 54*mm])
+        bk_t_table = Table([bk_cells], colWidths=[41*mm, 41*mm, 41*mm, 41*mm])
         bk_t_table.setStyle(TableStyle([
             ('VALIGN', (0,0), (-1,-1), 'TOP'),
             ('BACKGROUND', (0,0), (-1,-1), PAPIER_2),
-            ('LEFTPADDING', (0,0), (-1,-1), 14),
-            ('RIGHTPADDING', (0,0), (-1,-1), 14),
-            ('TOPPADDING', (0,0), (-1,-1), 14),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 14),
+            ('LEFTPADDING', (0,0), (-1,-1), 10),
+            ('RIGHTPADDING', (0,0), (-1,-1), 10),
+            ('TOPPADDING', (0,0), (-1,-1), 12),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 12),
             ('LINEAFTER', (0,0), (0,-1), 0.5, HexColor('#C5C0B5')),
             ('LINEAFTER', (1,0), (1,-1), 0.5, HexColor('#C5C0B5')),
+            ('LINEAFTER', (2,0), (2,-1), 0.5, HexColor('#C5C0B5')),
         ]))
         story.append(bk_t_table)
 
@@ -4967,7 +5013,7 @@ def build_ebook():
     # ─────────────────────────────────────────────────────────────────────────
 
     def build_programme_section(story):
-        """1 page magazine — Teaser ATHLÈTE 90 + Index séances + 60 fiches."""
+        """1 page magazine — Teaser ATHLÈTE 90 + Index séances + 72 fiches."""
         story.append(PdfBookmark(key="athlete-90", title="ATHLÈTE 90 — Le Protocole", level=1))
         story.append(Spacer(1, 4*mm))
 
@@ -5002,7 +5048,7 @@ def build_ebook():
         sub = ParagraphStyle('pg_sub', fontName='Inter-Bold', fontSize=11,
                               textColor=GRIS_DARK, alignment=TA_LEFT, leading=14,
                               spaceAfter=12)
-        story.append(Paragraph("12 SEMAINES &nbsp;·&nbsp; 60 SÉANCES &nbsp;·&nbsp; 3 BLOCS", sub))
+        story.append(Paragraph("12 SEMAINES &nbsp;·&nbsp; 72 SÉANCES &nbsp;·&nbsp; TEST → BLOC 1 → BLOC 2 → TEST", sub))
 
         body = ParagraphStyle('pg_b', fontName='Inter-Reg', fontSize=11,
                                 textColor=NOIR, alignment=TA_JUSTIFY, leading=16,
@@ -5026,11 +5072,11 @@ def build_ebook():
 
         features = [
             ("01", "STRUCTURE",
-             "12 semaines · 5 séances/sem · 60 séances détaillées."),
+             "12 semaines · 6 séances/sem (4 muscu + 2 course) · 72 séances détaillées."),
             ("02", "PÉRIODISATION",
-             "3 blocs de 4 semaines : PPG → PPS → Affûtage."),
+             "TEST (S1) → BLOC 1 développement (S2-S6) → BLOC 2 intensification (S7-S11) → TEST (S12)."),
             ("03", "TESTS J0 & J90",
-             "Baseline en S1, tests finaux + challenge en S12."),
+             "10 tests baseline en S1 (incluant T-test + footing), re-tests en S12."),
             ("04", "ATHLÉTISME",
              "Transversal chaque semaine — sprints, sauts, plyo, mobilité."),
             ("05", "NUTRITION",
@@ -5379,12 +5425,12 @@ def build_ebook():
         return (sem, jour) in EXISTING_SEANCES
 
     def _render_all_seances(story):
-        """Boucle sur les séances du programme ATHLÈTE 90 — 12 sem × 5 séances = 60."""
+        """Boucle sur les séances du programme ATHLÈTE 90 — 12 sem × 6 séances = 72."""
         # ─── Page INDEX SÉANCES (grille 12×5 cliquable) ─────────────────
         _render_index_seances(story)
 
-        # Page séparateur cycle 1
-        _render_cycle_separator(story, "CYCLE 1", "CONSTRUCTION", "SEMAINES 1-4",
+        # Page séparateur BLOC 1
+        _render_cycle_separator(story, "BLOC 1", "DÉVELOPPEMENT", "SEMAINES 2-6",
             "Tu poses les fondations. Force max, technique, volume contrôlé. Charges modérées, qualité parfaite.")
 
         # SEMAINE 1
@@ -5394,7 +5440,7 @@ def build_ebook():
         _render_seance_s1_j4(story)
 
     def _render_index_seances(story):
-        """Page INDEX SÉANCES — grille 12 sem × 5 séances = 60 entrées cliquables.
+        """Page INDEX SÉANCES — grille 12 sem × 6 séances = 72 entrées cliquables.
         Pointe vers les bookmarks PDF des séances. Les liens vers des séances non
         encore codées sont affichés en gris (pas cliquables visuellement)."""
         story.append(NextPageTemplate('light_full'))
@@ -5403,7 +5449,7 @@ def build_ebook():
         # Bookmark de la page index elle-même (cible des footers de navigation)
         story.append(PdfBookmark(
             key="index-seances",
-            title="Index des 60 séances",
+            title="Index des 72 séances",
             level=0))
 
         story.append(Spacer(1, 8*mm))
@@ -5506,7 +5552,7 @@ def build_ebook():
 
     def _render_cycle_separator(story, label, name, weeks, descr, cycle_num=1):
         """Page séparateur de cycle (light_full, design éditorial enrichi).
-        cycle_num : 1 (PPG/Construction), 2 (PPS/Intensification), 3 (Affûtage)"""
+        cycle_num : 1 (BLOC 1/Développement), 2 (BLOC 2/Intensification)"""
         story.append(NextPageTemplate('light_full'))
         story.append(PageBreak())
         story.append(Spacer(1, 60*mm))
@@ -6620,7 +6666,7 @@ def build_ebook():
             ("01", "À qui s'adresse ce programme ?",
              "À tous ceux qui veulent transformer leur physique, gagner en force et améliorer leur performance sur le terrain. Débutant ou confirmé — il s'adapte (ajustements charges et volumes selon ton niveau)."),
             ("02", "Combien de séances par semaine ?",
-             "5 séances par semaine, environ 1 h 30 chacune. Si tu peux pas faire 5, vise 3-4. Mieux vaut 3 régulières pendant 12 sem que 5 pendant 3 sem avant de craquer."),
+             "6 séances par semaine (4 muscu + 2 course), environ 1 h 30 chacune pour la muscu, 45-60 min pour la course. Si tu peux pas faire 6, vise 4-5. Mieux vaut 4 régulières pendant 12 sem que 6 pendant 3 sem avant de craquer."),
             ("03", "Que signifie « RIR » ?",
              "RIR = Répétitions En Réserve. 2 RIR = tu termines ta série en ayant encore 2 reps avant l'échec. Façon plus précise de doser l'intensité que « jusqu'à l'échec »."),
             ("04", "Hypertrophie vs force ?",
@@ -6735,7 +6781,7 @@ def build_ebook():
                                    spaceAfter=10)
 
         # ═══════ PAGE 1/2 — JUSQU'AU BOUT ═════════════════════════════════════
-        _cc_new_page(story, "01 / 02", first=True)
+        _cc_new_page(story, "01 / 04", first=True)
         _cc_title(story, "JUSQU'AU", "BOUT.")
         story.append(Spacer(1, 6*mm))
 
@@ -6802,7 +6848,7 @@ def build_ebook():
             story.append(Spacer(1, 3*mm))
 
         # ═══════ PAGE 2/2 — ÉCRIS-MOI ════════════════════════════════════════
-        _cc_new_page(story, "02 / 02")
+        _cc_new_page(story, "02 / 04")
         _cc_title(story, "ÉCRIS-MOI.", "QUAND TU VEUX.")
         story.append(Spacer(1, 14*mm))
 
@@ -6860,35 +6906,14 @@ def build_ebook():
         story.append(cta1_t)
         story.append(Spacer(1, 10*mm))
 
-        # CTA 2 — Pack Saison
-        cta2_lbl = ParagraphStyle('cc_c2l', fontName='Inter-Bold', fontSize=9,
-                                    textColor=CYAN_DARK, alignment=TA_LEFT, leading=11,
-                                    spaceAfter=8)
-        cta2_big = ParagraphStyle('cc_c2b', fontName='Inter-Black', fontSize=24,
-                                    textColor=NOIR, alignment=TA_LEFT, leading=28,
-                                    spaceAfter=8)
-        cta2_sub = ParagraphStyle('cc_c2s', fontName='Inter-Med', fontSize=10.5,
-                                    textColor=GRIS_DARK, alignment=TA_LEFT, leading=15)
-        cta2_inner = [
-            Paragraph("·  POUR ALLER PLUS LOIN", cta2_lbl),
-            Paragraph("LE PACK SAISON COMPLÈTE.", cta2_big),
-            Paragraph("Si t'as kiffé celui-ci : le bundle Force &amp; Masse + "
-                       "Athlète Complet te fait cycler entre prise de muscle "
-                       "et prépa athlétique sur toute la saison. Dispo sur la "
-                       "boutique.",
-                       cta2_sub),
-        ]
-        cta2_t = Table([[cta2_inner]], colWidths=[164*mm])
-        cta2_t.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,-1), PAPIER_2),
-            ('LEFTPADDING', (0,0), (-1,-1), 22),
-            ('RIGHTPADDING', (0,0), (-1,-1), 22),
-            ('TOPPADDING', (0,0), (-1,-1), 22),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 22),
-            ('VALIGN', (0,0), (-1,-1), 'TOP'),
-            ('LINEBEFORE', (0,0), (0,-1), 3, CYAN_DARK),
-        ]))
-        story.append(cta2_t)
+        # CTA 2 — Mini bloc pré-transition vers la page 3/3 (accompagnement complet)
+        cta2_sub = ParagraphStyle('cc_c2s', fontName='Inter-Med', fontSize=11,
+                                    textColor=GRIS_DARK, alignment=TA_LEFT, leading=16)
+        story.append(Paragraph(
+            "Cet ebook, c'est <b>la méthode</b>. Mais si tu veux que je te "
+            "<b>tienne par la main</b> sur tout le chemin — programme calibré, "
+            "vidéos corrigées, ajustements semaine après semaine — tourne la "
+            "page.", cta2_sub))
 
         story.append(Spacer(1, 18*mm))
 
@@ -6913,6 +6938,297 @@ def build_ebook():
         sig_aff = ParagraphStyle('cc_sigaff', fontName='Inter-Med', fontSize=9,
                                    textColor=GRIS_DARK, alignment=TA_RIGHT, leading=12)
         story.append(Paragraph("RB Perform &nbsp;·&nbsp; Édition 2026", sig_aff))
+
+        # ═══════ PAGE 3/4 — RÉSULTATS QUE J'OBTIENS ═══════════════════════════
+        _cc_new_page(story, "03 / 04")
+        _cc_title(story, "ILS L'ONT", "FAIT.")
+        story.append(Spacer(1, 8*mm))
+
+        # Sous-titre intro
+        intro_p3 = ParagraphStyle('cc_i3', fontName='Inter-Med', fontSize=12,
+                                    textColor=GRIS_DARK, alignment=TA_LEFT, leading=17,
+                                    spaceAfter=14)
+        story.append(Paragraph(
+            "Cinq athlètes. Cinq chemins différents. <b>Une seule méthode.</b>",
+            intro_p3))
+
+        # ─── 2 Témoignages featured PRO (Alexis + Muhammed) ───
+        ft_lbl = ParagraphStyle('cc_ftl', fontName='Inter-Bold', fontSize=8,
+                                  textColor=CYAN_DARK, alignment=TA_LEFT,
+                                  leading=10, spaceAfter=4)
+        ft_quote = ParagraphStyle('cc_ftq', fontName='Inter-Black', fontSize=12,
+                                    textColor=NOIR, alignment=TA_LEFT,
+                                    leading=17, spaceAfter=6, leftIndent=2)
+        ft_name = ParagraphStyle('cc_ftn', fontName='Inter-Bold', fontSize=10,
+                                   textColor=NOIR, alignment=TA_LEFT,
+                                   leading=12, spaceAfter=2)
+        ft_role = ParagraphStyle('cc_ftr', fontName='Inter-Med', fontSize=8.5,
+                                   textColor=GRIS_DARK, alignment=TA_LEFT,
+                                   leading=11)
+
+        def _featured_testimony(name, role, quote, photo=None):
+            if photo and photo.is_file():
+                try:
+                    portrait = RLImage(str(photo), width=20*mm, height=20*mm,
+                                         kind='proportional')
+                except Exception:
+                    portrait = Table([[""]], colWidths=[20*mm], rowHeights=[20*mm])
+                    portrait.setStyle(TableStyle([
+                        ('BACKGROUND', (0,0), (-1,-1), HexColor('#1A1A1A')),
+                    ]))
+            else:
+                portrait = Table([[""]], colWidths=[20*mm], rowHeights=[20*mm])
+                portrait.setStyle(TableStyle([
+                    ('BACKGROUND', (0,0), (-1,-1), HexColor('#1A1A1A')),
+                ]))
+            head = Table([[portrait, [
+                Paragraph(name, ft_name),
+                Paragraph(role, ft_role),
+            ]]], colWidths=[22*mm, 50*mm])
+            head.setStyle(TableStyle([
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                ('LEFTPADDING', (0,0), (-1,-1), 0),
+                ('RIGHTPADDING', (0,0), (0,0), 4),
+                ('TOPPADDING', (0,0), (-1,-1), 0),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+            ]))
+            return [
+                Paragraph("·  TÉMOIGNAGE PRO", ft_lbl),
+                Paragraph(
+                    f"<font color='#02D1BA'>«</font> &nbsp; {quote} &nbsp;"
+                    f"<font color='#02D1BA'>»</font>",
+                    ft_quote),
+                head,
+            ]
+
+        alexis = _featured_testimony(
+            "ALEXIS",
+            "Rugby XIII pro · Dragons Catalans",
+            "+20 kg sur <b>toutes mes perfs</b>. Signé pro aux Dragons "
+            "Catalans <b>3 mois plus tard</b>. Je n'ai jamais été "
+            "aussi fort.",
+            photo=TEMOIN_IMG_DIR / "alexis-portrait.png")
+        muhammed = _featured_testimony(
+            "MUHAMMED",
+            "Joueur professionnel · Turquie",
+            "Les programmes sont <b>parfaits</b>. Les résultats sont "
+            "incroyables. Je n'ai jamais progressé aussi vite.")
+
+        ft_t = Table([[alexis, muhammed]], colWidths=[80*mm, 80*mm])
+        ft_t.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('BACKGROUND', (0,0), (-1,-1), PAPIER_2),
+            ('LEFTPADDING', (0,0), (-1,-1), 14),
+            ('RIGHTPADDING', (0,0), (-1,-1), 14),
+            ('TOPPADDING', (0,0), (-1,-1), 14),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 14),
+            ('LINEBEFORE', (0,0), (0,-1), 3, CYAN_DARK),
+            ('LINEBEFORE', (1,0), (1,-1), 0.5, HexColor('#C5C0B5')),
+        ]))
+        story.append(ft_t)
+        story.append(Spacer(1, 10*mm))
+
+        # ─── Bloc Avant / Après transformations ───
+        ils_lbl = ParagraphStyle('cc_il', fontName='Inter-Bold', fontSize=9,
+                                   textColor=CYAN_DARK, alignment=TA_LEFT, leading=11,
+                                   spaceAfter=4)
+        story.append(Paragraph("·  ILS L'ONT FAIT AUSSI", ils_lbl))
+        story.append(Spacer(1, 4*mm))
+
+        ba_h = ParagraphStyle('cc_bah', fontName='Inter-Black', fontSize=12,
+                                textColor=NOIR, alignment=TA_CENTER, leading=14,
+                                spaceAfter=2)
+        ba_lbl = ParagraphStyle('cc_balb', fontName='Inter-Bold', fontSize=8,
+                                  textColor=CYAN_DARK, alignment=TA_CENTER, leading=10)
+        ba_quote = ParagraphStyle('cc_baq', fontName='Inter-Med', fontSize=8.5,
+                                    textColor=GRIS_DARK, alignment=TA_CENTER,
+                                    leading=11, spaceBefore=2)
+
+        def _avant_apres_cell(name, sport, label, gain_avant, gain_apres, quote,
+                                photo_avant=None, photo_apres=None):
+            def _photo_or_placeholder(path, placeholder_color):
+                if path and path.is_file():
+                    try:
+                        return RLImage(str(path), width=26*mm, height=38*mm,
+                                         kind='proportional')
+                    except Exception:
+                        pass
+                ph = Table([[""]], colWidths=[26*mm], rowHeights=[38*mm])
+                ph.setStyle(TableStyle([
+                    ('BACKGROUND', (0,0), (-1,-1), placeholder_color),
+                ]))
+                return ph
+            ph_avant = _photo_or_placeholder(photo_avant, HexColor('#D8D2C2'))
+            ph_apres = _photo_or_placeholder(photo_apres, HexColor('#1A1A1A'))
+            photos = Table([[ph_avant, ph_apres]], colWidths=[26*mm, 26*mm])
+            photos.setStyle(TableStyle([
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                ('LEFTPADDING', (0,0), (-1,-1), 0),
+                ('RIGHTPADDING', (0,0), (0,0), 1),
+                ('LEFTPADDING', (1,0), (1,0), 1),
+                ('TOPPADDING', (0,0), (-1,-1), 0),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+            ]))
+            cell = [
+                photos,
+                Spacer(1, 3),
+                Paragraph(f"<b>{name}</b> &nbsp;·&nbsp; {sport}", ba_lbl),
+                Paragraph(label, ba_h),
+                Paragraph(f"<font color='{CYAN_DARK_HEX}'>« {quote} »</font>", ba_quote),
+            ]
+            return cell
+
+        CYAN_DARK_HEX = "#00A38F"
+
+        # 3 transformations (clients réels Rayan)
+        ba_t = Table([[
+            _avant_apres_cell("LÉO", "Muscu", "−16 kg",
+                                "107 → 91 kg", "107 → 91 kg",
+                                "Sans Rayan, je n'aurais jamais pu atteindre cet objectif. Son aide au quotidien vaut de l'or. C'est le meilleur.",
+                                photo_avant=TEMOIN_IMG_DIR / "leo-avant.jpg",
+                                photo_apres=TEMOIN_IMG_DIR / "leo-apres-zoom.jpg"),
+            _avant_apres_cell("ANDY", "Rugby", "−8 kg",
+                                "Sec & rapide", "Sec & rapide",
+                                "8 kg en moins sans perdre en perf, juste plus vif sur le terrain."),
+            _avant_apres_cell("SÉNAN", "Muscu", "Transformation physique",
+                                "Prise de muscle", "Prise de muscle",
+                                "Un accompagnement complet. Rayan m'a poussé à atteindre le meilleur de moi-même.",
+                                photo_avant=TEMOIN_IMG_DIR / "senan-avant.jpg",
+                                photo_apres=TEMOIN_IMG_DIR / "senan-apres.jpg"),
+        ]], colWidths=[54*mm, 54*mm, 56*mm])
+        ba_t.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('LEFTPADDING', (0,0), (-1,-1), 6),
+            ('RIGHTPADDING', (0,0), (-1,-1), 6),
+            ('TOPPADDING', (0,0), (-1,-1), 4),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ]))
+        story.append(ba_t)
+
+        # ═══════ PAGE 4/4 — OFFRE HORMOZI-STYLE ═══════════════════════════════
+        _cc_new_page(story, "04 / 04")
+        _cc_title(story, "TON TOUR.", "DE SIGNER.")
+        story.append(Spacer(1, 8*mm))
+
+        # ─── Bloc vidéo Hormozi : grosse promesse + thumbnail + QR ───
+        hv_lbl = ParagraphStyle('cc_hvl', fontName='Inter-Bold', fontSize=9,
+                                  textColor=CYAN_DARK, alignment=TA_LEFT, leading=11,
+                                  spaceAfter=4)
+        hv_big = ParagraphStyle('cc_hvb', fontName='Inter-Black', fontSize=17,
+                                  textColor=NOIR, alignment=TA_LEFT, leading=20,
+                                  spaceAfter=6)
+        hv_sub = ParagraphStyle('cc_hvs', fontName='Inter-Med', fontSize=10,
+                                  textColor=GRIS_DARK, alignment=TA_LEFT, leading=13)
+
+        qr_video = _make_qr("https://rbperform.com/accompagnement", size_mm=26)
+        thumb_ph = Table([[""]], colWidths=[48*mm], rowHeights=[27*mm])
+        thumb_ph.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,-1), HexColor('#0F0F0F')),
+        ]))
+        play_lbl = ParagraphStyle('cc_pl', fontName='Inter-Black', fontSize=9,
+                                    textColor=CYAN_DARK, alignment=TA_CENTER, leading=11)
+        thumb_cell = Table(
+            [[thumb_ph], [Paragraph("▶ &nbsp; REGARDE LA VIDÉO", play_lbl)]],
+            colWidths=[48*mm])
+        thumb_cell.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('TOPPADDING', (0,0), (-1,-1), 0),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ]))
+        video_inner = [
+            Paragraph("·  3 MINUTES POUR TOUT COMPRENDRE", hv_lbl),
+            Paragraph("Comment je te fais <b>signer pro</b> en 3 mois.", hv_big),
+            Paragraph(
+                "Ce que tu obtiens, comment je travaille, mes engagements, "
+                "et pour qui ce n'est <b>pas</b> fait.", hv_sub),
+        ]
+        video_block = Table([[thumb_cell, video_inner, qr_video]],
+                              colWidths=[50*mm, 86*mm, 28*mm])
+        video_block.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('BACKGROUND', (0,0), (-1,-1), PAPIER_2),
+            ('LEFTPADDING', (0,0), (-1,-1), 6),
+            ('RIGHTPADDING', (0,0), (-1,-1), 6),
+            ('TOPPADDING', (0,0), (-1,-1), 14),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 14),
+            ('LINEBEFORE', (0,0), (0,-1), 3, CYAN_DARK),
+        ]))
+        story.append(video_block)
+        story.append(Spacer(1, 10*mm))
+
+        # ─── L'OFFRE Hormozi style : ce que tu obtiens ───
+        offer_lbl = ParagraphStyle('cc_ofl', fontName='Inter-Bold', fontSize=9,
+                                     textColor=CYAN_DARK, alignment=TA_LEFT, leading=11,
+                                     spaceAfter=6)
+        offer_big = ParagraphStyle('cc_ofb', fontName='Inter-Black', fontSize=20,
+                                     textColor=NOIR, alignment=TA_LEFT, leading=24,
+                                     spaceAfter=8)
+        offer_bullet = ParagraphStyle('cc_ofbu', fontName='Inter-Med', fontSize=11,
+                                        textColor=NOIR, alignment=TA_LEFT, leading=16,
+                                        leftIndent=14, spaceAfter=4)
+        story.append(Paragraph("·  CE QUE TU OBTIENS", offer_lbl))
+        story.append(Paragraph("L'ACCOMPAGNEMENT COMPLET.", offer_big))
+        for line in [
+            "Ton programme calibré à <b>ton sport</b>, ton niveau, ta saison",
+            "Tes vidéos d'exécution <b>analysées et corrigées</b> par moi",
+            "Tes ajustements <b>semaine par semaine</b> (charges, repos, intensités)",
+            "Ton plan nutrition adapté à <b>tes objectifs</b> (perte, prise, perf)",
+            "Mon <b>œil direct</b> sur ta progression — pas un bot, pas un PDF",
+        ]:
+            story.append(Paragraph(
+                f"<font color='#02D1BA'><b>→</b></font> &nbsp; {line}",
+                offer_bullet))
+
+        story.append(Spacer(1, 10*mm))
+
+        # ─── CTA FINAL ───
+        cta_lbl_f = ParagraphStyle('cc_clf', fontName='Inter-Bold', fontSize=9,
+                                     textColor=HexColor('#A8E5DC'), alignment=TA_LEFT,
+                                     leading=11, spaceAfter=6)
+        cta_big_f = ParagraphStyle('cc_cbf', fontName='Inter-Black', fontSize=22,
+                                     textColor=BLANC, alignment=TA_LEFT,
+                                     leading=26, spaceAfter=8)
+        cta_sub_f = ParagraphStyle('cc_csf', fontName='Inter-Med', fontSize=11,
+                                     textColor=HexColor('#EEF9F7'), alignment=TA_LEFT,
+                                     leading=15, spaceAfter=6)
+        cta_btn = ParagraphStyle('cc_cbtn', fontName='Inter-Black', fontSize=13,
+                                   textColor=CYAN_DARK, alignment=TA_CENTER, leading=15)
+
+        btn_cell = Table([[Paragraph(
+            "→ &nbsp; <link href='https://rbperform.com/accompagnement'>"
+            "POSTULE TON DOSSIER</link>", cta_btn)]],
+            colWidths=[140*mm], rowHeights=[18*mm])
+        btn_cell.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,-1), BLANC),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ]))
+
+        cta_final = [
+            Paragraph("·  PLACES LIMITÉES — SÉLECTION SUR DOSSIER", cta_lbl_f),
+            Paragraph("PRÊT À SIGNER ?", cta_big_f),
+            Paragraph(
+                "Tu postules. Je regarde. Si je dis <b>oui</b>, on attaque. "
+                "Si je dis <b>non</b>, je te dis pourquoi et ce que tu peux "
+                "travailler seul.",
+                cta_sub_f),
+            Spacer(1, 4),
+            btn_cell,
+            Spacer(1, 8),
+            Paragraph(
+                "« Le meilleur jour pour commencer était hier. Le deuxième, "
+                "c'est <b>aujourd'hui.</b> »",
+                cta_sub_f),
+        ]
+        cta_f_t = Table([[cta_final]], colWidths=[164*mm])
+        cta_f_t.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,-1), CYAN_DARK),
+            ('LEFTPADDING', (0,0), (-1,-1), 22),
+            ('RIGHTPADDING', (0,0), (-1,-1), 22),
+            ('TOPPADDING', (0,0), (-1,-1), 22),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 22),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ]))
+        story.append(cta_f_t)
 
         story.append(NextPageTemplate('chapter'))
 
@@ -6983,7 +7299,8 @@ def build_ebook():
         # Index alphabétique : terme | définition | chapitre de référence (bookmark key)
         gloss = sorted([
             ("1RM", "Poids maximum que tu peux soulever sur 1 répétition.", "chapter-3"),
-            ("AFFÛTAGE", "Bloc final de prépa : pic de performance, charges max, volumes réduits.", "athlete-90"),
+            ("BLOC 1", "Phase de développement S2-S6 : technique, volume, hypertrophie ciblée.", "athlete-90"),
+            ("BLOC 2", "Phase d'intensification S7-S11 : force max, vitesse, puissance explosive.", "athlete-90"),
             ("BRONCO", "Test cardio rugby : 6 × (60m-40m-20m sans récup). Mesure le RSA.", "chapter-4"),
             ("CMJ", "Counter Movement Jump — saut vertical avec contre-mouvement.", "chapter-4"),
             ("CONCENTRIQUE", "Phase du mouvement où le muscle se contracte (remontée du squat).", "chapter-3"),
@@ -6991,8 +7308,7 @@ def build_ebook():
             ("EXCENTRIQUE", "Phase où le muscle s'étire sous charge (descente du squat).", "chapter-3"),
             ("HYPERTROPHIE", "Prise de masse musculaire. 70-85 % 1RM, séries longues.", "chapter-3"),
             ("PLIOMÉTRIE", "Sauts et bondissements explosifs pour développer la puissance.", "chapter-3"),
-            ("PPG", "Prépa Physique Générale — volume + technique + hypertrophie modérée.", "athlete-90"),
-            ("PPS", "Prépa Physique Spécifique — force max + vitesse + intensité.", "athlete-90"),
+            ("PHASE TEST", "Semaine d'évaluation (S1 et S12) : 10 tests pour mesurer ton niveau et tes progrès.", "athlete-90"),
             ("RFD", "Rate of Force Development — vitesse à laquelle tu produis ta force max.", "chapter-3"),
             ("RIR", "Répétitions En Réserve — combien de reps tu pourrais encore faire après ta série.", "chapter-3"),
             ("RPE", "Rate of Perceived Exertion — note de difficulté ressentie (0 à 10).", "chapter-3"),
@@ -7460,9 +7776,9 @@ def build_ebook():
             story.append(row)
             story.append(Spacer(1, 5*mm))
 
-        # ═══════ PAGE 3/3 — RÈGLE D'OR (photo droite) ════════════════════════
+        # ═══════ PAGE 3/3 — PRINCIPE CLÉ (photo droite) ════════════════════════
         _hyd_new_page(story, "03 / 03", photo=True)
-        _hyd_title(story, "LA RÈGLE", "D'OR.", narrow=True)
+        _hyd_title(story, "LE PRINCIPE", "CLÉ.", narrow=True)
         story.append(Spacer(1, 10*mm))
 
         # Hero stat — design Ferrari (typographie pure, pas de fond saturé)
@@ -7604,7 +7920,7 @@ def build_ebook():
             num = chapter_num
             title_ = text
             # Override titre chap.VI : la source Word dit "Programme 8 semaines"
-            # mais le programme actuel est ATHLÈTE 90 (12 sem × 5 séances)
+            # mais le programme actuel est ATHLÈTE 90 (12 sem × 6 séances = 72)
             if chapter_num == 6:
                 title_ = "ATHLÈTE 90 — Programme"
             # Injection PARTIE I/II/III avant les chapitres frontières

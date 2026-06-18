@@ -179,7 +179,7 @@ export default function EbookMethodeWaitlist() {
               textTransform: "uppercase",
             }}
           >
-            Accès app RB Perform OFFERT aux 30 premiers
+            App RB Perform OFFERTE aux 30 premiers acheteurs
           </span>
         </div>
 
@@ -194,7 +194,7 @@ export default function EbookMethodeWaitlist() {
             animation: "liste_fadeUp 0.7s ease 0.3s both",
           }}
         >
-          12 semaines · +60 séances · Livret 110 pages <strong style={{ color: "#fff" }}>+ l'app RB Perform offerte pour les 30 premiers</strong>.
+          12 semaines · +60 séances · Livret 110 pages. <strong style={{ color: "#fff" }}>Pour les 30 premiers acheteurs de la méthode : l'app RB Perform offerte (100 jours)</strong>.
         </p>
 
         {/* Compteur places fondateur — visuel avec progress bar. La barre
@@ -244,6 +244,40 @@ export default function EbookMethodeWaitlist() {
           );
         })()}
 
+        {/* Callout "comment ça marche" — clarifie que l'ebook est payant,
+            l'app est offerte EN BONUS pour les 30 premiers acheteurs.
+            Évite l'ambiguïté "tout est gratuit". */}
+        <div
+          className="liste-anim"
+          style={{
+            maxWidth: 520, marginLeft: "auto", marginRight: "auto",
+            marginBottom: 36, padding: "18px 22px",
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            borderRadius: 16,
+            animation: "liste_fadeUp 0.7s ease 0.37s both",
+            textAlign: "left",
+          }}
+        >
+          <div style={{
+            fontSize: 10, letterSpacing: "3px", textTransform: "uppercase",
+            color: "rgba(255,255,255,0.5)", fontWeight: 800, marginBottom: 10,
+          }}>
+            Comment ça marche
+          </div>
+          <div style={{ fontSize: 13.5, color: "rgba(255,255,255,0.80)", lineHeight: 1.6 }}>
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ color: GREEN, fontWeight: 800 }}>→ Inscription waitlist :</span> gratuite, sans engagement.
+            </div>
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ color: GREEN, fontWeight: 800 }}>→ La méthode (ebook + vidéos) :</span> paiement unique à l'ouverture (juin 2026).
+            </div>
+            <div>
+              <span style={{ color: GREEN, fontWeight: 800 }}>→ L'app RB Perform :</span> <strong style={{ color: "#fff" }}>OFFERTE 100 jours</strong> aux 30 premiers acheteurs uniquement. Sinon abonnement séparé.
+            </div>
+          </div>
+        </div>
+
         {/* Formulaire waitlist — remonté tout en haut, juste après le compteur
             de places, pour réduire au max la friction d'inscription. */}
         <section id="form" className="liste-anim" style={{ marginBottom: 48, animation: "liste_fadeUp 0.7s ease 0.4s both" }}>
@@ -269,7 +303,7 @@ export default function EbookMethodeWaitlist() {
               lineHeight: 1.6, marginBottom: 22,
             }}
           >
-            Lien direct dès la mise en ligne. <strong style={{ color: GREEN }}>Les 30 premiers reçoivent l'app RB Perform offerte 100 jours</strong> — durée complète de la méthode, non disponible publiquement.
+            Lien direct dès la mise en ligne. <strong style={{ color: GREEN }}>Les 30 premiers acheteurs de la méthode reçoivent l'app RB Perform offerte 100 jours</strong> — durée complète de la méthode, non disponible publiquement.
           </p>
           <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
             <WaitlistForm />
