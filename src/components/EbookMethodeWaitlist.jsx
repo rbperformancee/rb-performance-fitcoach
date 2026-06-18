@@ -269,7 +269,7 @@ export default function EbookMethodeWaitlist() {
               lineHeight: 1.6, marginBottom: 22,
             }}
           >
-            Lien direct dès la mise en ligne. <strong style={{ color: GREEN }}>Les 30 premiers reçoivent l'app RB Perform offerte</strong> — gratuite à vie, non disponible publiquement.
+            Lien direct dès la mise en ligne. <strong style={{ color: GREEN }}>Les 30 premiers reçoivent l'app RB Perform offerte 100 jours</strong> — durée complète de la méthode, non disponible publiquement.
           </p>
           <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
             <WaitlistForm />
