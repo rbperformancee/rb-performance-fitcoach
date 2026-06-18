@@ -1,5 +1,19 @@
 apply plugin: 'com.android.application'
 
+// Lecture du fichier keystore.properties (gitignored) qui contient le path
+// du keystore + alias. Le mot de passe est lu via env var ou fichier .pass.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+// Mot de passe : env var prioritaire (CI/CD), fallback fichier local .pass
+def rbStorePass = System.getenv("RBPERFORM_KEYSTORE_PASS") ?:
+    (new File("${System.getProperty('user.home')}/.android-keystores/rbperform-release.pass").exists()
+        ? new File("${System.getProperty('user.home')}/.android-keystores/rbperform-release.pass").text.trim()
+        : "")
+
 android {
     namespace = "app.rbperform"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -8,7 +22,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +30,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists() && rbStorePass) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword rbStorePass
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword rbStorePass
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (keystorePropertiesFile.exists() && rbStorePass) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

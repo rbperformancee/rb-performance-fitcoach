@@ -122,7 +122,10 @@ module.exports = async (req, res) => {
           currency: usedCurrency,
         },
       },
-      success_url: `${baseUrl}/?checkout=success&plan=${plan}`,
+      // Redirection post-paiement : /post-vente reçoit l'athlète avec roadmap
+      // 30 jours, vidéo welcome, CTA App Store. session_id permet de retrouver
+      // les infos du paiement côté front si besoin.
+      success_url: `${baseUrl}/post-vente?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
       cancel_url: `${baseUrl}/?checkout=cancelled&plan=${plan}`,
       allow_promotion_codes: true,
     };

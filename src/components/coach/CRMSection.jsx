@@ -172,6 +172,60 @@ export default function CRMSection({ coachId }) {
     return out;
   }, [contacts]);
 
+  // ════════ KPI funnel-specific (calculés sur coaching_applications) ════════
+  // Show-up rate = LE KPI #1 cité dans la mémoire Jonas.
+  // Close rate = combien de calls passés deviennent des signés.
+  // Velocity = combien de candidatures cette semaine.
+  const [funnelKpis, setFunnelKpis] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const sinceMonth = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
+      const sinceWeek = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
+      const { data } = await supabase
+        .from("coaching_applications")
+        .select("id,call_scheduled_at,call_completed_at,call_outcome,created_at")
+        .gte("created_at", sinceMonth);
+      if (cancelled || !Array.isArray(data)) return;
+
+      // Show-up = calls dont l'outcome n'est PAS no_show (sur calls programmés et passés)
+      const callsThatHadPlace = data.filter(
+        (a) => a.call_scheduled_at &&
+        new Date(a.call_scheduled_at) < new Date() &&
+        a.call_outcome &&
+        a.call_outcome !== "rescheduled" &&
+        a.call_outcome !== "pending" &&
+        a.call_outcome !== "rejected_by_us"
+      );
+      const showed = callsThatHadPlace.filter((a) => a.call_outcome !== "no_show");
+      const showUpRate = callsThatHadPlace.length > 0
+        ? Math.round((showed.length / callsThatHadPlace.length) * 100)
+        : null;
+
+      const callsCompleted = data.filter(
+        (a) => a.call_outcome === "closed_won" || a.call_outcome === "closed_lost"
+      );
+      const won = data.filter((a) => a.call_outcome === "closed_won").length;
+      const closeRate = callsCompleted.length > 0
+        ? Math.round((won / callsCompleted.length) * 100)
+        : null;
+
+      const newThisWeek = data.filter((a) => new Date(a.created_at) >= new Date(sinceWeek)).length;
+      const callsBookedWeek = data.filter((a) => a.call_scheduled_at && new Date(a.call_scheduled_at) >= new Date(sinceWeek)).length;
+
+      setFunnelKpis({
+        candidatures_30j: data.length,
+        show_up_rate: showUpRate,
+        close_rate: closeRate,
+        won_30j: won,
+        new_this_week: newThisWeek,
+        calls_booked_week: callsBookedWeek,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [contacts]);
+
   return (
     <div style={{ padding: "16px 16px 80px", maxWidth: 1100, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
@@ -195,6 +249,47 @@ export default function CRMSection({ coachId }) {
           + Ajouter lead
         </button>
       </div>
+
+      {/* KPI funnel — 30 jours glissants */}
+      {funnelKpis && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 8, marginBottom: 14 }}>
+          <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 12px" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 800, marginBottom: 3 }}>
+              Candidatures 30j
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>
+              {funnelKpis.candidatures_30j}
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginLeft: 6, fontWeight: 600 }}>
+                +{funnelKpis.new_this_week} cette sem.
+              </span>
+            </div>
+          </div>
+          <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 12px" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 800, marginBottom: 3 }}>
+              Show-up rate
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: funnelKpis.show_up_rate == null ? "rgba(255,255,255,0.4)" : (funnelKpis.show_up_rate >= 70 ? GREEN : "#ffb000") }}>
+              {funnelKpis.show_up_rate == null ? "—" : `${funnelKpis.show_up_rate}%`}
+            </div>
+          </div>
+          <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 12px" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 800, marginBottom: 3 }}>
+              Close rate
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: funnelKpis.close_rate == null ? "rgba(255,255,255,0.4)" : (funnelKpis.close_rate >= 30 ? GREEN : "#ffb000") }}>
+              {funnelKpis.close_rate == null ? "—" : `${funnelKpis.close_rate}%`}
+            </div>
+          </div>
+          <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 12px" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 800, marginBottom: 3 }}>
+              Signés 30j
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: GREEN }}>
+              {funnelKpis.won_30j}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8, marginBottom: 18 }}>
@@ -339,6 +434,168 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
   const [newNote, setNewNote] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // ════════ Actions candidature coaching (set créneau / rejeter) ════════
+  // Recherche la coaching_applications row par email. Si elle existe, on
+  // affiche les actions admin (set call_scheduled_at, mark as rejected).
+  const [application, setApplication] = useState(null);
+  const [callDateInput, setCallDateInput] = useState("");
+  const [applicationBusy, setApplicationBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("coaching_applications")
+        .select("id,email,nom_prenom,call_scheduled_at,call_outcome,call_completed_at,preferred_slots")
+        .eq("email", email)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (cancelled) return;
+      const app = (data || [])[0] || null;
+      setApplication(app);
+      // Pré-remplir le datetime-local avec le créneau actuel si défini
+      if (app?.call_scheduled_at) {
+        const d = new Date(app.call_scheduled_at);
+        const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+          .toISOString().slice(0, 16);
+        setCallDateInput(local);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [email]);
+
+  async function setCallSchedule() {
+    if (!application?.id || !callDateInput) return;
+    setApplicationBusy(true);
+    const iso = new Date(callDateInput).toISOString();
+    const { error } = await supabase
+      .from("coaching_applications")
+      .update({ call_scheduled_at: iso })
+      .eq("id", application.id);
+    setApplicationBusy(false);
+    if (error) {
+      alert(`Erreur set créneau : ${error.message}`);
+      return;
+    }
+    setApplication((a) => ({ ...a, call_scheduled_at: iso }));
+    // Update CRM stage automatically
+    if (stage !== "call_booked" && stage !== "signed") {
+      saveStage("call_booked");
+    }
+    alert("Créneau confirmé. Reminders J-1 + H-2 envoyés auto par le cron.");
+  }
+
+  // Marque l'outcome du call post-meeting + update le CRM stage en conséquence.
+  // closed_won → stage 'signed' (séquence onboarding existante prend le relais)
+  // closed_lost → stage 'lost', déclenche le cron-coaching-call-followup J+1/J+3/J+7
+  // no_show     → stage 'cold', à relancer manuellement
+  // rescheduled → stage 'call_booked', Rayan re-set un créneau ensuite
+  async function setCallOutcome(outcome) {
+    if (!application?.id) return;
+    const labels = {
+      closed_won: "Marquer comme SIGNÉ ?",
+      closed_lost: "Marquer comme LOST (relance J+1/J+3/J+7 auto envoyée) ?",
+      no_show: "Marquer comme NO-SHOW ?",
+      rescheduled: "Marquer comme REPORTÉ (annule call_scheduled_at) ?",
+    };
+    if (!confirm(labels[outcome] || `Marquer comme ${outcome} ?`)) return;
+    setApplicationBusy(true);
+    const update = {
+      call_outcome: outcome,
+      call_completed_at: new Date().toISOString(),
+    };
+    if (outcome === "rescheduled") {
+      update.call_scheduled_at = null;
+      update.call_completed_at = null;
+    }
+    const { error } = await supabase
+      .from("coaching_applications")
+      .update(update)
+      .eq("id", application.id);
+    setApplicationBusy(false);
+    if (error) {
+      alert(`Erreur : ${error.message}`);
+      return;
+    }
+    setApplication((a) => ({ ...a, ...update }));
+    // Auto stage CRM
+    const nextStage = {
+      closed_won: "signed",
+      closed_lost: "lost",
+      no_show: "cold",
+      rescheduled: "call_booked",
+    }[outcome];
+    if (nextStage && nextStage !== stage) saveStage(nextStage);
+
+    // Si signé → trigger le mail "tu as fait le bon choix" auto
+    let wonEmailNote = "";
+    if (outcome === "closed_won") {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const jwt = sessionData?.session?.access_token;
+        if (jwt) {
+          const resp = await fetch("/api/notify-coaching-won", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${jwt}`,
+            },
+            body: JSON.stringify({ application_id: application.id }),
+          });
+          const json = await resp.json();
+          wonEmailNote = json.email_sent
+            ? "\n\n✓ Mail 'tu as fait le bon choix' envoyé."
+            : "\n\n⚠️ Mail won n'a pas pu être envoyé.";
+        }
+      } catch (e) {
+        wonEmailNote = `\n\n⚠️ Erreur mail won : ${e.message}`;
+      }
+    }
+
+    const followups = {
+      closed_won: "Signé ! Pense à coller le lien Stripe Payment." + wonEmailNote,
+      closed_lost: "Marqué lost. Séquence relance J+1/J+3/J+7 part automatiquement.",
+      no_show: "Marqué no-show. Pense à le rappeler ou WhatsApp.",
+      rescheduled: "Reporté. Re-set un nouveau créneau quand confirmé.",
+    };
+    alert(followups[outcome] || "Outcome enregistré.");
+  }
+
+  async function rejectApplication() {
+    if (!application?.id) return;
+    if (!confirm("Rejeter cette candidature ?\n\nUn email 'pas le bon match' sera envoyé avec le lien vers l'ebook 100J. Action non réversible (mais on peut juste ne rien renvoyer).")) return;
+    setApplicationBusy(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const jwt = sessionData?.session?.access_token;
+      if (!jwt) {
+        alert("Session expirée. Reconnecte-toi.");
+        setApplicationBusy(false);
+        return;
+      }
+      const resp = await fetch("/api/reject-coaching-application", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({ application_id: application.id }),
+      });
+      const json = await resp.json();
+      if (!resp.ok) {
+        alert(`Erreur rejet : ${json.error || "Unknown"}`);
+        setApplicationBusy(false);
+        return;
+      }
+      setApplication((a) => ({ ...a, call_outcome: "rejected_by_us" }));
+      saveStage("lost");
+      alert(json.email_sent ? "Rejet envoyé + mail expédié." : "Rejet marqué, mais l'email a échoué (check Sentry).");
+    } catch (e) {
+      alert(`Erreur réseau : ${e.message}`);
+    }
+    setApplicationBusy(false);
+  }
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -415,6 +672,168 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
               {JSON.stringify(contact.raw.candidature, null, 2)}
             </pre>
           </details>
+        )}
+
+        {/* Actions candidature coaching — visible seulement si une coaching_applications existe */}
+        {application && application.call_outcome !== "rejected_by_us" && (
+          <div style={{ marginBottom: 18, padding: 14, background: BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: GREEN, marginBottom: 10, fontWeight: 700 }}>
+              Actions candidature
+            </div>
+
+            {/* Set / update call_scheduled_at */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>
+                Confirmer le créneau (déclenche reminders J-1 + H-2 auto) :
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <input
+                  type="datetime-local"
+                  value={callDateInput}
+                  onChange={(e) => setCallDateInput(e.target.value)}
+                  style={{
+                    flex: 1, minWidth: 200, padding: "8px 10px",
+                    background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`,
+                    borderRadius: 6, color: "#fff", fontSize: 12, fontFamily: "inherit",
+                    colorScheme: "dark",
+                  }}
+                />
+                <button
+                  onClick={setCallSchedule}
+                  disabled={!callDateInput || applicationBusy}
+                  style={{
+                    padding: "8px 14px", background: GREEN, color: "#000",
+                    border: "none", borderRadius: 6, fontSize: 11, fontWeight: 800,
+                    letterSpacing: 0.5, textTransform: "uppercase",
+                    cursor: callDateInput && !applicationBusy ? "pointer" : "not-allowed",
+                    opacity: callDateInput && !applicationBusy ? 1 : 0.4,
+                  }}
+                >
+                  {application.call_scheduled_at ? "Modifier" : "Confirmer"}
+                </button>
+              </div>
+              {application.preferred_slots && Array.isArray(application.preferred_slots) && (
+                <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+                  Dispo prospect : {application.preferred_slots.map((s) => `${s.date} ${s.time}`).join(" · ")}
+                </div>
+              )}
+              {application.call_scheduled_at && (
+                <div style={{ marginTop: 6, fontSize: 11, color: GREEN, fontWeight: 600 }}>
+                  ✓ Créneau confirmé : {new Date(application.call_scheduled_at).toLocaleString("fr-FR")}
+                </div>
+              )}
+            </div>
+
+            {/* Post-call outcome buttons — visible une fois le créneau confirmé
+                ET que l'outcome n'est pas encore défini (call pas encore eu lieu) */}
+            {application.call_scheduled_at && (!application.call_outcome || application.call_outcome === "pending") && (
+              <div style={{ marginBottom: 14, paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>
+                  Une fois le call passé :
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                  <button
+                    onClick={() => setCallOutcome("closed_won")}
+                    disabled={applicationBusy}
+                    style={{
+                      padding: "10px 12px",
+                      background: `${GREEN}22`,
+                      color: GREEN,
+                      border: `1px solid ${GREEN}66`,
+                      borderRadius: 6, fontSize: 11, fontWeight: 800,
+                      letterSpacing: 0.5, textTransform: "uppercase",
+                      cursor: applicationBusy ? "not-allowed" : "pointer",
+                      opacity: applicationBusy ? 0.4 : 1,
+                    }}
+                  >
+                    ✓ Signé
+                  </button>
+                  <button
+                    onClick={() => setCallOutcome("closed_lost")}
+                    disabled={applicationBusy}
+                    style={{
+                      padding: "10px 12px",
+                      background: "rgba(255,176,0,0.1)",
+                      color: "#ffb000",
+                      border: "1px solid rgba(255,176,0,0.4)",
+                      borderRadius: 6, fontSize: 11, fontWeight: 800,
+                      letterSpacing: 0.5, textTransform: "uppercase",
+                      cursor: applicationBusy ? "not-allowed" : "pointer",
+                      opacity: applicationBusy ? 0.4 : 1,
+                    }}
+                  >
+                    🟡 À relancer
+                  </button>
+                  <button
+                    onClick={() => setCallOutcome("no_show")}
+                    disabled={applicationBusy}
+                    style={{
+                      padding: "10px 12px",
+                      background: "rgba(255,255,255,0.04)",
+                      color: "rgba(255,255,255,0.6)",
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 6, fontSize: 11, fontWeight: 700,
+                      letterSpacing: 0.5, textTransform: "uppercase",
+                      cursor: applicationBusy ? "not-allowed" : "pointer",
+                      opacity: applicationBusy ? 0.4 : 1,
+                    }}
+                  >
+                    ⏰ No-show
+                  </button>
+                  <button
+                    onClick={() => setCallOutcome("rescheduled")}
+                    disabled={applicationBusy}
+                    style={{
+                      padding: "10px 12px",
+                      background: "rgba(255,255,255,0.04)",
+                      color: "rgba(255,255,255,0.6)",
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 6, fontSize: 11, fontWeight: 700,
+                      letterSpacing: 0.5, textTransform: "uppercase",
+                      cursor: applicationBusy ? "not-allowed" : "pointer",
+                      opacity: applicationBusy ? 0.4 : 1,
+                    }}
+                  >
+                    📅 Reporté
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* État courant si outcome déjà set (visible aussi après) */}
+            {application.call_outcome && application.call_outcome !== "pending" && application.call_outcome !== "rejected_by_us" && (
+              <div style={{ marginBottom: 14, padding: "10px 14px", background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
+                {application.call_outcome === "closed_won" && <span style={{ color: GREEN, fontWeight: 700 }}>✓ Signé</span>}
+                {application.call_outcome === "closed_lost" && <span style={{ color: "#ffb000", fontWeight: 700 }}>🟡 À relancer — séquence J+1/J+3/J+7 active</span>}
+                {application.call_outcome === "no_show" && <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 700 }}>⏰ No-show</span>}
+                {application.call_outcome === "rescheduled" && <span>📅 Reporté</span>}
+              </div>
+            )}
+
+            {/* Rejeter (= avant call ou indépendant de l'outcome) */}
+            <button
+              onClick={rejectApplication}
+              disabled={applicationBusy}
+              style={{
+                padding: "8px 14px",
+                background: "transparent",
+                color: "#ff6b6b",
+                border: "1px solid rgba(255,107,107,0.4)",
+                borderRadius: 6, fontSize: 11, fontWeight: 700,
+                letterSpacing: 0.5, textTransform: "uppercase",
+                cursor: applicationBusy ? "not-allowed" : "pointer",
+                opacity: applicationBusy ? 0.4 : 1,
+              }}
+            >
+              🚫 Rejeter (envoyer mail "pas le bon match" + ebook)
+            </button>
+          </div>
+        )}
+
+        {application?.call_outcome === "rejected_by_us" && (
+          <div style={{ marginBottom: 14, padding: "10px 14px", background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.3)", borderRadius: 8, fontSize: 12, color: "#ff6b6b", fontWeight: 600 }}>
+            🚫 Candidature rejetée — mail "pas le bon match" envoyé
+          </div>
         )}
 
         <div style={{ marginBottom: 18 }}>

@@ -106,6 +106,14 @@
     {
       "path": "/api/cron-push-hygiene",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron-coaching-call-reminder",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron-coaching-call-followup",
+      "schedule": "30 9 * * *"
     }
   ],
   "redirects": [

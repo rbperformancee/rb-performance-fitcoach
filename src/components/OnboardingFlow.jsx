@@ -291,6 +291,14 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           return { ok: false, reason: detail };
         }
         try { localStorage.removeItem(draftKey); } catch {}
+        // Track conversion candidature (Plausible + Meta Lead event)
+        try {
+          const { trackApplicationSubmitted } = await import("../lib/analytics");
+          trackApplicationSubmitted({
+            budget: form.budget_mensuel || null,
+            timeline: form.commitment_timeline || null,
+          });
+        } catch {}
         return { ok: true };
       } catch (e) {
         console.error("[application] submit exception:", e.message);
@@ -1183,10 +1191,6 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
             </div>
           </div>
         )}
-
-        {/* Vidéo perso de Rayan : à ajouter quand Rayan enregistre.
-            Quand uploadée, déposer le fichier dans /public/rayan-confirm-call.mp4
-            et réactiver le bloc commenté. */}
 
         {/* Préparer l'appel : 3 actions concrètes. Engagement réciproque +
             qualifie le profil mental "prêt à bouger". */}

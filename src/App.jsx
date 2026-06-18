@@ -23,6 +23,8 @@ const BaselineMaxesForm = lazy(() => import("./components/client/BaselineMaxesFo
 const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
 const CandidatureLevel2 = lazy(() => import("./components/CandidatureLevel2"));
 const EbookMethodeWaitlist = lazy(() => import("./components/EbookMethodeWaitlist"));
+const PostVenteWelcome = lazy(() => import("./components/PostVenteWelcome"));
+const ConfirmationPagePreview = lazy(() => import("./components/ConfirmationPagePreview"));
 const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
 // Texte cyclique pour le splash demo client (3 etapes, 1.5s chacune).
@@ -495,6 +497,24 @@ function AppInner() {
     window.location.pathname === "/candidature/profil";
   if (isCandidatureL2) {
     return <Suspense fallback={null}><CandidatureLevel2 /></Suspense>;
+  }
+
+  // ===== PREVIEW PAGE 3 (/candidature/preview-confirmation) — dev only =====
+  // Affiche le rendu du step 7 confirmation sans avoir à soumettre le form.
+  // Utilisé pendant le tournage pour valider le visuel.
+  const isConfirmationPreview = typeof window !== "undefined" &&
+    window.location.pathname === "/candidature/preview-confirmation";
+  if (isConfirmationPreview) {
+    return <Suspense fallback={<div style={{ minHeight: "100dvh", background: "#050505" }} />}><ConfirmationPagePreview /></Suspense>;
+  }
+
+  // ===== WELCOME POST-VENTE (/post-vente) — Acte 3 Jonas =====
+  // Page affichée après paiement Stripe confirmé. Vidéo welcome, roadmap 30j,
+  // lien App Store, lien profil L2 si pas fait. Pas de groupe WhatsApp (1:1 only).
+  const isPostVente = typeof window !== "undefined" &&
+    window.location.pathname === "/post-vente";
+  if (isPostVente) {
+    return <Suspense fallback={<div style={{ minHeight: "100dvh", background: "#050505" }} />}><PostVenteWelcome /></Suspense>;
   }
 
   // ===== WAITLIST EBOOK MÉTHODE ATHLÈTE (/liste) =====

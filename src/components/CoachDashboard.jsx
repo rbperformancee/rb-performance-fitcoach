@@ -31,6 +31,7 @@ import { parseProgrammeHTML } from "../utils/parserProgramme";
 import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
 import CRMSection from "./coach/CRMSection";
+import FunnelAnalytics from "./coach/FunnelAnalytics";
 import ProgrammeDuplicateModal from "./coach/ProgrammeDuplicateModal";
 import Onboarding from "./coach/Onboarding";
 import BulkWeightImportCSV from "./coach/BulkWeightImportCSV";
@@ -5842,7 +5843,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const pillTabs = ["overview", "clients", "programmes", "business", ...(isSuperAdmin ? ["crm"] : [])];
+  const pillTabs = ["overview", "clients", "programmes", "business", ...(isSuperAdmin ? ["crm", "funnel"] : [])];
   const pillItems = [
     { id: "overview",    icon: "chart",       label: t("coach.nav_home"),       shortLabel: "HOME",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
     { id: "clients",     icon: "users",       label: t("coach.nav_clients"),    shortLabel: "CLIENTS", onClick: () => { setSelected(null); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
@@ -5852,6 +5853,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     // via tab swap manuel ou bouton (More menu si besoin plus tard). Caché pour
     // tous les autres coachs.
     ...(isSuperAdmin ? [{ id: "crm", icon: "users", label: "CRM", shortLabel: "CRM", onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("crm"); } }] : []),
+    ...(isSuperAdmin ? [{ id: "funnel", icon: "trending", label: "Funnel", shortLabel: "FUNNEL", onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("funnel"); } }] : []),
     { id: "more",        icon: "plus",        label: t("cd.pill_more"),      shortLabel: t("cd.pill_more_short"),    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   // Swipe gesture sur la pill
@@ -6668,6 +6670,11 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
           {/* ========== CRM PERSONNEL (Super Admin only — Rayan) ========== */}
           {!showClientList && activeTab === "crm" && isSuperAdmin && (
             <CRMSection coachId={coachId} />
+          )}
+
+          {/* ========== FUNNEL ANALYTICS (Super Admin only — Rayan) ========== */}
+          {!showClientList && activeTab === "funnel" && isSuperAdmin && (
+            <FunnelAnalytics />
           )}
 
           {/* ========== ACHIEVEMENTS (badges + streak + rank) ========== */}

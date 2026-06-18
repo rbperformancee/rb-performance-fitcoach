@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { navigateAfterAuth } from "../lib/native";
+import { trackLandingViewed, trackApplicationStarted } from "../lib/analytics";
 
 const OnboardingFlow = lazy(() => import("./OnboardingFlow"));
 
@@ -30,6 +31,11 @@ export default function CoachingApplicationLanding() {
     document.title = "Candidature Accompagnement Premium · RB Perform";
     if (showForm) window.scrollTo({ top: 0, behavior: "smooth" });
   }, [showForm]);
+
+  // Track landing pageview une seule fois au mount
+  useEffect(() => {
+    trackLandingViewed();
+  }, []);
 
   // Tilt 3D iPhone — suit le curseur (Apple Vision Pro style).
   // Max 8 degrees, smoothed via requestAnimationFrame.
@@ -111,9 +117,9 @@ export default function CoachingApplicationLanding() {
           3 mois minimum. Un suivi 24/7 qui ne ressemble à rien d'autre.
         </p>
 
-        {/* CTA hero — reduit la friction : pas besoin de scroller pour postuler */}
+        {/* CTA hero — réduit la friction : pas besoin de scroller pour postuler */}
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => { trackApplicationStarted(); setShowForm(true); }}
           style={{
             width: "100%",
             maxWidth: 480,
@@ -138,7 +144,7 @@ export default function CoachingApplicationLanding() {
           Postuler maintenant →
         </button>
         <div style={{ marginBottom: 48, fontSize: 11, color: "rgba(255,255,255,0.55)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.4s both" }}>
-          5 min · 0€ aujourd'hui · Paiement après appel validé
+          3 min · Aucun paiement aujourd'hui · Sélection sur dossier
         </div>
 
         {/* Profile — vraie photo HD avec ring teal */}
@@ -299,7 +305,7 @@ export default function CoachingApplicationLanding() {
 
         {/* CTA */}
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => { trackApplicationStarted(); setShowForm(true); }}
           style={{
             width: "100%",
             maxWidth: 480,
