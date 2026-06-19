@@ -25,6 +25,7 @@ const CandidatureLevel2 = lazy(() => import("./components/CandidatureLevel2"));
 const EbookMethodeWaitlist = lazy(() => import("./components/EbookMethodeWaitlist"));
 const PostVenteWelcome = lazy(() => import("./components/PostVenteWelcome"));
 const ConfirmationPagePreview = lazy(() => import("./components/ConfirmationPagePreview"));
+const PackDecouverteOptin = lazy(() => import("./components/PackDecouverteOptin"));
 const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
 // Texte cyclique pour le splash demo client (3 etapes, 1.5s chacune).
@@ -506,6 +507,13 @@ function AppInner() {
     window.location.pathname === "/candidature/preview-confirmation";
   if (isConfirmationPreview) {
     return <Suspense fallback={<div style={{ minHeight: "100dvh", background: "#050505" }} />}><ConfirmationPagePreview /></Suspense>;
+  }
+
+  // ===== LEAD MAGNET (/pack-decouverte) — front-funnel pré-vente =====
+  const isPackDecouverte =
+    window.location.pathname === "/pack-decouverte";
+  if (isPackDecouverte) {
+    return <Suspense fallback={<div style={{ minHeight: "100dvh", background: "#050505" }} />}><PackDecouverteOptin /></Suspense>;
   }
 
   // ===== WELCOME POST-VENTE (/post-vente) — Acte 3 Jonas =====

@@ -332,6 +332,37 @@ export default function CoachingApplicationLanding() {
         <div style={{ marginTop: 18, fontSize: 11, color: "rgba(255,255,255,0.62)", letterSpacing: "0.3px", animation: "fadeUp 0.7s ease 0.8s both" }}>
           0€ aujourd'hui · Paiement uniquement après validation appel
         </div>
+
+        {/* Backup Jonas-style — pour les visiteurs pas prêts au high-ticket
+            mais qu'on veut récupérer dans la liste email via le lead magnet
+            gratuit. Discret en bas, ne distrait pas du CTA principal. */}
+        <div style={{
+          marginTop: 56,
+          paddingTop: 28,
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          textAlign: "center",
+          animation: "fadeUp 0.7s ease 1s both",
+        }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8, letterSpacing: "0.5px" }}>
+            Pas prêt à candidater ?
+          </div>
+          <a
+            href="/pack-decouverte"
+            style={{
+              fontSize: 13,
+              color: GREEN,
+              fontWeight: 700,
+              textDecoration: "none",
+              borderBottom: `1px solid ${GREEN}66`,
+              paddingBottom: 2,
+            }}
+          >
+            Récupère mon Pack Découverte gratuit →
+          </a>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>
+            4 semaines de programme + vidéos + nutrition · sans engagement
+          </div>
+        </div>
       </div>
     </main>
   );

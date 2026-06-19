@@ -114,6 +114,10 @@
     {
       "path": "/api/cron-coaching-call-followup",
       "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron-pack-decouverte-nurture",
+      "schedule": "0 9 * * *"
     }
   ],
   "redirects": [
