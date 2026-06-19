@@ -106,22 +106,6 @@
     {
       "path": "/api/cron-push-hygiene",
       "schedule": "0 5 * * *"
-    },
-    {
-      "path": "/api/cron-coaching-call-reminder",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron-coaching-call-followup",
-      "schedule": "30 9 * * *"
-    },
-    {
-      "path": "/api/cron-pack-decouverte-nurture",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron-refresh-lead-intent",
-      "schedule": "0 8 * * *"
     }
   ],
   "redirects": [
