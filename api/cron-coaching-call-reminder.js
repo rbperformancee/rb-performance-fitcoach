@@ -147,20 +147,22 @@ function buildTransporter() {
   });
 }
 
+// IMPORTANT : utilise funnel_notification_logs (pas notification_logs).
+// notification_logs.client_id a une FK vers clients(id) → l'application_id ne
+// passe pas. Migration 118 introduit funnel_notification_logs sans FK.
 async function wasSent(applicationId, type) {
-  const today = new Date().toISOString().split('T')[0];
   const data = await sbFetch(
-    `/rest/v1/notification_logs?client_id=eq.${applicationId}&type=eq.${type}&select=id&limit=1`
+    `/rest/v1/funnel_notification_logs?ref_id=eq.${applicationId}&type=eq.${type}&select=id&limit=1`
   );
   return Array.isArray(data) && data.length > 0;
 }
 
 async function logSent(applicationId, type) {
-  await sbFetch('/rest/v1/notification_logs', {
+  await sbFetch('/rest/v1/funnel_notification_logs', {
     method: 'POST',
     headers: { Prefer: 'resolution=ignore-duplicates' },
     body: JSON.stringify({
-      client_id: applicationId,
+      ref_id: applicationId,
       type,
       sent_date: new Date().toISOString().split('T')[0],
     }),

@@ -229,13 +229,14 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // 4. Log dedup (au cas où Rayan re-clique)
+    // 4. Log dedup (au cas où Rayan re-clique) — funnel_notification_logs
+    // car notification_logs.client_id a une FK vers clients(id).
     try {
-      await sbFetch('/rest/v1/notification_logs', {
+      await sbFetch('/rest/v1/funnel_notification_logs', {
         method: 'POST',
         headers: { Prefer: 'resolution=ignore-duplicates' },
         body: JSON.stringify({
-          client_id: app.id,
+          ref_id: app.id,
           type: 'rejection_sent',
           sent_date: new Date().toISOString().split('T')[0],
         }),

@@ -141,19 +141,21 @@ function buildTransporter() {
   });
 }
 
+// IMPORTANT : voir cron-coaching-call-reminder.js — funnel_notification_logs
+// est la table dédiée funnel (pas de FK vers clients).
 async function wasSent(applicationId, type) {
   const data = await sbFetch(
-    `/rest/v1/notification_logs?client_id=eq.${applicationId}&type=eq.${type}&select=id&limit=1`
+    `/rest/v1/funnel_notification_logs?ref_id=eq.${applicationId}&type=eq.${type}&select=id&limit=1`
   );
   return Array.isArray(data) && data.length > 0;
 }
 
 async function logSent(applicationId, type) {
-  await sbFetch('/rest/v1/notification_logs', {
+  await sbFetch('/rest/v1/funnel_notification_logs', {
     method: 'POST',
     headers: { Prefer: 'resolution=ignore-duplicates' },
     body: JSON.stringify({
-      client_id: applicationId,
+      ref_id: applicationId,
       type,
       sent_date: new Date().toISOString().split('T')[0],
     }),
