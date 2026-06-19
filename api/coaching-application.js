@@ -18,6 +18,7 @@ const { rateLimit, attachRequestId } = require('./_security');
 const { captureException } = require('./_sentry');
 const { RB_SUPPORT_EMAIL } = require('./_branding');
 const { pushMetaEvent, extractRequestContext } = require('./_meta-pixel');
+const { runWorkflows } = require('./_workflows');
 
 // Recap candidature → rb.performancee@gmail.com (= RB_SUPPORT_EMAIL).
 const APPLICATION_RECAP_EMAIL = RB_SUPPORT_EMAIL;
@@ -389,6 +390,18 @@ module.exports = async (req, res) => {
         content_name: 'coaching_application',
         commitment_timeline: data.commitment_timeline || null,
       },
+    }).catch(() => {});
+
+    // Trigger workflows (fire-and-forget)
+    runWorkflows('coaching_application_received', {
+      ref_type: 'coaching_application',
+      email: data.email,
+      phone: data.telephone,
+      first_name: (data.nom_prenom || '').trim().split(/\s+/)[0] || '',
+      nom_prenom: data.nom_prenom,
+      budget_mensuel: data.budget_mensuel,
+      commitment_timeline: data.commitment_timeline,
+      objectif: data.objectifs_3mois || data.objectifs_6semaines,
     }).catch(() => {});
 
     return res.status(200).json({ ok: true, db: dbOk });

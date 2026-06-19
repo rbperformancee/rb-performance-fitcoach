@@ -15,6 +15,7 @@ const { z } = require('zod');
 const nodemailer = require('nodemailer');
 const { captureException } = require('./_sentry');
 const { pushMetaEvent, extractRequestContext } = require('./_meta-pixel');
+const { runWorkflows } = require('./_workflows');
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -226,6 +227,13 @@ module.exports = async function handler(req, res) {
       custom_data: {
         content_name: 'pack_decouverte_lead_magnet',
       },
+    }).catch(() => {});
+
+    // Trigger workflows
+    runWorkflows('pack_decouverte_optin', {
+      ref_type: 'pack_decouverte_optin',
+      email: emailLower,
+      first_name: firstName,
     }).catch(() => {});
 
     return res.status(200).json({ ok: true, is_new: isNew });

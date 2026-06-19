@@ -21,6 +21,7 @@ const { z } = require('zod');
 const nodemailer = require('nodemailer');
 const { captureException } = require('./_sentry');
 const { pushMetaEvent, extractRequestContext } = require('./_meta-pixel');
+const { runWorkflows } = require('./_workflows');
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -175,6 +176,18 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: 'Application not found' });
     }
     const app = apps[0];
+
+    // Trigger workflows (avant Meta pour que les actions critiques tournent)
+    runWorkflows('coaching_application_outcome_set', {
+      ref_type: 'coaching_application',
+      ref_id: app.id,
+      application_id: app.id,
+      email: app.email,
+      phone: app.telephone,
+      first_name: (app.nom_prenom || '').trim().split(/\s+/)[0] || '',
+      newOutcome: 'closed_won',
+      value: parseInt(app.budget_mensuel) || undefined,
+    }).catch(() => {});
 
     // Meta Conversions API — Purchase event server-side (signature détectée)
     // Valeur = budget mensuel * 6 mois (best estimate, ajustable plus tard)
