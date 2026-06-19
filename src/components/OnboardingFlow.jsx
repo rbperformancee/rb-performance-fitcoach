@@ -291,14 +291,8 @@ export default function OnboardingFlow({ client, onComplete, mode = "client" }) 
           return { ok: false, reason: detail };
         }
         try { localStorage.removeItem(draftKey); } catch {}
-        // Track conversion candidature (Plausible + Meta Lead event)
-        try {
-          const { trackApplicationSubmitted } = await import("../lib/analytics");
-          trackApplicationSubmitted({
-            budget: form.budget_mensuel || null,
-            timeline: form.commitment_timeline || null,
-          });
-        } catch {}
+        // Tracking déplacé sur rbperform.com — OnboardingFlow mode='client'
+        // (SaaS) n'a pas de tracking de conversion candidature.
         return { ok: true };
       } catch (e) {
         console.error("[application] submit exception:", e.message);

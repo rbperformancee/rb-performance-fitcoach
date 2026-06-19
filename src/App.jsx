@@ -20,12 +20,12 @@ const FaqAssistant = lazy(() => import("./components/FaqAssistant"));
 const MovePage = lazy(() => import("./components/MovePage"));
 const OnboardingFlow = lazy(() => import("./components/OnboardingFlow"));
 const BaselineMaxesForm = lazy(() => import("./components/client/BaselineMaxesForm"));
-const CoachingApplicationLanding = lazy(() => import("./components/CoachingApplicationLanding"));
+// CoachingApplicationLanding migré vers rbperform.com (Next.js).
+// L'URL /candidature redirige 301 via vercel.json.
 const CandidatureLevel2 = lazy(() => import("./components/CandidatureLevel2"));
 const EbookMethodeWaitlist = lazy(() => import("./components/EbookMethodeWaitlist"));
-const PostVenteWelcome = lazy(() => import("./components/PostVenteWelcome"));
-const ConfirmationPagePreview = lazy(() => import("./components/ConfirmationPagePreview"));
-const PackDecouverteOptin = lazy(() => import("./components/PackDecouverteOptin"));
+// PostVenteWelcome, ConfirmationPagePreview, PackDecouverteOptin migrés
+// vers rbperform.com (Next.js). Les URLs redirigent 301 via vercel.json.
 const PublicCoachProfile = lazy(() => import("./components/PublicCoachProfile"));
 
 // Texte cyclique pour le splash demo client (3 etapes, 1.5s chacune).
@@ -480,49 +480,17 @@ function AppInner() {
     return <Suspense fallback={null}><CoachOnboarding coach={mockCoach} preview={true} onComplete={() => alert("Onboarding terminé (preview)")} /></Suspense>;
   }
 
-  // ===== MODE CANDIDATURE HIGH-TICKET (/candidature) =====
-  // Landing premium (CoachingApplicationLanding) puis OnboardingFlow
-  // mode='application' au clic sur "Postuler maintenant".
-  const isCandidature = typeof window !== "undefined" &&
-    (window.location.pathname === "/candidature" ||
-     new URLSearchParams(window.location.search).get("candidature") === "true");
-  if (isCandidature) {
-    return <Suspense fallback={null}><CoachingApplicationLanding /></Suspense>;
-  }
+  // ===== MIGRATION B2C → rbperform.com =====
+  // /candidature, /pack-decouverte, /post-vente, /candidature/preview-confirmation
+  // sont maintenant hébergés sur rbperform.com (Next.js). Les redirects 301
+  // dans vercel.json détournent ces URLs. Aucun handler ici.
 
   // ===== MODE COMPLÉTER PROFIL (/candidature/profil) — Level 2 =====
-  // Après booking, l'athlète remplit les détails approfondis (passé sportif,
-  // diète, mindset, perf, vision) pour rendre l'appel utile. Pas de slot
-  // picker ici — on UPDATE la row existante par email.
+  // SaaS — pas migré. Après booking, l'athlète remplit les détails approfondis.
   const isCandidatureL2 = typeof window !== "undefined" &&
     window.location.pathname === "/candidature/profil";
   if (isCandidatureL2) {
     return <Suspense fallback={null}><CandidatureLevel2 /></Suspense>;
-  }
-
-  // ===== PREVIEW PAGE 3 (/candidature/preview-confirmation) — dev only =====
-  // Affiche le rendu du step 7 confirmation sans avoir à soumettre le form.
-  // Utilisé pendant le tournage pour valider le visuel.
-  const isConfirmationPreview = typeof window !== "undefined" &&
-    window.location.pathname === "/candidature/preview-confirmation";
-  if (isConfirmationPreview) {
-    return <Suspense fallback={<div style={{ minHeight: "100dvh", background: "#050505" }} />}><ConfirmationPagePreview /></Suspense>;
-  }
-
-  // ===== LEAD MAGNET (/pack-decouverte) — front-funnel pré-vente =====
-  const isPackDecouverte =
-    window.location.pathname === "/pack-decouverte";
-  if (isPackDecouverte) {
-    return <Suspense fallback={<div style={{ minHeight: "100dvh", background: "#050505" }} />}><PackDecouverteOptin /></Suspense>;
-  }
-
-  // ===== WELCOME POST-VENTE (/post-vente) — Acte 3 Jonas =====
-  // Page affichée après paiement Stripe confirmé. Vidéo welcome, roadmap 30j,
-  // lien App Store, lien profil L2 si pas fait. Pas de groupe WhatsApp (1:1 only).
-  const isPostVente = typeof window !== "undefined" &&
-    window.location.pathname === "/post-vente";
-  if (isPostVente) {
-    return <Suspense fallback={<div style={{ minHeight: "100dvh", background: "#050505" }} />}><PostVenteWelcome /></Suspense>;
   }
 
   // ===== WAITLIST EBOOK MÉTHODE ATHLÈTE (/liste) =====
