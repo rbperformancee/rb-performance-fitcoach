@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { navigateAfterAuth } from "../lib/native";
 import { trackLandingViewed, trackApplicationStarted } from "../lib/analytics";
+import { resolveABTest, applyVariant, trackABTestExposure } from "../lib/abtest";
 
 const OnboardingFlow = lazy(() => import("./OnboardingFlow"));
 
@@ -35,6 +36,22 @@ export default function CoachingApplicationLanding() {
   // Track landing pageview une seule fois au mount
   useEffect(() => {
     trackLandingViewed();
+  }, []);
+
+  // A/B test sur la landing — résolution + tracking au mount.
+  // Override par défaut : { headline: { line1: "X", line2: "Y" }, subhead: "Z" }
+  // Crée un test dans Supabase ab_tests (page='landing', variant_b={...overrides}).
+  const [abConfig, setAbConfig] = useState({
+    headline: { line1: "La transformation", line2: "qui change tout." },
+    subhead: "3 mois minimum. Un suivi 24/7 qui ne ressemble à rien d'autre.",
+  });
+  useEffect(() => {
+    (async () => {
+      const test = await resolveABTest("landing");
+      if (!test) return;
+      setAbConfig((prev) => applyVariant(prev, test.override));
+      trackABTestExposure("landing", test.testId, test.variant);
+    })();
   }, []);
 
   // Tilt 3D iPhone — suit le curseur (Apple Vision Pro style).
@@ -106,15 +123,15 @@ export default function CoachingApplicationLanding() {
             le rend opacity:0 puis fade-in, Lighthouse mesure le LCP a la fin
             de l'animation (700ms + 200ms delay = +900ms regression). */}
         <h1 style={{ fontFamily: "'Inter',-apple-system,sans-serif", fontSize: "clamp(38px, 7vw, 60px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 24 }}>
-          La transformation<br/>
+          {abConfig.headline.line1}<br/>
           <span style={{ background: `linear-gradient(90deg, ${GREEN}, #ffffff, ${GREEN})`, backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 6s linear infinite" }}>
-            qui change tout.
+            {abConfig.headline.line2}
           </span>
         </h1>
 
         {/* Subhead */}
         <p style={{ fontSize: 17, lineHeight: 1.65, color: "rgba(255,255,255,0.6)", marginBottom: 32, maxWidth: 520, marginLeft: "auto", marginRight: "auto", animation: "fadeUp 0.7s ease 0.3s both" }}>
-          3 mois minimum. Un suivi 24/7 qui ne ressemble à rien d'autre.
+          {abConfig.subhead}
         </p>
 
         {/* CTA hero — réduit la friction : pas besoin de scroller pour postuler */}
