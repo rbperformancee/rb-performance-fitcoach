@@ -78,15 +78,15 @@ const TEMPLATES = {
         Le truc qui te ralentit le plus${firstName ? ', ' + escHtml(firstName) : ''}.
       </div>
       <div style="font-size:15px;color:rgba(255,255,255,0.75);line-height:1.75;margin-bottom:20px">
-        90% des athlètes amateurs que je vois font la même erreur : ils changent de programme tous les 4-6 semaines parce qu'ils s'ennuient ou qu'ils ont vu un nouveau "système" sur Instagram.
+        90% des athlètes amateurs que je vois font la même erreur : ils changent de programme <strong style="color:#fff">tous les 10 jours</strong>. Ils s'ennuient, ils voient une nouvelle "méthode" sur Instagram, ou ils ne ressentent pas de progrès immédiat, alors ils switchent.
       </div>
       <div style="font-size:15px;color:rgba(255,255,255,0.7);line-height:1.75;margin-bottom:24px">
-        Résultat : leur corps n'a jamais le temps d'<em>adapter</em>. Tu progresses sur les 3 premières semaines (système nerveux), puis tu plateau, et au lieu de pousser à travers, tu changes. Tu recommences de zéro chaque mois.
+        Résultat : leur corps n'a jamais le temps d'<em>adapter</em>. Sur les 2 premières semaines tu prends en système nerveux (la coordination, l'apprentissage du geste), mais l'hypertrophie et la vraie force, ça vient à partir de la 4e-6e semaine. Si tu changes avant, tu recommences de zéro à chaque fois. Tu fais surplace pendant 2 ans sans le voir.
       </div>
       <div style="margin-bottom:24px;padding:18px 20px;background:rgba(2,209,186,0.05);border-left:3px solid ${G};border-radius:6px">
-        <div style="font-size:13px;color:#fff;line-height:1.7;font-weight:600;margin-bottom:6px">La règle que j'applique sur tous mes athlètes :</div>
+        <div style="font-size:13px;color:#fff;line-height:1.7;font-weight:600;margin-bottom:6px">La règle que j'applique sur mes athlètes (et sur moi) :</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.7">
-          <strong style="color:#fff">12 semaines minimum</strong> sur la même structure de programme. Les charges montent, les volumes ajustent, mais les mouvements clés restent. C'est le seul moyen d'avoir un vrai feedback corps/effort.
+          Une <strong style="color:#fff">structure stable sur 4 à 6 semaines</strong> minimum. Les charges montent, les volumes ajustent, mais les mouvements clés restent les mêmes. C'est le seul moyen d'avoir un vrai feedback corps/effort et de savoir ce qui marche pour TOI.
         </div>
       </div>
       <div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:14px">
