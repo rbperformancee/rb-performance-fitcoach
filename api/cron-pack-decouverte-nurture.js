@@ -224,6 +224,39 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Missing ZOHO_SMTP_PASS' });
   }
 
+  // ════════ PREVIEW MODE ════════
+  // Permet de tester les 4 mails du funnel en les envoyant à un email donné
+  // (typiquement rayan.b2701@gmail.com pour validation visuelle).
+  // Pas de DB write, pas de dedup, pas d'âge check. Auth via CRON_SECRET.
+  // Usage : POST /api/cron-pack-decouverte-nurture?preview_to=rayan.b2701@gmail.com
+  const previewTo = (req.query?.preview_to || '').toString().trim();
+  if (previewTo && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(previewTo)) {
+    const firstName = (req.query?.first_name || 'Rayan').toString().slice(0, 60);
+    const previews = [
+      { key: 'j1', tpl: TEMPLATES.nurture_j1(firstName) },
+      { key: 'j3', tpl: TEMPLATES.nurture_j3(firstName) },
+      { key: 'j5', tpl: TEMPLATES.nurture_j5(firstName) },
+      { key: 'j7', tpl: TEMPLATES.nurture_j7(firstName) },
+    ];
+    const sentList = [];
+    for (const p of previews) {
+      try {
+        await transporter.sendMail({
+          from: `Rayan · RB Perform <${SMTP_USER}>`,
+          to: [previewTo],
+          replyTo: SMTP_USER,
+          subject: `[PREVIEW ${p.key.toUpperCase()}] ${p.tpl.subject}`,
+          html: p.tpl.html,
+        });
+        sentList.push(p.key);
+        await new Promise((r) => setTimeout(r, 1500));
+      } catch (e) {
+        console.error(`[NURTURE_PREVIEW_FAIL] key=${p.key} err=${e.message}`);
+      }
+    }
+    return res.status(200).json({ ok: true, preview_mode: true, sent: sentList });
+  }
+
   const results = { j1: 0, j3: 0, j5: 0, j7: 0, skipped: 0, errors: 0 };
   const now = Date.now();
 

@@ -137,6 +137,29 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Missing Supabase env' });
   }
 
+  // ════════ PREVIEW MODE ════════
+  // X-Internal-Secret = CRON_SECRET → envoie juste le welcome mail à preview_to,
+  // pas de DB write, pas de rate-limit. Pour validation visuelle.
+  const previewSecret = req.headers['x-internal-secret'];
+  const previewTo = (req.body?.preview_to || '').toString().trim();
+  if (previewSecret && previewSecret === process.env.CRON_SECRET && previewTo) {
+    const transporter = buildTransporter();
+    if (!transporter) return res.status(500).json({ error: 'No SMTP' });
+    try {
+      const firstName = (req.body?.first_name || 'Rayan').toString().slice(0, 60);
+      await transporter.sendMail({
+        from: `Rayan · RB Perform <${SMTP_USER}>`,
+        to: [previewTo],
+        replyTo: SMTP_USER,
+        subject: `[PREVIEW J+0] Ton Pack Découverte est dispo`,
+        html: buildWelcomeEmail(firstName, PACK_URL),
+      });
+      return res.status(200).json({ ok: true, preview_mode: true });
+    } catch (e) {
+      return res.status(500).json({ error: 'Preview send failed', detail: e.message });
+    }
+  }
+
   const ip = (req.headers['x-forwarded-for'] || '').toString().split(',')[0].trim() ||
     req.socket?.remoteAddress || 'unknown';
   if (isRateLimited(ip)) {
