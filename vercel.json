@@ -125,7 +125,11 @@
     }
   ],
   "redirects": [
-    { "source": "/waitlist", "destination": "/founding", "permanent": true }
+    { "source": "/waitlist", "destination": "/founding", "permanent": true },
+    { "source": "/candidature", "destination": "https://www.rbperform.com/candidature", "permanent": true },
+    { "source": "/candidature/(.*)", "destination": "https://www.rbperform.com/candidature/$1", "permanent": true },
+    { "source": "/pack-decouverte", "destination": "https://www.rbperform.com/pack-decouverte", "permanent": true },
+    { "source": "/post-vente", "destination": "https://www.rbperform.com/post-vente", "permanent": true }
   ],
   "rewrites": [
     { "source": "/rejoindre/:slug", "destination": "/app.html?coach=:slug" },
