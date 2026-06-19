@@ -95,30 +95,63 @@ const TEMPLATES = {
     `),
   }),
 
-  // J+3 — Preuve sociale (case study Alexis / Dragons Catalans)
+  // J+3 — Preuve sociale (case studies Alexis + Muhammed)
   nurture_j3: (firstName) => ({
-    subject: `${firstName ? firstName + ', ' : ''}le cas d'Alexis (Dragons Catalans)`,
+    subject: `${firstName ? firstName + ', ' : ''}le cas d'Alexis et Muhammed`,
     html: wrap('Case study · J+3', `
       <div style="font-size:26px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:16px">
-        D'amateur sérieux à athlète pro chez les Dragons Catalans.
+        Deux athlètes, deux objectifs, même méthode.
       </div>
-      <div style="font-size:15px;color:rgba(255,255,255,0.75);line-height:1.75;margin-bottom:20px">
-        Alexis, c'est le mec qui m'envoie les meilleurs résultats que je puisse montrer. Il joue maintenant aux <strong style="color:#fff">Dragons Catalans</strong> en pro. On bosse ensemble depuis longtemps, et ce qu'on construit avec lui n'a rien à voir avec "prendre de la masse" ou "perdre du gras".
+      <div style="font-size:15px;color:rgba(255,255,255,0.75);line-height:1.75;margin-bottom:28px">
+        Pour te montrer concrètement ce que je veux dire par "prep adaptée", voici deux athlètes que j'accompagne — totalement différents en objectifs, mais la mécanique de travail est la même.
       </div>
-      <div style="font-size:15px;color:rgba(255,255,255,0.7);line-height:1.75;margin-bottom:24px">
-        Ce qu'on travaille avec lui : <strong style="color:#fff">puissance</strong>, <strong style="color:#fff">explosivité</strong>, <strong style="color:#fff">résistance aux blessures</strong> en saison, et la récupération entre matchs. La logique n'est pas la même qu'un programme de salle classique — c'est une prep physique au service d'une performance sportive précise.
-      </div>
-      <div style="margin-bottom:24px;padding:18px 20px;background:rgba(2,209,186,0.05);border-left:3px solid ${G};border-radius:6px">
-        <div style="font-size:13px;color:#fff;line-height:1.7;font-weight:600;margin-bottom:6px">Ce qui a fait la différence pour lui :</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.7">
-          → Une structure de programme qui s'ajuste à son calendrier compétition<br>
-          → Pas de surcharge inutile en semaine de match<br>
-          → Suivi régulier sur les ressentis (fatigue, gênes, sommeil)<br>
-          → Ajustement nutrition selon les phases (intensification / décharge / compétition)
+
+      <!-- Alexis -->
+      <div style="margin-bottom:30px">
+        <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">
+          <tr>
+            <td style="padding-bottom:14px;text-align:center">
+              <img src="https://rbperform.app/athletes/alexis.jpg" alt="Alexis"
+                style="width:100%;max-width:480px;height:auto;border-radius:14px;display:block;margin:0 auto;border:1px solid rgba(255,255,255,0.08)" />
+            </td>
+          </tr>
+        </table>
+        <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:6px">Alexis · Dragons Catalans</div>
+        <div style="font-size:13px;color:${G};font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Athlète pro · puissance · explosivité</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;margin-bottom:12px">
+          Alexis joue aux Dragons Catalans. Avec lui on construit une prep qui sert sa performance sportive : explosivité, vitesse, résistance aux blessures en saison, récupération entre matchs. Pas du bodybuilding — du physique <em>au service du sport</em>.
         </div>
       </div>
+
+      <!-- Muhammed -->
+      <div style="margin-bottom:24px">
+        <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">
+          <tr>
+            <td style="padding-bottom:14px;text-align:center">
+              <img src="https://rbperform.app/athletes/muhammed.jpg" alt="Muhammed"
+                style="width:100%;max-width:480px;height:auto;border-radius:14px;display:block;margin:0 auto;border:1px solid rgba(255,255,255,0.08)" />
+            </td>
+          </tr>
+        </table>
+        <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:6px">Muhammed · Athlète</div>
+        <div style="font-size:13px;color:${G};font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Force · récupération · construction</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;margin-bottom:12px">
+          Muhammed bosse avec moi sur la construction physique long-terme : force, masse fonctionnelle, et surtout une vraie stratégie de récupération entre les phases intensives. Là où la plupart des athlètes brûlent leur corps en 6 mois, lui construit pour les 5 prochaines années.
+        </div>
+      </div>
+
+      <div style="margin-top:28px;margin-bottom:24px;padding:18px 20px;background:rgba(2,209,186,0.05);border-left:3px solid ${G};border-radius:6px">
+        <div style="font-size:13px;color:#fff;line-height:1.7;font-weight:600;margin-bottom:6px">Le pattern commun :</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.7">
+          → Une structure adaptée à <strong style="color:#fff">SON</strong> objectif (pas un copier-coller)<br>
+          → Suivi régulier sur les ressentis (fatigue, gênes, sommeil)<br>
+          → Ajustements en cours de route selon les retours<br>
+          → Discipline sur la durée — minimum 6 mois pour voir le vrai changement
+        </div>
+      </div>
+
       <div style="font-size:14px;color:rgba(255,255,255,0.65);line-height:1.75;margin-bottom:12px">
-        Pour toi qui n'es pas pro — le pattern reste le même. Une prep adaptée à TON sport et TA vie, pas un copier-coller générique. C'est ça qui change tout.
+        Pour toi — le pattern reste exactement le même. Une prep adaptée à TON sport, TON corps, TA vie. C'est ça qui change tout, pas le "système" Instagram du mois.
       </div>
     `),
   }),
