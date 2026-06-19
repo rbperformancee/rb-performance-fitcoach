@@ -20,6 +20,7 @@
 const { z } = require('zod');
 const nodemailer = require('nodemailer');
 const { captureException } = require('./_sentry');
+const { pushMetaEvent, extractRequestContext } = require('./_meta-pixel');
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -168,12 +169,30 @@ module.exports = async function handler(req, res) {
 
   try {
     const apps = await sbFetch(
-      `/rest/v1/coaching_applications?id=eq.${body.application_id}&select=id,email,nom_prenom&limit=1`
+      `/rest/v1/coaching_applications?id=eq.${body.application_id}&select=id,email,nom_prenom,telephone,budget_mensuel&limit=1`
     );
     if (!Array.isArray(apps) || apps.length === 0) {
       return res.status(404).json({ error: 'Application not found' });
     }
     const app = apps[0];
+
+    // Meta Conversions API — Purchase event server-side (signature détectée)
+    // Valeur = budget mensuel * 6 mois (best estimate, ajustable plus tard)
+    const reqCtx = extractRequestContext(req);
+    const purchaseValue = parseInt(app.budget_mensuel) || 0;
+    pushMetaEvent({
+      event_name: 'Purchase',
+      email: app.email,
+      phone: app.telephone,
+      value: purchaseValue > 0 ? purchaseValue * 6 : undefined,
+      currency: 'EUR',
+      event_source_url: 'https://rbperform.app/admin/crm',
+      ...reqCtx,
+      custom_data: {
+        content_name: 'rb_perform_pro_coaching',
+        application_id: app.id,
+      },
+    }).catch(() => {});
 
     let emailSent = false;
     const transporter = buildTransporter();

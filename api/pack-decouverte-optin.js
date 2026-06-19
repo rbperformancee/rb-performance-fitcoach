@@ -14,6 +14,7 @@
 const { z } = require('zod');
 const nodemailer = require('nodemailer');
 const { captureException } = require('./_sentry');
+const { pushMetaEvent, extractRequestContext } = require('./_meta-pixel');
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -214,6 +215,18 @@ module.exports = async function handler(req, res) {
         });
       }
     }
+
+    // Meta Conversions API — Contact event server-side (lead magnet capture)
+    const reqCtx = extractRequestContext(req);
+    pushMetaEvent({
+      event_name: 'Contact',
+      email: emailLower,
+      event_source_url: 'https://rbperform.app/pack-decouverte',
+      ...reqCtx,
+      custom_data: {
+        content_name: 'pack_decouverte_lead_magnet',
+      },
+    }).catch(() => {});
 
     return res.status(200).json({ ok: true, is_new: isNew });
   } catch (err) {

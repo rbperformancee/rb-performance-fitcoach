@@ -17,6 +17,7 @@ const { getServiceClient } = require('./_supabase');
 const { rateLimit, attachRequestId } = require('./_security');
 const { captureException } = require('./_sentry');
 const { RB_SUPPORT_EMAIL } = require('./_branding');
+const { pushMetaEvent, extractRequestContext } = require('./_meta-pixel');
 
 // Recap candidature → rb.performancee@gmail.com (= RB_SUPPORT_EMAIL).
 const APPLICATION_RECAP_EMAIL = RB_SUPPORT_EMAIL;
@@ -372,6 +373,23 @@ module.exports = async (req, res) => {
         });
       }
     }
+
+    // Meta Conversions API — Lead event server-side (bypass adblock).
+    // Fire-and-forget : ne bloque pas la réponse en cas de problème Meta.
+    const reqCtx = extractRequestContext(req);
+    pushMetaEvent({
+      event_name: 'Lead',
+      email: data.email,
+      phone: data.telephone,
+      value: parseInt(data.budget_mensuel) || undefined,
+      currency: 'EUR',
+      event_source_url: 'https://rbperform.app/candidature',
+      ...reqCtx,
+      custom_data: {
+        content_name: 'coaching_application',
+        commitment_timeline: data.commitment_timeline || null,
+      },
+    }).catch(() => {});
 
     return res.status(200).json({ ok: true, db: dbOk });
   } catch (err) {
