@@ -107,7 +107,11 @@ module.exports = async (req, res) => {
     // Détermine le contexte du mail selon la source : ebook athlète ou
     // SaaS coach Founding. Évite d'envoyer un mail "coach Founding" à un
     // athlète qui s'inscrit pour le livre.
-    const isMethodeAthlete = (source || '').toLowerCase() === 'methode-athlete';
+    // Match toute source qui commence par "methode-athlete" (couvre
+    // vague 1 = "methode-athlete" et vague 2 = "methode-athlete-vague-2").
+    const sourceNorm = (source || '').toLowerCase();
+    const isMethodeAthlete = sourceNorm.startsWith('methode-athlete');
+    const isVague2 = sourceNorm === 'methode-athlete-vague-2';
     const prospectMail = isMethodeAthlete
       ? buildMethodeAthleteEmail(firstName)
       : buildCoachFoundingEmail(firstName);
@@ -142,9 +146,11 @@ module.exports = async (req, res) => {
         await transporter.sendMail({
           from: `RB Perform <${SMTP_USER}>`,
           to: [NOTIFY_EMAIL],
-          subject: isMethodeAthlete
-            ? `Nouvel inscrit MÉTHODE ATHLÈTE : ${subjectName}`
-            : `Nouvel inscrit waitlist coach : ${subjectName}`,
+          subject: isVague2
+            ? `Nouvel inscrit VAGUE 2 (liste prioritaire) : ${subjectName}`
+            : isMethodeAthlete
+              ? `Nouvel inscrit MÉTHODE ATHLÈTE : ${subjectName}`
+              : `Nouvel inscrit waitlist coach : ${subjectName}`,
           html: `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:32px 16px"><tr><td align="center">
@@ -170,6 +176,36 @@ module.exports = async (req, res) => {
     } else {
       console.error(`[WAITLIST_NO_TRANSPORT] email=${cleanEmail} — ZOHO_SMTP_PASS missing, prospect not notified by email`);
       await captureException(new Error('ZOHO_SMTP_PASS missing on /api/waitlist'), { tags: { endpoint: 'waitlist', stage: 'env' }, extra: { email: cleanEmail, db_ok: dbOk } });
+    }
+
+    // Threshold notification VAGUE 2 — ping à chaque pallier atteint
+    // (30, 60, 90…) pour que Rayan sache quand ouvrir une nouvelle vague.
+    if (isVague2 && dbOk && transporter) {
+      try {
+        const supabase = getServiceClient();
+        const { count } = await supabase.from('waitlist')
+          .select('*', { count: 'exact', head: true })
+          .eq('source', 'methode-athlete-vague-2');
+        const VAGUE_2_STEP = 30;
+        if (count != null && count > 0 && count % VAGUE_2_STEP === 0) {
+          await transporter.sendMail({
+            from: `RB Perform <${SMTP_USER}>`,
+            to: [NOTIFY_EMAIL],
+            subject: `🎯 VAGUE 2 → ${count} INSCRITS PRIORITAIRES`,
+            html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:32px 16px"><tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%">
+  <tr><td style="background:#111;border-radius:16px;border:1px solid rgba(2,209,186,0.4);padding:28px">
+    <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};margin-bottom:12px;font-weight:700">Pallier vague 2 atteint</div>
+    <div style="font-size:32px;font-weight:900;color:#fff;margin-bottom:16px">${count} inscrits<span style="color:${G}">.</span></div>
+    <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.6;margin:0">Tu peux ouvrir une nouvelle vague founders (cohorte ${(count / VAGUE_2_STEP) + 1}) ou relancer une story pour clôturer.</p>
+  </td></tr>
+</table></td></tr></table></body></html>`,
+          });
+        }
+      } catch (e) {
+        console.error(`[WAITLIST_THRESHOLD_FAILED] reason="${e.message}"`);
+      }
     }
 
     return res.status(200).json({ ok: true });
