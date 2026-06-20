@@ -160,46 +160,6 @@ export default function EbookMethodeWaitlist() {
           </span>
         </h1>
 
-        {/* Si vague 1 sold-out : on remonte le badge COMPLET + form vague 2
-            tout en haut pour pas perdre les leads qui scrollent pas. */}
-        {(signupCount ?? 0) >= 30 && (
-          <section className="liste-anim" style={{ marginBottom: 32, animation: "liste_fadeUp 0.7s ease 0.22s both" }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 10,
-              padding: "10px 20px", marginBottom: 16,
-              background: "rgba(255,75,75,0.10)",
-              border: "1px solid rgba(255,75,75,0.45)",
-              borderRadius: 100,
-            }}>
-              <span style={{ fontSize: 16 }}>🔒</span>
-              <span style={{
-                fontSize: 12, letterSpacing: "2.5px", textTransform: "uppercase",
-                color: "#ff9b9b", fontWeight: 800,
-              }}>
-                Vague 1 founders · COMPLET (30/30)
-              </span>
-            </div>
-            <h2 style={{
-              fontFamily: '"Inter", -apple-system, sans-serif',
-              fontSize: "clamp(22px, 4vw, 28px)",
-              fontWeight: 900, letterSpacing: "-0.02em",
-              lineHeight: 1.15, marginBottom: 12,
-            }}>
-              Liste d'attente vague 2.
-            </h2>
-            <p style={{
-              maxWidth: 500, marginLeft: "auto", marginRight: "auto",
-              fontSize: 14, color: "rgba(255,255,255,0.70)",
-              lineHeight: 1.55, marginBottom: 20,
-            }}>
-              Les 30 founders sont pris. <strong style={{ color: "#fff" }}>Inscris-toi sur la vague 2</strong> — tu seras prévenu si une place se libère ou à l'ouverture de la prochaine vague.
-            </p>
-            <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
-              <WaitlistForm source="methode-athlete-vague-2" />
-            </div>
-          </section>
-        )}
-
         {/* App-offerte badge — message critique : les 30 premiers ont l'app
             OFFERTE. Sans ça la promesse n'est pas claire à l'œil. */}
         <div
