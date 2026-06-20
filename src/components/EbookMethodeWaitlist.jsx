@@ -26,8 +26,9 @@ const KEYFRAMES = `
 `;
 
 export default function EbookMethodeWaitlist() {
-  // Compteur live d'inscrits — fetch /api/waitlist-count au mount (cache edge 60s)
+  // Compteurs live — vague 1 (methode-athlete) + vague 2 (methode-athlete-vague-2)
   const [signupCount, setSignupCount] = useState(null);
+  const [vague2Count, setVague2Count] = useState(null);
 
   useEffect(() => {
     document.title = "Liste · Méthode ATHLÈTE COMPLET — RB Perform";
@@ -39,8 +40,14 @@ export default function EbookMethodeWaitlist() {
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (alive && d && Number.isFinite(d.count)) setSignupCount(d.count); })
       .catch(() => { /* silencieux */ });
+    fetch(apiUrl("/api/waitlist-count?source=methode-athlete-vague-2"))
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (alive && d && Number.isFinite(d.count)) setVague2Count(d.count); })
+      .catch(() => { /* silencieux */ });
     return () => { alive = false; };
   }, []);
+
+  const isSoldOut = (signupCount ?? 0) >= 30;
 
   return (
     <main
@@ -236,6 +243,72 @@ export default function EbookMethodeWaitlist() {
         >
           12 semaines · +60 séances · Livret 110 pages. <strong style={{ color: "#fff" }}>Pour les 30 premiers acheteurs de la méthode : l'app RB Perform offerte (100 jours)</strong>.
         </p>
+
+        {/* Vague 1 sold-out → on remonte le form vague 2 tout en haut.
+            Sinon on perd les leads qui scrollent pas. */}
+        {isSoldOut && (
+          <section className="liste-anim" style={{
+            maxWidth: 540, marginLeft: "auto", marginRight: "auto",
+            marginBottom: 40,
+            animation: "liste_fadeUp 0.7s ease 0.22s both",
+          }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 10,
+              padding: "10px 20px", marginBottom: 18,
+              background: "rgba(255,75,75,0.10)",
+              border: "1px solid rgba(255,75,75,0.45)",
+              borderRadius: 100,
+            }}>
+              <span style={{ fontSize: 14 }}>🔒</span>
+              <span style={{
+                fontSize: 11, letterSpacing: "2.5px", textTransform: "uppercase",
+                color: "#ff9b9b", fontWeight: 800,
+              }}>
+                Vague 1 founders · COMPLET ({signupCount}/30)
+              </span>
+            </div>
+            <h2 style={{
+              fontFamily: '"Inter", -apple-system, sans-serif',
+              fontSize: "clamp(24px, 4.5vw, 32px)",
+              fontWeight: 900, letterSpacing: "-0.02em",
+              lineHeight: 1.1, marginBottom: 14,
+            }}>
+              Liste prioritaire <span style={{ color: GREEN }}>vague 2</span>.
+            </h2>
+            <p style={{
+              maxWidth: 480, marginLeft: "auto", marginRight: "auto",
+              fontSize: 14, color: "rgba(255,255,255,0.7)",
+              lineHeight: 1.6, marginBottom: 18,
+            }}>
+              Les 30 founders sont pris. Inscris-toi : tu es contacté en premier
+              dès qu'une place se libère ou que je rouvre une nouvelle cohorte.
+            </p>
+            {vague2Count != null && vague2Count > 0 && (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "7px 14px", marginBottom: 16,
+                background: "rgba(2,209,186,0.10)",
+                border: "1px solid rgba(2,209,186,0.35)",
+                borderRadius: 100,
+              }}>
+                <span style={{
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: GREEN, boxShadow: `0 0 8px ${GREEN}`,
+                  animation: "liste_breath60 1s ease-in-out infinite",
+                }} />
+                <span style={{
+                  fontSize: 10, letterSpacing: "2.5px", textTransform: "uppercase",
+                  color: GREEN, fontWeight: 800,
+                }}>
+                  {vague2Count} {vague2Count === 1 ? "inscrit" : "inscrits"} · liste prioritaire
+                </span>
+              </div>
+            )}
+            <div style={{ maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
+              <WaitlistForm source="methode-athlete-vague-2" />
+            </div>
+          </section>
+        )}
 
         {/* Compteur places fondateur — visuel avec progress bar. La barre
             visualise les inscrits sur la waitlist par rapport aux 30 places
@@ -555,6 +628,8 @@ export default function EbookMethodeWaitlist() {
 }
 
 // ─── Form intégré → POST /api/waitlist ────────────────────────────────
+// source : par défaut "methode-athlete" (vague 1). "methode-athlete-vague-2"
+// pour le formulaire liste prioritaire affiché quand vague 1 sold-out.
 function WaitlistForm({ source = "methode-athlete" }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
