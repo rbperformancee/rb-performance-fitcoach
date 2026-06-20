@@ -8,6 +8,10 @@ ios/App/Pods/
 *.dSYM
 DerivedData/
 
+# Android build artifacts (capacitor sync génère le dossier, jamais utile en
+# prod web). Cause des erreurs lstat sur des fichiers manifest absents.
+android/
+
 # Misc
 .DS_Store
 *.log
