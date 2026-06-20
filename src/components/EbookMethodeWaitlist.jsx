@@ -40,7 +40,7 @@ export default function EbookMethodeWaitlist() {
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (alive && d && Number.isFinite(d.count)) setSignupCount(d.count); })
       .catch(() => { /* silencieux */ });
-    fetch(apiUrl("/api/waitlist-count?source=methode-athlete-vague-2"))
+    fetch("/api/waitlist-count?source=methode-athlete-vague-2")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (alive && d && Number.isFinite(d.count)) setVague2Count(d.count); })
       .catch(() => { /* silencieux */ });
