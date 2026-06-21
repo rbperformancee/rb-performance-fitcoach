@@ -130,7 +130,7 @@ export default function EbookMethodeWaitlist() {
             }}
           >
             {signupCount != null && signupCount > 0
-              ? `${signupCount} inscrit${signupCount > 1 ? "s" : ""} · 30 places fondateur`
+              ? `${isSoldOut ? 30 : signupCount} inscrit${(isSoldOut ? 30 : signupCount) > 1 ? "s" : ""} · 30 places fondateur`
               : "Méthode signature · 30 places fondateur"}
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function EbookMethodeWaitlist() {
                 fontSize: 11, letterSpacing: "2.5px", textTransform: "uppercase",
                 color: "#ff9b9b", fontWeight: 800,
               }}>
-                Vague 1 founders · COMPLET ({signupCount}/30)
+                Vague 1 founders · COMPLET (30/30)
               </span>
             </div>
             <h2 style={{
