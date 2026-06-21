@@ -47,7 +47,9 @@ export default function EbookMethodeWaitlist() {
     return () => { alive = false; };
   }, []);
 
-  const isSoldOut = (signupCount ?? 0) >= 30;
+  // Seuil basculé à 29 : la 30e place est réservée (beta perso), donc 29
+  // inscrits = considéré sold-out → la page bascule en mode vague 2.
+  const isSoldOut = (signupCount ?? 0) >= 29;
 
   return (
     <main
