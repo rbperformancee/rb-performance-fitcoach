@@ -4,6 +4,7 @@ import { toast } from "../Toast";
 import AppIcon from "../AppIcon";
 import PushNotifModal from "./PushNotifModal";
 import CoachPlansSettings from "./CoachPlansSettings";
+import CoachAvailabilitySettings from "./CoachAvailabilitySettings";
 import { useCoachPlans } from "../../hooks/useCoachPlans";
 import { useT } from "../../lib/i18n";
 import InvoiceHistory from "./InvoiceHistory";
@@ -87,6 +88,7 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
   const TABS = [
     { id: "plans", label: t("set.tab_plans") },
     { id: "branding", label: t("set.tab_branding") },
+    { id: "dispos", label: "Dispos" },
     { id: "notifications", label: t("set.tab_notifications") },
     { id: "paiements", label: t("set.tab_paiements") },
   ];
@@ -192,6 +194,12 @@ export default function Settings({ coachData, isDemo = false, onClose }) {
         {tab === "plans" && (
           <Section>
             <CoachPlansSettings coachId={coachData?.id} plans={coachPlans} onReload={reloadPlans} />
+          </Section>
+        )}
+
+        {tab === "dispos" && (
+          <Section title="Tes disponibilités" sub="Périodes où tu n'es pas joignable. Le formulaire /candidature masquera ces créneaux.">
+            <CoachAvailabilitySettings isDemo={isDemo} />
           </Section>
         )}
 
