@@ -1,0 +1,47 @@
+name: Cron bilans hebdo
+
+# Tourne sur infra GitHub Actions — indépendant du déploiement Vercel.
+# Évite le risque de re-rebuild PWA qui exposerait le TDZ "w" résiduel.
+#
+# Schedules UTC :
+#   Dim 19:00  → prompt initial
+#   Mar 18:00  → relance J+2
+#   Jeu 18:00  → relance J+4
+on:
+  schedule:
+    - cron: "0 19 * * 0"   # dimanche
+    - cron: "0 18 * * 2"   # mardi
+    - cron: "0 18 * * 4"   # jeudi
+  workflow_dispatch:        # déclenchement manuel via UI GitHub
+    inputs:
+      dry_run:
+        description: "Dry run (log only, n'envoie rien)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install nodemailer
+        run: npm install --no-save nodemailer
+
+      - name: Run cron bilans
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ZOHO_SMTP_USER: ${{ secrets.ZOHO_SMTP_USER }}
+          ZOHO_SMTP_PASS: ${{ secrets.ZOHO_SMTP_PASS }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_BASE_URL: https://rbperform.app
+          DRY_RUN: ${{ github.event.inputs.dry_run == 'true' && '1' || '' }}
+        run: node scripts/run-cron-weekly-checkin.js
