@@ -277,7 +277,7 @@ export default function EbookMethodeWaitlist() {
             (cap "soft" à 30 pour rester crédible). Pleine = près du sold-out. */}
         {(() => {
           const total = 30;
-          const inscrits = signupCount ?? 0;
+          const inscrits = isSoldOut ? total : (signupCount ?? 0);
           const fillPct = Math.min(100, Math.max(8, (inscrits / total) * 100));
           return (
             <div
