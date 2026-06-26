@@ -1310,10 +1310,10 @@ function AppInner() {
         {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
         {isClientDemo && <div style={{height:52}} />}
 
-        {/* Particules d'ambiance — gradient cyan amplifié pour habiller
-            la zone safe-area en haut (incident Skander 26/06 : bande noire
-            visible sous la status bar perçue comme cassée). */}
-        <div style={{position:'absolute',top:0,left:0,right:0,height:'70%',background:'radial-gradient(ellipse at 50% 0%, rgba(2,209,186,0.32) 0%, rgba(2,209,186,0.12) 25%, transparent 65%)',pointerEvents:'none'}}/>
+        {/* Bande cyan uniforme au top (couvre toute la safe-area iOS
+            incluant les coins) + halo radial cyan derrière le nom. */}
+        <div style={{position:'absolute',top:0,left:0,right:0,height:160,background:'linear-gradient(180deg, rgba(2,209,186,0.18) 0%, rgba(2,209,186,0.08) 50%, transparent 100%)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:0,left:0,right:0,height:'70%',background:'radial-gradient(ellipse at 50% 5%, rgba(2,209,186,0.28) 0%, rgba(2,209,186,0.10) 30%, transparent 70%)',pointerEvents:'none'}}/>
         <div style={{position:'absolute',bottom:0,left:0,right:0,height:'40%',background:'radial-gradient(ellipse at 50% 120%, rgba(2,209,186,0.06) 0%, transparent 60%)',pointerEvents:'none'}}/>
 
         {/* TOP BAR — date + heure Tesla style.
