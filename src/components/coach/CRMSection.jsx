@@ -440,6 +440,12 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
   const [application, setApplication] = useState(null);
   const [callDateInput, setCallDateInput] = useState("");
   const [applicationBusy, setApplicationBusy] = useState(false);
+  // Mini-modal succès post-confirm slot (remplace l'alert() natif moche).
+  const [successModal, setSuccessModal] = useState(null); // { dateLabel, emailSent }
+  // Mode "déplacer" : une fois le créneau confirmé, on n'affiche plus les
+  // boutons préférés. On expose juste un bouton "Déplacer" qui rouvre le
+  // picker datetime-local pour cas de contre-temps.
+  const [rescheduleMode, setRescheduleMode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -466,23 +472,12 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
 
   async function setCallSchedule() {
     if (!application?.id || !callDateInput) return;
-    setApplicationBusy(true);
-    const iso = new Date(callDateInput).toISOString();
-    const { error } = await supabase
-      .from("coaching_applications")
-      .update({ call_scheduled_at: iso })
-      .eq("id", application.id);
-    setApplicationBusy(false);
-    if (error) {
-      alert(`Erreur set créneau : ${error.message}`);
-      return;
-    }
-    setApplication((a) => ({ ...a, call_scheduled_at: iso }));
-    // Update CRM stage automatically
-    if (stage !== "call_booked" && stage !== "signed") {
-      saveStage("call_booked");
-    }
-    alert("Créneau confirmé. Reminders J-1 + H-2 envoyés auto par le cron.\n\n⚠ Pas de mail confirmation envoyé (créneau custom). Utilise les boutons préférés du prospect pour le mail auto.");
+    // Convertit datetime-local "YYYY-MM-DDTHH:mm" en {date, time} pour
+    // pouvoir passer par confirmSlot (= envoie mail + .ics au candidat
+    // + .ics à Rayan, même flow que les boutons préférés).
+    const [date, time] = callDateInput.split("T");
+    if (!date || !time) return;
+    confirmSlot({ date, time: time.slice(0, 5) });
   }
 
   // Clic sur un créneau préféré → appelle l'endpoint qui :
@@ -518,7 +513,7 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
       if (stage !== "call_booked" && stage !== "signed") {
         saveStage("call_booked");
       }
-      alert(`✓ Créneau confirmé : ${json.date_label}\n\n${json.email_sent ? "✓ Mail confirmation + .ics envoyé au candidat\n✓ .ics envoyé à toi pour ton calendrier" : "⚠ Mail n'a pas pu être envoyé (check logs)"}`);
+      setSuccessModal({ dateLabel: json.date_label, emailSent: json.email_sent });
     } catch (e) {
       setApplicationBusy(false);
       alert(`Erreur réseau : ${e.message}`);
@@ -668,6 +663,52 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+      {successModal && (
+        <div onClick={(e) => { e.stopPropagation(); setSuccessModal(null); }} style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)",
+          zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+          animation: "rbModalFade .25s ease",
+        }}>
+          <style>{`@keyframes rbModalFade{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}`}</style>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: "linear-gradient(180deg,#101010 0%,#0a0a0a 100%)",
+            border: `1px solid ${GREEN}55`, borderRadius: 22, padding: "32px 28px 26px",
+            maxWidth: 420, width: "100%", textAlign: "center",
+            boxShadow: "0 20px 60px rgba(2,209,186,0.25), 0 0 0 1px rgba(255,255,255,0.04) inset",
+          }}>
+            <div style={{
+              width: 72, height: 72, borderRadius: "50%", background: `${GREEN}1f`,
+              border: `2px solid ${GREEN}`, margin: "0 auto 22px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: `0 0 0 8px ${GREEN}0d`,
+            }}>
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: "uppercase", color: GREEN, fontWeight: 800, marginBottom: 12 }}>RDV confirmé</div>
+            <div style={{ fontSize: 22, color: "#fff", fontWeight: 800, letterSpacing: -0.5, marginBottom: 22, textTransform: "capitalize", lineHeight: 1.2 }}>
+              {successModal.dateLabel}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px 18px", background: "rgba(255,255,255,0.025)", borderRadius: 12, marginBottom: 22, textAlign: "left" }}>
+              {[
+                { ok: successModal.emailSent, lbl: "Mail confirmation envoyé au candidat" },
+                { ok: successModal.emailSent, lbl: ".ics avec le RDV reçu dans ta boîte mail" },
+                { ok: true, lbl: "Reminders J-1 et H-2 programmés auto" },
+              ].map((row, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: row.ok ? "rgba(255,255,255,0.85)" : "rgba(245,158,11,0.85)" }}>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke={row.ok ? GREEN : "#fbbf24"} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>{row.lbl}</span>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setSuccessModal(null)} style={{
+              width: "100%", padding: "13px 16px", background: GREEN, color: "#000",
+              border: "none", borderRadius: 12, fontSize: 12, fontWeight: 800,
+              letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer",
+              fontFamily: "inherit",
+            }}>OK</button>
+          </div>
+        </div>
+      )}
       <div onClick={(e) => e.stopPropagation()} style={{
         background: "#0d0d0d", borderTopLeftRadius: 18, borderTopRightRadius: 18,
         width: "100%", maxWidth: 640, maxHeight: "90vh", overflow: "auto",
@@ -707,25 +748,43 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
 
         {contact?.raw?.candidature && (() => {
           const cand = contact.raw.candidature;
-          // Champs à masquer du rendu (déjà affichés ailleurs ou bruit DB)
-          const HIDDEN = new Set(["id","email","nom_prenom","telephone","created_at","updated_at","status","call_scheduled_at","call_outcome","call_completed_at","preferred_slots","coach_id","rejected_at","rejected_reason"]);
+          // Champs vraiment techniques (jamais utile en CRM)
+          const HIDDEN = new Set(["id","coach_id","call_scheduled_at","call_outcome","call_completed_at","preferred_slots","rejected_at","rejected_reason","updated_at"]);
           const LABELS = {
-            objectif: "Objectif", niveau: "Niveau actuel", sport_principal: "Sport principal",
+            email: "Email", nom_prenom: "Nom", telephone: "Téléphone",
+            created_at: "Reçue le", status: "Statut",
+            objectif: "Objectif", objectif_principal: "Objectif principal",
+            niveau: "Niveau actuel", sport_principal: "Sport principal",
             disponibilite: "Dispo / semaine", budget_mensuel: "Budget mensuel",
+            depense_actuelle_perf: "Dépense actuelle perf",
             historique_blessures: "Blessures", motivation: "Motivation",
             instagram: "Instagram", ville: "Ville", age: "Âge",
             why: "Pourquoi", commitment: "Engagement",
           };
-          const entries = Object.entries(cand).filter(([k,v]) => !HIDDEN.has(k) && v != null && v !== "");
+          const fmt = (k, v) => {
+            if (k === "created_at" && v) {
+              try { return new Date(v).toLocaleString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }).replace(":", "h"); } catch { return v; }
+            }
+            return typeof v === "string" ? v : JSON.stringify(v);
+          };
+          const ORDER = ["nom_prenom","email","telephone","created_at","status","age","ville","instagram","objectif","objectif_principal","sport_principal","niveau","disponibilite","budget_mensuel","depense_actuelle_perf","historique_blessures","motivation","why","commitment"];
+          const entries = Object.entries(cand)
+            .filter(([k,v]) => !HIDDEN.has(k) && v != null && v !== "")
+            .sort(([a],[b]) => {
+              const ia = ORDER.indexOf(a); const ib = ORDER.indexOf(b);
+              if (ia === -1 && ib === -1) return a.localeCompare(b);
+              if (ia === -1) return 1; if (ib === -1) return -1;
+              return ia - ib;
+            });
           if (!entries.length) return null;
           return (
             <div style={{ marginBottom: 14, padding: "14px 16px", background: BG, border: `1px solid ${BORDER}`, borderRadius: 10 }}>
               <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: GREEN, fontWeight: 700, marginBottom: 12 }}>Réponses candidature</div>
-              <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: "10px 12px", fontSize: 12, lineHeight: 1.5 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: "10px 12px", fontSize: 12, lineHeight: 1.5 }}>
                 {entries.map(([k, v]) => (
                   <React.Fragment key={k}>
                     <div style={{ color: "rgba(255,255,255,0.45)", textTransform: "lowercase", fontVariant: "small-caps", fontWeight: 600 }}>{LABELS[k] || k.replace(/_/g, " ")}</div>
-                    <div style={{ color: "rgba(255,255,255,0.85)", wordBreak: "break-word" }}>{typeof v === "string" ? v : JSON.stringify(v)}</div>
+                    <div style={{ color: "rgba(255,255,255,0.85)", wordBreak: "break-word" }}>{fmt(k, v)}</div>
                   </React.Fragment>
                 ))}
               </div>
@@ -740,74 +799,116 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
               Actions candidature
             </div>
 
-            {/* Set / update call_scheduled_at — 1 clic sur un créneau préféré
-                envoie auto le mail confirmation + .ics au candidat + .ics à Rayan
-                + marque le stage call_booked. Fallback : input datetime-local
-                si aucun des 3 slots prospect ne convient. */}
+            {/* Mode rendu :
+                - call_scheduled_at défini + !rescheduleMode → état confirmé compact + bouton Déplacer
+                - sinon → boutons préférés + picker custom (initial OR reschedule) */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>
-                Créneaux proposés par le prospect — clic = booké + mail confirmation envoyé :
-              </div>
-              {application.preferred_slots && Array.isArray(application.preferred_slots) && application.preferred_slots.length > 0 ? (
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
-                  {application.preferred_slots.map((s, i) => {
-                    const label = (() => {
-                      try {
-                        const d = new Date(s.date + "T" + s.time + ":00");
-                        return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + " · " + s.time;
-                      } catch { return `${s.date} · ${s.time}`; }
-                    })();
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => confirmSlot(s)}
-                        disabled={applicationBusy}
-                        style={{
-                          padding: "10px 14px", background: GREEN, color: "#000",
-                          border: "none", borderRadius: 8, fontSize: 12, fontWeight: 800,
-                          letterSpacing: .3, cursor: applicationBusy ? "not-allowed" : "pointer",
-                          opacity: applicationBusy ? 0.5 : 1, textTransform: "capitalize",
-                        }}
-                      >
-                        Valider · {label}
-                      </button>
-                    );
-                  })}
+              {application.call_scheduled_at && !rescheduleMode ? (
+                <div>
+                  <div style={{ padding: "14px 16px", background: "rgba(2,209,186,0.06)", border: `1px solid ${GREEN}33`, borderRadius: 10, marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", color: GREEN, fontWeight: 800, marginBottom: 6 }}>RDV confirmé</div>
+                    <div style={{ fontSize: 15, color: "#fff", fontWeight: 700, letterSpacing: -0.3, textTransform: "capitalize" }}>
+                      {(() => {
+                        try {
+                          return new Date(application.call_scheduled_at).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).replace(":", "h");
+                        } catch { return new Date(application.call_scheduled_at).toLocaleString("fr-FR"); }
+                      })()}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setRescheduleMode(true); setCallDateInput(""); }}
+                    style={{
+                      padding: "9px 14px", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)",
+                      border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 11, fontWeight: 700,
+                      letterSpacing: 0.4, textTransform: "uppercase", cursor: "pointer",
+                    }}
+                  >
+                    Déplacer le créneau
+                  </button>
                 </div>
               ) : (
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginBottom: 10 }}>
-                  Pas de créneaux proposés par le prospect. Utilise le picker ci-dessous.
-                </div>
-              )}
+                <>
+                  {rescheduleMode && (
+                    <div style={{ fontSize: 11, color: "#fbbf24", fontWeight: 700, marginBottom: 8, letterSpacing: 0.3 }}>
+                      Mode replanification — choisis un nouveau créneau ou pose une date custom
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>
+                    Créneaux proposés par le prospect — clic = booké + mail confirmation envoyé :
+                  </div>
+                  {application.preferred_slots && Array.isArray(application.preferred_slots) && application.preferred_slots.length > 0 ? (
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                      {application.preferred_slots.map((s, i) => {
+                        const label = (() => {
+                          try {
+                            const d = new Date(s.date + "T" + s.time + ":00");
+                            return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + " · " + s.time;
+                          } catch { return `${s.date} · ${s.time}`; }
+                        })();
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => { confirmSlot(s); setRescheduleMode(false); }}
+                            disabled={applicationBusy}
+                            style={{
+                              padding: "10px 14px", background: GREEN, color: "#000",
+                              border: "none", borderRadius: 8, fontSize: 12, fontWeight: 800,
+                              letterSpacing: .3, cursor: applicationBusy ? "not-allowed" : "pointer",
+                              opacity: applicationBusy ? 0.5 : 1, textTransform: "capitalize",
+                            }}
+                          >
+                            Valider · {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginBottom: 10 }}>
+                      Pas de créneaux proposés par le prospect. Utilise le picker ci-dessous.
+                    </div>
+                  )}
 
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Ou créneau custom</div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <input
-                  type="datetime-local"
-                  value={callDateInput}
-                  onChange={(e) => setCallDateInput(e.target.value)}
-                  style={{
-                    flex: 1, minWidth: 200, padding: "8px 10px",
-                    background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`,
-                    borderRadius: 6, color: "#fff", fontSize: 12, fontFamily: "inherit",
-                    colorScheme: "dark",
-                  }}
-                />
-                <button
-                  onClick={setCallSchedule}
-                  disabled={!callDateInput || applicationBusy}
-                  style={{
-                    padding: "8px 14px", background: "rgba(255,255,255,0.08)", color: "#fff",
-                    border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 11, fontWeight: 800,
-                    letterSpacing: 0.5, textTransform: "uppercase",
-                    cursor: callDateInput && !applicationBusy ? "pointer" : "not-allowed",
-                    opacity: callDateInput && !applicationBusy ? 1 : 0.4,
-                  }}
-                >
-                  {application.call_scheduled_at ? "Modifier" : "Confirmer"}
-                </button>
-              </div>
-              {application.call_scheduled_at && (
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Ou créneau custom</div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <input
+                      type="datetime-local"
+                      value={callDateInput}
+                      onChange={(e) => setCallDateInput(e.target.value)}
+                      style={{
+                        flex: 1, minWidth: 200, padding: "8px 10px",
+                        background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`,
+                        borderRadius: 6, color: "#fff", fontSize: 12, fontFamily: "inherit",
+                        colorScheme: "dark",
+                      }}
+                    />
+                    <button
+                      onClick={() => { setCallSchedule(); setRescheduleMode(false); }}
+                      disabled={!callDateInput || applicationBusy}
+                      style={{
+                        padding: "8px 14px", background: "rgba(255,255,255,0.08)", color: "#fff",
+                        border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 11, fontWeight: 800,
+                        letterSpacing: 0.5, textTransform: "uppercase",
+                        cursor: callDateInput && !applicationBusy ? "pointer" : "not-allowed",
+                        opacity: callDateInput && !applicationBusy ? 1 : 0.4,
+                      }}
+                    >
+                      {application.call_scheduled_at ? "Modifier" : "Confirmer"}
+                    </button>
+                    {rescheduleMode && (
+                      <button
+                        onClick={() => { setRescheduleMode(false); setCallDateInput(""); }}
+                        style={{
+                          padding: "8px 12px", background: "transparent", color: "rgba(255,255,255,0.4)",
+                          border: "none", fontSize: 11, fontWeight: 600, cursor: "pointer",
+                        }}
+                      >
+                        Annuler
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+              {false && application.call_scheduled_at && (
                 <div style={{ marginTop: 10, fontSize: 11, color: GREEN, fontWeight: 600 }}>
                   ✓ Créneau confirmé : {new Date(application.call_scheduled_at).toLocaleString("fr-FR")}
                 </div>
