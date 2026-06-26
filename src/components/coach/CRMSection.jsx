@@ -481,7 +481,7 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
     (async () => {
       const { data } = await supabase
         .from("coaching_applications")
-        .select("id,email,nom_prenom,call_scheduled_at,call_outcome,call_completed_at,preferred_slots,raw_phone")
+        .select("id,email,nom_prenom,call_scheduled_at,call_outcome,call_completed_at,preferred_slots,raw_phone,source,utm_source,utm_medium,utm_campaign,utm_content,referrer")
         .eq("email", email)
         .order("created_at", { ascending: false })
         .limit(1);
@@ -771,6 +771,39 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
         {/* Badge "doublon potentiel" : alerte si raw_phone de cette candidature
             matche d'autres candidatures avec un email différent. Permet à
             Rayan de fusionner mentalement avant relances dupliquées. */}
+        {/* Badge source / UTM : d'où vient le lead. Si utm_source dispo,
+            on l'affiche en priorité (Instagram story, ads, etc.) sinon
+            on tombe sur le champ `source` legacy (= "instagram" hardcoded
+            pour les candidatures venant de la landing rbperform.com). */}
+        {application && (application.utm_source || application.source) && (
+          <div style={{ marginBottom: 14, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            <div style={{ fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>Source</div>
+            {[
+              application.utm_source || application.source,
+              application.utm_medium,
+              application.utm_campaign,
+              application.utm_content,
+            ].filter(Boolean).map((v, i) => (
+              <span key={i} style={{
+                fontSize: 10, fontWeight: 700, color: i === 0 ? GREEN : "rgba(255,255,255,0.65)",
+                padding: "3px 8px", borderRadius: 100,
+                background: i === 0 ? `${GREEN}1a` : "rgba(255,255,255,0.04)",
+                border: i === 0 ? `1px solid ${GREEN}40` : "1px solid rgba(255,255,255,0.06)",
+                textTransform: i === 0 ? "capitalize" : "none",
+                letterSpacing: 0.3,
+              }}>{String(v)}</span>
+            ))}
+            {application.referrer && (
+              <span title={application.referrer} style={{
+                fontSize: 10, color: "rgba(255,255,255,0.4)",
+                padding: "3px 8px", borderRadius: 100,
+                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
+                maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>via {(() => { try { return new URL(application.referrer).hostname; } catch { return application.referrer.slice(0, 30); } })()}</span>
+            )}
+          </div>
+        )}
+
         {phoneDuplicates.length > 0 && (
           <div style={{ marginBottom: 14, padding: "11px 14px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
