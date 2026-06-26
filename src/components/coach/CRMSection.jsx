@@ -482,7 +482,47 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
     if (stage !== "call_booked" && stage !== "signed") {
       saveStage("call_booked");
     }
-    alert("Créneau confirmé. Reminders J-1 + H-2 envoyés auto par le cron.");
+    alert("Créneau confirmé. Reminders J-1 + H-2 envoyés auto par le cron.\n\n⚠ Pas de mail confirmation envoyé (créneau custom). Utilise les boutons préférés du prospect pour le mail auto.");
+  }
+
+  // Clic sur un créneau préféré → appelle l'endpoint qui :
+  //   1. Update DB call_scheduled_at
+  //   2. Envoie mail au candidat avec .ics + boutons calendrier + WhatsApp
+  //   3. Envoie .ics à Rayan pour qu'il l'ajoute à son propre calendrier
+  async function confirmSlot(slot) {
+    if (!application?.id || !slot?.date || !slot?.time) return;
+    setApplicationBusy(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const jwt = sessionData?.session?.access_token;
+      if (!jwt) {
+        alert("Session expirée. Reconnecte-toi.");
+        setApplicationBusy(false);
+        return;
+      }
+      const resp = await fetch("/api/confirm-coaching-call-slot", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({ application_id: application.id, slot }),
+      });
+      const json = await resp.json();
+      setApplicationBusy(false);
+      if (!resp.ok) {
+        alert(`Erreur : ${json.error || "Unknown"}`);
+        return;
+      }
+      setApplication((a) => ({ ...a, call_scheduled_at: json.call_scheduled_at }));
+      if (stage !== "call_booked" && stage !== "signed") {
+        saveStage("call_booked");
+      }
+      alert(`✓ Créneau confirmé : ${json.date_label}\n\n${json.email_sent ? "✓ Mail confirmation + .ics envoyé au candidat\n✓ .ics envoyé à toi pour ton calendrier" : "⚠ Mail n'a pas pu être envoyé (check logs)"}`);
+    } catch (e) {
+      setApplicationBusy(false);
+      alert(`Erreur réseau : ${e.message}`);
+    }
   }
 
   // Marque l'outcome du call post-meeting + update le CRM stage en conséquence.
@@ -665,14 +705,33 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
           </div>
         </div>
 
-        {contact?.raw?.candidature && (
-          <details style={{ marginBottom: 14, padding: "10px 12px", background: BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-            <summary style={{ cursor: "pointer", fontSize: 11, color: GREEN, fontWeight: 700 }}>📋 Réponses candidature</summary>
-            <pre style={{ marginTop: 10, fontSize: 11, color: "rgba(255,255,255,0.7)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-              {JSON.stringify(contact.raw.candidature, null, 2)}
-            </pre>
-          </details>
-        )}
+        {contact?.raw?.candidature && (() => {
+          const cand = contact.raw.candidature;
+          // Champs à masquer du rendu (déjà affichés ailleurs ou bruit DB)
+          const HIDDEN = new Set(["id","email","nom_prenom","telephone","created_at","updated_at","status","call_scheduled_at","call_outcome","call_completed_at","preferred_slots","coach_id","rejected_at","rejected_reason"]);
+          const LABELS = {
+            objectif: "Objectif", niveau: "Niveau actuel", sport_principal: "Sport principal",
+            disponibilite: "Dispo / semaine", budget_mensuel: "Budget mensuel",
+            historique_blessures: "Blessures", motivation: "Motivation",
+            instagram: "Instagram", ville: "Ville", age: "Âge",
+            why: "Pourquoi", commitment: "Engagement",
+          };
+          const entries = Object.entries(cand).filter(([k,v]) => !HIDDEN.has(k) && v != null && v !== "");
+          if (!entries.length) return null;
+          return (
+            <div style={{ marginBottom: 14, padding: "14px 16px", background: BG, border: `1px solid ${BORDER}`, borderRadius: 10 }}>
+              <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: GREEN, fontWeight: 700, marginBottom: 12 }}>Réponses candidature</div>
+              <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: "10px 12px", fontSize: 12, lineHeight: 1.5 }}>
+                {entries.map(([k, v]) => (
+                  <React.Fragment key={k}>
+                    <div style={{ color: "rgba(255,255,255,0.45)", textTransform: "lowercase", fontVariant: "small-caps", fontWeight: 600 }}>{LABELS[k] || k.replace(/_/g, " ")}</div>
+                    <div style={{ color: "rgba(255,255,255,0.85)", wordBreak: "break-word" }}>{typeof v === "string" ? v : JSON.stringify(v)}</div>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Actions candidature coaching — visible seulement si une coaching_applications existe */}
         {application && application.call_outcome !== "rejected_by_us" && (
@@ -681,11 +740,47 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
               Actions candidature
             </div>
 
-            {/* Set / update call_scheduled_at */}
+            {/* Set / update call_scheduled_at — 1 clic sur un créneau préféré
+                envoie auto le mail confirmation + .ics au candidat + .ics à Rayan
+                + marque le stage call_booked. Fallback : input datetime-local
+                si aucun des 3 slots prospect ne convient. */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>
-                Confirmer le créneau (déclenche reminders J-1 + H-2 auto) :
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>
+                Créneaux proposés par le prospect — clic = booké + mail confirmation envoyé :
               </div>
+              {application.preferred_slots && Array.isArray(application.preferred_slots) && application.preferred_slots.length > 0 ? (
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                  {application.preferred_slots.map((s, i) => {
+                    const label = (() => {
+                      try {
+                        const d = new Date(s.date + "T" + s.time + ":00");
+                        return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + " · " + s.time;
+                      } catch { return `${s.date} · ${s.time}`; }
+                    })();
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => confirmSlot(s)}
+                        disabled={applicationBusy}
+                        style={{
+                          padding: "10px 14px", background: GREEN, color: "#000",
+                          border: "none", borderRadius: 8, fontSize: 12, fontWeight: 800,
+                          letterSpacing: .3, cursor: applicationBusy ? "not-allowed" : "pointer",
+                          opacity: applicationBusy ? 0.5 : 1, textTransform: "capitalize",
+                        }}
+                      >
+                        Valider · {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginBottom: 10 }}>
+                  Pas de créneaux proposés par le prospect. Utilise le picker ci-dessous.
+                </div>
+              )}
+
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Ou créneau custom</div>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <input
                   type="datetime-local"
@@ -702,8 +797,8 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
                   onClick={setCallSchedule}
                   disabled={!callDateInput || applicationBusy}
                   style={{
-                    padding: "8px 14px", background: GREEN, color: "#000",
-                    border: "none", borderRadius: 6, fontSize: 11, fontWeight: 800,
+                    padding: "8px 14px", background: "rgba(255,255,255,0.08)", color: "#fff",
+                    border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 11, fontWeight: 800,
                     letterSpacing: 0.5, textTransform: "uppercase",
                     cursor: callDateInput && !applicationBusy ? "pointer" : "not-allowed",
                     opacity: callDateInput && !applicationBusy ? 1 : 0.4,
@@ -712,13 +807,8 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
                   {application.call_scheduled_at ? "Modifier" : "Confirmer"}
                 </button>
               </div>
-              {application.preferred_slots && Array.isArray(application.preferred_slots) && (
-                <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
-                  Dispo prospect : {application.preferred_slots.map((s) => `${s.date} ${s.time}`).join(" · ")}
-                </div>
-              )}
               {application.call_scheduled_at && (
-                <div style={{ marginTop: 6, fontSize: 11, color: GREEN, fontWeight: 600 }}>
+                <div style={{ marginTop: 10, fontSize: 11, color: GREEN, fontWeight: 600 }}>
                   ✓ Créneau confirmé : {new Date(application.call_scheduled_at).toLocaleString("fr-FR")}
                 </div>
               )}
