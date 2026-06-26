@@ -10,10 +10,15 @@
  * call_outcome posé (peut re-confirmer si re-clic).
  */
 
+const nodemailer = require('nodemailer');
+
 const G = '#02d1ba';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SMTP_USER = process.env.ZOHO_SMTP_USER || 'rayan@rbperform.app';
+const SMTP_PASS = process.env.ZOHO_SMTP_PASS;
+const RAYAN_EMAIL = process.env.RAYAN_PERSONAL_EMAIL || 'rayan.b2701@gmail.com';
 
 async function sbFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}${path}`, {
@@ -120,12 +125,44 @@ module.exports = async function handler(req, res) {
     }
 
     // Marque confirmé (ou re-confirmé) — idempotent
-    if (!app.call_confirmed_at) {
+    const isFirstConfirm = !app.call_confirmed_at;
+    if (isFirstConfirm) {
       await sbFetch(`/rest/v1/coaching_applications?id=eq.${app.id}`, {
         method: 'PATCH',
         headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ call_confirmed_at: new Date().toISOString() }),
       });
+
+      // Notif Rayan : best effort (un fail ici n'empêche pas la page
+      // de s'afficher au prospect). Seulement à la 1ère confirmation
+      // pour éviter de spammer si re-click.
+      if (SMTP_PASS) {
+        try {
+          const transporter = nodemailer.createTransport({
+            host: 'smtp.zoho.eu', port: 465, secure: true,
+            auth: { user: SMTP_USER, pass: SMTP_PASS },
+          });
+          const dateForRayan = (() => {
+            try {
+              return new Intl.DateTimeFormat('fr-FR', {
+                timeZone: 'Europe/Paris',
+                weekday: 'long', day: 'numeric', month: 'long',
+                hour: '2-digit', minute: '2-digit',
+              }).format(new Date(app.call_scheduled_at)).replace(':', 'h');
+            } catch { return ''; }
+          })();
+          const prospectName = (app.nom_prenom || '').trim() || 'Candidat';
+          await transporter.sendMail({
+            from: `RB Perform <${SMTP_USER}>`,
+            to: [RAYAN_EMAIL],
+            replyTo: SMTP_USER,
+            subject: `Confirmé : ${prospectName} sera là — ${dateForRayan}`,
+            html: `<!DOCTYPE html><html><body style="font-family:-apple-system,Inter,sans-serif;background:#050505;color:#fff;padding:30px"><div style="max-width:480px;margin:0 auto;background:#0d0d0d;padding:28px;border-radius:14px;border:1px solid ${G}33"><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};font-weight:800;margin-bottom:12px">Prospect a confirmé</div><div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.3px">${escHtml(prospectName)}</div><div style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:16px">a cliqué "Je confirme" dans le mail H-24</div><div style="font-size:16px;color:${G};font-weight:800;padding:12px 14px;background:rgba(2,209,186,0.08);border-radius:10px;text-transform:capitalize">${escHtml(dateForRayan)}</div></div></body></html>`,
+          });
+        } catch (e) {
+          console.warn(`[call-confirm] Rayan notif failed: ${e.message}`);
+        }
+      }
     }
 
     const firstName = (app.nom_prenom || '').trim().split(/\s+/)[0] || '';
