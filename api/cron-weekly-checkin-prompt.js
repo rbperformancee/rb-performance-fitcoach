@@ -157,18 +157,27 @@ async function sendCheckinEmail(client, joinUrl, tpl) {
   }
 }
 
-// ISO Monday : retourne YYYY-MM-DD du lundi de la semaine courante (UTC).
-// Si on est dimanche soir, c'est le lundi suivant qu'on cherche ? Non — on
-// envoie le prompt POUR la semaine qui se termine, donc on veut le lundi
-// précédent. Convention : "week_start" = lundi du début de la semaine
-// que le client va raconter.
+// ISO Monday : retourne YYYY-MM-DD du lundi de la semaine que le client
+// est en train de "clôturer" (= la semaine qui se termine aujourd'hui ou
+// vient de se terminer).
+//
+// Convention "week_start" = lundi du début de la semaine que le client
+// va raconter. Le 3e prompt envoyé LUNDI parle de la semaine d'AVANT
+// (celle qui vient de se terminer hier), pas de celle qui commence —
+// sinon le filtre submittedSet ne matche pas les bilans déjà remplis
+// samedi/dimanche → re-spam des clients à jour.
+//
+// - sam (6) : lundi de cette semaine = 5 j en arrière
+// - dim (0) : lundi de cette semaine = 6 j en arrière
+// - lun (1) : lundi de la semaine d'AVANT = 7 j en arrière
+// - autres  : lundi de cette semaine (utile run manuel)
 function currentWeekStart() {
   const d = new Date();
-  // getDay() : 0=dim, 1=lun, … 6=sam
-  const day = d.getUTCDay();
-  // Si dimanche (0), on remonte de 6 jours pour atteindre le lundi précédent.
-  // Sinon on remonte de (day-1) jours.
-  const diff = day === 0 ? 6 : day - 1;
+  const day = d.getUTCDay(); // 0=dim, 1=lun, … 6=sam
+  let diff;
+  if (day === 0) diff = 6;
+  else if (day === 1) diff = 7;
+  else diff = day - 1;
   d.setUTCDate(d.getUTCDate() - diff);
   return d.toISOString().slice(0, 10);
 }
