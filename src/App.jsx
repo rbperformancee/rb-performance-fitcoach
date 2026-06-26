@@ -638,17 +638,28 @@ function AppInner() {
     sendMagicLink, signOut,
   } = useAuth();
 
-  // Dispatch 'rb:app-ready' quand l'app a fini son auth check (= prête à
-  // afficher la home ou login). Le HTML #splash dans public/index.html
-  // l'écoute pour synchroniser le fade-out splash avec le 1er paint réel
-  // de l'app, évitant l'écran noir entre fin splash et home. Logique
-  // identique au build 131 v1.0.6 (App Store actuel).
+  // Dispatch 'rb:app-ready' quand auth check fini ET chunks lazy essentiels
+  // (TrainingPage / ProfilePage / FuelPage / MovePage) téléchargés. Sans
+  // ce preload, sur connexion lente l'event arrive trop tôt et le splash
+  // fade-out alors que les chunks ne sont pas encore là → mini écran noir
+  // visible. Avec preload, le splash reste jusqu'à ce que tout soit prêt
+  // à peindre.
   const appReadyDispatched = React.useRef(false);
   React.useEffect(() => {
-    if (!authLoading && !appReadyDispatched.current) {
-      appReadyDispatched.current = true;
-      try { window.dispatchEvent(new Event("rb:app-ready")); } catch {}
-    }
+    if (authLoading || appReadyDispatched.current) return;
+    appReadyDispatched.current = true;
+    const fire = () => { try { window.dispatchEvent(new Event("rb:app-ready")); } catch {} };
+    // Preload chunks home essentiels (best effort). Timeout 4s pour pas
+    // bloquer indéfiniment si un chunk fail à se télécharger sur mauvaise
+    // connexion — on fade quand même le splash.
+    const preloads = Promise.all([
+      import("./components/TrainingPage").catch(() => {}),
+      import("./components/ProfilePage").catch(() => {}),
+      import("./components/FuelPage").catch(() => {}),
+      import("./components/MovePage").catch(() => {}),
+    ]);
+    const timeout = new Promise((r) => setTimeout(r, 4000));
+    Promise.race([preloads, timeout]).then(fire);
   }, [authLoading]);
 
   // Préchargement pour les CLIENTS standards (pas demo) dès qu'ils sont loggés.

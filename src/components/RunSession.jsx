@@ -23,7 +23,7 @@
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
-  requestPermission, startRun, pauseRun, resumeRun, stopRun,
+  requestPermission, startRun, pauseRun, resumeRun, stopRun, getStats,
   onLocation, onKm, onAutoPause, onCadence,
   formatPace, formatDuration, formatDistance,
 } from "../lib/runTracker";
@@ -152,6 +152,50 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
     if (!target.isHiit) return null;
     return buildSchedule(prescribedTarget || {});
   }, [target.isHiit, prescribedTarget]);
+
+  // ── Recovery au mount (retour de Live Activity ou JS thread killé en bg) ──
+  // Si le tracker NATIF Swift est encore running (allowsBackgroundLocationUpdates),
+  // on récupère son state via getStats() au lieu de redémarrer à zéro.
+  // Évite : user clique Live Activity → app foreground → React unmount/remount
+  // → state perdu mais Swift continue → user voit UI à zéro et perd ses datas
+  // au stop.
+  useEffect(() => {
+    if (!isNative()) return;
+    (async () => {
+      try {
+        const stats = await getStats();
+        if (stats?.isRunning) {
+          // Reconstruct startedAtRef depuis durationS pour que les calculs ticks soient cohérents
+          const dur = stats.durationS || 0;
+          startedAtRef.current = Date.now() - dur * 1000;
+          setDistance(stats.distanceM || 0);
+          distanceRef.current = stats.distanceM || 0;
+          setDuration(dur);
+          if (stats.paceSPerKm) {
+            setPace(stats.paceSPerKm);
+            paceRef.current = stats.paceSPerKm;
+          }
+          isPausedRef.current = !!stats.isPaused;
+          setPhase(stats.isPaused ? "paused" : "active");
+          // Re-attach listener distance (minimum vital). Les autres listeners
+          // (km, autoPause, cadence) sont best-effort, l'absence ne perd
+          // pas la session. Le tick interval va re-démarrer via le useEffect
+          // qui watch `phase`. NOTE : on ne re-call PAS startRun() : le
+          // tracker natif Swift est déjà running.
+          const unsub = onLocation((d) => {
+            const distM = d.distanceM || 0;
+            setDistance(distM);
+            distanceRef.current = distM;
+          });
+          unsubsRef.current.push(unsub);
+        }
+      } catch (e) {
+        // best effort : si recovery rate, on reste en idle (user re-démarre)
+        console.warn("[runSession] recovery failed:", e?.message || e);
+      }
+    })();
+    // eslint-disable-next-line
+  }, []);
 
   // ── Permission ──
   const askPermission = useCallback(async () => {
@@ -451,12 +495,22 @@ export default function RunSession({ client, onClose, prescribedTarget = null })
     }
   }, [client?.id, route, splits, prescribedTarget]);
 
-  // ── Cleanup unmount : kill tick + listeners + Live Activity dangling ──
+  // Ref miroir de `phase` lisible dans les cleanups (deps [] ne voit pas l'état React).
+  const phaseRef = useRef("idle");
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
+
+  // ── Cleanup unmount : kill tick + listeners. NE PAS END la Live Activity
+  // si la session est encore active/paused — l'unmount peut venir d'un
+  // re-mount foreground après que iOS ait killé le JS thread en background
+  // (le tracker natif Swift, lui, continue). End uniquement aux états
+  // terminaux (done/stopping/idle) pour préserver la session en arrière-plan.
   useEffect(() => {
     return () => {
       if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
       unsubsRef.current.forEach((u) => u?.());
-      runActivity.end();
+      if (phaseRef.current === "done" || phaseRef.current === "stopping" || phaseRef.current === "idle") {
+        runActivity.end();
+      }
     };
   }, []);
 
