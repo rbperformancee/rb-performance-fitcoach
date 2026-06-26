@@ -164,7 +164,7 @@ function buildGCalLink({ startUTC, endUTC, title, details, location }) {
   return u.toString();
 }
 
-function buildConfirmEmail({ firstName, dateLabel, gcalUrl, appleCalUrl, isMinor }) {
+function buildConfirmEmail({ firstName, dateLabel, gcalUrl, appleCalUrl, isMinor, isReschedule }) {
   const name = firstName ? ` ${escHtml(firstName)}` : '';
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#050505;font-family:-apple-system,Inter,sans-serif">
@@ -172,10 +172,10 @@ function buildConfirmEmail({ firstName, dateLabel, gcalUrl, appleCalUrl, isMinor
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%">
   <tr><td style="background:#0d0d0d;border-radius:18px;border:1px solid rgba(255,255,255,0.06);padding:40px 32px">
 
-    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${G};margin-bottom:20px;font-weight:800">RDV confirmé</div>
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${G};margin-bottom:20px;font-weight:800">${isReschedule ? 'RDV d&eacute;plac&eacute;' : 'RDV confirm&eacute;'}</div>
 
     <div style="font-size:28px;font-weight:900;color:#fff;line-height:1.2;letter-spacing:-1px;margin-bottom:18px">
-      C'est bon${name}, on s'appelle.
+      ${isReschedule ? `C'est cal&eacute;${name}, on a d&eacute;plac&eacute; ensemble.` : `C'est bon${name}, on s'appelle.`}
     </div>
 
     <div style="font-size:18px;color:${G};font-weight:800;margin-bottom:26px;letter-spacing:.2px">
@@ -183,7 +183,9 @@ function buildConfirmEmail({ firstName, dateLabel, gcalUrl, appleCalUrl, isMinor
     </div>
 
     <div style="font-size:15px;color:rgba(255,255,255,0.75);line-height:1.7;margin-bottom:26px">
-      J'ai lu ta candidature. Ton profil m'intéresse et me plaît — c'est pour ça qu'on prend ce moment ensemble. On va voir si ce qu'on fait correspond à ton objectif, ton agenda et ton ressenti actuel. L'un comme l'autre on doit être sûrs.
+      ${isReschedule
+        ? `Nouveau cr&eacute;neau bien not&eacute;. J'efface l'ancien de mon c&ocirc;t&eacute;, c'est sur celui-ci qu'on s'appelle. Merci de m'avoir pr&eacute;venu.`
+        : `J'ai lu ta candidature. Ton profil m'int&eacute;resse et me pla&icirc;t &mdash; c'est pour &ccedil;a qu'on prend ce moment ensemble. On va voir si ce qu'on fait correspond &agrave; ton objectif, ton agenda et ton ressenti actuel. L'un comme l'autre on doit &ecirc;tre s&ucirc;rs.`}
     </div>
 
     <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 12px;width:100%">
@@ -275,7 +277,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const apps = await sbFetch(
-      `/rest/v1/coaching_applications?id=eq.${body.application_id}&select=id,email,nom_prenom,telephone,age&limit=1`
+      `/rest/v1/coaching_applications?id=eq.${body.application_id}&select=id,email,nom_prenom,telephone,age,call_scheduled_at,call_confirmed_at&limit=1`
     );
     if (!Array.isArray(apps) || apps.length === 0) {
       return res.status(404).json({ error: 'Application not found' });
@@ -286,13 +288,32 @@ module.exports = async function handler(req, res) {
     const endUTC = new Date(startUTC.getTime() + CALL_DURATION_MIN * 60000);
     const dateLabel = formatFR(startUTC);
 
-    // 1. Update call_scheduled_at en DB
+    // Reschedule detection : un call_scheduled_at préexistant ET différent
+    // de la nouvelle date = replanification (cas Rayan : prospect écrit sur
+    // WhatsApp pour changer de jour, Rayan clique "Déplacer" puis pose la
+    // nouvelle date dans le picker custom).
+    const previousScheduledISO = app.call_scheduled_at;
+    const newScheduledISO = startUTC.toISOString();
+    const isReschedule = previousScheduledISO != null
+      && new Date(previousScheduledISO).getTime() !== startUTC.getTime();
+
+    // 1. Update call_scheduled_at en DB. Si reschedule : reset aussi tous
+    // les flags pour que le cron renvoie H-24/H-2 pour la NOUVELLE date,
+    // l'ancien token de confirmation devient invalide, et le prospect doit
+    // re-confirmer le nouveau créneau.
+    const patch = { call_scheduled_at: newScheduledISO };
+    if (isReschedule) {
+      patch.reminder_h24_sent_at = null;
+      patch.reminder_h2_sent_at = null;
+      patch.call_confirmed_at = null;
+      patch.call_confirm_token = null;
+    }
     await sbFetch(
       `/rest/v1/coaching_applications?id=eq.${body.application_id}`,
       {
         method: 'PATCH',
         headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({ call_scheduled_at: startUTC.toISOString() }),
+        body: JSON.stringify(patch),
       }
     );
 
@@ -323,8 +344,8 @@ module.exports = async function handler(req, res) {
           from: `Rayan · RB Perform <${SMTP_USER}>`,
           to: [app.email],
           replyTo: SMTP_USER,
-          subject: `RDV confirmé — ${dateLabel}`,
-          html: buildConfirmEmail({ firstName, dateLabel, gcalUrl, appleCalUrl, isMinor: Number(app.age) > 0 && Number(app.age) < 18 }),
+          subject: isReschedule ? `RDV déplacé — ${dateLabel}` : `RDV confirmé — ${dateLabel}`,
+          html: buildConfirmEmail({ firstName, dateLabel, gcalUrl, appleCalUrl, isMinor: Number(app.age) > 0 && Number(app.age) < 18, isReschedule }),
           icalEvent: {
             method: 'REQUEST',
             content: ics,
@@ -341,8 +362,10 @@ module.exports = async function handler(req, res) {
             from: `RB Perform <${SMTP_USER}>`,
             to: [rayanInbox],
             replyTo: SMTP_USER,
-            subject: `Call booké : ${app.nom_prenom?.trim() || app.email} — ${dateLabel}`,
-            html: `<!DOCTYPE html><html><body style="font-family:-apple-system,Inter,sans-serif;background:#050505;color:#fff;padding:30px"><div style="max-width:520px;margin:0 auto;background:#0d0d0d;padding:30px;border-radius:14px;border:1px solid rgba(255,255,255,0.08)"><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};font-weight:800;margin-bottom:14px">CRM · Call confirmé</div><div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:10px">${escHtml(app.nom_prenom?.trim() || 'Candidat')}</div><div style="font-size:14px;color:rgba(255,255,255,0.65);margin-bottom:18px">${escHtml(app.email)}${app.telephone ? ' · ' + escHtml(app.telephone) : ''}</div><div style="font-size:16px;color:${G};font-weight:800;padding:14px 16px;background:rgba(2,209,186,0.08);border-radius:10px;margin-bottom:18px">${escHtml(dateLabel)}</div><div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.65">Mail de confirmation envoyé au candidat. La pièce jointe .ics ajoute le call à ton agenda en 1 tap.</div></div></body></html>`,
+            subject: isReschedule
+              ? `Call déplacé : ${app.nom_prenom?.trim() || app.email} — ${dateLabel}`
+              : `Call booké : ${app.nom_prenom?.trim() || app.email} — ${dateLabel}`,
+            html: `<!DOCTYPE html><html><body style="font-family:-apple-system,Inter,sans-serif;background:#050505;color:#fff;padding:30px"><div style="max-width:520px;margin:0 auto;background:#0d0d0d;padding:30px;border-radius:14px;border:1px solid rgba(255,255,255,0.08)"><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${G};font-weight:800;margin-bottom:14px">CRM &middot; Call ${isReschedule ? 'd&eacute;plac&eacute;' : 'confirm&eacute;'}</div><div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:10px">${escHtml(app.nom_prenom?.trim() || 'Candidat')}</div><div style="font-size:14px;color:rgba(255,255,255,0.65);margin-bottom:18px">${escHtml(app.email)}${app.telephone ? ' &middot; ' + escHtml(app.telephone) : ''}</div>${isReschedule && previousScheduledISO ? `<div style=\"font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:8px;text-decoration:line-through\">Ancien: ${escHtml(formatFR(new Date(previousScheduledISO)))}</div>` : ''}<div style="font-size:16px;color:${G};font-weight:800;padding:14px 16px;background:rgba(2,209,186,0.08);border-radius:10px;margin-bottom:18px;text-transform:capitalize">${escHtml(dateLabel)}</div><div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.65">${isReschedule ? `Cr&eacute;neau d&eacute;plac&eacute;. Le candidat a re&ccedil;u un nouveau mail "RDV d&eacute;plac&eacute;". Les rappels H-24 et H-2 ont &eacute;t&eacute; r&eacute;arm&eacute;s pour la nouvelle date.` : `Mail de confirmation envoy&eacute; au candidat. La pi&egrave;ce jointe .ics ajoute le call &agrave; ton agenda en 1 tap.`}</div></div></body></html>`,
             icalEvent: {
               method: 'REQUEST',
               content: ics,
