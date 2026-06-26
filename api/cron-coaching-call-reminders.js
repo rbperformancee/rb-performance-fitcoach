@@ -54,9 +54,10 @@ async function sbFetch(path, options = {}) {
 }
 
 function isAuthorized(req) {
-  // Vercel cron : signed via VERCEL_CRON_SECRET dans Authorization header
   const auth = req.headers.authorization || '';
-  if (process.env.VERCEL_CRON_SECRET && auth === `Bearer ${process.env.VERCEL_CRON_SECRET}`) return true;
+  // Vercel cron : env var CRON_SECRET (standard Vercel Crons v2) ou VERCEL_CRON_SECRET (legacy)
+  const cronSecret = process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET;
+  if (cronSecret && auth === `Bearer ${cronSecret}`) return true;
   // Test manuel : admin secret
   if (ADMIN_SECRET && auth === `Bearer ${ADMIN_SECRET}`) return true;
   if (ADMIN_SECRET && req.headers['x-admin-secret'] === ADMIN_SECRET) return true;
