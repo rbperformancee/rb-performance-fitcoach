@@ -41,7 +41,15 @@ const SOURCE_LABELS = {
 export default function CRMSection({ coachId }) {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEmail, setSelectedEmail] = useState(null);
+  // Auto-open via URL : ?email=xxx ou ?contact=xxx (alias). Permet à Rayan
+  // d'arriver directement sur un contact depuis un lien mail/notif sans
+  // chercher dans la liste (feature inspirée FunnelOps "?email= pre-fill").
+  const [selectedEmail, setSelectedEmail] = useState(() => {
+    try {
+      const u = new URL(window.location.href);
+      return u.searchParams.get("email") || u.searchParams.get("contact") || null;
+    } catch { return null; }
+  });
   const [filterStage, setFilterStage] = useState("all");
   const [filterSource, setFilterSource] = useState("all");
   const [search, setSearch] = useState("");
@@ -353,8 +361,25 @@ export default function CRMSection({ coachId }) {
         <ContactDetail
           email={selectedEmail}
           contact={contacts.find((c) => c.email === selectedEmail)}
-          onClose={() => setSelectedEmail(null)}
+          onClose={() => {
+            setSelectedEmail(null);
+            // Si on a ouvert via ?email=, on retire le param de l'URL au close
+            // pour pas que le refresh re-open le même contact.
+            try {
+              const u = new URL(window.location.href);
+              if (u.searchParams.get("email") || u.searchParams.get("contact")) {
+                u.searchParams.delete("email");
+                u.searchParams.delete("contact");
+                window.history.replaceState({}, "", u.toString());
+              }
+            } catch {}
+          }}
           onUpdate={(patch) => {
+            // Switch contact (via badge "doublon potentiel" → click email)
+            if (patch?.openEmail) {
+              setSelectedEmail(patch.openEmail);
+              return;
+            }
             setContacts((prev) => prev.map((c) => c.email === selectedEmail ? { ...c, ...patch } : c));
           }}
         />
@@ -446,19 +471,39 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
   // boutons préférés. On expose juste un bouton "Déplacer" qui rouvre le
   // picker datetime-local pour cas de contre-temps.
   const [rescheduleMode, setRescheduleMode] = useState(false);
+  // Doublons potentiels détectés via raw_phone (migration 132).
+  // Format : [{ email, nom_prenom, created_at }] des autres candidatures
+  // qui partagent le même téléphone (sauf le contact courant lui-même).
+  const [phoneDuplicates, setPhoneDuplicates] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data } = await supabase
         .from("coaching_applications")
-        .select("id,email,nom_prenom,call_scheduled_at,call_outcome,call_completed_at,preferred_slots")
+        .select("id,email,nom_prenom,call_scheduled_at,call_outcome,call_completed_at,preferred_slots,raw_phone")
         .eq("email", email)
         .order("created_at", { ascending: false })
         .limit(1);
       if (cancelled) return;
       const app = (data || [])[0] || null;
       setApplication(app);
+
+      // Dedup phone : si l'application a un raw_phone, chercher les autres
+      // candidatures qui le partagent (= probablement le même prospect avec
+      // un email différent). Tab dans le ContactDetail pour merger manuel.
+      if (app?.raw_phone) {
+        const { data: dups } = await supabase
+          .from("coaching_applications")
+          .select("email, nom_prenom, created_at, raw_phone")
+          .eq("raw_phone", app.raw_phone)
+          .neq("email", email)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (!cancelled) setPhoneDuplicates(dups || []);
+      } else {
+        setPhoneDuplicates([]);
+      }
       // Pré-remplir le datetime-local avec le créneau actuel si défini
       if (app?.call_scheduled_at) {
         const d = new Date(app.call_scheduled_at);
@@ -722,6 +767,31 @@ function ContactDetail({ email, contact, onClose, onUpdate }) {
           </div>
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: 24, cursor: "pointer" }}>×</button>
         </div>
+
+        {/* Badge "doublon potentiel" : alerte si raw_phone de cette candidature
+            matche d'autres candidatures avec un email différent. Permet à
+            Rayan de fusionner mentalement avant relances dupliquées. */}
+        {phoneDuplicates.length > 0 && (
+          <div style={{ marginBottom: 14, padding: "11px 14px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span style={{ fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", color: "#fbbf24", fontWeight: 800 }}>
+                Doublon potentiel · même téléphone ({phoneDuplicates.length})
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.55 }}>
+              {phoneDuplicates.map((d, i) => (
+                <div key={d.email} style={{ paddingLeft: 16 }}>
+                  • <button onClick={() => onUpdate({ openEmail: d.email })} style={{ background: "transparent", border: "none", color: "#fbbf24", textDecoration: "underline", cursor: "pointer", padding: 0, fontSize: 11, fontFamily: "inherit" }}>{d.email}</button>
+                  {d.nom_prenom ? ` — ${d.nom_prenom.trim()}` : ""}
+                  <span style={{ color: "rgba(255,255,255,0.4)", marginLeft: 6 }}>
+                    {(() => { try { return new Date(d.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }); } catch { return ""; } })()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.5)", marginBottom: 8, fontWeight: 700 }}>Stage pipeline</div>
