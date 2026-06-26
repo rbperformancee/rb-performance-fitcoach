@@ -39,14 +39,14 @@ preloadActiveLocale().catch(() => {}).finally(() => {
       requestAnimationFrame(async () => {
         try {
           const mod = await import("@capacitor/splash-screen");
-          await mod.SplashScreen.hide({ fadeOutDuration: 200 });
-          // Petite vibration premium juste après l'apparition de l'app
-          // (signal kinesthésique "app prête"). ImpactLight = à peine
-          // perceptible, tap subtil — pas une notif buzz.
+          // Haptic Light synchro avec le début de la disparition du splash
+          // (= moment où l'app prend la main). Fire & forget : on n'await
+          // pas pour pas retarder le hide.
           try {
             const { Haptics, ImpactStyle } = await import("@capacitor/haptics");
-            await Haptics.impact({ style: ImpactStyle.Light });
+            Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
           } catch {}
+          await mod.SplashScreen.hide({ fadeOutDuration: 200 });
         } catch (e) {
           // eslint-disable-next-line no-console
           console.warn("[splash] hide failed:", e);
