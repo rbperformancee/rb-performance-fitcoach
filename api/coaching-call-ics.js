@@ -37,14 +37,19 @@ async function sbFetch(path, options = {}) {
   return res.json();
 }
 
-function buildICS({ startUTC, endUTC, summary, description, location, organizerEmail, attendeeEmail }) {
+function buildICS({ startUTC, endUTC, summary, description, location, organizerEmail, attendeeEmail, applicationId }) {
   const fmt = (d) => d.toISOString().replace(/[-:]|\.\d{3}/g, '');
-  const uid = `coaching-${startUTC.getTime()}-${Math.random().toString(36).slice(2, 8)}@rbperform.app`;
+  // UID DÉTERMINISTE (= confirm-coaching-call-slot.js) pour que les re-fetch
+  // du même call mettent à jour l'event au lieu d'en créer un nouveau.
+  const uid = applicationId
+    ? `coaching-${applicationId}@rbperform.app`
+    : `coaching-${startUTC.getTime()}-${Math.random().toString(36).slice(2, 8)}@rbperform.app`;
+  const seq = Math.floor(Date.now() / 1000);
   const desc = String(description).replace(/\n/g, '\\n');
   return [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//RB Perform//Coaching Call//FR',
     'CALSCALE:GREGORIAN', 'METHOD:REQUEST', 'BEGIN:VEVENT',
-    `UID:${uid}`, `DTSTAMP:${fmt(new Date())}`, `DTSTART:${fmt(startUTC)}`, `DTEND:${fmt(endUTC)}`,
+    `UID:${uid}`, `SEQUENCE:${seq}`, `DTSTAMP:${fmt(new Date())}`, `DTSTART:${fmt(startUTC)}`, `DTEND:${fmt(endUTC)}`,
     `SUMMARY:${summary}`, `DESCRIPTION:${desc}`, `LOCATION:${location}`,
     `ORGANIZER;CN=Rayan Bonte:mailto:${organizerEmail}`,
     `ATTENDEE;CN=Athlete;RSVP=TRUE:mailto:${attendeeEmail}`,
@@ -80,7 +85,7 @@ module.exports = async function handler(req, res) {
 
     const startUTC = new Date(app.call_scheduled_at);
     const endUTC = new Date(startUTC.getTime() + CALL_DURATION_MIN * 60000);
-    const ics = buildICS({
+    const ics = buildICS({ applicationId: appId,
       startUTC, endUTC,
       summary: 'Appel RB Perform avec Rayan',
       description: `Appel WhatsApp avec Rayan. Prépare-toi : ${METHODE_URL}\\n\\nWhatsApp Rayan : ${WHATSAPP_URL}`,

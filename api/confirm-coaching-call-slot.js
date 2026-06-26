@@ -122,9 +122,20 @@ function formatFR(dateUTC) {
 }
 
 // Génère un .ics minimal pour Apple Calendar / Outlook / autres
-function buildICS({ startUTC, endUTC, summary, description, location, organizerEmail, attendeeEmail }) {
+function buildICS({ startUTC, endUTC, summary, description, location, organizerEmail, attendeeEmail, applicationId, sequence }) {
   const fmt = (d) => d.toISOString().replace(/[-:]|\.\d{3}/g, '');
-  const uid = `coaching-${startUTC.getTime()}-${Math.random().toString(36).slice(2, 8)}@rbperform.app`;
+  // UID DÉTERMINISTE basé sur application_id : si on resend un .ics pour
+  // la même candidature (cas reschedule), même UID + SEQUENCE incrémenté
+  // → Apple Calendar / Google Cal détectent et UPDATE l'event existant
+  // (pas un nouveau event en plus de l'ancien). Conforme RFC 5545.
+  // Fallback random pour les rares cas sans applicationId (legacy).
+  const uid = applicationId
+    ? `coaching-${applicationId}@rbperform.app`
+    : `coaching-${startUTC.getTime()}-${Math.random().toString(36).slice(2, 8)}@rbperform.app`;
+  // SEQUENCE : timestamp en seconds depuis epoch garantit monotone
+  // croissant entre tous les envois successifs, calendriers comparent et
+  // gardent la version la plus récente.
+  const seq = sequence != null ? sequence : Math.floor(Date.now() / 1000);
   const desc = String(description).replace(/\n/g, '\\n');
   return [
     'BEGIN:VCALENDAR',
@@ -134,6 +145,7 @@ function buildICS({ startUTC, endUTC, summary, description, location, organizerE
     'METHOD:REQUEST',
     'BEGIN:VEVENT',
     `UID:${uid}`,
+    `SEQUENCE:${seq}`,
     `DTSTAMP:${fmt(new Date())}`,
     `DTSTART:${fmt(startUTC)}`,
     `DTEND:${fmt(endUTC)}`,
@@ -332,6 +344,7 @@ module.exports = async function handler(req, res) {
       location: 'WhatsApp Rayan',
       organizerEmail: SMTP_USER,
       attendeeEmail: app.email || SMTP_USER,
+      applicationId: body.application_id,
     });
     const appleCalUrl = 'data:text/calendar;charset=utf-8;base64,' + Buffer.from(ics, 'utf-8').toString('base64');
 
