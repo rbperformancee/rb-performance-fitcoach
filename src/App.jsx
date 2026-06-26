@@ -638,6 +638,19 @@ function AppInner() {
     sendMagicLink, signOut,
   } = useAuth();
 
+  // Dispatch 'rb:app-ready' quand l'app a fini son auth check (= prête à
+  // afficher la home ou login). Le HTML #splash dans public/index.html
+  // l'écoute pour synchroniser le fade-out splash avec le 1er paint réel
+  // de l'app, évitant l'écran noir entre fin splash et home. Logique
+  // identique au build 131 v1.0.6 (App Store actuel).
+  const appReadyDispatched = React.useRef(false);
+  React.useEffect(() => {
+    if (!authLoading && !appReadyDispatched.current) {
+      appReadyDispatched.current = true;
+      try { window.dispatchEvent(new Event("rb:app-ready")); } catch {}
+    }
+  }, [authLoading]);
+
   // Préchargement pour les CLIENTS standards (pas demo) dès qu'ils sont loggés.
   // Évite l'écran noir d'une demi-seconde au premier swipe entre les onglets.
   // IMPORTANT : doit être APRÈS useAuth() qui déclare `user` — sinon TDZ.
@@ -1286,8 +1299,10 @@ function AppInner() {
         {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
         {isClientDemo && <div style={{height:52}} />}
 
-        {/* Particules d'ambiance */}
-        <div style={{position:'absolute',top:0,left:0,right:0,height:'60%',background:'radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.15) 0%, transparent 60%)',pointerEvents:'none'}}/>
+        {/* Particules d'ambiance — gradient cyan amplifié pour habiller
+            la zone safe-area en haut (incident Skander 26/06 : bande noire
+            visible sous la status bar perçue comme cassée). */}
+        <div style={{position:'absolute',top:0,left:0,right:0,height:'70%',background:'radial-gradient(ellipse at 50% 0%, rgba(2,209,186,0.32) 0%, rgba(2,209,186,0.12) 25%, transparent 65%)',pointerEvents:'none'}}/>
         <div style={{position:'absolute',bottom:0,left:0,right:0,height:'40%',background:'radial-gradient(ellipse at 50% 120%, rgba(2,209,186,0.06) 0%, transparent 60%)',pointerEvents:'none'}}/>
 
         {/* TOP BAR — date + heure Tesla style.
