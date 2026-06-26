@@ -30,6 +30,8 @@ import haptic from "../lib/haptic";
 import { parseProgrammeHTML } from "../utils/parserProgramme";
 import BusinessSection from "./coach/BusinessSection";
 import ProgrammeList from "./coach/ProgrammeList";
+import CRMSection from "./coach/CRMSection";
+import FunnelAnalytics from "./coach/FunnelAnalytics";
 import ProgrammeDuplicateModal from "./coach/ProgrammeDuplicateModal";
 import Onboarding from "./coach/Onboarding";
 import BulkWeightImportCSV from "./coach/BulkWeightImportCSV";
@@ -58,7 +60,6 @@ import AchievementsSection from "./coach/AchievementsSection";
 import RecipesSection from "./coach/RecipesSection";
 import TransformationView from "./coach/TransformationView";
 import AIAnalyze from "./coach/AIAnalyze";
-import { todayLocal } from "../lib/date";
 import CoachOnboardingWizard from "./coach/CoachOnboardingWizard";
 import CoachHomeScreen from "./coach/CoachHomeScreen";
 import MonCompte from "./coach/MonCompte";
@@ -79,7 +80,6 @@ const fillTpl = (s, vars) => {
 import ThemeSwitcher from "./ThemeSwitcher";
 import { calculateChurnRisk } from "../lib/coachIntelligence";
 
-import { apiUrl } from "../lib/api";
 // Durees d'abonnement (partage entre CoachDashboard et ClientPanel)
 // DEPRECATED — anciennes constantes, remplacées par coach_plans table
 const SUB_PLANS_LEGACY = [
@@ -827,7 +827,7 @@ function CreneauxManager() {
         <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>{t("cd.add_slot", "Ajouter un créneau")}</div>
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
-            min={todayLocal()}
+            min={new Date().toISOString().split("T")[0]}
             style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 16, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }} />
           <select value={heure} onChange={e => setHeure(e.target.value)}
             style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", padding: "10px 12px", fontSize: 16, outline: "none", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
@@ -1803,7 +1803,7 @@ function WeightNudgeButton({ client }) {
   const [sending, setSending] = React.useState(false);
   const [sentToday, setSentToday] = React.useState(() => {
     try {
-      const k = `weight_nudge_${client?.id}_${todayLocal()}`;
+      const k = `weight_nudge_${client?.id}_${new Date().toISOString().slice(0,10)}`;
       return localStorage.getItem(k) === "1";
     } catch { return false; }
   });
@@ -1834,7 +1834,7 @@ function WeightNudgeButton({ client }) {
       if (res.ok && (json.sent || 0) > 0) {
         toast.success(fillTpl(t("coach.weight_nudge_toast_sent"), { name: firstName }));
         try {
-          localStorage.setItem(`weight_nudge_${client.id}_${todayLocal()}`, "1");
+          localStorage.setItem(`weight_nudge_${client.id}_${new Date().toISOString().slice(0,10)}`, "1");
         } catch {}
         setSentToday(true);
       } else if (res.ok && json.total === 0) {
@@ -2101,7 +2101,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
       .then(({ data }) => setWeeklyCheckins(data || []));
     // Compliance habitudes du jour (migration 058)
     (async () => {
-      const today = todayLocal();
+      const today = new Date().toISOString().slice(0, 10);
       const [{ data: hs }, { data: lgs }] = await Promise.all([
         supabase.from("habits").select("id").eq("client_id", client.id).eq("active", true),
         supabase.from("habit_logs").select("habit_id").eq("client_id", client.id).eq("date", today),
@@ -2643,7 +2643,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                   try {
                     const { data: { session } } = await supabase.auth.getSession();
                     const jwt = session?.access_token;
-                    const r = await fetch(apiUrl("/api/send-welcome"), {
+                    const r = await fetch("/api/send-welcome", {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
@@ -2826,10 +2826,10 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
             // Construire les 7 derniers jours avec placeholders si pas de log.
             // Bug timezone : `new Date().setHours(0,0,0,0)` donne minuit LOCAL,
             // dont l'ISO bascule sur la date UTC précédente en CEST. Or
-            // FuelPage stocke `todayLocal()` (date UTC)
+            // FuelPage stocke `new Date().toISOString().slice(0,10)` (date UTC)
             // → mismatch des clés → chart vide tout l'été. On utilise donc la
             // date UTC partout pour rester aligné avec ce qui est stocké.
-            const todayUtcStr = todayLocal();
+            const todayUtcStr = new Date().toISOString().slice(0, 10);
             const [ty, tm, td] = todayUtcStr.split("-").map(Number);
             const todayMs = Date.UTC(ty, tm - 1, td);
             const msDay = 86400000;
@@ -4075,7 +4075,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
           <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 180 }}>
               {lastPayment ? (() => {
-                const today = todayLocal();
+                const today = new Date().toISOString().slice(0, 10);
                 const expired = lastPayment.period_end < today;
                 const fmt = (d) => new Date(d).toLocaleDateString(getDateLocale(), { day: "numeric", month: "short" });
                 return (
@@ -4193,7 +4193,7 @@ function ClientPanel({ client, onClose, onUpload, onDelete, coachId, coachData, 
                     setSavingEmail(true);
                     try {
                       const { data: { session } } = await supabase.auth.getSession();
-                      const r = await fetch(apiUrl("/api/coach-update-client-email"), {
+                      const r = await fetch("/api/coach-update-client-email", {
                         method: "POST",
                         headers: {
                           "Content-Type": "application/json",
@@ -4953,6 +4953,21 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
   const hasSentinelAccess = isFoundingCoach || SENTINEL_PLANS.includes(coachData?.subscription_plan);
   const [activeTab, setActiveTab] = useState("overview");
   const [celebMilestone, setCelebMilestone] = useState(null);
+
+  // CRM personnel super-admin — onglet caché pour tous les autres coachs.
+  // Check email auth contre la table super_admins au mount.
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const email = u?.user?.email;
+      if (!email) return;
+      const { data } = await supabase.from("super_admins").select("email").eq("email", email).maybeSingle();
+      if (!cancelled) setIsSuperAdmin(!!data);
+    })();
+    return () => { cancelled = true; };
+  }, []);
   // Map clientId → name pour ActivityFeedToday (évite re-fetch des noms)
   const clientsById = React.useMemo(() => {
     const m = new Map();
@@ -5155,7 +5170,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
         // On calcule les updates AVANT setClients pour pouvoir mettre à jour
         // la version locale en même temps que la DB — sinon le Kanban affiche
         // l'ancien statut pour tout le rest de la session (state stale).
-        const sentinel = `pipeline_auto_${coachId}_${todayLocal()}`;
+        const sentinel = `pipeline_auto_${coachId}_${new Date().toISOString().split("T")[0]}`;
         let finalClients = enrichedWithIntel;
         if (!sessionStorage.getItem(sentinel)) {
           const updates = [];
@@ -5234,7 +5249,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
       const diff = day === 0 ? 6 : day - 1;
       d.setDate(d.getDate() - diff);
       const weekStart = d.toISOString().slice(0, 10);
-      const today = todayLocal();
+      const today = new Date().toISOString().slice(0, 10);
       const [{ data: checkins }, { data: habits }, { data: habitLogs }] = await Promise.all([
         supabase.from("weekly_checkins").select("client_id").in("client_id", ids).eq("week_start", weekStart),
         supabase.from("habits").select("id, client_id").in("client_id", ids).eq("active", true),
@@ -5338,7 +5353,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     // Sans ça, signInWithOtp(shouldCreateUser:false) renvoie "Signups not
     // allowed for otp" → "Compte inexistant" cote login.
     try {
-      await fetch(apiUrl("/api/auth/check-invitation"), {
+      await fetch("/api/auth/check-invitation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -5353,7 +5368,7 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const jwt = session?.access_token;
-      const r = await fetch(apiUrl("/api/send-welcome"), {
+      const r = await fetch("/api/send-welcome", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -5828,12 +5843,17 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
 
   // ===== FLOATING PILL MOBILE =====
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const pillTabs = ["overview", "clients", "programmes", "business"];
+  const pillTabs = ["overview", "clients", "programmes", "business", ...(isSuperAdmin ? ["crm", "funnel"] : [])];
   const pillItems = [
     { id: "overview",    icon: "chart",       label: t("coach.nav_home"),       shortLabel: "HOME",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("overview"); } },
     { id: "clients",     icon: "users",       label: t("coach.nav_clients"),    shortLabel: "CLIENTS", onClick: () => { setSelected(null); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("clients"); setShowClientList(true); } },
     { id: "programmes",  icon: "document",    label: t("coach.nav_prog"),       shortLabel: "PROG",    onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("programmes"); } },
     { id: "business",    icon: "trending",    label: t("coach.nav_business"),   shortLabel: "BIZ",     onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("business"); } },
+    // CRM perso super-admin (Rayan) — pas dans la pill par défaut, accessible
+    // via tab swap manuel ou bouton (More menu si besoin plus tard). Caché pour
+    // tous les autres coachs.
+    ...(isSuperAdmin ? [{ id: "crm", icon: "users", label: "CRM", shortLabel: "CRM", onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("crm"); } }] : []),
+    ...(isSuperAdmin ? [{ id: "funnel", icon: "trending", label: "Funnel", shortLabel: "FUNNEL", onClick: () => { setSelected(null); setShowClientList(false); setShowSettings(false); setShowAnalytics(false); setShowMonCompte(false); setShowMoreMenu(false); setActiveTab("funnel"); } }] : []),
     { id: "more",        icon: "plus",        label: t("cd.pill_more"),      shortLabel: t("cd.pill_more_short"),    onClick: () => { setShowMoreMenu(!showMoreMenu); } },
   ];
   // Swipe gesture sur la pill
@@ -6645,6 +6665,16 @@ export function CoachDashboard({ coachId, coachData, onExit, onSwitchToSuperAdmi
               onAssign={(prog) => setDuplicateProgramme(prog)}
               onCreate={(client) => setNewProgClient(client)}
             />
+          )}
+
+          {/* ========== CRM PERSONNEL (Super Admin only — Rayan) ========== */}
+          {!showClientList && activeTab === "crm" && isSuperAdmin && (
+            <CRMSection coachId={coachId} />
+          )}
+
+          {/* ========== FUNNEL ANALYTICS (Super Admin only — Rayan) ========== */}
+          {!showClientList && activeTab === "funnel" && isSuperAdmin && (
+            <FunnelAnalytics />
           )}
 
           {/* ========== ACHIEVEMENTS (badges + streak + rank) ========== */}
