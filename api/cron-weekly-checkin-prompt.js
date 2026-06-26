@@ -173,34 +173,38 @@ function currentWeekStart() {
   return d.toISOString().slice(0, 10);
 }
 
-// Tonalité du message selon le jour de la semaine :
-// - dimanche : 1er prompt (calme, invitation)
-// - mardi    : relance J+2 (rappel)
-// - jeudi    : relance J+4 (urgence légère)
-// - autres   : on reste sur la tonalité standard (utile pour run manuel)
+// Tonalité du message selon le jour de la semaine.
+// Le bilan reflète la semaine écoulée → on cale les 3 prompts fin/début
+// de semaine, pas en plein milieu (envoyer le "dernier rappel" un jeudi
+// n'avait pas de sens : la semaine n'est pas encore finie).
+// - samedi   : 1er prompt (la semaine se termine, invitation calme)
+// - dimanche : relance (le soir, avant la bascule)
+// - lundi    : dernier rappel (la nouvelle semaine commence, il faut
+//              clôturer la précédente)
+// - autres   : tonalité standard (utile pour run manuel)
 function templatesForToday() {
-  const day = new Date().getUTCDay(); // 0=dim, 2=mar, 4=jeu
-  if (day === 2) {
+  const day = new Date().getUTCDay(); // 0=dim, 1=lun, 6=sam
+  if (day === 0) {
     return {
       pushTitle: (n) => (n ? `${n}, on attend ton bilan` : "On attend ton bilan"),
-      pushBody: "3 jours que la semaine a commencé. 30 secondes — c'est tout.",
+      pushBody: "La semaine se termine. 30 secondes — c'est tout.",
       mailSubject: (n) => (n ? `${n}, on attend ton bilan — 30s` : "On attend ton bilan — 30s"),
-      mailH1: (n) => `Ça fait 3 jours qu'on attend ton bilan${n ? ` ${n}` : ""}.`,
+      mailH1: (n) => `On attend ton bilan${n ? ` ${n}` : ""}.`,
       mailIntro: "30 secondes. Poids, ressenti, c'est tout. Si tout va bien, dis-le moi — je préfère ça que pas de nouvelles.",
       mailCta: "Faire mon bilan",
     };
   }
-  if (day === 4) {
+  if (day === 1) {
     return {
       pushTitle: (n) => (n ? `${n}, dernier rappel bilan` : "Dernier rappel bilan"),
-      pushBody: "Sans ton bilan, j'avance à l'aveugle pour la semaine prochaine. 30s.",
+      pushBody: "Sans ton bilan, j'avance à l'aveugle pour la semaine qui commence. 30s.",
       mailSubject: (n) => (n ? `${n}, dernier rappel — ton bilan` : "Dernier rappel — ton bilan"),
       mailH1: (n) => `Dernier rappel${n ? ` ${n}` : ""} : ton bilan.`,
-      mailIntro: "Sans tes infos je ne peux pas adapter ton plan pour la semaine prochaine. 30 secondes — promis. Si tu n'as rien à signaler, dis-le moi quand même.",
+      mailIntro: "Sans tes infos je ne peux pas adapter ton plan pour la semaine qui commence. 30 secondes — promis. Si tu n'as rien à signaler, dis-le moi quand même.",
       mailCta: "Faire mon bilan",
     };
   }
-  // dimanche & fallback
+  // samedi & fallback (premier prompt)
   return {
     pushTitle: (n) => (n ? `${n}, ton bilan ?` : "Ton bilan de la semaine"),
     pushBody: "30 secondes : poids, ressenti, photos. Ton coach voit ta progression.",
