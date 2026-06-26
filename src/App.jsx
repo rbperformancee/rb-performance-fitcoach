@@ -638,30 +638,6 @@ function AppInner() {
     sendMagicLink, signOut,
   } = useAuth();
 
-  // Dispatch 'rb:app-ready' quand auth check fini ET chunks lazy essentiels
-  // (TrainingPage / ProfilePage / FuelPage / MovePage) téléchargés. Sans
-  // ce preload, sur connexion lente l'event arrive trop tôt et le splash
-  // fade-out alors que les chunks ne sont pas encore là → mini écran noir
-  // visible. Avec preload, le splash reste jusqu'à ce que tout soit prêt
-  // à peindre.
-  const appReadyDispatched = React.useRef(false);
-  React.useEffect(() => {
-    if (authLoading || appReadyDispatched.current) return;
-    appReadyDispatched.current = true;
-    const fire = () => { try { window.dispatchEvent(new Event("rb:app-ready")); } catch {} };
-    // Preload chunks home essentiels (best effort). Timeout 4s pour pas
-    // bloquer indéfiniment si un chunk fail à se télécharger sur mauvaise
-    // connexion — on fade quand même le splash.
-    const preloads = Promise.all([
-      import("./components/TrainingPage").catch(() => {}),
-      import("./components/ProfilePage").catch(() => {}),
-      import("./components/FuelPage").catch(() => {}),
-      import("./components/MovePage").catch(() => {}),
-    ]);
-    const timeout = new Promise((r) => setTimeout(r, 4000));
-    Promise.race([preloads, timeout]).then(fire);
-  }, [authLoading]);
-
   // Préchargement pour les CLIENTS standards (pas demo) dès qu'ils sont loggés.
   // Évite l'écran noir d'une demi-seconde au premier swipe entre les onglets.
   // IMPORTANT : doit être APRÈS useAuth() qui déclare `user` — sinon TDZ.
@@ -1310,10 +1286,8 @@ function AppInner() {
         {isClientDemo && <ClientDemoBanner onExit={() => { supabase.auth.signOut().then(() => navigateAfterAuth("/")); }} />}
         {isClientDemo && <div style={{height:52}} />}
 
-        {/* Bande cyan uniforme au top (couvre toute la safe-area iOS
-            incluant les coins) + halo radial cyan derrière le nom. */}
-        <div style={{position:'absolute',top:0,left:0,right:0,height:160,background:'linear-gradient(180deg, rgba(2,209,186,0.18) 0%, rgba(2,209,186,0.08) 50%, transparent 100%)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',top:0,left:0,right:0,height:'70%',background:'radial-gradient(ellipse at 50% 5%, rgba(2,209,186,0.28) 0%, rgba(2,209,186,0.10) 30%, transparent 70%)',pointerEvents:'none'}}/>
+        {/* Particules d'ambiance */}
+        <div style={{position:'absolute',top:0,left:0,right:0,height:'60%',background:'radial-gradient(ellipse at 50% -10%, rgba(2,209,186,0.15) 0%, transparent 60%)',pointerEvents:'none'}}/>
         <div style={{position:'absolute',bottom:0,left:0,right:0,height:'40%',background:'radial-gradient(ellipse at 50% 120%, rgba(2,209,186,0.06) 0%, transparent 60%)',pointerEvents:'none'}}/>
 
         {/* TOP BAR — date + heure Tesla style.

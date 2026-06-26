@@ -39,11 +39,14 @@ preloadActiveLocale().catch(() => {}).finally(() => {
       requestAnimationFrame(async () => {
         try {
           const mod = await import("@capacitor/splash-screen");
+          // Haptic Light synchro avec le début de la disparition du splash
+          // (= moment où l'app prend la main). Fire & forget : on n'await
+          // pas pour pas retarder le hide.
+          try {
+            const { Haptics, ImpactStyle } = await import("@capacitor/haptics");
+            Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+          } catch {}
           await mod.SplashScreen.hide({ fadeOutDuration: 200 });
-          // Note : le haptic "fin du splash" n'est PAS ici (storyboard hide
-          // arrive trop tôt, le #splash HTML couvre encore l'écran). Il
-          // est déclenché inline dans public/index.html juste avant le
-          // fade-out du #splash HTML (= vrai "app visible").
         } catch (e) {
           // eslint-disable-next-line no-console
           console.warn("[splash] hide failed:", e);

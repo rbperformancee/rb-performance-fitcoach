@@ -221,35 +221,15 @@
         var splash = document.getElementById('splash');
         if (!splash) return;
 
-        // EXACT logique build 131 v1.0.6 (App Store actuel) :
-        // - Event 'rb:app-ready' dispatché par AppInner au mount React
-        // - Délai MIN 2200ms depuis start (sinon splash trop bref, mauvais
-        //   ressenti même si React rend en 500ms)
-        // - Fallback 6000ms si event ne vient jamais
-        // - Haptic LIGHT au moment du fade-out + fallback navigator.vibrate
-        var triggered = false, startedAt = Date.now();
-        function hideSplash() {
-          if (triggered) return;
-          triggered = true;
-          try {
-            var H = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
-            if (H && typeof H.impact === 'function') {
-              H.impact({ style: 'LIGHT' }).catch(function(){});
-            } else if (navigator.vibrate) {
-              navigator.vibrate(15);
-            }
-          } catch (e) {}
+        // Disparition apres 1.0s (eclair dessine, plus de freeze artificiel).
+        // Sur /demo et /demo-client, la transition est invisible (meme bg) car
+        // le splash React prend immediatement le relais avec progress messaging.
+        setTimeout(function(){
           splash.classList.add('fade-out');
           setTimeout(function(){
             if (splash.parentNode) splash.parentNode.removeChild(splash);
           }, 700);
-        }
-        window.addEventListener('rb:app-ready', function(){
-          var elapsed = Date.now() - startedAt;
-          var wait = Math.max(0, 2200 - elapsed);
-          setTimeout(hideSplash, wait);
-        }, { once: true });
-        setTimeout(hideSplash, 6000);
+        }, 1000);
       })();
       // ===== Service Worker registration =====
       // Sans ca : pas de cache offline, pas de push notifications, pas de PWA fullsize.
