@@ -215,16 +215,20 @@
       (function(){
         var splash = document.getElementById('splash');
         if (!splash) return;
-
-        // Disparition apres 1.0s (eclair dessine, plus de freeze artificiel).
-        // Sur /demo et /demo-client, la transition est invisible (meme bg) car
-        // le splash React prend immediatement le relais avec progress messaging.
-        setTimeout(function(){
+        // Le splash reste visible jusqu'à ce que React dispatche
+        // 'rb:app-ready' (= app prête à peindre). Fallback 6s pour pas
+        // bloquer si l'event ne vient jamais (crash JS, chunk fail, etc.).
+        // Évite l'écran noir entre fin splash et premier paint.
+        var done = false;
+        function hide() {
+          if (done) return; done = true;
           splash.classList.add('fade-out');
           setTimeout(function(){
             if (splash.parentNode) splash.parentNode.removeChild(splash);
           }, 700);
-        }, 1000);
+        }
+        window.addEventListener('rb:app-ready', hide, { once: true });
+        setTimeout(hide, 6000);
       })();
       // ===== Service Worker registration =====
       // Sans ca : pas de cache offline, pas de push notifications, pas de PWA fullsize.

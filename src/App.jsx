@@ -638,6 +638,17 @@ function AppInner() {
     sendMagicLink, signOut,
   } = useAuth();
 
+  // Signal au #splash HTML (public/index.html) que l'app est prête à
+  // peindre — il fait fade-out à la réception. Évite l'écran noir entre
+  // fin splash et home si React met du temps. Idempotent via ref.
+  const appReadySent = React.useRef(false);
+  React.useEffect(() => {
+    if (!authLoading && !appReadySent.current) {
+      appReadySent.current = true;
+      try { window.dispatchEvent(new Event("rb:app-ready")); } catch (_) {}
+    }
+  }, [authLoading]);
+
   // Préchargement pour les CLIENTS standards (pas demo) dès qu'ils sont loggés.
   // Évite l'écran noir d'une demi-seconde au premier swipe entre les onglets.
   // IMPORTANT : doit être APRÈS useAuth() qui déclare `user` — sinon TDZ.
