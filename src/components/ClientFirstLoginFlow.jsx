@@ -218,7 +218,9 @@ export default function ClientFirstLoginFlow({ client, user, onComplete }) {
                 C'est <span style={{ color: G }}>parti</span>.
               </div>
               <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, marginBottom: 40, maxWidth: 340, marginLeft: "auto", marginRight: "auto", opacity: 0, animation: "fadeUp 0.5s ease 1.6s forwards" }}>
-                Ton espace est prêt. Programme, suivi, et moi en face de toi quand tu en as besoin.
+                {client?.subscription_plan === "ebook-100d"
+                  ? "Ton espace est prêt. Ton programme et ton suivi sont là. À toi de jouer."
+                  : "Ton espace est prêt. Programme, suivi, et moi en face de toi quand tu en as besoin."}
               </div>
               <div style={{ opacity: 0, animation: "fadeUp 0.5s ease 1.75s forwards" }}>
                 <button onClick={finish} disabled={saving} style={btnPrimary(!saving)}>
