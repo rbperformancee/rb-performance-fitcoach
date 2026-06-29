@@ -898,6 +898,37 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       const completed = new Set();
       const completedNewFormat = new Set(); // pour weekProgress (clé "w-s")
       const weekStart = startOfCalendarWeek().getTime();
+      // Anti-cache fantôme (incident Skander 26/06): toute clé
+      // rb_c_<w>_<s> avec validee:true sur la semaine COURANTE ou FUTURE
+      // qui n'a pas de row session_completions du programme actuel est un
+      // résidu d'un programme précédent → on nettoie. Les semaines passées
+      // sont préservées (historique légitime de l'athlète).
+      const validKeys = new Set(
+        (data || [])
+          .filter((c) => !c.programme_id || !curProgId || c.programme_id === curProgId)
+          .map((c) => `rb_c_${c.week_idx}_${c.session_idx}`)
+      );
+      const curWeekIdxLocal = (() => {
+        if (!programmeMeta?.start_date) return null;
+        const start = new Date(programmeMeta.start_date + "T00:00:00");
+        const diffDays = Math.floor((Date.now() - start.getTime()) / 86400000);
+        return Math.max(0, Math.floor(diffDays / 7));
+      })();
+      try {
+        Object.keys(localStorage).forEach((k) => {
+          if (!k.startsWith("rb_c_")) return;
+          if (validKeys.has(k)) return;
+          const m = k.match(/^rb_c_(\d+)_(\d+)$/);
+          if (!m) return;
+          const wIdx = parseInt(m[1], 10);
+          if (curWeekIdxLocal != null && wIdx < curWeekIdxLocal) return;
+          const s = JSON.parse(localStorage.getItem(k) || "{}");
+          if (s.validee || s.done) {
+            const { validee, done, validated_at, ...rest } = s;
+            localStorage.setItem(k, JSON.stringify(rest));
+          }
+        });
+      } catch {}
       (data || [])
         .filter((c) => !c.programme_id || !curProgId || c.programme_id === curProgId)
         .forEach((c) => {
@@ -935,10 +966,30 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         activeWeek >= 0 && activeWeek < weeks.length &&
         activeSession >= 0 && activeSession < (weeks[activeWeek]?.sessions?.length || 0);
       const currentDone = currentValid && completed.has(`${activeWeek}_${activeSession}`);
-      if (currentValid && !currentDone) {
+      // Garde anti-réinstall (incident Alicia 26/06) : si activeWeek pointe sur
+      // une semaine ANTÉRIEURE à la semaine en cours du programme, on l'ignore
+      // — c'est l'état par défaut localStorage=0 après désinstall/réinstall.
+      // Sans cette garde, l'athlète qui a 4 semaines de programme derrière lui
+      // retombe sur la Semaine 1 quand il rouvre l'app fraîche, et ses logs
+      // partent en DB sur w0_sX au lieu de w3_sX → activeWeek faux + historique
+      // invisible. Ne s'applique PAS aux navigations manuelles (l'athlète qui
+      // tap S1 dans la barre de semaines reste sur S1) car le mount cloud ne
+      // se re-déclenche pas après une navigation.
+      const isStaleDefault = curWeekIdxLocal != null && activeWeek < curWeekIdxLocal;
+      if (currentValid && !currentDone && !isStaleDefault) {
         target = { w: activeWeek, s: activeSession };
       } else if (todaysSession?.type === "session") {
         target = { w: todaysSession.week, s: todaysSession.session };
+      } else if (curWeekIdxLocal != null && curWeekIdxLocal >= 0 && curWeekIdxLocal < weeks.length) {
+        // Pas de séance "aujourd'hui" suggérée ET activeWeek invalide :
+        // on pose au moins le bon week_idx + 1re séance non complétée de la
+        // semaine en cours.
+        const sessions = weeks[curWeekIdxLocal].sessions || [];
+        let s0 = 0;
+        for (let s = 0; s < sessions.length; s++) {
+          if (!completed.has(`${curWeekIdxLocal}_${s}`)) { s0 = s; break; }
+        }
+        target = { w: curWeekIdxLocal, s: s0 };
       } else {
         outer: for (let w = 0; w < weeks.length; w++) {
           const sessions = weeks[w].sessions || [];
@@ -1681,7 +1732,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       <div style={{ padding: "0 20px", marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>{currentSession.name || t("train.session_default")}</div>
+            <div style={{ fontSize: 17, fontWeight: 500, color: "rgba(255,255,255,0.92)", letterSpacing: -0.2, marginBottom: 6 }}>{currentSession.name || `${t("train.session_default")} ${activeSession + 1}`}</div>
             <div style={{ fontSize: 20, fontWeight: 700 }}>{doneEx} <span style={{ color: "rgba(255,255,255,0.2)", fontWeight: 300 }}>/ {totalEx} {t("train.exercises_count")}</span></div>
           </div>
           <div style={{ position: "relative", width: 52, height: 52 }}>
@@ -1870,10 +1921,10 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       {/* RUNS PRESCRITS DE LA SEANCE */}
       {Array.isArray(currentSession.runs) && currentSession.runs.length > 0 && (
         <div style={{ padding: "0 20px", marginTop: 18 }}>
-          <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 800, marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: "rgba(2,209,186,0.95)", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 800, marginBottom: 12 }}>
             {t("train.cardio_label")}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {currentSession.runs.map((r, ri) => {
               const isFrac = (r.repeats != null && r.repeats >= 2) || !!r.work;
               // Détection pattern "temps/temps" (HIIT, Tabata, 30/30…) : si
@@ -1883,18 +1934,21 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
               const isTimeBased = isFrac && isTimePattern(r.work) && isTimePattern(r.rest);
               return (
               <div key={ri} style={{
-                background: isFrac ? "rgba(239,68,68,0.04)" : "rgba(2,209,186,0.03)",
-                border: "1px solid " + (isFrac ? "rgba(239,68,68,0.22)" : "rgba(2,209,186,0.15)"),
+                background: isFrac ? "rgba(239,68,68,0.05)" : "rgba(2,209,186,0.04)",
+                border: "1px solid " + (isFrac ? "rgba(239,68,68,0.28)" : "rgba(2,209,186,0.22)"),
                 borderRadius: 12,
-                padding: "12px 14px",
+                padding: "14px 16px",
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4, background: "rgba(2,209,186,0.18)", color: "#02d1ba", textTransform: "uppercase" }}>
+                    Run {ri + 1}
+                  </span>
                   {isFrac && (
                     <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1.2, padding: "2px 6px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: "#ef4444", textTransform: "uppercase" }}>
                       {isTimeBased ? "HIIT" : "Frac"}
                     </span>
                   )}
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{r.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "#fff", letterSpacing: -0.1 }}>{r.name}</div>
                 </div>
                 {isFrac && (
                   <div style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", fontSize: 16, fontWeight: 700, color: "#ef4444", marginBottom: 6, letterSpacing: "-0.3px" }}>
