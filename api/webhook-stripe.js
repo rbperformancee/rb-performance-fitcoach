@@ -392,6 +392,17 @@ module.exports = async (req, res) => {
     // ===== CHECKOUT COMPLETED — CRÉER LE COACH =====
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
+
+      // EARLY-RETURN — Les achats ebook Méthode Athlète 90 sont gérés par
+      // le webhook /api/webhooks/stripe côté rbperform.com (lib/grant-app-access).
+      // Ce webhook SaaS B2B ne traite que les abonnements coach (Founding/Pro/Elite),
+      // pas les ebooks. Sans ce guard : UNKNOWN_PRICE_ID + alerte critique bidon
+      // à chaque achat ebook (couvre ebook seul ET ebook+bump dans la même session).
+      if (session.metadata?.programmeId === 'athlete-90') {
+        console.log(`[webhook-saas] skip ebook event ${session.id} (handled by rbperform.com webhook)`);
+        return res.status(200).json({ ok: true, skipped: 'ebook' });
+      }
+
       const email = session.customer_email || session.customer_details?.email;
       const customerName = session.customer_details?.name || null;
       const customerId = session.customer;
