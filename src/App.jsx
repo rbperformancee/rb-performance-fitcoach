@@ -1217,7 +1217,8 @@ function AppInner() {
   // amorcer la détection PR future. Posé une fois et flagué via
   // clients.baseline_form_shown_at (migration 055).
   if (!isClientDemo && user && userKind === "client" && !authLoading
-      && client && client.onboarding_done === true && !client.baseline_form_shown_at) {
+      && client && client.onboarding_done === true && !client.baseline_form_shown_at
+      && client.subscription_plan !== 'ebook-100d') {
     return (
       <Suspense fallback={null}>
         <BaselineMaxesForm
