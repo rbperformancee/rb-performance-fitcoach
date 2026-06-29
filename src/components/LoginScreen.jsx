@@ -280,7 +280,7 @@ export function LoginScreen({ onBack }) {
             borderRadius: 12,
           }}>
             <div style={{ fontSize: 10, letterSpacing: 3, color: G, fontWeight: 800, textTransform: 'uppercase', marginBottom: 6 }}>
-              Ebook Athlète · 100j
+              Méthode Athlète 90
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
               On t'envoie un code à 6 chiffres par email. Entre-le ci-dessous pour accéder à ton programme.
