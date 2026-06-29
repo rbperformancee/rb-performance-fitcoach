@@ -1681,7 +1681,7 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       <div style={{ padding: "0 20px", marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 4 }}>{currentSession.name || t("train.session_default")}</div>
+            <div style={{ fontSize: 17, fontWeight: 500, color: "rgba(255,255,255,0.92)", letterSpacing: -0.2, marginBottom: 6 }}>{currentSession.name || `${t("train.session_default")} ${activeSession + 1}`}</div>
             <div style={{ fontSize: 20, fontWeight: 700 }}>{doneEx} <span style={{ color: "rgba(255,255,255,0.2)", fontWeight: 300 }}>/ {totalEx} {t("train.exercises_count")}</span></div>
           </div>
           <div style={{ position: "relative", width: 52, height: 52 }}>
@@ -1870,10 +1870,10 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       {/* RUNS PRESCRITS DE LA SEANCE */}
       {Array.isArray(currentSession.runs) && currentSession.runs.length > 0 && (
         <div style={{ padding: "0 20px", marginTop: 18 }}>
-          <div style={{ fontSize: 9, color: "rgba(2,209,186,0.7)", letterSpacing: "2.5px", textTransform: "uppercase", fontWeight: 800, marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: "rgba(2,209,186,0.95)", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 800, marginBottom: 12 }}>
             {t("train.cardio_label")}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {currentSession.runs.map((r, ri) => {
               const isFrac = (r.repeats != null && r.repeats >= 2) || !!r.work;
               // Détection pattern "temps/temps" (HIIT, Tabata, 30/30…) : si
@@ -1883,18 +1883,21 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
               const isTimeBased = isFrac && isTimePattern(r.work) && isTimePattern(r.rest);
               return (
               <div key={ri} style={{
-                background: isFrac ? "rgba(239,68,68,0.04)" : "rgba(2,209,186,0.03)",
-                border: "1px solid " + (isFrac ? "rgba(239,68,68,0.22)" : "rgba(2,209,186,0.15)"),
+                background: isFrac ? "rgba(239,68,68,0.05)" : "rgba(2,209,186,0.04)",
+                border: "1px solid " + (isFrac ? "rgba(239,68,68,0.28)" : "rgba(2,209,186,0.22)"),
                 borderRadius: 12,
-                padding: "12px 14px",
+                padding: "14px 16px",
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4, background: "rgba(2,209,186,0.18)", color: "#02d1ba", textTransform: "uppercase" }}>
+                    Run {ri + 1}
+                  </span>
                   {isFrac && (
                     <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1.2, padding: "2px 6px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: "#ef4444", textTransform: "uppercase" }}>
                       {isTimeBased ? "HIIT" : "Frac"}
                     </span>
                   )}
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{r.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "#fff", letterSpacing: -0.1 }}>{r.name}</div>
                 </div>
                 {isFrac && (
                   <div style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", fontSize: 16, fontWeight: 700, color: "#ef4444", marginBottom: 6, letterSpacing: "-0.3px" }}>
