@@ -254,6 +254,36 @@ export const EXERCISE_VIDEOS = [
   { id: "UC9vbsZEiWg", title: "Box jump unilatéral", aliases: ["box jump unilateral", "box jump unilatéral", "box_jump_unilateral", "box_jump_unilatéral"] },
   { id: "ughHRxLxfjE", title: "Barre au front pausé", aliases: ["barre au front pause", "barre au front pausé", "barre_au_front_pause", "barre_au_front_pausé"] },
   { id: "tuJVgFSlg30", title: "Banc lombaire iso", aliases: ["banc lombaire iso", "banc_lombaire_iso", "lombaire iso"] },
+
+  // ───────── NUQUE · COU (renforcement athlète) ─────────
+  { id: "Nlsfq5_q1P0", title: "Cou gainage de face",                  aliases: ["cou gainage de face", "cou_gainage_de_face", "gainage cou face", "neck plank front"] },
+  { id: "LhM127bX85k", title: "Cou gainage arrière crâne",            aliases: ["cou gainage arriere crane", "cou gainage arrière crâne", "cou_gainage_arriere_crane", "cou_gainage_arrière_crâne", "gainage cou arriere", "neck plank back"] },
+  { id: "csYhRR9xHL0", title: "Cou flexion",                          aliases: ["cou flexion", "cou_flexion", "flexion cou", "neck flexion"] },
+  { id: "WV7Z4C2HaxA", title: "Cou flexion latérale",                 aliases: ["cou flexion laterale", "cou flexion latérale", "cou_flexion_laterale", "cou_flexion_latérale", "flexion laterale cou", "neck side flexion"] },
+  { id: "BZuslAlHVQ4", title: "Cou extension",                        aliases: ["cou extension", "cou_extension", "extension cou", "neck extension"] },
+  { id: "ZT7jJ1lrAmY", title: "Cou élastique latéral",                aliases: ["cou elastique lateral", "cou élastique latéral", "cou_elastique_lateral", "cou_élastique_latéral", "neck band lateral", "elastique cou lateral"] },
+
+  // ───────── ÉLASTIQUE — variations clés ─────────
+  { id: "BQtQC3vT_TI", title: "Développé couché élastique",           aliases: ["developpe couche elastique", "développé couché élastique", "developpe_couche_elastique", "développé_couché_élastique", "bench elastique", "bench band", "dc elastique"] },
+  { id: "_OVvCgb7aNY", title: "Deadlift trap barre élastique",        aliases: ["deadlift trap barre elastique", "deadlift trap barre élastique", "deadlift_trap_barre_elastique", "deadlift_trap_barre_élastique", "trap barre deadlift elastique", "trap bar deadlift band", "sdt trap barre elastique"] },
+  { id: "YBSrwIp545k", title: "Fentes sautées délestées élastique",   aliases: ["fentes sautees delestees elastique", "fentes sautées délestées élastique", "fentes_sautees_delestees_elastique", "fentes_sautées_délestées_élastique", "fentes sautees elastique", "jump lunges band", "fentes delestees elastique"] },
+  { id: "lpiM-Mj0DcA", title: "Pogo élastique",                       aliases: ["pogo elastique", "pogo élastique", "pogo_elastique", "pogo_élastique", "pogo band", "pogo jump elastique"] },
+
+  // ───────── ANTI-ROTATION ─────────
+  { id: "RqnNfxnD0AI", title: "Pallof press",                         aliases: ["pallof press", "pallof_press", "anti rotation press", "pallof"] },
+
+  // ───────── HAUSSEMENT ÉPAULES (trapèzes) ─────────
+  { id: "Z56YNKqlSOA", title: "Shrug",                                aliases: ["shrug", "shrug barre", "shrug halteres", "shrug haltères", "shrug trap bar", "haussement epaules", "haussement d'epaules", "haussements d'épaules", "trapezes shrug"] },
+
+  // ───────── EXOS PROGRAMME ATHLÈTE 90 — vidéos perso Rayan ─────────
+  { id: "NI3pE10tcIs", title: "Développé incliné haltères unilatéral", aliases: ["developpe incline halteres unilateral", "développé incliné haltères unilatéral", "developpe_incline_halteres_unilateral", "dc halteres unilateral", "dc haltères unilatéral", "incline DB unilateral"] },
+  { id: "WpSTavbjpMI", title: "RDL unilatéral pieds décalés barre",   aliases: ["rdl unilateral", "rdl unilatéral", "rdl unilateral pieds decales barre", "rdl unilatéral (pieds décalés) barre", "rdl_unilateral", "rdl_unilatéral", "rdl uni barre"] },
+  { id: "fTYYncnPgTg", title: "Saut survitesse élastique",            aliases: ["saut survitesse elastique", "saut survitesse élastique", "saut_survitesse_elastique", "saut_survitesse_élastique", "survitesse elastique", "overspeed band"] },
+  { id: "xSbsCz8ix9I", title: "Pin bench press",                      aliases: ["pin bench press", "pin_bench_press", "pin bench", "pin couche"] },
+  { id: "3nh5B_xfYWg", title: "Pompes pliométriques",                 aliases: ["pompes pliometriques", "pompes pliométriques", "pompes pliométrique", "pompes pliometrique", "pompes_pliometriques", "pompes_pliométriques", "pompes plyo", "plyo pushup", "clap push up"] },
+  { id: "MnDpmNYUjbc", title: "Band pull apart",                      aliases: ["band pull apart", "band pull appart", "band_pull_apart", "pull apart band", "band pullapart"] },
+  { id: "DtUuUld3b3M", title: "Close grip bench press élastique",     aliases: ["close grip bench press elastique", "close grip bench press élastique", "close_grip_bench_press_elastique", "close_grip_bench_press_élastique", "close grip bench elastique", "cgbp elastique", "bench prise serree elastique"] },
+  { id: "fKbu_2L94x8", title: "KB plank switch",                      aliases: ["kb plank switch", "kb_plank_switch", "plank kb switch", "plank_kb_switch", "kettlebell plank switch"] },
 ];
 
 // Construit un index trié par specifite : nom canonique d'abord, puis alias.
