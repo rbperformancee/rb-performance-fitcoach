@@ -45,11 +45,14 @@ const { getServiceClient } = require('../_supabase');
 const { isInternalAuthorized, attachRequestId, getIP } = require('../_security');
 const { captureException } = require('../_sentry');
 
-const MAX_GRANTED_SLOTS = 100;
+const MAX_GRANTED_SLOTS = 30;
 const SUBSCRIPTION_PLAN_LABEL = 'ebook-100d';
 const PROGRAMME_NAME = 'Méthode Athlète 90';
 
-// Cold-start probe — vérification déploiement live de la valeur cap après le bump 30→100 (launch 29/06/2026).
+// Cold-start probe — vérification déploiement live de la valeur cap.
+// Launch officiel 01/07/2026 20h Paris : quota fondateurs 30 places (les 30
+// premiers acheteurs athlete-90 reçoivent l'app gratuite, au-delà = waitlist_wave2
+// sauf si bump_app_paid=true qui bypass le quota).
 console.log(`[ebook-grant boot] MAX_GRANTED_SLOTS=${MAX_GRANTED_SLOTS} PROGRAMME_NAME="${PROGRAMME_NAME}" sha=${(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7) || 'local'}`);
 
 module.exports = async function handler(req, res) {
