@@ -51,9 +51,12 @@ export function computeCurrentWeekIdx(programmeMeta) {
  * @param {object} args.programme        - { weeks: [{ sessions: [{nom, focus, bonus}] }] }
  * @param {number} args.weekIdx          - 0-indexed
  * @param {Set<string>} args.doneSet     - clés "wIdx-sIdx" des sessions validées
+ * @param {function} [args.sessionFilter] - Optionnel. Si passé, exclut du résultat
+ *   les sessions pour lesquelles filter(s) === false. Les index d'origine sont
+ *   PRÉSERVÉS (pour rester cohérent avec doneSet / session_completions).
  * @returns {object | null}
  */
-export function computeWeekProgress({ programme, weekIdx, doneSet }) {
+export function computeWeekProgress({ programme, weekIdx, doneSet, sessionFilter }) {
   if (!programme?.weeks || weekIdx < 0 || weekIdx >= programme.weeks.length) {
     return null;
   }
@@ -64,32 +67,39 @@ export function computeWeekProgress({ programme, weekIdx, doneSet }) {
   // - next    : prochaine non-validée non-bonus
   // - todo    : non-validée, après "next"
   // - bonus   : optionnelle, ne compte pas dans target
+  //
+  // sessionFilter : sessions filtrées OUT ne sont pas retournées, ne comptent
+  // ni dans target ni dans done, ne peuvent pas être "next". Les index gardent
+  // leur valeur d'origine (pas de re-numérotation).
   let nextFound = false;
-  const sessions = weekSessions.map((s, idx) => {
-    const isBonus = !!s?.bonus;
-    const key = `${weekIdx}-${idx}`;
-    const isDone = doneSet?.has(key) || false;
+  const sessions = weekSessions
+    .map((s, idx) => ({ s, idx }))
+    .filter(({ s }) => (sessionFilter ? sessionFilter(s) : true))
+    .map(({ s, idx }) => {
+      const isBonus = !!s?.bonus;
+      const key = `${weekIdx}-${idx}`;
+      const isDone = doneSet?.has(key) || false;
 
-    let status;
-    if (isDone) {
-      status = "done";
-    } else if (isBonus) {
-      status = "bonus";
-    } else if (!nextFound) {
-      status = "next";
-      nextFound = true;
-    } else {
-      status = "todo";
-    }
+      let status;
+      if (isDone) {
+        status = "done";
+      } else if (isBonus) {
+        status = "bonus";
+      } else if (!nextFound) {
+        status = "next";
+        nextFound = true;
+      } else {
+        status = "todo";
+      }
 
-    return {
-      idx,
-      name: s?.nom || s?.title || `Séance ${idx + 1}`,
-      focus: s?.focus || s?.muscle_group || "",
-      isBonus,
-      status,
-    };
-  });
+      return {
+        idx,
+        name: s?.nom || s?.title || `Séance ${idx + 1}`,
+        focus: s?.focus || s?.muscle_group || "",
+        isBonus,
+        status,
+      };
+    });
 
   const target = sessions.filter((s) => !s.isBonus).length;
   const done = sessions.filter((s) => s.status === "done" && !s.isBonus).length;

@@ -774,10 +774,12 @@ function computeTodaysSession(programmeMeta, programme, doneSet) {
   const weekIdx = Math.floor(daysSinceStart / 7);
   if (weekIdx >= programme.weeks.length) return { type: "finished" };
 
-  // Prochaine séance non validée non-bonus de la semaine courante
+  // Prochaine séance non validée non-bonus de la semaine courante.
+  // Les séances pure run/terrain sont ignorées ici : elles vivent dans l'onglet Run.
   const sessions = programme.weeks[weekIdx]?.sessions || [];
   for (let i = 0; i < sessions.length; i++) {
     if (sessions[i]?.bonus) continue;
+    if (isPureRunOrFieldSession(sessions[i])) continue;
     const key = `${weekIdx}-${i}`;
     if (!doneSet || !doneSet.has(key)) {
       return { type: "session", week: weekIdx, session: i };
@@ -786,6 +788,19 @@ function computeTodaysSession(programmeMeta, programme, doneSet) {
 
   // Toutes les séances normales de cette semaine sont faites
   return { type: "week_done", week: weekIdx };
+}
+
+// Séance "pure run/terrain" : aucun exercice muscu, mais du run ou du terrain.
+// Cachée dans l'onglet Train (les runs restent visibles dans l'onglet Run via
+// useScheduledRuns qui parcourt session.runs indépendamment). Les index
+// d'origine sont conservés partout — pas de renumérotation — pour rester
+// cohérent avec doneSet, session_completions Supabase et activeSession.
+function isPureRunOrFieldSession(s) {
+  if (!s) return false;
+  const noStrength = (s.exercises || []).length === 0;
+  const hasRunOrField =
+    (s.runs || []).length > 0 || (s.fieldSessions || []).length > 0;
+  return noStrength && hasRunOrField;
 }
 
 export default function TrainingPage({ client, programme, programmeMeta, activeWeek, setActiveWeek, activeSession, setActiveSession, getHistory, getCrossWeekHistory, getLatest, saveLog, getDelta, refreshLogs, onStartSession }) {
@@ -828,7 +843,12 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   );
   const weekProgress = useMemo(
     () => (currentWeekIdx != null && currentWeekIdx >= 0)
-      ? computeWeekProgress({ programme, weekIdx: currentWeekIdx, doneSet })
+      ? computeWeekProgress({
+          programme,
+          weekIdx: currentWeekIdx,
+          doneSet,
+          sessionFilter: (s) => !isPureRunOrFieldSession(s),
+        })
       : null,
     [programme, currentWeekIdx, doneSet]
   );
@@ -860,9 +880,12 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
       if (daysSinceStart < 0) return { weekday, status: "future", date };
       if (!td.includes(weekday)) return { weekday, status: "rest", date };
       const wIdx = Math.floor(daysSinceStart / 7);
-      // Mappe le jour d'entraînement vers une séance normale (saute les bonus).
+      // Mappe le jour d'entraînement vers une séance normale (saute les bonus
+      // et les séances pure run/terrain — celles-ci vivent dans l'onglet Run).
       const wkSessions = programme?.weeks?.[wIdx]?.sessions || [];
-      const normalIdx = wkSessions.map((s, i) => (s && s.bonus) ? -1 : i).filter((i) => i >= 0);
+      const normalIdx = wkSessions
+        .map((s, i) => (s && (s.bonus || isPureRunOrFieldSession(s))) ? -1 : i)
+        .filter((i) => i >= 0);
       const pos = td.indexOf(weekday);
       const sIdx = normalIdx.length && normalIdx[pos] != null ? normalIdx[pos] : pos;
       const validated = isSessionValidee(wIdx, sIdx);
@@ -1144,10 +1167,16 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
   );
   // Les séances bonus ne comptent pas dans le total (dénominateur de progression) :
   // optionnelles, elles ne doivent pas faire baisser le % si le client les saute.
-  const totalSessions = programme?.weeks?.reduce((a, w) => a + (w.sessions || []).filter((s) => !s.bonus).length, 0) || 0;
+  // Les séances pure run/terrain non plus — elles sont trackées dans l'onglet Run.
+  const totalSessions = programme?.weeks?.reduce(
+    (a, w) => a + (w.sessions || []).filter((s) => !s.bonus && !isPureRunOrFieldSession(s)).length,
+    0
+  ) || 0;
   // Le compteur "done" provient EXCLUSIVEMENT des seances explicitement validees.
+  // Les pure run/terrain sont exclues du compte pour rester cohérent avec totalSessions.
   const doneSessions = (programme?.weeks || []).reduce((a, w, wIdx) => {
-    return a + (w.sessions || []).reduce((b, _s, sIdx) => {
+    return a + (w.sessions || []).reduce((b, s, sIdx) => {
+      if (isPureRunOrFieldSession(s)) return b;
       if (wIdx === activeWeek && sIdx === activeSession) return b + (sessionValidee ? 1 : 0);
       return b + (isSessionValidee(wIdx, sIdx) ? 1 : 0);
     }, 0);
@@ -1553,15 +1582,19 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase" }}>{t("train.this_week")}</div>
             <div style={{ fontSize: 11, color: G, fontWeight: 700 }}>
-              {(currentWeek?.sessions || []).filter((_, i) => {
+              {(currentWeek?.sessions || []).filter((s, i) => {
+                // Pure run/terrain : géré dans l'onglet Run, exclu du compte muscu.
+                if (isPureRunOrFieldSession(s)) return false;
                 // i === activeSession : utiliser sessionValidee (state React reactif)
                 if (i === activeSession) return sessionValidee;
                 return isSessionValidee(activeWeek, i);
-              }).length}/{currentWeek?.sessions?.length || 0} {t("train.sessions_count")}
+              }).length}/{(currentWeek?.sessions || []).filter((s) => !isPureRunOrFieldSession(s)).length} {t("train.sessions_count")}
             </div>
           </div>
           <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
-            {(currentWeek?.sessions || []).map((_, i) => {
+            {(currentWeek?.sessions || []).map((s, i) => {
+              // Pure run/terrain : pas de barre dans Train (visible dans Run).
+              if (isPureRunOrFieldSession(s)) return null;
               // i === activeSession : utiliser sessionValidee (state React reactif)
               // autres sessions : lire localStorage
               let seanceFaite = false;
@@ -1569,8 +1602,8 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
                 seanceFaite = sessionValidee;
               } else {
                 try {
-                  const s = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${i}`) || "{}");
-                  seanceFaite = !!s.validee;
+                  const s2 = JSON.parse(localStorage.getItem(`rb_c_${activeWeek}_${i}`) || "{}");
+                  seanceFaite = !!s2.validee;
                 } catch(e) {}
               }
               const active = i === activeSession && !seanceFaite;
@@ -1614,9 +1647,13 @@ export default function TrainingPage({ client, programme, programmeMeta, activeW
         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: 10, padding: "0 20px" }}>{t("train.weeks_header")}</div>
         <div style={{ display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none", padding: "0 20px 4px" }}>
           {programme.weeks.map((w, i) => {
-            // "Done" : seulement si toutes les seances de la semaine ont ete validees explicitement.
-            const totalSes = w.sessions?.length || 0;
-            const doneSes = (w.sessions || []).filter((_, sIdx) => isSessionValidee(i, sIdx)).length;
+            // "Done" : toutes les séances muscu (non-bonus, non pure run/terrain) de la
+            // semaine sont validées. Les pure run/terrain sont exclues du décompte.
+            const trainSessions = (w.sessions || []).filter((s) => !isPureRunOrFieldSession(s));
+            const totalSes = trainSessions.length;
+            const doneSes = (w.sessions || []).filter(
+              (s, sIdx) => !isPureRunOrFieldSession(s) && isSessionValidee(i, sIdx)
+            ).length;
             const isDone = totalSes > 0 && doneSes === totalSes;
             const isActive = i === activeWeek;
             return (
